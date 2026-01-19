@@ -10,22 +10,32 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/6.0/ref/settings/
 """
 
+import os
+from django.core.exceptions import ImproperlyConfigured
 from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+# only turn debug on when it is in debug mode
+DEBUG = os.getenv("DEBUG", "True") == "True"
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/6.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = "django-insecure-)_*v#sz$v86$wjkin7-wy5t^^=0#2v+kd=gy(+$$zn4okpq3t("
+if DEBUG:
+    SECRET_KEY = "django-insecure-)_*v#sz$v86$wjkin7-wy5t^^=0#2v+kd=gy(+$$zn4okpq3t("
+else:
+    SECRET_KEY = os.getenv("SECRET_KEY")
+    if not SECRET_KEY:
+        raise ImproperlyConfigured("SECRET_KEY not set!")
 
-# SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
 
-ALLOWED_HOSTS = []
+if DEBUG:
+    ALLOWED_HOSTS = []
+else:
+    ALLOWED_HOSTS = ["timely.subhan.work"]
 
 
 # Application definition
