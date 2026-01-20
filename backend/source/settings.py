@@ -20,6 +20,10 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # only turn debug on when it is in debug mode
 DEBUG = os.getenv("DEBUG", "True") == "True"
 
+# only turn SQLite on when using SQLite instead of PostgreSQL databasa
+SQLITE = os.getenv("SQLITE", "False") == "True"
+PGPASS = os.getenv("PGPASSFILE", "None")
+
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/6.0/howto/deployment/checklist/
 
