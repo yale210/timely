@@ -140,6 +140,9 @@ ENV/
 env.bak/
 venv.bak/
 
+# Postgres
+.pgpass
+
 # Spyder project settings
 .spyderproject
 .spyproject
