@@ -33,7 +33,7 @@ jobs:
               run: |
                   echo "${{ secrets.DEPLOYMENT_SSH_KEY }}" > deploy_key
                   chmod 600 deploy_key
-                  ssh -o "StrictHostKeyChecking=no" -i deploy_key ubuntu@${{ secrets.DEPLOYMENT_SERVER_IP }}"
+                  ssh -o "StrictHostKeyChecking=no" -i deploy_key subhan@${{ secrets.DEPLOYMENT_SERVER_IP }}"
                   cd ~/It-Worked-On-My-Machine
                   git pull origin main
                   sudo docker compose pull
