@@ -28,6 +28,7 @@ jobs:
                   docker push registry.digitalocean.com/segmajor/frontend:latest
     deploy:
         runs-on: ubuntu-latest
+        needs: [build]
         steps:
             - name: SSH and deploy
               run: |
