@@ -1,0 +1,43 @@
+name: Build and push to registry
+
+on:
+    push:
+        branches:
+            - main
+    workflow_dispatch:
+
+
+jobs:
+    build:
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v4
+            - name: Log in to DOCR
+              uses: docker/login-action@v3
+              with:
+                  registry: registry.digitalocean.com
+                  username: ${{ secrets.DOCR_TOKEN }}
+                  password: ${{ secrets.DOCR_TOKEN }}
+            - name: Build images
+              run: |
+                  docker build -t registry.digitalocean.com/segmajor/backend:latest backend
+                  docker build -t registry.digitalocean.com/segmajor/frontend:latest frontend
+            - name: Push images
+              run: |
+                  docker push registry.digitalocean.com/segmajor/backend:latest
+                  docker push registry.digitalocean.com/segmajor/frontend:latest
+    deploy:
+        runs-on: ubuntu-latest
+        steps:
+            - name: SSH and deploy
+              run: |
+                  echo "${{ secrets.DEPLOYMENT_SSH_KEY }}" > deploy_key
+                  chmod 600 deploy_key
+                  ssh -o "StrictHostKeyChecking=no" -i deploy_key ubuntu@${{ secrets.DEPLOYMENT_SERVER_IP }}"
+                  cd ~/It-Worked-On-My-Machine
+                  git pull origin main
+                  sudo docker compose pull
+                  sudo docker compose down
+                  sudo docker compose up -d
+                  sudo docker image prune -f
+

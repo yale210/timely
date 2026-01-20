@@ -1,6 +1,6 @@
 services:
   backend:
-    build: backend
+    image: registry.digitalocean.com/segmajor/backend:latest 
     command: ["gunicorn", "--bind", "0.0.0.0:8000", "source.wsgi:application"]
     restart: always
     volumes:
@@ -10,11 +10,10 @@ services:
     env_file:
       - .env
   frontend:
-    build: frontend
+    image: registry.digitalocean.com/segmajor/frontend:latest
     command: ["nginx", "-g", "daemon off;"]
     restart: always
     ports:
       - "80:80"
     depends_on:
       - backend
-  
