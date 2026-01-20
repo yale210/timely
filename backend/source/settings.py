@@ -22,7 +22,12 @@ DEBUG = os.getenv("DEBUG", "True") == "True"
 
 # only turn SQLite on when using SQLite instead of PostgreSQL databasa
 SQLITE = os.getenv("SQLITE", "False") == "True"
-PGPASS = os.getenv("PGPASSFILE", "None")
+DB_HOST = os.getenv("POSTGRES_HOST", "localhost")
+DB_USER = os.getenv("POSTGRES_USER", "postgres")
+DB_PASSWORD = os.getenv("POSTGRES_PASSWORD", "")
+DB_PORT = os.getenv("POSTGRES_PORT", 5432)
+DB_DB = os.getenv("POSTGRES_DB", "postgres")
+
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/6.0/howto/deployment/checklist/
