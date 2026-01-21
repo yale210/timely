@@ -4,7 +4,7 @@ from django.db import models
 #Task category: have unique categories so the db does not store the same thing thousands of times  (ie school)
 
 class Category(models.Model):
-    category = models.CharField(max_length=20,unique=True,blank=False,null=False)
+    text = models.CharField(max_length=20,unique=True,blank=False,null=False)
     
     # Return category.
     def __str__(self):

@@ -1,5 +1,5 @@
 from django.db import models
-from .user import User
+from django.conf import settings
 from datetime import date
 from django.core.validators import MinValueValidator, MaxValueValidator
 
@@ -7,13 +7,11 @@ from django.core.validators import MinValueValidator, MaxValueValidator
 
 class Event(models.Model):
     user = models.ForeignKey(
-        User,
+        settings.AUTH_USER_MODEL,
         on_delete = models.CASCADE, 
-        null=True, 
-        blank=True, 
-        related_name='user'
+        related_name='events'
     )
-    
+
     time = models.TimeField()
     date = models.DateField()
     # 1 least important, 10 insanely urgent

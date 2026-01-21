@@ -1,7 +1,7 @@
 from django.db import models
 from django.utils.timezone import now
 from django.conf import settings
-from .task_category import TaskCategory
+from .category import Category
 from datetime import date
 from django.core.validators import MinValueValidator, MaxValueValidator
 
@@ -16,7 +16,7 @@ class Task(models.Model):
 
     task_message = models.CharField(max_length=500)
     task_category = models.ForeignKey(
-        TaskCategory,
+        Category,
         on_delete=models.SET_NULL,
         null = True,
         blank = True,
