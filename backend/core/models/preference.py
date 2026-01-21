@@ -1,6 +1,6 @@
 from django.db import models
 from django.conf import settings
-import holidays
+from holidays.countries.united_kingdom import UnitedKingdom
 from django.core.validators import MinValueValidator, MaxValueValidator
 
 # Preferences: Sleep start and end time, commute time, Date/time when not to schedule tasks (rest times), max study hours per day
@@ -29,7 +29,7 @@ class Preference(models.Model):
     # Assumes united kingdom holidays only.
     # Year as int.
     def getHolidaysForYear(self, input_year):
-        return holidays.UnitedKingdom(years=[input_year])
+        return UnitedKingdom(years=[input_year])
 
     def getSleep(self):
         return f"{self.sleep_start} - {self.sleep_end}"
