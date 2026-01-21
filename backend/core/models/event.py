@@ -12,6 +12,14 @@ class Event(models.Model):
         related_name='events'
     )
 
+    event_category = models.ForeignKey(
+        Event,
+        on_delete=models.SET_NULL,
+        null = True,
+        blank = True,
+        related_name="category"
+    )
+
     time = models.TimeField()
     date = models.DateField()
     # 1 least important, 10 insanely urgent
