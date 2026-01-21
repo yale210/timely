@@ -1,0 +1,20 @@
+services:
+  backend:
+    build: backend
+    command: ["gunicorn", "--bind", "0.0.0.0:8000", "source.wsgi:application"]
+    restart: always
+    volumes:
+      - ./data:/data
+    environment:
+      - DEBUG=True
+      - DB_PATH=/data/db.sqlite3
+  frontend:
+    build: frontend
+    command: ["nginx", "-g", "daemon off;"]
+    restart: always
+    ports:
+      - "80:80"
+    volumes:
+      - ./frontend/nginx.dev.conf:/etc/nginx/nginx.conf
+    depends_on:
+      - backend
