@@ -1,13 +1,18 @@
 from django.db import models
-from .user import User
+from django.conf import settings
 import holidays
 from django.core.validators import MinValueValidator, MaxValueValidator
 
 #Preferences: Sleep start and end time, commute time, Date/time when not to schedule tasks (rest times), max study hours per day
 
 class Preference(models.Model):
-    user = models.ForeignKey(User,on_delete = models.CASCADE, null=True, blank=True, related_name='user')
-    
+    user = models.OneToOneField(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="preference"
+    )
+
+
     sleep_start = models.TimeField()
     sleep_end = models.TimeField()
     
@@ -20,7 +25,7 @@ class Preference(models.Model):
 
     # 1=Monday,2=Tuesday...,7=Sunday
     # Separate special dates model for any other one off dates (like "My birthday! : 25th april", etc)
-    days_off = models.JSONField(default=list)
+    days_off = models.JSONField(default=list,blank=True)
 
     # User may want certain holidays or dates off (birthdays, weddings, etc). We will store this in a separate model for ease.
     # A typical user will commute twice or more a day. I have added a commute model just to make it easier to handle this (particulary when doing the timetable)

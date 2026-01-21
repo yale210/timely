@@ -6,7 +6,14 @@ from django.core.validators import MinValueValidator, MaxValueValidator
 #Events: USERID, Event ID, time, date, importance, Recurring/not recurring (e.g. one-off) and how often its recurring and for how long
 
 class Event(models.Model):
-    user = models.ForeignKey(User,on_delete = models.CASCADE, null=True, blank=True, related_name='user')
+    user = models.ForeignKey(
+        User,
+        on_delete = models.CASCADE, 
+        null=True, 
+        blank=True, 
+        related_name='user'
+    )
+    
     time = models.TimeField()
     date = models.DateField()
     # 1 least important, 10 insanely urgent
