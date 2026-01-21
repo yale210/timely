@@ -9,4 +9,4 @@ class Category(models.Model):
 
     # Return category.
     def __str__(self):
-        return self.category
+        return self.text
