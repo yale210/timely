@@ -4,9 +4,10 @@ services:
     command: ["gunicorn", "--bind", "0.0.0.0:8000", "source.wsgi:application"]
     restart: always
     volumes:
-      - ./db.sqlite3:/app/db.sqlite3
+      - ./data:/data
     environment:
       - DEBUG=False
+      - DB_PATH=/data/db.sqlite3
     env_file:
       - .env
   frontend:
