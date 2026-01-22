@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from core.models import Task, Category
+from core.models import Task
 
 
 class CalendarSerializer(serializers.ModelSerializer):

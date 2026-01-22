@@ -1,1 +1,1 @@
-from .calendar_view import TaskViewSet
+from .calendar_view import TaskViewSet as TaskViewSet
