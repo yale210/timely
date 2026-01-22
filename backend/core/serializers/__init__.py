@@ -1,1 +1,1 @@
-from .calendar import CalendarSerializer
+from .calendar import CalendarSerializer as CalendarSerializer
