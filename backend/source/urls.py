@@ -21,7 +21,7 @@ from rest_framework.routers import DefaultRouter
 from core.views.calendar_view import TaskViewSet
 
 router = DefaultRouter()
-router.register(r'tasks', TaskViewSet, basename='task')
+router.register(r"tasks", TaskViewSet, basename="task")
 
 urlpatterns = [
     path("api/", include(router.urls)),
