@@ -38,3 +38,22 @@ cd frontend
 npm start
 
 - Visit http://localhost:REPLACE_WITH_PORT_NUMBER/ from terminal on your web browser
+
+
+## Before Committing:
+
+### Install and run ruff
+pip install ruff (if you havent already)
+
+ruff format --check 
+
+ruff check
+
+### Install and run ESlint
+cd frontend
+
+npm install eslint (if you havent already)
+
+npx eslint --init (if you havent already)
+
+npx eslint src/
