@@ -70,11 +70,11 @@ jobs:
               uses: actions/github-script@v8
               with:
                   script: |
-                      const runUrl = `${process.env.GITHUB_SERVER_URL}/${process.env.GITHUB_REPOSITORY}/actions/runs/${process.env.GITHUB_RUN_ID}`;
+                      const runUrl = `${process.env.GITHUB_SERVER_URL}/${process.env.GITHUB_REPOSITORY}/actions/runs/${process.env.GITHUB_RUN_ID}#artifacts`;
                       const body = [
-                          'Test Coverage report (HTML) is available as an artifact:',
-                          '- Artifact: backend-coverage',
-                          `- Run: ${runUrl}`,
+                          'Backend test coverage report HTML link',
+                          '- Artifact name: backend-coverage',
+                          `- Link to download: ${runUrl}`,
                       ].join('\n');
                       github.rest.issues.createComment({
                           owner: context.repo.owner,
