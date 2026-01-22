@@ -46,4 +46,12 @@ jobs:
               run: |
                   cd backend
                   python manage.py test
-    
+    docker-build-test:
+        name: Test if backend docker build will work
+        needs: [lint, test]
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v6
+            - name: Build image
+              run: |
+                  docker build backend
