@@ -1,1 +1,1 @@
-from .calendar import CategorySerializer, EventSerializer, TaskSerializer
+from .calendar import CalendarSerializer
