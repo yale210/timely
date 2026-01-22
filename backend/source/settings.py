@@ -21,12 +21,12 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 DEBUG = os.getenv("DEBUG", "True") == "True"
 
 # only turn SQLite on when using SQLite instead of PostgreSQL databasa
-SQLITE = os.getenv("SQLITE", "True") == "True"
+POSTGRES = os.getenv("POSTGRES", "False") == "True"
 DB_HOST = os.getenv("POSTGRES_HOST", "localhost")
-DB_USER = os.getenv("POSTGRES_USER", "postgres")
-DB_PASSWORD = os.getenv("POSTGRES_PASSWORD", "")
+DB_USER = os.getenv("POSTGRES_USER", "admin")
+DB_PASSWORD = os.getenv("POSTGRES_PASSWORD", "root")
 DB_PORT = os.getenv("POSTGRES_PORT", 5432)
-DB_DB = os.getenv("POSTGRES_DB", "postgres")
+DB_DB = os.getenv("POSTGRES_DB", "django")
 
 
 # Quick-start development settings - unsuitable for production
@@ -100,20 +100,20 @@ WSGI_APPLICATION = "source.wsgi.application"
 
 DATABASES = {
     "default": {
-        "ENGINE": "django.db.backends.postgresql",
-        "NAME": DB_DB,
-        "USER": DB_USER,
-        "PASSWORD": DB_PASSWORD,
-        "HOST": DB_HOST,
-        "PORT": DB_PORT,
+        "ENGINE": "django.db.backends.sqlite3",
+        "NAME": BASE_DIR / "db.sqlite3",
     }
 }
 
-if SQLITE:
+if POSTGRES:
     DATABASES["default"].update(
         {
-            "ENGINE": "django.db.backends.sqlite3",
-            "NAME": BASE_DIR / "db.sqlite3",
+            "ENGINE": "django.db.backends.postgresql",
+            "NAME": DB_DB,
+            "USER": DB_USER,
+            "PASSWORD": DB_PASSWORD,
+            "HOST": DB_HOST,
+            "PORT": DB_PORT,
         }
     )
 
