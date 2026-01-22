@@ -8,6 +8,7 @@
   Time management system for students in higher education
 </p>
 
+The website has been deployed on [timely.subhan.work](https://timely.subhan.work/)
 
 ## Repo setup:
 
