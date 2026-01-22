@@ -21,7 +21,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 DEBUG = os.getenv("DEBUG", "True") == "True"
 
 # only turn SQLite on when using SQLite instead of PostgreSQL databasa
-SQLITE = os.getenv("SQLITE", "False") == "True"
+SQLITE = os.getenv("SQLITE", "True") == "True"
 DB_HOST = os.getenv("POSTGRES_HOST", "localhost")
 DB_USER = os.getenv("POSTGRES_USER", "postgres")
 DB_PASSWORD = os.getenv("POSTGRES_PASSWORD", "")
