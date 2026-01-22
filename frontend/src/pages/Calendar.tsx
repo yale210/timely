@@ -19,17 +19,17 @@ const CalendarPage: React.FC = () => {
   const [tasks, setTasks] = useState<Task[]>([]);
 
   useEffect(() => {
+    const fetchTasks = async () => {
+      try {
+        const res = await axios.get("/api/tasks/");
+        setTasks(res.data);
+      } catch (err) {
+        console.error(err);
+      }
+    };
+
     fetchTasks();
   }, []);
-
-  const fetchTasks = async () => {
-    try {
-      const res = await axios.get("/api/tasks/");
-      setTasks(res.data);
-    } catch (err) {
-      console.error(err);
-    }
-  };
 
   const events = tasks.map((task) => ({
     id: task.id,
