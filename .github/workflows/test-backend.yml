@@ -52,7 +52,7 @@ jobs:
               if: always()
               run: |
                   cd backend
-                  coverage xml
+                  coverage html
             - name: Upload coverage report
               if: always()
               uses: actions/upload-artifact@v4
