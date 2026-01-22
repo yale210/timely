@@ -47,6 +47,8 @@ pip install ruff (if you havent already)
 
 ruff format --check 
 
+ruff check
+
 ### Install and run ESlint
 cd frontend
 
