@@ -1,5 +1,8 @@
 name: Lint/Test backend
 
+permissions:
+    pull-requests: write
+
 on:
     pull_request:
         branches:
@@ -60,6 +63,23 @@ jobs:
                   name: backend-coverage
                   path: backend/htmlcov
                   retention-days: 3
+            - name: Comment coverage artifact on PR
+              if: always() && github.event_name == 'pull_request'
+              uses: actions/github-script@v8
+              with:
+                  script: |
+                      const runUrl = `${process.env.GITHUB_SERVER_URL}/${process.env.GITHUB_REPOSITORY}/actions/runs/${process.env.GITHUB_RUN_ID}`;
+                      const body = [
+                          'Test Coverage report (HTML) is available as an artifact:',
+                          '- Artifact: backend-coverage',
+                          `- Run: ${runUrl}`,
+                      ].join('\n');
+                      github.rest.issues.createComment({
+                          owner: context.repo.owner,
+                          repo: context.repo.repo,
+                          issue_number: context.issue.number,
+                          body,
+                      });
     docker-build-test:
         name: Test if backend docker build will work
         needs: [lint, test]
