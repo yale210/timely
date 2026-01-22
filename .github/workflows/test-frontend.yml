@@ -29,3 +29,12 @@ jobs:
               run: |
                   npm run lint
               working-directory: frontend
+    docker-build-test:
+        name: Test if frontend docker build will work
+        needs: [lint]
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v6
+            - name: Build image
+              run: |
+                  docker build frontend
