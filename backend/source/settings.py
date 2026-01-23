@@ -20,6 +20,32 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # only turn debug on when it is in debug mode
 DEBUG = os.getenv("DEBUG", "True") == "True"
 
+# only turn SQLite on when using SQLite instead of PostgreSQL databasa
+POSTGRES = os.getenv("POSTGRES", "False") == "True"
+DB_HOST = os.getenv("POSTGRES_HOST", "localhost")
+DB_USER = os.getenv("POSTGRES_USER", "admin")
+DB_PASSWORD = os.getenv("POSTGRES_PASSWORD", "root")
+DB_PORT = os.getenv("POSTGRES_PORT", 5432)
+DB_DB = os.getenv("POSTGRES_DB", "django")
+
+if POSTGRES:
+    postgres_settings = {
+        "POSTGRES_HOST": DB_HOST,
+        "POSTGRES_USER": DB_USER,
+        "POSTGRES_PASSWORD": DB_PASSWORD,
+        "POSTGRES_DB": DB_DB,
+        "POSTGRES_PORT": DB_PORT,
+    }
+    missing_postgres_settings = [
+        name for name, value in postgres_settings.items() if not value
+    ]
+    if missing_postgres_settings:
+        raise ImproperlyConfigured(
+            "Missing required PostgreSQL settings: "
+            + ", ".join(missing_postgres_settings)
+        )
+
+
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/6.0/howto/deployment/checklist/
 
@@ -98,6 +124,17 @@ DATABASES = {
     }
 }
 
+if POSTGRES:
+    DATABASES["default"].update(
+        {
+            "ENGINE": "django.db.backends.postgresql",
+            "NAME": DB_DB,
+            "USER": DB_USER,
+            "PASSWORD": DB_PASSWORD,
+            "HOST": DB_HOST,
+            "PORT": DB_PORT,
+        }
+    )
 
 # Password validation
 # https://docs.djangoproject.com/en/6.0/ref/settings/#auth-password-validators

@@ -7,9 +7,13 @@ services:
       - ./data:/data
     environment:
       - DEBUG=False
-      - DB_PATH=/data/db.sqlite3
+      - POSTGRES=True
+      - POSTGRES_HOST=postgres
     env_file:
       - .env
+    depends_on:
+      postgres:
+        condition: service_started
   frontend:
     image: registry.digitalocean.com/segmajor/frontend:latest
     command: ["nginx", "-g", "daemon off;"]
@@ -18,3 +22,13 @@ services:
       - "80:80"
     depends_on:
       - backend
+  postgres:
+    image: postgres:16-alpine
+    restart: always
+    env_file:
+      - .env
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+volumes:
+  postgres_data:
