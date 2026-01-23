@@ -28,6 +28,23 @@ DB_PASSWORD = os.getenv("POSTGRES_PASSWORD", "root")
 DB_PORT = os.getenv("POSTGRES_PORT", 5432)
 DB_DB = os.getenv("POSTGRES_DB", "django")
 
+if POSTGRES:
+    postgres_settings = {
+        "POSTGRES_HOST": DB_HOST,
+        "POSTGRES_USER": DB_USER,
+        "POSTGRES_PASSWORD": DB_PASSWORD,
+        "POSTGRES_DB": DB_DB,
+        "POSTGRES_PORT": DB_PORT,
+    }
+    missing_postgres_settings = [
+        name for name, value in postgres_settings.items() if not value
+    ]
+    if missing_postgres_settings:
+        raise ImproperlyConfigured(
+            "Missing required PostgreSQL settings: "
+            + ", ".join(missing_postgres_settings)
+        )
+
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/6.0/howto/deployment/checklist/
