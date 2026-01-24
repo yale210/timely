@@ -59,7 +59,9 @@ INSTALLED_APPS = [
     "core.apps.CoreConfig",
     # Extra apps
     "rest_framework",
+    "rest_framework.authtoken"
     "corsheaders",
+    "authentication"
 ]
 
 MIDDLEWARE = [
@@ -137,6 +139,7 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
+AUTH_USER_MODEL = "authentication.User"
 
 # Internationalization
 # https://docs.djangoproject.com/en/6.0/topics/i18n/
