@@ -46,17 +46,17 @@ class ModelTests(TestCase):
             self.category.full_clean()
 
     def test_category_cannot_be_blank(self):
-        self.category.text=""
-        self.category.full_clean()
+        with self.assertRaises(ValidationError):
+            self.category.text=""
+            self.category.full_clean()
 
     def test_category_must_be_unique(self):
-        second_category = Category.objects.create("Study")[0]
-        second_category.full_clean()
+        with self.assertRaises(ValidationError):
+            second_category = Category("Study")
+            second_category.full_clean()
 
     def test_profile_str(self):
-        profile = Profile.objects.create(user=self.user)
-
-        self.assertEqual(str(profile), "testuser")
+        self.assertEqual(str(self.profile), str(self.user))
 
     def test_valid_profile(self):
         self.profile.full_clean()
@@ -168,7 +168,7 @@ class ModelTests(TestCase):
             user=self.user,
             event_category=None,
             time=datetime.time(10, 0),
-            date=today + datetime.delta(days=10),
+            date=today + datetime.timedelta(days=10),
             importance=5,
             recurring=False,
         )
@@ -282,9 +282,7 @@ class ModelTests(TestCase):
         )
 
         self.assertEqual(task.user,self.user)
-        self.assertEqual(self.user.tasks.count(1),1)
-
-
+        self.assertEqual(self.user.tasks.count(),1)
 
     def test_preference_helpers(self):
         preference = Preference.objects.create(
@@ -318,7 +316,7 @@ class ModelTests(TestCase):
         preference.full_clean()
 
     def test_maximum_study_time_cannot_be_25_hours(self):
-        preference = Preference.objects.create(
+        preference = Preference(
             user=self.user,
             sleep_start=datetime.time(23, 0),
             sleep_end=datetime.time(7, 0),
@@ -329,7 +327,7 @@ class ModelTests(TestCase):
             preference.full_clean()
 
     def test_maximum_study_time_cannot_be_less_than_0_hours(self):
-        preference = Preference.objects.create(
+        preference = Preference(
             user=self.user,
             sleep_start=datetime.time(23, 0),
             sleep_end=datetime.time(7, 0),
@@ -338,8 +336,6 @@ class ModelTests(TestCase):
 
         with self.assertRaises(ValidationError):
             preference.full_clean()
-
-    
 
 
 class CalendarSerializerTests(TestCase):
