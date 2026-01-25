@@ -1,35 +1,55 @@
 from django.db import models
+from .category import Category
 from django.conf import settings
+from django.utils.timezone import now
 from django.core.validators import MinValueValidator, MaxValueValidator
-
-# Events: USERID, Event ID, time, date, importance, Recurring/not recurring (e.g. one-off) and how often its recurring and for how long
 
 
 class Event(models.Model):
+    """
+    Model used to allow for events to be created.
+    Events can be one-off, or recurring and with set intervals.
+    """
+
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="events"
     )
 
     event_category = models.ForeignKey(
-        "self",
+        Category,
         on_delete=models.SET_NULL,
         null=True,
         blank=True,
         related_name="category",
     )
 
-    time = models.TimeField()
-    date = models.DateField()
-    # 1 least important, 10 insanely urgent
+    # 1 represents events of least importance.
+    # 10 represents events of most importance.
     importance = models.PositiveSmallIntegerField(
         validators=[MinValueValidator(1), MaxValueValidator(10)]
     )
-    recurring = models.BooleanField(default=False)
-    recurring_start = models.DateField()
-    recurring_end = models.DateField()
 
+    # If one-off event, use these fields.
+    time = models.TimeField()
+    date = models.DateField()
+
+    # If recurring event, use these fields.
+    recurring = models.BooleanField(default=False)
+    recurring_start = models.DateField(null=True, blank=True)
+    recurring_end = models.DateField(null=True, blank=True)
+    recurring_interval = models.CharField(max_length=20, null=True, blank=True)
+
+    # Calculate the time left of the event.
+    # If event is recurring, return days between now and end date.
+    # If event is a one off, return days between date and now.
     def calculateTimeLeft(self):
-        if self.recurring_start is not None and self.recurring_start is not None:
-            return (self.recurring_end - self.recurring_start).days
+        current_time = now().date()
+
+        if self.recurring and self.recurring_end:
+            days_left = (self.recurring_end - current_time).days
+            return max(days_left, 0)
+        elif not self.recurring and self.date:
+            days_left = (self.date - current_time).days
+            return max(days_left, 0)
         else:
             return 0

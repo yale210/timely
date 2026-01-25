@@ -5,8 +5,15 @@ from .category import Category
 from django.core.validators import MinValueValidator, MaxValueValidator
 
 
-# A user can create a task. A task belongs to that user.
 class Task(models.Model):
+    """
+    This model allows for the creation of tasks.
+    Tasks are one-off events. Anything recurring should be an event.
+    Tasks may have sub-tasks.
+    Examples of tasks may be "Maths coursework" due on the 12th February which will take 4 hours 32 minutes to complete.
+    This could have 3 sub-tasks: read textbook; read brief; complete answers.
+    """
+
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="tasks"
     )
@@ -24,8 +31,8 @@ class Task(models.Model):
         validators=[MinValueValidator(1), MaxValueValidator(24 * 60)]
     )
     start_time = models.DateField()
-    completed = models.BooleanField(default=False)
     deadline = models.DateField()
+    completed = models.BooleanField(default=False)
 
     # Query db for models with specific parent tasks when necessary.
     parent_task = models.ForeignKey(
@@ -36,22 +43,15 @@ class Task(models.Model):
         related_name="subtasks",
     )
 
-    # 1 least important, 10 insanely urgent
+    # 1 represents events of least importance.
+    # 10 represents events of most importance.
     importance = models.PositiveSmallIntegerField(
         validators=[MinValueValidator(1), MaxValueValidator(10)]
     )
 
-    recurring = models.BooleanField(default=False)
-    recurring_start = models.DateField(null=True, blank=True)
-    recurring_end = models.DateField(null=True, blank=True)
-
+    # Return the time left between now and the deadline.
     def calculateTimeLeft(self):
         current_time = now().date()
-
-        if self.recurring and self.recurring_end:
-            return (self.recurring_end - current_time).days
-
-        if self.deadline:
-            return (self.deadline - current_time).days
-
-        return 0
+        if not self.deadline:
+            return 0
+        return max((self.deadline - current_time).days, 0)

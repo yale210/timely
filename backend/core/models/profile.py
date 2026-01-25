@@ -1,15 +1,12 @@
 from django.db import models
 from django.conf import settings
 
-# READ ME:
-# We will be using django's built in user.
-# This has auth, passwords, permissions, login, admin, etc
-# Profile will be a wrapper for small extra features. #
-# This saves us rebuilding the same features which are already provided by django
-# and shows we actually understand django
-
 
 class Profile(models.Model):
+    """
+    This model is used to add additional functionality to Django's built in User feature.
+    """
+
     user = models.OneToOneField(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
@@ -19,5 +16,6 @@ class Profile(models.Model):
     date_of_birth = models.DateField(null=True, blank=True)
     creation_date = models.DateField(null=True, blank=True)
 
+    # Retrieve the user's username.
     def __str__(self):
         return self.user.username
