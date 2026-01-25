@@ -4,6 +4,8 @@ WORKDIR /app
 
 COPY requirements.txt .
 
+RUN apk add --no-cache postgresql-libs
+
 RUN uv pip install --no-cache-dir --system 'gunicorn==23.0.0'
 
 RUN uv pip install --no-cache-dir --system 'whitenoise==6.6.0'
