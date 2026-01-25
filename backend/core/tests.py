@@ -109,6 +109,8 @@ class ModelTests(TestCase):
             importance=10,
         )
 
+        self.assertEqual(task.calculateTimeLeft(), 0)
+
 
 
     def test_task_calculate_time_left_deadline(self):
