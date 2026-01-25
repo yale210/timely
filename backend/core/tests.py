@@ -28,8 +28,7 @@ class ModelTests(TestCase):
             password="password123",
         )
         self.profile = Profile.objects.create(
-            user=self.user,
-            date_of_birth=datetime.date(2006,4,20)
+            user=self.user, date_of_birth=datetime.date(2006, 4, 20)
         )
         self.category = Category.objects.create(text="Study")
 
@@ -37,17 +36,17 @@ class ModelTests(TestCase):
         self.assertEqual(str(self.category), "Study")
 
     def test_category_can_be_20_characters(self):
-        self.category.text="a"*20
+        self.category.text = "a" * 20
         self.category.full_clean()
 
     def test_category_cannot_be_21_characters_long(self):
-        self.category.text="a"*21
+        self.category.text = "a" * 21
         with self.assertRaises(ValidationError):
             self.category.full_clean()
 
     def test_category_cannot_be_blank(self):
         with self.assertRaises(ValidationError):
-            self.category.text=""
+            self.category.text = ""
             self.category.full_clean()
 
     def test_category_must_be_unique(self):
@@ -62,16 +61,15 @@ class ModelTests(TestCase):
         self.profile.full_clean()
 
     def test_profile_can_have_a_date_of_birth(self):
-        dob = datetime.date(2006,2,24)
-        self.profile.date_of_birth=dob
+        dob = datetime.date(2006, 2, 24)
+        self.profile.date_of_birth = dob
 
-        self.assertEqual(self.profile.date_of_birth,dob)
+        self.assertEqual(self.profile.date_of_birth, dob)
 
     def test_profile_can_have_null_date_of_birth(self):
         self.profile.date_of_birth = None
 
         self.assertIsNone(self.profile.date_of_birth)
-
 
     def test_commute_can_be_created(self):
         commute = Commute.objects.create(
@@ -80,7 +78,7 @@ class ModelTests(TestCase):
             commute_end=datetime.time(9, 0),
         )
 
-        self.assertEqual(commute.user,self.user)
+        self.assertEqual(commute.user, self.user)
 
     def test_commute_str(self):
         commute = Commute.objects.create(
@@ -95,15 +93,14 @@ class ModelTests(TestCase):
         Commute.objects.create(
             user=self.user,
             commute_start=datetime.time(8, 0),
-            commute_end=datetime.time(9, 0)
+            commute_end=datetime.time(9, 0),
         )
         Commute.objects.create(
             user=self.user,
             commute_start=datetime.time(18, 0),
-            commute_end=datetime.time(19, 0)
+            commute_end=datetime.time(19, 0),
         )
-        self.assertEqual(self.user.commute.count(),2)
-
+        self.assertEqual(self.user.commute.count(), 2)
 
     def test_special_dates_str_with_text(self):
         special_date = SpecialDates.objects.create(
@@ -126,13 +123,12 @@ class ModelTests(TestCase):
     def test_special_date_can_be_linked_to_a_user(self):
         special_date = SpecialDates.objects.create(
             user=self.user,
-            date=datetime.date(2026,1,25),
+            date=datetime.date(2026, 1, 25),
             text="Day in bed",
         )
-        
-        self.assertEqual(special_date.user,self.user)
-        self.assertEqual(self.user.special_dates.count(),1)
 
+        self.assertEqual(special_date.user, self.user)
+        self.assertEqual(self.user.special_dates.count(), 1)
 
     def test_event_calculate_time_left(self):
         today = timezone.now().date()
@@ -145,7 +141,7 @@ class ModelTests(TestCase):
             recurring=True,
             recurring_start=today,
             recurring_end=today + datetime.timedelta(days=10),
-            recurring_interval = "daily"
+            recurring_interval="daily",
         )
 
         self.assertEqual(event.calculateTimeLeft(), 10)
@@ -175,7 +171,6 @@ class ModelTests(TestCase):
 
         self.assertEqual(event.calculateTimeLeft(), 10)
 
-
     def test_event_is_linked_to_user(self):
         today = timezone.now().date()
         event = Event.objects.create(
@@ -186,11 +181,9 @@ class ModelTests(TestCase):
             importance=5,
             recurring=False,
         )
-        
-        self.assertEqual(event.user,self.user)
-        self.assertEqual(self.user.events.count(),1)
 
-
+        self.assertEqual(event.user, self.user)
+        self.assertEqual(self.user.events.count(), 1)
 
     def test_task_calculate_time_left_is_overdue_returns_zero(self):
         today = timezone.now().date()
@@ -206,8 +199,6 @@ class ModelTests(TestCase):
         )
 
         self.assertEqual(task.calculateTimeLeft(), 0)
-
-
 
     def test_task_calculate_time_left_deadline(self):
         today = timezone.now().date()
@@ -239,7 +230,6 @@ class ModelTests(TestCase):
 
         self.assertEqual(task.calculateTimeLeft(), 0)
 
-
     def test_tasks_can_have_subtasks(self):
         today = timezone.now().date()
         parent = Task.objects.create(
@@ -262,11 +252,11 @@ class ModelTests(TestCase):
             completed=False,
             deadline=today,
             importance=7,
-            parent_task=parent
+            parent_task=parent,
         )
 
-        self.assertEqual(parent.subtasks.count(),1)
-        self.assertEqual(child.parent_task,parent)
+        self.assertEqual(parent.subtasks.count(), 1)
+        self.assertEqual(child.parent_task, parent)
 
     def test_task_is_linked_to_user(self):
         today = timezone.now().date()
@@ -281,8 +271,8 @@ class ModelTests(TestCase):
             importance=7,
         )
 
-        self.assertEqual(task.user,self.user)
-        self.assertEqual(self.user.tasks.count(),1)
+        self.assertEqual(task.user, self.user)
+        self.assertEqual(self.user.tasks.count(), 1)
 
     def test_preference_helpers(self):
         preference = Preference.objects.create(
@@ -296,7 +286,7 @@ class ModelTests(TestCase):
 
         self.assertTrue(len(holidays) > 0)
         self.assertEqual(preference.getSleep(), "23:00:00 - 07:00:00")
-    
+
     def test_maximum_study_time_can_be_24_hours(self):
         preference = Preference.objects.create(
             user=self.user,
@@ -322,7 +312,7 @@ class ModelTests(TestCase):
             sleep_end=datetime.time(7, 0),
             max_daily_study_time=25,
         )
-        
+
         with self.assertRaises(ValidationError):
             preference.full_clean()
 
