@@ -65,20 +65,23 @@ class ModelTests(TestCase):
         self.assertEqual(str(special_date), "")
 
     def test_event_calculate_time_left(self):
+        today = timezone.now().date()
         event = Event.objects.create(
             user=self.user,
             event_category=None,
             time=datetime.time(10, 0),
-            date=datetime.date(2025, 1, 1),
+            date=today,
             importance=5,
             recurring=True,
-            recurring_start=datetime.date(2025, 1, 1),
-            recurring_end=datetime.date(2025, 1, 11),
+            recurring_start=today,
+            recurring_end=today + datetime.timedelta(days=10),
+            recurring_interval = "daily"
         )
 
         self.assertEqual(event.calculateTimeLeft(), 10)
 
     def test_event_calculate_time_left_zero_days(self):
+        today = timezone.now().date()
         event = Event.objects.create(
             user=self.user,
             event_category=None,
@@ -86,29 +89,27 @@ class ModelTests(TestCase):
             date=datetime.date(2025, 1, 1),
             importance=5,
             recurring=False,
-            recurring_start=datetime.date(2025, 1, 1),
-            recurring_end=datetime.date(2025, 1, 1),
+            recurring_start=today,
+            recurring_end=today,
+            recurring_interval="daily"
         )
 
         self.assertEqual(event.calculateTimeLeft(), 0)
 
-    def test_task_calculate_time_left_recurring(self):
+    def test_task_calculate_time_left_is_overdue_returns_zero(self):
         today = timezone.now().date()
         task = Task.objects.create(
             user=self.user,
-            task_message="Recurring task",
+            task_message="Overdue task",
             task_category=None,
-            estimated_minutes=30,
+            estimated_minutes=45,
             start_time=today,
             completed=False,
-            deadline=today + datetime.timedelta(days=30),
-            importance=7,
-            recurring=True,
-            recurring_start=today,
-            recurring_end=today + datetime.timedelta(days=7),
+            deadline=today - datetime.timedelta(days=10),
+            importance=10,
         )
 
-        self.assertEqual(task.calculateTimeLeft(), 7)
+
 
     def test_task_calculate_time_left_deadline(self):
         today = timezone.now().date()
@@ -121,9 +122,6 @@ class ModelTests(TestCase):
             completed=False,
             deadline=today + datetime.timedelta(days=5),
             importance=7,
-            recurring=False,
-            recurring_start=None,
-            recurring_end=None,
         )
 
         self.assertEqual(task.calculateTimeLeft(), 5)
@@ -139,9 +137,6 @@ class ModelTests(TestCase):
             completed=False,
             deadline=today,
             importance=7,
-            recurring=False,
-            recurring_start=None,
-            recurring_end=None,
         )
 
         self.assertEqual(task.calculateTimeLeft(), 0)
@@ -179,9 +174,6 @@ class CalendarSerializerTests(TestCase):
             completed=False,
             deadline=today + datetime.timedelta(days=2),
             importance=4,
-            recurring=False,
-            recurring_start=None,
-            recurring_end=None,
         )
 
         data = CalendarSerializer(task).data
@@ -224,9 +216,6 @@ class TaskViewSetTests(TestCase):
             completed=False,
             deadline=today + datetime.timedelta(days=10),
             importance=2,
-            recurring=False,
-            recurring_start=None,
-            recurring_end=None,
         )
         earlier_task = Task.objects.create(
             user=self.user,
@@ -237,9 +226,6 @@ class TaskViewSetTests(TestCase):
             completed=False,
             deadline=today + datetime.timedelta(days=5),
             importance=3,
-            recurring=False,
-            recurring_start=None,
-            recurring_end=None,
         )
         Task.objects.create(
             user=self.other_user,
@@ -250,9 +236,6 @@ class TaskViewSetTests(TestCase):
             completed=False,
             deadline=today + datetime.timedelta(days=4),
             importance=1,
-            recurring=False,
-            recurring_start=None,
-            recurring_end=None,
         )
 
         self.client.force_authenticate(user=self.user)

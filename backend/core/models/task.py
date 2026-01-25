@@ -24,7 +24,7 @@ class Task(models.Model):
         on_delete=models.SET_NULL,
         null=True,
         blank=True,
-        related_name="category",
+        related_name="task_category",
     )
 
     estimated_minutes = models.PositiveSmallIntegerField(

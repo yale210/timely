@@ -20,7 +20,7 @@ class Event(models.Model):
         on_delete=models.SET_NULL,
         null=True,
         blank=True,
-        related_name="category",
+        related_name="event_category",
     )
 
     # 1 represents events of least importance.
