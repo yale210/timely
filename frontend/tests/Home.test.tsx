@@ -1,4 +1,4 @@
-import { it, expect, describe } from 'vitest'
+import { it, describe } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import { Home } from "../src/pages/index"
 import { MemoryRouter } from 'react-router-dom'
