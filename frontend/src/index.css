@@ -5,7 +5,7 @@
 @import "tailwindcss";
 
 body, html {
-  font-family: "Inter", system-ui, sans-serif;
+  font-family: "Poppins", system-ui, sans-serif;
 }
 
 ::-webkit-scrollbar {
