@@ -1,5 +1,11 @@
 name: opencode
 
+permissions:
+  id-token: write
+  contents: read
+  pull-requests: read
+  issues: write
+
 on:
   issue_comment:
     types: [created]
