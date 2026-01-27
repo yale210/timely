@@ -1,7 +1,10 @@
 from django.db import models
 from django.conf import settings
 from holidays.countries.united_kingdom import UnitedKingdom
+from django.core.exceptions import ValidationError
 from django.core.validators import MinValueValidator, MaxValueValidator
+
+from .day_of_week import DayOfWeek
 
 
 class Preference(models.Model):
@@ -23,17 +26,24 @@ class Preference(models.Model):
     )
 
     # Used to store the days a user wishes to have off each week.
-    # There is a separate special dates model for any other one off dates (like "My birthday! : 25th april", etc)
-    days_off = models.JSONField(
-        default=list,
+    days_off = models.ManyToManyField(
+        DayOfWeek,
         blank=True,
-        help_text="List of days off: 1=Monday,2=Tuesday...,7=Sunday",
+        related_name="preferences",
     )
+    
+
+    def clean(self):
+        super().clean()
+        if self.sleep_start == self.sleep_end:
+            raise ValidationError(
+                {"sleep_end": "sleep_start must be different to sleep_end"}
+            )
 
     # Retrieve all UK holidays for inputted year.
-    def getHolidaysForYear(self, input_year):
+    def get_holidays_for_year(self, input_year):
         return UnitedKingdom(years=[input_year])
 
     # Get the sleep length of the user.
-    def getSleep(self):
+    def get_sleep(self):
         return f"{self.sleep_start} - {self.sleep_end}"
