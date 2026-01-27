@@ -14,7 +14,7 @@ class Profile(models.Model):
     )
 
     date_of_birth = models.DateField(null=True, blank=True)
-    creation_date = models.DateField(auto_now_add=True)
+    creation_date = models.DateTimeField(auto_now_add=True)
 
     # Retrieve the user's username.
     def __str__(self):
