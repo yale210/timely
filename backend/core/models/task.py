@@ -4,6 +4,8 @@ from django.conf import settings
 from .category import Category
 from django.core.validators import MinValueValidator, MaxValueValidator
 
+from .importance_choices import ImportanceChoices
+
 
 class Task(models.Model):
     """
@@ -27,8 +29,8 @@ class Task(models.Model):
         related_name="task_category",
     )
 
-    estimated_minutes = models.PositiveSmallIntegerField(
-        validators=[MinValueValidator(1), MaxValueValidator(24 * 60)]
+    estimated_minutes = models.PositiveIntegerField(
+        validators=[MinValueValidator(1)]
     )
     start_time = models.DateField()
     deadline = models.DateField()
@@ -46,6 +48,7 @@ class Task(models.Model):
     # 1 represents events of least importance.
     # 10 represents events of most importance.
     importance = models.PositiveSmallIntegerField(
+        choices=ImportanceChoices.choices,
         validators=[MinValueValidator(1), MaxValueValidator(10)]
     )
 
