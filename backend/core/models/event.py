@@ -1,8 +1,10 @@
-from django.db import models
-from .category import Category
 from django.conf import settings
+from django.core.exceptions import ValidationError
+from django.core.validators import MaxValueValidator, MinValueValidator
+from django.db import models
 from django.utils.timezone import now
-from django.core.validators import MinValueValidator, MaxValueValidator
+
+from .category import Category
 
 
 class Event(models.Model):
@@ -23,33 +25,80 @@ class Event(models.Model):
         related_name="event_category",
     )
 
-    # 1 represents events of least importance.
-    # 10 represents events of most importance.
+    class ImportanceChoices(models.IntegerChoices):
+        VERY_LOW = 1, "Very low"
+        LOW = 2, "Low"
+        LOW_MEDIUM = 3, "Low-medium"
+        MEDIUM_LOW = 4, "Medium-low"
+        MEDIUM = 5, "Medium"
+        MEDIUM_HIGH = 6, "Medium-high"
+        HIGH_MEDIUM = 7, "High-medium"
+        HIGH = 8, "High"
+        VERY_HIGH = 9, "Very high"
+        CRITICAL = 10, "Critical"
+
     importance = models.PositiveSmallIntegerField(
-        validators=[MinValueValidator(1), MaxValueValidator(10)]
+        choices=ImportanceChoices.choices,
+        validators=[MinValueValidator(1), MaxValueValidator(10)],
     )
 
     # If one-off event, use these fields.
-    time = models.TimeField()
-    date = models.DateField()
+    time = models.TimeField(null=True, blank=True)
+    date = models.DateField(null=True, blank=True)
 
     # If recurring event, use these fields.
     recurring = models.BooleanField(default=False)
     recurring_start = models.DateField(null=True, blank=True)
     recurring_end = models.DateField(null=True, blank=True)
-    recurring_interval = models.CharField(max_length=20, null=True, blank=True)
+    
+    class RecurrenceInterval(models.TextChoices):
+        DAILY = "daily", "Daily"
+        WEEKLY = "weekly", "Weekly"
+        MONTHLY = "monthly", "Monthly"
+        YEARLY = "yearly", "Yearly"
+    
+    recurring_interval = models.CharField(
+        max_length=20,
+        choices=RecurrenceInterval.choices,
+        null=True, 
+        blank=True
+    )
+    def clean(self):
+        errors = {}
+        if self.recurring:
+            if not self.recurring_start:
+                errors["recurring_start"] = "Recurring events require a start date."
+            if not self.recurring_end:
+                errors["recurring_end"] = "Recurring events require an end date."
+            if not self.recurring_interval:
+                errors["recurring_interval"] = "Recurring events require an interval."
+        else:
+            if not self.time:
+                errors["time"] = "One-off events require a time."
+            if not self.date:
+                errors["date"] = "One-off events require a date."
+            if self.recurring_start:
+                errors["recurring_start"] = "One-off events cannot set a start date."
+            if self.recurring_end:
+                errors["recurring_end"] = "One-off events cannot set an end date."
+            if self.recurring_interval:
+                errors["recurring_interval"] = (
+                    "One-off events cannot set a recurring interval."
+                )
+        if errors:
+            raise ValidationError(errors)
+
+    def save(self, *args, **kwargs):
+        self.full_clean()
+        return super().save(*args, **kwargs)
 
     # Calculate the time left of the event.
     # If event is recurring, return days between now and end date.
     # If event is a one off, return days between date and now.
-    def calculateTimeLeft(self):
+    def calculate_time_left(self):
         current_time = now().date()
-
         if self.recurring and self.recurring_end:
-            days_left = (self.recurring_end - current_time).days
-            return max(days_left, 0)
-        elif not self.recurring and self.date:
-            days_left = (self.date - current_time).days
-            return max(days_left, 0)
-        else:
-            return 0
+            return max((self.recurring_end - current_time).days, 0)
+        if not self.recurring and self.date:
+            return max((self.date - current_time).days, 0)
+        return 0
