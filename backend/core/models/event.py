@@ -26,8 +26,6 @@ class Event(models.Model):
         related_name="event_category",
     )
 
-
-
     importance = models.PositiveSmallIntegerField(
         choices=ImportanceChoices.choices,
         validators=[MinValueValidator(1), MaxValueValidator(10)],
@@ -41,19 +39,17 @@ class Event(models.Model):
     recurring = models.BooleanField(default=False)
     recurring_start = models.DateField(null=True, blank=True)
     recurring_end = models.DateField(null=True, blank=True)
-    
+
     class RecurrenceInterval(models.TextChoices):
         DAILY = "daily", "Daily"
         WEEKLY = "weekly", "Weekly"
         MONTHLY = "monthly", "Monthly"
         YEARLY = "yearly", "Yearly"
-    
+
     recurring_interval = models.CharField(
-        max_length=20,
-        choices=RecurrenceInterval.choices,
-        null=True, 
-        blank=True
+        max_length=20, choices=RecurrenceInterval.choices, null=True, blank=True
     )
+
     def clean(self):
         errors = {}
         if self.recurring:

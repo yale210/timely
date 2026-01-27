@@ -31,7 +31,6 @@ class Preference(models.Model):
         blank=True,
         related_name="preferences",
     )
-    
 
     def clean(self):
         super().clean()

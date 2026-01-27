@@ -1,5 +1,6 @@
 from django.db import models
 
+
 class ImportanceChoices(models.IntegerChoices):
     VERY_LOW = 1, "Very low"
     LOW = 2, "Low"

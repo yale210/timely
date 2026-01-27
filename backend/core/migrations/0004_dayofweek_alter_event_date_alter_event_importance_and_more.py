@@ -6,7 +6,6 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("core", "0003_remove_task_recurring_remove_task_recurring_end_and_more"),
     ]

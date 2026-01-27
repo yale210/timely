@@ -29,9 +29,7 @@ class Task(models.Model):
         related_name="task_category",
     )
 
-    estimated_minutes = models.PositiveIntegerField(
-        validators=[MinValueValidator(1)]
-    )
+    estimated_minutes = models.PositiveIntegerField(validators=[MinValueValidator(1)])
     start_time = models.DateField()
     deadline = models.DateField()
     completed = models.BooleanField(default=False)
@@ -49,7 +47,7 @@ class Task(models.Model):
     # 10 represents events of most importance.
     importance = models.PositiveSmallIntegerField(
         choices=ImportanceChoices.choices,
-        validators=[MinValueValidator(1), MaxValueValidator(10)]
+        validators=[MinValueValidator(1), MaxValueValidator(10)],
     )
 
     # Return the time left between now and the deadline.
