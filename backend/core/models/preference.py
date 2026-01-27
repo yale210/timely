@@ -1,12 +1,19 @@
 from django.db import models
 from django.conf import settings
 from holidays.countries.united_kingdom import UnitedKingdom
+from django.core.exceptions import ValidationError
 from django.core.validators import MinValueValidator, MaxValueValidator
+from datetime import datetime, timedelta
 
-# Preferences: Sleep start and end time, commute time, Date/time when not to schedule tasks (rest times), max study hours per day
+from .day_of_week import DayOfWeek
 
 
 class Preference(models.Model):
+    """
+    This model allows users to store their preferences.
+    Preferences are used to help customise their scheduling.
+    """
+
     user = models.OneToOneField(
         settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="preference"
     )
@@ -14,22 +21,36 @@ class Preference(models.Model):
     sleep_start = models.TimeField()
     sleep_end = models.TimeField()
 
+    # Users can set a maximum study length to avoid burnout.
     max_daily_study_time = models.PositiveSmallIntegerField(
         validators=[MinValueValidator(0), MaxValueValidator(24)]
     )
 
-    # 1=Monday,2=Tuesday...,7=Sunday
-    # Separate special dates model for any other one off dates (like "My birthday! : 25th april", etc)
-    days_off = models.JSONField(default=list, blank=True)
+    # Used to store the days a user wishes to have off each week.
+    days_off = models.ManyToManyField(
+        DayOfWeek,
+        blank=True,
+        related_name="preferences",
+    )
 
-    # User may want certain holidays or dates off (birthdays, weddings, etc). We will store this in a separate model for ease.
-    # A typical user will commute twice or more a day. I have added a commute model just to make it easier to handle this (particulary when doing the timetable)
+    def clean(self):
+        super().clean()
+        if self.sleep_start == self.sleep_end:
+            raise ValidationError(
+                {"sleep_end": "sleep_start must be different to sleep_end"}
+            )
 
-    # Get the a list of holidays for an inputted year.
-    # Assumes united kingdom holidays only.
-    # Year as int.
-    def getHolidaysForYear(self, input_year):
+        # midnight crossing
+        start = datetime.combine(datetime.today(), self.sleep_start)
+        end = datetime.combine(datetime.today(), self.sleep_end)
+
+        if end <= start:
+            end += timedelta(days=1)  # Sleep crosses midnight
+
+    # Retrieve all UK holidays for inputted year.
+    def get_holidays_for_year(self, input_year):
         return UnitedKingdom(years=[input_year])
 
-    def getSleep(self):
+    # Get the sleep length of the user.
+    def get_sleep(self):
         return f"{self.sleep_start} - {self.sleep_end}"
