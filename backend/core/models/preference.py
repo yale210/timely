@@ -3,6 +3,7 @@ from django.conf import settings
 from holidays.countries.united_kingdom import UnitedKingdom
 from django.core.exceptions import ValidationError
 from django.core.validators import MinValueValidator, MaxValueValidator
+from datetime import datetime, timedelta
 
 from .day_of_week import DayOfWeek
 
@@ -38,6 +39,13 @@ class Preference(models.Model):
             raise ValidationError(
                 {"sleep_end": "sleep_start must be different to sleep_end"}
             )
+
+        # midnight crossing
+        start = datetime.combine(datetime.today(), self.sleep_start)
+        end = datetime.combine(datetime.today(), self.sleep_end)
+
+        if end <= start:
+            end += timedelta(days=1)  # Sleep crosses midnight
 
     # Retrieve all UK holidays for inputted year.
     def get_holidays_for_year(self, input_year):

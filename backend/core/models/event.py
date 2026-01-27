@@ -59,6 +59,18 @@ class Event(models.Model):
                 errors["recurring_end"] = "Recurring events require an end date."
             if not self.recurring_interval:
                 errors["recurring_interval"] = "Recurring events require an interval."
+            if (
+                self.recurring_start
+                and self.recurring_end
+                and self.recurring_start > self.recurring_end
+            ):
+                errors["recurring_start"] = (
+                    "Start date must be before or equal to end date."
+                )
+            if self.time:
+                errors["time"] = "Recurring events cannot set a time."
+            if self.date:
+                errors["date"] = "Recurring events cannot set a date."
         else:
             if not self.time:
                 errors["time"] = "One-off events require a time."

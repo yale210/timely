@@ -1,7 +1,6 @@
-import datetime
-
 from django.contrib.auth import get_user_model
 from django.test import TestCase
+from django.utils import timezone
 
 from core.models import SpecialDates
 
@@ -16,7 +15,7 @@ class SpecialDatesTests(TestCase):
     def test_special_dates_str_with_text(self):
         special_date = SpecialDates.objects.create(
             user=self.user,
-            date=datetime.date(2025, 1, 1),
+            date=(timezone.now() - timezone.timedelta(days=30)).date(),
             text="New Year",
         )
 
@@ -25,7 +24,7 @@ class SpecialDatesTests(TestCase):
     def test_special_dates_str_without_text(self):
         special_date = SpecialDates.objects.create(
             user=self.user,
-            date=datetime.date(2025, 1, 2),
+            date=(timezone.now() - timezone.timedelta(days=29)).date(),
             text="",
         )
 
@@ -34,7 +33,7 @@ class SpecialDatesTests(TestCase):
     def test_special_date_can_be_linked_to_a_user(self):
         special_date = SpecialDates.objects.create(
             user=self.user,
-            date=datetime.date(2026, 1, 25),
+            date=(timezone.now() - timezone.timedelta(days=2)).date(),
             text="Day in bed",
         )
 

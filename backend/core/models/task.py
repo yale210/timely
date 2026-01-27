@@ -1,6 +1,7 @@
 from django.db import models
 from django.utils.timezone import now
 from django.conf import settings
+from django.core.exceptions import ValidationError
 from .category import Category
 from django.core.validators import MinValueValidator, MaxValueValidator
 
@@ -43,16 +44,21 @@ class Task(models.Model):
         related_name="subtasks",
     )
 
-    # 1 represents events of least importance.
-    # 10 represents events of most importance.
+    # 1 represents tasks of least importance.
+    # 10 represents tasks of most importance.
     importance = models.PositiveSmallIntegerField(
         choices=ImportanceChoices.choices,
         validators=[MinValueValidator(1), MaxValueValidator(10)],
     )
 
     # Return the time left between now and the deadline.
-    def calculateTimeLeft(self):
+    def calculate_time_left(self):
         current_time = now().date()
         if not self.deadline:
             return 0
         return max((self.deadline - current_time).days, 0)
+
+    def clean(self):
+        if self.start_time and self.deadline and self.start_time > self.deadline:
+            raise ValidationError("Start time must be before or on the deadline.")
+        super().clean()

@@ -27,7 +27,7 @@ class TaskTests(TestCase):
             importance=10,
         )
 
-        self.assertEqual(task.calculateTimeLeft(), 0)
+        self.assertEqual(task.calculate_time_left(), 0)
 
     def test_task_calculate_time_left_deadline(self):
         today = timezone.now().date()
@@ -42,9 +42,9 @@ class TaskTests(TestCase):
             importance=7,
         )
 
-        self.assertEqual(task.calculateTimeLeft(), 5)
+        self.assertEqual(task.calculate_time_left(), 5)
 
-    def test_task_calculate_time_left_no_dates(self):
+    def test_task_calculate_time_left_same_day_deadline(self):
         today = timezone.now().date()
         task = Task.objects.create(
             user=self.user,
@@ -57,7 +57,7 @@ class TaskTests(TestCase):
             importance=7,
         )
 
-        self.assertEqual(task.calculateTimeLeft(), 0)
+        self.assertEqual(task.calculate_time_left(), 0)
 
     def test_tasks_can_have_subtasks(self):
         today = timezone.now().date()
