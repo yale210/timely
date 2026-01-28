@@ -102,14 +102,29 @@ const TaskList: React.FC = () => {
     t.title.toLowerCase().includes(search.toLowerCase())
   );
 
+  const now = moment();
+  const sevenDaysAgo = moment().subtract(7, "days").startOf("day");
+
+  const pastTasks = filteredTasks.filter(
+    (t) =>
+      t.completed &&
+      moment(t.deadline).isBetween(sevenDaysAgo, now, undefined, "[]")
+  );
+
   const overdueTasks = filteredTasks.filter(
-    (t) => new Date(t.deadline) < new Date() && !t.completed
+    (t) => !t.completed && moment(t.deadline).isBefore(now)
   );
+
   const todayTasks = filteredTasks.filter(
-    (t) => moment(t.deadline).isSame(moment(), "day") && !overdueTasks.includes(t)
+    (t) =>
+      moment(t.deadline).isSame(now, "day") &&
+      !overdueTasks.some((ot) => ot.id === t.id) &&
+      !pastTasks.some((pt) => pt.id === t.id)
   );
+
   const upcomingTasks = filteredTasks.filter(
-    (t) => moment(t.deadline).isAfter(moment(), "day")
+    (t) =>
+      moment(t.deadline).isAfter(now) && !moment(t.deadline).isSame(now, "day")
   );
 
   return (
@@ -237,6 +252,16 @@ const TaskList: React.FC = () => {
       </header>
 
       <div className="flex-1 overflow-y-auto p-6 bg-white">
+        {pastTasks.length > 0 && (
+          <TaskListSection
+            title="Past (7 days)"
+            tasks={pastTasks}
+            onToggleComplete={handleToggleComplete}
+            onTaskClick={handleTaskClick}
+            isCollapsible={true}
+            defaultCollapsed={true}
+          />
+        )}
         {overdueTasks.length > 0 && (
           <TaskListSection
             title="Overdue"
