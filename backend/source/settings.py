@@ -125,16 +125,14 @@ DATABASES = {
 }
 
 if POSTGRES:
-    DATABASES["default"].update(
-        {
-            "ENGINE": "django.db.backends.postgresql",
-            "NAME": DB_DB,
-            "USER": DB_USER,
-            "PASSWORD": DB_PASSWORD,
-            "HOST": DB_HOST,
-            "PORT": DB_PORT,
-        }
-    )
+    DATABASES["default"].update({
+        "ENGINE": "django.db.backends.postgresql",
+        "NAME": DB_DB,
+        "USER": DB_USER,
+        "PASSWORD": DB_PASSWORD,
+        "HOST": DB_HOST,
+        "PORT": DB_PORT,
+    })
 
 # Password validation
 # https://docs.djangoproject.com/en/6.0/ref/settings/#auth-password-validators

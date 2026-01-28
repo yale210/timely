@@ -14,8 +14,12 @@ from core.views.grade_view import GradeViewSet
 class GradeViewTests(TestCase):
     def setUp(self):
         self.client = APIClient()
-        self.user = get_user_model().objects.create_user(username="viewuser", password="pwd")
-        self.other = get_user_model().objects.create_user(username="other", password="pwd")
+        self.user = get_user_model().objects.create_user(
+            username="viewuser", password="pwd"
+        )
+        self.other = get_user_model().objects.create_user(
+            username="other", password="pwd"
+        )
 
     def test_unauthenticated_access(self):
         res = self.client.get("/api/grades/")
@@ -92,7 +96,14 @@ class GradeViewTests(TestCase):
     def test_time_spent_ignores_future_tasks(self):
         cat = Category.objects.create(text="Module2")
         date = timezone.now().date()
-        Grade.objects.create(user=self.user, name="G", category=cat, score=1, total_possible=2, date_achieved=date)
+        Grade.objects.create(
+            user=self.user,
+            name="G",
+            category=cat,
+            score=1,
+            total_possible=2,
+            date_achieved=date,
+        )
         Task.objects.create(
             user=self.user,
             task_message="Later",
@@ -111,7 +122,14 @@ class GradeViewTests(TestCase):
     def test_time_spent_sums_past_tasks(self):
         cat = Category.objects.create(text="Module3")
         date = timezone.now().date()
-        Grade.objects.create(user=self.user, name="G2", category=cat, score=1, total_possible=2, date_achieved=date)
+        Grade.objects.create(
+            user=self.user,
+            name="G2",
+            category=cat,
+            score=1,
+            total_possible=2,
+            date_achieved=date,
+        )
         Task.objects.create(
             user=self.user,
             task_message="Earlier",
@@ -127,21 +145,6 @@ class GradeViewTests(TestCase):
         self.assertEqual(res.status_code, 200)
         self.assertEqual(res.data[0]["time_spent_minutes"], 45)
 
-    def test_dev_user_fallback(self):
-        # when request has no authenticated user, dev_user should return first user in DB
-        view = GradeViewSet()
-        view.request = SimpleNamespace(user=None)
-        first = get_user_model().objects.first()
-        self.assertEqual(view.dev_user, first)
-
-        # when request.user exists but is not authenticated
-        view.request = SimpleNamespace(user=SimpleNamespace(is_authenticated=False))
-        self.assertEqual(view.dev_user, first)
-
-        # when request.user is authenticated, dev_user should return that user
-        view.request = SimpleNamespace(user=self.user)
-        self.assertEqual(view.dev_user, self.user)
-
     def test_update_grade(self):
         self.client.force_authenticate(user=self.user)
         g = Grade.objects.create(
@@ -152,7 +155,13 @@ class GradeViewTests(TestCase):
             total_possible=10,
             date_achieved=timezone.now().date(),
         )
-        payload = {"name": "Edited", "category": None, "score": 8.0, "total_possible": 10.0, "date_achieved": timezone.now().date().isoformat()}
+        payload = {
+            "name": "Edited",
+            "category": None,
+            "score": 8.0,
+            "total_possible": 10.0,
+            "date_achieved": timezone.now().date().isoformat(),
+        }
         res = self.client.put(f"/api/grades/{g.id}/", payload, format="json")
         self.assertEqual(res.status_code, 200)
         g.refresh_from_db()

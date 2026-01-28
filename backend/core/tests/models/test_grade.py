@@ -9,7 +9,9 @@ from core.models import Grade, Category, Task
 
 class GradeModelTests(TestCase):
     def setUp(self):
-        self.user = get_user_model().objects.create_user(username="guser", password="pwd")
+        self.user = get_user_model().objects.create_user(
+            username="guser", password="pwd"
+        )
 
     def test_valid_grade_creation(self):
         cat = Category.objects.create(text="Coursework")

@@ -7,23 +7,56 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('core', '0004_dayofweek_alter_event_date_alter_event_importance_and_more'),
+        ("core", "0004_dayofweek_alter_event_date_alter_event_importance_and_more"),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='Grade',
+            name="Grade",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('name', models.CharField(help_text='Assessment name', max_length=100)),
-                ('score', models.FloatField(validators=[django.core.validators.MinValueValidator(0)])),
-                ('total_possible', models.FloatField(validators=[django.core.validators.MinValueValidator(1)])),
-                ('date_achieved', models.DateField()),
-                ('category', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='grades', to='core.category')),
-                ('user', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='grades', to=settings.AUTH_USER_MODEL)),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("name", models.CharField(help_text="Assessment name", max_length=100)),
+                (
+                    "score",
+                    models.FloatField(
+                        validators=[django.core.validators.MinValueValidator(0)]
+                    ),
+                ),
+                (
+                    "total_possible",
+                    models.FloatField(
+                        validators=[django.core.validators.MinValueValidator(1)]
+                    ),
+                ),
+                ("date_achieved", models.DateField()),
+                (
+                    "category",
+                    models.ForeignKey(
+                        blank=True,
+                        null=True,
+                        on_delete=django.db.models.deletion.SET_NULL,
+                        related_name="grades",
+                        to="core.category",
+                    ),
+                ),
+                (
+                    "user",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="grades",
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
             ],
         ),
     ]

@@ -15,6 +15,15 @@ type Grade = {
   time_spent_minutes: number
 }
 
+type EditInitial = {
+  id?: number
+  name?: string
+  score?: number | ""
+  total?: number | ""
+  date?: string
+  categoryId?: number | null
+} | null
+
 function format_duration(minutes: number): string {
   if (!minutes) return "0m"
   const h = Math.floor(minutes / 60)
@@ -39,7 +48,7 @@ export default function Gradebook() {
   const [grades, setGrades] = useState<Grade[] | null>(null)
   const [loading, setLoading] = useState(true)
   const [modalOpen, setModalOpen] = useState(false)
-  const [editInitial, setEditInitial] = useState<any | null>(null)
+  const [editInitial, setEditInitial] = useState<EditInitial>(null)
   const [selectedCategoryId, setSelectedCategoryId] = useState<number | null>(null)
   const { categories } = useCategories()
 

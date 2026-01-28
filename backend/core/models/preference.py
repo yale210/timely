@@ -36,9 +36,9 @@ class Preference(models.Model):
     def clean(self):
         super().clean()
         if self.sleep_start == self.sleep_end:
-            raise ValidationError(
-                {"sleep_end": "sleep_start must be different to sleep_end"}
-            )
+            raise ValidationError({
+                "sleep_end": "sleep_start must be different to sleep_end"
+            })
 
         # midnight crossing
         start = datetime.combine(datetime.today(), self.sleep_start)
