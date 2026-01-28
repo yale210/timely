@@ -98,25 +98,28 @@ export default function CreateGradeModal({ open, onClose, onCreated }: Props) {
                 ))}
             </select>
           </div>
-          <input
-            type="date"
-            value={date}
-            onChange={(e) => setDate(e.target.value)}
-            className="w-full border p-2 rounded hover:bg-gray-50 transition-colors duration-150 cursor-pointer"
-            required
-          />
+          <div>
+            <input
+              id="grade-date-input"
+              type="date"
+              value={date}
+              onChange={(e) => setDate(e.target.value)}
+              className="w-full border p-2 rounded"
+              required
+            />
+          </div>
           {error && <div className="text-red-600">{error}</div>}
           <div className="flex justify-end gap-2">
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 bg-gray-100 hover:bg-gray-200 transition-colors duration-150 rounded"
+              className="px-4 py-2 bg-gray-100 hover:bg-gray-200 active:bg-gray-300 active:scale-95 transition transform duration-150 rounded cursor-pointer"
             >
               Cancel
             </button>
             <button
               type="submit"
-              className="bg-indigo-600 hover:bg-indigo-700 active:scale-95 transition transform duration-150 text-white px-4 py-2 rounded"
+              className="bg-indigo-600 hover:bg-indigo-700 active:scale-95 transition transform duration-150 text-white px-4 py-2 rounded cursor-pointer"
             >
               Create
             </button>

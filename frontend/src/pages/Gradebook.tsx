@@ -79,7 +79,7 @@ export default function Gradebook() {
         <div className="flex gap-2">
           <button
             onClick={() => setModalOpen(true)}
-            className="rounded bg-indigo-600 hover:bg-indigo-700 transition-colors duration-150 px-4 py-2 text-white"
+            className="rounded bg-indigo-600 hover:bg-indigo-700 active:scale-95 transition transform duration-150 px-4 py-2 text-white cursor-pointer"
           >
             Add grade
           </button>
