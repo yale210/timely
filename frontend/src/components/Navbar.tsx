@@ -4,9 +4,10 @@ import { Bars3Icon, XMarkIcon } from '@heroicons/react/24/outline'
 import { Link } from "react-router-dom"
 
 const navigation = [
-  { name: 'Home', href: '/' },
-  { name: 'Login', href: '/login' },
-  { name: 'Signup', href: '/signup' },
+    { name: 'Home', href: '/' },
+    { name: 'Gradebook', href: '/gradebook' },
+    { name: 'Login', href: '/login' },
+    { name: 'Signup', href: '/signup' },
 ]
 
 export default function Navbar() {
