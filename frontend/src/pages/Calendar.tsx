@@ -8,8 +8,11 @@ import * as taskService from "../services/taskService";
 import { type Task, type Category, type TaskSubmission } from "../types";
 
 const localizer = momentLocalizer(moment);
-
-const CalendarPage: React.FC = () => {
+/**
+ * A functional component that renders a calendar view of tasks.
+ * @returns The rendered calendar page component.
+ */
+const CalendarPage = () => {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -96,7 +99,6 @@ const CalendarPage: React.FC = () => {
     end: new Date(task.deadline),
     allDay: moment(task.deadline).diff(moment(task.start_time), "hours") >= 24,
   }));
-
   return (
     <AppLayout>
       <div className="flex h-full flex-col overflow-hidden bg-white text-black">
