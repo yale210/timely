@@ -59,7 +59,7 @@ const TaskSidebar: React.FC<TaskSidebarProps> = ({
                           <DialogTitle className="text-lg font-bold text-black">
                             {initialData && initialData.id ? "Edit Task" : "Add New Task"}
                           </DialogTitle>
-                          {initialData && initialData.id && onDelete && (
+                          {initialData && !!initialData.id && onDelete && (
                             <button
                               onClick={() => setIsDeleteModalOpen(true)}
                               className="text-red-500 hover:text-red-700 transition-colors p-1 rounded-md hover:bg-red-50"

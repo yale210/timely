@@ -197,7 +197,7 @@ const CalendarPage: React.FC = () => {
           categories={categories}
           onSubmit={handleSubmitTask}
           onDelete={handleDeleteTask}
-          initialData={selectedTask && selectedTask.id !== 0 ? selectedTask : selectedTask}
+          initialData={selectedTask}
         />
       </div>
     </AppLayout>

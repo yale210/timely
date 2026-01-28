@@ -28,4 +28,32 @@ describe('TaskSidebar', () => {
         )
         expect(screen.getByText(/Add New Task/i)).toBeDefined()
     })
+
+    it('should not render delete button when id is 0 (new task)', () => {
+        const initialData = {
+            id: 0,
+            title: "",
+            description: "",
+            start_time: new Date().toISOString(),
+            deadline: new Date().toISOString(),
+            importance: 5,
+            completed: false,
+            categories: [],
+            estimated_minutes: 30,
+        }
+        render(
+            <TaskSidebar 
+                isOpen={true} 
+                onClose={vi.fn()} 
+                categories={[]} 
+                onSubmit={vi.fn()} 
+                onDelete={vi.fn()}
+                initialData={initialData}
+            />
+        )
+        // Check that 'delete' material icon is NOT present
+        expect(screen.queryByText('delete')).toBeNull()
+        // Specifically check that "0" is not rendered (the bug reported)
+        expect(screen.queryByText('0')).toBeNull()
+    })
 })
