@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from "react";
 import moment from "moment";
 import { Menu, MenuButton, MenuItems, MenuItem } from "@headlessui/react";
 import AppLayout from "../layouts/AppLayout";
-import { TaskListSection, TaskSidebar } from "../components";
+import { TaskListSection, TaskSidebar, TaskCard } from "../components";
 import * as taskService from "../services/taskService";
 import { type Task, type Category, type TaskSubmission } from "../types";
 
@@ -132,6 +132,26 @@ const TaskList: React.FC = () => {
     (t) =>
       moment(t.deadline).isAfter(now) && !moment(t.deadline).isSame(now, "day")
   );
+
+  const groupedUpcomingTasks = upcomingTasks.reduce((groups, task) => {
+    const date = moment(task.deadline).startOf("day").format("YYYY-MM-DD");
+    if (!groups[date]) {
+      groups[date] = [];
+    }
+    groups[date].push(task);
+    return groups;
+  }, {} as Record<string, Task[]>);
+
+  const sortedUpcomingDates = Object.keys(groupedUpcomingTasks).sort();
+
+  const formatDayLabel = (dateStr: string) => {
+    const d = moment(dateStr);
+    const tomorrow = moment().add(1, "day").startOf("day");
+    if (d.isSame(tomorrow, "day")) {
+      return "Tomorrow";
+    }
+    return d.format("ddd D MMM");
+  };
 
   return (
     <AppLayout>
@@ -314,12 +334,43 @@ const TaskList: React.FC = () => {
           onToggleComplete={handleToggleComplete}
           onTaskClick={handleTaskClick}
         />
-        <TaskListSection
-          title="Upcoming"
-          tasks={upcomingTasks}
-          onToggleComplete={handleToggleComplete}
-          onTaskClick={handleTaskClick}
-        />
+        
+        {upcomingTasks.length > 0 && (
+          <div className="mb-8">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold text-black flex items-center">
+                Upcoming
+                <span className="ml-2 px-2 py-0.5 rounded-full bg-gray-100 text-xs text-gray-500 font-bold">
+                  {upcomingTasks.length}
+                </span>
+              </h3>
+            </div>
+            <div className="space-y-6">
+              {sortedUpcomingDates.map((date) => (
+                <div key={date} className="relative">
+                  <div className="flex items-center justify-between mb-2 border-b border-gray-100 pb-1">
+                    <h4 className="text-xs font-semibold text-gray-400 uppercase tracking-wider">
+                      {formatDayLabel(date)}
+                    </h4>
+                    <span className="text-[10px] text-gray-400 font-bold">
+                      {groupedUpcomingTasks[date].length} {groupedUpcomingTasks[date].length === 1 ? 'task' : 'tasks'}
+                    </span>
+                  </div>
+                  <div className="space-y-3">
+                    {groupedUpcomingTasks[date].map((task) => (
+                      <TaskCard
+                        key={task.id}
+                        task={task}
+                        onToggleComplete={handleToggleComplete}
+                        onClick={handleTaskClick}
+                      />
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
         <button
           onClick={handleNewTask}

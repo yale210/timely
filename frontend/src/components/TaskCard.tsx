@@ -9,6 +9,7 @@ interface TaskCardProps {
 
 const TaskCard: React.FC<TaskCardProps> = ({ task, onToggleComplete, onClick }) => {
   const [isHovered, setIsHovered] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(false);
   const isOverdue = new Date(task.deadline) < new Date() && !task.completed;
 
   // Map importance to priority color and label
@@ -104,6 +105,39 @@ const TaskCard: React.FC<TaskCardProps> = ({ task, onToggleComplete, onClick }) 
           </button>
         </div>
       </div>
+
+      {/* Task Description - Shown on hover/focus or when expanded */}
+      {(isHovered || isExpanded) && task.description && (
+        <div 
+          className="mt-3 pt-3 border-t border-gray-100 animate-in fade-in slide-in-from-top-2 duration-200 w-full overflow-hidden"
+          aria-expanded={isExpanded}
+        >
+          <p className={`text-xs text-gray-600 leading-relaxed whitespace-pre-wrap break-words ${isExpanded ? "" : "line-clamp-2"}`}>
+            {task.description}
+          </p>
+          {task.description.length > 60 && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                setIsExpanded(!isExpanded);
+              }}
+              className="mt-2 text-[10px] font-bold text-primary hover:text-blue-400 uppercase tracking-wider flex items-center transition-colors"
+            >
+              {isExpanded ? (
+                <>
+                  <span className="material-icons text-[12px] mr-1">expand_less</span>
+                  Show Less
+                </>
+              ) : (
+                <>
+                  <span className="material-icons text-[12px] mr-1">expand_more</span>
+                  Show More
+                </>
+              )}
+            </button>
+          )}
+        </div>
+      )}
     </div>
   );
 };
