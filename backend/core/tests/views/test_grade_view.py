@@ -8,7 +8,6 @@ from rest_framework.test import APIClient
 
 from core.models import Grade, Category, Task
 from types import SimpleNamespace
-from core.views.grade_view import GradeViewSet
 
 
 class GradeViewTests(TestCase):
