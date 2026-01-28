@@ -2,8 +2,9 @@ from django.test import TestCase
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
 from django.utils import timezone
+import datetime
 
-from core.models import Grade, Category
+from core.models import Grade, Category, Task
 
 
 class GradeModelTests(TestCase):
@@ -44,3 +45,61 @@ class GradeModelTests(TestCase):
         )
         with self.assertRaises(ValidationError):
             g.full_clean()
+
+    def test_percentage_when_total_zero_and_str(self):
+        date = timezone.now().date()
+        g = Grade(
+            user=self.user,
+            name="NoTotal",
+            category=None,
+            score=5.0,
+            total_possible=0.0,
+            date_achieved=date,
+        )
+        self.assertEqual(g.percentage, 0.0)
+        self.assertIn("NoTotal", str(g))
+
+    def test_get_time_spent_multiple_tasks(self):
+        cat = Category.objects.create(text="Multi")
+        date = timezone.now().date()
+        g = Grade.objects.create(
+            user=self.user,
+            name="Gmulti",
+            category=cat,
+            score=1,
+            total_possible=2,
+            date_achieved=date,
+        )
+        Task.objects.create(
+            user=self.user,
+            task_message="T1",
+            task_category=cat,
+            estimated_minutes=10,
+            start_time=date - datetime.timedelta(days=3),
+            deadline=date,
+            completed=True,
+            importance=1,
+        )
+        Task.objects.create(
+            user=self.user,
+            task_message="T2",
+            task_category=cat,
+            estimated_minutes=20,
+            start_time=date - datetime.timedelta(days=2),
+            deadline=date - datetime.timedelta(days=1),
+            completed=True,
+            importance=2,
+        )
+        self.assertEqual(g.get_time_spent_minutes(), 30)
+
+    def test_get_time_spent_no_category_model(self):
+        date = timezone.now().date()
+        g = Grade.objects.create(
+            user=self.user,
+            name="NoCatModel",
+            category=None,
+            score=2,
+            total_possible=4,
+            date_achieved=date,
+        )
+        self.assertEqual(g.get_time_spent_minutes(), 0)

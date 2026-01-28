@@ -7,6 +7,8 @@ from django.utils import timezone
 from rest_framework.test import APIClient
 
 from core.models import Grade, Category, Task
+from types import SimpleNamespace
+from core.views.grade_view import GradeViewSet
 
 
 class GradeViewTests(TestCase):
@@ -124,3 +126,64 @@ class GradeViewTests(TestCase):
         res = self.client.get("/api/grades/")
         self.assertEqual(res.status_code, 200)
         self.assertEqual(res.data[0]["time_spent_minutes"], 45)
+
+    def test_dev_user_fallback(self):
+        # when request has no authenticated user, dev_user should return first user in DB
+        view = GradeViewSet()
+        view.request = SimpleNamespace(user=None)
+        first = get_user_model().objects.first()
+        self.assertEqual(view.dev_user, first)
+
+        # when request.user exists but is not authenticated
+        view.request = SimpleNamespace(user=SimpleNamespace(is_authenticated=False))
+        self.assertEqual(view.dev_user, first)
+
+        # when request.user is authenticated, dev_user should return that user
+        view.request = SimpleNamespace(user=self.user)
+        self.assertEqual(view.dev_user, self.user)
+
+    def test_update_grade(self):
+        self.client.force_authenticate(user=self.user)
+        g = Grade.objects.create(
+            user=self.user,
+            name="ToEdit",
+            category=None,
+            score=5,
+            total_possible=10,
+            date_achieved=timezone.now().date(),
+        )
+        payload = {"name": "Edited", "category": None, "score": 8.0, "total_possible": 10.0, "date_achieved": timezone.now().date().isoformat()}
+        res = self.client.put(f"/api/grades/{g.id}/", payload, format="json")
+        self.assertEqual(res.status_code, 200)
+        g.refresh_from_db()
+        self.assertEqual(g.name, "Edited")
+        self.assertEqual(g.score, 8.0)
+
+    def test_delete_grade(self):
+        self.client.force_authenticate(user=self.user)
+        g = Grade.objects.create(
+            user=self.user,
+            name="ToDelete",
+            category=None,
+            score=3,
+            total_possible=5,
+            date_achieved=timezone.now().date(),
+        )
+        res = self.client.delete(f"/api/grades/{g.id}/")
+        self.assertIn(res.status_code, (204, 202, 200))
+        self.assertFalse(Grade.objects.filter(id=g.id).exists())
+
+    def test_category_name_in_serializer(self):
+        cat = Category.objects.create(text="SerializerCat")
+        Grade.objects.create(
+            user=self.user,
+            name="WithCat",
+            category=cat,
+            score=9,
+            total_possible=10,
+            date_achieved=timezone.now().date(),
+        )
+        self.client.force_authenticate(user=self.user)
+        res = self.client.get("/api/grades/")
+        self.assertEqual(res.status_code, 200)
+        self.assertEqual(res.data[0]["category_name"], "SerializerCat")
