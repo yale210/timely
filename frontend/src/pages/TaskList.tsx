@@ -17,6 +17,8 @@ const TaskList: React.FC = () => {
   const [sortBy, setSortBy] = useState<string>("deadline");
   const [filterCategory, setFilterCategory] = useState<number | null>(null);
   const [filterCompleted, setFilterCompleted] = useState<string>("all");
+  const [filterHighImportance, setFilterHighImportance] = useState(false);
+  const [filterQuickWins, setFilterQuickWins] = useState(false);
 
   const fetchTasks = useCallback(async () => {
     try {
@@ -99,9 +101,12 @@ const TaskList: React.FC = () => {
     }
   };
 
-  const filteredTasks = tasks.filter((t) =>
-    t.title.toLowerCase().includes(search.toLowerCase())
-  );
+  const filteredTasks = tasks.filter((t) => {
+    const matchesSearch = t.title.toLowerCase().includes(search.toLowerCase());
+    const matchesHighImportance = !filterHighImportance || t.importance >= 8;
+    const matchesQuickWins = !filterQuickWins || (t.estimated_minutes > 0 && t.estimated_minutes <= 30);
+    return matchesSearch && matchesHighImportance && matchesQuickWins;
+  });
 
   const now = moment();
   const sevenDaysAgo = moment().subtract(7, "days").startOf("day");
@@ -187,6 +192,38 @@ const TaskList: React.FC = () => {
                       )}
                     </MenuItem>
                   ))}
+                  <div className="border-t border-gray-100 my-1"></div>
+                  <div className="px-3 py-2 text-xs font-semibold text-gray-500 uppercase">Attributes</div>
+                  <MenuItem>
+                    {({ focus }) => (
+                      <button
+                        onClick={() => setFilterHighImportance(!filterHighImportance)}
+                        className={`${
+                          focus ? "bg-blue-50 text-primary" : "text-gray-700"
+                        } ${filterHighImportance ? "bg-blue-50 text-primary font-bold" : ""} group flex w-full items-center rounded-md px-3 py-2 text-sm`}
+                      >
+                        <span className={`material-icons text-sm mr-2 ${filterHighImportance ? "text-primary" : "text-gray-400"}`}>
+                          {filterHighImportance ? "check_box" : "check_box_outline_blank"}
+                        </span>
+                        High Importance Only
+                      </button>
+                    )}
+                  </MenuItem>
+                  <MenuItem>
+                    {({ focus }) => (
+                      <button
+                        onClick={() => setFilterQuickWins(!filterQuickWins)}
+                        className={`${
+                          focus ? "bg-blue-50 text-primary" : "text-gray-700"
+                        } ${filterQuickWins ? "bg-blue-50 text-primary font-bold" : ""} group flex w-full items-center rounded-md px-3 py-2 text-sm`}
+                      >
+                        <span className={`material-icons text-sm mr-2 ${filterQuickWins ? "text-primary" : "text-gray-400"}`}>
+                          {filterQuickWins ? "check_box" : "check_box_outline_blank"}
+                        </span>
+                        ≤ 30 mins (Quick wins)
+                      </button>
+                    )}
+                  </MenuItem>
                   <div className="border-t border-gray-100 my-1"></div>
                   <div className="px-3 py-2 text-xs font-semibold text-gray-500 uppercase">Category</div>
                   <MenuItem>

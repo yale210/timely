@@ -41,4 +41,38 @@ describe('TaskCard', () => {
         fireEvent.click(checkbox)
         expect(onToggleComplete).toHaveBeenCalledWith(1)
     })
+
+    it('should render importance pill and estimated time', () => {
+        render(
+            <TaskCard 
+                task={mockTask} 
+                onToggleComplete={vi.fn()} 
+                onClick={vi.fn()} 
+            />
+        )
+        expect(screen.getByText(/High/i)).toBeDefined()
+        expect(screen.getByText(/30m/i)).toBeDefined()
+    })
+
+    it('should show numeric importance on hover', () => {
+        render(
+            <TaskCard 
+                task={mockTask} 
+                onToggleComplete={vi.fn()} 
+                onClick={vi.fn()} 
+            />
+        )
+        const card = screen.getByText(/Test Task/i).closest('div.group')
+        if (!card) throw new Error('Card not found')
+        
+        expect(screen.queryByText('8')).toBeNull()
+        
+        fireEvent.mouseEnter(card)
+        expect(screen.getByText('8')).toBeDefined()
+        expect(screen.queryByText(/High/i)).toBeNull()
+        
+        fireEvent.mouseLeave(card)
+        expect(screen.getByText(/High/i)).toBeDefined()
+        expect(screen.queryByText('8')).toBeNull()
+    })
 })

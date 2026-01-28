@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { type Task } from "../types";
 
 interface TaskCardProps {
@@ -8,14 +8,17 @@ interface TaskCardProps {
 }
 
 const TaskCard: React.FC<TaskCardProps> = ({ task, onToggleComplete, onClick }) => {
+  const [isHovered, setIsHovered] = useState(false);
   const isOverdue = new Date(task.deadline) < new Date() && !task.completed;
 
-  // Map importance to priority color
-  const getPriorityColor = (importance: number) => {
-    if (importance >= 8) return "bg-red-500";
-    if (importance >= 5) return "bg-yellow-500";
-    return "bg-green-500";
+  // Map importance to priority color and label
+  const getImportanceInfo = (importance: number) => {
+    if (importance >= 8) return { label: "High", color: "bg-red-50 text-red-600 border-red-100" };
+    if (importance >= 4) return { label: "Medium", color: "bg-amber-50 text-amber-600 border-amber-100" };
+    return { label: "Low", color: "bg-green-50 text-green-600 border-green-100" };
   };
+
+  const importanceInfo = getImportanceInfo(task.importance);
 
   const formatTime = (isoString: string) => {
     return new Date(isoString).toLocaleTimeString([], {
@@ -27,7 +30,12 @@ const TaskCard: React.FC<TaskCardProps> = ({ task, onToggleComplete, onClick }) 
   return (
     <div
       onClick={() => onClick(task)}
-      className={`bg-white rounded-xl border border-gray-200 p-4 hover:shadow-md transition-shadow cursor-pointer group ${
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+      onFocus={() => setIsHovered(true)}
+      onBlur={() => setIsHovered(false)}
+      tabIndex={0}
+      className={`bg-white rounded-xl border border-gray-200 p-4 hover:shadow-md transition-shadow cursor-pointer group outline-none focus:ring-2 focus:ring-primary/20 ${
         task.completed ? "opacity-75" : ""
       }`}
     >
@@ -42,8 +50,8 @@ const TaskCard: React.FC<TaskCardProps> = ({ task, onToggleComplete, onClick }) 
             }}
             className="h-5 w-5 text-primary border-gray-300 rounded focus:ring-primary"
           />
-          <div className="ml-4 flex flex-col">
-            <div className="flex items-center">
+          <div className="ml-4 flex flex-col flex-1 min-w-0">
+            <div className="flex items-center justify-between">
               <span
                 className={`text-sm font-medium truncate ${
                   task.completed
@@ -53,12 +61,20 @@ const TaskCard: React.FC<TaskCardProps> = ({ task, onToggleComplete, onClick }) 
               >
                 {task.title}
               </span>
-              <span
-                className={`ml-3 inline-block h-2 w-2 rounded-full ${getPriorityColor(
-                  task.importance
-                )}`}
-                title={`Importance: ${task.importance}`}
-              ></span>
+              
+              <div className="flex items-center space-x-2 ml-2">
+                {task.estimated_minutes > 0 && (
+                  <span className="flex items-center px-2 py-0.5 rounded-full bg-gray-50 text-gray-600 text-[10px] font-semibold border border-gray-100">
+                    <span className="material-icons text-[12px] mr-1">schedule</span>
+                    {task.estimated_minutes}m
+                  </span>
+                )}
+                <span 
+                  className={`px-2 py-0.5 rounded-full text-[10px] font-semibold border transition-all duration-200 ${importanceInfo.color}`}
+                >
+                  {isHovered ? task.importance : importanceInfo.label}
+                </span>
+              </div>
             </div>
             <div className="flex items-center mt-1 space-x-3 text-xs text-gray-500">
               <span
@@ -66,14 +82,14 @@ const TaskCard: React.FC<TaskCardProps> = ({ task, onToggleComplete, onClick }) 
                   isOverdue ? "text-red-500" : ""
                 }`}
               >
-                <span className="material-icons text-sm mr-1">schedule</span>
+                <span className="material-icons text-sm mr-1">event</span>
                 {isOverdue ? "Overdue" : formatTime(task.deadline)}
               </span>
-              <div className="flex gap-1">
+              <div className="flex gap-1 overflow-hidden">
                 {task.categories.map((cat) => (
                   <span
                     key={cat.id}
-                    className="px-2 py-0.5 rounded bg-blue-50 text-blue-600 font-medium border border-blue-100"
+                    className="px-2 py-0.5 rounded bg-blue-50 text-blue-600 font-medium border border-blue-100 whitespace-nowrap"
                   >
                     {cat.text}
                   </span>
