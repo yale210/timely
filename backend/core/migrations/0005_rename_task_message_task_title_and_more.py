@@ -4,39 +4,40 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('core', '0004_dayofweek_alter_event_date_alter_event_importance_and_more'),
+        ("core", "0004_dayofweek_alter_event_date_alter_event_importance_and_more"),
     ]
 
     operations = [
         migrations.RenameField(
-            model_name='task',
-            old_name='task_message',
-            new_name='title',
+            model_name="task",
+            old_name="task_message",
+            new_name="title",
         ),
         migrations.RemoveField(
-            model_name='task',
-            name='task_category',
+            model_name="task",
+            name="task_category",
         ),
         migrations.AddField(
-            model_name='task',
-            name='categories',
-            field=models.ManyToManyField(blank=True, related_name='tasks', to='core.category'),
+            model_name="task",
+            name="categories",
+            field=models.ManyToManyField(
+                blank=True, related_name="tasks", to="core.category"
+            ),
         ),
         migrations.AddField(
-            model_name='task',
-            name='description',
+            model_name="task",
+            name="description",
             field=models.TextField(blank=True),
         ),
         migrations.AlterField(
-            model_name='task',
-            name='deadline',
+            model_name="task",
+            name="deadline",
             field=models.DateTimeField(),
         ),
         migrations.AlterField(
-            model_name='task',
-            name='start_time',
+            model_name="task",
+            name="start_time",
             field=models.DateTimeField(),
         ),
     ]

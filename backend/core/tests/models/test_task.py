@@ -112,7 +112,7 @@ class TaskTests(TestCase):
             importance=5,
         )
         task.categories.add(self.category1, self.category2)
-        
+
         self.assertEqual(task.categories.count(), 2)
         self.assertIn(self.category1, task.categories.all())
         self.assertIn(self.category2, task.categories.all())

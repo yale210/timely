@@ -21,9 +21,9 @@ class TaskViewSetTests(TestCase):
         )
         self.category1 = Category.objects.create(text="Work")
         self.category2 = Category.objects.create(text="Home")
-        
+
         self.now = timezone.now()
-        
+
         # Create some tasks
         self.task1 = Task.objects.create(
             user=self.user,
@@ -35,7 +35,7 @@ class TaskViewSetTests(TestCase):
             importance=2,
         )
         self.task1.categories.add(self.category1)
-        
+
         self.task2 = Task.objects.create(
             user=self.user,
             title="Task 2",
@@ -66,12 +66,12 @@ class TaskViewSetTests(TestCase):
 
     def test_filter_by_completed(self):
         self.client.force_authenticate(user=self.user)
-        
+
         # Filter completed
         response = self.client.get("/api/tasks/?completed=true")
         self.assertEqual(len(response.data), 1)
         self.assertEqual(response.data[0]["id"], self.task2.id)
-        
+
         # Filter incomplete
         response = self.client.get("/api/tasks/?completed=false")
         self.assertEqual(len(response.data), 1)
@@ -79,28 +79,29 @@ class TaskViewSetTests(TestCase):
 
     def test_filter_by_category(self):
         self.client.force_authenticate(user=self.user)
-        
+
         response = self.client.get(f"/api/tasks/?categories={self.category1.id}")
         self.assertEqual(len(response.data), 1)
         self.assertEqual(response.data[0]["id"], self.task1.id)
 
     def test_ordering(self):
         self.client.force_authenticate(user=self.user)
-        
+
         # Order by importance descending
         response = self.client.get("/api/tasks/?ordering=-importance")
-        self.assertEqual(response.data[0]["id"], self.task2.id) # 8 > 2
-        
+        self.assertEqual(response.data[0]["id"], self.task2.id)  # 8 > 2
+
         # Order by importance ascending
         response = self.client.get("/api/tasks/?ordering=importance")
-        self.assertEqual(response.data[0]["id"], self.task1.id) # 2 < 8
+        self.assertEqual(response.data[0]["id"], self.task1.id)  # 2 < 8
 
     def test_filter_by_date_range(self):
         self.client.force_authenticate(user=self.user)
-        
+
         # Filter by start_time__gte
         start_date = (self.now + datetime.timedelta(hours=12)).isoformat()
         import urllib.parse
+
         encoded_date = urllib.parse.quote(start_date)
         response = self.client.get(f"/api/tasks/?start_time__gte={encoded_date}")
         self.assertEqual(len(response.data), 1)

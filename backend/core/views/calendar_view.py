@@ -6,9 +6,15 @@ from core.serializers.category_serializer import CategorySerializer
 
 
 class TaskFilter(django_filters.FilterSet):
-    categories = django_filters.BaseInFilter(field_name="categories__id", lookup_expr="in")
-    start_time__gte = django_filters.IsoDateTimeFilter(field_name="start_time", lookup_expr="gte")
-    deadline__lte = django_filters.IsoDateTimeFilter(field_name="deadline", lookup_expr="lte")
+    categories = django_filters.BaseInFilter(
+        field_name="categories__id", lookup_expr="in"
+    )
+    start_time__gte = django_filters.IsoDateTimeFilter(
+        field_name="start_time", lookup_expr="gte"
+    )
+    deadline__lte = django_filters.IsoDateTimeFilter(
+        field_name="deadline", lookup_expr="lte"
+    )
 
     class Meta:
         model = Task

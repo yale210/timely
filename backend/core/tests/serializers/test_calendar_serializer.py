@@ -35,7 +35,7 @@ class CalendarSerializerTests(TestCase):
 
         self.assertEqual(data["title"], "Read notes")
         self.assertEqual(data["description"], "Reading some notes for exam")
-        
+
         # Check categories nested representation
         self.assertEqual(len(data["categories"]), 2)
         cat_texts = [cat["text"] for cat in data["categories"]]
@@ -53,7 +53,7 @@ class CalendarSerializerTests(TestCase):
                 "deadline",
                 "importance",
                 "completed",
-                "estimated_minutes", # I should check if this was in fields before, it wasn't but model has it.
+                "estimated_minutes",  # I should check if this was in fields before, it wasn't but model has it.
                 "parent_task",
             },
         )
@@ -68,14 +68,14 @@ class CalendarSerializerTests(TestCase):
             "deadline": (now + datetime.timedelta(hours=1)).isoformat(),
             "importance": 5,
             "completed": False,
-            "categories": [self.category1.id, self.category2.id]
+            "categories": [self.category1.id, self.category2.id],
         }
-        
+
         # To test creation, we usually use the serializer's save method
         # but we need a request context usually for user, or pass it explicitly
         serializer = CalendarSerializer(data=data)
         self.assertTrue(serializer.is_valid(), serializer.errors)
         task = serializer.save(user=self.user)
-        
+
         self.assertEqual(task.categories.count(), 2)
         self.assertIn(self.category1, task.categories.all())
