@@ -87,7 +87,7 @@ export default function CreateGradeModal({ open, onClose, onCreated }: Props) {
             <select
               value={categoryId ?? ""}
               onChange={(e) => setCategoryId(e.target.value === "" ? null : Number(e.target.value))}
-              className="w-full border p-2 rounded mb-2"
+              className="w-full border p-2 rounded mb-2 cursor-pointer"
             >
               <option value="">None</option>
               {categories &&
@@ -102,13 +102,24 @@ export default function CreateGradeModal({ open, onClose, onCreated }: Props) {
             type="date"
             value={date}
             onChange={(e) => setDate(e.target.value)}
-            className="w-full border p-2 rounded"
+            className="w-full border p-2 rounded hover:bg-gray-50 transition-colors duration-150 cursor-pointer"
             required
           />
           {error && <div className="text-red-600">{error}</div>}
           <div className="flex justify-end gap-2">
-            <button type="button" onClick={onClose} className="px-4 py-2">Cancel</button>
-            <button type="submit" className="bg-indigo-600 text-white px-4 py-2 rounded">Create</button>
+            <button
+              type="button"
+              onClick={onClose}
+              className="px-4 py-2 bg-gray-100 hover:bg-gray-200 transition-colors duration-150 rounded"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              className="bg-indigo-600 hover:bg-indigo-700 active:scale-95 transition transform duration-150 text-white px-4 py-2 rounded"
+            >
+              Create
+            </button>
           </div>
         </form>
       </div>
