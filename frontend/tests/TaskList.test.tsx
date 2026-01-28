@@ -18,6 +18,7 @@ const mockTasks = [
     {
         id: 1,
         title: 'High Importance Task',
+        start_time: new Date().toISOString(),
         deadline: new Date().toISOString(),
         importance: 9,
         estimated_minutes: 60,
@@ -27,6 +28,7 @@ const mockTasks = [
     {
         id: 2,
         title: 'Quick Win Task',
+        start_time: new Date().toISOString(),
         deadline: new Date().toISOString(),
         importance: 3,
         estimated_minutes: 20,
@@ -36,6 +38,7 @@ const mockTasks = [
     {
         id: 3,
         title: 'Normal Task',
+        start_time: new Date().toISOString(),
         deadline: new Date().toISOString(),
         importance: 5,
         estimated_minutes: 45,

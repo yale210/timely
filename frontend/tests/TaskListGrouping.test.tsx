@@ -22,6 +22,7 @@ const mockTasks = [
     {
         id: 1,
         title: 'Task Tomorrow',
+        start_time: moment().toISOString(),
         deadline: tomorrow,
         importance: 5,
         estimated_minutes: 30,
@@ -32,6 +33,7 @@ const mockTasks = [
     {
         id: 2,
         title: 'Task in Two Days',
+        start_time: moment().toISOString(),
         deadline: inTwoDays,
         importance: 5,
         estimated_minutes: 30,

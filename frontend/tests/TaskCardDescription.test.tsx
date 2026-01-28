@@ -5,6 +5,7 @@ import TaskCard from "../src/components/TaskCard"
 const mockTask = {
     id: 1,
     title: 'Test Task',
+    start_time: new Date().toISOString(),
     deadline: new Date().toISOString(),
     importance: 5,
     estimated_minutes: 30,

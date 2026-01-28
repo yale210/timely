@@ -18,7 +18,17 @@ describe('taskService', () => {
 
     it('createTask should call axios.post', async () => {
         const data: TaskSubmission = { title: 'New Task' };
-        const spy = vi.spyOn(axios, 'post').mockResolvedValue({ data } as { data: Task })
+        const mockResponse: Task = {
+            id: 1,
+            title: 'New Task',
+            start_time: new Date().toISOString(),
+            deadline: new Date().toISOString(),
+            importance: 5,
+            estimated_minutes: 30,
+            completed: false,
+            categories: []
+        };
+        const spy = vi.spyOn(axios, 'post').mockResolvedValue({ data: mockResponse } as unknown as { data: Task })
         await taskService.createTask(data)
         expect(spy).toHaveBeenCalledWith('/api/tasks/', data)
     })
