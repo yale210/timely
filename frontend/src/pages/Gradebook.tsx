@@ -1,9 +1,12 @@
 import { useEffect, useState } from "react"
 import CreateGradeModal from "../components/CreateGradeModal.tsx"
+import useCategories from "../hooks/useCategories"
 
 type Grade = {
   id: number
   name: string
+  category?: number | null
+  category_name?: string | null
   score: number
   total_possible: number
   percentage: number
@@ -35,6 +38,8 @@ export default function Gradebook() {
   const [grades, setGrades] = useState<Grade[] | null>(null)
   const [loading, setLoading] = useState(true)
   const [modalOpen, setModalOpen] = useState(false)
+  const [selectedCategoryId, setSelectedCategoryId] = useState<number | null>(null)
+  const { categories } = useCategories()
 
   useEffect(() => {
     fetchGrades()
@@ -53,10 +58,16 @@ export default function Gradebook() {
     setLoading(false)
   }
 
+  const filteredGrades = grades
+    ? selectedCategoryId == null
+      ? grades
+      : grades.filter((g) => g.category === selectedCategoryId)
+    : []
+
   const average = () => {
-    if (!grades || grades.length === 0) return 0
-    const s = grades.reduce((acc, g) => acc + (g.percentage || 0), 0)
-    return Math.round((s / grades.length) * 10) / 10
+    if (!filteredGrades || filteredGrades.length === 0) return 0
+    const s = filteredGrades.reduce((acc, g) => acc + (g.percentage || 0), 0)
+    return Math.round((s / filteredGrades.length) * 10) / 10
   }
 
   const avgValue = average()
@@ -86,7 +97,7 @@ export default function Gradebook() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6 items-center">
         <div className="col-span-1 p-4 shadow rounded">
           <div className="text-sm text-gray-500">Average Percentage</div>
           <div className="text-xl font-semibold">
@@ -96,20 +107,38 @@ export default function Gradebook() {
             </span>
           </div>
         </div>
+        <div className="col-span-1 md:col-span-2 p-4">
+          <label className="block text-sm text-gray-600 mb-1">Filter by Category</label>
+          <select
+            value={selectedCategoryId ?? ""}
+            onChange={(e) => setSelectedCategoryId(e.target.value === "" ? null : Number(e.target.value))}
+            className="w-full max-w-xs border p-2 rounded cursor-pointer"
+          >
+            <option value="">All Categories</option>
+            {categories && categories.map((c) => (
+              <option key={c.id} value={c.id}>{c.text}</option>
+            ))}
+          </select>
+        </div>
       </div>
 
       {loading && <div>Loading...</div>}
 
-      {!loading && grades && grades.length === 0 && (
+      {!loading && (!grades || grades.length === 0) && (
         <div className="text-center text-gray-600">No grades yet. Add one above.</div>
       )}
 
-      {!loading && grades && grades.length > 0 && (
+      {!loading && grades && filteredGrades.length === 0 && grades.length > 0 && (
+        <div className="text-center text-gray-600">No grades found for this category.</div>
+      )}
+
+      {!loading && grades && filteredGrades.length > 0 && (
         <div className="overflow-x-auto shadow rounded">
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-50">
               <tr>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500">Name</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500">Category</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500">Date</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500">Score</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500">Percentage</th>
@@ -117,9 +146,10 @@ export default function Gradebook() {
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-              {grades.map((g) => (
+              {filteredGrades.map((g) => (
                 <tr key={g.id}>
                   <td className="px-6 py-4 whitespace-nowrap">{g.name}</td>
+                  <td className="px-6 py-4 whitespace-nowrap">{g.category_name ?? "—"}</td>
                   <td className="px-6 py-4 whitespace-nowrap">{g.date_achieved}</td>
                   <td className="px-6 py-4 whitespace-nowrap">{g.score}/{g.total_possible}</td>
                   <td className="px-6 py-4 whitespace-nowrap">
