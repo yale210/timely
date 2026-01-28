@@ -8,6 +8,7 @@ from rest_framework.test import APIClient
 
 from core.models import Grade, Category, Task
 
+
 class GradeViewTests(TestCase):
     def setUp(self):
         self.client = APIClient()
