@@ -1,10 +1,10 @@
-import React, { useState, useEffect } from "react";
-import { type Category } from "../types";
+import React, { useState } from "react";
+import { type Category, type Task, type TaskSubmission } from "../types";
 
 interface TaskFormProps {
-  initialData?: any;
+  initialData?: Task;
   categories: Category[];
-  onSubmit: (data: any) => void;
+  onSubmit: (data: TaskSubmission) => void;
   onCancel: () => void;
 }
 
@@ -45,48 +45,39 @@ const TaskForm: React.FC<TaskFormProps> = ({
       : "11:00"
   );
   const [selectedCategories, setSelectedCategories] = useState<number[]>(
-    initialData?.categories?.map((c: any) => (typeof c === "object" ? c.id : c)) || []
+    initialData?.categories?.map((c) => (typeof c === "object" ? c.id : c)) || []
   );
   const [importance, setImportance] = useState(initialData?.importance || 5);
   const [estimatedMinutes, setEstimatedMinutes] = useState(
     initialData?.estimated_minutes || 30
   );
 
-  // Validation States
-  const [errors, setErrors] = useState<{ [key: string]: boolean }>({});
-
-  useEffect(() => {
-    validateForm();
-  }, [date, startTime, deadline, deadlineTime, importance]);
-
-  const validateForm = () => {
-    const newErrors: { [key: string]: boolean } = {};
-    
-    const start = new Date(`${date}T${startTime}`);
-    const end = new Date(`${deadline}T${deadlineTime}`);
-
-    if (start >= end) {
-      newErrors.start = true;
-      newErrors.deadline = true;
-    }
-
-    if (importance < 1 || importance > 10 || isNaN(importance)) {
-      newErrors.importance = true;
-    }
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
+  // Derived Validation
+  const startDateTime = new Date(`${date}T${startTime}`);
+  const endDateTime = new Date(`${deadline}T${deadlineTime}`);
+  const isTimeInvalid = startDateTime >= endDateTime;
+  const isImportanceInvalid = importance < 1 || importance > 10 || isNaN(importance);
+  
+  const errors: Record<string, boolean> = {};
+  if (isTimeInvalid) {
+    errors.start = true;
+    errors.deadline = true;
+  }
+  if (isImportanceInvalid) {
+    errors.importance = true;
+  }
+  
+  const hasErrors = Object.keys(errors).length > 0;
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!validateForm()) return;
+    if (hasErrors) return;
 
-    const data = {
+    const data: TaskSubmission = {
       title,
       description,
-      start_time: new Date(`${date}T${startTime}`).toISOString(),
-      deadline: new Date(`${deadline}T${deadlineTime}`).toISOString(),
+      start_time: startDateTime.toISOString(),
+      deadline: endDateTime.toISOString(),
       categories: selectedCategories,
       importance,
       estimated_minutes: estimatedMinutes,

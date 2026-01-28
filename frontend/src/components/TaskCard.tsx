@@ -37,7 +37,7 @@ const TaskCard: React.FC<TaskCardProps> = ({ task, onToggleComplete, onClick }) 
             type="checkbox"
             checked={task.completed}
             onClick={(e) => e.stopPropagation()}
-            onChange={(e) => {
+            onChange={() => {
               onToggleComplete(task.id);
             }}
             className="h-5 w-5 text-primary border-gray-300 rounded focus:ring-primary"

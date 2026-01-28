@@ -2,15 +2,15 @@ import React, { Fragment, useState } from "react";
 import { Dialog, Transition, TransitionChild, DialogPanel, DialogTitle } from "@headlessui/react";
 import TaskForm from "./TaskForm";
 import ConfirmationModal from "./ConfirmationModal";
-import { type Category } from "../types";
+import { type Category, type Task, type TaskSubmission } from "../types";
 
 interface TaskSidebarProps {
   isOpen: boolean;
   onClose: () => void;
   categories: Category[];
-  onSubmit: (data: any) => void;
+  onSubmit: (data: TaskSubmission) => void;
   onDelete?: (id: number) => void;
-  initialData?: any;
+  initialData?: Task;
 }
 
 const TaskSidebar: React.FC<TaskSidebarProps> = ({

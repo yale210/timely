@@ -4,7 +4,7 @@ import { Menu, MenuButton, MenuItems, MenuItem } from "@headlessui/react";
 import AppLayout from "../layouts/AppLayout";
 import { TaskListSection, TaskSidebar } from "../components";
 import * as taskService from "../services/taskService";
-import { type Task, type Category } from "../types";
+import { type Task, type Category, type TaskSubmission } from "../types";
 
 const TaskList: React.FC = () => {
   const [tasks, setTasks] = useState<Task[]>([]);
@@ -20,7 +20,7 @@ const TaskList: React.FC = () => {
 
   const fetchTasks = useCallback(async () => {
     try {
-      const params: any = {
+      const params: Record<string, string | number> = {
         ordering: sortBy,
       };
       
@@ -41,19 +41,20 @@ const TaskList: React.FC = () => {
     }
   }, [sortBy, filterCategory, filterCompleted]);
 
-  const fetchCategories = async () => {
+  const fetchCategories = useCallback(async () => {
     try {
       const data = await taskService.getCategories();
       setCategories(data);
     } catch (err) {
       console.error(err);
     }
-  };
+  }, []);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchTasks();
     fetchCategories();
-  }, [fetchTasks]);
+  }, [fetchTasks, fetchCategories]);
 
   const handleToggleComplete = async (id: number) => {
     const task = tasks.find((t) => t.id === id);
@@ -76,7 +77,7 @@ const TaskList: React.FC = () => {
     setIsSidebarOpen(true);
   };
 
-  const handleSubmitTask = async (data: any) => {
+  const handleSubmitTask = async (data: TaskSubmission) => {
     try {
       if (selectedTask) {
         await taskService.updateTask(selectedTask.id, data);

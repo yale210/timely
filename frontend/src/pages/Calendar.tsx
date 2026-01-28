@@ -1,11 +1,11 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { Calendar, momentLocalizer, type View, Views } from "react-big-calendar";
 import moment from "moment";
 import "react-big-calendar/lib/css/react-big-calendar.css";
 import { TaskSidebar } from "../components";
 import AppLayout from "../layouts/AppLayout";
 import * as taskService from "../services/taskService";
-import { type Task, type Category } from "../types";
+import { type Task, type Category, type TaskSubmission } from "../types";
 
 const localizer = momentLocalizer(moment);
 
@@ -17,28 +17,29 @@ const CalendarPage: React.FC = () => {
   const [view, setView] = useState<View>(Views.MONTH);
   const [date, setDate] = useState(new Date());
 
-  const fetchTasks = async () => {
+  const fetchTasks = useCallback(async () => {
     try {
       const data = await taskService.getTasks();
       setTasks(data);
     } catch (err) {
       console.error(err);
     }
-  };
+  }, []);
 
-  const fetchCategories = async () => {
+  const fetchCategories = useCallback(async () => {
     try {
       const data = await taskService.getCategories();
       setCategories(data);
     } catch (err) {
       console.error(err);
     }
-  };
+  }, []);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchTasks();
     fetchCategories();
-  }, []);
+  }, [fetchTasks, fetchCategories]);
 
   const handleSelectSlot = ({ start }: { start: Date }) => {
     // Create a template for a new task
@@ -56,7 +57,7 @@ const CalendarPage: React.FC = () => {
     setIsSidebarOpen(true);
   };
 
-  const handleSelectEvent = (event: any) => {
+  const handleSelectEvent = (event: { id: number }) => {
     const task = tasks.find((t) => t.id === event.id);
     if (task) {
       setSelectedTask(task);
@@ -64,7 +65,7 @@ const CalendarPage: React.FC = () => {
     }
   };
 
-  const handleSubmitTask = async (data: any) => {
+  const handleSubmitTask = async (data: TaskSubmission) => {
     try {
       if (selectedTask && selectedTask.id !== 0) {
         await taskService.updateTask(selectedTask.id, data);
@@ -132,7 +133,7 @@ const CalendarPage: React.FC = () => {
               <div className="flex items-center bg-white border border-gray-200 rounded-lg overflow-hidden shadow-sm">
                 <button
                   onClick={() =>
-                    setDate(moment(date).subtract(1, view as any).toDate())
+                    setDate(moment(date).subtract(1, view as "month" | "week" | "day").toDate())
                   }
                   className="p-2 hover:bg-blue-100 text-gray-500 transition-colors border-r border-gray-200"
                 >
@@ -146,7 +147,7 @@ const CalendarPage: React.FC = () => {
                 </button>
                 <button
                   onClick={() =>
-                    setDate(moment(date).add(1, view as any).toDate())
+                    setDate(moment(date).add(1, view as "month" | "week" | "day").toDate())
                   }
                   className="p-2 hover:bg-blue-100 text-gray-500 transition-colors border-l border-gray-200"
                 >

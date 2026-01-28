@@ -10,15 +10,15 @@ describe('taskService', () => {
     })
 
     it('getTasks should call axios.get', async () => {
-        (axios.get as any).mockResolvedValue({ data: [] })
+        vi.mocked(axios.get).mockResolvedValue({ data: [] })
         await taskService.getTasks()
         expect(axios.get).toHaveBeenCalledWith('/api/tasks/', { params: undefined })
     })
 
     it('createTask should call axios.post', async () => {
         const data = { title: 'New Task' };
-        (axios.post as any).mockResolvedValue({ data })
-        await taskService.createTask(data)
+        vi.mocked(axios.post).mockResolvedValue({ data })
+        await taskService.createTask(data as Partial<Task>)
         expect(axios.post).toHaveBeenCalledWith('/api/tasks/', data)
     })
 })

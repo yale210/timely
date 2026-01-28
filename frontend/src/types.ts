@@ -15,3 +15,7 @@ export interface Task {
   estimated_minutes: number;
   parent_task?: number | null;
 }
+
+export interface TaskSubmission extends Omit<Partial<Task>, "categories"> {
+  categories?: number[];
+}
