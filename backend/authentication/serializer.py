@@ -7,7 +7,7 @@ from .models import User
 class RegisterSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ["username", "password", "email"]
+        fields = ["username", "email", "password"]
 
     def validate(self, attrs):
         username = attrs.get("username").strip().lower()
@@ -20,6 +20,7 @@ class RegisterSerializer(serializers.ModelSerializer):
         return user
 
 class LoginSerializer(serializers.Serializer):
+
     email = serializers.EmailField()
     password = serializers.CharField(style={'input_type': 'password'}, trim_whitespace=False)
 
@@ -41,3 +42,9 @@ class LoginSerializer(serializers.Serializer):
             raise serializers.ValidationError("Invalid credentials.")
         attrs["user"] = user
         return attrs
+
+
+class UserSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ["id", "username", "email", "last_login", "date_of_birth", "date_joined", "is_staff", "is_superuser"]
