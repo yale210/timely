@@ -39,6 +39,7 @@ export default function Gradebook() {
   const [grades, setGrades] = useState<Grade[] | null>(null)
   const [loading, setLoading] = useState(true)
   const [modalOpen, setModalOpen] = useState(false)
+  const [editInitial, setEditInitial] = useState<any | null>(null)
   const [selectedCategoryId, setSelectedCategoryId] = useState<number | null>(null)
   const { categories } = useCategories()
 
@@ -57,6 +58,12 @@ export default function Gradebook() {
       setGrades([])
     }
     setLoading(false)
+  }
+
+  async function deleteGrade(id: number) {
+    if (!confirm("Delete this grade?")) return
+    const res = await fetch(`/api/grades/${id}/`, { method: "DELETE", credentials: "include" })
+    if (res.ok) fetchGrades()
   }
 
   const filteredGrades = grades
@@ -151,6 +158,7 @@ export default function Gradebook() {
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500">Score</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500">Percentage</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500">Time spent</th>
+                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500">Actions</th>
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
@@ -166,6 +174,40 @@ export default function Gradebook() {
                     </span>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">{format_duration(g.time_spent_minutes)}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-right">
+                    <div className="flex items-center justify-end gap-3">
+                      <button
+                        onClick={() => {
+                          setEditInitial({
+                            id: g.id,
+                            name: g.name,
+                            score: g.score,
+                            total: g.total_possible,
+                            date: g.date_achieved,
+                            categoryId: g.category ?? null,
+                          })
+                          setModalOpen(true)
+                        }}
+                        className="p-1 rounded hover:bg-gray-100"
+                        aria-label="Edit grade"
+                        title="Edit"
+                      >
+                        <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 text-indigo-600" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                          <path d="M12 20h9" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                          <path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                        </svg>
+                      </button>
+                      <button onClick={() => deleteGrade(g.id)} className="p-1 rounded hover:bg-gray-100" aria-label="Delete grade" title="Delete">
+                        <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 text-red-600" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                          <polyline points="3 6 5 6 21 6" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                          <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                          <path d="M10 11v6" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                          <path d="M14 11v6" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                          <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                        </svg>
+                      </button>
+                    </div>
+                  </td>
                 </tr>
               ))}
             </tbody>
@@ -175,9 +217,19 @@ export default function Gradebook() {
 
       <CreateGradeModal
         open={modalOpen}
-        onClose={() => setModalOpen(false)}
+        onClose={() => {
+          setModalOpen(false)
+          setEditInitial(null)
+        }}
+        initialData={editInitial ?? undefined}
         onCreated={() => {
           setModalOpen(false)
+          setEditInitial(null)
+          fetchGrades()
+        }}
+        onUpdated={() => {
+          setModalOpen(false)
+          setEditInitial(null)
           fetchGrades()
         }}
       />

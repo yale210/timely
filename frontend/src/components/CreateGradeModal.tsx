@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import useCategories from "../hooks/useCategories"
 
 type Category = { id: number; text: string }
@@ -6,10 +6,19 @@ type Category = { id: number; text: string }
 type Props = {
   open: boolean
   onClose: () => void
-  onCreated: () => void
+  onCreated?: () => void
+  onUpdated?: () => void
+  initialData?: {
+    id?: number
+    name?: string
+    score?: number | ""
+    total?: number | ""
+    date?: string
+    categoryId?: number | null
+  }
 }
 
-export default function CreateGradeModal({ open, onClose, onCreated }: Props) {
+export default function CreateGradeModal({ open, onClose, onCreated, onUpdated, initialData }: Props) {
   const [name, setName] = useState("")
   const [score, setScore] = useState<number | "">("")
   const [total, setTotal] = useState<number | "">("")
@@ -18,11 +27,38 @@ export default function CreateGradeModal({ open, onClose, onCreated }: Props) {
   const [categoryId, setCategoryId] = useState<number | null>(null)
   const { categories } = useCategories()
 
+  useEffect(() => {
+    if (!open) return
+    if (!initialData) {
+      setName("")
+      setScore("")
+      setTotal("")
+      setDate("")
+      setCategoryId(null)
+      return
+    }
+    if (initialData.name) setName(initialData.name)
+    if (typeof initialData.score !== "undefined") setScore(initialData.score)
+    if (typeof initialData.total !== "undefined") setTotal(initialData.total)
+    if (initialData.date) setDate(initialData.date)
+    if (typeof initialData.categoryId !== "undefined") setCategoryId(initialData.categoryId)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, initialData])
+
   if (!open) return null
 
   async function createGrade(payload: Record<string, unknown>) {
     return fetch("/api/grades/", {
       method: "POST",
+      credentials: "include",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    })
+  }
+
+  async function updateGrade(id: number, payload: Record<string, unknown>) {
+    return fetch(`/api/grades/${id}/`, {
+      method: "PUT",
       credentials: "include",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),
@@ -47,15 +83,23 @@ export default function CreateGradeModal({ open, onClose, onCreated }: Props) {
       total_possible: total,
       date_achieved: date,
     }
-    const res = await createGrade(payload)
-    if (res.ok) onCreated()
-    else setError("Failed to create grade")
+    if (initialData && typeof initialData.id === "number") {
+      const res = await updateGrade(initialData.id, payload)
+      if (res.ok) {
+        if (onUpdated) onUpdated()
+      } else setError("Failed to update grade")
+    } else {
+      const res = await createGrade(payload)
+      if (res.ok) {
+        if (onCreated) onCreated()
+      } else setError("Failed to create grade")
+    }
   }
 
   return (
     <div className="fixed inset-0 bg-black/30 flex items-center justify-center p-4">
       <div className="bg-white rounded shadow p-4 w-full max-w-md">
-        <h2 className="text-lg font-semibold mb-2">Create grade</h2>
+  <h2 className="text-lg font-semibold mb-2">{initialData ? "Edit grade" : "Create grade"}</h2>
         <form onSubmit={submit} className="space-y-2">
           <input
             placeholder="Assessment name"
@@ -121,7 +165,7 @@ export default function CreateGradeModal({ open, onClose, onCreated }: Props) {
               type="submit"
               className="bg-indigo-600 hover:bg-indigo-700 active:scale-95 transition transform duration-150 text-white px-4 py-2 rounded cursor-pointer"
             >
-              Create
+              {initialData ? "Update" : "Create"}
             </button>
           </div>
         </form>
