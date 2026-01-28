@@ -1,10 +1,10 @@
-import React, { type ReactNode } from "react";
+import { type ReactNode } from "react";
 
 interface AppLayoutProps {
   children: ReactNode;
 }
 
-const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
+const AppLayout = ({ children }: AppLayoutProps) => {
   return (
     <div className="bg-white text-black transition-colors duration-200 h-screen flex overflow-hidden">
       <main className="flex-1 flex flex-col min-w-0 overflow-hidden bg-white">

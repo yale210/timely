@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import TaskCard from "./TaskCard";
 import { type Task } from "../types";
 
@@ -12,7 +12,7 @@ interface TaskListSectionProps {
   defaultCollapsed?: boolean;
 }
 
-const TaskListSection: React.FC<TaskListSectionProps> = ({
+const TaskListSection = ({
   title,
   tasks,
   onToggleComplete,
@@ -20,7 +20,7 @@ const TaskListSection: React.FC<TaskListSectionProps> = ({
   initialVisible = 5,
   isCollapsible = false,
   defaultCollapsed = false,
-}) => {
+}: TaskListSectionProps) => {
   const [visibleCount, setVisibleCount] = useState(initialVisible);
   const [isCollapsed, setIsCollapsed] = useState(defaultCollapsed);
 

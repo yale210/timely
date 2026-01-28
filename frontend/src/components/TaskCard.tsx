@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { type Task } from "../types";
 
 interface TaskCardProps {
@@ -7,7 +7,7 @@ interface TaskCardProps {
   onClick: (task: Task) => void;
 }
 
-const TaskCard: React.FC<TaskCardProps> = ({ task, onToggleComplete, onClick }) => {
+const TaskCard = ({ task, onToggleComplete, onClick }: TaskCardProps) => {
   const [isHovered, setIsHovered] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
   const isOverdue = new Date(task.deadline) < new Date() && !task.completed;

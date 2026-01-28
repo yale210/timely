@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState, type FormEvent } from "react";
 import { type Category, type Task, type TaskSubmission } from "../types";
 
 interface TaskFormProps {
@@ -8,14 +8,14 @@ interface TaskFormProps {
   onCancel: () => void;
 }
 
-const TaskForm: React.FC<TaskFormProps> = ({
+const TaskForm = ({
   initialData,
   categories,
   onSubmit,
   onCancel,
-}) => {
-  const [title, setTitle] = useState(initialData?.title || "");
-  const [description, setDescription] = useState(initialData?.description || "");
+}: TaskFormProps) => {
+  const [title, setTitle] = useState(initialData?.title ?? "");
+  const [description, setDescription] = useState(initialData?.description ?? "");
   const [date, setDate] = useState(
     initialData?.start_time
       ? new Date(initialData.start_time).toISOString().split("T")[0]
@@ -45,11 +45,11 @@ const TaskForm: React.FC<TaskFormProps> = ({
       : "11:00"
   );
   const [selectedCategories, setSelectedCategories] = useState<number[]>(
-    initialData?.categories?.map((c) => (typeof c === "object" ? c.id : c)) || []
+    initialData?.categories?.map((c) => (typeof c === "object" ? c.id : c)) ?? []
   );
-  const [importance, setImportance] = useState(initialData?.importance || 5);
+  const [importance, setImportance] = useState(initialData?.importance ?? 5);
   const [estimatedMinutes, setEstimatedMinutes] = useState(
-    initialData?.estimated_minutes || 30
+    initialData?.estimated_minutes ?? 30
   );
 
   // Derived Validation
@@ -69,7 +69,7 @@ const TaskForm: React.FC<TaskFormProps> = ({
   
   const hasErrors = Object.keys(errors).length > 0;
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
     if (hasErrors) return;
 
@@ -81,7 +81,7 @@ const TaskForm: React.FC<TaskFormProps> = ({
       categories: selectedCategories,
       importance,
       estimated_minutes: estimatedMinutes,
-      completed: initialData?.completed || false,
+      completed: initialData?.completed ?? false,
     };
     onSubmit(data);
   };
@@ -208,7 +208,7 @@ const TaskForm: React.FC<TaskFormProps> = ({
             rows={4}
             value={description}
             onChange={(e) => setDescription(e.target.value)}
-          ></textarea>
+          />
         </div>
 
         <div>

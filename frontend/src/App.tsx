@@ -1,5 +1,5 @@
 import { Routes, Route } from "react-router-dom"
-import { Home, Login, Signup, CalendarPage, TaskList} from "./pages/index"
+import { Home, Login, Signup, CalendarPage } from "./pages/index"
 
 /**
  * The root component of the application which organises the routing logic.

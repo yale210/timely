@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback } from "react";
 import moment from "moment";
 import { Menu, MenuButton, MenuItems, MenuItem } from "@headlessui/react";
 import AppLayout from "../layouts/AppLayout";
@@ -6,7 +6,7 @@ import { TaskListSection, TaskSidebar, TaskCard } from "../components";
 import * as taskService from "../services/taskService";
 import { type Task, type Category, type TaskSubmission } from "../types";
 
-const TaskList: React.FC = () => {
+const TaskList = () => {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -53,9 +53,13 @@ const TaskList: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    fetchTasks();
-    fetchCategories();
+    const init = async () => {
+      await fetchTasks();
+      await fetchCategories();
+    };
+    init().catch((err: unknown) => {
+      console.error("Failed to initialise TaskList:", err);
+    });
   }, [fetchTasks, fetchCategories]);
 
   const handleToggleComplete = async (id: number) => {
@@ -63,7 +67,7 @@ const TaskList: React.FC = () => {
     if (!task) return;
     try {
       await taskService.updateTask(id, { completed: !task.completed });
-      fetchTasks();
+      await fetchTasks();
     } catch (err) {
       console.error(err);
     }
@@ -86,7 +90,7 @@ const TaskList: React.FC = () => {
       } else {
         await taskService.createTask(data);
       }
-      fetchTasks();
+      await fetchTasks();
     } catch (err) {
       console.error(err);
     }
@@ -95,7 +99,7 @@ const TaskList: React.FC = () => {
   const handleDeleteTask = async (id: number) => {
     try {
       await taskService.deleteTask(id);
-      fetchTasks();
+      await fetchTasks();
     } catch (err) {
       console.error(err);
     }
@@ -215,7 +219,7 @@ const TaskList: React.FC = () => {
                       )}
                     </MenuItem>
                   ))}
-                  <div className="border-t border-gray-100 my-1"></div>
+                  <div className="border-t border-gray-100 my-1" />
                   <div className="px-3 py-2 text-xs font-semibold text-gray-500 uppercase">Attributes</div>
                   <MenuItem>
                     {({ focus }) => (
@@ -247,7 +251,7 @@ const TaskList: React.FC = () => {
                       </button>
                     )}
                   </MenuItem>
-                  <div className="border-t border-gray-100 my-1"></div>
+                  <div className="border-t border-gray-100 my-1" />
                   <div className="px-3 py-2 text-xs font-semibold text-gray-500 uppercase">Category</div>
                   <MenuItem>
                     {({ focus }) => (
@@ -317,7 +321,7 @@ const TaskList: React.FC = () => {
           <TaskListSection
             title="Past (7 days)"
             tasks={pastTasks}
-            onToggleComplete={handleToggleComplete}
+            onToggleComplete={(id: number) => { void handleToggleComplete(id); }}
             onTaskClick={handleTaskClick}
             isCollapsible={true}
             defaultCollapsed={true}
@@ -327,14 +331,14 @@ const TaskList: React.FC = () => {
           <TaskListSection
             title="Overdue"
             tasks={overdueTasks}
-            onToggleComplete={handleToggleComplete}
+            onToggleComplete={(id: number) => { void handleToggleComplete(id); }}
             onTaskClick={handleTaskClick}
           />
         )}
         <TaskListSection
           title="Today"
           tasks={todayTasks}
-          onToggleComplete={handleToggleComplete}
+          onToggleComplete={(id: number) => { void handleToggleComplete(id); }}
           onTaskClick={handleTaskClick}
         />
         
@@ -364,7 +368,7 @@ const TaskList: React.FC = () => {
                       <TaskCard
                         key={task.id}
                         task={task}
-                        onToggleComplete={handleToggleComplete}
+                        onToggleComplete={(id: number) => { void handleToggleComplete(id); }}
                         onClick={handleTaskClick}
                       />
                     ))}
@@ -388,8 +392,8 @@ const TaskList: React.FC = () => {
         isOpen={isSidebarOpen}
         onClose={() => setIsSidebarOpen(false)}
         categories={categories}
-        onSubmit={handleSubmitTask}
-        onDelete={handleDeleteTask}
+        onSubmit={(data) => { void handleSubmitTask(data); }}
+        onDelete={(id) => { void handleDeleteTask(id); }}
         initialData={selectedTask}
       />
     </AppLayout>

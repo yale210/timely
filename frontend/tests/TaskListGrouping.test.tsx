@@ -9,9 +9,9 @@ vi.mock("../src/services/taskService")
 
 // Mock ResizeObserver for Headless UI
 class ResizeObserver {
-  observe() {}
-  unobserve() {}
-  disconnect() {}
+  observe = vi.fn();
+  unobserve = vi.fn();
+  disconnect = vi.fn();
 }
 window.ResizeObserver = ResizeObserver;
 

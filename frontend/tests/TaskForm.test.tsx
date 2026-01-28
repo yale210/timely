@@ -1,6 +1,7 @@
 import { it, describe, expect, vi, afterEach } from 'vitest'
 import { render, screen, fireEvent, cleanup } from '@testing-library/react'
 import { TaskForm } from "../src/components/index"
+import { type TaskSubmission } from '../src/types'
 
 describe('TaskForm', () => {
     afterEach(cleanup)
@@ -39,7 +40,7 @@ describe('TaskForm', () => {
         fireEvent.click(screen.getByRole('button', { name: /Save Task/i }))
         
         expect(onSubmit).toHaveBeenCalled()
-        const callData = onSubmit.mock.calls[0][0]
+        const callData = onSubmit.mock.calls[0][0] as TaskSubmission
         expect(callData.title).toBe('New Task')
     })
 })

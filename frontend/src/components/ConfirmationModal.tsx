@@ -1,4 +1,4 @@
-import React, { Fragment } from "react";
+import { Fragment } from "react";
 import { Dialog, Transition, TransitionChild, DialogPanel, DialogTitle } from "@headlessui/react";
 
 interface ConfirmationModalProps {
@@ -11,7 +11,7 @@ interface ConfirmationModalProps {
   cancelText?: string;
 }
 
-const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
+const ConfirmationModal = ({
   isOpen,
   onClose,
   onConfirm,
@@ -19,7 +19,7 @@ const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
   message,
   confirmText = "Delete",
   cancelText = "Cancel",
-}) => {
+}: ConfirmationModalProps) => {
   return (
     <Transition show={isOpen} as={Fragment}>
       <Dialog as="div" className="relative z-[60]" onClose={onClose}>

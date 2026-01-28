@@ -1,6 +1,7 @@
 import { it, describe, expect, vi, beforeEach } from 'vitest'
 import axios from 'axios'
 import * as taskService from '../src/services/taskService'
+import { type Task, type TaskSubmission } from '../src/types'
 
 vi.mock('axios')
 
@@ -10,15 +11,15 @@ describe('taskService', () => {
     })
 
     it('getTasks should call axios.get', async () => {
-        vi.mocked(axios.get).mockResolvedValue({ data: [] })
+        const spy = vi.spyOn(axios, 'get').mockResolvedValue({ data: [] } as { data: Task[] })
         await taskService.getTasks()
-        expect(axios.get).toHaveBeenCalledWith('/api/tasks/', { params: undefined })
+        expect(spy).toHaveBeenCalledWith('/api/tasks/', { params: undefined })
     })
 
     it('createTask should call axios.post', async () => {
-        const data = { title: 'New Task' };
-        vi.mocked(axios.post).mockResolvedValue({ data })
-        await taskService.createTask(data as Partial<Task>)
-        expect(axios.post).toHaveBeenCalledWith('/api/tasks/', data)
+        const data: TaskSubmission = { title: 'New Task' };
+        const spy = vi.spyOn(axios, 'post').mockResolvedValue({ data } as { data: Task })
+        await taskService.createTask(data)
+        expect(spy).toHaveBeenCalledWith('/api/tasks/', data)
     })
 })

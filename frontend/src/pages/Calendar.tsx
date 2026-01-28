@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Calendar, momentLocalizer, type View, Views } from "react-big-calendar";
 import moment from "moment";
 import "react-big-calendar/lib/css/react-big-calendar.css";
@@ -39,9 +39,13 @@ const CalendarPage = () => {
   }, []);
 
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    fetchTasks();
-    fetchCategories();
+    const init = async () => {
+      await fetchTasks();
+      await fetchCategories();
+    };
+    init().catch((err: unknown) => {
+      console.error("Failed to initialise Calendar:", err);
+    });
   }, [fetchTasks, fetchCategories]);
 
   const handleSelectSlot = ({ start }: { start: Date }) => {
@@ -70,12 +74,12 @@ const CalendarPage = () => {
 
   const handleSubmitTask = async (data: TaskSubmission) => {
     try {
-      if (selectedTask && selectedTask.id !== 0) {
+      if (selectedTask?.id && selectedTask.id !== 0) {
         await taskService.updateTask(selectedTask.id, data);
       } else {
         await taskService.createTask(data);
       }
-      fetchTasks();
+      await fetchTasks();
       setIsSidebarOpen(false);
     } catch (err) {
       console.error(err);
@@ -85,7 +89,7 @@ const CalendarPage = () => {
   const handleDeleteTask = async (id: number) => {
     try {
       await taskService.deleteTask(id);
-      fetchTasks();
+      await fetchTasks();
       setIsSidebarOpen(false);
     } catch (err) {
       console.error(err);
@@ -197,8 +201,8 @@ const CalendarPage = () => {
             setSelectedTask(undefined);
           }}
           categories={categories}
-          onSubmit={handleSubmitTask}
-          onDelete={handleDeleteTask}
+          onSubmit={(data) => { void handleSubmitTask(data); }}
+          onDelete={(id) => { void handleDeleteTask(id); }}
           initialData={selectedTask}
         />
       </div>
