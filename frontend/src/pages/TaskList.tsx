@@ -133,7 +133,9 @@ const TaskList: React.FC = () => {
       moment(t.deadline).isAfter(now) && !moment(t.deadline).isSame(now, "day")
   );
 
+  // Group upcoming tasks by their deadline date to facilitate daily sections in the UI.
   const groupedUpcomingTasks = upcomingTasks.reduce((groups, task) => {
+    // Normalise the deadline to the start of the day for consistent grouping keys.
     const date = moment(task.deadline).startOf("day").format("YYYY-MM-DD");
     if (!groups[date]) {
       groups[date] = [];
@@ -142,6 +144,7 @@ const TaskList: React.FC = () => {
     return groups;
   }, {} as Record<string, Task[]>);
 
+  // Sort the grouped date keys chronologically to ensure upcoming tasks appear in order.
   const sortedUpcomingDates = Object.keys(groupedUpcomingTasks).sort();
 
   const formatDayLabel = (dateStr: string) => {
