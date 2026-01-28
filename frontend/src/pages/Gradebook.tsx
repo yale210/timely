@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react"
+import { Link } from "react-router-dom"
 import CreateGradeModal from "../components/CreateGradeModal.tsx"
 import useCategories from "../hooks/useCategories"
 
@@ -86,7 +87,14 @@ export default function Gradebook() {
   return (
   <div className="p-6 font-young-coconut">
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold">Gradebook</h1>
+        <div className="flex items-center gap-4">
+          <Link to="/" aria-label="Back to home" title="Back to home" className="p-2 rounded hover:bg-gray-100 transition">
+            <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5 text-gray-700" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7" />
+            </svg>
+          </Link>
+          <h1 className="text-2xl font-bold">Gradebook</h1>
+        </div>
         <div className="flex gap-2">
           <button
             onClick={() => setModalOpen(true)}
@@ -98,7 +106,7 @@ export default function Gradebook() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6 items-center">
-        <div className="col-span-1 p-4 shadow rounded">
+  <div className="col-span-1 p-4 shadow rounded border border-black">
           <div className="text-sm text-gray-500">Average Percentage</div>
           <div className="text-xl font-semibold">
             {avgValue}%
