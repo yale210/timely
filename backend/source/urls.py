@@ -18,10 +18,11 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
-from core.views.calendar_view import TaskViewSet
+from core.views.calendar_view import TaskViewSet, CategoryViewSet
 
 router = DefaultRouter()
 router.register(r"tasks", TaskViewSet, basename="task")
+router.register(r"categories", CategoryViewSet, basename="category")
 
 urlpatterns = [
     path("api/", include(router.urls)),
