@@ -18,6 +18,19 @@ function format_duration(minutes: number): string {
   return `${h}h ${m}m`
 }
 
+function percentageClass(p: number | null | undefined): string {
+  switch (true) {
+    case p == null:
+      return "text-gray-600"
+    case (p as number) < 50:
+      return "inline-block text-sm font-semibold text-red-700 bg-red-100 px-2 py-0.5 rounded"
+    case (p as number) < 70:
+      return "inline-block text-sm font-semibold text-orange-700 bg-orange-100 px-2 py-0.5 rounded"
+    default:
+      return "inline-block text-sm font-semibold text-green-700 bg-green-100 px-2 py-0.5 rounded"
+  }
+}
+
 export default function Gradebook() {
   const [grades, setGrades] = useState<Grade[] | null>(null)
   const [loading, setLoading] = useState(true)
@@ -91,7 +104,11 @@ export default function Gradebook() {
                   <td className="px-6 py-4 whitespace-nowrap">{g.name}</td>
                   <td className="px-6 py-4 whitespace-nowrap">{g.date_achieved}</td>
                   <td className="px-6 py-4 whitespace-nowrap">{g.score}/{g.total_possible}</td>
-                  <td className="px-6 py-4 whitespace-nowrap">{g.percentage}%</td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <span className={percentageClass(g.percentage)}>
+                      {Math.round((g.percentage ?? 0) * 10) / 10}%
+                    </span>
+                  </td>
                   <td className="px-6 py-4 whitespace-nowrap">{format_duration(g.time_spent_minutes)}</td>
                 </tr>
               ))}
