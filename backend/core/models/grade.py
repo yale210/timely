@@ -1,8 +1,6 @@
 from django.db import models
 from django.conf import settings
 from django.core.validators import MinValueValidator
-from django.utils.functional import cached_property
-
 from .category import Category
 from .task import Task
 

@@ -1,5 +1,5 @@
-from rest_framework import viewsets, permissions
-from rest_framework.permissions import AllowAny
+from rest_framework import viewsets
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from django.contrib.auth import get_user_model
 
 from core.models import Grade
@@ -8,7 +8,6 @@ from core.serializers import GradeSerializer
 
 class GradeViewSet(viewsets.ModelViewSet):
     serializer_class = GradeSerializer
-    ##COME BACK TO THIS - MAY NEED TO CHANGE PERMISSIONS
     authentication_classes = []
     permission_classes = [AllowAny]
 

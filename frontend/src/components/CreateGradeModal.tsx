@@ -68,7 +68,7 @@ export default function CreateGradeModal({ open, onClose, onCreated }: Props) {
             <input
               type="number"
               placeholder="Score"
-              value={score as any}
+              value={String(score)}
               onChange={(e) => setScore(e.target.value === "" ? "" : Number(e.target.value))}
               className="w-full border p-2 rounded"
               required
@@ -76,7 +76,7 @@ export default function CreateGradeModal({ open, onClose, onCreated }: Props) {
             <input
               type="number"
               placeholder="Total"
-              value={total as any}
+              value={String(total)}
               onChange={(e) => setTotal(e.target.value === "" ? "" : Number(e.target.value))}
               className="w-full border p-2 rounded"
               required
