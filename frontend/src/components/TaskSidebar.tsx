@@ -57,9 +57,9 @@ const TaskSidebar = ({
                       <div className="p-6 border-b border-gray-200 flex justify-between items-center bg-white">
                         <div className="flex items-center gap-4">
                           <DialogTitle className="text-lg font-bold text-black">
-                            {initialData?.id ? "Edit Task" : "Add New Task"}
+                            {!!initialData?.id ? "Edit Task" : "Add New Task"}
                           </DialogTitle>
-                          {initialData?.id && onDelete && (
+                          {!!initialData?.id && onDelete && (
                             <button
                               onClick={() => setIsDeleteModalOpen(true)}
                               className="text-red-500 hover:text-red-700 transition-colors p-1 rounded-md hover:bg-red-50"
