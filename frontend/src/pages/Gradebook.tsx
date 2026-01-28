@@ -59,8 +59,21 @@ export default function Gradebook() {
     return Math.round((s / grades.length) * 10) / 10
   }
 
+  const avgValue = average()
+
+  function moodEmoji(p: number): string {
+    switch (true) {
+      case p >= 70:
+        return "😊"
+      case p >= 50:
+        return "😐"
+      default:
+        return "😞"
+    }
+  }
+
   return (
-    <div className="p-6">
+  <div className="p-6 font-young-coconut">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold">Gradebook</h1>
         <div className="flex gap-2">
@@ -76,7 +89,12 @@ export default function Gradebook() {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
         <div className="col-span-1 p-4 shadow rounded">
           <div className="text-sm text-gray-500">Average Percentage</div>
-          <div className="text-xl font-semibold">{average()}%</div>
+          <div className="text-xl font-semibold">
+            {avgValue}%
+            <span className="ml-3" role="img" aria-label={avgValue >= 70 ? "happy" : avgValue >= 50 ? "neutral" : "sad"}>
+              {moodEmoji(avgValue)}
+            </span>
+          </div>
         </div>
       </div>
 
