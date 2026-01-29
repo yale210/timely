@@ -94,6 +94,8 @@ class GradeViewTests(TestCase):
     def test_time_spent_ignores_future_tasks(self):
         cat = Category.objects.create(text="Module2")
         date = timezone.now().date()
+        start_time = timezone.make_aware(datetime.datetime.combine(date, datetime.time.min))
+        deadline = timezone.make_aware(datetime.datetime.combine(date + datetime.timedelta(days=2), datetime.time.min))
         Grade.objects.create(
             user=self.user,
             name="G",
@@ -102,16 +104,16 @@ class GradeViewTests(TestCase):
             total_possible=2,
             date_achieved=date,
         )
-        Task.objects.create(
+        t = Task.objects.create(
             user=self.user,
-            task_message="Later",
-            task_category=cat,
+            title="Later",
             estimated_minutes=30,
-            start_time=date,
-            deadline=date + datetime.timedelta(days=2),
+            start_time=start_time,
+            deadline=deadline,
             completed=True,
             importance=5,
         )
+        t.categories.set([cat])
         self.client.force_authenticate(user=self.user)
         res = self.client.get("/api/grades/")
         self.assertEqual(res.status_code, 200)
@@ -120,6 +122,8 @@ class GradeViewTests(TestCase):
     def test_time_spent_sums_past_tasks(self):
         cat = Category.objects.create(text="Module3")
         date = timezone.now().date()
+        start_time = timezone.make_aware(datetime.datetime.combine(date - datetime.timedelta(days=3), datetime.time.min))
+        deadline = timezone.make_aware(datetime.datetime.combine(date - datetime.timedelta(days=1), datetime.time.min))
         Grade.objects.create(
             user=self.user,
             name="G2",
@@ -128,16 +132,16 @@ class GradeViewTests(TestCase):
             total_possible=2,
             date_achieved=date,
         )
-        Task.objects.create(
+        t = Task.objects.create(
             user=self.user,
-            task_message="Earlier",
-            task_category=cat,
+            title="Earlier",
             estimated_minutes=45,
-            start_time=date - datetime.timedelta(days=3),
-            deadline=date - datetime.timedelta(days=1),
+            start_time=start_time,
+            deadline=deadline,
             completed=True,
             importance=5,
         )
+        t.categories.set([cat])
         self.client.force_authenticate(user=self.user)
         res = self.client.get("/api/grades/")
         self.assertEqual(res.status_code, 200)

@@ -47,7 +47,7 @@ class Grade(models.Model):
             return 0
         qs = Task.objects.filter(
             user=self.user,
-            task_category=self.category,
+            categories=self.category,
             completed=True,
             deadline__lte=self.date_achieved,
         )
