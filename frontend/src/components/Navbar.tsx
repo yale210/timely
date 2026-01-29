@@ -5,11 +5,14 @@ import { Link } from "react-router-dom"
 
 const navigation = [
     { name: 'Home', href: '/' },
-    { name: 'Gradebook', href: '/gradebook' },
     { name: 'Login', href: '/login' },
     { name: 'Signup', href: '/signup' },
 ]
 
+/**
+ * A functional component that renders the navigation bar, including mobile menu logic.
+ * @returns The rendered navigation bar component.
+ */
 export default function Navbar() {
 
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false)

@@ -1,9 +1,8 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { Calendar, momentLocalizer } from "react-big-calendar";
 import moment from "moment";
 import axios from "axios";
 import "react-big-calendar/lib/css/react-big-calendar.css";
-
 interface Task {
   id: number;
   task_message: string;
@@ -12,25 +11,24 @@ interface Task {
   importance: number;
   completed: boolean;
 }
-
 const localizer = momentLocalizer(moment);
-
-const CalendarPage: React.FC = () => {
+/**
+ * A functional component that renders a calendar view of tasks.
+ * @returns The rendered calendar page component.
+ */
+const CalendarPage = () => {
   const [tasks, setTasks] = useState<Task[]>([]);
-
   useEffect(() => {
     const fetchTasks = async () => {
       try {
-        const res = await axios.get("/api/tasks/");
+        const res = await axios.get<Task[]>("/api/tasks/");
         setTasks(res.data);
       } catch (err) {
         console.error(err);
       }
     };
-
-    fetchTasks();
+    void fetchTasks();
   }, []);
-
   const events = tasks.map((task) => ({
     id: task.id,
     title: task.task_message,
@@ -38,7 +36,6 @@ const CalendarPage: React.FC = () => {
     end: new Date(task.deadline),
     allDay: true,
   }));
-
   return (
     <div style={{ height: "80vh", padding: "2rem" }}>
       <h1>Task Calendar</h1>
@@ -52,5 +49,4 @@ const CalendarPage: React.FC = () => {
     </div>
   );
 };
-
 export default CalendarPage;
