@@ -6,6 +6,7 @@ from .special_dates import SpecialDates
 from .category import Category
 from .task import Task
 from .profile import Profile
+from .grade import Grade
 
 __all__ = [
     "Commute",
@@ -16,4 +17,5 @@ __all__ = [
     "Category",
     "Task",
     "Profile",
+    "Grade",
 ]

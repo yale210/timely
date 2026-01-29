@@ -19,12 +19,16 @@ from django.contrib import admin
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 from core.views.calendar_view import TaskViewSet
+from core.views.grade_view import GradeViewSet
+from core.views.category_view import CategoryViewSet
 from core.views.event_view import EventViewSet
+
 
 router = DefaultRouter()
 router.register(r"tasks", TaskViewSet, basename="task")
+router.register(r"grades", GradeViewSet, basename="grade")
+router.register(r"categories", CategoryViewSet, basename="category")
 router.register(r"events", EventViewSet, basename="event")
-
 
 urlpatterns = [
     path("api/", include(router.urls)),
