@@ -4,11 +4,9 @@ from django.db import migrations
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('core', '0005_grade'),
-        ('core', '0005_rename_task_message_task_title_and_more'),
+        ("core", "0005_grade"),
+        ("core", "0005_rename_task_message_task_title_and_more"),
     ]
 
-    operations = [
-    ]
+    operations = []

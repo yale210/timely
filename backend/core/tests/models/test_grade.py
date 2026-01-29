@@ -65,9 +65,15 @@ class GradeModelTests(TestCase):
         cat = Category.objects.create(text="Multi")
         date = timezone.now().date()
         # Use make_aware for datetime fields
-        start_time_1 = timezone.make_aware(datetime.datetime.combine(date - datetime.timedelta(days=3), datetime.time.min))
-        deadline_1 = timezone.make_aware(datetime.datetime.combine(date, datetime.time.min))
-        
+        start_time_1 = timezone.make_aware(
+            datetime.datetime.combine(
+                date - datetime.timedelta(days=3), datetime.time.min
+            )
+        )
+        deadline_1 = timezone.make_aware(
+            datetime.datetime.combine(date, datetime.time.min)
+        )
+
         g = Grade.objects.create(
             user=self.user,
             name="Gmulti",
@@ -87,8 +93,16 @@ class GradeModelTests(TestCase):
         )
         t1.categories.set([cat])
 
-        start_time_2 = timezone.make_aware(datetime.datetime.combine(date - datetime.timedelta(days=2), datetime.time.min))
-        deadline_2 = timezone.make_aware(datetime.datetime.combine(date - datetime.timedelta(days=1), datetime.time.min))
+        start_time_2 = timezone.make_aware(
+            datetime.datetime.combine(
+                date - datetime.timedelta(days=2), datetime.time.min
+            )
+        )
+        deadline_2 = timezone.make_aware(
+            datetime.datetime.combine(
+                date - datetime.timedelta(days=1), datetime.time.min
+            )
+        )
 
         t2 = Task.objects.create(
             user=self.user,

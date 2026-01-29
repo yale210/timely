@@ -94,8 +94,14 @@ class GradeViewTests(TestCase):
     def test_time_spent_ignores_future_tasks(self):
         cat = Category.objects.create(text="Module2")
         date = timezone.now().date()
-        start_time = timezone.make_aware(datetime.datetime.combine(date, datetime.time.min))
-        deadline = timezone.make_aware(datetime.datetime.combine(date + datetime.timedelta(days=2), datetime.time.min))
+        start_time = timezone.make_aware(
+            datetime.datetime.combine(date, datetime.time.min)
+        )
+        deadline = timezone.make_aware(
+            datetime.datetime.combine(
+                date + datetime.timedelta(days=2), datetime.time.min
+            )
+        )
         Grade.objects.create(
             user=self.user,
             name="G",
@@ -122,8 +128,16 @@ class GradeViewTests(TestCase):
     def test_time_spent_sums_past_tasks(self):
         cat = Category.objects.create(text="Module3")
         date = timezone.now().date()
-        start_time = timezone.make_aware(datetime.datetime.combine(date - datetime.timedelta(days=3), datetime.time.min))
-        deadline = timezone.make_aware(datetime.datetime.combine(date - datetime.timedelta(days=1), datetime.time.min))
+        start_time = timezone.make_aware(
+            datetime.datetime.combine(
+                date - datetime.timedelta(days=3), datetime.time.min
+            )
+        )
+        deadline = timezone.make_aware(
+            datetime.datetime.combine(
+                date - datetime.timedelta(days=1), datetime.time.min
+            )
+        )
         Grade.objects.create(
             user=self.user,
             name="G2",
