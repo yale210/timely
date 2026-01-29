@@ -254,4 +254,3 @@ class EventTests(TestCase):
             recurring=False,
         )
         self.assertEqual(event.calculate_time_left(), 0)
-        
