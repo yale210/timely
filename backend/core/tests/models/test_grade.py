@@ -64,6 +64,16 @@ class GradeModelTests(TestCase):
     def test_get_time_spent_multiple_tasks(self):
         cat = Category.objects.create(text="Multi")
         date = timezone.now().date()
+        # Use make_aware for datetime fields
+        start_time_1 = timezone.make_aware(
+            datetime.datetime.combine(
+                date - datetime.timedelta(days=3), datetime.time.min
+            )
+        )
+        deadline_1 = timezone.make_aware(
+            datetime.datetime.combine(date, datetime.time.min)
+        )
+
         g = Grade.objects.create(
             user=self.user,
             name="Gmulti",
@@ -72,26 +82,39 @@ class GradeModelTests(TestCase):
             total_possible=2,
             date_achieved=date,
         )
-        Task.objects.create(
+        t1 = Task.objects.create(
             user=self.user,
-            task_message="T1",
-            task_category=cat,
+            title="T1",
             estimated_minutes=10,
-            start_time=date - datetime.timedelta(days=3),
-            deadline=date,
+            start_time=start_time_1,
+            deadline=deadline_1,
             completed=True,
             importance=1,
         )
-        Task.objects.create(
+        t1.categories.set([cat])
+
+        start_time_2 = timezone.make_aware(
+            datetime.datetime.combine(
+                date - datetime.timedelta(days=2), datetime.time.min
+            )
+        )
+        deadline_2 = timezone.make_aware(
+            datetime.datetime.combine(
+                date - datetime.timedelta(days=1), datetime.time.min
+            )
+        )
+
+        t2 = Task.objects.create(
             user=self.user,
-            task_message="T2",
-            task_category=cat,
+            title="T2",
             estimated_minutes=20,
-            start_time=date - datetime.timedelta(days=2),
-            deadline=date - datetime.timedelta(days=1),
+            start_time=start_time_2,
+            deadline=deadline_2,
             completed=True,
             importance=2,
         )
+        t2.categories.set([cat])
+
         self.assertEqual(g.get_time_spent_minutes(), 30)
 
     def test_get_time_spent_no_category_model(self):

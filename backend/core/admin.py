@@ -25,14 +25,19 @@ class GradeAdmin(admin.ModelAdmin):
 @admin.register(Task)
 class TaskAdmin(admin.ModelAdmin):
     list_display = (
-        "task_message",
+        "title",
         "user",
         "deadline",
         "completed",
         "importance",
-        "task_category",
+        "get_categories",
         "estimated_minutes",
     )
-    list_filter = ("completed", "importance", "task_category")
-    search_fields = ("task_message", "user__username")
+    list_filter = ("completed", "importance", "categories")
+    search_fields = ("title", "user__username")
     raw_id_fields = ("parent_task",)
+
+    def get_categories(self, obj):
+        return ", ".join([c.text for c in obj.categories.all()])
+
+    get_categories.short_description = "Categories"

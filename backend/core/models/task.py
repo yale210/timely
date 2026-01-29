@@ -21,18 +21,17 @@ class Task(models.Model):
         settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="tasks"
     )
 
-    task_message = models.CharField(max_length=500)
-    task_category = models.ForeignKey(
+    title = models.CharField(max_length=500)
+    description = models.TextField(blank=True)
+    categories = models.ManyToManyField(
         Category,
-        on_delete=models.SET_NULL,
-        null=True,
         blank=True,
-        related_name="task_category",
+        related_name="tasks",
     )
 
     estimated_minutes = models.PositiveIntegerField(validators=[MinValueValidator(1)])
-    start_time = models.DateField()
-    deadline = models.DateField()
+    start_time = models.DateTimeField()
+    deadline = models.DateTimeField()
     completed = models.BooleanField(default=False)
 
     # Query db for models with specific parent tasks when necessary.
@@ -56,7 +55,10 @@ class Task(models.Model):
         current_time = now().date()
         if not self.deadline:
             return 0
-        return max((self.deadline - current_time).days, 0)
+        deadline_date = self.deadline.date()
+        if deadline_date < current_time:
+            return 0
+        return (deadline_date - current_time).days
 
     def clean(self):
         if self.start_time and self.deadline and self.start_time > self.deadline:

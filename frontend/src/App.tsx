@@ -1,5 +1,5 @@
 import { Routes, Route } from "react-router-dom"
-import { Home, Login, Signup, CalendarPage} from "./pages/index"
+import { Home, Login, Signup, CalendarPage, TaskList } from "./pages/index"
 
 
 /**
@@ -13,6 +13,7 @@ export default function App() {
       <Route path="/login" element={<Login />} />
       <Route path="/signup" element={<Signup />} />
       <Route path="/calendar" element={<CalendarPage />} />
+      <Route path="/tasks" element={<TaskList />} />
     </Routes>
   )
 }
