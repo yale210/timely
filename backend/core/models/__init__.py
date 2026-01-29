@@ -1,4 +1,5 @@
 from .commute import Commute
+from .day_of_week import DayOfWeek
 from .event import Event
 from .preference import Preference
 from .special_dates import SpecialDates
@@ -8,6 +9,7 @@ from .profile import Profile
 
 __all__ = [
     "Commute",
+    "DayOfWeek",
     "Event",
     "Preference",
     "SpecialDates",

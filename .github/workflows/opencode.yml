@@ -1,11 +1,5 @@
 name: opencode
 
-permissions:
-  id-token: write
-  contents: read
-  pull-requests: read
-  issues: write
-
 on:
   issue_comment:
     types: [created]
@@ -20,6 +14,9 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       id-token: write
+      contents: read
+      pull-requests: read
+      issues: write
     steps:
       - name: Checkout repository
         uses: actions/checkout@v6
@@ -32,4 +29,4 @@ jobs:
         env:
           OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
         with:
-          model: minimax/minimax-m2.1
+          model: openrouter/minimax/minimax-m2.1
