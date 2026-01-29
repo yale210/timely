@@ -23,6 +23,13 @@ from core.views.calendar_view import TaskViewSet, CategoryViewSet
 router = DefaultRouter()
 router.register(r"tasks", TaskViewSet, basename="task")
 router.register(r"categories", CategoryViewSet, basename="category")
+from core.views.calendar_view import TaskViewSet
+from core.views.event_view import EventViewSet
+
+router = DefaultRouter()
+router.register(r"tasks", TaskViewSet, basename="task")
+router.register(r"events", EventViewSet, basename="event")
+
 
 urlpatterns = [
     path("api/", include(router.urls)),
