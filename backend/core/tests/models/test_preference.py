@@ -77,3 +77,25 @@ class PreferenceTests(TestCase):
 
         with self.assertRaises(ValidationError):
             preference.full_clean()
+
+    def test_allows_sleep_crossing_midnight(self):
+        preference = Preference.objects.create(
+            user=self.user,
+            sleep_start=datetime.time(20, 0),
+            sleep_end=datetime.time(10, 0),
+            max_daily_study_time=4,
+        )
+        preference.full_clean()
+
+    def test_get_holidays_for_year_contains_christmas(self):
+        preference = Preference.objects.create(
+            user=self.user,
+            sleep_start=datetime.time(20, 0),
+            sleep_end=datetime.time(10, 0),
+            max_daily_study_time=4,
+        )
+        holidays = preference.get_holidays_for_year(2026)
+        self.assertIn(
+            datetime.date(2026, 12, 25),
+            holidays,
+        )

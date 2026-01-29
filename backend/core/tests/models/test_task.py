@@ -1,6 +1,7 @@
 import datetime
 
 from django.contrib.auth import get_user_model
+from django.core.exceptions import ValidationError
 from django.test import TestCase
 from django.utils import timezone
 
@@ -100,5 +101,39 @@ class TaskTests(TestCase):
             importance=7,
         )
 
+    
         self.assertEqual(task.user, self.user)
         self.assertEqual(self.user.tasks.count(), 1)
+
+
+    def test_task_calculate_time_left_and_no_deadline_returns_zero(self):
+        today = timezone.now().date()
+        task = Task.objects.create(
+            user=self.user,
+            task_message="No deadline task",
+            task_category=None,
+            estimated_minutes=60,
+            start_time=today,
+            completed=False,
+            deadline=today,
+            importance=7,
+        )
+        task.deadline = None
+
+        self.assertEqual(task.calculate_time_left(), 0)
+
+    def test_task_clean_with_invalid_dates(self):
+        today = timezone.now().date()
+        task = Task.objects.create(
+            user=self.user,
+            task_message="Clean test",
+            task_category=None,
+            estimated_minutes=60,
+            start_time=today+datetime.timedelta(days=100),
+            completed=False,
+            deadline=today,
+            importance=7,
+        )
+
+        with self.assertRaises(ValidationError):
+            task.full_clean()
