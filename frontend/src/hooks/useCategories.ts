@@ -1,7 +1,15 @@
 import { useEffect, useState } from "react"
 
-export type Category = { id: number; text: string }
+/**
+ * Category represents a simple category record returned by the API.
+ */
+export interface Category { id: number; text: string }
 
+/**
+ * Hook to load categories from the API.
+ *
+ * Returns an object with `categories` and `loading` flag.
+ */
 export default function useCategories() {
   const [categories, setCategories] = useState<Category[]>([])
   const [loading, setLoading] = useState(true)
@@ -12,14 +20,14 @@ export default function useCategories() {
       try {
         const res = await fetch("/api/categories/", { credentials: "include" })
         if (res.ok) {
-          const data = await res.json()
+          const data = await res.json() as Category[]
           if (mounted) setCategories(data)
         }
       } finally {
         if (mounted) setLoading(false)
       }
     }
-    load()
+    void load()
     return () => {
       mounted = false
     }

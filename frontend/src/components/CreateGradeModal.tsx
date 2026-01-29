@@ -1,9 +1,17 @@
-import { useState, useEffect } from "react"
+import { useState } from "react"
 import useCategories from "../hooks/useCategories"
 
-type Category = { id: number; text: string }
+interface Category { id: number; text: string }
 
-type Props = {
+/**
+ * Props for CreateGradeModal component.
+ * @property open Controls whether the modal is visible.
+ * @property onClose Callback invoked to close the modal.
+ * @property onCreated Optional callback invoked after a successful create.
+ * @property onUpdated Optional callback invoked after a successful update.
+ * @property initialData Optional initial values for editing an existing grade.
+ */
+interface Props {
   open: boolean
   onClose: () => void
   onCreated?: () => void
@@ -18,32 +26,24 @@ type Props = {
   }
 }
 
-export default function CreateGradeModal({ open, onClose, onCreated, onUpdated, initialData }: Props) {
-  const [name, setName] = useState("")
-  const [score, setScore] = useState<number | "">("")
-  const [total, setTotal] = useState<number | "">("")
-  const [date, setDate] = useState("")
+/**
+ * CreateGradeModal renders a small modal to create or edit a grade.
+ * @param props Component props.
+ * @param props.open Whether the modal is open.
+ * @param props.onClose Function to call to close the modal.
+ * @param props.onCreated Optional callback after creation.
+ * @param props.onUpdated Optional callback after update.
+ * @param props.initialData Optional initial values used when editing.
+ */
+export default function CreateGradeModal(props: Props) {
+  const { open, onClose, onCreated, onUpdated, initialData } = props
+  const [name, setName] = useState(initialData?.name ?? "")
+  const [score, setScore] = useState<number | "">(initialData?.score ?? "")
+  const [total, setTotal] = useState<number | "">(initialData?.total ?? "")
+  const [date, setDate] = useState(initialData?.date ?? "")
   const [error, setError] = useState<string | null>(null)
-  const [categoryId, setCategoryId] = useState<number | null>(null)
+  const [categoryId, setCategoryId] = useState<number | null>(initialData?.categoryId ?? null)
   const { categories } = useCategories()
-
-  useEffect(() => {
-    if (!open) return
-    if (!initialData) {
-      setName("")
-      setScore("")
-      setTotal("")
-      setDate("")
-      setCategoryId(null)
-      return
-    }
-    if (initialData.name) setName(initialData.name)
-    if (typeof initialData.score !== "undefined") setScore(initialData.score)
-    if (typeof initialData.total !== "undefined") setTotal(initialData.total)
-    if (initialData.date) setDate(initialData.date)
-    if (typeof initialData.categoryId !== "undefined") setCategoryId(initialData.categoryId)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open, initialData])
 
   if (!open) return null
 
@@ -56,6 +56,8 @@ export default function CreateGradeModal({ open, onClose, onCreated, onUpdated, 
     })
   }
 
+  /** Create a grade record via the API. */
+
   async function updateGrade(id: number, payload: Record<string, unknown>) {
     return fetch(`/api/grades/${id}/`, {
       method: "PUT",
@@ -64,6 +66,8 @@ export default function CreateGradeModal({ open, onClose, onCreated, onUpdated, 
       body: JSON.stringify(payload),
     })
   }
+
+  /** Update an existing grade via the API. */
 
   async function submit(e: React.FormEvent) {
     e.preventDefault()
@@ -83,24 +87,27 @@ export default function CreateGradeModal({ open, onClose, onCreated, onUpdated, 
       total_possible: total,
       date_achieved: date,
     }
-    if (initialData && typeof initialData.id === "number") {
+
+    if (typeof initialData?.id === "number") {
       const res = await updateGrade(initialData.id, payload)
       if (res.ok) {
-        if (onUpdated) onUpdated()
+        void onUpdated?.()
       } else setError("Failed to update grade")
     } else {
       const res = await createGrade(payload)
       if (res.ok) {
-        if (onCreated) onCreated()
+        void onCreated?.()
       } else setError("Failed to create grade")
     }
   }
+  
+  /** Submit handler for the form; performs create or update. */
 
   return (
     <div className="fixed inset-0 bg-black/30 flex items-center justify-center p-4">
       <div className="bg-white rounded shadow p-4 w-full max-w-md">
-  <h2 className="text-lg font-semibold mb-2">{initialData ? "Edit grade" : "Create grade"}</h2>
-        <form onSubmit={submit} className="space-y-2">
+        <h2 className="text-lg font-semibold mb-2">{initialData ? "Edit grade" : "Create grade"}</h2>
+        <form onSubmit={(e) => void submit(e)} className="space-y-2">
           <input
             placeholder="Assessment name"
             value={name}
@@ -134,8 +141,7 @@ export default function CreateGradeModal({ open, onClose, onCreated, onUpdated, 
               className="w-full border p-2 rounded mb-2 cursor-pointer"
             >
               <option value="">None</option>
-              {categories &&
-                categories.map((c: Category) => (
+              {categories?.map((c: Category) => (
                   <option key={c.id} value={c.id}>
                     {c.text}
                   </option>

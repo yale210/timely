@@ -3,7 +3,7 @@ import { Link } from "react-router-dom"
 import CreateGradeModal from "../components/CreateGradeModal.tsx"
 import useCategories from "../hooks/useCategories"
 
-type Grade = {
+interface Grade {
   id: number
   name: string
   category?: number | null
@@ -24,6 +24,12 @@ type EditInitial = {
   categoryId?: number | null
 } | null
 
+/**
+ * Format a duration given in minutes into a short human readable string.
+ * Examples: 0 -> "0m", 90 -> "1h 30m".
+ * @param minutes Minutes to format.
+ * @returns A compact duration string.
+ */
 function format_duration(minutes: number): string {
   if (!minutes) return "0m"
   const h = Math.floor(minutes / 60)
@@ -31,19 +37,29 @@ function format_duration(minutes: number): string {
   return `${h}h ${m}m`
 }
 
+/**
+ * Choose a CSS class for a percentage badge based on thresholds.
+ * @param p Percentage value (may be null/undefined).
+ * @returns A string of classes to style the percentage badge.
+ */
 function percentageClass(p: number | null | undefined): string {
   switch (true) {
     case p == null:
       return "text-gray-600"
-    case (p as number) < 50:
+    case (p!) < 50:
       return "inline-block text-sm font-semibold text-red-700 bg-red-100 px-2 py-0.5 rounded"
-    case (p as number) < 70:
+    case (p!) < 70:
       return "inline-block text-sm font-semibold text-orange-700 bg-orange-100 px-2 py-0.5 rounded"
     default:
       return "inline-block text-sm font-semibold text-green-700 bg-green-100 px-2 py-0.5 rounded"
   }
 }
 
+/**
+ * Gradebook page showing a table of grades, filters and summary cards.
+ *
+ * Fetches grades from the API and provides create / edit / delete actions.
+ */
 export default function Gradebook() {
   const [grades, setGrades] = useState<Grade[] | null>(null)
   const [loading, setLoading] = useState(true)
@@ -53,15 +69,15 @@ export default function Gradebook() {
   const { categories } = useCategories()
 
   useEffect(() => {
-    fetchGrades()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    void fetchGrades()
+    
   }, [])
 
   async function fetchGrades() {
     setLoading(true)
     const res = await fetch("/api/grades/", { credentials: "include" })
     if (res.ok) {
-      const data = await res.json()
+      const data = await res.json() as Grade[]
       setGrades(data)
     } else {
       setGrades([])
@@ -72,7 +88,7 @@ export default function Gradebook() {
   async function deleteGrade(id: number) {
     if (!confirm("Delete this grade?")) return
     const res = await fetch(`/api/grades/${id}/`, { method: "DELETE", credentials: "include" })
-    if (res.ok) fetchGrades()
+    if (res.ok) void fetchGrades()
   }
 
   const filteredGrades = grades
@@ -139,7 +155,7 @@ export default function Gradebook() {
             className="w-full max-w-xs border p-2 rounded cursor-pointer"
           >
             <option value="">All Categories</option>
-            {categories && categories.map((c) => (
+            {categories?.map((c) => (
               <option key={c.id} value={c.id}>{c.text}</option>
             ))}
           </select>
@@ -206,7 +222,7 @@ export default function Gradebook() {
                           <path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                         </svg>
                       </button>
-                      <button onClick={() => deleteGrade(g.id)} className="p-1 rounded hover:bg-gray-100" aria-label="Delete grade" title="Delete">
+                      <button onClick={() => { void deleteGrade(g.id); }} className="p-1 rounded hover:bg-gray-100" aria-label="Delete grade" title="Delete">
                         <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 text-red-600" viewBox="0 0 24 24" fill="none" stroke="currentColor">
                           <polyline points="3 6 5 6 21 6" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                           <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
@@ -234,12 +250,12 @@ export default function Gradebook() {
         onCreated={() => {
           setModalOpen(false)
           setEditInitial(null)
-          fetchGrades()
+          void fetchGrades()
         }}
         onUpdated={() => {
           setModalOpen(false)
           setEditInitial(null)
-          fetchGrades()
+          void fetchGrades()
         }}
       />
     </div>
