@@ -101,10 +101,8 @@ class TaskTests(TestCase):
             importance=7,
         )
 
-    
         self.assertEqual(task.user, self.user)
         self.assertEqual(self.user.tasks.count(), 1)
-
 
     def test_task_calculate_time_left_and_no_deadline_returns_zero(self):
         today = timezone.now().date()
@@ -129,7 +127,7 @@ class TaskTests(TestCase):
             task_message="Clean test",
             task_category=None,
             estimated_minutes=60,
-            start_time=today+datetime.timedelta(days=100),
+            start_time=today + datetime.timedelta(days=100),
             completed=False,
             deadline=today,
             importance=7,
