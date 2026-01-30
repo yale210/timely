@@ -1,5 +1,10 @@
 name: Lint/Test backend
 
+permissions:
+    contents: read
+    pull-requests: write
+    issues: write
+
 on:
     pull_request:
         branches:
@@ -42,10 +47,41 @@ jobs:
                   cd backend
                   python -m pip install --upgrade pip
                   pip install -r requirements.txt
+                  pip install coverage
             - name: Run tests
               run: |
                   cd backend
-                  python manage.py test
+                  coverage run manage.py test
+                  coverage report --fail-under=90 -m
+            - name: Generate coverage html
+              if: always()
+              run: |
+                  cd backend
+                  coverage html
+            - name: Upload coverage report
+              if: always()
+              uses: actions/upload-artifact@v4
+              with:
+                  name: backend-coverage
+                  path: backend/htmlcov
+                  retention-days: 3
+            - name: Comment coverage artifact on PR
+              if: always() && github.event_name == 'pull_request'
+              uses: actions/github-script@v8
+              with:
+                  script: |
+                      const runUrl = `${process.env.GITHUB_SERVER_URL}/${process.env.GITHUB_REPOSITORY}/actions/runs/${process.env.GITHUB_RUN_ID}#artifacts`;
+                      const body = [
+                          'Backend test coverage report HTML link',
+                          '- Artifact name: backend-coverage',
+                          `- Link to download: ${runUrl}`,
+                      ].join('\n');
+                      github.rest.issues.createComment({
+                          owner: context.repo.owner,
+                          repo: context.repo.repo,
+                          issue_number: context.issue.number,
+                          body,
+                      });
     docker-build-test:
         name: Test if backend docker build will work
         needs: [lint, test]
