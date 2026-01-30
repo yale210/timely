@@ -18,11 +18,7 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
-from core.views.calendar_view import TaskViewSet
-from core.views.event_view import EventViewSet
-from core.views.preference_view import PreferenceViewSet
-from core.views.grade_view import GradeViewSet
-from core.views.category_view import CategoryViewSet
+from core.views import TaskViewSet, EventViewSet, PreferenceViewSet, GradeViewSet, CategoryViewSet
 
 
 router = DefaultRouter()
