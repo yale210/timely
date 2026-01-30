@@ -21,23 +21,23 @@ class RegisterSerializer(serializers.ModelSerializer):
 
 class LoginSerializer(serializers.Serializer):
 
-    email = serializers.EmailField()
+    username = serializers.CharField(max_length=255)
     password = serializers.CharField(style={'input_type': 'password'}, trim_whitespace=False)
 
     def validate(self, attrs):
-        email = attrs.get("email").strip().lower()
+        username = attrs.get("username")
         password = attrs.get("password")
 
-        if not email:
-            raise serializers.ValidationError("Email is required.")
+        if not username:
+            raise serializers.ValidationError("Username is required.")
 
         if not password:
             raise serializers.ValidationError("Password is required.")
 
-        if not User.objects.filter(email=email).exists():
+        if not User.objects.filter(username=username).exists():
             serializers.ValidationError("Invalid credentials.")
 
-        user = authenticate(request=self.context.get("request"), email=email, password=password)
+        user = authenticate(request=self.context.get("request"), username=username, password=password)
         if not user:
             raise serializers.ValidationError("Invalid credentials.")
         attrs["user"] = user
