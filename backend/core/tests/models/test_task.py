@@ -102,15 +102,15 @@ class TaskTests(TestCase):
         self.assertEqual(self.user.tasks.count(), 1)
 
     def test_task_calculate_time_left_and_no_deadline_returns_zero(self):
-        today = timezone.now().date()
+        now = timezone.now()
         task = Task.objects.create(
             user=self.user,
-            task_message="No deadline task",
-            task_category=None,
+            title="No deadline task",
+            description="Testing no deadline",
             estimated_minutes=60,
-            start_time=today,
+            start_time=now,
             completed=False,
-            deadline=today,
+            deadline=now,
             importance=7,
         )
         task.deadline = None
@@ -118,15 +118,15 @@ class TaskTests(TestCase):
         self.assertEqual(task.calculate_time_left(), 0)
 
     def test_task_clean_with_invalid_dates(self):
-        today = timezone.now().date()
+        now = timezone.now()
         task = Task.objects.create(
             user=self.user,
-            task_message="Clean test",
-            task_category=None,
+            title="Clean test",
+            description="Testing invalid dates",
             estimated_minutes=60,
-            start_time=today + datetime.timedelta(days=100),
+            start_time=now + datetime.timedelta(days=100),
             completed=False,
-            deadline=today,
+            deadline=now,
             importance=7,
         )
 
