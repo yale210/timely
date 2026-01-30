@@ -10,6 +10,7 @@ class SpecialDatesTests(TestCase):
         self.user = get_user_model().objects.create_user(
             username="testuser",
             password="password123",
+            email="test@user.com"
         )
 
     def test_special_dates_str_with_text(self):

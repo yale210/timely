@@ -13,6 +13,7 @@ class EventTests(TestCase):
         self.user = get_user_model().objects.create_user(
             username="testuser",
             password="password123",
+            email="test@user.com"
         )
 
     def test_event_calculate_time_left(self):

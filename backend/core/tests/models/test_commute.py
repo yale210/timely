@@ -11,6 +11,7 @@ class CommuteTests(TestCase):
         self.user = get_user_model().objects.create_user(
             username="testuser",
             password="password123",
+            email="test@user.com"
         )
 
     def test_commute_can_be_created(self):

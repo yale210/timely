@@ -80,7 +80,7 @@ class LoginSerializerTest(TestCase):
 
     def test_valid_login(self):
         data = {
-            'email': 'test@example.com',
+            'username': 'testuser',
             'password': 'password123'
         }
         serializer = LoginSerializer(data=data)
@@ -89,7 +89,7 @@ class LoginSerializerTest(TestCase):
 
     def test_login_with_incorrect_password(self):
         data = {
-            'email': 'test@example.com',
+            'username': 'testuser',
             'password': 'wrongpassword'
         }
         serializer = LoginSerializer(data=data)
@@ -97,9 +97,9 @@ class LoginSerializerTest(TestCase):
         self.assertIn('non_field_errors', serializer.errors)
         self.assertIn("Invalid credentials.", serializer.errors['non_field_errors'])
 
-    def test_login_with_non_existent_email(self):
+    def test_login_with_non_existent_username(self):
         data = {
-            'email': 'nonexistent@example.com',
+            'username': 'nonexistentuser',
             'password': 'password123'
         }
         serializer = LoginSerializer(data=data)
@@ -107,14 +107,14 @@ class LoginSerializerTest(TestCase):
         self.assertIn('non_field_errors', serializer.errors)
         self.assertIn("Invalid credentials.", serializer.errors['non_field_errors'])
 
-    def test_login_missing_email(self):
+    def test_login_missing_username(self):
         data = {
             'password': 'password123'
         }
         serializer = LoginSerializer(data=data)
         self.assertFalse(serializer.is_valid())
-        self.assertIn('email', serializer.errors)
-        self.assertEqual(serializer.errors['email'][0],
+        self.assertIn('username', serializer.errors)
+        self.assertEqual(serializer.errors['username'][0],
                          ErrorDetail('This field is required.', code='required'))
 
     def test_login_missing_password(self):
@@ -164,7 +164,7 @@ class LoginAPIViewTest(APITestCase):
 
     def test_successful_login(self):
         data = {
-            'email': 'test@example.com',
+            'username': 'testuser',
             'password': 'password123'
         }
         response = self.client.post(self.login_url, data, format='json')
@@ -175,7 +175,7 @@ class LoginAPIViewTest(APITestCase):
 
     def test_login_with_invalid_credentials(self):
         data = {
-            'email': 'test@example.com',
+            'username': 'testuser',
             'password': 'wrongpassword'
         }
         response = self.client.post(self.login_url, data, format='json')
@@ -185,7 +185,7 @@ class LoginAPIViewTest(APITestCase):
 
     def test_login_with_missing_fields(self):
         data = {
-            'email': 'test@example.com'
+            'username': 'testuser'
         }
         response = self.client.post(self.login_url, data, format='json')
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)

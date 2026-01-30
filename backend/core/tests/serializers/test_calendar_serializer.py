@@ -13,6 +13,7 @@ class CalendarSerializerTests(TestCase):
         self.user = get_user_model().objects.create_user(
             username="serializeruser",
             password="password123",
+            email="test@user.com"
         )
         self.category1 = Category.objects.create(text="Study")
         self.category2 = Category.objects.create(text="Work")
