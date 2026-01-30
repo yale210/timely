@@ -135,7 +135,7 @@ class RegisterViewTest(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertIn("username", response.data)
         self.assertIn("email", response.data)
-        self.assertTrue("password" in response.data)  # Password should not be returned
+        self.assertNotIn("password", response.data)  # Password should not be returned
         self.assertTrue(User.objects.filter(username="newapitestuser").exists())
 
     def test_registration_with_invalid_data(self):

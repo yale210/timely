@@ -8,6 +8,9 @@ class RegisterSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ["username", "email", "password"]
+        extra_kwargs = {
+            "password": {"write_only": True},
+        }
 
     def validate(self, attrs):
         username = attrs.get("username").strip().lower()
@@ -37,7 +40,7 @@ class LoginSerializer(serializers.Serializer):
             raise serializers.ValidationError("Password is required.")
 
         if not User.objects.filter(username=username).exists():
-            serializers.ValidationError("Invalid credentials.")
+            raise serializers.ValidationError("Invalid credentials.")
 
         user = authenticate(
             request=self.context.get("request"), username=username, password=password
