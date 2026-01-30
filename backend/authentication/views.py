@@ -1,7 +1,7 @@
 from django.contrib.auth import login
 from knox.views import LoginView
 from rest_framework import status
-from rest_framework.permissions import AllowAny
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
@@ -35,3 +35,10 @@ class LoginAPIView(LoginView):
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
         return Response(responses.data, status=status.HTTP_200_OK)
+
+
+class TestPermissionView(APIView):
+    permission_classes = (IsAuthenticated,)
+
+    def get(self, request):
+        return Response({"message": "You are authenticated!: " + str(request.user)})
