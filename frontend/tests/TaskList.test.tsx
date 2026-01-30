@@ -1,7 +1,7 @@
 import { it, describe, expect, vi, beforeEach, afterEach } from 'vitest'
 import { render, screen, fireEvent, waitFor, cleanup } from '@testing-library/react'
-import TaskList from "../src/pages/TaskList"
-import * as taskService from "../src/services/taskService"
+import TaskList from "@/pages/TaskList"
+import * as taskService from "@/services/taskService"
 import { MemoryRouter } from 'react-router-dom'
 
 vi.mock("../src/services/taskService")

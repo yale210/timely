@@ -1,6 +1,6 @@
 import { cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { it, expect, describe, beforeEach, afterEach } from 'vitest'
-import { Navbar } from '../../src/components'
+import { Navbar } from '@/components'
 import { MemoryRouter } from 'react-router-dom'
 
 describe('Navbar', () => {
