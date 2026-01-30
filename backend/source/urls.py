@@ -21,7 +21,8 @@ from rest_framework.routers import DefaultRouter
 from core.views.calendar_view import TaskViewSet
 from core.views.event_view import EventViewSet
 from core.views.preference_view import PreferenceViewSet
-from core.views import TaskViewSet, GradeViewSet, CategoryViewSet, EventViewSet
+from core.views.grade_view import GradeViewSet
+from core.views.category_view import CategoryViewSet
 
 
 router = DefaultRouter()
