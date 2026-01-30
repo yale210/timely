@@ -26,11 +26,6 @@ class Event(models.Model):
         related_name="event_category",
     )
 
-    importance = models.PositiveSmallIntegerField(
-        choices=ImportanceChoices.choices,
-        validators=[MinValueValidator(1), MaxValueValidator(10)],
-    )
-
     # If one-off event, use these fields.
     time = models.TimeField(null=True, blank=True)
     date = models.DateField(null=True, blank=True)
