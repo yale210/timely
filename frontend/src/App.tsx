@@ -8,11 +8,11 @@ import { Home, Login, Signup, CalendarPage, Dashboard, TaskList, Gradebook } fro
 export default function App() {
   return (
     <Routes>
-      <Route path="/" element={<Home />}></Route>
-      <Route path="/login" element={<Login />}></Route>
-      <Route path="/signup" element={<Signup />}></Route>
-      <Route path="/calendar" element={<CalendarPage />}></Route>
-      <Route path="/dashboard" element={<Dashboard />}></Route>
+      <Route path="/" element={<Home />} />
+      <Route path="/login" element={<Login />} />
+      <Route path="/signup" element={<Signup />} />
+      <Route path="/calendar" element={<CalendarPage />} />
+      <Route path="/dashboard" element={<Dashboard />} />
       <Route path="/tasks" element={<TaskList />} />
       <Route path="/gradebook" element={<Gradebook />} />
     </Routes>

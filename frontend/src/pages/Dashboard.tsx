@@ -6,6 +6,9 @@ import { CalendarPage } from "./index"
 
 
 
+/**
+ *
+ */
 export default function Dashboard(){
   return(
   <div className="min-h-screen bg-white">
@@ -20,9 +23,9 @@ export default function Dashboard(){
       </header>
 
       <section className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-        <Statcard title={"Today's Tasks"} value={["do part one of courswork", "review pr for coursework"]}/>
-        <Statcard title={"Pending Tasks"} value={[]}/>
-        <Statcard title={"Overdue Tasks"} value={[]}/>
+        <Statcard title="Today's Tasks" value={["do part one of courswork", "review pr for coursework"]}/>
+        <Statcard title="Pending Tasks" value={[]}/>
+        <Statcard title="Overdue Tasks" value={[]}/>
 
         <section className=" col-span-3 rounded-lg bg-white p-6 shadow-sm ring-1 ring-gray-900/5 m-6">
           <CalendarPage />
