@@ -12,14 +12,10 @@ class TaskViewSetTests(TestCase):
     def setUp(self):
         self.client = APIClient()
         self.user = get_user_model().objects.create_user(
-            username="viewuser",
-            password="password123",
-            email="view@user.com"
+            username="viewuser", password="password123", email="view@user.com"
         )
         self.other_user = get_user_model().objects.create_user(
-            username="otheruser",
-            password="password123",
-            email="other@user.com"
+            username="otheruser", password="password123", email="other@user.com"
         )
         self.category1 = Category.objects.create(text="Work")
         self.category2 = Category.objects.create(text="Home")

@@ -1,4 +1,3 @@
-
 from django.contrib.auth import login
 from knox.views import LoginView
 from rest_framework import status
@@ -22,7 +21,6 @@ class RegisterView(APIView):
 
 
 class LoginAPIView(LoginView):
-
     permission_classes = (AllowAny,)
     serializer_class = LoginSerializer
 

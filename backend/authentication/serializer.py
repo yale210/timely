@@ -19,10 +19,12 @@ class RegisterSerializer(serializers.ModelSerializer):
         user = User.objects.create_user(**validated_data)
         return user
 
-class LoginSerializer(serializers.Serializer):
 
+class LoginSerializer(serializers.Serializer):
     username = serializers.CharField(max_length=255)
-    password = serializers.CharField(style={'input_type': 'password'}, trim_whitespace=False)
+    password = serializers.CharField(
+        style={"input_type": "password"}, trim_whitespace=False
+    )
 
     def validate(self, attrs):
         username = attrs.get("username")
@@ -37,7 +39,9 @@ class LoginSerializer(serializers.Serializer):
         if not User.objects.filter(username=username).exists():
             serializers.ValidationError("Invalid credentials.")
 
-        user = authenticate(request=self.context.get("request"), username=username, password=password)
+        user = authenticate(
+            request=self.context.get("request"), username=username, password=password
+        )
         if not user:
             raise serializers.ValidationError("Invalid credentials.")
         attrs["user"] = user
@@ -47,4 +51,13 @@ class LoginSerializer(serializers.Serializer):
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ["id", "username", "email", "last_login", "date_of_birth", "date_joined", "is_staff", "is_superuser"]
+        fields = [
+            "id",
+            "username",
+            "email",
+            "last_login",
+            "date_of_birth",
+            "date_joined",
+            "is_staff",
+            "is_superuser",
+        ]

@@ -13,12 +13,10 @@ class GradeViewTests(TestCase):
     def setUp(self):
         self.client = APIClient()
         self.user = get_user_model().objects.create_user(
-            username="viewuser", password="pwd",
-            email="view@user.com"
+            username="viewuser", password="pwd", email="view@user.com"
         )
         self.other = get_user_model().objects.create_user(
-            username="other", password="pwd",
-            email="other@user.com"
+            username="other", password="pwd", email="other@user.com"
         )
 
     def test_unauthenticated_access(self):
