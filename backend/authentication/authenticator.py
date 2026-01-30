@@ -1,5 +1,4 @@
 from django.contrib.auth.backends import BaseBackend
-from knox.serializers import username_field
 
 from .models import User
 

@@ -1,8 +1,7 @@
 
 from django.contrib.auth import login
 from knox.views import LoginView
-from rest_framework import status, permissions
-from rest_framework.authtoken.serializers import AuthTokenSerializer
+from rest_framework import status
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.views import APIView

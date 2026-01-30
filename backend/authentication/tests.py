@@ -6,7 +6,6 @@ from rest_framework.test import APITestCase
 
 from .models import User
 from .serializer import RegisterSerializer, LoginSerializer
-from .views import RegisterView, LoginAPIView
 
 
 class UserModelTest(TestCase):

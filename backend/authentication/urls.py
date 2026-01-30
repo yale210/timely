@@ -1,5 +1,5 @@
 from django.urls import path
-from knox.views import LoginView, LogoutView, LogoutAllView
+from knox.views import LogoutView, LogoutAllView
 
 from .views import RegisterView, LoginAPIView
 
