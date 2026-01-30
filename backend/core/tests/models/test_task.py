@@ -11,8 +11,7 @@ from core.models import Task, Category
 class TaskTests(TestCase):
     def setUp(self):
         self.user = get_user_model().objects.create_user(
-            username="testuser",
-            password="password123",
+            username="testuser", password="password123", email="test@user.com"
         )
         self.category1 = Category.objects.create(text="Work")
         self.category2 = Category.objects.create(text="Personal")

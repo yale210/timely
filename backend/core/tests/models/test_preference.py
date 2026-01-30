@@ -10,8 +10,7 @@ from core.models import Preference
 class PreferenceTests(TestCase):
     def setUp(self):
         self.user = get_user_model().objects.create_user(
-            username="testuser",
-            password="password123",
+            username="testuser", password="password123", email="test@user.com"
         )
 
     def test_preference_helpers(self):

@@ -11,8 +11,7 @@ from core.models import Event
 class EventTests(TestCase):
     def setUp(self):
         self.user = get_user_model().objects.create_user(
-            username="testuser",
-            password="password123",
+            username="testuser", password="password123", email="test@user.com"
         )
 
     def test_event_calculate_time_left(self):

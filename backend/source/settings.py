@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/6.0/ref/settings/
 """
 
 import os
+from datetime import timedelta
 from django.core.exceptions import ImproperlyConfigured
 from pathlib import Path
 
@@ -78,6 +79,8 @@ INSTALLED_APPS = [
     "rest_framework",
     "django_filters",
     "corsheaders",
+    "knox",
+    "authentication",
 ]
 
 MIDDLEWARE = [
@@ -161,6 +164,21 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
+AUTHENTICATION_BACKENDS = (
+    "django.contrib.auth.backends.ModelBackend",
+    "authentication.authenticator.Authenticator",
+)
+
+AUTH_USER_MODEL = "authentication.User"
+
+REST_FRAMEWORK = {
+    "DEFAULT_AUTHENTICATION_CLASSES": ("knox.auth.TokenAuthentication",),
+}
+
+REST_KNOX = {
+    "USER_SERIALIZER": "authentication.serializer.UserSerializer",
+    "TOKEN_TTL": timedelta(hours=10),
+}
 
 # Internationalization
 # https://docs.djangoproject.com/en/6.0/topics/i18n/

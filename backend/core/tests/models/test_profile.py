@@ -9,8 +9,7 @@ from core.models import Profile
 class ProfileTests(TestCase):
     def setUp(self):
         self.user = get_user_model().objects.create_user(
-            username="testuser",
-            password="password123",
+            username="testuser", password="password123", email="test@user.com"
         )
         self.profile = Profile.objects.create(
             user=self.user, date_of_birth=datetime.date(2006, 4, 20)

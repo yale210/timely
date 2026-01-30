@@ -37,4 +37,5 @@ router.register(r"preferences", PreferenceViewSet, basename="preference")
 urlpatterns = [
     path("api/", include(router.urls)),
     path("api/admin/", admin.site.urls),
+    path("api/authentication/", include("authentication.urls")),
 ]

@@ -10,7 +10,7 @@ from core.models import Grade, Category, Task
 class GradeModelTests(TestCase):
     def setUp(self):
         self.user = get_user_model().objects.create_user(
-            username="guser", password="pwd"
+            username="guser", password="pwd", email="g@mail.com"
         )
 
     def test_valid_grade_creation(self):

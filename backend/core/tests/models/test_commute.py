@@ -9,8 +9,7 @@ from core.models import Commute
 class CommuteTests(TestCase):
     def setUp(self):
         self.user = get_user_model().objects.create_user(
-            username="testuser",
-            password="password123",
+            username="testuser", password="password123", email="test@user.com"
         )
 
     def test_commute_can_be_created(self):
