@@ -4,8 +4,9 @@ from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
 from django.test import TestCase
 from django.utils import timezone
+from django.core.exceptions import ValidationError
 
-from core.models import Task
+from core.models import Task, Category
 
 
 class TaskTests(TestCase):
@@ -14,73 +15,71 @@ class TaskTests(TestCase):
             username="testuser",
             password="password123",
         )
+        self.category1 = Category.objects.create(text="Work")
+        self.category2 = Category.objects.create(text="Personal")
 
     def test_task_calculate_time_left_is_overdue_returns_zero(self):
-        today = timezone.now().date()
+        now = timezone.now()
         task = Task.objects.create(
             user=self.user,
-            task_message="Overdue task",
-            task_category=None,
+            title="Overdue task",
             estimated_minutes=45,
-            start_time=today,
+            start_time=now,
             completed=False,
-            deadline=today - datetime.timedelta(days=10),
+            deadline=now - datetime.timedelta(days=10),
             importance=10,
         )
 
         self.assertEqual(task.calculate_time_left(), 0)
 
     def test_task_calculate_time_left_deadline(self):
-        today = timezone.now().date()
+        now = timezone.now()
         task = Task.objects.create(
             user=self.user,
-            task_message="Deadline task",
-            task_category=None,
+            title="Deadline task",
             estimated_minutes=45,
-            start_time=today,
+            start_time=now,
             completed=False,
-            deadline=today + datetime.timedelta(days=5),
+            deadline=now + datetime.timedelta(days=5),
             importance=7,
         )
 
         self.assertEqual(task.calculate_time_left(), 5)
 
     def test_task_calculate_time_left_same_day_deadline(self):
-        today = timezone.now().date()
+        now = timezone.now()
         task = Task.objects.create(
             user=self.user,
-            task_message="No date task",
-            task_category=None,
+            title="No date task",
             estimated_minutes=60,
-            start_time=today,
+            start_time=now,
             completed=False,
-            deadline=today,
+            deadline=now + datetime.timedelta(hours=1),
             importance=7,
         )
 
+        # Still within the same day, so it might return 0 days left if we use days
         self.assertEqual(task.calculate_time_left(), 0)
 
     def test_tasks_can_have_subtasks(self):
-        today = timezone.now().date()
+        now = timezone.now()
         parent = Task.objects.create(
             user=self.user,
-            task_message="Parent task",
-            task_category=None,
+            title="Parent task",
             estimated_minutes=60,
-            start_time=today,
+            start_time=now,
             completed=False,
-            deadline=today,
+            deadline=now,
             importance=7,
         )
 
         child = Task.objects.create(
             user=self.user,
-            task_message="child task",
-            task_category=None,
+            title="child task",
             estimated_minutes=600,
-            start_time=today,
+            start_time=now,
             completed=False,
-            deadline=today,
+            deadline=now,
             importance=7,
             parent_task=parent,
         )
@@ -89,15 +88,14 @@ class TaskTests(TestCase):
         self.assertEqual(child.parent_task, parent)
 
     def test_task_is_linked_to_user(self):
-        today = timezone.now().date()
+        now = timezone.now()
         task = Task.objects.create(
             user=self.user,
-            task_message="user task",
-            task_category=None,
+            title="user task",
             estimated_minutes=60,
-            start_time=today,
+            start_time=now,
             completed=False,
-            deadline=today,
+            deadline=now,
             importance=7,
         )
 

@@ -21,12 +21,15 @@ from rest_framework.routers import DefaultRouter
 from core.views.calendar_view import TaskViewSet
 from core.views.event_view import EventViewSet
 from core.views.preference_view import PreferenceViewSet
+from core.views import TaskViewSet, GradeViewSet, CategoryViewSet, EventViewSet
+
 
 router = DefaultRouter()
 router.register(r"tasks", TaskViewSet, basename="task")
+router.register(r"grades", GradeViewSet, basename="grade")
+router.register(r"categories", CategoryViewSet, basename="category")
 router.register(r"events", EventViewSet, basename="event")
 router.register(r"preferences", PreferenceViewSet, basename="preference")
-
 
 urlpatterns = [
     path("api/", include(router.urls)),
