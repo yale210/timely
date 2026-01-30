@@ -26,14 +26,11 @@ class PreferenceTests(TestCase):
         self.assertGreater(len(holidays), 0)
         self.assertEqual(preference.get_sleep(), "23:00:00 - 07:00:00")
 
-    
-    
     def test_sleep_start_cannot_equal_sleep_end(self):
         preference = Preference(
             user=self.user,
             sleep_start=datetime.time(8, 0),
             sleep_end=datetime.time(8, 0),
-            
         )
 
         with self.assertRaises(ValidationError):
@@ -44,7 +41,6 @@ class PreferenceTests(TestCase):
             user=self.user,
             sleep_start=datetime.time(20, 0),
             sleep_end=datetime.time(10, 0),
-            
         )
         preference.full_clean()
 
@@ -53,7 +49,6 @@ class PreferenceTests(TestCase):
             user=self.user,
             sleep_start=datetime.time(20, 0),
             sleep_end=datetime.time(10, 0),
-            
         )
         holidays = preference.get_holidays_for_year(2026)
         self.assertIn(

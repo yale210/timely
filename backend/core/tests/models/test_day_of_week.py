@@ -24,7 +24,9 @@ class DayOfWeekTests(TestCase):
             username="testuser", email="test@example.com", password="testpass123"
         )
         preference = Preference.objects.create(
-            user=user, sleep_start="22:00", sleep_end="07:00",
+            user=user,
+            sleep_start="22:00",
+            sleep_end="07:00",
         )
         preference.days_off.add(self.monday)
         self.assertIn(self.monday, preference.days_off.all())
