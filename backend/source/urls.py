@@ -18,7 +18,13 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
-from core.views import TaskViewSet, GradeViewSet, CategoryViewSet, EventViewSet
+from core.views import (
+    TaskViewSet,
+    EventViewSet,
+    PreferenceViewSet,
+    GradeViewSet,
+    CategoryViewSet,
+)
 
 
 router = DefaultRouter()
@@ -26,6 +32,7 @@ router.register(r"tasks", TaskViewSet, basename="task")
 router.register(r"grades", GradeViewSet, basename="grade")
 router.register(r"categories", CategoryViewSet, basename="category")
 router.register(r"events", EventViewSet, basename="event")
+router.register(r"preferences", PreferenceViewSet, basename="preference")
 
 urlpatterns = [
     path("api/", include(router.urls)),

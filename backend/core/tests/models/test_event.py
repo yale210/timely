@@ -242,3 +242,15 @@ class EventTests(TestCase):
         )
         self.assertFalse(event.recurring)
         self.assertEqual(event.time, datetime.time(10, 0))
+
+    def test_one_off_event_time_left(self):
+        today = timezone.now().date()
+        event = Event.objects.create(
+            user=self.user,
+            event_category=None,
+            time=datetime.time(10, 0),
+            date=today,
+            importance=5,
+            recurring=False,
+        )
+        self.assertEqual(event.calculate_time_left(), 0)

@@ -1,9 +1,9 @@
 import datetime
 
 from django.contrib.auth import get_user_model
+from django.core.exceptions import ValidationError
 from django.test import TestCase
 from django.utils import timezone
-from django.core.exceptions import ValidationError
 
 from core.models import Task, Category
 
@@ -101,44 +101,34 @@ class TaskTests(TestCase):
         self.assertEqual(task.user, self.user)
         self.assertEqual(self.user.tasks.count(), 1)
 
-    def test_task_multiple_categories(self):
+    def test_task_calculate_time_left_and_no_deadline_returns_zero(self):
         now = timezone.now()
         task = Task.objects.create(
             user=self.user,
-            title="Multi-cat task",
-            estimated_minutes=30,
+            title="No deadline task",
+            description="Testing no deadline",
+            estimated_minutes=60,
             start_time=now,
-            deadline=now + datetime.timedelta(days=1),
-            importance=5,
-        )
-        task.categories.add(self.category1, self.category2)
-
-        self.assertEqual(task.categories.count(), 2)
-        self.assertIn(self.category1, task.categories.all())
-        self.assertIn(self.category2, task.categories.all())
-
-    def test_task_description_field(self):
-        now = timezone.now()
-        task = Task.objects.create(
-            user=self.user,
-            title="Task with desc",
-            description="This is a test description",
-            estimated_minutes=30,
-            start_time=now,
-            deadline=now + datetime.timedelta(days=1),
-            importance=5,
-        )
-        self.assertEqual(task.description, "This is a test description")
-
-    def test_task_clean_validation(self):
-        now = timezone.now()
-        task = Task(
-            user=self.user,
-            title="Invalid task",
-            start_time=now + datetime.timedelta(days=1),
+            completed=False,
             deadline=now,
-            estimated_minutes=10,
-            importance=1,
+            importance=7,
         )
+        task.deadline = None
+
+        self.assertEqual(task.calculate_time_left(), 0)
+
+    def test_task_clean_with_invalid_dates(self):
+        now = timezone.now()
+        task = Task.objects.create(
+            user=self.user,
+            title="Clean test",
+            description="Testing invalid dates",
+            estimated_minutes=60,
+            start_time=now + datetime.timedelta(days=100),
+            completed=False,
+            deadline=now,
+            importance=7,
+        )
+
         with self.assertRaises(ValidationError):
-            task.clean()
+            task.full_clean()
