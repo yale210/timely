@@ -1,4 +1,5 @@
 from django.contrib.auth import login
+from django.utils import timezone
 from knox.views import LoginView
 from rest_framework import status
 from rest_framework.permissions import AllowAny, IsAuthenticated
@@ -29,6 +30,7 @@ class LoginAPIView(LoginView):
         if serializer.is_valid(raise_exception=True):
             user = serializer.validated_data["user"]
             login(request, user)
+            user.last_login = timezone.now()
             responses = super().post(request, format=None)
             responses.data["user"] = UserSerializer(user).data
         else:

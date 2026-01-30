@@ -13,6 +13,7 @@ class CustomUserAdmin(UserAdmin):
         "is_staff",
         "is_active",
         "date_joined",
+        "last_login",
     )
 
     list_filter = (
@@ -51,3 +52,19 @@ class CustomUserAdmin(UserAdmin):
         "groups",
         "user_permissions",
     )
+
+    add_fieldsets = [
+        (
+            None,
+            {
+                "classes": ["wide"],
+                "fields": (
+                    "username",
+                    "password1",
+                    "password2",
+                    "email",
+                    "date_of_birth",
+                ),
+            },
+        )
+    ]
