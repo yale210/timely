@@ -37,7 +37,7 @@ class LoginSerializer(serializers.Serializer):
             raise serializers.ValidationError("Password is required.")
 
         if not User.objects.filter(username=username).exists():
-            serializers.ValidationError("Invalid credentials.")
+            raise serializers.ValidationError("Invalid credentials.")
 
         user = authenticate(
             request=self.context.get("request"), username=username, password=password
