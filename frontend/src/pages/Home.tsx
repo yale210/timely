@@ -1,5 +1,5 @@
-import { Navbar, Footer } from "../components/index"
-import heroImage from "../assets/hero-content-img.svg"
+import { Navbar, Footer } from "@/components/index"
+import heroImage from "@/assets/hero-content-img.svg"
 import { Link } from "react-router-dom"
 
 /**
