@@ -8,5 +8,5 @@ urlpatterns = [
     path("session/", LoginAPIView.as_view(), name="login"),
     path("logout/", LogoutView.as_view(), name="logout"),
     path("logoutall/", LogoutAllView.as_view(), name="logoutall"),
-    path("test/", TestPermissionView.as_view(), name="test")
+    path("test/", TestPermissionView.as_view(), name="test"),
 ]
