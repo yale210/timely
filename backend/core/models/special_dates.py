@@ -3,6 +3,11 @@ from django.conf import settings
 
 
 class SpecialDates(models.Model):
+    """
+    This model allows users to create special dates which can be used to help customise scheduling.
+    An example could be a birthday, wedding, or any other special occasion.
+    """
+
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="special_dates"
     )
@@ -10,6 +15,7 @@ class SpecialDates(models.Model):
     date = models.DateField()
     text = models.CharField(max_length=250)
 
+    # Retrieve the descriptive text for the special date.
     def __str__(self):
         if self.text:
             return self.text

@@ -1,3 +1,4 @@
+/// <reference types="vitest/config" />
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 
@@ -6,8 +7,6 @@ import tailwindcss from '@tailwindcss/vite'
 
 // https://vite.dev/config/
 export default defineConfig({
-<<<<<<< Updated upstream
-=======
   test: {
     environment: 'jsdom',
     coverage: {
@@ -20,11 +19,10 @@ export default defineConfig({
       }
     }
   },
->>>>>>> Stashed changes
   plugins: [react(), tailwindcss()], // Added tailwind plugin
   server: {
     proxy: {
       "/api": "http://localhost:8000"
     }
-  }
+  },
 })
