@@ -13,7 +13,9 @@ class Category(models.Model):
         max_length=10, blank=True, null=True
     )  # Store the hex code
     max_daily_study_time = models.PositiveSmallIntegerField(
-        validators=[MinValueValidator(0), MaxValueValidator(24)]
+        validators=[MinValueValidator(0), MaxValueValidator(24)],
+        null=True,
+        blank=True,
     )
 
     # Return the category.
