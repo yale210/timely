@@ -11,3 +11,39 @@ body, html {
 ::-webkit-scrollbar {
   display: none;
 }
+
+.event-slot {
+  border-radius: 10px;
+  overflow: hidden;
+}
+.event-slot.is-repeat::before{
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  width:6px;
+  height: 100px;
+  background: #22c55e;
+}
+
+.event-slot.is-split{
+  outline: 2px dashed #f59e1b;
+}
+
+.event-slot.is-onego::after{
+  content:"";
+  position: absolute;
+  inset: 0;
+  background-image: repeating-linear-gradient(
+    45deg,
+    rgba(59, 130, 246, 0.18),
+    rgba(59, 130, 246, 0.18) 6px,
+    rgba(59, 130, 246, 0.00) 6px,
+    rgba(59, 130, 246, 0.00) 12px,
+  );
+  pointer-events: none;
+}
+
+.event-slot.is-completed {
+  opacity: 0.55;
+}
