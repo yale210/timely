@@ -4,18 +4,22 @@ import { Bars3Icon, XMarkIcon } from '@heroicons/react/24/outline'
 import { Link } from "react-router-dom"
 
 const navigation = [
-  { name: 'Home', href: '/' },
-  { name: 'Login', href: '/login' },
-  { name: 'Signup', href: '/signup' },
+    { name: 'Home', href: '/' },
+    { name: 'Login', href: '/login' },
+    { name: 'Signup', href: '/signup' },
 ]
 
+/**
+ * A functional component that renders the navigation bar, including mobile menu logic.
+ * @returns The rendered navigation bar component.
+ */
 export default function Navbar() {
 
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
     
     return (
         <>
-            <header className="absolute inset-x-0 top-0 z-50">
+            <header className="absolute inset-x-0 top-0 z-50" data-testid="navbar">
                 <nav aria-label="Global" className="flex items-center justify-between p-6 lg:px-8">
 
                     <div className="flex lg:flex-1">

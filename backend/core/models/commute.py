@@ -2,8 +2,12 @@ from django.db import models
 from django.conf import settings
 
 
-# Stores a commute of a user. A user may have multiple a day.
 class Commute(models.Model):
+    """
+    Model used to allow for user commutes to be stored.
+    It is assumed a user may have multiple commutes a day.
+    """
+
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="commute"
     )
