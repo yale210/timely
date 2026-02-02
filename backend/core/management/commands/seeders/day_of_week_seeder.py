@@ -21,8 +21,8 @@ class DayOfWeekSeeder(BaseSeeder):
 
     
     def _create_day_of_week(self, day):
-        Commute.objects.get_or_create(
-            day_of_week = day["day_of_week"],
+        DayOfWeek.objects.get_or_create(
+            day = day["day"],
         )
 
     
