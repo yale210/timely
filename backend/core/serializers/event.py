@@ -12,7 +12,6 @@ class EventSerializer(serializers.ModelSerializer):
             "id",
             "user",
             "event_category",
-            "importance",
             "time",
             "date",
             "recurring",

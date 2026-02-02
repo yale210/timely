@@ -13,7 +13,6 @@ class PreferenceSerializer(serializers.ModelSerializer):
             "user",
             "sleep_start",
             "sleep_end",
-            "max_daily_study_time",
             "days_off",
         ]
         read_only_fields = ["id"]
