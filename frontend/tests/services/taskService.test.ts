@@ -1,7 +1,7 @@
 import { it, describe, expect, vi, beforeEach } from 'vitest'
 import axios from 'axios'
-import * as taskService from '../src/services/taskService'
-import { type Task, type TaskSubmission } from '../src/types'
+import * as taskService from '@/services/taskService'
+import { type Task, type TaskSubmission } from '@/types'
 
 vi.mock('axios')
 
