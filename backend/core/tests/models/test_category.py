@@ -24,8 +24,3 @@ class CategoryTests(TestCase):
         with self.assertRaises(ValidationError):
             self.category.text = ""
             self.category.full_clean()
-
-    def test_category_must_be_unique(self):
-        with self.assertRaises(ValidationError):
-            second_category = Category(text="Study")
-            second_category.full_clean()
