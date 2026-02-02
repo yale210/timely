@@ -1,6 +1,6 @@
 import { it, describe, expect, vi, afterEach } from 'vitest'
 import { render, screen, cleanup } from '@testing-library/react'
-import { TaskListSection } from "../src/components/index"
+import { TaskListSection } from "@/components/index"
 
 describe('TaskListSection', () => {
     afterEach(cleanup)
