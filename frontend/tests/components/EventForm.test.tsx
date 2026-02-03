@@ -5,8 +5,8 @@ import EventForm from "@/components/EventForm"
 import { type Category, type Event } from "@/types"
 
 const mockCategories: Category[] = [
-  { id: 1, text: 'Work', color: '#ff0000' },
-  { id: 2, text: 'Personal', color: '#00ff00' }
+  { id: 1, text: 'Work' },
+  { id: 2, text: 'Personal' }
 ]
 
 const mockInitialData: Event = {
@@ -16,7 +16,7 @@ const mockInitialData: Event = {
   location: 'Some place',
   start_time: '2026-02-03T10:00:00Z',
   end_time: '2026-02-03T11:00:00Z',
-  event_category: 1,
+  categories: [],
   importance: 8,
   recurrence_interval: 'weekly',
   recurrence_end: '2026-12-31',
@@ -52,7 +52,6 @@ describe('EventForm', () => {
     expect(screen.getByLabelText(/Location/i)).toHaveValue('Some place')
     expect(screen.getByLabelText(/Description/i)).toHaveValue('Some description')
     expect(screen.getByLabelText(/Importance/i)).toHaveValue(8)
-    expect(screen.getByLabelText(/Category/i)).toHaveValue('1')
     expect(screen.getByLabelText(/Interval/i)).toHaveValue('weekly')
   })
 
@@ -121,7 +120,7 @@ describe('EventForm', () => {
     expect(screen.getByRole('button', { name: /Save Event/i })).toBeDisabled()
   })
 
-  it('validates recurrence end date', () => {
+  it('allows recurrence without end date (never)', () => {
     render(
       <EventForm
         categories={mockCategories}
@@ -130,11 +129,11 @@ describe('EventForm', () => {
       />
     )
 
+    // Set a recurrence interval
     fireEvent.change(screen.getByLabelText(/Interval/i), { target: { value: 'daily' } })
-    expect(screen.getByRole('button', { name: /Save Event/i })).toBeDisabled()
-
-    const recurrenceEndInput = screen.getByLabelText(/End Date/i, { selector: '#recurrence-end' })
-    fireEvent.change(recurrenceEndInput, { target: { value: '2026-12-31' } })
+    
+    // With new requirement, recurrence end is optional (defaults to "Never")
+    // The form should still be submittable
     expect(screen.getByRole('button', { name: /Save Event/i })).not.toBeDisabled()
   })
 
@@ -150,7 +149,9 @@ describe('EventForm', () => {
     fireEvent.click(screen.getByText(/Add Reminder/i))
     expect(screen.getByText(/mins before/i)).toBeInTheDocument()
 
-    const typeSelect = screen.getByRole('combobox', { name: '' })
+    // Get all comboboxes and select the reminder type one (last one added)
+    const comboboxes = screen.getAllByRole('combobox')
+    const typeSelect = comboboxes[comboboxes.length - 1]  // Get the last combobox (reminder type)
     fireEvent.change(typeSelect, { target: { value: 'email' } })
     
     const minutesInput = screen.getAllByRole('spinbutton')[1]
@@ -174,7 +175,7 @@ describe('EventForm', () => {
     expect(onDataChange).toHaveBeenCalled()
   })
 
-  it('handles category selection', () => {
+  it('handles category selection via checkboxes', () => {
     render(
       <EventForm
         categories={mockCategories}
@@ -183,12 +184,36 @@ describe('EventForm', () => {
       />
     )
 
-    const categorySelect = screen.getByLabelText(/Category/i)
-    fireEvent.change(categorySelect, { target: { value: '2' } })
-    expect(categorySelect).toHaveValue('2')
+    // Categories are now checkboxes, not a select
+    const workCheckbox = screen.getByLabelText(/Work/i)
+    fireEvent.click(workCheckbox)
+    expect(workCheckbox).toBeChecked()
     
-    fireEvent.change(categorySelect, { target: { value: '' } })
-    expect(categorySelect).toHaveValue('')
+    // Toggle it off
+    fireEvent.click(workCheckbox)
+    expect(workCheckbox).not.toBeChecked()
+  })
+
+  it('limits reminders to 5', () => {
+    render(
+      <EventForm
+        categories={mockCategories}
+        onSubmit={onSubmit}
+        onCancel={onCancel}
+      />
+    )
+
+    // Add 5 reminders
+    for (let i = 0; i < 5; i++) {
+      fireEvent.click(screen.getByText(/Add Reminder/i))
+    }
+
+    // Check that the header shows 5/5
+    expect(screen.getByText(/Reminders \(5\/5\)/i)).toBeInTheDocument()
+    
+    // The Add Reminder button should be disabled
+    const addButton = screen.getByText(/Add Reminder/i)
+    expect(addButton).toHaveClass('cursor-not-allowed')
   })
 
   it('handles all field changes', () => {

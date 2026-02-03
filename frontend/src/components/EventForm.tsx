@@ -71,8 +71,8 @@ const EventForm = ({
       : "11:00"
   );
 
-  const [eventCategory, setEventCategory] = useState<number | null>(
-    initialData?.event_category ?? null
+  const [selectedCategories, setSelectedCategories] = useState<number[]>(
+    initialData?.categories?.map((c) => (typeof c === "object" ? c.id : c)) ?? []
   );
   const [importance, setImportance] = useState(initialData?.importance ?? 5);
   
@@ -92,7 +92,10 @@ const EventForm = ({
   const endDateTime = new Date(`${endDate}T${endTime}`);
   const isTimeInvalid = startDateTime >= endDateTime;
   const isImportanceInvalid = importance < 1 || importance > 10 || isNaN(importance);
-  const isRecurrenceInvalid = recurrenceInterval && !recurrenceEnd;
+  // Recurrence end date is optional now ("never" is valid)
+  
+  const MAX_REMINDERS = 5;
+  const canAddReminder = reminders.length < MAX_REMINDERS;
   
   const errors: Record<string, boolean> = {};
   if (isTimeInvalid) {
@@ -100,9 +103,6 @@ const EventForm = ({
   }
   if (isImportanceInvalid) {
     errors.importance = true;
-  }
-  if (isRecurrenceInvalid) {
-    errors.recurrence = true;
   }
   
   const hasErrors = Object.keys(errors).length > 0;
@@ -117,7 +117,7 @@ const EventForm = ({
       location,
       start_time: startDateTime.toISOString(),
       end_time: endDateTime.toISOString(),
-      event_category: eventCategory,
+      categories: selectedCategories,
       importance,
       recurrence_interval: (recurrenceInterval as Event["recurrence_interval"]) ?? null,
       recurrence_end: recurrenceEnd || null,
@@ -126,8 +126,16 @@ const EventForm = ({
     onSubmit(data);
   };
 
+  const toggleCategory = (id: number) => {
+    setSelectedCategories((prev) =>
+      prev.includes(id) ? prev.filter((c) => c !== id) : [...prev, id]
+    );
+  };
+
   const addReminder = () => {
-    setReminders([...reminders, { type: "popup", minutes_before: 15 }]);
+    if (canAddReminder) {
+      setReminders([...reminders, { type: "popup", minutes_before: 15 }]);
+    }
   };
 
   const removeReminder = (index: number) => {
@@ -257,37 +265,40 @@ const EventForm = ({
           />
         </div>
 
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <label htmlFor="event-category" className="block text-sm font-medium text-gray-700 mb-2">
-              Category
-            </label>
-            <select
-              id="event-category"
-              className={baseInputClass}
-              value={eventCategory ?? ""}
-              onChange={(e) => setEventCategory(e.target.value ? parseInt(e.target.value) : null)}
-            >
-              <option value="">None</option>
-              {categories.map((cat) => (
-                <option key={cat.id} value={cat.id}>{cat.text}</option>
-              ))}
-            </select>
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-3">
+            Category
+          </label>
+          <div className="flex flex-wrap gap-2">
+            {categories.map((category) => (
+              <label key={category.id} className="cursor-pointer group">
+                <input
+                  type="checkbox"
+                  className="hidden peer"
+                  checked={selectedCategories.includes(category.id)}
+                  onChange={() => toggleCategory(category.id)}
+                />
+                <div className="px-3 py-1.5 rounded-full text-xs font-semibold bg-gray-100 text-gray-600 border border-transparent peer-checked:border-orange-500 peer-checked:ring-1 peer-checked:ring-orange-500 peer-checked:text-orange-600 peer-checked:bg-orange-50 transition-all hover:bg-orange-100">
+                  {category.text}
+                </div>
+              </label>
+            ))}
           </div>
-          <div>
-            <label htmlFor="event-importance" className="block text-sm font-medium text-gray-700 mb-2">
-              Importance (1-10)
-            </label>
-            <input
-              id="event-importance"
-              className={`${baseInputClass} ${errors.importance ? errorClass : ""}`}
-              type="number"
-              min="1"
-              max="10"
-              value={importance}
-              onChange={(e) => setImportance(parseInt(e.target.value))}
-            />
-          </div>
+        </div>
+
+        <div>
+          <label htmlFor="event-importance" className="block text-sm font-medium text-gray-700 mb-2">
+            Importance (1-10)
+          </label>
+          <input
+            id="event-importance"
+            className={`${baseInputClass} ${errors.importance ? errorClass : ""}`}
+            type="number"
+            min="1"
+            max="10"
+            value={importance}
+            onChange={(e) => setImportance(parseInt(e.target.value))}
+          />
         </div>
 
         <div className="border-t pt-4">
@@ -301,7 +312,14 @@ const EventForm = ({
                 id="recurrence-interval"
                 className={baseInputClass}
                 value={recurrenceInterval ?? ""}
-                onChange={(e) => setRecurrenceInterval(e.target.value || null)}
+                onChange={(e) => {
+                  const value = e.target.value || null;
+                  setRecurrenceInterval(value);
+                  // Clear end date when switching to one-off
+                  if (!value) {
+                    setRecurrenceEnd("");
+                  }
+                }}
               >
                 <option value="">One-off</option>
                 <option value="daily">Daily</option>
@@ -311,29 +329,61 @@ const EventForm = ({
               </select>
             </div>
             <div>
-              <label htmlFor="recurrence-end" className="block text-sm font-medium text-gray-700 mb-2">
+              <label htmlFor="recurrence-end-type" className="block text-sm font-medium text-gray-700 mb-2">
                 End Date
               </label>
-              <input
-                id="recurrence-end"
-                className={`${baseInputClass} ${errors.recurrence ? errorClass : ""}`}
-                type="date"
-                value={recurrenceEnd}
-                onChange={(e) => setRecurrenceEnd(e.target.value)}
-                disabled={!recurrenceInterval}
-                required={!!recurrenceInterval}
-              />
+              {recurrenceInterval ? (
+                <>
+                  <select
+                    id="recurrence-end-type"
+                    className={`${baseInputClass} mb-2`}
+                    value={recurrenceEnd ? "date" : "never"}
+                    onChange={(e) => {
+                      if (e.target.value === "never") {
+                        setRecurrenceEnd("");
+                      } else {
+                        // Set a default date when switching to "On Date"
+                        const defaultDate = new Date();
+                        defaultDate.setMonth(defaultDate.getMonth() + 1);
+                        setRecurrenceEnd(defaultDate.toISOString().split("T")[0]);
+                      }
+                    }}
+                  >
+                    <option value="never">Never</option>
+                    <option value="date">On Date</option>
+                  </select>
+                  {recurrenceEnd && (
+                    <input
+                      id="recurrence-end"
+                      className={baseInputClass}
+                      type="date"
+                      value={recurrenceEnd}
+                      onChange={(e) => setRecurrenceEnd(e.target.value)}
+                    />
+                  )}
+                </>
+              ) : (
+                <input
+                  id="recurrence-end"
+                  className={baseInputClass}
+                  type="date"
+                  value={recurrenceEnd}
+                  onChange={(e) => setRecurrenceEnd(e.target.value)}
+                  disabled
+                />
+              )}
             </div>
           </div>
         </div>
 
         <div className="border-t pt-4">
           <div className="flex justify-between items-center mb-4">
-            <h3 className="text-sm font-semibold text-gray-900">Reminders</h3>
+            <h3 className="text-sm font-semibold text-gray-900">Reminders ({reminders.length}/{MAX_REMINDERS})</h3>
             <button
               type="button"
               onClick={addReminder}
-              className="text-xs font-medium text-orange-600 hover:text-orange-700 flex items-center gap-1"
+              disabled={!canAddReminder}
+              className={`text-xs font-medium flex items-center gap-1 ${canAddReminder ? "text-orange-600 hover:text-orange-700" : "text-gray-400 cursor-not-allowed"}`}
             >
               <span className="material-icons text-sm">add</span> Add Reminder
             </button>
@@ -344,7 +394,7 @@ const EventForm = ({
                 <select
                   className="text-sm border-gray-300 rounded-md focus:ring-orange-500 focus:border-orange-500"
                   value={reminder.type}
-                  onChange={(e) => updateReminder(index, "type", e.target.value)}
+                  onChange={(e) => updateReminder(index, "type", e.target.value as "email" | "popup")}
                 >
                   <option value="popup">Popup</option>
                   <option value="email">Email</option>
