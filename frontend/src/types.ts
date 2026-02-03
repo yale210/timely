@@ -66,7 +66,7 @@ export interface Event {
   location?: string;
   start_time: string;
   end_time: string;
-  event_category: number | null;
+  categories: Category[];
   importance: number;
   recurrence_interval?: "daily" | "weekly" | "monthly" | "yearly" | null;
   recurrence_end?: string | null;
@@ -77,6 +77,7 @@ export interface Event {
  * Represents the data structure used when submitting an event to the server.
  * @interface EventSubmission
  */
-export interface EventSubmission extends Omit<Partial<Event>, "reminders"> {
+export interface EventSubmission extends Omit<Partial<Event>, "reminders" | "categories"> {
   reminders?: Omit<EventReminder, "id">[];
+  categories?: number[];
 }
