@@ -44,3 +44,39 @@ export interface Task {
 export interface TaskSubmission extends Omit<Partial<Task>, "categories"> {
   categories?: number[];
 }
+
+/**
+ * Represents a reminder for an event.
+ * @interface EventReminder
+ */
+export interface EventReminder {
+  id?: number;
+  type: "email" | "popup";
+  minutes_before: number;
+}
+
+/**
+ * Represents a calendar event.
+ * @interface Event
+ */
+export interface Event {
+  id: number;
+  title: string;
+  description?: string;
+  location?: string;
+  start_time: string;
+  end_time: string;
+  event_category: number | null;
+  importance: number;
+  recurrence_interval?: "daily" | "weekly" | "monthly" | "yearly" | null;
+  recurrence_end?: string | null;
+  reminders: EventReminder[];
+}
+
+/**
+ * Represents the data structure used when submitting an event to the server.
+ * @interface EventSubmission
+ */
+export interface EventSubmission extends Omit<Partial<Event>, "reminders"> {
+  reminders?: Omit<EventReminder, "id">[];
+}
