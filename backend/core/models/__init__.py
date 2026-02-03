@@ -1,6 +1,7 @@
 from .commute import Commute
 from .day_of_week import DayOfWeek
 from .event import Event
+from .event_reminder import EventReminder
 from .preference import Preference
 from .special_dates import SpecialDates
 from .category import Category
@@ -12,6 +13,7 @@ __all__ = [
     "Commute",
     "DayOfWeek",
     "Event",
+    "EventReminder",
     "Preference",
     "SpecialDates",
     "Category",

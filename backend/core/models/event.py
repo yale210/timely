@@ -31,14 +31,12 @@ class Event(models.Model):
         validators=[MinValueValidator(1), MaxValueValidator(10)],
     )
 
-    # If one-off event, use these fields.
-    time = models.TimeField(null=True, blank=True)
-    date = models.DateField(null=True, blank=True)
+    title = models.CharField(max_length=500, default="Untitled Event")
+    description = models.TextField(blank=True)
+    location = models.CharField(max_length=255, blank=True)
 
-    # If recurring event, use these fields.
-    recurring = models.BooleanField(default=False)
-    recurring_start = models.DateField(null=True, blank=True)
-    recurring_end = models.DateField(null=True, blank=True)
+    start_time = models.DateTimeField(default=now)
+    end_time = models.DateTimeField(default=now)
 
     class RecurrenceInterval(models.TextChoices):
         DAILY = "daily", "Daily"
@@ -46,44 +44,26 @@ class Event(models.Model):
         MONTHLY = "monthly", "Monthly"
         YEARLY = "yearly", "Yearly"
 
-    recurring_interval = models.CharField(
+    recurrence_interval = models.CharField(
         max_length=20, choices=RecurrenceInterval.choices, null=True, blank=True
     )
+    recurrence_end = models.DateField(null=True, blank=True)
 
     def clean(self):
         errors = {}
-        if self.recurring:
-            if not self.recurring_start:
-                errors["recurring_start"] = "Recurring events require a start date."
-            if not self.recurring_end:
-                errors["recurring_end"] = "Recurring events require an end date."
-            if not self.recurring_interval:
-                errors["recurring_interval"] = "Recurring events require an interval."
-            if (
-                self.recurring_start
-                and self.recurring_end
-                and self.recurring_start > self.recurring_end
-            ):
-                errors["recurring_start"] = (
-                    "Start date must be before or equal to end date."
-                )
-            if self.time:
-                errors["time"] = "Recurring events cannot set a time."
-            if self.date:
-                errors["date"] = "Recurring events cannot set a date."
-        else:
-            if not self.time:
-                errors["time"] = "One-off events require a time."
-            if not self.date:
-                errors["date"] = "One-off events require a date."
-            if self.recurring_start:
-                errors["recurring_start"] = "One-off events cannot set a start date."
-            if self.recurring_end:
-                errors["recurring_end"] = "One-off events cannot set an end date."
-            if self.recurring_interval:
-                errors["recurring_interval"] = (
-                    "One-off events cannot set a recurring interval."
-                )
+        if self.start_time and self.end_time and self.end_time < self.start_time:
+            errors["end_time"] = "End time must be after or equal to start time."
+
+        if self.recurrence_interval or self.recurrence_end:
+            if not self.recurrence_interval:
+                errors["recurrence_interval"] = "Recurring events require an interval."
+            if not self.recurrence_end:
+                errors["recurrence_end"] = "Recurring events require an end date."
+            
+            if self.recurrence_end and self.start_time:
+                if self.recurrence_end < self.start_time.date():
+                    errors["recurrence_end"] = "Recurrence end date must be after or equal to start date."
+
         if errors:
             raise ValidationError(errors)
 
@@ -91,13 +71,15 @@ class Event(models.Model):
         self.full_clean()
         return super().save(*args, **kwargs)
 
-    # Calculate the time left of the event.
-    # If event is recurring, return days between now and end date.
-    # If event is a one off, return days between date and now.
     def calculate_time_left(self):
-        current_time = now().date()
-        if self.recurring and self.recurring_end:
-            return max((self.recurring_end - current_time).days, 0)
-        if not self.recurring and self.date:
-            return max((self.date - current_time).days, 0)
+        """
+        Calculate the time left of the event.
+        If event is recurring, return days between now and recurrence end date.
+        If event is a one off, return days between start_time and now.
+        """
+        current_date = now().date()
+        if self.recurrence_interval and self.recurrence_end:
+            return max((self.recurrence_end - current_date).days, 0)
+        if self.start_time:
+            return max((self.start_time.date() - current_date).days, 0)
         return 0
