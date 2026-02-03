@@ -1,0 +1,233 @@
+import { it, describe, expect, vi, beforeEach, afterEach } from 'vitest'
+import { render, screen, fireEvent, cleanup } from '@testing-library/react'
+import '@testing-library/jest-dom'
+import EventForm from "@/components/EventForm"
+import { type Category, type Event } from "@/types"
+
+const mockCategories: Category[] = [
+  { id: 1, text: 'Work', color: '#ff0000' },
+  { id: 2, text: 'Personal', color: '#00ff00' }
+]
+
+const mockInitialData: Event = {
+  id: 1,
+  title: 'Existing Event',
+  description: 'Some description',
+  location: 'Some place',
+  start_time: '2026-02-03T10:00:00Z',
+  end_time: '2026-02-03T11:00:00Z',
+  event_category: 1,
+  importance: 8,
+  recurrence_interval: 'weekly',
+  recurrence_end: '2026-12-31',
+  reminders: [
+    { id: 1, type: 'popup', minutes_before: 30 }
+  ]
+}
+
+describe('EventForm', () => {
+  const onSubmit = vi.fn()
+  const onCancel = vi.fn()
+  const onDataChange = vi.fn()
+
+  beforeEach(() => {
+    vi.resetAllMocks()
+  })
+
+  afterEach(() => {
+    cleanup()
+  })
+
+  it('renders with initial data', () => {
+    render(
+      <EventForm
+        initialData={mockInitialData}
+        categories={mockCategories}
+        onSubmit={onSubmit}
+        onCancel={onCancel}
+      />
+    )
+
+    expect(screen.getByLabelText(/Title/i)).toHaveValue('Existing Event')
+    expect(screen.getByLabelText(/Location/i)).toHaveValue('Some place')
+    expect(screen.getByLabelText(/Description/i)).toHaveValue('Some description')
+    expect(screen.getByLabelText(/Importance/i)).toHaveValue(8)
+    expect(screen.getByLabelText(/Category/i)).toHaveValue('1')
+    expect(screen.getByLabelText(/Interval/i)).toHaveValue('weekly')
+  })
+
+  it('calls onCancel when cancel button is clicked', () => {
+    render(
+      <EventForm
+        categories={mockCategories}
+        onSubmit={onSubmit}
+        onCancel={onCancel}
+      />
+    )
+
+    fireEvent.click(screen.getByRole('button', { name: /Cancel/i }))
+    expect(onCancel).toHaveBeenCalled()
+  })
+
+  it('calls onSubmit with form data', () => {
+    render(
+      <EventForm
+        categories={mockCategories}
+        onSubmit={onSubmit}
+        onCancel={onCancel}
+      />
+    )
+
+    fireEvent.change(screen.getByLabelText(/Title/i), { target: { value: 'New Event' } })
+    fireEvent.change(screen.getByLabelText(/Location/i), { target: { value: 'New Place' } })
+    
+    fireEvent.submit(screen.getByRole('button', { name: /Save Event/i }))
+
+    expect(onSubmit).toHaveBeenCalledWith(expect.objectContaining({
+      title: 'New Event',
+      location: 'New Place'
+    }))
+  })
+
+  it('validates time (start before end)', () => {
+    render(
+      <EventForm
+        categories={mockCategories}
+        onSubmit={onSubmit}
+        onCancel={onCancel}
+      />
+    )
+
+    fireEvent.change(screen.getByLabelText(/Start Time/i), { target: { value: '12:00' } })
+    fireEvent.change(screen.getByLabelText(/End Time/i), { target: { value: '11:00' } })
+
+    expect(screen.getByText(/Start time must be before end time/i)).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /Save Event/i })).toBeDisabled()
+  })
+
+  it('validates importance range', () => {
+    render(
+      <EventForm
+        categories={mockCategories}
+        onSubmit={onSubmit}
+        onCancel={onCancel}
+      />
+    )
+
+    fireEvent.change(screen.getByLabelText(/Importance/i), { target: { value: '11' } })
+    expect(screen.getByRole('button', { name: /Save Event/i })).toBeDisabled()
+    
+    fireEvent.change(screen.getByLabelText(/Importance/i), { target: { value: '0' } })
+    expect(screen.getByRole('button', { name: /Save Event/i })).toBeDisabled()
+  })
+
+  it('validates recurrence end date', () => {
+    render(
+      <EventForm
+        categories={mockCategories}
+        onSubmit={onSubmit}
+        onCancel={onCancel}
+      />
+    )
+
+    fireEvent.change(screen.getByLabelText(/Interval/i), { target: { value: 'daily' } })
+    expect(screen.getByRole('button', { name: /Save Event/i })).toBeDisabled()
+
+    const recurrenceEndInput = screen.getByLabelText(/End Date/i, { selector: '#recurrence-end' })
+    fireEvent.change(recurrenceEndInput, { target: { value: '2026-12-31' } })
+    expect(screen.getByRole('button', { name: /Save Event/i })).not.toBeDisabled()
+  })
+
+  it('manages reminders', () => {
+    render(
+      <EventForm
+        categories={mockCategories}
+        onSubmit={onSubmit}
+        onCancel={onCancel}
+      />
+    )
+
+    fireEvent.click(screen.getByText(/Add Reminder/i))
+    expect(screen.getByText(/mins before/i)).toBeInTheDocument()
+
+    const typeSelect = screen.getByRole('combobox', { name: '' })
+    fireEvent.change(typeSelect, { target: { value: 'email' } })
+    
+    const minutesInput = screen.getAllByRole('spinbutton')[1]
+    fireEvent.change(minutesInput, { target: { value: '45' } })
+
+    fireEvent.click(screen.getByText(/delete/i))
+    expect(screen.queryByText(/mins before/i)).not.toBeInTheDocument()
+  })
+
+  it('calls onDataChange when fields change', () => {
+    render(
+      <EventForm
+        categories={mockCategories}
+        onSubmit={onSubmit}
+        onCancel={onCancel}
+        onDataChange={onDataChange}
+      />
+    )
+
+    fireEvent.change(screen.getByLabelText(/Title/i), { target: { value: 'Changed' } })
+    expect(onDataChange).toHaveBeenCalled()
+  })
+
+  it('handles category selection', () => {
+    render(
+      <EventForm
+        categories={mockCategories}
+        onSubmit={onSubmit}
+        onCancel={onCancel}
+      />
+    )
+
+    const categorySelect = screen.getByLabelText(/Category/i)
+    fireEvent.change(categorySelect, { target: { value: '2' } })
+    expect(categorySelect).toHaveValue('2')
+    
+    fireEvent.change(categorySelect, { target: { value: '' } })
+    expect(categorySelect).toHaveValue('')
+  })
+
+  it('handles all field changes', () => {
+    render(
+      <EventForm
+        categories={mockCategories}
+        onSubmit={onSubmit}
+        onCancel={onCancel}
+      />
+    )
+
+    fireEvent.change(screen.getByLabelText(/Location/i), { target: { value: 'New Location' } })
+    fireEvent.change(screen.getByLabelText(/Start Date/i), { target: { value: '2026-02-04' } })
+    fireEvent.change(screen.getByLabelText(/End Date/i, { selector: '#event-end-date' }), { target: { value: '2026-02-04' } })
+    fireEvent.change(screen.getByLabelText(/Description/i), { target: { value: 'New Description' } })
+    
+    fireEvent.submit(screen.getByRole('button', { name: /Save Event/i }))
+    
+    expect(onSubmit).toHaveBeenCalledWith(expect.objectContaining({
+      location: 'New Location',
+      description: 'New Description'
+    }))
+  })
+
+  it('handles recurrence interval change', () => {
+    render(
+      <EventForm
+        categories={mockCategories}
+        onSubmit={onSubmit}
+        onCancel={onCancel}
+      />
+    )
+
+    const intervalSelect = screen.getByLabelText(/Interval/i)
+    fireEvent.change(intervalSelect, { target: { value: 'weekly' } })
+    expect(intervalSelect).toHaveValue('weekly')
+    
+    fireEvent.change(intervalSelect, { target: { value: '' } })
+    expect(intervalSelect).toHaveValue('')
+  })
+})
+

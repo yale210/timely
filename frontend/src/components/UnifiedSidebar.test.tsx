@@ -1,12 +1,55 @@
 import { render, screen, fireEvent, cleanup } from "@testing-library/react";
 import { describe, it, expect, vi, afterEach } from "vitest";
+import '@testing-library/jest-dom'
 import UnifiedSidebar from "./UnifiedSidebar";
-import { type Category } from "../types";
+import { type Category, type Task, type Event } from "../types";
 
 const mockCategories: Category[] = [
-  { id: 1, text: "Work" },
-  { id: 2, text: "Personal" },
+  { id: 1, text: "Work", color: "#ff0000" },
+  { id: 2, text: "Personal", color: "#00ff00" },
 ];
+
+vi.mock("./TaskForm", () => ({
+  default: ({ initialData, onDataChange, onSubmit, onCancel }: any) => (
+    <div data-testid="mock-task-form">
+      <label htmlFor="task-title">Title</label>
+      <input
+        id="task-title"
+        value={initialData?.title || ""}
+        onChange={(e) => onDataChange({ title: e.target.value })}
+      />
+      <label htmlFor="task-description">Description</label>
+      <input
+        id="task-description"
+        value={initialData?.description || ""}
+        onChange={(e) => onDataChange({ description: e.target.value })}
+      />
+      <button onClick={() => onSubmit({ title: "Submitted Task" })}>Save Task</button>
+      <button onClick={onCancel}>Cancel</button>
+    </div>
+  )
+}));
+
+vi.mock("./EventForm", () => ({
+  default: ({ initialData, onDataChange, onSubmit, onCancel }: any) => (
+    <div data-testid="mock-event-form">
+      <label htmlFor="event-title">Title</label>
+      <input
+        id="event-title"
+        value={initialData?.title || ""}
+        onChange={(e) => onDataChange({ title: e.target.value })}
+      />
+      <label htmlFor="event-description">Description</label>
+      <input
+        id="event-description"
+        value={initialData?.description || ""}
+        onChange={(e) => onDataChange({ description: e.target.value })}
+      />
+      <button onClick={() => onSubmit({ title: "Submitted Event" })}>Save Event</button>
+      <button onClick={onCancel}>Cancel</button>
+    </div>
+  )
+}));
 
 describe("UnifiedSidebar", () => {
   afterEach(() => {
@@ -29,10 +72,10 @@ describe("UnifiedSidebar", () => {
     );
 
     // Start in Task mode
-    const titleInput = screen.getByLabelText(/Title/i) as HTMLInputElement;
+    const titleInput = screen.getByLabelText(/Title/i);
     fireEvent.change(titleInput, { target: { value: "Shared Title" } });
     
-    const descInput = screen.getByLabelText(/Description/i) as HTMLTextAreaElement;
+    const descInput = screen.getByLabelText(/Description/i);
     fireEvent.change(descInput, { target: { value: "Shared Description" } });
 
     // Switch to Event mode
@@ -40,8 +83,8 @@ describe("UnifiedSidebar", () => {
     fireEvent.click(eventButton);
 
     // Check if fields are preserved
-    expect((screen.getByLabelText(/Title/i) as HTMLInputElement).value).toBe("Shared Title");
-    expect((screen.getByLabelText(/Description/i) as HTMLTextAreaElement).value).toBe("Shared Description");
+    expect(screen.getByLabelText(/Title/i)).toHaveValue("Shared Title");
+    expect(screen.getByLabelText(/Description/i)).toHaveValue("Shared Description");
   });
 
   it("preserves shared fields when switching from Event to Task mode", () => {
@@ -61,7 +104,7 @@ describe("UnifiedSidebar", () => {
     );
 
     // Start in Event mode
-    const titleInput = screen.getByLabelText(/Title/i) as HTMLInputElement;
+    const titleInput = screen.getByLabelText(/Title/i);
     fireEvent.change(titleInput, { target: { value: "Event Title" } });
 
     // Switch to Task mode
@@ -69,6 +112,113 @@ describe("UnifiedSidebar", () => {
     fireEvent.click(taskButton);
 
     // Check if fields are preserved
-    expect((screen.getByLabelText(/Title/i) as HTMLInputElement).value).toBe("Event Title");
+    expect(screen.getByLabelText(/Title/i)).toHaveValue("Event Title");
+  });
+
+  it("renders nothing when isOpen is false", () => {
+    const { container } = render(
+      <UnifiedSidebar
+        isOpen={false}
+        onClose={vi.fn()}
+        categories={mockCategories}
+        onSubmitTask={vi.fn()}
+        onSubmitEvent={vi.fn()}
+      />
+    );
+    expect(container.firstChild).toBeNull();
+  });
+
+  it("handles initialData for a Task", () => {
+    const task: Task = {
+      id: 1,
+      title: "Existing Task",
+      description: "Task Desc",
+      start_time: new Date().toISOString(),
+      deadline: new Date().toISOString(),
+      importance: 5,
+      completed: false,
+      categories: [],
+      estimated_minutes: 30
+    };
+    render(
+      <UnifiedSidebar
+        isOpen={true}
+        onClose={vi.fn()}
+        categories={mockCategories}
+        initialData={task}
+        onSubmitTask={vi.fn()}
+        onSubmitEvent={vi.fn()}
+      />
+    );
+    expect(screen.getByText(/Edit Task/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/Title/i)).toHaveValue("Existing Task");
+  });
+
+  it("handles initialData for an Event", () => {
+    const event: Event = {
+      id: 1,
+      title: "Existing Event",
+      description: "Event Desc",
+      start_time: new Date().toISOString(),
+      end_time: new Date().toISOString(),
+      importance: 5,
+      reminders: [],
+      event_category: null
+    };
+    render(
+      <UnifiedSidebar
+        isOpen={true}
+        onClose={vi.fn()}
+        categories={mockCategories}
+        initialData={event}
+        initialMode="event"
+        onSubmitTask={vi.fn()}
+        onSubmitEvent={vi.fn()}
+      />
+    );
+    expect(screen.getByText(/Edit Event/i)).toBeInTheDocument();
+    expect(screen.getByTestId("mock-event-form")).toBeInTheDocument();
+  });
+
+  it("calls onDelete when delete button is clicked", () => {
+    const onDelete = vi.fn();
+    const task: Task = {
+      id: 1,
+      title: "Task",
+      start_time: new Date().toISOString(),
+      deadline: new Date().toISOString(),
+      importance: 5,
+      completed: false,
+      categories: [],
+      estimated_minutes: 30
+    };
+    render(
+      <UnifiedSidebar
+        isOpen={true}
+        onClose={vi.fn()}
+        categories={mockCategories}
+        initialData={task}
+        onSubmitTask={vi.fn()}
+        onSubmitEvent={vi.fn()}
+        onDelete={onDelete}
+      />
+    );
+    fireEvent.click(screen.getByText(/Delete Task/i));
+    expect(onDelete).toHaveBeenCalled();
+  });
+
+  it("calls onClose when close button is clicked", () => {
+    const onClose = vi.fn();
+    render(
+      <UnifiedSidebar
+        isOpen={true}
+        onClose={onClose}
+        categories={mockCategories}
+        onSubmitTask={vi.fn()}
+        onSubmitEvent={vi.fn()}
+      />
+    );
+    fireEvent.click(screen.getByText("close")); // material icon text
+    expect(onClose).toHaveBeenCalled();
   });
 });
