@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from "react";
+import { useState, useEffect, type FormEvent } from "react";
 import { type Category, type Task, type TaskSubmission } from "../types";
 
 interface TaskFormProps {
@@ -6,6 +6,7 @@ interface TaskFormProps {
   categories: Category[];
   onSubmit: (data: TaskSubmission) => void;
   onCancel: () => void;
+  onDataChange?: (data: Partial<Task>) => void;
 }
 
 const TaskForm = ({
@@ -13,6 +14,7 @@ const TaskForm = ({
   categories,
   onSubmit,
   onCancel,
+  onDataChange,
 }: TaskFormProps) => {
   const [title, setTitle] = useState(initialData?.title ?? "");
   const [description, setDescription] = useState(initialData?.description ?? "");
@@ -30,6 +32,17 @@ const TaskForm = ({
         })
       : "10:00"
   );
+
+  useEffect(() => {
+    if (onDataChange) {
+      const startDateTime = new Date(`${date}T${startTime}`);
+      onDataChange({
+        title,
+        description,
+        start_time: startDateTime.toISOString(),
+      });
+    }
+  }, [title, description, date, startTime]);
   const [deadline, setDeadline] = useState(
     initialData?.deadline
       ? new Date(initialData.deadline).toISOString().split("T")[0]
