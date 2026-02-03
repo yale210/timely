@@ -9,6 +9,16 @@ interface EventFormProps {
   onDataChange?: (data: Partial<Event>) => void;
 }
 
+/**
+ * A functional component that renders a form for creating or editing an event.
+ * @param props - The properties for the EventForm component.
+ * @param props.initialData - The initial data to populate the form with.
+ * @param props.categories - The list of available categories.
+ * @param props.onSubmit - The callback function to handle form submission.
+ * @param props.onCancel - The callback function to handle form cancellation.
+ * @param props.onDataChange - An optional callback function to handle data changes.
+ * @returns The rendered event form component.
+ */
 const EventForm = ({
   initialData,
   categories,
@@ -44,7 +54,7 @@ const EventForm = ({
         start_time: startDateTime.toISOString(),
       });
     }
-  }, [title, description, startDate, startTime]);
+  }, [title, description, startDate, startTime, onDataChange]);
   
   const [endDate, setEndDate] = useState(
     initialData?.end_time
@@ -109,7 +119,7 @@ const EventForm = ({
       end_time: endDateTime.toISOString(),
       event_category: eventCategory,
       importance,
-      recurrence_interval: (recurrenceInterval as any) || null,
+      recurrence_interval: (recurrenceInterval as Event["recurrence_interval"]) ?? null,
       recurrence_end: recurrenceEnd || null,
       reminders,
     };
@@ -124,9 +134,13 @@ const EventForm = ({
     setReminders(reminders.filter((_, i) => i !== index));
   };
 
-  const updateReminder = (index: number, field: keyof EventReminder, value: any) => {
+  const updateReminder = <K extends keyof Omit<EventReminder, "id">>(
+    index: number,
+    field: K,
+    value: Omit<EventReminder, "id">[K]
+  ) => {
     const newReminders = [...reminders];
-    (newReminders[index] as any)[field] = value;
+    newReminders[index] = { ...newReminders[index], [field]: value };
     setReminders(newReminders);
   };
 

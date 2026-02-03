@@ -9,6 +9,16 @@ interface TaskFormProps {
   onDataChange?: (data: Partial<Task>) => void;
 }
 
+/**
+ * A functional component that renders a form for creating or editing a task.
+ * @param props - The properties for the TaskForm component.
+ * @param props.initialData - The initial data to populate the form with.
+ * @param props.categories - The list of available categories.
+ * @param props.onSubmit - The callback function to handle form submission.
+ * @param props.onCancel - The callback function to handle form cancellation.
+ * @param props.onDataChange - An optional callback function to handle data changes.
+ * @returns The rendered task form component.
+ */
 const TaskForm = ({
   initialData,
   categories,
@@ -42,7 +52,7 @@ const TaskForm = ({
         start_time: startDateTime.toISOString(),
       });
     }
-  }, [title, description, date, startTime]);
+  }, [title, description, date, startTime, onDataChange]);
   const [deadline, setDeadline] = useState(
     initialData?.deadline
       ? new Date(initialData.deadline).toISOString().split("T")[0]

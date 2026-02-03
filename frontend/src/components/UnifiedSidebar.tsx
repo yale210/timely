@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { type Category, type Task, type Event, type TaskSubmission, type EventSubmission } from "../types";
 import TaskForm from "./TaskForm";
 import EventForm from "./EventForm";
@@ -14,6 +14,19 @@ interface UnifiedSidebarProps {
   onDelete?: () => void;
 }
 
+/**
+ * A functional component that renders a unified sidebar for managing both tasks and events.
+ * @param props - The properties for the UnifiedSidebar component.
+ * @param props.isOpen - Indicates whether the sidebar is open.
+ * @param props.onClose - The callback function to close the sidebar.
+ * @param props.initialMode - The initial mode of the sidebar (task or event).
+ * @param props.categories - The list of available categories.
+ * @param props.initialData - The initial data for the task or event being edited.
+ * @param props.onSubmitTask - The callback function to handle task submission.
+ * @param props.onSubmitEvent - The callback function to handle event submission.
+ * @param props.onDelete - An optional callback function to handle deletion.
+ * @returns The rendered unified sidebar component.
+ */
 const UnifiedSidebar = ({
   isOpen,
   onClose,
@@ -28,8 +41,13 @@ const UnifiedSidebar = ({
   
   // Shared fields state for preservation
   const [sharedData, setSharedData] = useState<Partial<Task & Event>>({});
+  const [lastInitialData, setLastInitialData] = useState<Task | Event | undefined>(initialData);
+  const [lastIsOpen, setLastIsOpen] = useState(isOpen);
 
-  useEffect(() => {
+  if (isOpen !== lastIsOpen || initialData !== lastInitialData) {
+    setLastIsOpen(isOpen);
+    setLastInitialData(initialData);
+    
     if (isOpen) {
       if (initialData) {
         setSharedData({
@@ -48,7 +66,7 @@ const UnifiedSidebar = ({
         setSharedData({});
       }
     }
-  }, [isOpen, initialData, initialMode]);
+  }
 
   if (!isOpen) return null;
 

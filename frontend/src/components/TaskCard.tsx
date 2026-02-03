@@ -7,6 +7,14 @@ interface TaskCardProps {
   onClick: (task: Task) => void;
 }
 
+/**
+ * A functional component that renders a card representing a single task.
+ * @param props - The properties for the TaskCard component.
+ * @param props.task - The task object to display.
+ * @param props.onToggleComplete - The callback function to toggle task completion.
+ * @param props.onClick - The callback function to handle card clicks.
+ * @returns The rendered task card component.
+ */
 const TaskCard = ({ task, onToggleComplete, onClick }: TaskCardProps) => {
   const [isHovered, setIsHovered] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
