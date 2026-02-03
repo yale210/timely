@@ -117,3 +117,8 @@ class EventTests(TestCase):
             )
             event.full_clean()
         self.assertIn("recurrence_end", context.exception.message_dict)
+
+    def test_calculate_time_left_no_start_time(self):
+        event = Event(user=self.user, title="No Start Time", importance=5)
+        event.start_time = None
+        self.assertEqual(event.calculate_time_left(), 0)

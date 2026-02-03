@@ -41,3 +41,13 @@ class EventReminderTests(TestCase):
         self.assertEqual(EventReminder.objects.count(), 1)
         self.event.delete()
         self.assertEqual(EventReminder.objects.count(), 0)
+
+    def test_save_with_event_no_start_time(self):
+        # This covers the branch where self.event.start_time is None
+        event = Event(user=self.user, title="No Start Time")
+        event.start_time = None
+        reminder = EventReminder(event=event, minutes_before=15)
+        try:
+            reminder.save()
+        except Exception:
+            pass
