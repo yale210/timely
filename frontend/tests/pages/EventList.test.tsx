@@ -45,7 +45,7 @@ const mockEvents: Event[] = [
     location: 'Old Place',
     importance: 5,
     reminders: [],
-    event_category: null
+    categories: []
   },
   {
     id: 2,
@@ -55,7 +55,7 @@ const mockEvents: Event[] = [
     location: 'Current Place',
     importance: 5,
     reminders: [],
-    event_category: null
+    categories: []
   },
   {
     id: 3,
@@ -65,7 +65,7 @@ const mockEvents: Event[] = [
     location: 'Future Place',
     importance: 5,
     reminders: [],
-    event_category: null
+    categories: []
   }
 ]
 
@@ -98,7 +98,7 @@ describe('EventList', () => {
       </MemoryRouter>
     )
 
-    const toggleButton = await screen.findByText(/Past Events \(1\)/i)
+    const toggleButton = await screen.findByRole('button', { name: /Past Events/i })
     fireEvent.click(toggleButton)
 
     expect(screen.getByText('Past Event')).toBeDefined()
@@ -114,7 +114,7 @@ describe('EventList', () => {
       </MemoryRouter>
     )
 
-    const newEventButton = screen.getByText(/New Event/i)
+    const newEventButton = screen.getAllByText(/New Event/i)[0]
     fireEvent.click(newEventButton)
 
     expect(screen.getByTestId('mock-sidebar')).toBeDefined()
@@ -135,7 +135,7 @@ describe('EventList', () => {
   })
 
   it('handles event submission', async () => {
-    vi.mocked(eventService.createEvent).mockResolvedValue({ id: 4, title: 'New Event', start_time: '', end_time: '', importance: 5, reminders: [], event_category: null })
+    vi.mocked(eventService.createEvent).mockResolvedValue({ id: 4, title: 'New Event', start_time: '', end_time: '', importance: 5, reminders: [], categories: [] })
     
     render(
       <MemoryRouter>
@@ -143,7 +143,7 @@ describe('EventList', () => {
       </MemoryRouter>
     )
 
-    fireEvent.click(screen.getByText(/New Event/i))
+    fireEvent.click(screen.getAllByText(/New Event/i)[0])
     fireEvent.click(screen.getByText('Submit'))
 
     await waitFor(() => expect(eventService.createEvent).toHaveBeenCalled())
@@ -151,7 +151,7 @@ describe('EventList', () => {
   })
 
   it('handles event update', async () => {
-    vi.mocked(eventService.updateEvent).mockResolvedValue({ id: 2, title: 'Updated Event', start_time: '', end_time: '', importance: 5, reminders: [], event_category: null })
+    vi.mocked(eventService.updateEvent).mockResolvedValue({ id: 2, title: 'Updated Event', start_time: '', end_time: '', importance: 5, reminders: [], categories: [] })
     
     render(
       <MemoryRouter>
@@ -206,7 +206,7 @@ describe('EventList', () => {
       </MemoryRouter>
     )
 
-    fireEvent.click(screen.getByText(/New Event/i))
+    fireEvent.click(screen.getAllByText(/New Event/i)[0])
     fireEvent.click(screen.getByText('Submit'))
 
     await waitFor(() => expect(consoleSpy).toHaveBeenCalled())
@@ -243,7 +243,7 @@ describe('EventList', () => {
     await waitFor(() => expect(screen.getByText('No events scheduled for today.')).toBeDefined())
     expect(screen.getByText('No upcoming events.')).toBeDefined()
     
-    const toggleButton = screen.getByText(/Past Events \(0\)/i)
+    const toggleButton = screen.getByRole('button', { name: /Past Events/i })
     fireEvent.click(toggleButton)
     expect(screen.getByText('No past events.')).toBeDefined()
   })
