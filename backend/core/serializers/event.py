@@ -2,6 +2,8 @@ from django.core.exceptions import ValidationError as DjangoValidationError
 from django.db import transaction
 from rest_framework import serializers
 from core.models import Event, EventReminder
+from core.models import Category
+from .category_serializer import CategorySerializer
 
 
 class EventReminderSerializer(serializers.ModelSerializer):
@@ -10,12 +12,17 @@ class EventReminderSerializer(serializers.ModelSerializer):
         fields = ["id", "type", "minutes_before"]
 
 
+MAX_REMINDERS_PER_EVENT = 5
+
+
 class EventSerializer(serializers.ModelSerializer):
     user = serializers.HiddenField(default=serializers.CurrentUserDefault())
     reminders = EventReminderSerializer(many=True, required=False)
+    categories = serializers.PrimaryKeyRelatedField(
+        many=True, queryset=Category.objects.all(), required=False
+    )
 
     class Meta:
-        model = EventReminder
         model = Event
         fields = [
             "id",
@@ -23,7 +30,7 @@ class EventSerializer(serializers.ModelSerializer):
             "title",
             "description",
             "location",
-            "event_category",
+            "categories",
             "importance",
             "start_time",
             "end_time",
@@ -33,11 +40,28 @@ class EventSerializer(serializers.ModelSerializer):
         ]
         read_only_fields = ["id"]
 
+    def to_representation(self, instance):
+        representation = super().to_representation(instance)
+        # Use CategorySerializer for full objects in responses
+        from core.serializers.category_serializer import CategorySerializer
+        representation["categories"] = CategorySerializer(
+            instance.categories.all(), many=True
+        ).data
+        return representation
+
     def validate(self, attributes):
+        # Validate max reminders
+        reminders_data = attributes.get('reminders', [])
+        if len(reminders_data) > MAX_REMINDERS_PER_EVENT:
+            raise serializers.ValidationError({
+                "reminders": f"Maximum of {MAX_REMINDERS_PER_EVENT} reminders allowed per event."
+            })
+        
         # Create a temporary instance to run clean()
-        # We exclude 'reminders' from attributes because it's not a model field
         attrs_copy = attributes.copy()
+        # Pop M2M and custom fields
         reminders_data = attrs_copy.pop('reminders', None)
+        categories_data = attrs_copy.pop('categories', None)
         
         event = self.instance or Event()
         for attribute, value in attrs_copy.items():
@@ -52,7 +76,10 @@ class EventSerializer(serializers.ModelSerializer):
     @transaction.atomic
     def create(self, validated_data):
         reminders_data = validated_data.pop("reminders", [])
+        categories_data = validated_data.pop("categories", [])
         event = Event.objects.create(**validated_data)
+        if categories_data:
+            event.categories.set(categories_data)
         for reminder_data in reminders_data:
             EventReminder.objects.create(event=event, **reminder_data)
         return event
@@ -60,14 +87,17 @@ class EventSerializer(serializers.ModelSerializer):
     @transaction.atomic
     def update(self, instance, validated_data):
         reminders_data = validated_data.pop("reminders", None)
+        categories_data = validated_data.pop("categories", None)
         
         # Update event fields
         for attr, value in validated_data.items():
             setattr(instance, attr, value)
         instance.save()
 
+        if categories_data is not None:
+            instance.categories.set(categories_data)
+
         if reminders_data is not None:
-            # Simple approach: delete existing reminders and recreate
             instance.reminders.all().delete()
             for reminder_data in reminders_data:
                 EventReminder.objects.create(event=instance, **reminder_data)

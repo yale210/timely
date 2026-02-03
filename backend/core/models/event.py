@@ -18,12 +18,10 @@ class Event(models.Model):
         settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="events"
     )
 
-    event_category = models.ForeignKey(
+    categories = models.ManyToManyField(
         Category,
-        on_delete=models.SET_NULL,
-        null=True,
         blank=True,
-        related_name="event_category",
+        related_name="events",
     )
 
     importance = models.PositiveSmallIntegerField(
@@ -54,15 +52,14 @@ class Event(models.Model):
         if self.start_time and self.end_time and self.end_time < self.start_time:
             errors["end_time"] = "End time must be after or equal to start time."
 
-        if self.recurrence_interval or self.recurrence_end:
-            if not self.recurrence_interval:
-                errors["recurrence_interval"] = "Recurring events require an interval."
-            if not self.recurrence_end:
-                errors["recurrence_end"] = "Recurring events require an end date."
+        # If recurrence_end is provided, it must have an interval
+        if self.recurrence_end and not self.recurrence_interval:
+            errors["recurrence_interval"] = "Recurring events require an interval."
             
-            if self.recurrence_end and self.start_time:
-                if self.recurrence_end < self.start_time.date():
-                    errors["recurrence_end"] = "Recurrence end date must be after or equal to start date."
+        # If recurrence_end is provided, validate it's after start_time
+        if self.recurrence_end and self.start_time:
+            if self.recurrence_end < self.start_time.date():
+                errors["recurrence_end"] = "Recurrence end date must be after or equal to start date."
 
         if errors:
             raise ValidationError(errors)
