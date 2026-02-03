@@ -180,6 +180,30 @@ describe("UnifiedSidebar", () => {
     expect(screen.getByTestId("mock-event-form")).toBeInTheDocument();
   });
 
+  it("handles initialData without id (Create mode)", () => {
+    const template: Partial<Event> = {
+      title: "Template Title",
+      start_time: new Date().toISOString(),
+    };
+    render(
+      <UnifiedSidebar
+        isOpen={true}
+        onClose={vi.fn()}
+        categories={mockCategories}
+        initialData={template as Event}
+        onSubmitTask={vi.fn()}
+        onSubmitEvent={vi.fn()}
+      />
+    );
+    // Should show "Create New" not "Edit Event"
+    expect(screen.getByText(/Create New/i)).toBeInTheDocument();
+    // Mode toggle should be visible
+    expect(screen.getByTestId("mode-toggle-task")).toBeInTheDocument();
+    expect(screen.getByTestId("mode-toggle-event")).toBeInTheDocument();
+    // Template data should be pre-filled
+    expect(screen.getByLabelText(/Title/i)).toHaveValue("Template Title");
+  });
+
   it("calls onDelete when delete button is clicked", () => {
     const onDelete = vi.fn();
     const task: Task = {

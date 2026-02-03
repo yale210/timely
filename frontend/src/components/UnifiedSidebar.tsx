@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { type Category, type Task, type Event, type TaskSubmission, type EventSubmission } from "../types";
 import TaskForm from "./TaskForm";
 import EventForm from "./EventForm";
@@ -68,24 +68,24 @@ const UnifiedSidebar = ({
     }
   }
 
-  if (!isOpen) return null;
-
   const handleModeChange = (newMode: "task" | "event") => {
     setMode(newMode);
   };
 
-  const handleDataChange = (data: Partial<Task | Event>) => {
+  const handleDataChange = useCallback((data: Partial<Task | Event>) => {
     setSharedData((prev) => ({ ...prev, ...data }));
-  };
+  }, []);
 
   // Merge sharedData into initialData for the forms
   const mergedData = { ...initialData, ...sharedData };
+
+  if (!isOpen) return null;
 
   return (
     <div className="fixed inset-y-0 right-0 w-96 bg-white shadow-2xl z-50 flex flex-col border-l border-gray-200 transition-transform duration-300 transform translate-x-0">
       <div className="p-4 border-b border-gray-200 flex justify-between items-center bg-gray-50">
         <h2 className="text-lg font-bold text-gray-900">
-          {initialData ? `Edit ${mode === "task" ? "Task" : "Event"}` : `Create New`}
+          {initialData?.id ? `Edit ${mode === "task" ? "Task" : "Event"}` : `Create New`}
         </h2>
         <button
           onClick={onClose}
@@ -95,7 +95,7 @@ const UnifiedSidebar = ({
         </button>
       </div>
 
-      {!initialData && (
+      {!initialData?.id && (
         <div className="p-4 bg-white border-b border-gray-100">
           <div className="flex p-1 bg-gray-100 rounded-lg">
             <button
@@ -146,7 +146,7 @@ const UnifiedSidebar = ({
         )}
       </div>
 
-      {onDelete && initialData && (
+      {onDelete && initialData?.id && (
         <div className="p-4 bg-red-50 border-t border-red-100">
           <button
             onClick={onDelete}

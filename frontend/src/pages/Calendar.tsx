@@ -150,7 +150,8 @@ const CalendarPage = () => {
     const twoYearsFromNow = moment().add(2, "years");
 
     eventsToExpand.forEach((event) => {
-      if (!event.recurrence_interval || !event.recurrence_end) {
+      // If not recurring, add as-is
+      if (!event.recurrence_interval) {
         expanded.push({
           id: event.id,
           title: event.title,
@@ -161,9 +162,11 @@ const CalendarPage = () => {
         return;
       }
 
+      // For recurring events, expand with 2-year hard limit
       const currentStart = moment(event.start_time);
       const currentEnd = moment(event.end_time);
-      const recurrenceEnd = moment(event.recurrence_end);
+      // If recurrence_end is null ("never"), use the 2-year window as the limit
+      const recurrenceEnd = event.recurrence_end ? moment(event.recurrence_end) : twoYearsFromNow;
       const limit = moment.min(recurrenceEnd, twoYearsFromNow);
 
       while (currentStart.isBefore(limit) || currentStart.isSame(limit, "day")) {
@@ -286,13 +289,11 @@ const CalendarPage = () => {
               toolbar={false}
               className="h-full"
               eventPropGetter={(event) => ({
-                className: event.isEvent
-                  ? "bg-orange-100 text-orange-700 font-medium border-l-4 border-orange-500 rounded-md px-2 py-1 text-xs"
-                  : "bg-blue-100 text-blue-700 font-medium border-l-4 border-blue-500 rounded-md px-2 py-1 text-xs",
+                className: "font-medium border-l-4 rounded-md px-2 py-1 text-xs shadow-sm",
                 style: {
-                  backgroundColor: undefined,
-                  color: undefined,
-                  border: undefined,
+                  backgroundColor: event.isEvent ? "#f97316" : "#3b82f6", // orange-500 : blue-500
+                  color: "#ffffff",
+                  borderColor: event.isEvent ? "#c2410c" : "#1d4ed8", // orange-700 : blue-700
                 },
               })}
             />
