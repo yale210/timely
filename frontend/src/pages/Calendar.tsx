@@ -60,6 +60,15 @@ const CalendarPage = () => {
     });
   }, [fetchTasks, fetchEvents, fetchCategories]);
 
+  interface CalendarEvent {
+    id: number;
+    title: string;
+    start: Date;
+    end: Date;
+    isEvent: boolean;
+    allDay?: boolean;
+  }
+
   const handleSelectSlot = ({ start }: { start: Date }) => {
     setSelectedItem(undefined);
     setSidebarMode("event");
@@ -74,7 +83,7 @@ const CalendarPage = () => {
     setIsSidebarOpen(true);
   };
 
-  const handleSelectEvent = (calendarEvent: any) => {
+  const handleSelectEvent = (calendarEvent: CalendarEvent) => {
     if (calendarEvent.isEvent) {
       const event = events.find((e) => e.id === calendarEvent.id);
       if (event) {
@@ -136,8 +145,8 @@ const CalendarPage = () => {
     }
   };
 
-  const expandRecurrence = (eventsToExpand: Event[]): any[] => {
-    const expanded: any[] = [];
+  const expandRecurrence = (eventsToExpand: Event[]): CalendarEvent[] => {
+    const expanded: CalendarEvent[] = [];
     const twoYearsFromNow = moment().add(2, "years");
 
     eventsToExpand.forEach((event) => {
@@ -186,7 +195,7 @@ const CalendarPage = () => {
     return expanded;
   };
 
-  const calendarEvents = [
+  const calendarEvents: CalendarEvent[] = [
     ...tasks.map((task) => ({
       id: task.id,
       title: task.title,
@@ -276,7 +285,7 @@ const CalendarPage = () => {
               onSelectEvent={handleSelectEvent}
               toolbar={false}
               className="h-full"
-              eventPropGetter={(event: any) => ({
+              eventPropGetter={(event) => ({
                 className: event.isEvent
                   ? "bg-orange-100 text-orange-700 font-medium border-l-4 border-orange-500 rounded-md px-2 py-1 text-xs"
                   : "bg-blue-100 text-blue-700 font-medium border-l-4 border-blue-500 rounded-md px-2 py-1 text-xs",
@@ -299,9 +308,9 @@ const CalendarPage = () => {
           initialMode={sidebarMode}
           categories={categories}
           initialData={selectedItem}
-          onSubmitTask={handleSubmitTask}
-          onSubmitEvent={handleSubmitEvent}
-          onDelete={handleDelete}
+          onSubmitTask={(data) => { void handleSubmitTask(data); }}
+          onSubmitEvent={(data) => { void handleSubmitEvent(data); }}
+          onDelete={() => { void handleDelete(); }}
         />
       </div>
     </AppLayout>

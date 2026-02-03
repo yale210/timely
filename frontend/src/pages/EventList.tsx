@@ -6,6 +6,10 @@ import { type Event, type Category, type EventSubmission } from "../types";
 import { UnifiedSidebar } from "../components";
 import moment from "moment";
 
+/**
+ * A functional component that renders a list of events, categorised by date.
+ * @returns The rendered event list page component.
+ */
 const EventList = () => {
   const [events, setEvents] = useState<Event[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
@@ -32,8 +36,11 @@ const EventList = () => {
   }, []);
 
   useEffect(() => {
-    void fetchEvents();
-    void fetchCategories();
+    const loadData = async () => {
+      await fetchEvents();
+      await fetchCategories();
+    };
+    void loadData();
   }, [fetchEvents, fetchCategories]);
 
   const handleEditEvent = (event: Event) => {
@@ -78,7 +85,7 @@ const EventList = () => {
       className="p-4 bg-white border border-gray-200 rounded-xl shadow-sm hover:shadow-md transition-all cursor-pointer flex justify-between items-center group"
     >
       <div className="flex items-center gap-4">
-        <div className="w-2 h-12 bg-orange-500 rounded-full"></div>
+        <div className="w-2 h-12 bg-orange-500 rounded-full" />
         <div>
           <h3 className="font-bold text-gray-900 group-hover:text-orange-600 transition-colors">
             {event.title}
@@ -146,7 +153,7 @@ const EventList = () => {
         {/* Today's Events */}
         <section>
           <h2 className="text-lg font-bold text-orange-600 uppercase tracking-wider mb-4 flex items-center gap-2">
-            <span className="w-2 h-2 bg-orange-500 rounded-full animate-pulse"></span>
+            <span className="w-2 h-2 bg-orange-500 rounded-full animate-pulse" />
             Today
           </h2>
           <div className="grid gap-4">
@@ -181,9 +188,9 @@ const EventList = () => {
           initialMode="event"
           categories={categories}
           initialData={selectedEvent}
-          onSubmitTask={() => {}} // Not used in this page
-          onSubmitEvent={handleSubmitEvent}
-          onDelete={handleDeleteEvent}
+          onSubmitTask={() => { /* Not used */ }}
+          onSubmitEvent={(data) => { void handleSubmitEvent(data); }}
+          onDelete={() => { void handleDeleteEvent(); }}
         />
       </div>
     </AppLayout>
