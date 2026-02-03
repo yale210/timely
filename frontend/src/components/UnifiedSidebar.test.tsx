@@ -2,26 +2,40 @@ import { render, screen, fireEvent, cleanup } from "@testing-library/react";
 import { describe, it, expect, vi, afterEach } from "vitest";
 import '@testing-library/jest-dom'
 import UnifiedSidebar from "./UnifiedSidebar";
-import { type Category, type Task, type Event } from "../types";
+import { type Category, type Task, type Event, type TaskSubmission, type EventSubmission } from "../types";
 
 const mockCategories: Category[] = [
-  { id: 1, text: "Work", color: "#ff0000" },
-  { id: 2, text: "Personal", color: "#00ff00" },
+  { id: 1, text: "Work" },
+  { id: 2, text: "Personal" },
 ];
 
+interface MockTaskFormProps {
+  initialData: Partial<Task>;
+  onDataChange: (data: Partial<Task>) => void;
+  onSubmit: (data: TaskSubmission) => void;
+  onCancel: () => void;
+}
+
+interface MockEventFormProps {
+  initialData: Partial<Event>;
+  onDataChange: (data: Partial<Event>) => void;
+  onSubmit: (data: EventSubmission) => void;
+  onCancel: () => void;
+}
+
 vi.mock("./TaskForm", () => ({
-  default: ({ initialData, onDataChange, onSubmit, onCancel }: any) => (
+  default: ({ initialData, onDataChange, onSubmit, onCancel }: MockTaskFormProps) => (
     <div data-testid="mock-task-form">
       <label htmlFor="task-title">Title</label>
       <input
         id="task-title"
-        value={initialData?.title || ""}
+        value={initialData?.title ?? ""}
         onChange={(e) => onDataChange({ title: e.target.value })}
       />
       <label htmlFor="task-description">Description</label>
       <input
         id="task-description"
-        value={initialData?.description || ""}
+        value={initialData?.description ?? ""}
         onChange={(e) => onDataChange({ description: e.target.value })}
       />
       <button onClick={() => onSubmit({ title: "Submitted Task" })}>Save Task</button>
@@ -31,18 +45,18 @@ vi.mock("./TaskForm", () => ({
 }));
 
 vi.mock("./EventForm", () => ({
-  default: ({ initialData, onDataChange, onSubmit, onCancel }: any) => (
+  default: ({ initialData, onDataChange, onSubmit, onCancel }: MockEventFormProps) => (
     <div data-testid="mock-event-form">
       <label htmlFor="event-title">Title</label>
       <input
         id="event-title"
-        value={initialData?.title || ""}
+        value={initialData?.title ?? ""}
         onChange={(e) => onDataChange({ title: e.target.value })}
       />
       <label htmlFor="event-description">Description</label>
       <input
         id="event-description"
-        value={initialData?.description || ""}
+        value={initialData?.description ?? ""}
         onChange={(e) => onDataChange({ description: e.target.value })}
       />
       <button onClick={() => onSubmit({ title: "Submitted Event" })}>Save Event</button>
@@ -162,8 +176,8 @@ describe("UnifiedSidebar", () => {
       start_time: new Date().toISOString(),
       end_time: new Date().toISOString(),
       importance: 5,
-      reminders: [],
-      event_category: null
+      categories: [],
+      reminders: []
     };
     render(
       <UnifiedSidebar
