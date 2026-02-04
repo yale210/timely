@@ -19,7 +19,6 @@ class EventTests(TestCase):
         event = Event.objects.create(
             user=self.user,
             event_category=None,
-            importance=5,
             recurring=True,
             recurring_start=today,
             recurring_end=today + datetime.timedelta(days=10),
@@ -34,7 +33,6 @@ class EventTests(TestCase):
             event_category=None,
             time=datetime.time(10, 0),
             date=datetime.date(2025, 1, 1),
-            importance=5,
             recurring=False,
         )
 
@@ -47,7 +45,6 @@ class EventTests(TestCase):
             event_category=None,
             time=datetime.time(10, 0),
             date=today + datetime.timedelta(days=10),
-            importance=5,
             recurring=False,
         )
 
@@ -60,7 +57,6 @@ class EventTests(TestCase):
             event_category=None,
             time=datetime.time(10, 0),
             date=today,
-            importance=5,
             recurring=False,
         )
 
@@ -73,7 +69,6 @@ class EventTests(TestCase):
             Event.objects.create(
                 user=self.user,
                 event_category=None,
-                importance=5,
                 recurring=True,
                 recurring_end=today + datetime.timedelta(days=10),
                 recurring_interval="daily",
@@ -86,7 +81,6 @@ class EventTests(TestCase):
             Event.objects.create(
                 user=self.user,
                 event_category=None,
-                importance=5,
                 recurring=True,
                 recurring_start=today,
                 recurring_interval="daily",
@@ -99,7 +93,6 @@ class EventTests(TestCase):
             Event.objects.create(
                 user=self.user,
                 event_category=None,
-                importance=5,
                 recurring=True,
                 recurring_start=today,
                 recurring_end=today + datetime.timedelta(days=10),
@@ -112,7 +105,6 @@ class EventTests(TestCase):
             Event.objects.create(
                 user=self.user,
                 event_category=None,
-                importance=5,
                 recurring=True,
                 recurring_start=today + datetime.timedelta(days=10),
                 recurring_end=today,
@@ -127,7 +119,6 @@ class EventTests(TestCase):
                 user=self.user,
                 event_category=None,
                 time=datetime.time(10, 0),
-                importance=5,
                 recurring=True,
                 recurring_start=today,
                 recurring_end=today + datetime.timedelta(days=10),
@@ -142,7 +133,6 @@ class EventTests(TestCase):
                 user=self.user,
                 event_category=None,
                 date=today,
-                importance=5,
                 recurring=True,
                 recurring_start=today,
                 recurring_end=today + datetime.timedelta(days=10),
@@ -157,7 +147,6 @@ class EventTests(TestCase):
                 user=self.user,
                 event_category=None,
                 date=today,
-                importance=5,
                 recurring=False,
             )
         self.assertIn("time", context.exception.message_dict)
@@ -168,7 +157,6 @@ class EventTests(TestCase):
                 user=self.user,
                 event_category=None,
                 time=datetime.time(10, 0),
-                importance=5,
                 recurring=False,
             )
         self.assertIn("date", context.exception.message_dict)
@@ -181,7 +169,6 @@ class EventTests(TestCase):
                 event_category=None,
                 time=datetime.time(10, 0),
                 date=today,
-                importance=5,
                 recurring=False,
                 recurring_start=today,
             )
@@ -195,7 +182,6 @@ class EventTests(TestCase):
                 event_category=None,
                 time=datetime.time(10, 0),
                 date=today,
-                importance=5,
                 recurring=False,
                 recurring_end=today + datetime.timedelta(days=10),
             )
@@ -209,7 +195,6 @@ class EventTests(TestCase):
                 event_category=None,
                 time=datetime.time(10, 0),
                 date=today,
-                importance=5,
                 recurring=False,
                 recurring_interval="daily",
             )
@@ -220,7 +205,6 @@ class EventTests(TestCase):
         event = Event.objects.create(
             user=self.user,
             event_category=None,
-            importance=5,
             recurring=True,
             recurring_start=today,
             recurring_end=today + datetime.timedelta(days=10),
@@ -236,7 +220,6 @@ class EventTests(TestCase):
             event_category=None,
             time=datetime.time(10, 0),
             date=today,
-            importance=5,
             recurring=False,
         )
         self.assertFalse(event.recurring)
@@ -249,7 +232,6 @@ class EventTests(TestCase):
             event_category=None,
             time=datetime.time(10, 0),
             date=today,
-            importance=5,
             recurring=False,
         )
         self.assertEqual(event.calculate_time_left(), 0)
