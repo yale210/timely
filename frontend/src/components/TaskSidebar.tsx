@@ -13,6 +13,17 @@ interface TaskSidebarProps {
   initialData?: Task;
 }
 
+/**
+ * A functional component that renders a sidebar for managing tasks.
+ * @param props - The properties for the TaskSidebar component.
+ * @param props.isOpen - Indicates whether the sidebar is open.
+ * @param props.onClose - The callback function to close the sidebar.
+ * @param props.categories - The list of available categories.
+ * @param props.onSubmit - The callback function to handle task submission.
+ * @param props.onDelete - An optional callback function to handle task deletion.
+ * @param props.initialData - The initial data for the task being edited.
+ * @returns The rendered task sidebar component.
+ */
 const TaskSidebar = ({
   isOpen,
   onClose,
