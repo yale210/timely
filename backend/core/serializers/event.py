@@ -3,7 +3,6 @@ from django.db import transaction
 from rest_framework import serializers
 from core.models import Event, EventReminder
 from core.models import Category
-from .category_serializer import CategorySerializer
 
 
 class EventReminderSerializer(serializers.ModelSerializer):
@@ -51,18 +50,20 @@ class EventSerializer(serializers.ModelSerializer):
 
     def validate(self, attributes):
         # Validate max reminders
-        reminders_data = attributes.get('reminders', [])
+        reminders_data = attributes.get("reminders", [])
         if len(reminders_data) > MAX_REMINDERS_PER_EVENT:
-            raise serializers.ValidationError({
-                "reminders": f"Maximum of {MAX_REMINDERS_PER_EVENT} reminders allowed per event."
-            })
-        
+            raise serializers.ValidationError(
+                {
+                    "reminders": f"Maximum of {MAX_REMINDERS_PER_EVENT} reminders allowed per event."
+                }
+            )
+
         # Create a temporary instance to run clean()
         attrs_copy = attributes.copy()
         # Pop M2M and custom fields
-        reminders_data = attrs_copy.pop('reminders', None)
-        categories_data = attrs_copy.pop('categories', None)
-        
+        reminders_data = attrs_copy.pop("reminders", None)
+        attrs_copy.pop("categories", None)
+
         event = self.instance or Event()
         for attribute, value in attrs_copy.items():
             setattr(event, attribute, value)
@@ -88,7 +89,7 @@ class EventSerializer(serializers.ModelSerializer):
     def update(self, instance, validated_data):
         reminders_data = validated_data.pop("reminders", None)
         categories_data = validated_data.pop("categories", None)
-        
+
         # Update event fields
         for attr, value in validated_data.items():
             setattr(instance, attr, value)
@@ -101,5 +102,5 @@ class EventSerializer(serializers.ModelSerializer):
             instance.reminders.all().delete()
             for reminder_data in reminders_data:
                 EventReminder.objects.create(event=instance, **reminder_data)
-        
+
         return instance

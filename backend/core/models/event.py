@@ -1,9 +1,11 @@
 from django.conf import settings
 from django.core.exceptions import ValidationError
+from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 from django.utils.timezone import now
 
 from .category import Category
+from .importance_choices import ImportanceChoices
 
 
 class Event(models.Model):
@@ -25,6 +27,7 @@ class Event(models.Model):
     importance = models.PositiveSmallIntegerField(
         choices=ImportanceChoices.choices,
         validators=[MinValueValidator(1), MaxValueValidator(10)],
+        default=ImportanceChoices.MEDIUM,
     )
 
     title = models.CharField(max_length=500, default="Untitled Event")
@@ -53,11 +56,13 @@ class Event(models.Model):
         # If recurrence_end is provided, it must have an interval
         if self.recurrence_end and not self.recurrence_interval:
             errors["recurrence_interval"] = "Recurring events require an interval."
-            
+
         # If recurrence_end is provided, validate it's after start_time
         if self.recurrence_end and self.start_time:
             if self.recurrence_end < self.start_time.date():
-                errors["recurrence_end"] = "Recurrence end date must be after or equal to start date."
+                errors["recurrence_end"] = (
+                    "Recurrence end date must be after or equal to start date."
+                )
 
         if errors:
             raise ValidationError(errors)
