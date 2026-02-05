@@ -1,6 +1,7 @@
 from datetime import timedelta
 from django.db import models
 
+
 class EventReminder(models.Model):
     class Type(models.TextChoices):
         EMAIL = "email", "Email"

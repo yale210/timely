@@ -43,6 +43,7 @@ class EventSerializer(serializers.ModelSerializer):
         representation = super().to_representation(instance)
         # Use CategorySerializer for full objects in responses
         from core.serializers.category_serializer import CategorySerializer
+
         representation["categories"] = CategorySerializer(
             instance.categories.all(), many=True
         ).data

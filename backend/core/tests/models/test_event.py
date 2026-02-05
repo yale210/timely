@@ -5,6 +5,7 @@ from django.test import TestCase
 from django.utils import timezone
 from core.models import Event
 
+
 class EventTests(TestCase):
     def setUp(self):
         self.user = get_user_model().objects.create_user(
