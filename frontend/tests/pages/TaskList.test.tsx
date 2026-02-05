@@ -7,8 +7,7 @@ import type { TaskSubmission, Task, Category } from "@/types"
 
 vi.mock("@/services/taskService")
 
-// eslint-disable-next-line prefer-const
-let mockSidebarProps: {
+let _mockSidebarProps: {
   onSubmit?: (data: TaskSubmission) => void;
   onDelete?: (id: number) => void;
   onClose?: () => void;
@@ -26,7 +25,7 @@ vi.mock("@/components/TaskSidebar", () => ({
     initialData?: Task;
     categories: Category[];
   }) => {
-    mockSidebarProps = props
+    _mockSidebarProps = props
     if (!props.isOpen) return null
     return (
       <div data-testid="mock-task-sidebar">
@@ -447,7 +446,7 @@ describe('TaskList Sidebar Operations', () => {
 
     beforeEach(() => {
         vi.resetAllMocks()
-        mockSidebarProps = {}
+        _mockSidebarProps = {}
         vi.mocked(taskService.getTasks).mockResolvedValue(mockTasks)
         vi.mocked(taskService.getCategories).mockResolvedValue([])
         vi.mocked(taskService.createTask).mockResolvedValue({} as never)
