@@ -6,6 +6,7 @@ from rest_framework.test import APITestCase
 from django.utils import timezone
 from core.models import Event, EventReminder
 
+
 class EventViewSetTests(APITestCase):
     def setUp(self):
         self.user = get_user_model().objects.create_user(
@@ -24,13 +25,13 @@ class EventViewSetTests(APITestCase):
             "reminders": [
                 {"type": "popup", "minutes_before": 15},
                 {"type": "email", "minutes_before": 60},
-            ]
+            ],
         }
         response = self.client.post(self.url, data, format="json")
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(Event.objects.count(), 1)
         self.assertEqual(EventReminder.objects.count(), 2)
-        
+
         event = Event.objects.first()
         self.assertEqual(event.title, "API Event")
         self.assertEqual(event.reminders.count(), 2)
@@ -42,23 +43,21 @@ class EventViewSetTests(APITestCase):
             title="Old Title",
             importance=5,
             start_time=now,
-            end_time=now + datetime.timedelta(hours=1)
+            end_time=now + datetime.timedelta(hours=1),
         )
         EventReminder.objects.create(event=event, type="popup", minutes_before=10)
-        
+
         url = reverse("event-detail", args=[event.id])
         data = {
             "title": "New Title",
             "importance": 5,
             "start_time": now,
             "end_time": now + datetime.timedelta(hours=1),
-            "reminders": [
-                {"type": "email", "minutes_before": 20}
-            ]
+            "reminders": [{"type": "email", "minutes_before": 20}],
         }
         response = self.client.put(url, data, format="json")
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        
+
         event.refresh_from_db()
         self.assertEqual(event.title, "New Title")
         self.assertEqual(event.reminders.count(), 1)
@@ -72,10 +71,10 @@ class EventViewSetTests(APITestCase):
             title="Event with Reminders",
             importance=5,
             start_time=now,
-            end_time=now + datetime.timedelta(hours=1)
+            end_time=now + datetime.timedelta(hours=1),
         )
         EventReminder.objects.create(event=event, type="popup", minutes_before=10)
-        
+
         response = self.client.get(self.url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), 1)
@@ -96,7 +95,7 @@ class EventViewSetTests(APITestCase):
                 {"type": "popup", "minutes_before": 15},
                 {"type": "email", "minutes_before": 30},
                 {"type": "email", "minutes_before": 60},
-            ]
+            ],
         }
         response = self.client.post(self.url, data, format="json")
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
@@ -117,7 +116,7 @@ class EventViewSetTests(APITestCase):
                 {"type": "email", "minutes_before": 30},
                 {"type": "email", "minutes_before": 60},
                 {"type": "popup", "minutes_before": 120},  # 6th reminder - should fail
-            ]
+            ],
         }
         response = self.client.post(self.url, data, format="json")
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
@@ -140,4 +139,3 @@ class EventViewSetTests(APITestCase):
         event = Event.objects.first()
         self.assertEqual(event.recurrence_interval, "weekly")
         self.assertIsNone(event.recurrence_end)
-
