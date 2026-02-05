@@ -482,7 +482,7 @@ describe('EventList Recurring Events', () => {
   })
 
   it('expands daily recurring events', async () => {
-    const dailyEvent = {
+    const dailyEvent: Event = {
       id: 10,
       title: 'Daily Standup',
       start_time: moment().startOf('day').add(9, 'hours').toISOString(),
@@ -506,7 +506,7 @@ describe('EventList Recurring Events', () => {
   })
 
   it('expands weekly recurring events', async () => {
-    const weeklyEvent = {
+    const weeklyEvent: Event = {
       id: 11,
       title: 'Weekly Meeting',
       start_time: moment().startOf('day').add(14, 'hours').toISOString(),
@@ -530,7 +530,7 @@ describe('EventList Recurring Events', () => {
   })
 
   it('expands monthly recurring events', async () => {
-    const monthlyEvent = {
+    const monthlyEvent: Event = {
       id: 12,
       title: 'Monthly Review',
       start_time: moment().startOf('day').add(11, 'hours').toISOString(),
@@ -554,7 +554,7 @@ describe('EventList Recurring Events', () => {
   })
 
   it('expands yearly recurring events', async () => {
-    const yearlyEvent = {
+    const yearlyEvent: Event = {
       id: 13,
       title: 'Annual Event',
       start_time: moment().startOf('day').add(10, 'hours').toISOString(),
@@ -578,7 +578,7 @@ describe('EventList Recurring Events', () => {
   })
 
   it('handles invalid recurrence interval by breaking loop', async () => {
-    const invalidEvent = {
+    const invalidEvent: Event = {
       id: 14,
       title: 'Invalid Recurrence',
       start_time: moment().startOf('day').add(10, 'hours').toISOString(),
@@ -587,7 +587,7 @@ describe('EventList Recurring Events', () => {
       importance: 5,
       reminders: [],
       categories: [],
-      recurrence_interval: 'invalid_interval',
+      recurrence_interval: 'daily',
       recurrence_end: moment().add(1, 'week').toISOString()
     }
     vi.mocked(eventService.getEvents).mockResolvedValue([invalidEvent])

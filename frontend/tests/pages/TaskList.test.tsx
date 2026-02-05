@@ -7,15 +7,6 @@ import type { TaskSubmission, Task, Category } from "@/types"
 
 vi.mock("@/services/taskService")
 
-let _mockSidebarProps: {
-  onSubmit?: (data: TaskSubmission) => void;
-  onDelete?: (id: number) => void;
-  onClose?: () => void;
-  initialData?: Task;
-  categories?: Category[];
-  isOpen?: boolean;
-} = {}
-
 vi.mock("@/components/TaskSidebar", () => ({
   default: (props: {
     isOpen: boolean;
@@ -25,7 +16,6 @@ vi.mock("@/components/TaskSidebar", () => ({
     initialData?: Task;
     categories: Category[];
   }) => {
-    _mockSidebarProps = props
     if (!props.isOpen) return null
     return (
       <div data-testid="mock-task-sidebar">
@@ -446,7 +436,6 @@ describe('TaskList Sidebar Operations', () => {
 
     beforeEach(() => {
         vi.resetAllMocks()
-        _mockSidebarProps = {}
         vi.mocked(taskService.getTasks).mockResolvedValue(mockTasks)
         vi.mocked(taskService.getCategories).mockResolvedValue([])
         vi.mocked(taskService.createTask).mockResolvedValue({} as never)

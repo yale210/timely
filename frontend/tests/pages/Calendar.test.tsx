@@ -91,7 +91,7 @@ const mockTasks = [
     }
 ]
 
-const mockEvents = [
+const mockEvents: Event[] = [
     {
         id: 1,
         title: 'Test Event',
@@ -100,7 +100,8 @@ const mockEvents = [
         importance: 5,
         categories: [],
         recurrence_interval: null,
-        recurrence_end: null
+        recurrence_end: null,
+        reminders: []
     }
 ]
 
@@ -365,7 +366,7 @@ describe('CalendarPage Recurring Events', () => {
     })
 
     it('should render non-recurring events correctly', async () => {
-        const nonRecurringEvent = [{
+        const nonRecurringEvent: Event[] = [{
             id: 1,
             title: 'Single Event',
             start_time: new Date().toISOString(),
@@ -373,7 +374,8 @@ describe('CalendarPage Recurring Events', () => {
             importance: 5,
             categories: [],
             recurrence_interval: null,
-            recurrence_end: null
+            recurrence_end: null,
+            reminders: []
         }]
         
         vi.mocked(eventService.getEvents).mockResolvedValue(nonRecurringEvent)
@@ -390,7 +392,7 @@ describe('CalendarPage Recurring Events', () => {
     })
 
     it('should expand daily recurring events', async () => {
-        const dailyEvent = [{
+        const dailyEvent: Event[] = [{
             id: 2,
             title: 'Daily Event',
             start_time: new Date().toISOString(),
@@ -398,7 +400,8 @@ describe('CalendarPage Recurring Events', () => {
             importance: 5,
             categories: [],
             recurrence_interval: 'daily',
-            recurrence_end: moment().add(7, 'days').toISOString()
+            recurrence_end: moment().add(7, 'days').toISOString(),
+            reminders: []
         }]
         
         vi.mocked(eventService.getEvents).mockResolvedValue(dailyEvent)
@@ -415,7 +418,7 @@ describe('CalendarPage Recurring Events', () => {
     })
 
     it('should expand weekly recurring events', async () => {
-        const weeklyEvent = [{
+        const weeklyEvent: Event[] = [{
             id: 3,
             title: 'Weekly Event',
             start_time: new Date().toISOString(),
@@ -423,7 +426,8 @@ describe('CalendarPage Recurring Events', () => {
             importance: 5,
             categories: [],
             recurrence_interval: 'weekly',
-            recurrence_end: moment().add(4, 'weeks').toISOString()
+            recurrence_end: moment().add(4, 'weeks').toISOString(),
+            reminders: []
         }]
         
         vi.mocked(eventService.getEvents).mockResolvedValue(weeklyEvent)
@@ -440,7 +444,7 @@ describe('CalendarPage Recurring Events', () => {
     })
 
     it('should expand monthly recurring events', async () => {
-        const monthlyEvent = [{
+        const monthlyEvent: Event[] = [{
             id: 4,
             title: 'Monthly Event',
             start_time: new Date().toISOString(),
@@ -448,7 +452,8 @@ describe('CalendarPage Recurring Events', () => {
             importance: 5,
             categories: [],
             recurrence_interval: 'monthly',
-            recurrence_end: moment().add(3, 'months').toISOString()
+            recurrence_end: moment().add(3, 'months').toISOString(),
+            reminders: []
         }]
         
         vi.mocked(eventService.getEvents).mockResolvedValue(monthlyEvent)
@@ -465,7 +470,7 @@ describe('CalendarPage Recurring Events', () => {
     })
 
     it('should expand yearly recurring events', async () => {
-        const yearlyEvent = [{
+        const yearlyEvent: Event[] = [{
             id: 5,
             title: 'Yearly Event',
             start_time: new Date().toISOString(),
@@ -473,7 +478,8 @@ describe('CalendarPage Recurring Events', () => {
             importance: 5,
             categories: [],
             recurrence_interval: 'yearly',
-            recurrence_end: moment().add(2, 'years').toISOString()
+            recurrence_end: moment().add(2, 'years').toISOString(),
+            reminders: []
         }]
         
         vi.mocked(eventService.getEvents).mockResolvedValue(yearlyEvent)
@@ -490,7 +496,7 @@ describe('CalendarPage Recurring Events', () => {
     })
 
     it('should handle recurring events with no end date (never ending)', async () => {
-        const neverEndingEvent = [{
+        const neverEndingEvent: Event[] = [{
             id: 6,
             title: 'Never Ending Event',
             start_time: new Date().toISOString(),
@@ -498,7 +504,8 @@ describe('CalendarPage Recurring Events', () => {
             importance: 5,
             categories: [],
             recurrence_interval: 'weekly',
-            recurrence_end: null
+            recurrence_end: null,
+            reminders: []
         }]
         
         vi.mocked(eventService.getEvents).mockResolvedValue(neverEndingEvent)
@@ -583,15 +590,16 @@ describe('CalendarPage Invalid Recurrence', () => {
         vi.mocked(taskService.getTasks).mockResolvedValue([])
         vi.mocked(taskService.getCategories).mockResolvedValue([])
         
-        const invalidRecurrenceEvent = [{
+        const invalidRecurrenceEvent: Event[] = [{
             id: 7,
             title: 'Invalid Recurrence Event',
             start_time: new Date().toISOString(),
             end_time: moment().add(1, 'hour').toISOString(),
             importance: 5,
             categories: [],
-            recurrence_interval: 'invalid_interval',
-            recurrence_end: moment().add(1, 'month').toISOString()
+            recurrence_interval: 'daily',
+            recurrence_end: moment().add(1, 'month').toISOString(),
+            reminders: []
         }]
         
         vi.mocked(eventService.getEvents).mockResolvedValue(invalidRecurrenceEvent)
@@ -976,7 +984,7 @@ describe('CalendarPage Direct Handler Coverage', () => {
     })
 
     it('handleSubmitEvent - should update event when selectedItem is an event', async () => {
-        const eventWithEndTime = {
+        const eventWithEndTime: Event = {
             id: 88,
             title: 'Existing Event',
             start_time: new Date().toISOString(),
@@ -984,7 +992,8 @@ describe('CalendarPage Direct Handler Coverage', () => {
             importance: 5,
             categories: [],
             recurrence_interval: null,
-            recurrence_end: null
+            recurrence_end: null,
+            reminders: []
         }
         
         vi.mocked(taskService.getTasks).mockResolvedValue([])
@@ -1071,7 +1080,7 @@ describe('CalendarPage Direct Handler Coverage', () => {
     })
 
     it('handleDelete - should delete event when selectedItem is an event', async () => {
-        const eventWithEndTime = {
+        const eventWithEndTime: Event = {
             id: 66,
             title: 'Event to Delete',
             start_time: new Date().toISOString(),
@@ -1079,7 +1088,8 @@ describe('CalendarPage Direct Handler Coverage', () => {
             importance: 5,
             categories: [],
             recurrence_interval: null,
-            recurrence_end: null
+            recurrence_end: null,
+            reminders: []
         }
         
         vi.mocked(taskService.getTasks).mockResolvedValue([])
@@ -1259,7 +1269,7 @@ describe('CalendarPage Direct Handler Coverage', () => {
 
     it('handleDelete - should handle error gracefully when deleting event', async () => {
         const consoleSpy = vi.spyOn(console, 'error').mockImplementation(function noOp() { /* suppress */ })
-        const eventWithEndTime = {
+        const eventWithEndTime: Event = {
             id: 44,
             title: 'Event to Delete',
             start_time: new Date().toISOString(),
@@ -1267,7 +1277,8 @@ describe('CalendarPage Direct Handler Coverage', () => {
             importance: 5,
             categories: [],
             recurrence_interval: null,
-            recurrence_end: null
+            recurrence_end: null,
+            reminders: []
         }
         
         vi.mocked(taskService.getTasks).mockResolvedValue([])
