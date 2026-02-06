@@ -8,6 +8,8 @@ from .category import Category
 from .task import Task
 from .profile import Profile
 from .grade import Grade
+from .notification import Notification
+from .push_subscription import PushSubscription
 
 __all__ = [
     "Commute",
@@ -20,4 +22,7 @@ __all__ = [
     "Task",
     "Profile",
     "Grade",
+    "Notification",
+    "PushSubscription",
 ]
+

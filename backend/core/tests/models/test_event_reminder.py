@@ -20,7 +20,7 @@ class EventReminderTests(TestCase):
 
     def test_trigger_at_calculation(self):
         reminder = EventReminder.objects.create(
-            event=self.event, type=EventReminder.Type.POPUP, minutes_before=30
+            event=self.event, send_push=True, minutes_before=30
         )
         expected_trigger_at = self.event.start_time - datetime.timedelta(minutes=30)
         self.assertEqual(reminder.trigger_at, expected_trigger_at)

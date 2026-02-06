@@ -8,7 +8,7 @@ from core.models import Category
 class EventReminderSerializer(serializers.ModelSerializer):
     class Meta:
         model = EventReminder
-        fields = ["id", "type", "minutes_before"]
+        fields = ["id", "send_push", "send_email", "minutes_before"]
 
 
 MAX_REMINDERS_PER_EVENT = 5

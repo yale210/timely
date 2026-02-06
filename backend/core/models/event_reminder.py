@@ -3,15 +3,13 @@ from django.db import models
 
 
 class EventReminder(models.Model):
-    class Type(models.TextChoices):
-        EMAIL = "email", "Email"
-        POPUP = "popup", "Popup"
-
     event = models.ForeignKey(
         "Event", related_name="reminders", on_delete=models.CASCADE
     )
-    type = models.CharField(max_length=10, choices=Type.choices, default=Type.POPUP)
+    send_email = models.BooleanField(default=False)
+    send_push = models.BooleanField(default=False)
     minutes_before = models.PositiveIntegerField()
+
     trigger_at = models.DateTimeField(editable=False)
     processed = models.BooleanField(default=False)
 

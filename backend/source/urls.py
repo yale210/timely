@@ -24,6 +24,9 @@ from core.views import (
     PreferenceViewSet,
     GradeViewSet,
     CategoryViewSet,
+    NotificationViewSet,
+    PushSubscriptionViewSet,
+    AdminSendNotificationView,
 )
 
 
@@ -33,8 +36,11 @@ router.register(r"grades", GradeViewSet, basename="grade")
 router.register(r"categories", CategoryViewSet, basename="category")
 router.register(r"events", EventViewSet, basename="event")
 router.register(r"preferences", PreferenceViewSet, basename="preference")
+router.register(r"notifications", NotificationViewSet, basename="notification")
+router.register(r"push", PushSubscriptionViewSet, basename="push")
 
 urlpatterns = [
+    path("api/admin/send_notification/", AdminSendNotificationView.as_view(), name="admin-send-notification"),
     path("api/", include(router.urls)),
     path("api/admin/", admin.site.urls),
     path("api/authentication/", include("authentication.urls")),
