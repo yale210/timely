@@ -23,8 +23,8 @@ class EventViewSetTests(APITestCase):
             "start_time": now + datetime.timedelta(hours=1),
             "end_time": now + datetime.timedelta(hours=2),
             "reminders": [
-                {"type": "popup", "minutes_before": 15},
-                {"type": "email", "minutes_before": 60},
+                {"send_push": True, "send_email": False, "minutes_before": 15},
+                {"send_push": False, "send_email": True, "minutes_before": 60},
             ],
         }
         response = self.client.post(self.url, data, format="json")
@@ -45,7 +45,7 @@ class EventViewSetTests(APITestCase):
             start_time=now,
             end_time=now + datetime.timedelta(hours=1),
         )
-        EventReminder.objects.create(event=event, type="popup", minutes_before=10)
+        EventReminder.objects.create(event=event, send_push=True, minutes_before=10)
 
         url = reverse("event-detail", args=[event.id])
         data = {
@@ -53,7 +53,9 @@ class EventViewSetTests(APITestCase):
             "importance": 5,
             "start_time": now,
             "end_time": now + datetime.timedelta(hours=1),
-            "reminders": [{"type": "email", "minutes_before": 20}],
+            "reminders": [
+                {"send_push": False, "send_email": True, "minutes_before": 20}
+            ],
         }
         response = self.client.put(url, data, format="json")
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -61,7 +63,8 @@ class EventViewSetTests(APITestCase):
         event.refresh_from_db()
         self.assertEqual(event.title, "New Title")
         self.assertEqual(event.reminders.count(), 1)
-        self.assertEqual(event.reminders.first().type, "email")
+        self.assertTrue(event.reminders.first().send_email)
+        self.assertFalse(event.reminders.first().send_push)
         self.assertEqual(event.reminders.first().minutes_before, 20)
 
     def test_get_events_includes_reminders(self):
@@ -73,13 +76,14 @@ class EventViewSetTests(APITestCase):
             start_time=now,
             end_time=now + datetime.timedelta(hours=1),
         )
-        EventReminder.objects.create(event=event, type="popup", minutes_before=10)
+        EventReminder.objects.create(event=event, send_push=True, minutes_before=10)
 
         response = self.client.get(self.url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), 1)
         self.assertEqual(len(response.data[0]["reminders"]), 1)
-        self.assertEqual(response.data[0]["reminders"][0]["type"], "popup")
+        self.assertTrue(response.data[0]["reminders"][0]["send_push"])
+        self.assertFalse(response.data[0]["reminders"][0]["send_email"])
 
     def test_create_event_with_max_reminders(self):
         """Test that an event can have up to 5 reminders."""
@@ -90,11 +94,11 @@ class EventViewSetTests(APITestCase):
             "start_time": now + datetime.timedelta(hours=1),
             "end_time": now + datetime.timedelta(hours=2),
             "reminders": [
-                {"type": "popup", "minutes_before": 5},
-                {"type": "popup", "minutes_before": 10},
-                {"type": "popup", "minutes_before": 15},
-                {"type": "email", "minutes_before": 30},
-                {"type": "email", "minutes_before": 60},
+                {"send_push": True, "minutes_before": 5},
+                {"send_push": True, "minutes_before": 10},
+                {"send_push": True, "minutes_before": 15},
+                {"send_email": True, "minutes_before": 30},
+                {"send_email": True, "minutes_before": 60},
             ],
         }
         response = self.client.post(self.url, data, format="json")
@@ -110,12 +114,15 @@ class EventViewSetTests(APITestCase):
             "start_time": now + datetime.timedelta(hours=1),
             "end_time": now + datetime.timedelta(hours=2),
             "reminders": [
-                {"type": "popup", "minutes_before": 5},
-                {"type": "popup", "minutes_before": 10},
-                {"type": "popup", "minutes_before": 15},
-                {"type": "email", "minutes_before": 30},
-                {"type": "email", "minutes_before": 60},
-                {"type": "popup", "minutes_before": 120},  # 6th reminder - should fail
+                {"send_push": True, "minutes_before": 5},
+                {"send_push": True, "minutes_before": 10},
+                {"send_push": True, "minutes_before": 15},
+                {"send_email": True, "minutes_before": 30},
+                {"send_email": True, "minutes_before": 60},
+                {
+                    "send_push": True,
+                    "minutes_before": 120,
+                },  # 6th reminder - should fail
             ],
         }
         response = self.client.post(self.url, data, format="json")
