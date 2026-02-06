@@ -1,7 +1,12 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Dialog, DialogPanel } from '@headlessui/react'
 import { Bars3Icon, XMarkIcon } from '@heroicons/react/24/outline'
-import { Link } from "react-router-dom"
+import { Link, useNavigate } from "react-router-dom"
+import { NotificationBell } from './NotificationBell'
+import { NotificationDropdown } from './NotificationDropdown'
+import { useNotifications } from '../hooks/useNotifications'
+import { useWebSocket } from '../hooks/useWebSocket'
+import { type Notification } from '../types/notification'
 
 const navigation = [
     { name: 'Home', href: '/' },
@@ -11,13 +16,30 @@ const navigation = [
     { name: 'Gradebook', href: '/gradebook' },
 ]
 
-/**
- * A functional component that renders the navigation bar, including mobile menu logic.
- * @returns The rendered navigation bar component.
- */
 export default function Navbar() {
-
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+    const navigate = useNavigate()
+    const { 
+        notifications, 
+        unreadCount, 
+        markRead, 
+        markAllRead, 
+        fetchUnreadCount,
+        setUnreadCount 
+    } = useNotifications()
+
+    const handleWebSocketMessage = (data: any) => {
+        if (data.type === 'unread_count') {
+            setUnreadCount(data.count)
+        }
+    }
+
+    useWebSocket('/ws/notifications/', handleWebSocketMessage)
+
+    const handleNotificationClick = (notification: Notification) => {
+        markRead(notification.id)
+        navigate(`/notifications/${notification.id}`)
+    }
     
     return (
         <>
@@ -31,6 +53,9 @@ export default function Navbar() {
                     </div>
 
                     <div className="flex lg:hidden">
+                        <div className="flex items-center gap-4 mr-4">
+                            <NotificationBell unreadCount={unreadCount} onClick={() => navigate('/notifications')} />
+                        </div>
                         <button
                         type="button"
                         onClick={() => setMobileMenuOpen(true)}
@@ -49,13 +74,20 @@ export default function Navbar() {
                         ))}
                     </div>
 
-                    <div className="hidden lg:flex lg:flex-1 lg:justify-end">
+                    <div className="hidden lg:flex lg:flex-1 lg:justify-end lg:items-center lg:gap-x-6">
+                        <NotificationDropdown 
+                            notifications={notifications}
+                            unreadCount={unreadCount}
+                            onMarkAllRead={markAllRead}
+                            onItemClick={handleNotificationClick}
+                        />
                         <Link to="/login" className="text-sm/6 font-semibold text-gray-900">
                         Log in <span aria-hidden="true">&rarr;</span>
                         </Link>
                     </div>
 
                 </nav>
+
 
                 <Dialog open={mobileMenuOpen} onClose={setMobileMenuOpen} className="lg:hidden">
                     <div className="fixed inset-0 z-50" />

@@ -5,3 +5,6 @@ export { default as CalendarPage } from "./Calendar";
 export { default as TaskList } from "./TaskList";
 export { default as EventList } from "./EventList";
 export { default as Gradebook } from "./Gradebook";
+export { Notifications } from "./Notifications";
+export { NotificationDetail } from "./NotificationDetail";
+
