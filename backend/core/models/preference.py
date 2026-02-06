@@ -2,7 +2,6 @@ from django.db import models
 from django.conf import settings
 from holidays.countries.united_kingdom import UnitedKingdom
 from django.core.exceptions import ValidationError
-from django.core.validators import MinValueValidator, MaxValueValidator
 from datetime import datetime, timedelta
 
 from .day_of_week import DayOfWeek
@@ -20,11 +19,6 @@ class Preference(models.Model):
 
     sleep_start = models.TimeField()
     sleep_end = models.TimeField()
-
-    # Users can set a maximum study length to avoid burnout.
-    max_daily_study_time = models.PositiveSmallIntegerField(
-        validators=[MinValueValidator(0), MaxValueValidator(24)]
-    )
 
     # Used to store the days a user wishes to have off each week.
     days_off = models.ManyToManyField(

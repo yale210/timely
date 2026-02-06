@@ -1,6 +1,6 @@
 import { Routes, Route } from "react-router-dom"
-import { Home, Login, Signup, Logout, CalendarPage, TaskList, Gradebook } from "./pages/index"
 import RequireAuth from "@/components/RequireAuth"
+import { Home, Login, Signup, Logout, CalendarPage, TaskList, EventList, Gradebook } from "./pages/index"
 
 /**
  * The root component of the application which organises the routing logic.
@@ -21,8 +21,8 @@ export default function App() {
       } />
 
       <Route path="/tasks" element={<TaskList />} />
+      <Route path="/events" element={<EventList />} />
       <Route path="/gradebook" element={<Gradebook />} />
-
     </Routes>
   )
 }

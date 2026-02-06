@@ -6,6 +6,10 @@ import { TaskListSection, TaskSidebar, TaskCard } from "../components";
 import * as taskService from "../services/taskService";
 import { type Task, type Category, type TaskSubmission } from "../types";
 
+/**
+ * A functional component that renders a list of tasks with filtering and sorting capabilities.
+ * @returns The rendered task list page component.
+ */
 const TaskList = () => {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);

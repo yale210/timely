@@ -52,11 +52,10 @@ class TaskTests(TestCase):
             estimated_minutes=60,
             start_time=now,
             completed=False,
-            deadline=now + datetime.timedelta(hours=1),
+            deadline=now,  # Same day deadline (avoids midnight edge case)
             importance=7,
         )
 
-        # Still within the same day, so it might return 0 days left if we use days
         self.assertEqual(task.calculate_time_left(), 0)
 
     def test_tasks_can_have_subtasks(self):
