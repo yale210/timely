@@ -8,7 +8,7 @@ import pluginJsDoc from "eslint-plugin-jsdoc";
 
 export default tseslint.config(
   // 1. Global ignores
-  { ignores: ["dist", "node_modules", "coverage", "build", ".next"] },
+  { ignores: ["dist", "node_modules", "coverage", "build", ".next", ".vite"] },
 
   // 2. Base Configuration & Language Options
   {
