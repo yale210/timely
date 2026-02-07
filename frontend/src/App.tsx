@@ -1,6 +1,11 @@
 import { Routes, Route } from "react-router-dom"
+<<<<<<< HEAD
 import { Home, Login, Signup, Logout, CalendarPage, TaskList, EventList, Gradebook } from "./pages/index"
 import RequireAuth from "@/components/RequireAuth"
+=======
+import RequireAuth from "@/components/RequireAuth"
+import { Home, Login, Signup, Logout, CalendarPage, TaskList, EventList, Gradebook } from "./pages/index"
+>>>>>>> origin/feature/implement-authentication
 
 /* The root component of the application which organises the routing logic.
  * @returns The rendered application routes.
