@@ -2,7 +2,7 @@
 
 import random
 from core.models import Category
-from django.core.management.base import BaseSeeder
+from core.management.base import BaseSeeder
 from .fixtures import categories
 
 

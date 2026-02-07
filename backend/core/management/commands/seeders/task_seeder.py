@@ -4,7 +4,7 @@ import random
 from core.models import Task
 from .fixtures import tasks
 from django.contrib.auth import get_user_model
-from django.core.management.base import BaseSeeder
+from core.management.base import BaseSeeder
 
 
 class TaskSeeder(BaseSeeder):

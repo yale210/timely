@@ -3,7 +3,7 @@
 from django.core.models import Profile
 from .fixtures import profiles
 from django.contrib.auth import get_user_model
-from django.core.management.base import BaseSeeder
+from core.management.base import BaseSeeder
 
 
 class ProfileSeeder(BaseSeeder):

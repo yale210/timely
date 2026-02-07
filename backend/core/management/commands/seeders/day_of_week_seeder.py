@@ -1,7 +1,7 @@
 """Day of Week Seeder"""
 
 from core.models import DayOfWeek
-from django.core.management.base import BaseSeeder
+from core.management.base import BaseSeeder
 
 
 class DayOfWeekSeeder(BaseSeeder):

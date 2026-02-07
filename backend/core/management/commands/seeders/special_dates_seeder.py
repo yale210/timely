@@ -3,7 +3,7 @@
 from core.models import SpecialDates
 from .fixtures import special_dates
 from django.contrib.auth import get_user_model
-from django.core.management.base import BaseSeeder
+from core.management.base import BaseSeeder
 
 
 class SpecialDatesSeeder(BaseSeeder):

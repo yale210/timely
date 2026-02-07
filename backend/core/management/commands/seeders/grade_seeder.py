@@ -4,7 +4,7 @@ import random
 from core.models import Grade, Category
 from .fixtures import grades
 from django.contrib.auth import get_user_model
-from django.core.management.base import BaseSeeder
+from core.management.base import BaseSeeder
 
 
 class GradeSeeder(BaseSeeder):

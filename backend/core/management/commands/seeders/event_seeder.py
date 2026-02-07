@@ -6,7 +6,7 @@ import faker
 from core.models import Event
 from .fixtures import events
 from django.contrib.auth import get_user_model
-from django.core.management.base import BaseSeeder
+from core.management.base import BaseSeeder
 
 
 class EventSeeder(BaseSeeder):

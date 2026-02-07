@@ -5,7 +5,7 @@ import datetime
 from core.models import Commute
 from .fixtures import commutes
 from django.contrib.auth import get_user_model
-from django.core.management.base import BaseSeeder
+from core.management.base import BaseSeeder
 
 
 class CommuteSeeder(BaseSeeder):
