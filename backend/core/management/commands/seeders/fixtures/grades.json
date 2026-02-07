@@ -1,0 +1,93 @@
+{
+    "grades": [
+        {
+            "model": "core.grade",
+            "pk": 1,
+            "fields": {
+                "user": 1,
+                "name": "CS1",
+                "score": 85,
+                "weight": 15,
+                "date_awarded": "2025-01-01"
+            }
+        },
+        {
+            "model": "core.grade",
+            "pk": 2,
+            "fields": {
+                "user": 2,
+                "name": "ELA",
+                "score": 85,
+                "weight": 100,
+                "date_awarded": "2025-01-01"
+            }
+        },
+        {
+            "model": "core.grade",
+            "pk": 3,
+            "fields": {
+                "user": 1,
+                "name": "ELA",
+                "score": 60,
+                "weight": 100,
+                "date_awarded": "2025-01-01"
+            }
+        },
+        {
+            "model": "core.grade",
+            "pk": 4,
+            "fields": {
+                "user": 2,
+                "name": "DBS",
+                "score": 100,
+                "weight": 100,
+                "date_awarded": "2025-01-01"
+            }
+        },
+        {
+            "model": "core.grade",
+            "pk": 5,
+            "fields": {
+                "user": 3,
+                "name": "IPP",
+                "score": 75,
+                "weight": 100,
+                "date_awarded": "2025-01-01"
+            }
+        },
+        {
+            "model": "core.grade",
+            "pk": 6,
+            "fields": {
+                "user": 1,
+                "name": "FC1",
+                "score": 44,
+                "weight": 100,
+                "date_awarded": "2025-01-01"
+            }
+        },
+        {
+            "model": "core.grade",
+            "pk": 7,
+            "fields": {
+                "user": 1,
+                "name": "AKC",
+                "score": 100,
+                "weight": 100,
+                "date_awarded": "2025-01-01"
+            }
+        },
+        {
+            "model": "core.grade",
+            "pk": 8,
+            "fields": {
+                "user": 4,
+                "name": "CS1",
+                "score": 85,
+                "weight": 15,
+                "date_awarded": "2025-01-01"
+            }
+        }
+    ]
+}
+
