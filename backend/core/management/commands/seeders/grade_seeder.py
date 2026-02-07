@@ -1,8 +1,7 @@
 """Grade Seeder"""
 
- 
 import random
-from core.models import Grade
+from core.models import Grade, Category
 from .fixtures import grades
 from django.contrib.auth import get_user_model
 from django.core.management.base import BaseSeeder
@@ -18,14 +17,14 @@ class GradeSeeder(BaseSeeder):
             except Exception:
                 pass
 
-    def _create_task(self, data):
+    def _create_grade(self, data):
         Grade.objects.get_or_create(
-            "user": data["user"],
-            "name": data["name"],
-            "category": data["category"],
-            "score": data["score"],
-            "total_possible": data["total_possible"],
-            "date_achieved": data["date_achieved"]
+            user=data["user"],
+            name=data["name"],
+            category=data["category"],
+            score=data["score"],
+            total_possible=data["total_possible"],
+            date_achieved=data["date_achieved"],
         )
 
     def populate_random_grade(self):
@@ -45,8 +44,8 @@ class GradeSeeder(BaseSeeder):
                 "user": temporary_user,
                 "name": self.faker.sentence(),
                 "category": Category.objects.order_by("?").first(),
-                "score": random.randint(0,100),
+                "score": random.randint(0, 100),
                 "total_possible": 100,
-                "date_achieved": self.faker.datetime()
+                "date_achieved": self.faker.datetime(),
             }
         )
