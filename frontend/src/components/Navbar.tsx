@@ -7,6 +7,10 @@ import { authStore, AUTH_CHANGE_EVENT } from "@/services/authService"
 const navigation = [
     { name: 'Home', href: '/' },
     { name: 'Signup', href: '/signup' },
+    { name: 'Calendar', href: '/calendar' },
+    { name: 'Tasks', href: '/tasks' },
+    { name: 'Events', href: '/events' },
+    { name: 'Gradebook', href: '/gradebook' },
 ]
 
 /**
@@ -101,11 +105,12 @@ export default function Navbar() {
                                 <div className="space-y-2 py-6">
                                 {navigation.map((item) => (
                                     <Link
-                                        key={item.name}
-                                        to={item.href}
-                                        className="-mx-3 block rounded-lg px-3 py-2 text-base/7 font-semibold text-gray-900 hover:bg-gray-50"
+                                    key={item.name}
+                                    to={item.href}
+                                    onClick={() => setMobileMenuOpen(false)}
+                                    className="-mx-3 block rounded-lg px-3 py-2 text-base/7 font-semibold text-gray-900 hover:bg-gray-50"
                                     >
-                                        {item.name}
+                                    {item.name}
                                     </Link>
                                 ))}
                                 </div>
