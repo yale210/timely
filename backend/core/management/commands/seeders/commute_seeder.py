@@ -8,7 +8,6 @@ from django.contrib.auth import get_user_model
 from django.core.management.base import BaseSeeder
 
 
-
 class CommuteSeeder(BaseSeeder):
     help = "Handles seeding of commutes into the database."
 
@@ -16,7 +15,7 @@ class CommuteSeeder(BaseSeeder):
         for commute in commutes:
             try:
                 self._create_commute(commute)
-            except Exception as e:
+            except Exception:
                 pass
 
     def populate_random_commute(self):
@@ -30,7 +29,7 @@ class CommuteSeeder(BaseSeeder):
                 email=self.faker.email(),
                 password="thomas123",
             )
-        
+
         commute_start = self._random_time()
         commute_end = self._random_time()
 
@@ -39,31 +38,20 @@ class CommuteSeeder(BaseSeeder):
 
         self._create_commute(
             {
-            "user": temporary_user,
-            "commute_start": commute_start,
-            "commute_end": commute_end,
+                "user": temporary_user,
+                "commute_start": commute_start,
+                "commute_end": commute_end,
             }
         )
 
-
     def _random_time(self):
-        hours = random.randint(0,23)
-        minutes = random.randint(0,59)
-        return datetime.time(hour=hours,minute=minutes)
+        hours = random.randint(0, 23)
+        minutes = random.randint(0, 59)
+        return datetime.time(hour=hours, minute=minutes)
 
-
-    def _create_commute(self,data):
+    def _create_commute(self, data):
         Commute.objects.get_or_create(
-            user = data["user"],
-            commute_start = data["commute_start"],
-            commute_end = data["commute_end"],
+            user=data["user"],
+            commute_start=data["commute_start"],
+            commute_end=data["commute_end"],
         )
-
-    
-
-#
-#    user = models.ForeignKey(
- #       settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="commute"
-  #  )
-   # commute_start = models.TimeField()
-    #commute_end = models.TimeField()

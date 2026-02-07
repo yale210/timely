@@ -27,11 +27,11 @@ class CategoryTests(TestCase):
 
 
 # text = models.CharField(max_length=20, blank=False, null=False)
-    # colour = models.CharField(
-    #    max_length=10, blank=True, null=True
-    #)  # Store the hex code
-    #max_daily_study_time = models.PositiveSmallIntegerField(
-    #    validators=[MinValueValidator(0), MaxValueValidator(24)],
-    #    null=True,
-    #    blank=True,
-    #)
+# colour = models.CharField(
+#    max_length=10, blank=True, null=True
+# )  # Store the hex code
+# max_daily_study_time = models.PositiveSmallIntegerField(
+#    validators=[MinValueValidator(0), MaxValueValidator(24)],
+#    null=True,
+#    blank=True,
+# )

@@ -2,11 +2,11 @@
 
 import random
 import datetime
+import faker
 from core.models import Event
 from .fixtures import events
 from django.contrib.auth import get_user_model
 from django.core.management.base import BaseSeeder
-
 
 
 class EventSeeder(BaseSeeder):
@@ -16,8 +16,20 @@ class EventSeeder(BaseSeeder):
         for event in events:
             try:
                 self._create_event(event)
-            except Exception as e:
+            except Exception:
                 pass
+
+    def _create_event(self, data):
+        Event.objects.get_or_create(
+            user=data["user"],
+            event_category=data["event_category"],
+            time=data["time"],
+            date=data["date"],
+            recurring=data["recurring"],
+            recurring_start=data["recurring_start"],
+            recurring_end=data["recurring_end"],
+            recurring_interval=data["recurring_interval"],
+        )
 
     def populate_random_event(self):
         User = get_user_model()
@@ -30,16 +42,25 @@ class EventSeeder(BaseSeeder):
                 email=self.faker.email(),
                 password="thomas123",
             )
-        
-        
 
+        self._create_event(
+            {
+                "user": temporary_user,
+                "event_category": faker.word(),
+                "time": self._random_time(),
+                "date": faker.date(),
+                "recurring": random.randint(0, 1) == 1,
+                "recurring_start": faker.date() if "recurring" == 1 else None,
+                "recurring_end": faker.date() if "recurring" == 1 else None,
+                "recurring_interval": random.choice(
+                    ["daily", "weekly", "monthly", "yearly"]
+                )
+                if "recurring" == 1
+                else None,
+            }
+        )
 
     def _random_time(self):
-        hours = random.randint(0,23)
-        minutes = random.randint(0,59)
-        return datetime.time(hour=hours,minute=minutes)
-
-
-    def _create_event(self,data):
-       
-
+        hours = random.randint(0, 23)
+        minutes = random.randint(0, 59)
+        return datetime.time(hour=hours, minute=minutes)
