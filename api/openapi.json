@@ -5,5 +5,22 @@
     "description": "API specification for Timely scheduling webapp",
     "version": "0.0.0"
   },
-  "paths": {}
+  "security": [
+    {
+      "tokenApiKey": []
+    }
+  ],
+  "paths": {
+
+  },
+  "components": {
+    "securitySchemes": {
+      "tokenApiKey":{
+        "description": "API key for token based authentication given from login endpoint. Prefix with 'Token '",
+        "type": "apiKey",
+        "name": "Authorization",
+        "in": "header"
+      }
+    }
+  }
 }
