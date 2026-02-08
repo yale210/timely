@@ -1,0 +1,9 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Timely API",
+    "description": "API specification for Timely scheduling webapp",
+    "version": "0.0.0"
+  },
+  "paths": {}
+}
