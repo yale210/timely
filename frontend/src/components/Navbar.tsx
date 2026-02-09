@@ -4,13 +4,18 @@ import { Bars3Icon, XMarkIcon } from '@heroicons/react/24/outline'
 import { Link } from "react-router-dom"
 import { authStore, AUTH_CHANGE_EVENT } from "@/services/authService"
 
-const navigation = [
+const authedNavigation = [
     { name: 'Home', href: '/' },
     { name: 'Signup', href: '/signup' },
     { name: 'Calendar', href: '/calendar' },
     { name: 'Tasks', href: '/tasks' },
     { name: 'Events', href: '/events' },
     { name: 'Gradebook', href: '/gradebook' },
+]
+
+const guestNavigation = [
+    { name: 'Home', href: '/' },
+    { name: 'Signup', href: '/signup' },
 ]
 
 interface NavbarProps {
@@ -23,19 +28,17 @@ interface NavbarProps {
 
 /**
  * A functional component that renders the navigation bar, including mobile menu logic.
- * @param root0
- * @param root0.hideSignupWhenAuthed
- * @param root0
- * @param root0.hideSignupWhenAuthed
  * @returns The rendered navigation bar component.
  */
 export default function Navbar({ hideSignupWhenAuthed = true }: NavbarProps = {}) {
 
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
     const [isAuthed, setIsAuthed] = useState(Boolean(authStore.getToken()))
-    const filteredNavigation = (isAuthed && hideSignupWhenAuthed)
-        ? navigation.filter((item) => item.href !== "/signup")
-        : navigation
+    const filteredNavigation = isAuthed
+        ? (hideSignupWhenAuthed
+            ? authedNavigation.filter((item) => item.href !== "/signup")
+            : authedNavigation)
+        : guestNavigation
 
     useEffect(() => {
         const syncAuthState = () => setIsAuthed(Boolean(authStore.getToken()))
