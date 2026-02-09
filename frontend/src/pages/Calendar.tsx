@@ -23,6 +23,7 @@ split,
 one-go
 */
 import { TaskSidebar } from "../components";
+import "../index.css"
 import AppLayout from "../layouts/AppLayout";
 import * as taskService from "../services/taskService";
 import { type Task, type Category, type TaskSubmission } from "../types";
@@ -105,6 +106,7 @@ const CalendarPage = () => {
       const data = await taskService.getCategories();
       setCategories(data);
     } catch (err) {
+      setCategories([])
       console.error(err);
     }
   }, []);
@@ -181,6 +183,7 @@ const CalendarPage = () => {
     repeat: index%3==0,
     split: index%2==0,
     setTime: index%3==1,
+    oneGo: index%3==1,
     allDay: moment(task.deadline).diff(moment(task.start_time), "hours") >= 24,
   }));
   return (
@@ -278,15 +281,24 @@ const CalendarPage = () => {
               onSelectEvent={handleSelectEvent}
               toolbar={false}
               className="h-full"
-              eventPropGetter={() => ({
-                className:
+              eventPropGetter={(event: any) => {
+                /*className:
                   "bg-blue-100 text-blue-700 font-medium border-l-4 border-blue-500 rounded-md px-2 py-1 text-xs",
                 style: {
                   backgroundColor: undefined,
                   color: undefined,
                   border: undefined,
-                },
-              })}
+                },*/
+                const className=[
+                  "event-slot",
+                  event.repeat ? "is-repeat": "",
+                  event.split ? "is-split" : "",
+                  event.oneGo ? "is-onego" : "",
+                ]
+                .filter(Boolean)
+                .join(" ");
+                return { className };
+              }}
             />
           </div>
         </main>

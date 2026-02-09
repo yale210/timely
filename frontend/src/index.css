@@ -31,6 +31,7 @@
 }
 
 .event-slot {
+  position:relative;
   border-radius: 10px;
   overflow: hidden;
 }
@@ -46,6 +47,7 @@
 
 .event-slot.is-split{
   outline: 2px dashed #f59e1b;
+  outline-offset: -2px;
 }
 
 .event-slot.is-onego::after{
@@ -57,13 +59,14 @@
     rgba(59, 130, 246, 0.18),
     rgba(59, 130, 246, 0.18) 6px,
     rgba(59, 130, 246, 0.00) 6px,
-    rgba(59, 130, 246, 0.00) 12px,
+    rgba(59, 130, 246, 0.00) 12px
   );
   pointer-events: none;
 }
 
 .event-slot.is-completed {
   opacity: 0.55;
+}
 /* Use Google-hosted decorative font 'Pacifico' for headings. */
 .font-young-coconut {
   font-family: 'Pacifico', "Poppins", system-ui, sans-serif;
@@ -85,4 +88,4 @@
 
 ::-webkit-scrollbar-thumb:hover {
   background: #94a3b8;
-}}
+}
