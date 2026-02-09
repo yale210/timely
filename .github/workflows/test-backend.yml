@@ -84,7 +84,6 @@ jobs:
                       });
     docker-build-test:
         name: Test if backend docker build will work
-        needs: [lint]
         runs-on: ubuntu-latest
         steps:
             - uses: actions/checkout@v6
