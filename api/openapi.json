@@ -1089,7 +1089,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/GradeCreate"
+                "$ref": "#/components/schemas/GradePatch"
               }
             }
           }
@@ -1973,6 +1973,63 @@
           "total_possible",
           "date_achieved"
         ]
+      },
+      "GradePatch": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "readOnly": true
+          },
+          "user": {
+            "type": "integer",
+            "description": "User ID (read-only)",
+            "readOnly": true
+          },
+          "name": {
+            "type": "string",
+            "maxLength": 100,
+            "description": "Assessment name"
+          },
+          "category": {
+            "type": "integer",
+            "nullable": true,
+            "description": "Category ID (optional)"
+          },
+          "category_name": {
+            "type": "string",
+            "nullable": true,
+            "description": "Name of the category (read-only)",
+            "readOnly": true
+          },
+          "score": {
+            "type": "number",
+            "format": "float",
+            "minimum": 0,
+            "description": "Score achieved"
+          },
+          "total_possible": {
+            "type": "number",
+            "format": "float",
+            "minimum": 1,
+            "description": "Total possible score"
+          },
+          "percentage": {
+            "type": "number",
+            "format": "float",
+            "description": "Calculated percentage (read-only)",
+            "readOnly": true
+          },
+          "date_achieved": {
+            "type": "string",
+            "format": "date",
+            "description": "Date when grade was achieved"
+          },
+          "time_spent_minutes": {
+            "type": "integer",
+            "description": "Total time spent on related tasks in minutes (read-only)"
+          }
+        }
       },
       "Preference": {
         "type": "object",
