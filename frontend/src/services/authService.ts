@@ -136,7 +136,10 @@ export const authService = {
 
   async logout() {
     // Knox typically invalidates the current token server-side
-    await request("/api/authentication/logout/", { method: "POST" }, true)
-    authStore.clear()
+    try {
+      await request("/api/authentication/logout/", { method: "POST" }, true)
+    } finally {
+      authStore.clear()
+    }
   },
 }
