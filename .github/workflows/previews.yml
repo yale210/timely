@@ -21,9 +21,8 @@ env:
   # Discovered from:
   # - .github/workflows/test-backend.yml (job name: "Test if backend docker build will work")
   # - .github/workflows/test-frontend.yml (job name: "Test if frontend docker build will work")
-  REQUIRED_CHECK_NAMES: |
-    Test if backend docker build will work
-    Test if frontend docker build will work
+  BACKEND_DOCKER_CHECK_NAME: Test if backend docker build will work
+  FRONTEND_DOCKER_CHECK_NAME: Test if frontend docker build will work
   CHECK_POLL_INTERVAL_SECONDS: "20"
   CHECK_POLL_TIMEOUT_SECONDS: "1200"
 
@@ -40,6 +39,79 @@ jobs:
           echo "branch=${{ github.head_ref }}" >> "$GITHUB_OUTPUT"
           echo "sha=${{ github.event.pull_request.head.sha }}" >> "$GITHUB_OUTPUT"
 
+      - name: Determine required checks for this PR
+        id: req
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_NUMBER: ${{ steps.ctx.outputs.pr_number }}
+          BACKEND_DOCKER_CHECK_NAME: ${{ env.BACKEND_DOCKER_CHECK_NAME }}
+          FRONTEND_DOCKER_CHECK_NAME: ${{ env.FRONTEND_DOCKER_CHECK_NAME }}
+        run: |
+          set -euo pipefail
+
+          backend_changed="false"
+          frontend_changed="false"
+
+          page=1
+          while true; do
+            files_json=$(curl -sS \
+              -H "Authorization: Bearer ${GITHUB_TOKEN}" \
+              -H "Accept: application/vnd.github+json" \
+              -H "X-GitHub-Api-Version: 2022-11-28" \
+              "https://api.github.com/repos/${GITHUB_REPOSITORY}/pulls/${PR_NUMBER}/files?per_page=100&page=${page}")
+
+            count=$(jq -r 'length' <<< "$files_json")
+            if [[ "$count" == "0" ]]; then
+              break
+            fi
+
+            if jq -e '[.[].filename | startswith("backend/")] | any' <<< "$files_json" >/dev/null; then
+              backend_changed="true"
+            fi
+            if jq -e '[.[].filename | startswith("frontend/")] | any' <<< "$files_json" >/dev/null; then
+              frontend_changed="true"
+            fi
+
+            if [[ "$backend_changed" == "true" && "$frontend_changed" == "true" ]]; then
+              break
+            fi
+
+            if (( count < 100 )); then
+              break
+            fi
+
+            page=$((page + 1))
+          done
+
+          should_gate="true"
+          skip_reason=""
+
+          required_lines=()
+          if [[ "$backend_changed" == "true" ]]; then
+            required_lines+=("${BACKEND_DOCKER_CHECK_NAME}")
+          fi
+          if [[ "$frontend_changed" == "true" ]]; then
+            required_lines+=("${FRONTEND_DOCKER_CHECK_NAME}")
+          fi
+
+          if [[ ${#required_lines[@]} -eq 0 ]]; then
+            should_gate="false"
+            skip_reason="No backend/ or frontend/ changes detected; docker build checks will not run"
+          fi
+
+          echo "backend_changed=${backend_changed}" >> "$GITHUB_OUTPUT"
+          echo "frontend_changed=${frontend_changed}" >> "$GITHUB_OUTPUT"
+          echo "should_gate=${should_gate}" >> "$GITHUB_OUTPUT"
+          echo "skip_reason=${skip_reason}" >> "$GITHUB_OUTPUT"
+
+          {
+            echo "required_check_names<<EOF"
+            if [[ ${#required_lines[@]} -gt 0 ]]; then
+              printf '%s\n' "${required_lines[@]}"
+            fi
+            echo "EOF"
+          } >> "$GITHUB_OUTPUT"
+
       - name: Find existing preview comment (initial)
         id: find_comment_initial
         uses: peter-evans/find-comment@v3
@@ -52,7 +124,9 @@ jobs:
         env:
           BRANCH: ${{ steps.ctx.outputs.branch }}
           COMMIT_SHA: ${{ steps.ctx.outputs.sha }}
-          REQUIRED_CHECK_NAMES: ${{ env.REQUIRED_CHECK_NAMES }}
+          REQUIRED_CHECK_NAMES: ${{ steps.req.outputs.required_check_names }}
+          SHOULD_GATE: ${{ steps.req.outputs.should_gate }}
+          SKIP_REASON: ${{ steps.req.outputs.skip_reason }}
         run: |
           set -euo pipefail
           short_sha="${COMMIT_SHA:0:7}"
@@ -66,14 +140,32 @@ jobs:
             fi
           done <<< "${REQUIRED_CHECK_NAMES}"
           required_inline="${required_inline%$'\n'}"
+          if [[ -z "${required_inline}" ]]; then
+            required_inline="- (none)"
+          fi
+
+          title="Preview pending (waiting for docker build checks)"
+          if [[ "${SHOULD_GATE}" != "true" ]]; then
+            title="Preview skipped (not applicable)"
+          fi
+
+          details_line=""
+          if [[ "${SHOULD_GATE}" != "true" && -n "${SKIP_REASON:-}" ]]; then
+            details_line="- Details: ${SKIP_REASON}"
+          fi
 
           body_lines=(
             "<!-- preview-bot -->"
-            "Preview pending (waiting for docker build checks)"
+            "${title}"
             ""
             "- Preview link: <not deployed>"
             "- Branch: ${BRANCH}"
             "- Commit: ${short_sha}"
+          )
+          if [[ -n "${details_line}" ]]; then
+            body_lines+=("${details_line}")
+          fi
+          body_lines+=(
             ""
             "Required checks:"
             "${required_inline}"
@@ -106,10 +198,11 @@ jobs:
 
       - name: Gate on required docker build checks
         id: gate
+        if: steps.req.outputs.should_gate == 'true'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SHA: ${{ steps.ctx.outputs.sha }}
-          REQUIRED_CHECK_NAMES: ${{ env.REQUIRED_CHECK_NAMES }}
+          REQUIRED_CHECK_NAMES: ${{ steps.req.outputs.required_check_names }}
           CHECK_POLL_INTERVAL_SECONDS: ${{ env.CHECK_POLL_INTERVAL_SECONDS }}
           CHECK_POLL_TIMEOUT_SECONDS: ${{ env.CHECK_POLL_TIMEOUT_SECONDS }}
         run: |
@@ -221,7 +314,7 @@ jobs:
 
       - name: Upsert preview (create or update)
         id: preview
-        if: steps.gate.outputs.result == 'success'
+        if: steps.req.outputs.should_gate == 'true' && steps.gate.outputs.result == 'success'
         env:
           PREVIEW_API_URL: ${{ secrets.PREVIEW_API_URL }}
           PREVIEW_API_KEY: ${{ secrets.PREVIEW_API_KEY }}
@@ -302,7 +395,9 @@ jobs:
           REPO_SLUG: ${{ steps.ctx.outputs.repo_slug }}
           BRANCH: ${{ steps.ctx.outputs.branch }}
           COMMIT_SHA: ${{ steps.ctx.outputs.sha }}
-          REQUIRED_CHECK_NAMES: ${{ env.REQUIRED_CHECK_NAMES }}
+          REQUIRED_CHECK_NAMES: ${{ steps.req.outputs.required_check_names }}
+          SHOULD_GATE: ${{ steps.req.outputs.should_gate }}
+          SKIP_REASON: ${{ steps.req.outputs.skip_reason }}
           GATE_RESULT: ${{ steps.gate.outputs.result }}
           GATE_REASON: ${{ steps.gate.outputs.reason }}
           GATE_MISSING: ${{ steps.gate.outputs.missing }}
@@ -327,11 +422,17 @@ jobs:
             fi
           done <<< "${REQUIRED_CHECK_NAMES}"
           required_inline="${required_inline%$'\n'}"
+          if [[ -z "${required_inline}" ]]; then
+            required_inline="- (none)"
+          fi
 
           status_line=""
           details=""
 
-          if [[ "$GATE_RESULT" != "success" ]]; then
+          if [[ "${SHOULD_GATE}" != "true" ]]; then
+            status_line="Preview skipped (not applicable)"
+            details="${SKIP_REASON:-No required checks for this PR}"
+          elif [[ "$GATE_RESULT" != "success" ]]; then
             status_line="Preview skipped (waiting for docker build checks)"
             details="${GATE_REASON}"
           elif [[ "$PREVIEW_RESULT" != "ok" ]]; then
@@ -361,7 +462,7 @@ jobs:
           fi
 
           gating_extra=()
-          if [[ "$GATE_RESULT" != "success" ]]; then
+          if [[ "${SHOULD_GATE}" == "true" && "$GATE_RESULT" != "success" ]]; then
             if [[ -n "${GATE_MISSING:-}" ]]; then
               gating_extra+=("- Missing: ${GATE_MISSING}")
             fi
@@ -568,6 +669,78 @@ jobs:
           echo "branch=${branch}" >> "$GITHUB_OUTPUT"
           echo "sha=${sha}" >> "$GITHUB_OUTPUT"
 
+      - name: Determine required checks for this PR
+        id: req
+        if: steps.cmd.outputs.action == 'start'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_NUMBER: ${{ steps.cmd.outputs.pr_number }}
+          BACKEND_DOCKER_CHECK_NAME: ${{ env.BACKEND_DOCKER_CHECK_NAME }}
+          FRONTEND_DOCKER_CHECK_NAME: ${{ env.FRONTEND_DOCKER_CHECK_NAME }}
+        run: |
+          set -euo pipefail
+
+          backend_changed="false"
+          frontend_changed="false"
+
+          page=1
+          while true; do
+            files_json=$(curl -sS \
+              -H "Authorization: Bearer ${GITHUB_TOKEN}" \
+              -H "Accept: application/vnd.github+json" \
+              -H "X-GitHub-Api-Version: 2022-11-28" \
+              "https://api.github.com/repos/${GITHUB_REPOSITORY}/pulls/${PR_NUMBER}/files?per_page=100&page=${page}")
+
+            count=$(jq -r 'length' <<< "$files_json")
+            if [[ "$count" == "0" ]]; then
+              break
+            fi
+
+            if jq -e '[.[].filename | startswith("backend/")] | any' <<< "$files_json" >/dev/null; then
+              backend_changed="true"
+            fi
+            if jq -e '[.[].filename | startswith("frontend/")] | any' <<< "$files_json" >/dev/null; then
+              frontend_changed="true"
+            fi
+
+            if [[ "$backend_changed" == "true" && "$frontend_changed" == "true" ]]; then
+              break
+            fi
+
+            if (( count < 100 )); then
+              break
+            fi
+
+            page=$((page + 1))
+          done
+
+          should_gate="true"
+          skip_reason=""
+
+          required_lines=()
+          if [[ "$backend_changed" == "true" ]]; then
+            required_lines+=("${BACKEND_DOCKER_CHECK_NAME}")
+          fi
+          if [[ "$frontend_changed" == "true" ]]; then
+            required_lines+=("${FRONTEND_DOCKER_CHECK_NAME}")
+          fi
+
+          if [[ ${#required_lines[@]} -eq 0 ]]; then
+            should_gate="false"
+            skip_reason="No backend/ or frontend/ changes detected; docker build checks will not run"
+          fi
+
+          echo "should_gate=${should_gate}" >> "$GITHUB_OUTPUT"
+          echo "skip_reason=${skip_reason}" >> "$GITHUB_OUTPUT"
+
+          {
+            echo "required_check_names<<EOF"
+            if [[ ${#required_lines[@]} -gt 0 ]]; then
+              printf '%s\n' "${required_lines[@]}"
+            fi
+            echo "EOF"
+          } >> "$GITHUB_OUTPUT"
+
       - name: Find existing preview comment (initial)
         id: find_comment_initial
         if: steps.cmd.outputs.action == 'start'
@@ -582,7 +755,9 @@ jobs:
         env:
           BRANCH: ${{ steps.pr.outputs.branch }}
           COMMIT_SHA: ${{ steps.pr.outputs.sha }}
-          REQUIRED_CHECK_NAMES: ${{ env.REQUIRED_CHECK_NAMES }}
+          REQUIRED_CHECK_NAMES: ${{ steps.req.outputs.required_check_names }}
+          SHOULD_GATE: ${{ steps.req.outputs.should_gate }}
+          SKIP_REASON: ${{ steps.req.outputs.skip_reason }}
         run: |
           set -euo pipefail
           short_sha="${COMMIT_SHA:0:7}"
@@ -596,14 +771,32 @@ jobs:
             fi
           done <<< "${REQUIRED_CHECK_NAMES}"
           required_inline="${required_inline%$'\n'}"
+          if [[ -z "${required_inline}" ]]; then
+            required_inline="- (none)"
+          fi
+
+          title="Manual preview requested (waiting for docker build checks)"
+          if [[ "${SHOULD_GATE}" != "true" ]]; then
+            title="Preview skipped (not applicable)"
+          fi
+
+          details_line=""
+          if [[ "${SHOULD_GATE}" != "true" && -n "${SKIP_REASON:-}" ]]; then
+            details_line="- Details: ${SKIP_REASON}"
+          fi
 
           body_lines=(
             "<!-- preview-bot -->"
-            "Manual preview requested (waiting for docker build checks)"
+            "${title}"
             ""
             "- Preview link: <not deployed>"
             "- Branch: ${BRANCH}"
             "- Commit: ${short_sha}"
+          )
+          if [[ -n "${details_line}" ]]; then
+            body_lines+=("${details_line}")
+          fi
+          body_lines+=(
             ""
             "Required checks:"
             "${required_inline}"
@@ -636,11 +829,11 @@ jobs:
 
       - name: Gate on required docker build checks
         id: gate
-        if: steps.cmd.outputs.action == 'start'
+        if: steps.cmd.outputs.action == 'start' && steps.req.outputs.should_gate == 'true'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SHA: ${{ steps.pr.outputs.sha }}
-          REQUIRED_CHECK_NAMES: ${{ env.REQUIRED_CHECK_NAMES }}
+          REQUIRED_CHECK_NAMES: ${{ steps.req.outputs.required_check_names }}
           CHECK_POLL_INTERVAL_SECONDS: ${{ env.CHECK_POLL_INTERVAL_SECONDS }}
           CHECK_POLL_TIMEOUT_SECONDS: ${{ env.CHECK_POLL_TIMEOUT_SECONDS }}
         run: |
@@ -780,7 +973,7 @@ jobs:
 
       - name: Upsert preview (create or update)
         id: preview
-        if: steps.cmd.outputs.action == 'start' && steps.gate.outputs.result == 'success'
+        if: steps.cmd.outputs.action == 'start' && steps.req.outputs.should_gate == 'true' && steps.gate.outputs.result == 'success'
         env:
           PREVIEW_API_URL: ${{ secrets.PREVIEW_API_URL }}
           PREVIEW_API_KEY: ${{ secrets.PREVIEW_API_KEY }}
@@ -860,7 +1053,9 @@ jobs:
           ACTION: ${{ steps.cmd.outputs.action }}
           BRANCH: ${{ steps.pr.outputs.branch }}
           SHA: ${{ steps.pr.outputs.sha }}
-          REQUIRED_CHECK_NAMES: ${{ env.REQUIRED_CHECK_NAMES }}
+          REQUIRED_CHECK_NAMES: ${{ steps.req.outputs.required_check_names }}
+          SHOULD_GATE: ${{ steps.req.outputs.should_gate }}
+          SKIP_REASON: ${{ steps.req.outputs.skip_reason }}
           GATE_RESULT: ${{ steps.gate.outputs.result }}
           GATE_REASON: ${{ steps.gate.outputs.reason }}
           GATE_MISSING: ${{ steps.gate.outputs.missing }}
@@ -885,6 +1080,9 @@ jobs:
             fi
           done <<< "${REQUIRED_CHECK_NAMES}"
           required_inline="${required_inline%$'\n'}"
+          if [[ -z "${required_inline}" ]]; then
+            required_inline="- (none)"
+          fi
 
           if [[ "$ACTION" == "stop" ]]; then
             title="Preview stopped"
@@ -893,7 +1091,10 @@ jobs:
             result_line="- Result: ${DELETE_MESSAGE:-Completed}"
             extra=""
           else
-            if [[ "$GATE_RESULT" != "success" ]]; then
+            if [[ "${SHOULD_GATE}" != "true" ]]; then
+              title="Preview skipped (not applicable)"
+              extra="${SKIP_REASON:-No required checks for this PR}"
+            elif [[ "$GATE_RESULT" != "success" ]]; then
               title="Preview skipped (waiting for docker build checks)"
               extra="${GATE_REASON}"
             elif [[ "$PREVIEW_RESULT" != "ok" ]]; then
@@ -926,7 +1127,7 @@ jobs:
           fi
 
           gating_extra=()
-          if [[ "$ACTION" == "start" && "$GATE_RESULT" != "success" ]]; then
+          if [[ "$ACTION" == "start" && "${SHOULD_GATE}" == "true" && "$GATE_RESULT" != "success" ]]; then
             if [[ -n "${GATE_MISSING:-}" ]]; then
               gating_extra+=("- Missing: ${GATE_MISSING}")
             fi
