@@ -1904,7 +1904,8 @@
           "category_name": {
             "type": "string",
             "nullable": true,
-            "description": "Name of the category (read-only)"
+            "description": "Name of the category (read-only)",
+            "readOnly": true
           },
           "score": {
             "type": "number",
@@ -1931,7 +1932,8 @@
           },
           "time_spent_minutes": {
             "type": "integer",
-            "description": "Total time spent on related tasks in minutes (read-only)"
+            "description": "Total time spent on related tasks in minutes (read-only)",
+            "readOnly": true
           }
         },
         "required": [
@@ -2035,11 +2037,13 @@
         "type": "object",
         "properties": {
           "id": {
-            "type": "integer"
+            "type": "integer",
+            "readOnly": true
           },
           "user": {
             "type": "integer",
-            "description": "User ID (read-only)"
+            "description": "User ID (read-only)",
+            "readOnly": true
           },
           "sleep_start": {
             "type": "string",
