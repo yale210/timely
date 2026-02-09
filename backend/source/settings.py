@@ -81,6 +81,7 @@ INSTALLED_APPS = [
     "corsheaders",
     "knox",
     "authentication",
+    "scheduler",
 ]
 
 MIDDLEWARE = [
