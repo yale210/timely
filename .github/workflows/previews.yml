@@ -84,7 +84,7 @@ jobs:
           )
           body=$(printf '%s\n' "${body_lines[@]}")
           {
-            echo "body<<'EOF'"
+            echo "body<<EOF"
             printf '%s\n' "$body"
             echo "EOF"
           } >> "$GITHUB_OUTPUT"
@@ -409,7 +409,7 @@ jobs:
           body=$(printf '%s\n' "${body_lines[@]}")
 
           {
-            echo "body<<'EOF'"
+            echo "body<<EOF"
             printf '%s\n' "$body"
             echo "EOF"
           } >> "$GITHUB_OUTPUT"
@@ -508,7 +508,7 @@ jobs:
           )
           body=$(printf '%s\n' "${body_lines[@]}")
           {
-            echo "body<<'EOF'"
+            echo "body<<EOF"
             printf '%s\n' "$body"
             echo "EOF"
           } >> "$GITHUB_OUTPUT"
@@ -614,7 +614,7 @@ jobs:
           )
           body=$(printf '%s\n' "${body_lines[@]}")
           {
-            echo "body<<'EOF'"
+            echo "body<<EOF"
             printf '%s\n' "$body"
             echo "EOF"
           } >> "$GITHUB_OUTPUT"
@@ -971,7 +971,7 @@ jobs:
           body=$(printf '%s\n' "${body_lines[@]}")
 
           {
-            echo "body<<'EOF'"
+            echo "body<<EOF"
             printf '%s\n' "$body"
             echo "EOF"
           } >> "$GITHUB_OUTPUT"
