@@ -5,5 +5,10 @@ export { default as TaskSidebar } from "./TaskSidebar";
 export { default as TaskCard } from "./TaskCard";
 export { default as TaskListSection } from "./TaskListSection";
 export { default as ConfirmationModal } from "./ConfirmationModal";
+<<<<<<< HEAD
 export { default as CreateGradeModal } from "./CreateGradeModal";
 export {default as Statcard} from "./Statcard";
+=======
+export { default as CreateGradeModal } from "./CreateGradeModal"
+export {default as Statcard} from "./Statcard"
+>>>>>>> main
