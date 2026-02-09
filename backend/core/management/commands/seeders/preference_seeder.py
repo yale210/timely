@@ -3,7 +3,7 @@
 import random
 import datetime
 from core.models import Preference, DayOfWeek
-from .fixtures import preference
+from .fixtures.preference_fixtures import preferences
 from django.contrib.auth import get_user_model
 from core.management.commands.seeders.base import BaseSeeder
 
@@ -12,7 +12,7 @@ class PreferenceSeeder(BaseSeeder):
     help = "Handles seeding of preferences into the database."
 
     def seed(self):
-        for temporary_preference in preference:
+        for temporary_preference in preferences:
             try:
                 self._create_preference(temporary_preference)
             except Exception:

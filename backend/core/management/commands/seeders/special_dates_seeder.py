@@ -2,7 +2,7 @@
 
 from core.models import SpecialDates
 
-from .fixtures import special_dates
+from .fixtures .special_dates_fixtures import special_dates
 from django.contrib.auth import get_user_model
 from core.management.commands.seeders.base import BaseSeeder
 

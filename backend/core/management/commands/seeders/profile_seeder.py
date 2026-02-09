@@ -2,7 +2,7 @@
 
 from core.models import Profile
 
-from .fixtures import profiles
+from .fixtures.profile_fixtures import profiles
 from django.contrib.auth import get_user_model
 from core.management.commands.seeders.base import BaseSeeder
 
