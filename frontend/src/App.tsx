@@ -16,10 +16,7 @@ export default function App() {
       <Route path="/dashboard" element={<Dashboard />} />
       <Route path="/tasks" element={<TaskList />} />
       <Route path="/gradebook" element={<Gradebook />} />
-<<<<<<< HEAD
-=======
       <Route path="/dashboard" element={<Dashboard />}></Route>
->>>>>>> main
     </Routes>
   )
 }
