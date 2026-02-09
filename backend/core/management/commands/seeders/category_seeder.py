@@ -3,8 +3,7 @@
 import random
 from core.models import Category
 from core.management.commands.seeders.base import BaseSeeder
-
-# from .fixtures import categories
+from .fixtures.category_fixtures import categories
 
 
 class CategorySeeder(BaseSeeder):
@@ -22,18 +21,20 @@ class CategorySeeder(BaseSeeder):
         colour = self.faker.hex_color()
         self._create_category(
             {
-                "text": word,
-                "colour": colour,
-                "max_daily_study_time": random.randint(0, 24),
+                "fields": {
+                    "text": word,
+                    "colour": colour,
+                    "max_daily_study_time": random.randint(0, 24),
+                }
             }
         )
 
     def _create_category(self, data):
         Category.objects.get_or_create(
-            id=data["id"],
-            text=data["text"],
-            colour=data.get("colour", None),
-            max_daily_study_time=data.get("max_daily_study_time", None),
+            id=data["fields"]["pk"],
+            text=data["fields"]["text"],
+            colour=data["fields"].get("colour", None),
+            max_daily_study_time=data["fields"].get("max_daily_study_time", None),
         )
 
 

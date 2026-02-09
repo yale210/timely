@@ -1,6 +1,6 @@
 """User Seeder"""
 
-from .fixtures import user_fixtures as users
+from .fixtures.user_fixtures import users
 from django.contrib.auth import get_user_model
 from core.management.commands.seeders.base import BaseSeeder
 
@@ -22,14 +22,18 @@ class UserSeeder(BaseSeeder):
     def _create_user(self, data):
         User = get_user_model()
         User.objects.get_or_create(
-            username=data["username"], email=data["email"], password=data["password"]
+            username=data["fields"]["username"],
+            email=data["fields"]["email"],
+            password=data["fields"]["password"],
         )
 
     def _populate_random_user(self):
         self._create_user(
             {
-                "username": self.faker.user_name(),
-                "email": self.faker.email(),
-                "password": self.faker.password(),
+                "fields": {
+                    "username": self.faker.user_name(),
+                    "email": self.faker.email(),
+                    "password": self.faker.password(),
+                }
             }
         )

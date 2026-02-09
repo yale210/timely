@@ -3,8 +3,7 @@
 import random
 import datetime
 from core.models import Preference, DayOfWeek
-
-# from .fixtures import preference
+from .fixtures import preference
 from django.contrib.auth import get_user_model
 from core.management.commands.seeders.base import BaseSeeder
 
@@ -21,9 +20,9 @@ class PreferenceSeeder(BaseSeeder):
 
     def _create_preference(self, data):
         temporary_preference = Preference.objects.get_or_create(
-            user=data["user"],
-            sleep_start=data["sleep_start"],
-            sleep_end=data["sleep_end"],
+            user=data["fields"]["user"],
+            sleep_start=data["fields"]["sleep_start"],
+            sleep_end=data["fields"]["sleep_end"],
         )
 
         chosen_days = random.sample([1, 2, 3, 4, 5, 6, 7], random.randint(0, 7))
@@ -46,9 +45,11 @@ class PreferenceSeeder(BaseSeeder):
 
         self._create_preference(
             {
-                "user": temporary_user,
-                "sleep_start": self._random_time(),
-                "sleep_end": self._random_time(),
+                "fields": {
+                    "user": temporary_user,
+                    "sleep_start": self._random_time(),
+                    "sleep_end": self._random_time(),
+                }
             }
         )
 

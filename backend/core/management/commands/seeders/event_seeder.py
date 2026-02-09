@@ -5,7 +5,7 @@ import datetime
 import faker
 from core.models import Event
 
-# from .fixtures import events
+from .fixtures.event_fixtures import events
 from django.contrib.auth import get_user_model
 from core.management.commands.seeders.base import BaseSeeder
 
@@ -22,14 +22,14 @@ class EventSeeder(BaseSeeder):
 
     def _create_event(self, data):
         Event.objects.get_or_create(
-            user=data["user"],
-            event_category=data["event_category"],
-            time=data["time"],
-            date=data["date"],
-            recurring=data["recurring"],
-            recurring_start=data["recurring_start"],
-            recurring_end=data["recurring_end"],
-            recurring_interval=data["recurring_interval"],
+            user=data["fields"]["user"],
+            event_category=data["fields"]["event_category"],
+            time=data["fields"]["time"],
+            date=data["fields"]["date"],
+            recurring=data["fields"]["recurring"],
+            recurring_start=data["fields"]["recurring_start"],
+            recurring_end=data["fields"]["recurring_end"],
+            recurring_interval=data["fields"]["recurring_interval"],
         )
 
     def populate_random_event(self):
@@ -46,18 +46,20 @@ class EventSeeder(BaseSeeder):
 
         self._create_event(
             {
-                "user": temporary_user,
-                "event_category": faker.word(),
-                "time": self._random_time(),
-                "date": faker.date(),
-                "recurring": random.randint(0, 1) == 1,
-                "recurring_start": faker.date() if "recurring" == 1 else None,
-                "recurring_end": faker.date() if "recurring" == 1 else None,
-                "recurring_interval": random.choice(
-                    ["daily", "weekly", "monthly", "yearly"]
-                )
-                if "recurring" == 1
-                else None,
+                "fields": {
+                    "user": temporary_user,
+                    "event_category": faker.word(),
+                    "time": self._random_time(),
+                    "date": faker.date(),
+                    "recurring": random.randint(0, 1) == 1,
+                    "recurring_start": faker.date() if "recurring" == 1 else None,
+                    "recurring_end": faker.date() if "recurring" == 1 else None,
+                    "recurring_interval": random.choice(
+                        ["daily", "weekly", "monthly", "yearly"]
+                    )
+                    if "recurring" == 1
+                    else None,
+                }
             }
         )
 

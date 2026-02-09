@@ -2,7 +2,7 @@
 
 from core.models import SpecialDates
 
-# from .fixtures import special_dates
+from .fixtures import special_dates
 from django.contrib.auth import get_user_model
 from core.management.commands.seeders.base import BaseSeeder
 
@@ -19,7 +19,9 @@ class SpecialDatesSeeder(BaseSeeder):
 
     def _create_special_date(self, data):
         SpecialDates.objects.get_or_create(
-            user=data["user"], date=data["date"], text=data["text"]
+            user=data["fields"]["user"],
+            date=data["fields"]["date"],
+            text=data["fields"]["text"],
         )
 
     def populate_random_special_date(self):
@@ -36,8 +38,10 @@ class SpecialDatesSeeder(BaseSeeder):
 
         self._create_special_date(
             {
-                "user": temporary_user,
-                "date": self.faker.date(),
-                "text": self.faker.sentence(),
+                "fields": {
+                    "user": temporary_user,
+                    "date": self.faker.date(),
+                    "text": self.faker.sentence(),
+                }
             }
         )

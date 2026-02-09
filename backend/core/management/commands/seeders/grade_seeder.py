@@ -3,7 +3,7 @@
 import random
 from core.models import Grade, Category
 
-# from .fixtures import grades
+from .fixtures.grade_fixtures import grades
 from django.contrib.auth import get_user_model
 from core.management.commands.seeders.base import BaseSeeder
 
@@ -20,12 +20,12 @@ class GradeSeeder(BaseSeeder):
 
     def _create_grade(self, data):
         Grade.objects.get_or_create(
-            user=data["user"],
-            name=data["name"],
-            category=data["category"],
-            score=data["score"],
-            total_possible=data["total_possible"],
-            date_achieved=data["date_achieved"],
+            user=data["fields"]["user"],
+            name=data["fields"]["name"],
+            category=data["fields"]["category"],
+            score=data["fields"]["score"],
+            total_possible=data["fields"]["total_possible"],
+            date_achieved=data["fields"]["date_achieved"],
         )
 
     def populate_random_grade(self):
@@ -42,11 +42,13 @@ class GradeSeeder(BaseSeeder):
 
         self._create_grade(
             {
-                "user": temporary_user,
-                "name": self.faker.sentence(),
-                "category": Category.objects.order_by("?").first(),
-                "score": random.randint(0, 100),
-                "total_possible": 100,
-                "date_achieved": self.faker.datetime(),
+                "fields": {
+                    "user": temporary_user,
+                    "name": self.faker.sentence(),
+                    "category": Category.objects.order_by("?").first(),
+                    "score": random.randint(0, 100),
+                    "total_possible": 100,
+                    "date_achieved": self.faker.datetime(),
+                }
             }
         )

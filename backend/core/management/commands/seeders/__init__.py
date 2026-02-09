@@ -13,6 +13,7 @@ from .task_seeder import TaskSeeder
 
 
 __all__ = [
+    "UserSeeder",
     "CategorySeeder",
     "CommuteSeeder",
     "DayOfWeekSeeder",

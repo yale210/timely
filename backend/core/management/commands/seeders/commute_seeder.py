@@ -3,8 +3,7 @@
 import random
 import datetime
 from core.models import Commute
-
-# from .fixtures import commutes
+from .fixtures.commute_fixtures import commutes
 from django.contrib.auth import get_user_model
 from core.management.commands.seeders.base import BaseSeeder
 
@@ -39,9 +38,11 @@ class CommuteSeeder(BaseSeeder):
 
         self._create_commute(
             {
-                "user": temporary_user,
-                "commute_start": commute_start,
-                "commute_end": commute_end,
+                "fields": {
+                    "user": temporary_user,
+                    "commute_start": commute_start,
+                    "commute_end": commute_end,
+                }
             }
         )
 
@@ -52,7 +53,7 @@ class CommuteSeeder(BaseSeeder):
 
     def _create_commute(self, data):
         Commute.objects.get_or_create(
-            user=data["user"],
-            commute_start=data["commute_start"],
-            commute_end=data["commute_end"],
+            user=data["fields"]["user"],
+            commute_start=data["fields"]["commute_start"],
+            commute_end=data["fields"]["commute_end"],
         )

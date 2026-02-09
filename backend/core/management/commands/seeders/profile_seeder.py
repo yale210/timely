@@ -2,7 +2,7 @@
 
 from core.models import Profile
 
-# from .fixtures import profiles
+from .fixtures import profiles
 from django.contrib.auth import get_user_model
 from core.management.commands.seeders.base import BaseSeeder
 
@@ -19,9 +19,9 @@ class ProfileSeeder(BaseSeeder):
 
     def _create_profile(self, data):
         Profile.objects.get_or_create(
-            user=data["user"],
-            date_of_birth=data["date_of_birth"],
-            creation_date=data["creation_date"],
+            user=data["fields"]["user"],
+            date_of_birth=data["fields"]["date_of_birth"],
+            creation_date=data["fields"]["creation_date"],
         )
 
     def populate_random_profile(self):
@@ -38,8 +38,10 @@ class ProfileSeeder(BaseSeeder):
 
         self._create_profile(
             {
-                "user": temporary_user,
-                "date_of_birth": self.faker.date(),
-                "creation_date": self.faker.date(),
+                "fields": {
+                    "user": temporary_user,
+                    "date_of_birth": self.faker.date(),
+                    "creation_date": self.faker.date(),
+                }
             }
         )
