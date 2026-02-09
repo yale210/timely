@@ -11,7 +11,14 @@ from core.management.commands.seeders.base import BaseSeeder
 class GradeSeeder(BaseSeeder):
     help = "Handles seeding of grades into the database."
 
+
+    
     def seed(self):
+        self._create_fixture_grade()
+        self._populate_random_grade()
+
+
+    def _create_fixture_grade(self):
         for grade in grades:
             try:
                 self._create_grade(grade)

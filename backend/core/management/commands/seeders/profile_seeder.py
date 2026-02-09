@@ -10,7 +10,14 @@ from core.management.commands.seeders.base import BaseSeeder
 class ProfileSeeder(BaseSeeder):
     help = "Handles seeding of profiles into the database."
 
+
+     
     def seed(self):
+        self._create_fixture_profile()
+        self._populate_random_profile()
+
+
+    def _create_fixture_profile(self):
         for profile in profiles:
             try:
                 self._create_profile(profile)
@@ -24,7 +31,7 @@ class ProfileSeeder(BaseSeeder):
             creation_date=data["fields"]["creation_date"],
         )
 
-    def populate_random_profile(self):
+    def _populate_random_profile(self):
         User = get_user_model()
         # Shuffle users and get a random user.
         temporary_user = User.objects.order_by("?").first()

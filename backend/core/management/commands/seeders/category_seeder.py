@@ -9,18 +9,29 @@ from .fixtures.category_fixtures import categories
 class CategorySeeder(BaseSeeder):
     help = "Handles seeding of categories into the database."
 
+
+    
+    
     def seed(self):
+        self._create_fixture_category()
+        self._populate_random_category()
+
+
+
+
+    def _create_fixture_category(self):
         for category in categories:
             try:
                 self._create_category(category)
             except Exception:
                 pass
 
-    def populate_random_category(self):
+    def _populate_random_category(self):
         word = self.faker.word()
         colour = self.faker.hex_color()
         self._create_category(
             {
+                "pk": None,
                 "fields": {
                     "text": word,
                     "colour": colour,
@@ -31,7 +42,7 @@ class CategorySeeder(BaseSeeder):
 
     def _create_category(self, data):
         Category.objects.get_or_create(
-            id=data["fields"]["pk"],
+            id=data["pk"],
             text=data["fields"]["text"],
             colour=data["fields"].get("colour", None),
             max_daily_study_time=data["fields"].get("max_daily_study_time", None),

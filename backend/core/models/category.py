@@ -8,6 +8,7 @@ class Category(models.Model):
     This allows for easy filtering and sorting.
     """
 
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete = models.CASCADE, related_name = "categories")
     text = models.CharField(max_length=20, blank=False, null=False)
     colour = models.CharField(
         max_length=10, blank=True, null=True

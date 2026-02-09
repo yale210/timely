@@ -1,6 +1,6 @@
 tasks = [
     {
-        "model": "core.tasks", 
+        "model": "core.tasks",
         "pk": 1,
         "fields": {
             "user": 1,
@@ -15,10 +15,10 @@ tasks = [
             "total_task_allocations": 0,
             "allocation": [],
             "importance": 10,
-        }
+        },
     },
     {
-        "model": "core.tasks", 
+        "model": "core.tasks",
         "pk": 2,
         "fields": {
             "user": 1,
@@ -33,10 +33,10 @@ tasks = [
             "total_task_allocations": 0,
             "allocation": [],
             "importance": 1,
-        }
+        },
     },
     {
-        "model": "core.tasks", 
+        "model": "core.tasks",
         "pk": 3,
         "fields": {
             "user": 2,
@@ -51,10 +51,10 @@ tasks = [
             "total_task_allocations": 0,
             "allocation": [],
             "importance": 10,
-        }
+        },
     },
     {
-        "model": "core.tasks", 
+        "model": "core.tasks",
         "pk": 4,
         "fields": {
             "user": 2,
@@ -69,10 +69,10 @@ tasks = [
             "total_task_allocations": 0,
             "allocation": [],
             "importance": 6,
-        }
+        },
     },
     {
-        "model": "core.tasks", 
+        "model": "core.tasks",
         "pk": 5,
         "fields": {
             "user": 2,
@@ -87,10 +87,10 @@ tasks = [
             "total_task_allocations": 0,
             "allocation": [],
             "importance": 7,
-        }
+        },
     },
     {
-        "model": "core.tasks", 
+        "model": "core.tasks",
         "pk": 6,
         "fields": {
             "user": 2,
@@ -105,10 +105,10 @@ tasks = [
             "total_task_allocations": 0,
             "allocation": [],
             "importance": 10,
-        }
+        },
     },
     {
-        "model": "core.tasks", 
+        "model": "core.tasks",
         "pk": 7,
         "fields": {
             "user": 4,
@@ -123,10 +123,10 @@ tasks = [
             "total_task_allocations": 0,
             "allocation": [],
             "importance": 1,
-        }
+        },
     },
     {
-        "model": "core.tasks", 
+        "model": "core.tasks",
         "pk": 8,
         "fields": {
             "user": 4,
@@ -141,9 +141,6 @@ tasks = [
             "total_task_allocations": 0,
             "allocation": [],
             "importance": 10,
-        }
-    }
+        },
+    },
 ]
-
-
-

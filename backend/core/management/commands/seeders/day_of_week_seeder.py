@@ -8,7 +8,7 @@ class DayOfWeekSeeder(BaseSeeder):
     help = "Handles seeding of days of the week into the database."
 
     def seed(self):
-        for i in range(1, 7):
+        for i in range(1, 8):
             try:
                 self._create_day_of_week(i)
             except Exception:

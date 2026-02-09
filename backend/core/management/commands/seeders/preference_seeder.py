@@ -11,7 +11,15 @@ from core.management.commands.seeders.base import BaseSeeder
 class PreferenceSeeder(BaseSeeder):
     help = "Handles seeding of preferences into the database."
 
+
+    
+     
     def seed(self):
+        self._create_fixture_preference()
+        self._populate_random_preference()
+
+
+    def _create_fixture_preference(self):
         for temporary_preference in preferences:
             try:
                 self._create_preference(temporary_preference)

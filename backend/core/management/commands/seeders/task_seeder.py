@@ -10,7 +10,12 @@ from core.management.commands.seeders.base import BaseSeeder
 class TaskSeeder(BaseSeeder):
     help = "Handles seeding of tasks into the database."
 
+
     def seed(self):
+        self._create_fixture_task()
+        self._populate_random_task()
+
+    def _create_fixture_task(self):
         for task in tasks:
             try:
                 self._create_task(task)

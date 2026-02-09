@@ -2,7 +2,7 @@
 
 from core.models import SpecialDates
 
-from .fixtures .special_dates_fixtures import special_dates
+from .fixtures.special_dates_fixtures import special_dates
 from django.contrib.auth import get_user_model
 from core.management.commands.seeders.base import BaseSeeder
 
@@ -10,7 +10,12 @@ from core.management.commands.seeders.base import BaseSeeder
 class SpecialDatesSeeder(BaseSeeder):
     help = "Handles seeding of special dates into the database."
 
+    
     def seed(self):
+        self._create_fixture_special_date()
+        self._populate_random_special_date()
+
+    def _create_fixture_special_date(self):
         for special_date in special_dates:
             try:
                 self._create_special_date(special_date)
