@@ -1,5 +1,5 @@
 {
-  "openapi": "3.2.0",
+  "openapi": "3.0.0",
   "info": {
     "title": "Timely API",
     "description": "API specification for Timely scheduling webapp",
