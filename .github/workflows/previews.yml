@@ -1,0 +1,992 @@
+name: Previews
+
+on:
+  pull_request:
+    types: [opened, reopened, synchronize, closed]
+  issue_comment:
+    types: [created]
+
+permissions:
+  contents: read
+  pull-requests: write
+  issues: write
+  checks: read
+
+concurrency:
+  group: previews-${{ github.event.pull_request.number || github.event.issue.number }}
+  cancel-in-progress: true
+
+env:
+  # IMPORTANT: These must match the GitHub "check run" names exactly.
+  # Discovered from:
+  # - .github/workflows/test-backend.yml (job name: "Test if backend docker build will work")
+  # - .github/workflows/test-frontend.yml (job name: "Test if frontend docker build will work")
+  REQUIRED_CHECK_NAMES: |
+    Test if backend docker build will work
+    Test if frontend docker build will work
+  CHECK_POLL_INTERVAL_SECONDS: "20"
+  CHECK_POLL_TIMEOUT_SECONDS: "1200"
+
+jobs:
+  pr-preview:
+    if: github.event_name == 'pull_request' && github.event.action != 'closed'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Collect PR context
+        id: ctx
+        run: |
+          echo "pr_number=${{ github.event.pull_request.number }}" >> "$GITHUB_OUTPUT"
+          echo "repo_slug=${{ github.repository }}" >> "$GITHUB_OUTPUT"
+          echo "branch=${{ github.head_ref }}" >> "$GITHUB_OUTPUT"
+          echo "sha=${{ github.event.pull_request.head.sha }}" >> "$GITHUB_OUTPUT"
+
+      - name: Find existing preview comment (initial)
+        id: find_comment_initial
+        uses: peter-evans/find-comment@v3
+        with:
+          issue-number: ${{ steps.ctx.outputs.pr_number }}
+          body-includes: "<!-- preview-bot -->"
+
+      - name: Build pending comment body
+        id: pending_body
+        env:
+          BRANCH: ${{ steps.ctx.outputs.branch }}
+          COMMIT_SHA: ${{ steps.ctx.outputs.sha }}
+          REQUIRED_CHECK_NAMES: ${{ env.REQUIRED_CHECK_NAMES }}
+        run: |
+          set -euo pipefail
+          short_sha="${COMMIT_SHA:0:7}"
+
+          required_inline=""
+          while IFS= read -r line; do
+            line="${line#${line%%[![:space:]]*}}"
+            line="${line%${line##*[![:space:]]}}"
+            if [[ -n "$line" ]]; then
+              required_inline+="- ${line}"$'\n'
+            fi
+          done <<< "${REQUIRED_CHECK_NAMES}"
+          required_inline="${required_inline%$'\n'}"
+
+          body_lines=(
+            "<!-- preview-bot -->"
+            "Preview pending (waiting for docker build checks)"
+            ""
+            "- Preview link: <not deployed>"
+            "- Branch: ${BRANCH}"
+            "- Commit: ${short_sha}"
+            ""
+            "Required checks:"
+            "${required_inline}"
+            ""
+            "Commands:"
+            "- !preview_start"
+            "- !preview_stop"
+          )
+          body=$(printf '%s\n' "${body_lines[@]}")
+          {
+            echo "body<<'EOF'"
+            printf '%s\n' "$body"
+            echo "EOF"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Update preview comment (pending)
+        if: steps.find_comment_initial.outputs.comment-id != '0'
+        uses: peter-evans/create-or-update-comment@v4
+        with:
+          comment-id: ${{ steps.find_comment_initial.outputs.comment-id }}
+          edit-mode: replace
+          body: ${{ steps.pending_body.outputs.body }}
+
+      - name: Create preview comment (pending)
+        if: steps.find_comment_initial.outputs.comment-id == '0'
+        uses: peter-evans/create-or-update-comment@v4
+        with:
+          issue-number: ${{ steps.ctx.outputs.pr_number }}
+          body: ${{ steps.pending_body.outputs.body }}
+
+      - name: Gate on required docker build checks
+        id: gate
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SHA: ${{ steps.ctx.outputs.sha }}
+          REQUIRED_CHECK_NAMES: ${{ env.REQUIRED_CHECK_NAMES }}
+          CHECK_POLL_INTERVAL_SECONDS: ${{ env.CHECK_POLL_INTERVAL_SECONDS }}
+          CHECK_POLL_TIMEOUT_SECONDS: ${{ env.CHECK_POLL_TIMEOUT_SECONDS }}
+        run: |
+          set -euo pipefail
+
+          required=()
+          while IFS= read -r line; do
+            # Trim leading/trailing whitespace
+            line="${line#${line%%[![:space:]]*}}"
+            line="${line%${line##*[![:space:]]}}"
+            if [[ -n "$line" ]]; then
+              required+=("$line")
+            fi
+          done <<< "${REQUIRED_CHECK_NAMES}"
+
+          if [[ ${#required[@]} -eq 0 ]]; then
+            echo "result=blocked" >> "$GITHUB_OUTPUT"
+            echo "reason=REQUIRED_CHECK_NAMES is empty" >> "$GITHUB_OUTPUT"
+            echo "missing=" >> "$GITHUB_OUTPUT"
+            echo "pending=" >> "$GITHUB_OUTPUT"
+            echo "failing=" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          start_epoch=$(date +%s)
+          interval="${CHECK_POLL_INTERVAL_SECONDS}"
+          timeout="${CHECK_POLL_TIMEOUT_SECONDS}"
+
+          fetch_check_runs() {
+            curl -sS \
+              -H "Authorization: Bearer ${GITHUB_TOKEN}" \
+              -H "Accept: application/vnd.github+json" \
+              -H "X-GitHub-Api-Version: 2022-11-28" \
+              "https://api.github.com/repos/${GITHUB_REPOSITORY}/commits/${SHA}/check-runs?per_page=100"
+          }
+
+          result="timeout"
+          reason="Timed out waiting for required checks"
+          missing_out=""
+          pending_out=""
+          failing_out=""
+
+          while true; do
+            now_epoch=$(date +%s)
+            elapsed=$((now_epoch - start_epoch))
+            if (( elapsed > timeout )); then
+              result="timeout"
+              reason="Checks still missing or running after ${timeout}s"
+              break
+            fi
+
+            resp="$(fetch_check_runs)"
+
+            missing=()
+            pending=()
+            failing=()
+
+            for name in "${required[@]}"; do
+              run_json=$(jq -c --arg NAME "$name" '([.check_runs[] | select(.name == $NAME)] | sort_by(.completed_at // .started_at) | last | {name, status, conclusion}) // empty' <<< "$resp")
+
+              if [[ -z "$run_json" ]]; then
+                missing+=("$name")
+                continue
+              fi
+
+              status=$(jq -r '.status // ""' <<< "$run_json")
+              conclusion=$(jq -r '.conclusion // ""' <<< "$run_json")
+
+              if [[ "$status" != "completed" ]]; then
+                pending+=("${name} (${status})")
+                continue
+              fi
+
+              if [[ "$conclusion" != "success" ]]; then
+                failing+=("${name} (${conclusion:-unknown})")
+              fi
+            done
+
+            if [[ ${#failing[@]} -gt 0 ]]; then
+              result="blocked"
+              reason="One or more required checks failed"
+              missing_out=$(printf '%s\n' "${missing[@]:-}" | jq -Rsr 'split("\n") | map(select(length>0)) | join(", ")')
+              pending_out=$(printf '%s\n' "${pending[@]:-}" | jq -Rsr 'split("\n") | map(select(length>0)) | join(", ")')
+              failing_out=$(printf '%s\n' "${failing[@]:-}" | jq -Rsr 'split("\n") | map(select(length>0)) | join(", ")')
+              break
+            fi
+
+            if [[ ${#missing[@]} -eq 0 && ${#pending[@]} -eq 0 ]]; then
+              result="success"
+              reason="All required checks completed successfully"
+              missing_out=""
+              pending_out=""
+              failing_out=""
+              break
+            fi
+
+            missing_out=$(printf '%s\n' "${missing[@]:-}" | jq -Rsr 'split("\n") | map(select(length>0)) | join(", ")')
+            pending_out=$(printf '%s\n' "${pending[@]:-}" | jq -Rsr 'split("\n") | map(select(length>0)) | join(", ")')
+            failing_out=""
+
+            sleep "$interval"
+          done
+
+          echo "result=${result}" >> "$GITHUB_OUTPUT"
+          echo "reason=${reason}" >> "$GITHUB_OUTPUT"
+          echo "missing=${missing_out}" >> "$GITHUB_OUTPUT"
+          echo "pending=${pending_out}" >> "$GITHUB_OUTPUT"
+          echo "failing=${failing_out}" >> "$GITHUB_OUTPUT"
+
+      - name: Upsert preview (create or update)
+        id: preview
+        if: steps.gate.outputs.result == 'success'
+        env:
+          PREVIEW_API_URL: ${{ secrets.PREVIEW_API_URL }}
+          PREVIEW_API_KEY: ${{ secrets.PREVIEW_API_KEY }}
+          REPO_SLUG: ${{ steps.ctx.outputs.repo_slug }}
+          BRANCH: ${{ steps.ctx.outputs.branch }}
+          COMMIT_SHA: ${{ steps.ctx.outputs.sha }}
+        run: |
+          set -euo pipefail
+
+          if [[ -z "${PREVIEW_API_URL:-}" || -z "${PREVIEW_API_KEY:-}" ]]; then
+            echo "result=error" >> "$GITHUB_OUTPUT"
+            echo "message=Missing PREVIEW_API_URL or PREVIEW_API_KEY secret" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          repo_slug_enc=$(jq -rn --arg v "$REPO_SLUG" '$v|@uri')
+          branch_enc=$(jq -rn --arg v "$BRANCH" '$v|@uri')
+          previews_url="${PREVIEW_API_URL%/}/previews"
+          get_url="${previews_url}?repo_slug=${repo_slug_enc}&branch=${branch_enc}"
+
+          get_code=$(curl -sS -o get.json -w "%{http_code}" \
+            -H "X-API-Key: ${PREVIEW_API_KEY}" \
+            "$get_url" || true)
+
+          exists="false"
+          if [[ "$get_code" == "200" ]]; then
+            # Accept either an array (possibly empty) or an object.
+            if jq -e 'type == "array" and length > 0' get.json >/dev/null 2>&1; then
+              exists="true"
+            elif jq -e 'type == "object" and (has("repo_slug") or has("branch") or has("url") or has("preview_url"))' get.json >/dev/null 2>&1; then
+              exists="true"
+            fi
+          elif [[ "$get_code" == "404" ]]; then
+            exists="false"
+          fi
+
+          payload=$(jq -n --arg repo_slug "$REPO_SLUG" --arg branch "$BRANCH" --arg commit_sha "$COMMIT_SHA" '{repo_slug:$repo_slug, branch:$branch, commit_sha:$commit_sha}')
+
+          method="POST"
+          if [[ "$exists" == "true" ]]; then
+            method="PATCH"
+          fi
+
+          upsert_code=$(curl -sS -o upsert.json -w "%{http_code}" \
+            -X "$method" \
+            -H "Content-Type: application/json" \
+            -H "X-API-Key: ${PREVIEW_API_KEY}" \
+            --data "$payload" \
+            "$previews_url" || true)
+
+          if [[ "$upsert_code" != "200" && "$upsert_code" != "201" ]]; then
+            msg=$(jq -r '.detail // .message // .error // empty' upsert.json 2>/dev/null || true)
+            echo "result=error" >> "$GITHUB_OUTPUT"
+            echo "message=Preview API ${method} failed (HTTP ${upsert_code}) ${msg}" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          preview_url=$(jq -r '.preview_url // .url // .link // empty' upsert.json 2>/dev/null || true)
+          expires_in=$(jq -r '.expires_in // .seconds_remaining // .expiresIn // empty' upsert.json 2>/dev/null || true)
+
+          echo "result=ok" >> "$GITHUB_OUTPUT"
+          echo "method=${method}" >> "$GITHUB_OUTPUT"
+          echo "preview_url=${preview_url}" >> "$GITHUB_OUTPUT"
+          echo "expires_in=${expires_in}" >> "$GITHUB_OUTPUT"
+
+      - name: Find existing preview comment
+        id: find_comment
+        if: always()
+        uses: peter-evans/find-comment@v3
+        with:
+          issue-number: ${{ steps.ctx.outputs.pr_number }}
+          body-includes: "<!-- preview-bot -->"
+
+      - name: Build comment body
+        id: body
+        if: always()
+        env:
+          REPO_SLUG: ${{ steps.ctx.outputs.repo_slug }}
+          BRANCH: ${{ steps.ctx.outputs.branch }}
+          COMMIT_SHA: ${{ steps.ctx.outputs.sha }}
+          REQUIRED_CHECK_NAMES: ${{ env.REQUIRED_CHECK_NAMES }}
+          GATE_RESULT: ${{ steps.gate.outputs.result }}
+          GATE_REASON: ${{ steps.gate.outputs.reason }}
+          GATE_MISSING: ${{ steps.gate.outputs.missing }}
+          GATE_PENDING: ${{ steps.gate.outputs.pending }}
+          GATE_FAILING: ${{ steps.gate.outputs.failing }}
+          PREVIEW_RESULT: ${{ steps.preview.outputs.result }}
+          PREVIEW_METHOD: ${{ steps.preview.outputs.method }}
+          PREVIEW_URL: ${{ steps.preview.outputs.preview_url }}
+          PREVIEW_EXPIRES_IN: ${{ steps.preview.outputs.expires_in }}
+          PREVIEW_ERROR: ${{ steps.preview.outputs.message }}
+        run: |
+          set -euo pipefail
+
+          short_sha="${COMMIT_SHA:0:7}"
+
+          required_inline=""
+          while IFS= read -r line; do
+            line="${line#${line%%[![:space:]]*}}"
+            line="${line%${line##*[![:space:]]}}"
+            if [[ -n "$line" ]]; then
+              required_inline+="- ${line}"$'\n'
+            fi
+          done <<< "${REQUIRED_CHECK_NAMES}"
+          required_inline="${required_inline%$'\n'}"
+
+          status_line=""
+          details=""
+
+          if [[ "$GATE_RESULT" != "success" ]]; then
+            status_line="Preview skipped (waiting for docker build checks)"
+            details="${GATE_REASON}"
+          elif [[ "$PREVIEW_RESULT" != "ok" ]]; then
+            status_line="Preview error (API call failed)"
+            details="${PREVIEW_ERROR:-Unknown error}"
+          else
+            if [[ "$PREVIEW_METHOD" == "PATCH" ]]; then
+              status_line="Preview updated"
+            else
+              status_line="Preview created"
+            fi
+          fi
+
+          expires_line=""
+          if [[ -n "${PREVIEW_EXPIRES_IN:-}" ]]; then
+            expires_line="- Expires in: ${PREVIEW_EXPIRES_IN}s"
+          fi
+
+          preview_line="- Preview link: <not deployed>"
+          if [[ "$GATE_RESULT" == "success" && "$PREVIEW_RESULT" == "ok" ]]; then
+            preview_line="- Preview link: ${PREVIEW_URL:-<not returned>}"
+          fi
+
+          details_line=""
+          if [[ -n "${details:-}" ]]; then
+            details_line="- Details: ${details}"
+          fi
+
+          gating_extra=()
+          if [[ "$GATE_RESULT" != "success" ]]; then
+            if [[ -n "${GATE_MISSING:-}" ]]; then
+              gating_extra+=("- Missing: ${GATE_MISSING}")
+            fi
+            if [[ -n "${GATE_PENDING:-}" ]]; then
+              gating_extra+=("- Pending: ${GATE_PENDING}")
+            fi
+            if [[ -n "${GATE_FAILING:-}" ]]; then
+              gating_extra+=("- Failing: ${GATE_FAILING}")
+            fi
+          fi
+
+          body_lines=(
+            "<!-- preview-bot -->"
+            "${status_line}"
+            ""
+            "${preview_line}"
+          )
+          if [[ -n "${expires_line}" ]]; then
+            body_lines+=("${expires_line}")
+          fi
+          body_lines+=(
+            "- Branch: ${BRANCH}"
+            "- Commit: ${short_sha}"
+          )
+          if [[ -n "${details_line}" ]]; then
+            body_lines+=("${details_line}")
+          fi
+          body_lines+=(
+            ""
+            "Required checks:"
+            "${required_inline}"
+          )
+
+          if [[ ${#gating_extra[@]} -gt 0 ]]; then
+            body_lines+=("${gating_extra[@]}")
+          fi
+
+          body_lines+=(
+            ""
+            "Commands:"
+            "- !preview_start"
+            "- !preview_stop"
+          )
+
+          body=$(printf '%s\n' "${body_lines[@]}")
+
+          {
+            echo "body<<'EOF'"
+            printf '%s\n' "$body"
+            echo "EOF"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Update preview comment
+        if: steps.find_comment.outputs.comment-id != '0'
+        uses: peter-evans/create-or-update-comment@v4
+        with:
+          comment-id: ${{ steps.find_comment.outputs.comment-id }}
+          edit-mode: replace
+          body: ${{ steps.body.outputs.body }}
+
+      - name: Create preview comment
+        if: steps.find_comment.outputs.comment-id == '0'
+        uses: peter-evans/create-or-update-comment@v4
+        with:
+          issue-number: ${{ steps.ctx.outputs.pr_number }}
+          body: ${{ steps.body.outputs.body }}
+
+  pr-cleanup:
+    if: github.event_name == 'pull_request' && github.event.action == 'closed'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Collect PR context
+        id: ctx
+        run: |
+          echo "pr_number=${{ github.event.pull_request.number }}" >> "$GITHUB_OUTPUT"
+          echo "repo_slug=${{ github.repository }}" >> "$GITHUB_OUTPUT"
+          echo "branch=${{ github.head_ref }}" >> "$GITHUB_OUTPUT"
+          echo "sha=${{ github.event.pull_request.head.sha }}" >> "$GITHUB_OUTPUT"
+
+      - name: Delete preview (cleanup)
+        id: delete
+        env:
+          PREVIEW_API_URL: ${{ secrets.PREVIEW_API_URL }}
+          PREVIEW_API_KEY: ${{ secrets.PREVIEW_API_KEY }}
+          REPO_SLUG: ${{ steps.ctx.outputs.repo_slug }}
+          BRANCH: ${{ steps.ctx.outputs.branch }}
+        run: |
+          set -euo pipefail
+
+          if [[ -z "${PREVIEW_API_URL:-}" || -z "${PREVIEW_API_KEY:-}" ]]; then
+            echo "result=error" >> "$GITHUB_OUTPUT"
+            echo "message=Missing PREVIEW_API_URL or PREVIEW_API_KEY secret" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          repo_slug_enc=$(jq -rn --arg v "$REPO_SLUG" '$v|@uri')
+          branch_enc=$(jq -rn --arg v "$BRANCH" '$v|@uri')
+          url="${PREVIEW_API_URL%/}/previews?repo_slug=${repo_slug_enc}&branch=${branch_enc}"
+
+          code=$(curl -sS -o delete.json -w "%{http_code}" \
+            -X DELETE \
+            -H "X-API-Key: ${PREVIEW_API_KEY}" \
+            "$url" || true)
+
+          if [[ "$code" == "200" || "$code" == "204" ]]; then
+            echo "result=ok" >> "$GITHUB_OUTPUT"
+            echo "message=Preview deleted" >> "$GITHUB_OUTPUT"
+          elif [[ "$code" == "404" ]]; then
+            echo "result=not_found" >> "$GITHUB_OUTPUT"
+            echo "message=No preview found to delete" >> "$GITHUB_OUTPUT"
+          else
+            msg=$(jq -r '.detail // .message // .error // empty' delete.json 2>/dev/null || true)
+            echo "result=error" >> "$GITHUB_OUTPUT"
+            echo "message=Preview API DELETE failed (HTTP ${code}) ${msg}" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Find existing preview comment
+        id: find_comment
+        uses: peter-evans/find-comment@v3
+        with:
+          issue-number: ${{ steps.ctx.outputs.pr_number }}
+          body-includes: "<!-- preview-bot -->"
+
+      - name: Build cleanup comment body
+        id: body
+        env:
+          BRANCH: ${{ steps.ctx.outputs.branch }}
+          SHA: ${{ steps.ctx.outputs.sha }}
+          DELETE_MESSAGE: ${{ steps.delete.outputs.message }}
+        run: |
+          set -euo pipefail
+          short_sha="${SHA:0:7}"
+          body_lines=(
+            "<!-- preview-bot -->"
+            "Preview cleanup on PR close"
+            ""
+            "- Result: ${DELETE_MESSAGE}"
+            "- Branch: ${BRANCH}"
+            "- Commit: ${short_sha}"
+            ""
+            "Commands:"
+            "- !preview_start"
+            "- !preview_stop"
+          )
+          body=$(printf '%s\n' "${body_lines[@]}")
+          {
+            echo "body<<'EOF'"
+            printf '%s\n' "$body"
+            echo "EOF"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Update preview comment
+        if: steps.find_comment.outputs.comment-id != '0'
+        uses: peter-evans/create-or-update-comment@v4
+        with:
+          comment-id: ${{ steps.find_comment.outputs.comment-id }}
+          edit-mode: replace
+          body: ${{ steps.body.outputs.body }}
+
+      - name: Create preview comment
+        if: steps.find_comment.outputs.comment-id == '0'
+        uses: peter-evans/create-or-update-comment@v4
+        with:
+          issue-number: ${{ steps.ctx.outputs.pr_number }}
+          body: ${{ steps.body.outputs.body }}
+
+  manual-preview:
+    if: github.event_name == 'issue_comment' && github.event.action == 'created' && github.event.issue.pull_request
+    runs-on: ubuntu-latest
+    steps:
+      - name: Detect preview command
+        id: cmd
+        run: |
+          set -euo pipefail
+
+          body=$(jq -r '.comment.body // ""' "$GITHUB_EVENT_PATH")
+          action=""
+          if printf '%s\n' "$body" | grep -Fxq '!preview_stop'; then
+            action="stop"
+          elif printf '%s\n' "$body" | grep -Fxq '!preview_start'; then
+            action="start"
+          fi
+
+          echo "action=${action}" >> "$GITHUB_OUTPUT"
+          echo "pr_number=${{ github.event.issue.number }}" >> "$GITHUB_OUTPUT"
+          echo "repo_slug=${{ github.repository }}" >> "$GITHUB_OUTPUT"
+
+      - name: Fetch PR head ref and sha
+        id: pr
+        if: steps.cmd.outputs.action != ''
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_NUMBER: ${{ steps.cmd.outputs.pr_number }}
+        run: |
+          set -euo pipefail
+          pr_json=$(curl -sS \
+            -H "Authorization: Bearer ${GITHUB_TOKEN}" \
+            -H "Accept: application/vnd.github+json" \
+            -H "X-GitHub-Api-Version: 2022-11-28" \
+            "https://api.github.com/repos/${GITHUB_REPOSITORY}/pulls/${PR_NUMBER}")
+          branch=$(jq -r '.head.ref' <<< "$pr_json")
+          sha=$(jq -r '.head.sha' <<< "$pr_json")
+
+          echo "branch=${branch}" >> "$GITHUB_OUTPUT"
+          echo "sha=${sha}" >> "$GITHUB_OUTPUT"
+
+      - name: Find existing preview comment (initial)
+        id: find_comment_initial
+        if: steps.cmd.outputs.action == 'start'
+        uses: peter-evans/find-comment@v3
+        with:
+          issue-number: ${{ steps.cmd.outputs.pr_number }}
+          body-includes: "<!-- preview-bot -->"
+
+      - name: Build pending comment body
+        id: pending_body
+        if: steps.cmd.outputs.action == 'start'
+        env:
+          BRANCH: ${{ steps.pr.outputs.branch }}
+          COMMIT_SHA: ${{ steps.pr.outputs.sha }}
+          REQUIRED_CHECK_NAMES: ${{ env.REQUIRED_CHECK_NAMES }}
+        run: |
+          set -euo pipefail
+          short_sha="${COMMIT_SHA:0:7}"
+
+          required_inline=""
+          while IFS= read -r line; do
+            line="${line#${line%%[![:space:]]*}}"
+            line="${line%${line##*[![:space:]]}}"
+            if [[ -n "$line" ]]; then
+              required_inline+="- ${line}"$'\n'
+            fi
+          done <<< "${REQUIRED_CHECK_NAMES}"
+          required_inline="${required_inline%$'\n'}"
+
+          body_lines=(
+            "<!-- preview-bot -->"
+            "Manual preview requested (waiting for docker build checks)"
+            ""
+            "- Preview link: <not deployed>"
+            "- Branch: ${BRANCH}"
+            "- Commit: ${short_sha}"
+            ""
+            "Required checks:"
+            "${required_inline}"
+            ""
+            "Commands:"
+            "- !preview_start"
+            "- !preview_stop"
+          )
+          body=$(printf '%s\n' "${body_lines[@]}")
+          {
+            echo "body<<'EOF'"
+            printf '%s\n' "$body"
+            echo "EOF"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Update preview comment (pending)
+        if: steps.cmd.outputs.action == 'start' && steps.find_comment_initial.outputs.comment-id != '0'
+        uses: peter-evans/create-or-update-comment@v4
+        with:
+          comment-id: ${{ steps.find_comment_initial.outputs.comment-id }}
+          edit-mode: replace
+          body: ${{ steps.pending_body.outputs.body }}
+
+      - name: Create preview comment (pending)
+        if: steps.cmd.outputs.action == 'start' && steps.find_comment_initial.outputs.comment-id == '0'
+        uses: peter-evans/create-or-update-comment@v4
+        with:
+          issue-number: ${{ steps.cmd.outputs.pr_number }}
+          body: ${{ steps.pending_body.outputs.body }}
+
+      - name: Gate on required docker build checks
+        id: gate
+        if: steps.cmd.outputs.action == 'start'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SHA: ${{ steps.pr.outputs.sha }}
+          REQUIRED_CHECK_NAMES: ${{ env.REQUIRED_CHECK_NAMES }}
+          CHECK_POLL_INTERVAL_SECONDS: ${{ env.CHECK_POLL_INTERVAL_SECONDS }}
+          CHECK_POLL_TIMEOUT_SECONDS: ${{ env.CHECK_POLL_TIMEOUT_SECONDS }}
+        run: |
+          set -euo pipefail
+
+          required=()
+          while IFS= read -r line; do
+            line="${line#${line%%[![:space:]]*}}"
+            line="${line%${line##*[![:space:]]}}"
+            if [[ -n "$line" ]]; then
+              required+=("$line")
+            fi
+          done <<< "${REQUIRED_CHECK_NAMES}"
+
+          start_epoch=$(date +%s)
+          interval="${CHECK_POLL_INTERVAL_SECONDS}"
+          timeout="${CHECK_POLL_TIMEOUT_SECONDS}"
+
+          fetch_check_runs() {
+            curl -sS \
+              -H "Authorization: Bearer ${GITHUB_TOKEN}" \
+              -H "Accept: application/vnd.github+json" \
+              -H "X-GitHub-Api-Version: 2022-11-28" \
+              "https://api.github.com/repos/${GITHUB_REPOSITORY}/commits/${SHA}/check-runs?per_page=100"
+          }
+
+          result="timeout"
+          reason="Timed out waiting for required checks"
+          missing_out=""
+          pending_out=""
+          failing_out=""
+
+          while true; do
+            now_epoch=$(date +%s)
+            elapsed=$((now_epoch - start_epoch))
+            if (( elapsed > timeout )); then
+              result="timeout"
+              reason="Checks still missing or running after ${timeout}s"
+              break
+            fi
+
+            resp="$(fetch_check_runs)"
+
+            missing=()
+            pending=()
+            failing=()
+
+            for name in "${required[@]}"; do
+              run_json=$(jq -c --arg NAME "$name" '([.check_runs[] | select(.name == $NAME)] | sort_by(.completed_at // .started_at) | last | {name, status, conclusion}) // empty' <<< "$resp")
+
+              if [[ -z "$run_json" ]]; then
+                missing+=("$name")
+                continue
+              fi
+
+              status=$(jq -r '.status // ""' <<< "$run_json")
+              conclusion=$(jq -r '.conclusion // ""' <<< "$run_json")
+
+              if [[ "$status" != "completed" ]]; then
+                pending+=("${name} (${status})")
+                continue
+              fi
+
+              if [[ "$conclusion" != "success" ]]; then
+                failing+=("${name} (${conclusion:-unknown})")
+              fi
+            done
+
+            if [[ ${#failing[@]} -gt 0 ]]; then
+              result="blocked"
+              reason="One or more required checks failed"
+              missing_out=$(printf '%s\n' "${missing[@]:-}" | jq -Rsr 'split("\n") | map(select(length>0)) | join(", ")')
+              pending_out=$(printf '%s\n' "${pending[@]:-}" | jq -Rsr 'split("\n") | map(select(length>0)) | join(", ")')
+              failing_out=$(printf '%s\n' "${failing[@]:-}" | jq -Rsr 'split("\n") | map(select(length>0)) | join(", ")')
+              break
+            fi
+
+            if [[ ${#missing[@]} -eq 0 && ${#pending[@]} -eq 0 ]]; then
+              result="success"
+              reason="All required checks completed successfully"
+              missing_out=""
+              pending_out=""
+              failing_out=""
+              break
+            fi
+
+            missing_out=$(printf '%s\n' "${missing[@]:-}" | jq -Rsr 'split("\n") | map(select(length>0)) | join(", ")')
+            pending_out=$(printf '%s\n' "${pending[@]:-}" | jq -Rsr 'split("\n") | map(select(length>0)) | join(", ")')
+            failing_out=""
+
+            sleep "$interval"
+          done
+
+          echo "result=${result}" >> "$GITHUB_OUTPUT"
+          echo "reason=${reason}" >> "$GITHUB_OUTPUT"
+          echo "missing=${missing_out}" >> "$GITHUB_OUTPUT"
+          echo "pending=${pending_out}" >> "$GITHUB_OUTPUT"
+          echo "failing=${failing_out}" >> "$GITHUB_OUTPUT"
+
+      - name: Delete preview
+        id: delete
+        if: steps.cmd.outputs.action == 'stop'
+        env:
+          PREVIEW_API_URL: ${{ secrets.PREVIEW_API_URL }}
+          PREVIEW_API_KEY: ${{ secrets.PREVIEW_API_KEY }}
+          REPO_SLUG: ${{ steps.cmd.outputs.repo_slug }}
+          BRANCH: ${{ steps.pr.outputs.branch }}
+        run: |
+          set -euo pipefail
+
+          if [[ -z "${PREVIEW_API_URL:-}" || -z "${PREVIEW_API_KEY:-}" ]]; then
+            echo "result=error" >> "$GITHUB_OUTPUT"
+            echo "message=Missing PREVIEW_API_URL or PREVIEW_API_KEY secret" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          repo_slug_enc=$(jq -rn --arg v "$REPO_SLUG" '$v|@uri')
+          branch_enc=$(jq -rn --arg v "$BRANCH" '$v|@uri')
+          url="${PREVIEW_API_URL%/}/previews?repo_slug=${repo_slug_enc}&branch=${branch_enc}"
+
+          code=$(curl -sS -o delete.json -w "%{http_code}" \
+            -X DELETE \
+            -H "X-API-Key: ${PREVIEW_API_KEY}" \
+            "$url" || true)
+
+          if [[ "$code" == "200" || "$code" == "204" ]]; then
+            echo "result=ok" >> "$GITHUB_OUTPUT"
+            echo "message=Preview deleted" >> "$GITHUB_OUTPUT"
+          elif [[ "$code" == "404" ]]; then
+            echo "result=not_found" >> "$GITHUB_OUTPUT"
+            echo "message=No preview found to delete" >> "$GITHUB_OUTPUT"
+          else
+            msg=$(jq -r '.detail // .message // .error // empty' delete.json 2>/dev/null || true)
+            echo "result=error" >> "$GITHUB_OUTPUT"
+            echo "message=Preview API DELETE failed (HTTP ${code}) ${msg}" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Upsert preview (create or update)
+        id: preview
+        if: steps.cmd.outputs.action == 'start' && steps.gate.outputs.result == 'success'
+        env:
+          PREVIEW_API_URL: ${{ secrets.PREVIEW_API_URL }}
+          PREVIEW_API_KEY: ${{ secrets.PREVIEW_API_KEY }}
+          REPO_SLUG: ${{ steps.cmd.outputs.repo_slug }}
+          BRANCH: ${{ steps.pr.outputs.branch }}
+          COMMIT_SHA: ${{ steps.pr.outputs.sha }}
+        run: |
+          set -euo pipefail
+
+          if [[ -z "${PREVIEW_API_URL:-}" || -z "${PREVIEW_API_KEY:-}" ]]; then
+            echo "result=error" >> "$GITHUB_OUTPUT"
+            echo "message=Missing PREVIEW_API_URL or PREVIEW_API_KEY secret" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          repo_slug_enc=$(jq -rn --arg v "$REPO_SLUG" '$v|@uri')
+          branch_enc=$(jq -rn --arg v "$BRANCH" '$v|@uri')
+          previews_url="${PREVIEW_API_URL%/}/previews"
+          get_url="${previews_url}?repo_slug=${repo_slug_enc}&branch=${branch_enc}"
+
+          get_code=$(curl -sS -o get.json -w "%{http_code}" \
+            -H "X-API-Key: ${PREVIEW_API_KEY}" \
+            "$get_url" || true)
+
+          exists="false"
+          if [[ "$get_code" == "200" ]]; then
+            if jq -e 'type == "array" and length > 0' get.json >/dev/null 2>&1; then
+              exists="true"
+            elif jq -e 'type == "object" and (has("repo_slug") or has("branch") or has("url") or has("preview_url"))' get.json >/dev/null 2>&1; then
+              exists="true"
+            fi
+          elif [[ "$get_code" == "404" ]]; then
+            exists="false"
+          fi
+
+          payload=$(jq -n --arg repo_slug "$REPO_SLUG" --arg branch "$BRANCH" --arg commit_sha "$COMMIT_SHA" '{repo_slug:$repo_slug, branch:$branch, commit_sha:$commit_sha}')
+
+          method="POST"
+          if [[ "$exists" == "true" ]]; then
+            method="PATCH"
+          fi
+
+          upsert_code=$(curl -sS -o upsert.json -w "%{http_code}" \
+            -X "$method" \
+            -H "Content-Type: application/json" \
+            -H "X-API-Key: ${PREVIEW_API_KEY}" \
+            --data "$payload" \
+            "$previews_url" || true)
+
+          if [[ "$upsert_code" != "200" && "$upsert_code" != "201" ]]; then
+            msg=$(jq -r '.detail // .message // .error // empty' upsert.json 2>/dev/null || true)
+            echo "result=error" >> "$GITHUB_OUTPUT"
+            echo "message=Preview API ${method} failed (HTTP ${upsert_code}) ${msg}" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          preview_url=$(jq -r '.preview_url // .url // .link // empty' upsert.json 2>/dev/null || true)
+          expires_in=$(jq -r '.expires_in // .seconds_remaining // .expiresIn // empty' upsert.json 2>/dev/null || true)
+
+          echo "result=ok" >> "$GITHUB_OUTPUT"
+          echo "method=${method}" >> "$GITHUB_OUTPUT"
+          echo "preview_url=${preview_url}" >> "$GITHUB_OUTPUT"
+          echo "expires_in=${expires_in}" >> "$GITHUB_OUTPUT"
+
+      - name: Find existing preview comment
+        id: find_comment
+        if: steps.cmd.outputs.action != ''
+        uses: peter-evans/find-comment@v3
+        with:
+          issue-number: ${{ steps.cmd.outputs.pr_number }}
+          body-includes: "<!-- preview-bot -->"
+
+      - name: Build comment body
+        id: body
+        if: steps.cmd.outputs.action != ''
+        env:
+          ACTION: ${{ steps.cmd.outputs.action }}
+          BRANCH: ${{ steps.pr.outputs.branch }}
+          SHA: ${{ steps.pr.outputs.sha }}
+          REQUIRED_CHECK_NAMES: ${{ env.REQUIRED_CHECK_NAMES }}
+          GATE_RESULT: ${{ steps.gate.outputs.result }}
+          GATE_REASON: ${{ steps.gate.outputs.reason }}
+          GATE_MISSING: ${{ steps.gate.outputs.missing }}
+          GATE_PENDING: ${{ steps.gate.outputs.pending }}
+          GATE_FAILING: ${{ steps.gate.outputs.failing }}
+          PREVIEW_RESULT: ${{ steps.preview.outputs.result }}
+          PREVIEW_METHOD: ${{ steps.preview.outputs.method }}
+          PREVIEW_URL: ${{ steps.preview.outputs.preview_url }}
+          PREVIEW_EXPIRES_IN: ${{ steps.preview.outputs.expires_in }}
+          PREVIEW_ERROR: ${{ steps.preview.outputs.message }}
+          DELETE_MESSAGE: ${{ steps.delete.outputs.message }}
+        run: |
+          set -euo pipefail
+
+          short_sha="${SHA:0:7}"
+          required_inline=""
+          while IFS= read -r line; do
+            line="${line#${line%%[![:space:]]*}}"
+            line="${line%${line##*[![:space:]]}}"
+            if [[ -n "$line" ]]; then
+              required_inline+="- ${line}"$'\n'
+            fi
+          done <<< "${REQUIRED_CHECK_NAMES}"
+          required_inline="${required_inline%$'\n'}"
+
+          if [[ "$ACTION" == "stop" ]]; then
+            title="Preview stopped"
+            preview_line="- Preview link: <deleted>"
+            expires_line=""
+            result_line="- Result: ${DELETE_MESSAGE:-Completed}"
+            extra=""
+          else
+            if [[ "$GATE_RESULT" != "success" ]]; then
+              title="Preview skipped (waiting for docker build checks)"
+              extra="${GATE_REASON}"
+            elif [[ "$PREVIEW_RESULT" != "ok" ]]; then
+              title="Preview error (API call failed)"
+              extra="${PREVIEW_ERROR:-Unknown error}"
+            else
+              if [[ "$PREVIEW_METHOD" == "PATCH" ]]; then
+                title="Preview updated"
+              else
+                title="Preview created"
+              fi
+              extra=""
+            fi
+
+            preview_line="- Preview link: <not deployed>"
+            if [[ "$GATE_RESULT" == "success" && "$PREVIEW_RESULT" == "ok" ]]; then
+              preview_line="- Preview link: ${PREVIEW_URL:-<not returned>}"
+            fi
+            expires_line=""
+            if [[ -n "${PREVIEW_EXPIRES_IN:-}" ]]; then
+              expires_line="- Expires in: ${PREVIEW_EXPIRES_IN}s"
+            fi
+          fi
+
+          details_line=""
+          if [[ -n "${result_line:-}" ]]; then
+            details_line="${result_line}"
+          elif [[ -n "${extra:-}" ]]; then
+            details_line="- Details: ${extra}"
+          fi
+
+          gating_extra=()
+          if [[ "$ACTION" == "start" && "$GATE_RESULT" != "success" ]]; then
+            if [[ -n "${GATE_MISSING:-}" ]]; then
+              gating_extra+=("- Missing: ${GATE_MISSING}")
+            fi
+            if [[ -n "${GATE_PENDING:-}" ]]; then
+              gating_extra+=("- Pending: ${GATE_PENDING}")
+            fi
+            if [[ -n "${GATE_FAILING:-}" ]]; then
+              gating_extra+=("- Failing: ${GATE_FAILING}")
+            fi
+          fi
+
+          body_lines=(
+            "<!-- preview-bot -->"
+            "${title}"
+            ""
+            "${preview_line}"
+          )
+          if [[ -n "${expires_line}" ]]; then
+            body_lines+=("${expires_line}")
+          fi
+          body_lines+=(
+            "- Branch: ${BRANCH}"
+            "- Commit: ${short_sha}"
+          )
+          if [[ -n "${details_line}" ]]; then
+            body_lines+=("${details_line}")
+          fi
+          body_lines+=(
+            ""
+            "Required checks:"
+            "${required_inline}"
+          )
+          if [[ ${#gating_extra[@]} -gt 0 ]]; then
+            body_lines+=("${gating_extra[@]}")
+          fi
+          body_lines+=(
+            ""
+            "Commands:"
+            "- !preview_start"
+            "- !preview_stop"
+          )
+          body=$(printf '%s\n' "${body_lines[@]}")
+
+          {
+            echo "body<<'EOF'"
+            printf '%s\n' "$body"
+            echo "EOF"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Update preview comment
+        if: steps.cmd.outputs.action != '' && steps.find_comment.outputs.comment-id != '0'
+        uses: peter-evans/create-or-update-comment@v4
+        with:
+          comment-id: ${{ steps.find_comment.outputs.comment-id }}
+          edit-mode: replace
+          body: ${{ steps.body.outputs.body }}
+
+      - name: Create preview comment
+        if: steps.cmd.outputs.action != '' && steps.find_comment.outputs.comment-id == '0'
+        uses: peter-evans/create-or-update-comment@v4
+        with:
+          issue-number: ${{ steps.cmd.outputs.pr_number }}
+          body: ${{ steps.body.outputs.body }}
