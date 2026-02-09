@@ -5,8 +5,6 @@ import { Link } from "react-router-dom"
 import { authStore, AUTH_CHANGE_EVENT } from "@/services/authService"
 
 const authedNavigation = [
-    { name: 'Home', href: '/' },
-    { name: 'Signup', href: '/signup' },
     { name: 'Calendar', href: '/calendar' },
     { name: 'Tasks', href: '/tasks' },
     { name: 'Events', href: '/events' },
@@ -34,6 +32,7 @@ export default function Navbar({ hideSignupWhenAuthed = true }: NavbarProps = {}
 
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
     const [isAuthed, setIsAuthed] = useState(Boolean(authStore.getToken()))
+
     const filteredNavigation = isAuthed
         ? (hideSignupWhenAuthed
             ? authedNavigation.filter((item) => item.href !== "/signup")
