@@ -12,6 +12,18 @@ interface TaskListSectionProps {
   defaultCollapsed?: boolean;
 }
 
+/**
+ * A functional component that renders a section of tasks with a title.
+ * @param props - The properties for the TaskListSection component.
+ * @param props.title - The title of the section.
+ * @param props.tasks - The list of tasks to display in this section.
+ * @param props.onToggleComplete - The callback function to toggle task completion.
+ * @param props.onTaskClick - The callback function to handle task clicks.
+ * @param props.initialVisible - The initial number of visible tasks.
+ * @param props.isCollapsible - Indicates whether the section is collapsible.
+ * @param props.defaultCollapsed - Indicates whether the section is collapsed by default.
+ * @returns The rendered task list section component.
+ */
 const TaskListSection = ({
   title,
   tasks,
