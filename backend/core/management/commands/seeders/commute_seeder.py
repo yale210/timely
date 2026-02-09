@@ -3,9 +3,10 @@
 import random
 import datetime
 from core.models import Commute
-from .fixtures import commutes
+
+# from .fixtures import commutes
 from django.contrib.auth import get_user_model
-from core.management.base import BaseSeeder
+from core.management.commands.seeders.base import BaseSeeder
 
 
 class CommuteSeeder(BaseSeeder):

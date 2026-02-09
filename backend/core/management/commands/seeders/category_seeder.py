@@ -2,8 +2,9 @@
 
 import random
 from core.models import Category
-from core.management.base import BaseSeeder
-from .fixtures import categories
+from core.management.commands.seeders.base import BaseSeeder
+
+# from .fixtures import categories
 
 
 class CategorySeeder(BaseSeeder):

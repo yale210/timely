@@ -3,9 +3,10 @@
 import random
 import datetime
 from core.models import Preference, DayOfWeek
-from .fixtures import preference
+
+# from .fixtures import preference
 from django.contrib.auth import get_user_model
-from core.management.base import BaseSeeder
+from core.management.commands.seeders.base import BaseSeeder
 
 
 class PreferenceSeeder(BaseSeeder):
