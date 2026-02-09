@@ -771,7 +771,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/EventCreate"
+                "$ref": "#/components/schemas/EventPatch"
               }
             }
           }
@@ -1802,6 +1802,82 @@
           "end_time",
           "importance"
         ]
+      },
+      "EventPatch": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "readOnly": true
+          },
+          "title": {
+            "type": "string",
+            "maxLength": 500
+          },
+          "description": {
+            "type": "string"
+          },
+          "location": {
+            "type": "string",
+            "maxLength": 255
+          },
+          "categories": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Category"
+            }
+          },
+          "importance": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 10,
+            "enum": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10
+            ],
+            "description": "1=Very low, 2=Low, 3=Low-medium, 4=Medium-low, 5=Medium, 6=Medium-high, 7=High-medium, 8=High, 9=Very high, 10=Critical"
+          },
+          "start_time": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "end_time": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "recurrence_interval": {
+            "type": "string",
+            "enum": [
+              "daily",
+              "weekly",
+              "monthly",
+              "yearly"
+            ],
+            "nullable": true,
+            "description": "Recurring interval type"
+          },
+          "recurrence_end": {
+            "type": "string",
+            "format": "date",
+            "nullable": true,
+            "description": "Date when recurrence ends"
+          },
+          "reminders": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/EventReminder"
+            },
+            "maxItems": 5
+          }
+        }
       },
       "Grade": {
         "type": "object",
