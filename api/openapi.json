@@ -21,8 +21,7 @@
       }
     },
     {
-      "name": "Production",
-      "url": "https://timely.subhan.work/api/",
+      "url": "https://timely.subhan.work/api",
       "description": "Production server"
     }
   ],
