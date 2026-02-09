@@ -10,12 +10,9 @@ from core.management.commands.seeders.base import BaseSeeder
 class ProfileSeeder(BaseSeeder):
     help = "Handles seeding of profiles into the database."
 
-
-     
     def seed(self):
         self._create_fixture_profile()
         self._populate_random_profile()
-
 
     def _create_fixture_profile(self):
         for profile in profiles:

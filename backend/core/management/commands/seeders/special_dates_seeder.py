@@ -10,7 +10,6 @@ from core.management.commands.seeders.base import BaseSeeder
 class SpecialDatesSeeder(BaseSeeder):
     help = "Handles seeding of special dates into the database."
 
-    
     def seed(self):
         self._create_fixture_special_date()
         self._populate_random_special_date()

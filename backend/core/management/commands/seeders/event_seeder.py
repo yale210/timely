@@ -13,14 +13,9 @@ from core.management.commands.seeders.base import BaseSeeder
 class EventSeeder(BaseSeeder):
     help = "Handles seeding of events into the database."
 
-
-    
     def seed(self):
         self._create_fixture_event()
         self._populate_random_event()
-
-
-
 
     def _create_fixture_event(self):
         for event in events:
@@ -53,14 +48,16 @@ class EventSeeder(BaseSeeder):
                 password="thomas123",
             )
 
-        temporary_category = Category.objects.filter(user=temporary_user).order_by("?").first()
+        temporary_category = (
+            Category.objects.filter(user=temporary_user).order_by("?").first()
+        )
 
         if temporary_category is None:
             temporary_category = Category.objects.create(
-                user = temporary_user,
-                text = self.faker.word(),
-                colour = self.faker.hex_color(),
-                max_daily_study_time = random.randint(1,24)
+                user=temporary_user,
+                text=self.faker.word(),
+                colour=self.faker.hex_color(),
+                max_daily_study_time=random.randint(1, 24),
             )
 
         self._create_event(

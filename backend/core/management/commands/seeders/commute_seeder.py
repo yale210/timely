@@ -11,14 +11,9 @@ from core.management.commands.seeders.base import BaseSeeder
 class CommuteSeeder(BaseSeeder):
     help = "Handles seeding of commutes into the database."
 
-
-    
-    
     def seed(self):
         self._create_fixture_commute()
         self._populate_random_commute()
-
-
 
     def _create_fixture_commute(self):
         for commute in commutes:

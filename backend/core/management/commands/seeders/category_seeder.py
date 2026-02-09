@@ -9,15 +9,9 @@ from .fixtures.category_fixtures import categories
 class CategorySeeder(BaseSeeder):
     help = "Handles seeding of categories into the database."
 
-
-    
-    
     def seed(self):
         self._create_fixture_category()
         self._populate_random_category()
-
-
-
 
     def _create_fixture_category(self):
         for category in categories:
@@ -36,7 +30,7 @@ class CategorySeeder(BaseSeeder):
                     "text": word,
                     "colour": colour,
                     "max_daily_study_time": random.randint(0, 24),
-                }
+                },
             }
         )
 

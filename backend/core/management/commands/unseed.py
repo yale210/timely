@@ -52,14 +52,9 @@ class Command(BaseCommand):
 
         count = Preference.objects.all().delete()[0]
         print(f"Deleted {count} preferences.")
-        
+
         count = Profile.objects.all().delete()[0]
         print(f"Deleted {count} profiles.")
 
         count = SpecialDates.objects.all().delete()[0]
         print(f"Deleted {count} special dates.")
-
-        
-
-
-        
