@@ -20,9 +20,24 @@ export default function App() {
         </RequireAuth>
       } />
 
-      <Route path="/tasks" element={<TaskList />} />
-      <Route path="/events" element={<EventList />} />
-      <Route path="/gradebook" element={<Gradebook />} />
+      <Route path="/tasks" element={
+        <RequireAuth>
+          <TaskList />
+        </RequireAuth>} 
+      />
+
+      <Route path="/events" element={
+        <RequireAuth>
+          <EventList />
+        </RequireAuth>
+      } />
+
+      <Route path="/gradebook" element={
+        <RequireAuth>
+          <Gradebook />
+        </RequireAuth>} 
+      />
+      
     </Routes>
   )
 }

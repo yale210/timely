@@ -13,14 +13,25 @@ const navigation = [
     { name: 'Gradebook', href: '/gradebook' },
 ]
 
+type NavbarProps = {
+    /**
+     * When true, hide the Signup link for authenticated users.
+     * Defaults to true to prevent logged-in users from navigating back to signup.
+     */
+    hideSignupWhenAuthed?: boolean
+}
+
 /**
  * A functional component that renders the navigation bar, including mobile menu logic.
  * @returns The rendered navigation bar component.
  */
-export default function Navbar() {
+export default function Navbar({ hideSignupWhenAuthed = true }: NavbarProps = {}) {
 
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
     const [isAuthed, setIsAuthed] = useState(Boolean(authStore.getToken()))
+    const filteredNavigation = (isAuthed && hideSignupWhenAuthed)
+        ? navigation.filter((item) => item.href !== "/signup")
+        : navigation
 
     useEffect(() => {
         const syncAuthState = () => setIsAuthed(Boolean(authStore.getToken()))
@@ -55,7 +66,7 @@ export default function Navbar() {
                     </div>
 
                     <div className="hidden lg:flex lg:gap-x-12">
-                        {navigation.map((item) => (
+                        {filteredNavigation.map((item) => (
                         <Link key={item.name} to={item.href} className="text-sm/6 font-semibold text-gray-900">
                             {item.name}
                         </Link>
@@ -103,7 +114,7 @@ export default function Navbar() {
                         <div className="mt-6 flow-root">
                             <div className="-my-6 divide-y divide-gray-500/10">
                                 <div className="space-y-2 py-6">
-                                {navigation.map((item) => (
+                                {filteredNavigation.map((item) => (
                                     <Link
                                     key={item.name}
                                     to={item.href}

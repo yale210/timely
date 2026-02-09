@@ -119,7 +119,7 @@ export const authService = {
     return data
   },
 
-  async login(payload: { username: string; email: string; password: string }) {
+  async login(payload: { username: string; password: string }) {
     const data = await request<AuthResponse>("/api/authentication/session/", {
       method: "POST",
       body: JSON.stringify(payload),

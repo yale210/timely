@@ -8,7 +8,6 @@ import { useNavigate } from "react-router-dom"
  * @returns The rendered login page component.
  */
 export default function Login() {
-  const [email, setEmail] = useState("")
   const [username, setUsername] = useState("")
   const [password, setPassword] = useState("")
   const [error, setError] = useState<string | null>(null)
@@ -22,7 +21,7 @@ export default function Login() {
     setLoading(true)
 
     void authService
-      .login({ username, email, password })
+      .login({ username, password })
       .then(() => {
         void navigate("/calendar")
       })
@@ -74,19 +73,6 @@ export default function Login() {
                     required
                     value={username}
                     onChange={(e) => setUsername(e.target.value)}
-                    className="block w-full rounded-md bg-white px-3 py-1.5 text-gray-900 outline outline-1 outline-gray-300 focus:outline-2 focus:outline-indigo-600"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-900">Email address</label>
-                <div className="mt-2">
-                  <input
-                    type="email"
-                    required
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
                     className="block w-full rounded-md bg-white px-3 py-1.5 text-gray-900 outline outline-1 outline-gray-300 focus:outline-2 focus:outline-indigo-600"
                   />
                 </div>
