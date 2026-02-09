@@ -13,7 +13,7 @@ const navigation = [
     { name: 'Gradebook', href: '/gradebook' },
 ]
 
-type NavbarProps = {
+interface NavbarProps {
     /**
      * When true, hide the Signup link for authenticated users.
      * Defaults to true to prevent logged-in users from navigating back to signup.
@@ -23,6 +23,10 @@ type NavbarProps = {
 
 /**
  * A functional component that renders the navigation bar, including mobile menu logic.
+ * @param root0
+ * @param root0.hideSignupWhenAuthed
+ * @param root0
+ * @param root0.hideSignupWhenAuthed
  * @returns The rendered navigation bar component.
  */
 export default function Navbar({ hideSignupWhenAuthed = true }: NavbarProps = {}) {
