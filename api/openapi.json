@@ -511,7 +511,13 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/TaskCreate"
+                "allOf": [
+                  {
+                    "$ref": "#/components/schemas/TaskCreate"
+                  },
+                  {"required": []}
+                ],
+                "minProperties": 1
               }
             }
           }
