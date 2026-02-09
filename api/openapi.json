@@ -12,9 +12,13 @@
   ],
   "servers": [
     {
-      "name": "Development",
-      "url": "http://localhost:8000/api/",
-      "description": "Local Development server"
+      "url": "http://localhost:{port}/api",
+      "description": "Local Development server",
+      "variables": {
+        "port": {
+          "default": "8000"
+        }
+      }
     },
     {
       "name": "Production",
