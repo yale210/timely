@@ -11,6 +11,14 @@ vi.mock('axios', () => {
         create: vi.fn(),
         interceptors: { request: { use: vi.fn() } },
         defaults: {},
+    } satisfies {
+        get: ReturnType<typeof vi.fn>
+        post: ReturnType<typeof vi.fn>
+        patch: ReturnType<typeof vi.fn>
+        delete: ReturnType<typeof vi.fn>
+        create: ReturnType<typeof vi.fn>
+        interceptors: { request: { use: ReturnType<typeof vi.fn> } }
+        defaults: Record<string, unknown>
     }
     mockAxios.create.mockReturnValue(mockAxios)
     return { default: mockAxios }
@@ -21,15 +29,6 @@ import * as taskService from '@/services/taskService'
 describe('taskService', () => {
     beforeEach(() => {
         vi.resetAllMocks()
-        // Provide axios.create + interceptors so api.ts doesn't crash when axios is mocked
-        const mockAxios = axios as unknown as {
-            create?: () => typeof axios
-            interceptors?: { request?: { use?: (fn: (c: any) => any) => any } }
-        }
-        mockAxios.create = vi.fn(() => mockAxios as unknown as typeof axios)
-        mockAxios.interceptors = mockAxios.interceptors ?? {}
-        mockAxios.interceptors.request = mockAxios.interceptors.request ?? {}
-        mockAxios.interceptors.request.use = mockAxios.interceptors.request.use ?? vi.fn((fn) => fn)
     })
 
     it('getTasks should call axios.get', async () => {

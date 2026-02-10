@@ -25,7 +25,9 @@ interface NavbarProps {
 }
 
 /**
- * A functional component that renders the navigation bar, including mobile menu logic.
+ * Renders the navigation bar, including mobile menu logic.
+ * @param root0 Component props.
+ * @param root0.hideSignupWhenAuthed When true, hide the Signup link for authed users.
  * @returns The rendered navigation bar component.
  */
 export default function Navbar({ hideSignupWhenAuthed = true }: NavbarProps = {}) {
