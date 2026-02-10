@@ -1,13 +1,35 @@
 import { it, describe, expect, vi, beforeEach } from "vitest"
 import axios from "axios"
-import * as eventService from "@/services/eventService"
 import { type Event, type EventSubmission } from "@/types"
 
-vi.mock("axios")
+vi.mock("axios", () => {
+  const mockAxios = {
+    get: vi.fn(),
+    post: vi.fn(),
+    patch: vi.fn(),
+    delete: vi.fn(),
+    create: vi.fn(),
+    interceptors: { request: { use: vi.fn() } },
+    defaults: {},
+  }
+  mockAxios.create.mockReturnValue(mockAxios)
+  return { default: mockAxios }
+})
+
+import * as eventService from "@/services/eventService"
 
 describe("eventService", () => {
   beforeEach(() => {
     vi.resetAllMocks()
+    // Provide axios.create + interceptors so api.ts doesn't crash when axios is mocked
+    const mockAxios = axios as unknown as {
+      create?: () => typeof axios
+      interceptors?: { request?: { use?: (fn: (c: any) => any) => any } }
+    }
+    mockAxios.create = vi.fn(() => mockAxios as unknown as typeof axios)
+    mockAxios.interceptors = mockAxios.interceptors ?? {}
+    mockAxios.interceptors.request = mockAxios.interceptors.request ?? {}
+    mockAxios.interceptors.request.use = mockAxios.interceptors.request.use ?? vi.fn((fn) => fn)
   })
 
   const mockEvent: Event = {
