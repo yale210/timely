@@ -64,9 +64,10 @@ export default function Signup() {
 
               {/* same fields */}
               <div>
-                <label className="block text-sm font-medium text-gray-900">Username</label>
+                <label htmlFor="signup-username" className="block text-sm font-medium text-gray-900">Username</label>
                 <div className="mt-2">
                   <input
+                    id="signup-username"
                     type="text"
                     required
                     value={username}
@@ -77,9 +78,10 @@ export default function Signup() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-900">Email address</label>
+                <label htmlFor="signup-email" className="block text-sm font-medium text-gray-900">Email address</label>
                 <div className="mt-2">
                   <input
+                    id="signup-email"
                     type="email"
                     required
                     value={email}
@@ -90,9 +92,10 @@ export default function Signup() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-900">Password</label>
+                <label htmlFor="signup-password" className="block text-sm font-medium text-gray-900">Password</label>
                 <div className="mt-2">
                   <input
+                    id="signup-password"
                     type="password"
                     required
                     value={password}
@@ -119,4 +122,3 @@ export default function Signup() {
     </div>
   )
 }
-

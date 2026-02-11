@@ -66,9 +66,10 @@ export default function Login() {
               )}
 
               <div>
-                <label className="block text-sm font-medium text-gray-900">Username</label>
+                <label htmlFor="login-username" className="block text-sm font-medium text-gray-900">Username</label>
                 <div className="mt-2">
                   <input
+                    id="login-username"
                     type="text"
                     required
                     value={username}
@@ -79,9 +80,10 @@ export default function Login() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-900">Password</label>
+                <label htmlFor="login-password" className="block text-sm font-medium text-gray-900">Password</label>
                 <div className="mt-2">
                   <input
+                    id="login-password"
                     type="password"
                     required
                     value={password}

@@ -5,6 +5,8 @@ import { Link } from "react-router-dom"
 import { authStore, AUTH_CHANGE_EVENT } from "@/services/authService"
 
 const authedNavigation = [
+    { name: 'Home', href: '/' },
+    { name: 'Signup', href: '/signup' },
     { name: 'Calendar', href: '/calendar' },
     { name: 'Tasks', href: '/tasks' },
     { name: 'Events', href: '/events' },
