@@ -45,7 +45,6 @@ if POSTGRES:
             "Missing required PostgreSQL settings: "
             + ", ".join(missing_postgres_settings)
         )
-        
 
 
 # Quick-start development settings - unsuitable for production
@@ -76,8 +75,6 @@ else:
     SESSION_COOKIE_SECURE = True
     CSRF_COOKIE_SECURE = True
     SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
-    
-    
 
 
 # Application definition
@@ -110,7 +107,6 @@ MIDDLEWARE = [
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
-
 
 
 ROOT_URLCONF = "source.urls"
