@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from "react";
+import { useState, useEffect, type FormEvent } from "react";
 import { type Category, type Task, type TaskSubmission } from "../types";
 
 interface TaskFormProps {
@@ -6,13 +6,25 @@ interface TaskFormProps {
   categories: Category[];
   onSubmit: (data: TaskSubmission) => void;
   onCancel: () => void;
+  onDataChange?: (data: Partial<Task>) => void;
 }
 
+/**
+ * A functional component that renders a form for creating or editing a task.
+ * @param props - The properties for the TaskForm component.
+ * @param props.initialData - The initial data to populate the form with.
+ * @param props.categories - The list of available categories.
+ * @param props.onSubmit - The callback function to handle form submission.
+ * @param props.onCancel - The callback function to handle form cancellation.
+ * @param props.onDataChange - An optional callback function to handle data changes.
+ * @returns The rendered task form component.
+ */
 const TaskForm = ({
   initialData,
   categories,
   onSubmit,
   onCancel,
+  onDataChange,
 }: TaskFormProps) => {
   const [title, setTitle] = useState(initialData?.title ?? "");
   const [description, setDescription] = useState(initialData?.description ?? "");
@@ -30,6 +42,17 @@ const TaskForm = ({
         })
       : "10:00"
   );
+
+  useEffect(() => {
+    if (onDataChange) {
+      const startDateTime = new Date(`${date}T${startTime}`);
+      onDataChange({
+        title,
+        description,
+        start_time: startDateTime.toISOString(),
+      });
+    }
+  }, [title, description, date, startTime, onDataChange]);
   const [deadline, setDeadline] = useState(
     initialData?.deadline
       ? new Date(initialData.deadline).toISOString().split("T")[0]

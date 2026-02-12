@@ -11,6 +11,18 @@ interface ConfirmationModalProps {
   cancelText?: string;
 }
 
+/**
+ * A functional component that renders a confirmation modal for destructive actions.
+ * @param props - The properties for the ConfirmationModal component.
+ * @param props.isOpen - Indicates whether the modal is open.
+ * @param props.onClose - The callback function to close the modal.
+ * @param props.onConfirm - The callback function to handle confirmation.
+ * @param props.title - The title of the modal.
+ * @param props.message - The message to display in the modal.
+ * @param props.confirmText - The text for the confirmation button.
+ * @param props.cancelText - The text for the cancellation button.
+ * @returns The rendered confirmation modal component.
+ */
 const ConfirmationModal = ({
   isOpen,
   onClose,

@@ -1,11 +1,11 @@
 import { it, describe, expect, vi, beforeEach, afterEach } from 'vitest'
 import { render, screen, waitFor, cleanup } from '@testing-library/react'
-import TaskList from "../src/pages/TaskList"
-import * as taskService from "../src/services/taskService"
+import TaskList from "@/pages/TaskList"
+import * as taskService from "@/services/taskService"
 import { MemoryRouter } from 'react-router-dom'
 import moment from 'moment'
 
-vi.mock("../src/services/taskService")
+vi.mock("@/services/taskService")
 
 // Mock ResizeObserver for Headless UI
 class ResizeObserver {
