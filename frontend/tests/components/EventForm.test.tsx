@@ -50,7 +50,6 @@ describe('EventForm', () => {
     expect(screen.getByLabelText(/Title/i)).toHaveValue('Existing Event')
     expect(screen.getByLabelText(/Location/i)).toHaveValue('Some place')
     expect(screen.getByLabelText(/Description/i)).toHaveValue('Some description')
-    expect(screen.getByLabelText(/Importance/i)).toHaveValue(8)
     expect(screen.getByLabelText(/Interval/i)).toHaveValue('weekly')
   })
 
@@ -137,7 +136,7 @@ describe('EventForm', () => {
     const typeSelect = comboboxes[comboboxes.length - 1]  // Get the last combobox (reminder type)
     fireEvent.change(typeSelect, { target: { value: 'email' } })
     
-    const minutesInput = screen.getAllByRole('spinbutton')[1]
+    const minutesInput = screen.getAllByRole('spinbutton')[0]
     fireEvent.change(minutesInput, { target: { value: '45' } })
 
     fireEvent.click(screen.getByText(/delete/i))
