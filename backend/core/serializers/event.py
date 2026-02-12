@@ -30,7 +30,6 @@ class EventSerializer(serializers.ModelSerializer):
             "description",
             "location",
             "categories",
-            "importance",
             "start_time",
             "end_time",
             "recurrence_interval",
