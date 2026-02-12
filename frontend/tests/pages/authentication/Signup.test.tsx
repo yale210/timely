@@ -68,9 +68,11 @@ describe("Signup page", () => {
   })
 
   it("disables submit and shows loading text while signing up", async () => {
-    const registerSpy = vi.spyOn(authService, "register").mockImplementation(
-      () => new Promise((resolve) => setTimeout(() => resolve({} as never), 50))
-    )
+    let resolveFn: (() => void) | undefined
+    const deferred = new Promise((resolve) => {
+      resolveFn = () => resolve({} as never)
+    })
+    const registerSpy = vi.spyOn(authService, "register").mockReturnValue(deferred as never)
 
     render(
       <MemoryRouter>
@@ -87,6 +89,8 @@ describe("Signup page", () => {
 
     expect(button).toBeDisabled()
     expect(button).toHaveTextContent(/signing up/i)
+
+    resolveFn?.()
 
     await waitFor(() => expect(registerSpy).toHaveBeenCalled())
   })
