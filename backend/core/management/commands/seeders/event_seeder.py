@@ -3,7 +3,6 @@
 import random
 import datetime
 from datetime import timedelta
-import faker
 from core.models import Event, Category
 
 from .fixtures.event_fixtures import events

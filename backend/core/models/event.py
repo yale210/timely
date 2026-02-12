@@ -18,9 +18,11 @@ class Event(models.Model):
         settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="events"
     )
 
-    categories = models.ManyToManyField(
+    categories = models.ForeignKey(
         Category,
+        null=True,
         blank=True,
+        on_delete=models.SET_NULL,
         related_name="events",
     )
 
@@ -36,6 +38,11 @@ class Event(models.Model):
 
     start_time = models.DateTimeField(default=now)
     end_time = models.DateTimeField(default=now)
+
+    event_minutes_length = models.PositiveSmallIntegerField(
+        validators=[MinValueValidator(1), MaxValueValidator(24*60)],
+        default=1
+    )
 
     class RecurrenceInterval(models.TextChoices):
         DAILY = "daily", "Daily"

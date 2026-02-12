@@ -24,7 +24,7 @@ class CategoryTests(TestCase):
         with self.assertRaises(ValidationError):
             self.category.text = ""
             self.category.full_clean()
- def test_category_max_daily_study_time_allows_bounds(self):
+    def test_category_max_daily_study_time_allows_bounds(self):
         self.category.max_daily_study_time = 0
         self.category.full_clean()
 
@@ -60,5 +60,3 @@ class CategoryTests(TestCase):
         self.category.colour = "#A1B2CG"
         with self.assertRaises(ValidationError):
             self.category.full_clean()
->>>>>>> main
-

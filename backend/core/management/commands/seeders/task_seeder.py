@@ -27,7 +27,7 @@ class TaskSeeder(BaseSeeder):
             user=data["fields"]["user"],
             title=data["fields"]["title"],
             description=data["fields"]["description"],
-            #categories=data["fields"]["categories"],
+            categories=data["fields"]["categories"],
             estimated_minutes=data["fields"]["estimated_minutes"],
             start_time=data["fields"]["start_time"],
             deadline=data["fields"]["deadline"],
