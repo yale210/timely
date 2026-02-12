@@ -45,6 +45,7 @@ if POSTGRES:
             "Missing required PostgreSQL settings: "
             + ", ".join(missing_postgres_settings)
         )
+        
 
 
 # Quick-start development settings - unsuitable for production
@@ -58,11 +59,25 @@ else:
     if not SECRET_KEY:
         raise ImproperlyConfigured("SECRET_KEY not set!")
 
+ALLOWED_HOSTS = []
+CORS_ALLOWED_ORIGINS = ["http://localhost:5173", "http://localhost:3000"]
 
+CSRF_TRUSTED_ORIGINS = [
+    "http://localhost:5173",
+    "http://localhost:3000",
+    "http://127.0.0.1:5173",
+]
 if DEBUG:
-    ALLOWED_HOSTS = []
+    ALLOWED_HOSTS.extend(["127.0.0.1", "localhost"])
 else:
-    ALLOWED_HOSTS = ["timely.subhan.work"]
+    ALLOWED_HOSTS.append("timely.subhan.work")
+    CSRF_TRUSTED_ORIGINS = ["https://timely.subhan.work"]
+    CORS_ALLOWED_ORIGINS = ["https://timely.subhan.work"]
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+    SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+    
+    
 
 
 # Application definition
@@ -96,13 +111,7 @@ MIDDLEWARE = [
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
 
-CORS_ALLOWED_ORIGINS = ["http://localhost:5173", "http://localhost:3000"]
 
-CSRF_TRUSTED_ORIGINS = [
-    "http://localhost:5173",
-    "http://localhost:3000",
-    "http://127.0.0.1:5173",
-]
 
 ROOT_URLCONF = "source.urls"
 
