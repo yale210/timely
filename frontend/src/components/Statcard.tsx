@@ -1,4 +1,4 @@
-type StatcardProps = {
+interface StatcardProps {
   title : string;
   value : string[];
 }
