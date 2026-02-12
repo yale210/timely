@@ -344,13 +344,6 @@ const CalendarPage = () => {
               toolbar={false}
               className="h-full"
               eventPropGetter={(event: CalendarEntry) => {
-                /*className:
-                  "bg-blue-100 text-blue-700 font-medium border-l-4 border-blue-500 rounded-md px-2 py-1 text-xs",
-                style: {
-                  backgroundColor: undefined,
-                  color: undefined,
-                  border: undefined,
-                },*/
                 const className=[
                   "event-slot",
                   event.repeat ? "is-repeat": "",
