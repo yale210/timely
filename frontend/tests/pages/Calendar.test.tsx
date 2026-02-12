@@ -164,7 +164,6 @@ const mockEvents: Event[] = [
     title: "Test Event",
     start_time: new Date("2026-02-12T11:00:00.000Z").toISOString(),
     end_time: moment("2026-02-12T11:00:00.000Z").add(1, "hour").toISOString(),
-    importance: 5,
     categories: [],
     recurrence_interval: null,
     recurrence_end: null,
