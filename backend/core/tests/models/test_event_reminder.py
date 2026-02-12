@@ -13,7 +13,6 @@ class EventReminderTests(TestCase):
         self.event = Event.objects.create(
             user=self.user,
             title="Test Event",
-            importance=5,
             start_time=timezone.now() + datetime.timedelta(hours=2),
             end_time=timezone.now() + datetime.timedelta(hours=3),
         )
