@@ -1,12 +1,15 @@
 from django.core.exceptions import ValidationError
 from django.test import TestCase
+from django.contrib.auth import get_user_model
 
 from core.models import Category
 
 
 class CategoryTests(TestCase):
     def setUp(self):
-        self.category = Category.objects.create(text="Study")
+        self.category = Category.objects.create(text="Study",user = get_user_model().objects.create_user(
+            username="testuser", password="password123", email="test@user.com"
+        ))
 
     def test_category_str(self):
         self.assertEqual(str(self.category), "Study")

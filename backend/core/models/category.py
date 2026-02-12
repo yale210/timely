@@ -14,6 +14,7 @@ class Category(models.Model):
         on_delete=models.CASCADE,
         related_name="categories",
         null=True,
+        blank=False
     )
     text = models.CharField(max_length=20, blank=False, null=False)
     colour = models.CharField(

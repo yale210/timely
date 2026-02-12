@@ -19,7 +19,6 @@ class EventSerializerTests(TestCase):
         # which is then caught and re-raised as rest_framework.ValidationError
         data = {
             "title": "Invalid Event",
-            "importance": 5,
             "start_time": now,
             "end_time": now - datetime.timedelta(hours=1),
         }
@@ -39,7 +38,6 @@ class EventSerializerTests(TestCase):
         now = timezone.now()
         data = {
             "title": "No Reminders",
-            "importance": 5,
             "start_time": now,
             "end_time": now + datetime.timedelta(hours=1),
         }
@@ -56,7 +54,6 @@ class EventSerializerTests(TestCase):
         event = Event.objects.create(
             user=self.user,
             title="Initial Title",
-            importance=5,
             start_time=now,
             end_time=now + datetime.timedelta(hours=1),
         )
@@ -78,7 +75,6 @@ class EventSerializerTests(TestCase):
         now = timezone.now()
         data = {
             "title": "No Categories Event",
-            "importance": 5,
             "start_time": now,
             "end_time": now + datetime.timedelta(hours=1),
         }
@@ -98,7 +94,6 @@ class EventSerializerTests(TestCase):
         event = Event.objects.create(
             user=self.user,
             title="Initial Title",
-            importance=5,
             start_time=now,
             end_time=now + datetime.timedelta(hours=1),
         )
@@ -124,7 +119,6 @@ class EventSerializerTests(TestCase):
         category = Category.objects.create(text="Meeting")
         data = {
             "title": "Event with Categories",
-            "importance": 5,
             "start_time": now,
             "end_time": now + datetime.timedelta(hours=1),
             "categories": [category.id],
