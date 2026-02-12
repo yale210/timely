@@ -3,11 +3,19 @@ import { Calendar, momentLocalizer, type View, Views } from "react-big-calendar"
 import moment from "moment";
 import "react-big-calendar/lib/css/react-big-calendar.css";
 
-import { TaskSidebar } from "../components";
+import { UnifiedSidebar } from "../components";
 import "../index.css"
 import AppLayout from "../layouts/AppLayout";
 import * as taskService from "../services/taskService";
-import { type Task, type Category, type TaskSubmission } from "../types";
+import * as eventService from "@/services/eventService";
+import type {
+  Task,
+  Category,
+  TaskSubmission,
+  Event,
+  EventSubmission,
+} from "../types";
+import { title } from "process";
 
 const localizer = momentLocalizer(moment);
 /**
@@ -15,24 +23,28 @@ const localizer = momentLocalizer(moment);
  * @returns The rendered calendar page component.
  */
 
-type CalendarEvent = {
+type CalendarEntry = {
   id: number;
   title: string;
   start: Date;
   end: Date;
-  allDay: Boolean;
-  repeat?: Boolean;
-  split?: Boolean;
-  oneGo?: Boolean;
+  allDay: boolean;
+  kind: "task" | "event";
+  sourceId: number;
+  repeat?: boolean;
+  split?: boolean;
+  oneGo?: boolean;
 }
 
 const CalendarPage = () => {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const [selectedTask, setSelectedTask] = useState<Task | undefined>(undefined);
+  const [selectedItem, setSelectedItem] = useState<Task | Event| undefined>(undefined);
   const [view, setView] = useState<View>(Views.MONTH);
   const [date, setDate] = useState(new Date());
+  const [sidebarMode, setSidebarMode] = useState<"task" | "event">("task");
+  const [events, setEvents] = useState<Event[]>([]);
 
   const fetchTasks = useCallback(async () => {
     try {
@@ -102,19 +114,31 @@ const CalendarPage = () => {
     }
   }, []);
 
+  const fetchEvents = useCallback(async () => {
+    try {
+      const data = await eventService.getEvents();
+      setEvents(data);
+    } catch(err) {
+      console.error(err);
+      setEvents([]);
+    }
+  }, [])
+
   useEffect(() => {
     const init = async () => {
       await fetchTasks();
+      await fetchEvents();
       await fetchCategories();
     };
     init().catch((err: unknown) => {
       console.error("Failed to initialise Calendar:", err);
     });
-  }, [fetchTasks, fetchCategories]);
+  }, [fetchTasks, fetchEvents, fetchCategories]);
 
   const handleSelectSlot = ({ start }: { start: Date }) => {
     // Create a template for a new task
-    setSelectedTask({
+    setSidebarMode("task");
+    setSelectedItem({
       id: 0,
       title: "",
       description: "",
@@ -128,18 +152,32 @@ const CalendarPage = () => {
     setIsSidebarOpen(true);
   };
 
-  const handleSelectEvent = (event: { id: number }) => {
-    const task = tasks.find((t) => t.id === event.id);
-    if (task) {
-      setSelectedTask(task);
+  const handleSelectEvent = (entry: CalendarEntry) => {
+    if (entry.kind==="task") {
+      const task = tasks.find((t) => {
+        t.id===entry.sourceId
+      });
+      if (task) {
+        setSidebarMode("task");
+        setSelectedItem(task);
+        setIsSidebarOpen(true);
+      }
+      return;
+    }
+    const event = events.find((ev) => {
+      ev.id===entry.sourceId
+    });
+    if (event) {
+      setSidebarMode("event");
+      setSelectedItem(event);
       setIsSidebarOpen(true);
     }
   };
 
   const handleSubmitTask = async (data: TaskSubmission) => {
     try {
-      if (selectedTask?.id && selectedTask.id !== 0) {
-        await taskService.updateTask(selectedTask.id, data);
+      if (selectedItem && "deadline" in selectedItem && selectedItem.id !== 0) {
+        await taskService.updateTask(selectedItem.id, data);
       } else {
         await taskService.createTask(data);
       }
@@ -160,22 +198,69 @@ const CalendarPage = () => {
     }
   };
 
-  const events: CalendarEvent[] = tasks.map((task, index) => ({
+  const handleSubmitEvent = async (data: EventSubmission) => {
+    try {
+      if (selectedItem && "end_time" in selectedItem && selectedItem.id !== 0) {
+        await eventService.updateEvent(selectedItem.id, data);
+      } else {
+        await eventService.createEvent(data);
+      }
+      await fetchEvents();
+      setIsSidebarOpen(false);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const handleDeleteSelected = async () => {
+    try {
+      if (!selectedItem || !selectedItem.id) {
+        console.error("There is either no item, or its id is not valid.");
+        return ;
+      }
+      if ("end_time" in selectedItem) {
+        await eventService.deleteEvent(selectedItem.id);
+        await fetchEvents();
+      } else {
+        await taskService.deleteTask(selectedItem.id);
+        await fetchTasks();
+      }
+      setIsSidebarOpen(false);
+      setSelectedItem(undefined);
+    } catch (error) {
+      console.error(error);
+    }
+  }
+
+  const calendarEntries: CalendarEntry[] = [
+    ...tasks.map((task, index) => ({
     id: task.id,
     title: task.title,
     start: new Date(task.start_time),
     end: new Date(task.deadline),
+    allDay: moment(task.deadline).diff(moment(task.start_time), "hours") >= 24,
+    kind: "task" as const,
+    sourceId: task.id,
     /*
-    repeat: Boolean(task.repeat),
-    split: Boolean(task.split),
-    oneGo: Boolean(task["one-go"]),
+    repeat: boolean(task.repeat),
+    split: boolean(task.split),
+    oneGo: boolean(task["one-go"]),
     */
     repeat: index%3==0,
     split: index%2==0,
     setTime: index%3==1,
     oneGo: index%3==1,
-    allDay: moment(task.deadline).diff(moment(task.start_time), "hours") >= 24,
-  }));
+  })),
+  ...events.map((event) => ({
+    id: 1000000 + event.id,
+    title: event.title,
+    start: new Date(event.start_time),
+    end: new Date(event.end_time),
+    allDay: false,
+    kind: "event" as const,
+    sourceId: event.id,
+  })),
+];
   return (
     /*<div style={{ height: "80vh", padding: "2rem" }}>
       <h1>Task Calendar</h1>
@@ -200,7 +285,7 @@ const CalendarPage = () => {
           <div className="flex flex-col md:flex-row justify-between items-center gap-4">
             <div className="flex items-center gap-6">
               <h1 className="text-2xl font-bold tracking-tight text-black">
-                Task Calendar
+                Calendar
               </h1>
               <div className="hidden md:flex bg-gray-100 p-1 rounded-lg">
                 {(
@@ -261,17 +346,19 @@ const CalendarPage = () => {
           <div className="flex-grow bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
             <Calendar
               localizer={localizer}
-              events={events}
+              events={calendarEntries}
               view={view}
               onView={setView}
               date={date}
               onNavigate={setDate}
               selectable
               onSelectSlot={handleSelectSlot}
-              onSelectEvent={handleSelectEvent}
+              onSelectEvent={(e) => {
+                handleSelectEvent(e as CalendarEntry)
+              }}
               toolbar={false}
               className="h-full"
-              eventPropGetter={(event: CalendarEvent) => {
+              eventPropGetter={(event: CalendarEntry) => {
                 /*className:
                   "bg-blue-100 text-blue-700 font-medium border-l-4 border-blue-500 rounded-md px-2 py-1 text-xs",
                 style: {
@@ -293,16 +380,18 @@ const CalendarPage = () => {
           </div>
         </main>
 
-        <TaskSidebar
+        <UnifiedSidebar
           isOpen={isSidebarOpen}
           onClose={() => {
             setIsSidebarOpen(false);
-            setSelectedTask(undefined);
+            setSelectedItem(undefined);
           }}
           categories={categories}
-          onSubmit={(data) => { void handleSubmitTask(data); }}
-          onDelete={(id) => { void handleDeleteTask(id); }}
-          initialData={selectedTask}
+          initialData={selectedItem}
+          initialMode={sidebarMode}
+          onSubmitTask={(data) => { void handleSubmitTask(data); }}
+          onSubmitEvent={(data) => { void handleSubmitEvent(data); }}
+          onDelete={() => { void handleDeleteSelected(); }}
         />
       </div>
     </AppLayout>
