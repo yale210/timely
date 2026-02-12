@@ -24,11 +24,10 @@ class ProfileSeeder(BaseSeeder):
     def _create_profile(self, data):
         Profile.objects.get_or_create(
             user=data["fields"]["user"],
-            defaults = {
-                "date_of_birth":data["fields"]["date_of_birth"],
-                "creation_date":data["fields"]["creation_date"],
-            }
-            
+            defaults={
+                "date_of_birth": data["fields"]["date_of_birth"],
+                "creation_date": data["fields"]["creation_date"],
+            },
         )
 
     def _populate_random_profile(self):

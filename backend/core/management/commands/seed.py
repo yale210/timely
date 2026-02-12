@@ -34,7 +34,6 @@ class Command(BaseCommand):
             TaskSeeder,
         ]
 
-    
         for seeder in seeders:
             print(f"Seeding {seeder.__name__}...\n")
             seeder().seed()

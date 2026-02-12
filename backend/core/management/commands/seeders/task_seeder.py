@@ -23,11 +23,10 @@ class TaskSeeder(BaseSeeder):
                 pass
 
     def _create_task(self, data):
-        temporary_task = Task.objects.get_or_create(
+        temporary_task, _ = Task.objects.get_or_create(
             user=data["fields"]["user"],
             title=data["fields"]["title"],
             description=data["fields"]["description"],
-            categories=data["fields"]["categories"],
             estimated_minutes=data["fields"]["estimated_minutes"],
             start_time=data["fields"]["start_time"],
             deadline=data["fields"]["deadline"],
@@ -38,8 +37,9 @@ class TaskSeeder(BaseSeeder):
             importance=data["fields"]["importance"],
         )
 
-        
-
+        categories = data["fields"]["categories"]
+        if categories:
+            temporary_task.categories.set(categories)
 
     def _populate_random_task(self):
         User = get_user_model()
@@ -53,8 +53,6 @@ class TaskSeeder(BaseSeeder):
                 password="thomas123",
             )
 
-
-        
         temporary_category = (
             Category.objects.filter(user=temporary_user).order_by("?").first()
         )
@@ -67,18 +65,13 @@ class TaskSeeder(BaseSeeder):
                 max_daily_study_time=random.randint(1, 24),
             )
 
-
-
-
-
-
         self._create_task(
             {
                 "fields": {
                     "user": temporary_user,
                     "title": self.faker.sentence(),
                     "description": self.faker.sentence(),
-                    "categories": temporary_category,
+                    "categories": [temporary_category],
                     "estimated_minutes": random.randint(1, 60 * 24),
                     "start_time": self.faker.date_time(),
                     "deadline": self.faker.date_time(),

@@ -25,16 +25,20 @@ class EventSeeder(BaseSeeder):
                 pass
 
     def _create_event(self, data):
-        Event.objects.get_or_create(
+        temporary_event, _ = Event.objects.get_or_create(
             user=data["fields"]["user"],
-            event_category=data["fields"]["event_category"],
-            time=data["fields"]["time"],
-            date=data["fields"]["date"],
-            recurring=data["fields"]["recurring"],
-            recurring_start=data["fields"]["recurring_start"],
-            recurring_end=data["fields"]["recurring_end"],
-            recurring_interval=data["fields"]["recurring_interval"],
+            title=data["fields"]["title"],
+            description=data["fields"]["description"],
+            location=data["fields"]["location"],
+            start_time=data["fields"]["start_time"],
+            end_time=data["fields"]["end_time"],
+            recurrence_interval=data["fields"]["recurrence_interval"],
+            recurrence_end=data["fields"]["recurrence_end"],
         )
+
+        categories = data["fields"]["categories"]
+        if categories:
+            temporary_event.categories.set(categories)
 
     def _populate_random_event(self):
         User = get_user_model()
@@ -60,7 +64,6 @@ class EventSeeder(BaseSeeder):
                 max_daily_study_time=random.randint(1, 24),
             )
 
-
         recurring = random.randint(0, 1) == 1
 
         if recurring:
@@ -69,30 +72,35 @@ class EventSeeder(BaseSeeder):
                 {
                     "fields": {
                         "user": temporary_user,
-                        "event_category": temporary_category,
-                        "time": None,
-                        "date": None,
+                        "categories": [temporary_category],
+                        "title": self.faker.sentence(),
+                        "description": self.faker.sentence(),
+                        "location": self.faker.word(),
                         "recurring": True,
-                        "recurring_start": start,
-                        "recurring_end": start + timedelta(random.randint(0,100)),
-                        "recurring_interval": random.choice(
+                        "start_time": start,
+                        "end_time": start + timedelta(random.randint(0, 100)),
+                        "recurrence_interval": random.choice(
                             ["daily", "weekly", "monthly", "yearly"]
-                        )
+                        ),
+                        "recurrence_end": start + timedelta(random.randint(0, 100)),
                     }
                 }
             )
         else:
+            start = self.faker.date_object()
             self._create_event(
                 {
                     "fields": {
                         "user": temporary_user,
-                        "event_category": temporary_category,
-                        "time": self._random_time(),
-                        "date": self.faker.date(),
-                        "recurring": False,
-                        "recurring_start": None,
-                        "recurring_end": None,
-                        "recurring_interval": None,
+                        "categories": [temporary_category],
+                        "title": self.faker.sentence(),
+                        "description": self.faker.sentence(),
+                        "location": self.faker.word(),
+                        "recurring": True,
+                        "start_time": start,
+                        "end_time": start + timedelta(random.randint(0, 100)),
+                        "recurrence_interval": None,
+                        "recurrence_end": None,
                     }
                 }
             )

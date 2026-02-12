@@ -36,7 +36,6 @@ class CategorySeeder(BaseSeeder):
                 password="thomas123",
             )
 
-
         self._create_category(
             {
                 "pk": None,
@@ -52,7 +51,7 @@ class CategorySeeder(BaseSeeder):
     def _create_category(self, data):
         Category.objects.get_or_create(
             id=data["pk"],
-            user = data["user"],
+            user=data["user"],
             text=data["fields"]["text"],
             colour=data["fields"].get("colour", None),
             max_daily_study_time=data["fields"].get("max_daily_study_time", None),

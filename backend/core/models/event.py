@@ -1,11 +1,9 @@
 from django.conf import settings
 from django.core.exceptions import ValidationError
-from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 from django.utils.timezone import now
 
 from .category import Category
-from .importance_choices import ImportanceChoices
 
 
 class Event(models.Model):
@@ -18,18 +16,10 @@ class Event(models.Model):
         settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="events"
     )
 
-    categories = models.ForeignKey(
+    categories = models.ManyToManyField(
         Category,
-        null=True,
         blank=True,
-        on_delete=models.SET_NULL,
         related_name="events",
-    )
-
-    importance = models.PositiveSmallIntegerField(
-        choices=ImportanceChoices.choices,
-        validators=[MinValueValidator(1), MaxValueValidator(10)],
-        default=ImportanceChoices.MEDIUM,
     )
 
     title = models.CharField(max_length=500, default="Untitled Event")
@@ -38,11 +28,6 @@ class Event(models.Model):
 
     start_time = models.DateTimeField(default=now)
     end_time = models.DateTimeField(default=now)
-
-    event_minutes_length = models.PositiveSmallIntegerField(
-        validators=[MinValueValidator(1), MaxValueValidator(24*60)],
-        default=1
-    )
 
     class RecurrenceInterval(models.TextChoices):
         DAILY = "daily", "Daily"

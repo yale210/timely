@@ -23,12 +23,12 @@ class PreferenceSeeder(BaseSeeder):
                 pass
 
     def _create_preference(self, data):
-        temporary_preference,_ = Preference.objects.get_or_create(
+        temporary_preference, _ = Preference.objects.get_or_create(
             user=data["fields"]["user"],
-            defaults = {
-                "sleep_start":data["fields"]["sleep_start"],
-                "sleep_end":data["fields"]["sleep_end"],
-            }
+            defaults={
+                "sleep_start": data["fields"]["sleep_start"],
+                "sleep_end": data["fields"]["sleep_end"],
+            },
         )
 
         chosen_days = random.sample([1, 2, 3, 4, 5, 6, 7], random.randint(0, 7))
