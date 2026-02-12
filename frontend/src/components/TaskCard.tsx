@@ -7,16 +7,45 @@ interface TaskCardProps {
   onClick: (task: Task) => void;
 }
 
+/**
+ * A functional component that renders a card representing a single task.
+ * @param props - The properties for the TaskCard component.
+ * @param props.task - The task object to display.
+ * @param props.onToggleComplete - The callback function to toggle task completion.
+ * @param props.onClick - The callback function to handle card clicks.
+ * @returns The rendered task card component.
+ */
 const TaskCard = ({ task, onToggleComplete, onClick }: TaskCardProps) => {
   const [isHovered, setIsHovered] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
   const isOverdue = new Date(task.deadline) < new Date() && !task.completed;
 
-  // Map importance to priority color and label
+  // Map importance to priority color and label using ImportanceChoices levels
   const getImportanceInfo = (importance: number) => {
-    if (importance >= 8) return { label: "High", color: "bg-red-50 text-red-600 border-red-100" };
-    if (importance >= 4) return { label: "Medium", color: "bg-amber-50 text-amber-600 border-amber-100" };
-    return { label: "Low", color: "bg-green-50 text-green-600 border-green-100" };
+    switch (importance) {
+      case 1:
+        return { label: "Very low", color: "bg-slate-50 text-slate-500 border-slate-200" };
+      case 2:
+        return { label: "Low", color: "bg-green-50 text-green-600 border-green-200" };
+      case 3:
+        return { label: "Low-medium", color: "bg-emerald-50 text-emerald-600 border-emerald-200" };
+      case 4:
+        return { label: "Medium-low", color: "bg-teal-50 text-teal-600 border-teal-200" };
+      case 5:
+        return { label: "Medium", color: "bg-cyan-50 text-cyan-600 border-cyan-200" };
+      case 6:
+        return { label: "Medium-high", color: "bg-amber-50 text-amber-600 border-amber-200" };
+      case 7:
+        return { label: "High-medium", color: "bg-orange-50 text-orange-600 border-orange-200" };
+      case 8:
+        return { label: "High", color: "bg-rose-50 text-rose-600 border-rose-200" };
+      case 9:
+        return { label: "Very high", color: "bg-red-50 text-red-600 border-red-200" };
+      case 10:
+        return { label: "Critical", color: "bg-red-100 text-red-700 border-red-300" };
+      default:
+        return { label: "Medium", color: "bg-cyan-50 text-cyan-600 border-cyan-200" };
+    }
   };
 
   const importanceInfo = getImportanceInfo(task.importance);

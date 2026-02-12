@@ -1,7 +1,7 @@
 import { it, describe, expect, vi, afterEach } from 'vitest'
 import { render, screen, fireEvent, cleanup } from '@testing-library/react'
-import { TaskForm } from "../src/components/index"
-import { type TaskSubmission } from '../src/types'
+import { TaskForm } from "@/components/index"
+import { type TaskSubmission } from '@/types'
 
 describe('TaskForm', () => {
     afterEach(cleanup)

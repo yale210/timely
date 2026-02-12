@@ -12,12 +12,10 @@ class TaskViewSetTests(TestCase):
     def setUp(self):
         self.client = APIClient()
         self.user = get_user_model().objects.create_user(
-            username="viewuser",
-            password="password123",
+            username="viewuser", password="password123", email="view@user.com"
         )
         self.other_user = get_user_model().objects.create_user(
-            username="otheruser",
-            password="password123",
+            username="otheruser", password="password123", email="other@user.com"
         )
         self.category1 = Category.objects.create(text="Work")
         self.category2 = Category.objects.create(text="Home")
@@ -110,3 +108,21 @@ class TaskViewSetTests(TestCase):
     def test_task_list_requires_authentication(self):
         response = self.client.get("/api/tasks/")
         self.assertIn(response.status_code, {401, 403})
+
+    def test_create_task_via_api(self):
+        self.client.force_authenticate(user=self.user)
+        data = {
+            "title": "New API Task",
+            "estimated_minutes": 60,
+            "start_time": (self.now + datetime.timedelta(hours=1)).isoformat(),
+            "deadline": (self.now + datetime.timedelta(days=2)).isoformat(),
+            "importance": 7,
+            "completed": False,
+            "categories": [self.category1.id],
+        }
+        response = self.client.post("/api/tasks/", data, format="json")
+        self.assertEqual(response.status_code, 201)
+        self.assertEqual(Task.objects.filter(user=self.user).count(), 3)
+        new_task = Task.objects.get(title="New API Task")
+        self.assertEqual(new_task.user, self.user)
+        self.assertEqual(new_task.importance, 7)

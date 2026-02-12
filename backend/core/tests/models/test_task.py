@@ -11,8 +11,7 @@ from core.models import Task, Category
 class TaskTests(TestCase):
     def setUp(self):
         self.user = get_user_model().objects.create_user(
-            username="testuser",
-            password="password123",
+            username="testuser", password="password123", email="test@user.com"
         )
         self.category1 = Category.objects.create(text="Work")
         self.category2 = Category.objects.create(text="Personal")
@@ -53,11 +52,10 @@ class TaskTests(TestCase):
             estimated_minutes=60,
             start_time=now,
             completed=False,
-            deadline=now + datetime.timedelta(hours=1),
+            deadline=now,  # Same day deadline (avoids midnight edge case)
             importance=7,
         )
 
-        # Still within the same day, so it might return 0 days left if we use days
         self.assertEqual(task.calculate_time_left(), 0)
 
     def test_tasks_can_have_subtasks(self):
