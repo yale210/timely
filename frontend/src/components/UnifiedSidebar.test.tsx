@@ -175,7 +175,6 @@ describe("UnifiedSidebar", () => {
       description: "Event Desc",
       start_time: new Date().toISOString(),
       end_time: new Date().toISOString(),
-      importance: 5,
       categories: [],
       reminders: []
     };
