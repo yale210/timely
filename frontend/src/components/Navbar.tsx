@@ -1,23 +1,57 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Dialog, DialogPanel } from '@headlessui/react'
 import { Bars3Icon, XMarkIcon } from '@heroicons/react/24/outline'
 import { Link } from "react-router-dom"
+import { authStore, AUTH_CHANGE_EVENT } from "@/services/authService"
 
-const navigation = [
+const authedNavigation = [
     { name: 'Home', href: '/' },
+    { name: 'Signup', href: '/signup' },
     { name: 'Calendar', href: '/calendar' },
     { name: 'Tasks', href: '/tasks' },
     { name: 'Events', href: '/events' },
     { name: 'Gradebook', href: '/gradebook' },
 ]
 
+const guestNavigation = [
+    { name: 'Home', href: '/' },
+    { name: 'Signup', href: '/signup' },
+]
+
+interface NavbarProps {
+    /**
+     * When true, hide the Signup link for authenticated users.
+     * Defaults to true to prevent logged-in users from navigating back to signup.
+     */
+    hideSignupWhenAuthed?: boolean
+}
+
 /**
- * A functional component that renders the navigation bar, including mobile menu logic.
+ * Renders the navigation bar, including mobile menu logic.
+ * @param root0 Component props.
+ * @param root0.hideSignupWhenAuthed When true, hide the Signup link for authed users.
  * @returns The rendered navigation bar component.
  */
-export default function Navbar() {
+export default function Navbar({ hideSignupWhenAuthed = true }: NavbarProps = {}) {
 
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+    const [isAuthed, setIsAuthed] = useState(Boolean(authStore.getToken()))
+
+    const filteredNavigation = isAuthed
+        ? (hideSignupWhenAuthed
+            ? authedNavigation.filter((item) => item.href !== "/signup")
+            : authedNavigation)
+        : guestNavigation
+
+    useEffect(() => {
+        const syncAuthState = () => setIsAuthed(Boolean(authStore.getToken()))
+        window.addEventListener("storage", syncAuthState)
+        window.addEventListener(AUTH_CHANGE_EVENT, syncAuthState)
+        return () => {
+            window.removeEventListener("storage", syncAuthState)
+            window.removeEventListener(AUTH_CHANGE_EVENT, syncAuthState)
+        }
+    }, [])
     
     return (
         <>
@@ -42,7 +76,7 @@ export default function Navbar() {
                     </div>
 
                     <div className="hidden lg:flex lg:gap-x-12">
-                        {navigation.map((item) => (
+                        {filteredNavigation.map((item) => (
                         <Link key={item.name} to={item.href} className="text-sm/6 font-semibold text-gray-900">
                             {item.name}
                         </Link>
@@ -50,9 +84,15 @@ export default function Navbar() {
                     </div>
 
                     <div className="hidden lg:flex lg:flex-1 lg:justify-end">
-                        <Link to="/login" className="text-sm/6 font-semibold text-gray-900">
-                        Log in <span aria-hidden="true">&rarr;</span>
-                        </Link>
+                        {isAuthed ? (
+                            <Link to="/logout" className="text-sm/6 font-semibold text-gray-900">
+                                Log out <span aria-hidden="true">&rarr;</span>
+                            </Link>
+                        ) : (
+                            <Link to="/login" className="text-sm/6 font-semibold text-gray-900">
+                                Log in <span aria-hidden="true">&rarr;</span>
+                            </Link>
+                        )}
                     </div>
 
                 </nav>
@@ -84,7 +124,7 @@ export default function Navbar() {
                         <div className="mt-6 flow-root">
                             <div className="-my-6 divide-y divide-gray-500/10">
                                 <div className="space-y-2 py-6">
-                                {navigation.map((item) => (
+                                {filteredNavigation.map((item) => (
                                     <Link
                                     key={item.name}
                                     to={item.href}
@@ -96,12 +136,21 @@ export default function Navbar() {
                                 ))}
                                 </div>
                                 <div className="py-6">
-                                <Link
-                                    to="/login"
-                                    className="-mx-3 block rounded-lg px-3 py-2.5 text-base/7 font-semibold text-gray-900 hover:bg-gray-50"
-                                >
-                                    Log in
-                                </Link>
+                                {isAuthed ? (
+                                    <Link
+                                        to="/logout"
+                                        className="-mx-3 block rounded-lg px-3 py-2.5 text-base/7 font-semibold text-gray-900 hover:bg-gray-50"
+                                    >
+                                        Log out
+                                    </Link>
+                                ) : (
+                                    <Link
+                                        to="/login"
+                                        className="-mx-3 block rounded-lg px-3 py-2.5 text-base/7 font-semibold text-gray-900 hover:bg-gray-50"
+                                    >
+                                        Log in
+                                    </Link>
+                                )}
                                 </div>
                             </div>
                         </div>
