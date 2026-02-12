@@ -1,6 +1,3 @@
-import { Navbar } from "../components/index"
-import heroImage from "../assets/hero-content-img.svg"
-import { Link } from "react-router-dom"
 import { Statcard } from "../components/index"
 import { CalendarPage } from "./index"
 

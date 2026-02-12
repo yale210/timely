@@ -1,4 +1,4 @@
-interface StatcardProps {
+type StatcardProps = {
   title : string;
   value : string[];
 }
@@ -13,7 +13,7 @@ export default function Statcard({title, value} : StatcardProps){
   const task_list = value.map(task =>
     <li key={value.indexOf(task)}>
       <input type="checkbox" value={value.indexOf(task)} />
-      <label className="mt-2 text-md font-semibold text-gray-900" htmlFor={value.indexOf(task)}> {task} </label><br />
+      <label className="mt-2 text-md font-semibold text-gray-900" htmlFor={value.indexOf(task).toString()}> {task} </label><br />
     </li>
   )
   return(
