@@ -3,6 +3,7 @@ from django.db import transaction
 from rest_framework import serializers
 from core.models import Event, EventReminder
 from core.models import Category
+from core.serializers.category_serializer import CategorySerializer
 
 
 class EventReminderSerializer(serializers.ModelSerializer):
@@ -41,9 +42,6 @@ class EventSerializer(serializers.ModelSerializer):
 
     def to_representation(self, instance):
         representation = super().to_representation(instance)
-        # Use CategorySerializer for full objects in responses
-        from core.serializers.category_serializer import CategorySerializer
-
         representation["categories"] = CategorySerializer(
             instance.categories.all(), many=True
         ).data
@@ -105,3 +103,24 @@ class EventSerializer(serializers.ModelSerializer):
                 EventReminder.objects.create(event=instance, **reminder_data)
 
         return instance
+
+
+class EventResponseSerializer(serializers.ModelSerializer):
+    categories = CategorySerializer(many=True, read_only=True)
+    reminders = EventReminderSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = Event
+        fields = [
+            "id",
+            "title",
+            "description",
+            "location",
+            "categories",
+            "importance",
+            "start_time",
+            "end_time",
+            "recurrence_interval",
+            "recurrence_end",
+            "reminders",
+        ]

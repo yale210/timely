@@ -1,2133 +1,1896 @@
 {
-  "openapi": "3.0.0",
-  "info": {
-    "title": "Timely API",
-    "description": "API specification for Timely scheduling webapp",
-    "version": "1.0.0"
-  },
-  "servers": [
-    {
-      "url": "http://localhost:{port}/api",
-      "description": "Local Development server",
-      "variables": {
-        "port": {
-          "default": "8000"
-        }
-      }
+    "openapi": "3.0.3",
+    "info": {
+        "title": "Timely API",
+        "version": "1.0.0",
+        "description": "OpenAPI schema for Timely backend"
     },
-    {
-      "url": "https://timely.subhan.work/api",
-      "description": "Production server"
-    }
-  ],
-  "paths": {
-    "/authentication/register/": {
-      "post": {
-        "tags": [
-          "Authentication"
-        ],
-        "summary": "Register a new user",
-        "description": "Create a new user account with username, email, and password",
-        "operationId": "registerUser",
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "required": [
-                  "username",
-                  "email",
-                  "password"
+    "paths": {
+        "/api/authentication/logout/": {
+            "post": {
+                "operationId": "authentication_logout_create",
+                "tags": [
+                    "authentication"
                 ],
-                "properties": {
-                  "username": {
-                    "type": "string",
-                    "description": "Unique username for the account",
-                    "example": "john_doe"
-                  },
-                  "email": {
-                    "type": "string",
-                    "format": "email",
-                    "description": "User's email address",
-                    "example": "john@example.com"
-                  },
-                  "password": {
-                    "type": "string",
-                    "format": "password",
-                    "description": "User's password",
-                    "example": "secure_password_123"
-                  }
-                }
-              }
-            }
-          }
-        },
-        "responses": {
-          "201": {
-            "description": "User successfully registered",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "id": {
-                      "type": "integer"
-                    },
-                    "username": {
-                      "type": "string"
-                    },
-                    "email": {
-                      "type": "string"
+                "security": [
+                    {
+                        "knoxApiToken": []
                     }
-                  }
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Validation error - username may already exist or fields invalid"
-          }
-        }
-      }
-    },
-    "/authentication/session/": {
-      "post": {
-        "tags": [
-          "Authentication"
-        ],
-        "summary": "Login user",
-        "description": "Authenticate user and receive authentication token",
-        "operationId": "loginUser",
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "required": [
-                  "username",
-                  "password"
                 ],
-                "properties": {
-                  "username": {
-                    "type": "string",
-                    "description": "Username",
-                    "example": "john_doe"
-                  },
-                  "password": {
-                    "type": "string",
-                    "format": "password",
-                    "description": "Password",
-                    "example": "secure_password_123"
-                  }
+                "responses": {
+                    "200": {
+                        "description": "No response body"
+                    }
                 }
-              }
             }
-          }
         },
-        "responses": {
-          "200": {
-            "description": "Login successful",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "expiry": {
-                      "type": "string",
-                      "format": "date-time",
-                      "description": "Token expiration time"
+        "/api/authentication/logoutall/": {
+            "post": {
+                "operationId": "authentication_logoutall_create",
+                "description": "Log the user out of all sessions\nI.E. deletes all auth tokens for the user",
+                "tags": [
+                    "authentication"
+                ],
+                "security": [
+                    {
+                        "knoxApiToken": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "No response body"
+                    }
+                }
+            }
+        },
+        "/api/authentication/register/": {
+            "post": {
+                "operationId": "authentication_register_create",
+                "tags": [
+                    "authentication"
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/Register"
+                            }
+                        },
+                        "application/x-www-form-urlencoded": {
+                            "schema": {
+                                "$ref": "#/components/schemas/Register"
+                            }
+                        },
+                        "multipart/form-data": {
+                            "schema": {
+                                "$ref": "#/components/schemas/Register"
+                            }
+                        }
                     },
-                    "token": {
-                      "type": "string",
-                      "description": "Authentication token"
+                    "required": true
+                },
+                "security": [
+                    {
+                        "knoxApiToken": []
+                    },
+                    {
+                        "cookieAuth": []
+                    },
+                    {}
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Register"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/api/authentication/session/": {
+            "post": {
+                "operationId": "authentication_session_create",
+                "tags": [
+                    "authentication"
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/Login"
+                            }
+                        },
+                        "application/x-www-form-urlencoded": {
+                            "schema": {
+                                "$ref": "#/components/schemas/Login"
+                            }
+                        },
+                        "multipart/form-data": {
+                            "schema": {
+                                "$ref": "#/components/schemas/Login"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "security": [
+                    {
+                        "knoxApiToken": []
+                    },
+                    {
+                        "cookieAuth": []
+                    },
+                    {}
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Login"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/api/authentication/test/": {
+            "get": {
+                "operationId": "authentication_test_retrieve",
+                "tags": [
+                    "authentication"
+                ],
+                "security": [
+                    {
+                        "knoxApiToken": []
+                    },
+                    {
+                        "cookieAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "No response body"
+                    }
+                }
+            }
+        },
+        "/api/categories/": {
+            "get": {
+                "operationId": "categories_list",
+                "tags": [
+                    "categories"
+                ],
+                "security": [
+                    {
+                        "knoxApiToken": []
+                    },
+                    {
+                        "cookieAuth": []
+                    },
+                    {}
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/Category"
+                                    }
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/api/categories/{id}/": {
+            "get": {
+                "operationId": "categories_retrieve",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "id",
+                        "schema": {
+                            "type": "integer"
+                        },
+                        "description": "A unique integer value identifying this category.",
+                        "required": true
+                    }
+                ],
+                "tags": [
+                    "categories"
+                ],
+                "security": [
+                    {
+                        "knoxApiToken": []
+                    },
+                    {
+                        "cookieAuth": []
+                    },
+                    {}
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Category"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/api/events/": {
+            "get": {
+                "operationId": "events_list",
+                "tags": [
+                    "events"
+                ],
+                "security": [
+                    {
+                        "knoxApiToken": []
+                    },
+                    {
+                        "cookieAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/EventResponse"
+                                    }
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            },
+            "post": {
+                "operationId": "events_create",
+                "tags": [
+                    "events"
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/Event"
+                            }
+                        },
+                        "application/x-www-form-urlencoded": {
+                            "schema": {
+                                "$ref": "#/components/schemas/Event"
+                            }
+                        },
+                        "multipart/form-data": {
+                            "schema": {
+                                "$ref": "#/components/schemas/Event"
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "knoxApiToken": []
+                    },
+                    {
+                        "cookieAuth": []
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/EventResponse"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/api/events/{id}/": {
+            "get": {
+                "operationId": "events_retrieve",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "id",
+                        "schema": {
+                            "type": "string"
+                        },
+                        "required": true
+                    }
+                ],
+                "tags": [
+                    "events"
+                ],
+                "security": [
+                    {
+                        "knoxApiToken": []
+                    },
+                    {
+                        "cookieAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/EventResponse"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            },
+            "put": {
+                "operationId": "events_update",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "id",
+                        "schema": {
+                            "type": "string"
+                        },
+                        "required": true
+                    }
+                ],
+                "tags": [
+                    "events"
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/Event"
+                            }
+                        },
+                        "application/x-www-form-urlencoded": {
+                            "schema": {
+                                "$ref": "#/components/schemas/Event"
+                            }
+                        },
+                        "multipart/form-data": {
+                            "schema": {
+                                "$ref": "#/components/schemas/Event"
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "knoxApiToken": []
+                    },
+                    {
+                        "cookieAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/EventResponse"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            },
+            "patch": {
+                "operationId": "events_partial_update",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "id",
+                        "schema": {
+                            "type": "string"
+                        },
+                        "required": true
+                    }
+                ],
+                "tags": [
+                    "events"
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/PatchedEvent"
+                            }
+                        },
+                        "application/x-www-form-urlencoded": {
+                            "schema": {
+                                "$ref": "#/components/schemas/PatchedEvent"
+                            }
+                        },
+                        "multipart/form-data": {
+                            "schema": {
+                                "$ref": "#/components/schemas/PatchedEvent"
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "knoxApiToken": []
+                    },
+                    {
+                        "cookieAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/EventResponse"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            },
+            "delete": {
+                "operationId": "events_destroy",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "id",
+                        "schema": {
+                            "type": "string"
+                        },
+                        "required": true
+                    }
+                ],
+                "tags": [
+                    "events"
+                ],
+                "security": [
+                    {
+                        "knoxApiToken": []
+                    },
+                    {
+                        "cookieAuth": []
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No response body"
+                    }
+                }
+            }
+        },
+        "/api/grades/": {
+            "get": {
+                "operationId": "grades_list",
+                "tags": [
+                    "grades"
+                ],
+                "security": [
+                    {
+                        "knoxApiToken": []
+                    },
+                    {
+                        "cookieAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/Grade"
+                                    }
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            },
+            "post": {
+                "operationId": "grades_create",
+                "tags": [
+                    "grades"
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/Grade"
+                            }
+                        },
+                        "application/x-www-form-urlencoded": {
+                            "schema": {
+                                "$ref": "#/components/schemas/Grade"
+                            }
+                        },
+                        "multipart/form-data": {
+                            "schema": {
+                                "$ref": "#/components/schemas/Grade"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "security": [
+                    {
+                        "knoxApiToken": []
+                    },
+                    {
+                        "cookieAuth": []
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Grade"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/api/grades/{id}/": {
+            "get": {
+                "operationId": "grades_retrieve",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "id",
+                        "schema": {
+                            "type": "string"
+                        },
+                        "required": true
+                    }
+                ],
+                "tags": [
+                    "grades"
+                ],
+                "security": [
+                    {
+                        "knoxApiToken": []
+                    },
+                    {
+                        "cookieAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Grade"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            },
+            "put": {
+                "operationId": "grades_update",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "id",
+                        "schema": {
+                            "type": "string"
+                        },
+                        "required": true
+                    }
+                ],
+                "tags": [
+                    "grades"
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/Grade"
+                            }
+                        },
+                        "application/x-www-form-urlencoded": {
+                            "schema": {
+                                "$ref": "#/components/schemas/Grade"
+                            }
+                        },
+                        "multipart/form-data": {
+                            "schema": {
+                                "$ref": "#/components/schemas/Grade"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "security": [
+                    {
+                        "knoxApiToken": []
+                    },
+                    {
+                        "cookieAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Grade"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            },
+            "patch": {
+                "operationId": "grades_partial_update",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "id",
+                        "schema": {
+                            "type": "string"
+                        },
+                        "required": true
+                    }
+                ],
+                "tags": [
+                    "grades"
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/PatchedGrade"
+                            }
+                        },
+                        "application/x-www-form-urlencoded": {
+                            "schema": {
+                                "$ref": "#/components/schemas/PatchedGrade"
+                            }
+                        },
+                        "multipart/form-data": {
+                            "schema": {
+                                "$ref": "#/components/schemas/PatchedGrade"
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "knoxApiToken": []
+                    },
+                    {
+                        "cookieAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Grade"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            },
+            "delete": {
+                "operationId": "grades_destroy",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "id",
+                        "schema": {
+                            "type": "string"
+                        },
+                        "required": true
+                    }
+                ],
+                "tags": [
+                    "grades"
+                ],
+                "security": [
+                    {
+                        "knoxApiToken": []
+                    },
+                    {
+                        "cookieAuth": []
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No response body"
+                    }
+                }
+            }
+        },
+        "/api/preferences/": {
+            "get": {
+                "operationId": "preferences_list",
+                "tags": [
+                    "preferences"
+                ],
+                "security": [
+                    {
+                        "knoxApiToken": []
+                    },
+                    {
+                        "cookieAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/Preference"
+                                    }
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            },
+            "post": {
+                "operationId": "preferences_create",
+                "tags": [
+                    "preferences"
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/Preference"
+                            }
+                        },
+                        "application/x-www-form-urlencoded": {
+                            "schema": {
+                                "$ref": "#/components/schemas/Preference"
+                            }
+                        },
+                        "multipart/form-data": {
+                            "schema": {
+                                "$ref": "#/components/schemas/Preference"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "security": [
+                    {
+                        "knoxApiToken": []
+                    },
+                    {
+                        "cookieAuth": []
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Preference"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/api/preferences/{id}/": {
+            "get": {
+                "operationId": "preferences_retrieve",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "id",
+                        "schema": {
+                            "type": "string"
+                        },
+                        "required": true
+                    }
+                ],
+                "tags": [
+                    "preferences"
+                ],
+                "security": [
+                    {
+                        "knoxApiToken": []
+                    },
+                    {
+                        "cookieAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Preference"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            },
+            "put": {
+                "operationId": "preferences_update",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "id",
+                        "schema": {
+                            "type": "string"
+                        },
+                        "required": true
+                    }
+                ],
+                "tags": [
+                    "preferences"
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/Preference"
+                            }
+                        },
+                        "application/x-www-form-urlencoded": {
+                            "schema": {
+                                "$ref": "#/components/schemas/Preference"
+                            }
+                        },
+                        "multipart/form-data": {
+                            "schema": {
+                                "$ref": "#/components/schemas/Preference"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "security": [
+                    {
+                        "knoxApiToken": []
+                    },
+                    {
+                        "cookieAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Preference"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            },
+            "patch": {
+                "operationId": "preferences_partial_update",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "id",
+                        "schema": {
+                            "type": "string"
+                        },
+                        "required": true
+                    }
+                ],
+                "tags": [
+                    "preferences"
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/PatchedPreference"
+                            }
+                        },
+                        "application/x-www-form-urlencoded": {
+                            "schema": {
+                                "$ref": "#/components/schemas/PatchedPreference"
+                            }
+                        },
+                        "multipart/form-data": {
+                            "schema": {
+                                "$ref": "#/components/schemas/PatchedPreference"
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "knoxApiToken": []
+                    },
+                    {
+                        "cookieAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Preference"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            },
+            "delete": {
+                "operationId": "preferences_destroy",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "id",
+                        "schema": {
+                            "type": "string"
+                        },
+                        "required": true
+                    }
+                ],
+                "tags": [
+                    "preferences"
+                ],
+                "security": [
+                    {
+                        "knoxApiToken": []
+                    },
+                    {
+                        "cookieAuth": []
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No response body"
+                    }
+                }
+            }
+        },
+        "/api/tasks/": {
+            "get": {
+                "operationId": "tasks_list",
+                "parameters": [
+                    {
+                        "name": "ordering",
+                        "required": false,
+                        "in": "query",
+                        "description": "Which field to use when ordering the results.",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "tags": [
+                    "tasks"
+                ],
+                "security": [
+                    {
+                        "knoxApiToken": []
+                    },
+                    {
+                        "cookieAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/Calendar"
+                                    }
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            },
+            "post": {
+                "operationId": "tasks_create",
+                "tags": [
+                    "tasks"
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/Calendar"
+                            }
+                        },
+                        "application/x-www-form-urlencoded": {
+                            "schema": {
+                                "$ref": "#/components/schemas/Calendar"
+                            }
+                        },
+                        "multipart/form-data": {
+                            "schema": {
+                                "$ref": "#/components/schemas/Calendar"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "security": [
+                    {
+                        "knoxApiToken": []
+                    },
+                    {
+                        "cookieAuth": []
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Calendar"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/api/tasks/{id}/": {
+            "get": {
+                "operationId": "tasks_retrieve",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "id",
+                        "schema": {
+                            "type": "string"
+                        },
+                        "required": true
+                    }
+                ],
+                "tags": [
+                    "tasks"
+                ],
+                "security": [
+                    {
+                        "knoxApiToken": []
+                    },
+                    {
+                        "cookieAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Calendar"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            },
+            "put": {
+                "operationId": "tasks_update",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "id",
+                        "schema": {
+                            "type": "string"
+                        },
+                        "required": true
+                    }
+                ],
+                "tags": [
+                    "tasks"
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/Calendar"
+                            }
+                        },
+                        "application/x-www-form-urlencoded": {
+                            "schema": {
+                                "$ref": "#/components/schemas/Calendar"
+                            }
+                        },
+                        "multipart/form-data": {
+                            "schema": {
+                                "$ref": "#/components/schemas/Calendar"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "security": [
+                    {
+                        "knoxApiToken": []
+                    },
+                    {
+                        "cookieAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Calendar"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            },
+            "patch": {
+                "operationId": "tasks_partial_update",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "id",
+                        "schema": {
+                            "type": "string"
+                        },
+                        "required": true
+                    }
+                ],
+                "tags": [
+                    "tasks"
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/PatchedCalendar"
+                            }
+                        },
+                        "application/x-www-form-urlencoded": {
+                            "schema": {
+                                "$ref": "#/components/schemas/PatchedCalendar"
+                            }
+                        },
+                        "multipart/form-data": {
+                            "schema": {
+                                "$ref": "#/components/schemas/PatchedCalendar"
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "knoxApiToken": []
+                    },
+                    {
+                        "cookieAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Calendar"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            },
+            "delete": {
+                "operationId": "tasks_destroy",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "id",
+                        "schema": {
+                            "type": "string"
+                        },
+                        "required": true
+                    }
+                ],
+                "tags": [
+                    "tasks"
+                ],
+                "security": [
+                    {
+                        "knoxApiToken": []
+                    },
+                    {
+                        "cookieAuth": []
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No response body"
+                    }
+                }
+            }
+        }
+    },
+    "components": {
+        "schemas": {
+            "BlankEnum": {
+                "enum": [
+                    ""
+                ]
+            },
+            "Calendar": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "readOnly": true
+                    },
+                    "title": {
+                        "type": "string",
+                        "maxLength": 500
+                    },
+                    "description": {
+                        "type": "string"
+                    },
+                    "categories": {
+                        "type": "array",
+                        "items": {
+                            "type": "integer"
+                        }
+                    },
+                    "estimated_minutes": {
+                        "type": "integer",
+                        "maximum": 9223372036854775807,
+                        "minimum": 1,
+                        "format": "int64"
+                    },
+                    "start_time": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "deadline": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "importance": {
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/ImportanceEnum"
+                            }
+                        ],
+                        "minimum": 1,
+                        "maximum": 10
+                    },
+                    "completed": {
+                        "type": "boolean"
+                    },
+                    "parent_task": {
+                        "type": "integer",
+                        "nullable": true
+                    }
+                },
+                "required": [
+                    "deadline",
+                    "estimated_minutes",
+                    "id",
+                    "importance",
+                    "start_time",
+                    "title"
+                ]
+            },
+            "Category": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "readOnly": true
+                    },
+                    "text": {
+                        "type": "string",
+                        "maxLength": 20
+                    }
+                },
+                "required": [
+                    "id",
+                    "text"
+                ]
+            },
+            "Event": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "readOnly": true
+                    },
+                    "title": {
+                        "type": "string",
+                        "maxLength": 500
+                    },
+                    "description": {
+                        "type": "string"
+                    },
+                    "location": {
+                        "type": "string",
+                        "maxLength": 255
+                    },
+                    "categories": {
+                        "type": "array",
+                        "items": {
+                            "type": "integer"
+                        }
+                    },
+                    "importance": {
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/ImportanceEnum"
+                            }
+                        ],
+                        "minimum": 1,
+                        "maximum": 10
+                    },
+                    "start_time": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "end_time": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "recurrence_interval": {
+                        "nullable": true,
+                        "oneOf": [
+                            {
+                                "$ref": "#/components/schemas/RecurrenceIntervalEnum"
+                            },
+                            {
+                                "$ref": "#/components/schemas/BlankEnum"
+                            },
+                            {
+                                "$ref": "#/components/schemas/NullEnum"
+                            }
+                        ]
+                    },
+                    "recurrence_end": {
+                        "type": "string",
+                        "format": "date",
+                        "nullable": true
+                    },
+                    "reminders": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/EventReminder"
+                        }
+                    }
+                },
+                "required": [
+                    "id"
+                ]
+            },
+            "EventReminder": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "readOnly": true
+                    },
+                    "type": {
+                        "$ref": "#/components/schemas/TypeEnum"
+                    },
+                    "minutes_before": {
+                        "type": "integer",
+                        "maximum": 9223372036854775807,
+                        "minimum": 0,
+                        "format": "int64"
+                    }
+                },
+                "required": [
+                    "id",
+                    "minutes_before"
+                ]
+            },
+            "EventResponse": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "readOnly": true
+                    },
+                    "title": {
+                        "type": "string",
+                        "maxLength": 500
+                    },
+                    "description": {
+                        "type": "string"
+                    },
+                    "location": {
+                        "type": "string",
+                        "maxLength": 255
+                    },
+                    "categories": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/Category"
+                        },
+                        "readOnly": true
+                    },
+                    "importance": {
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/ImportanceEnum"
+                            }
+                        ],
+                        "minimum": 1,
+                        "maximum": 10
+                    },
+                    "start_time": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "end_time": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "recurrence_interval": {
+                        "nullable": true,
+                        "oneOf": [
+                            {
+                                "$ref": "#/components/schemas/RecurrenceIntervalEnum"
+                            },
+                            {
+                                "$ref": "#/components/schemas/BlankEnum"
+                            },
+                            {
+                                "$ref": "#/components/schemas/NullEnum"
+                            }
+                        ]
+                    },
+                    "recurrence_end": {
+                        "type": "string",
+                        "format": "date",
+                        "nullable": true
+                    },
+                    "reminders": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/EventReminder"
+                        },
+                        "readOnly": true
+                    }
+                },
+                "required": [
+                    "categories",
+                    "id",
+                    "reminders"
+                ]
+            },
+            "Grade": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "readOnly": true
                     },
                     "user": {
-                      "type": "object",
-                      "properties": {
-                        "id": {
-                          "type": "integer"
-                        },
-                        "username": {
-                          "type": "string"
-                        },
-                        "email": {
-                          "type": "string"
-                        },
-                        "last_login": {
-                          "type": "string",
-                          "format": "date-time"
-                        },
-                        "date_of_birth": {
-                          "type": "string",
-                          "format": "date"
-                        },
-                        "date_joined": {
-                          "type": "string",
-                          "format": "date-time"
-                        },
-                        "is_staff": {
-                          "type": "boolean"
-                        },
-                        "is_superuser": {
-                          "type": "boolean"
+                        "type": "integer",
+                        "readOnly": true
+                    },
+                    "name": {
+                        "type": "string",
+                        "description": "Assessment name",
+                        "maxLength": 100
+                    },
+                    "category": {
+                        "type": "integer",
+                        "nullable": true
+                    },
+                    "category_name": {
+                        "type": "string",
+                        "readOnly": true
+                    },
+                    "score": {
+                        "type": "number",
+                        "format": "double",
+                        "minimum": 0
+                    },
+                    "total_possible": {
+                        "type": "number",
+                        "format": "double",
+                        "minimum": 1
+                    },
+                    "percentage": {
+                        "type": "string",
+                        "readOnly": true
+                    },
+                    "date_achieved": {
+                        "type": "string",
+                        "format": "date"
+                    },
+                    "time_spent_minutes": {
+                        "type": "string",
+                        "readOnly": true
+                    }
+                },
+                "required": [
+                    "category_name",
+                    "date_achieved",
+                    "id",
+                    "name",
+                    "percentage",
+                    "score",
+                    "time_spent_minutes",
+                    "total_possible",
+                    "user"
+                ]
+            },
+            "ImportanceEnum": {
+                "enum": [
+                    1,
+                    2,
+                    3,
+                    4,
+                    5,
+                    6,
+                    7,
+                    8,
+                    9,
+                    10
+                ],
+                "type": "integer",
+                "description": "* `1` - Very low\n* `2` - Low\n* `3` - Low-medium\n* `4` - Medium-low\n* `5` - Medium\n* `6` - Medium-high\n* `7` - High-medium\n* `8` - High\n* `9` - Very high\n* `10` - Critical"
+            },
+            "Login": {
+                "type": "object",
+                "properties": {
+                    "username": {
+                        "type": "string",
+                        "maxLength": 255
+                    },
+                    "password": {
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "password",
+                    "username"
+                ]
+            },
+            "NullEnum": {
+                "enum": [
+                    null
+                ]
+            },
+            "PatchedCalendar": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "readOnly": true
+                    },
+                    "title": {
+                        "type": "string",
+                        "maxLength": 500
+                    },
+                    "description": {
+                        "type": "string"
+                    },
+                    "categories": {
+                        "type": "array",
+                        "items": {
+                            "type": "integer"
                         }
-                      }
+                    },
+                    "estimated_minutes": {
+                        "type": "integer",
+                        "maximum": 9223372036854775807,
+                        "minimum": 1,
+                        "format": "int64"
+                    },
+                    "start_time": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "deadline": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "importance": {
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/ImportanceEnum"
+                            }
+                        ],
+                        "minimum": 1,
+                        "maximum": 10
+                    },
+                    "completed": {
+                        "type": "boolean"
+                    },
+                    "parent_task": {
+                        "type": "integer",
+                        "nullable": true
                     }
-                  }
                 }
-              }
-            }
-          },
-          "400": {
-            "description": "Invalid credentials"
-          }
-        }
-      }
-    },
-    "/authentication/logout/": {
-      "post": {
-        "tags": [
-          "Authentication"
-        ],
-        "summary": "Logout user",
-        "description": "Logout the current authenticated user",
-        "operationId": "logoutUser",
-        "security": [
-          {
-            "tokenApiKey": []
-          }
-        ],
-        "responses": {
-          "204": {
-            "description": "Successfully logged out"
-          },
-          "401": {
-            "description": "Unauthorized - invalid or missing token"
-          }
-        }
-      }
-    },
-    "/authentication/logoutall/": {
-      "post": {
-        "tags": [
-          "Authentication"
-        ],
-        "summary": "Logout all sessions",
-        "description": "Logout user from all authenticated sessions",
-        "operationId": "logoutAllSessions",
-        "security": [
-          {
-            "tokenApiKey": []
-          }
-        ],
-        "responses": {
-          "204": {
-            "description": "Successfully logged out from all sessions"
-          },
-          "401": {
-            "description": "Unauthorized - invalid or missing token"
-          }
-        }
-      }
-    },
-    "/authentication/test/": {
-      "get": {
-        "tags": [
-          "Authentication"
-        ],
-        "summary": "Test authentication",
-        "description": "Test that authentication token is valid",
-        "operationId": "testAuthentication",
-        "security": [
-          {
-            "tokenApiKey": []
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Authentication is valid",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "message": {
-                      "type": "string"
+            },
+            "PatchedEvent": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "readOnly": true
+                    },
+                    "title": {
+                        "type": "string",
+                        "maxLength": 500
+                    },
+                    "description": {
+                        "type": "string"
+                    },
+                    "location": {
+                        "type": "string",
+                        "maxLength": 255
+                    },
+                    "categories": {
+                        "type": "array",
+                        "items": {
+                            "type": "integer"
+                        }
+                    },
+                    "importance": {
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/ImportanceEnum"
+                            }
+                        ],
+                        "minimum": 1,
+                        "maximum": 10
+                    },
+                    "start_time": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "end_time": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "recurrence_interval": {
+                        "nullable": true,
+                        "oneOf": [
+                            {
+                                "$ref": "#/components/schemas/RecurrenceIntervalEnum"
+                            },
+                            {
+                                "$ref": "#/components/schemas/BlankEnum"
+                            },
+                            {
+                                "$ref": "#/components/schemas/NullEnum"
+                            }
+                        ]
+                    },
+                    "recurrence_end": {
+                        "type": "string",
+                        "format": "date",
+                        "nullable": true
+                    },
+                    "reminders": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/EventReminder"
+                        }
                     }
-                  }
                 }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized - invalid or missing token"
-          }
-        }
-      }
-    },
-    "/tasks/": {
-      "get": {
-        "tags": [
-          "Tasks"
-        ],
-        "summary": "List tasks",
-        "description": "Retrieve a list of tasks for the authenticated user with optional filtering and sorting",
-        "operationId": "listTasks",
-        "security": [
-          {
-            "tokenApiKey": []
-          }
-        ],
-        "parameters": [
-          {
-            "name": "completed",
-            "in": "query",
-            "description": "Filter by completion status (true/false)",
-            "schema": {
-              "type": "boolean"
-            }
-          },
-          {
-            "name": "categories",
-            "in": "query",
-            "description": "Filter by category IDs (comma-separated)",
-            "schema": {
-              "type": "array",
-              "items": {
-                "type": "integer"
-              }
             },
-            "style": "form",
-            "explode": false
-          },
-          {
-            "name": "start_time__gte",
-            "in": "query",
-            "description": "Filter by start time (ISO 8601 datetime)",
-            "schema": {
-              "type": "string",
-              "format": "date-time"
-            }
-          },
-          {
-            "name": "deadline__lte",
-            "in": "query",
-            "description": "Filter by deadline (ISO 8601 datetime)",
-            "schema": {
-              "type": "string",
-              "format": "date-time"
-            }
-          },
-          {
-            "name": "ordering",
-            "in": "query",
-            "description": "Sort by field (importance, deadline, estimated_minutes, start_time). Prefix with '-' for descending",
-            "schema": {
-              "type": "string",
-              "example": "-importance"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "List of tasks",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/Task"
-                  }
+            "PatchedGrade": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "readOnly": true
+                    },
+                    "user": {
+                        "type": "integer",
+                        "readOnly": true
+                    },
+                    "name": {
+                        "type": "string",
+                        "description": "Assessment name",
+                        "maxLength": 100
+                    },
+                    "category": {
+                        "type": "integer",
+                        "nullable": true
+                    },
+                    "category_name": {
+                        "type": "string",
+                        "readOnly": true
+                    },
+                    "score": {
+                        "type": "number",
+                        "format": "double",
+                        "minimum": 0
+                    },
+                    "total_possible": {
+                        "type": "number",
+                        "format": "double",
+                        "minimum": 1
+                    },
+                    "percentage": {
+                        "type": "string",
+                        "readOnly": true
+                    },
+                    "date_achieved": {
+                        "type": "string",
+                        "format": "date"
+                    },
+                    "time_spent_minutes": {
+                        "type": "string",
+                        "readOnly": true
+                    }
                 }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized"
-          }
-        }
-      },
-      "post": {
-        "tags": [
-          "Tasks"
-        ],
-        "summary": "Create a new task",
-        "description": "Create a new task for the authenticated user",
-        "operationId": "createTask",
-        "security": [
-          {
-            "tokenApiKey": []
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/TaskCreate"
-              }
-            }
-          }
-        },
-        "responses": {
-          "201": {
-            "description": "Task created successfully",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Task"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Validation error"
-          },
-          "401": {
-            "description": "Unauthorized"
-          }
-        }
-      }
-    },
-    "/tasks/{id}/": {
-      "get": {
-        "tags": [
-          "Tasks"
-        ],
-        "summary": "Retrieve a task",
-        "description": "Get details of a specific task",
-        "operationId": "retrieveTask",
-        "security": [
-          {
-            "tokenApiKey": []
-          }
-        ],
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "integer"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Task details",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Task"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized"
-          },
-          "404": {
-            "description": "Task not found"
-          }
-        }
-      },
-      "put": {
-        "tags": [
-          "Tasks"
-        ],
-        "summary": "Update a task",
-        "description": "Update all fields of a specific task",
-        "operationId": "updateTask",
-        "security": [
-          {
-            "tokenApiKey": []
-          }
-        ],
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "integer"
-            }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/TaskCreate"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Task updated successfully",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Task"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Validation error"
-          },
-          "401": {
-            "description": "Unauthorized"
-          },
-          "404": {
-            "description": "Task not found"
-          }
-        }
-      },
-      "patch": {
-        "tags": [
-          "Tasks"
-        ],
-        "summary": "Partially update a task",
-        "description": "Update specific fields of a task",
-        "operationId": "partialUpdateTask",
-        "security": [
-          {
-            "tokenApiKey": []
-          }
-        ],
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "integer"
-            }
-          }
-        ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/TaskPatch"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Task updated successfully",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Task"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Validation error"
-          },
-          "401": {
-            "description": "Unauthorized"
-          },
-          "404": {
-            "description": "Task not found"
-          }
-        }
-      },
-      "delete": {
-        "tags": [
-          "Tasks"
-        ],
-        "summary": "Delete a task",
-        "description": "Delete a specific task",
-        "operationId": "deleteTask",
-        "security": [
-          {
-            "tokenApiKey": []
-          }
-        ],
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "integer"
-            }
-          }
-        ],
-        "responses": {
-          "204": {
-            "description": "Task deleted successfully"
-          },
-          "401": {
-            "description": "Unauthorized"
-          },
-          "404": {
-            "description": "Task not found"
-          }
-        }
-      }
-    },
-    "/events/": {
-      "get": {
-        "tags": [
-          "Events"
-        ],
-        "summary": "List events",
-        "description": "Retrieve a list of events for the authenticated user",
-        "operationId": "listEvents",
-        "security": [
-          {
-            "tokenApiKey": []
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "List of events",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/Event"
-                  }
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized"
-          }
-        }
-      },
-      "post": {
-        "tags": [
-          "Events"
-        ],
-        "summary": "Create a new event",
-        "description": "Create a new event for the authenticated user with optional reminders",
-        "operationId": "createEvent",
-        "security": [
-          {
-            "tokenApiKey": []
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/EventCreate"
-              }
-            }
-          }
-        },
-        "responses": {
-          "201": {
-            "description": "Event created successfully",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Event"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Validation error"
-          },
-          "401": {
-            "description": "Unauthorized"
-          }
-        }
-      }
-    },
-    "/events/{id}/": {
-      "get": {
-        "tags": [
-          "Events"
-        ],
-        "summary": "Retrieve an event",
-        "description": "Get details of a specific event",
-        "operationId": "retrieveEvent",
-        "security": [
-          {
-            "tokenApiKey": []
-          }
-        ],
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "integer"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Event details",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Event"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized"
-          },
-          "404": {
-            "description": "Event not found"
-          }
-        }
-      },
-      "put": {
-        "tags": [
-          "Events"
-        ],
-        "summary": "Update an event",
-        "description": "Update all fields of a specific event",
-        "operationId": "updateEvent",
-        "security": [
-          {
-            "tokenApiKey": []
-          }
-        ],
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "integer"
-            }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/EventCreate"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Event updated successfully",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Event"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Validation error"
-          },
-          "401": {
-            "description": "Unauthorized"
-          },
-          "404": {
-            "description": "Event not found"
-          }
-        }
-      },
-      "patch": {
-        "tags": [
-          "Events"
-        ],
-        "summary": "Partially update an event",
-        "description": "Update specific fields of an event",
-        "operationId": "partialUpdateEvent",
-        "security": [
-          {
-            "tokenApiKey": []
-          }
-        ],
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "integer"
-            }
-          }
-        ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/EventPatch"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Event updated successfully",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Event"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Validation error"
-          },
-          "401": {
-            "description": "Unauthorized"
-          },
-          "404": {
-            "description": "Event not found"
-          }
-        }
-      },
-      "delete": {
-        "tags": [
-          "Events"
-        ],
-        "summary": "Delete an event",
-        "description": "Delete a specific event",
-        "operationId": "deleteEvent",
-        "security": [
-          {
-            "tokenApiKey": []
-          }
-        ],
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "integer"
-            }
-          }
-        ],
-        "responses": {
-          "204": {
-            "description": "Event deleted successfully"
-          },
-          "401": {
-            "description": "Unauthorized"
-          },
-          "404": {
-            "description": "Event not found"
-          }
-        }
-      }
-    },
-    "/categories/": {
-      "get": {
-        "tags": [
-          "Categories"
-        ],
-        "summary": "List all categories",
-        "description": "Retrieve a list of all available categories (public endpoint)",
-        "operationId": "listCategories",
-        "responses": {
-          "200": {
-            "description": "List of categories",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/Category"
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/categories/{id}/": {
-      "get": {
-        "tags": [
-          "Categories"
-        ],
-        "summary": "Retrieve a category",
-        "description": "Get details of a specific category",
-        "operationId": "retrieveCategory",
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "integer"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Category details",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Category"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Category not found"
-          }
-        }
-      }
-    },
-    "/grades/": {
-      "get": {
-        "tags": [
-          "Grades"
-        ],
-        "summary": "List grades",
-        "description": "Retrieve a list of grades for the authenticated user, sorted by most recent achievement date",
-        "operationId": "listGrades",
-        "security": [
-          {
-            "tokenApiKey": []
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "List of grades",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/Grade"
-                  }
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized"
-          }
-        }
-      },
-      "post": {
-        "tags": [
-          "Grades"
-        ],
-        "summary": "Create a new grade",
-        "description": "Create a new grade record for the authenticated user",
-        "operationId": "createGrade",
-        "security": [
-          {
-            "tokenApiKey": []
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/GradeCreate"
-              }
-            }
-          }
-        },
-        "responses": {
-          "201": {
-            "description": "Grade created successfully",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Grade"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Validation error"
-          },
-          "401": {
-            "description": "Unauthorized"
-          }
-        }
-      }
-    },
-    "/grades/{id}/": {
-      "get": {
-        "tags": [
-          "Grades"
-        ],
-        "summary": "Retrieve a grade",
-        "description": "Get details of a specific grade",
-        "operationId": "retrieveGrade",
-        "security": [
-          {
-            "tokenApiKey": []
-          }
-        ],
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "integer"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Grade details",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Grade"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized"
-          },
-          "404": {
-            "description": "Grade not found"
-          }
-        }
-      },
-      "put": {
-        "tags": [
-          "Grades"
-        ],
-        "summary": "Update a grade",
-        "description": "Update all fields of a specific grade",
-        "operationId": "updateGrade",
-        "security": [
-          {
-            "tokenApiKey": []
-          }
-        ],
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "integer"
-            }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/GradeCreate"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Grade updated successfully",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Grade"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Validation error"
-          },
-          "401": {
-            "description": "Unauthorized"
-          },
-          "404": {
-            "description": "Grade not found"
-          }
-        }
-      },
-      "patch": {
-        "tags": [
-          "Grades"
-        ],
-        "summary": "Partially update a grade",
-        "description": "Update specific fields of a grade",
-        "operationId": "partialUpdateGrade",
-        "security": [
-          {
-            "tokenApiKey": []
-          }
-        ],
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "integer"
-            }
-          }
-        ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/GradePatch"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Grade updated successfully",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Grade"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Validation error"
-          },
-          "401": {
-            "description": "Unauthorized"
-          },
-          "404": {
-            "description": "Grade not found"
-          }
-        }
-      },
-      "delete": {
-        "tags": [
-          "Grades"
-        ],
-        "summary": "Delete a grade",
-        "description": "Delete a specific grade",
-        "operationId": "deleteGrade",
-        "security": [
-          {
-            "tokenApiKey": []
-          }
-        ],
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "integer"
-            }
-          }
-        ],
-        "responses": {
-          "204": {
-            "description": "Grade deleted successfully"
-          },
-          "401": {
-            "description": "Unauthorized"
-          },
-          "404": {
-            "description": "Grade not found"
-          }
-        }
-      }
-    },
-    "/preferences/": {
-      "get": {
-        "tags": [
-          "Preferences"
-        ],
-        "summary": "List preferences",
-        "description": "Retrieve preferences for the authenticated user",
-        "operationId": "listPreferences",
-        "security": [
-          {
-            "tokenApiKey": []
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "List of user preferences",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/Preference"
-                  }
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized"
-          }
-        }
-      },
-      "post": {
-        "tags": [
-          "Preferences"
-        ],
-        "summary": "Create user preferences",
-        "description": "Create preference settings for the authenticated user. Users can only have one preference record.",
-        "operationId": "createPreference",
-        "security": [
-          {
-            "tokenApiKey": []
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/PreferenceCreate"
-              }
-            }
-          }
-        },
-        "responses": {
-          "201": {
-            "description": "Preference created successfully",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Preference"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Validation error or user already has a preference"
-          },
-          "401": {
-            "description": "Unauthorized"
-          }
-        }
-      }
-    },
-    "/preferences/{id}/": {
-      "get": {
-        "tags": [
-          "Preferences"
-        ],
-        "summary": "Retrieve preferences",
-        "description": "Get details of specific preference record",
-        "operationId": "retrievePreference",
-        "security": [
-          {
-            "tokenApiKey": []
-          }
-        ],
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "integer"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Preference details",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Preference"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized"
-          },
-          "404": {
-            "description": "Preference not found"
-          }
-        }
-      },
-      "put": {
-        "tags": [
-          "Preferences"
-        ],
-        "summary": "Update preferences",
-        "description": "Update all fields of user preferences",
-        "operationId": "updatePreference",
-        "security": [
-          {
-            "tokenApiKey": []
-          }
-        ],
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "integer"
-            }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/PreferenceCreate"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Preference updated successfully",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Preference"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Validation error"
-          },
-          "401": {
-            "description": "Unauthorized"
-          },
-          "404": {
-            "description": "Preference not found"
-          }
-        }
-      },
-      "patch": {
-        "tags": [
-          "Preferences"
-        ],
-        "summary": "Partially update preferences",
-        "description": "Update specific fields of user preferences",
-        "operationId": "partialUpdatePreference",
-        "security": [
-          {
-            "tokenApiKey": []
-          }
-        ],
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "integer"
-            }
-          }
-        ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/PreferenceCreate"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Preference updated successfully",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Preference"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Validation error"
-          },
-          "401": {
-            "description": "Unauthorized"
-          },
-          "404": {
-            "description": "Preference not found"
-          }
-        }
-      },
-      "delete": {
-        "tags": [
-          "Preferences"
-        ],
-        "summary": "Delete preferences",
-        "description": "Delete user preference record",
-        "operationId": "deletePreference",
-        "security": [
-          {
-            "tokenApiKey": []
-          }
-        ],
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "integer"
-            }
-          }
-        ],
-        "responses": {
-          "204": {
-            "description": "Preference deleted successfully"
-          },
-          "401": {
-            "description": "Unauthorized"
-          },
-          "404": {
-            "description": "Preference not found"
-          }
-        }
-      }
-    }
-  },
-  "components": {
-    "schemas": {
-      "Category": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "integer",
-            "readOnly": true
-          },
-          "text": {
-            "type": "string",
-            "maxLength": 20
-          }
-        }
-      },
-      "Task": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "integer",
-            "readOnly": true
-          },
-          "title": {
-            "type": "string",
-            "maxLength": 500
-          },
-          "description": {
-            "type": "string"
-          },
-          "categories": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/Category"
-            }
-          },
-          "estimated_minutes": {
-            "type": "integer",
-            "minimum": 1
-          },
-          "start_time": {
-            "type": "string",
-            "format": "date-time"
-          },
-          "deadline": {
-            "type": "string",
-            "format": "date-time"
-          },
-          "importance": {
-            "type": "integer",
-            "minimum": 1,
-            "maximum": 10,
-            "enum": [
-              1,
-              2,
-              3,
-              4,
-              5,
-              6,
-              7,
-              8,
-              9,
-              10
-            ],
-            "description": "1=Very low, 2=Low, 3=Low-medium, 4=Medium-low, 5=Medium, 6=Medium-high, 7=High-medium, 8=High, 9=Very high, 10=Critical"
-          },
-          "completed": {
-            "type": "boolean"
-          },
-          "parent_task": {
-            "type": "integer",
-            "nullable": true
-          }
-        },
-        "required": [
-          "title",
-          "estimated_minutes",
-          "start_time",
-          "deadline",
-          "importance"
-        ]
-      },
-      "TaskCreate": {
-        "type": "object",
-        "properties": {
-          "title": {
-            "type": "string",
-            "maxLength": 500
-          },
-          "description": {
-            "type": "string"
-          },
-          "categories": {
-            "type": "array",
-            "items": {
-              "type": "integer"
-            }
-          },
-          "estimated_minutes": {
-            "type": "integer",
-            "minimum": 1
-          },
-          "start_time": {
-            "type": "string",
-            "format": "date-time"
-          },
-          "deadline": {
-            "type": "string",
-            "format": "date-time"
-          },
-          "importance": {
-            "type": "integer",
-            "minimum": 1,
-            "maximum": 10,
-            "enum": [
-              1,
-              2,
-              3,
-              4,
-              5,
-              6,
-              7,
-              8,
-              9,
-              10
-            ],
-            "description": "1=Very low, 2=Low, 3=Low-medium, 4=Medium-low, 5=Medium, 6=Medium-high, 7=High-medium, 8=High, 9=Very high, 10=Critical"
-          },
-          "completed": {
-            "type": "boolean"
-          },
-          "parent_task": {
-            "type": "integer",
-            "nullable": true
-          }
-        },
-        "required": [
-          "title",
-          "estimated_minutes",
-          "start_time",
-          "deadline",
-          "importance"
-        ]
-      },
-      "TaskPatch": {
-        "type": "object",
-        "properties": {
-          "title": {
-            "type": "string",
-            "maxLength": 500
-          },
-          "description": {
-            "type": "string"
-          },
-          "categories": {
-            "type": "array",
-            "items": {
-              "type": "integer"
-            }
-          },
-          "estimated_minutes": {
-            "type": "integer",
-            "minimum": 1
-          },
-          "start_time": {
-            "type": "string",
-            "format": "date-time"
-          },
-          "deadline": {
-            "type": "string",
-            "format": "date-time"
-          },
-          "importance": {
-            "type": "integer",
-            "minimum": 1,
-            "maximum": 10,
-            "enum": [
-              1,
-              2,
-              3,
-              4,
-              5,
-              6,
-              7,
-              8,
-              9,
-              10
-            ],
-            "description": "1=Very low, 2=Low, 3=Low-medium, 4=Medium-low, 5=Medium, 6=Medium-high, 7=High-medium, 8=High, 9=Very high, 10=Critical"
-          },
-          "completed": {
-            "type": "boolean"
-          },
-          "parent_task": {
-            "type": "integer",
-            "nullable": true
-          }
-        }
-      },
-      "EventReminder": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "integer",
-            "readOnly": true
-          },
-          "type": {
-            "type": "string",
-            "enum": [
-              "email",
-              "popup"
-            ],
-            "description": "Reminder type"
-          },
-          "minutes_before": {
-            "type": "integer",
-            "description": "Minutes before event to trigger reminder"
-          }
-        }
-      },
-      "Event": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "integer",
-            "readOnly": true
-          },
-          "title": {
-            "type": "string",
-            "maxLength": 500
-          },
-          "description": {
-            "type": "string"
-          },
-          "location": {
-            "type": "string",
-            "maxLength": 255
-          },
-          "categories": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/Category"
-            }
-          },
-          "importance": {
-            "type": "integer",
-            "minimum": 1,
-            "maximum": 10,
-            "enum": [
-              1,
-              2,
-              3,
-              4,
-              5,
-              6,
-              7,
-              8,
-              9,
-              10
-            ],
-            "description": "1=Very low, 2=Low, 3=Low-medium, 4=Medium-low, 5=Medium, 6=Medium-high, 7=High-medium, 8=High, 9=Very high, 10=Critical"
-          },
-          "start_time": {
-            "type": "string",
-            "format": "date-time"
-          },
-          "end_time": {
-            "type": "string",
-            "format": "date-time"
-          },
-          "recurrence_interval": {
-            "type": "string",
-            "enum": [
-              "daily",
-              "weekly",
-              "monthly",
-              "yearly"
-            ],
-            "nullable": true,
-            "description": "Recurring interval type"
-          },
-          "recurrence_end": {
-            "type": "string",
-            "format": "date",
-            "nullable": true,
-            "description": "Date when recurrence ends"
-          },
-          "reminders": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/EventReminder"
             },
-            "maxItems": 5
-          }
-        },
-        "required": [
-          "title",
-          "start_time",
-          "end_time",
-          "importance"
-        ]
-      },
-      "EventCreate": {
-        "type": "object",
-        "properties": {
-          "title": {
-            "type": "string",
-            "maxLength": 500
-          },
-          "description": {
-            "type": "string"
-          },
-          "location": {
-            "type": "string",
-            "maxLength": 255
-          },
-          "categories": {
-            "type": "array",
-            "items": {
-              "type": "integer"
-            }
-          },
-          "importance": {
-            "type": "integer",
-            "minimum": 1,
-            "maximum": 10,
-            "enum": [
-              1,
-              2,
-              3,
-              4,
-              5,
-              6,
-              7,
-              8,
-              9,
-              10
-            ],
-            "description": "1=Very low, 2=Low, 3=Low-medium, 4=Medium-low, 5=Medium, 6=Medium-high, 7=High-medium, 8=High, 9=Very high, 10=Critical"
-          },
-          "start_time": {
-            "type": "string",
-            "format": "date-time"
-          },
-          "end_time": {
-            "type": "string",
-            "format": "date-time"
-          },
-          "recurrence_interval": {
-            "type": "string",
-            "enum": [
-              "daily",
-              "weekly",
-              "monthly",
-              "yearly"
-            ],
-            "nullable": true
-          },
-          "recurrence_end": {
-            "type": "string",
-            "format": "date",
-            "nullable": true
-          },
-          "reminders": {
-            "type": "array",
-            "items": {
-              "type": "object",
-              "properties": {
-                "type": {
-                  "type": "string",
-                  "enum": [
+            "PatchedPreference": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "readOnly": true
+                    },
+                    "sleep_start": {
+                        "type": "string",
+                        "format": "time"
+                    },
+                    "sleep_end": {
+                        "type": "string",
+                        "format": "time"
+                    },
+                    "days_off": {
+                        "type": "array",
+                        "items": {
+                            "type": "integer"
+                        }
+                    }
+                }
+            },
+            "Preference": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "readOnly": true
+                    },
+                    "sleep_start": {
+                        "type": "string",
+                        "format": "time"
+                    },
+                    "sleep_end": {
+                        "type": "string",
+                        "format": "time"
+                    },
+                    "days_off": {
+                        "type": "array",
+                        "items": {
+                            "type": "integer"
+                        }
+                    }
+                },
+                "required": [
+                    "id",
+                    "sleep_end",
+                    "sleep_start"
+                ]
+            },
+            "RecurrenceIntervalEnum": {
+                "enum": [
+                    "daily",
+                    "weekly",
+                    "monthly",
+                    "yearly"
+                ],
+                "type": "string",
+                "description": "* `daily` - Daily\n* `weekly` - Weekly\n* `monthly` - Monthly\n* `yearly` - Yearly"
+            },
+            "Register": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "readOnly": true
+                    },
+                    "username": {
+                        "type": "string",
+                        "maxLength": 255
+                    },
+                    "email": {
+                        "type": "string",
+                        "format": "email",
+                        "maxLength": 255
+                    },
+                    "password": {
+                        "type": "string",
+                        "writeOnly": true,
+                        "maxLength": 128
+                    }
+                },
+                "required": [
+                    "email",
+                    "id",
+                    "password",
+                    "username"
+                ]
+            },
+            "TypeEnum": {
+                "enum": [
                     "email",
                     "popup"
-                  ]
-                },
-                "minutes_before": {
-                  "type": "integer"
-                }
-              },
-              "required": [
-                "type",
-                "minutes_before"
-              ]
-            },
-            "maxItems": 5
-          }
-        },
-        "required": [
-          "title",
-          "start_time",
-          "end_time",
-          "importance"
-        ]
-      },
-      "EventPatch": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "integer",
-            "readOnly": true
-          },
-          "title": {
-            "type": "string",
-            "maxLength": 500
-          },
-          "description": {
-            "type": "string"
-          },
-          "location": {
-            "type": "string",
-            "maxLength": 255
-          },
-          "categories": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/Category"
+                ],
+                "type": "string",
+                "description": "* `email` - Email\n* `popup` - Popup"
             }
-          },
-          "importance": {
-            "type": "integer",
-            "minimum": 1,
-            "maximum": 10,
-            "enum": [
-              1,
-              2,
-              3,
-              4,
-              5,
-              6,
-              7,
-              8,
-              9,
-              10
-            ],
-            "description": "1=Very low, 2=Low, 3=Low-medium, 4=Medium-low, 5=Medium, 6=Medium-high, 7=High-medium, 8=High, 9=Very high, 10=Critical"
-          },
-          "start_time": {
-            "type": "string",
-            "format": "date-time"
-          },
-          "end_time": {
-            "type": "string",
-            "format": "date-time"
-          },
-          "recurrence_interval": {
-            "type": "string",
-            "enum": [
-              "daily",
-              "weekly",
-              "monthly",
-              "yearly"
-            ],
-            "nullable": true,
-            "description": "Recurring interval type"
-          },
-          "recurrence_end": {
-            "type": "string",
-            "format": "date",
-            "nullable": true,
-            "description": "Date when recurrence ends"
-          },
-          "reminders": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/EventReminder"
+        },
+        "securitySchemes": {
+            "cookieAuth": {
+                "type": "apiKey",
+                "in": "cookie",
+                "name": "sessionid"
             },
-            "maxItems": 5
-          }
+            "knoxApiToken": {
+                "type": "apiKey",
+                "in": "header",
+                "name": "Authorization",
+                "description": "Token-based authentication with required prefix \"Token\""
+            }
         }
-      },
-      "Grade": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "integer",
-            "readOnly": true
-          },
-          "user": {
-            "type": "integer",
-            "description": "User ID (read-only)",
-            "readOnly": true
-          },
-          "name": {
-            "type": "string",
-            "maxLength": 100,
-            "description": "Assessment name"
-          },
-          "category": {
-            "type": "integer",
-            "nullable": true,
-            "description": "Category ID (optional)"
-          },
-          "category_name": {
-            "type": "string",
-            "nullable": true,
-            "description": "Name of the category (read-only)",
-            "readOnly": true
-          },
-          "score": {
-            "type": "number",
-            "format": "float",
-            "minimum": 0,
-            "description": "Score achieved"
-          },
-          "total_possible": {
-            "type": "number",
-            "format": "float",
-            "minimum": 1,
-            "description": "Total possible score"
-          },
-          "percentage": {
-            "type": "number",
-            "format": "float",
-            "description": "Calculated percentage (read-only)",
-            "readOnly": true
-          },
-          "date_achieved": {
-            "type": "string",
-            "format": "date",
-            "description": "Date when grade was achieved"
-          },
-          "time_spent_minutes": {
-            "type": "integer",
-            "description": "Total time spent on related tasks in minutes (read-only)",
-            "readOnly": true
-          }
-        },
-        "required": [
-          "name",
-          "score",
-          "total_possible",
-          "date_achieved"
-        ]
-      },
-      "GradeCreate": {
-        "type": "object",
-        "properties": {
-          "name": {
-            "type": "string",
-            "maxLength": 100
-          },
-          "category": {
-            "type": "integer",
-            "nullable": true
-          },
-          "score": {
-            "type": "number",
-            "format": "float",
-            "minimum": 0
-          },
-          "total_possible": {
-            "type": "number",
-            "format": "float",
-            "minimum": 1
-          },
-          "date_achieved": {
-            "type": "string",
-            "format": "date"
-          }
-        },
-        "required": [
-          "name",
-          "score",
-          "total_possible",
-          "date_achieved"
-        ]
-      },
-      "GradePatch": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "integer",
-            "readOnly": true
-          },
-          "user": {
-            "type": "integer",
-            "description": "User ID (read-only)",
-            "readOnly": true
-          },
-          "name": {
-            "type": "string",
-            "maxLength": 100,
-            "description": "Assessment name"
-          },
-          "category": {
-            "type": "integer",
-            "nullable": true,
-            "description": "Category ID (optional)"
-          },
-          "category_name": {
-            "type": "string",
-            "nullable": true,
-            "description": "Name of the category (read-only)",
-            "readOnly": true
-          },
-          "score": {
-            "type": "number",
-            "format": "float",
-            "minimum": 0,
-            "description": "Score achieved"
-          },
-          "total_possible": {
-            "type": "number",
-            "format": "float",
-            "minimum": 1,
-            "description": "Total possible score"
-          },
-          "percentage": {
-            "type": "number",
-            "format": "float",
-            "description": "Calculated percentage (read-only)",
-            "readOnly": true
-          },
-          "date_achieved": {
-            "type": "string",
-            "format": "date",
-            "description": "Date when grade was achieved"
-          },
-          "time_spent_minutes": {
-            "type": "integer",
-            "description": "Total time spent on related tasks in minutes (read-only)"
-          }
-        }
-      },
-      "Preference": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "integer",
-            "readOnly": true
-          },
-          "user": {
-            "type": "integer",
-            "description": "User ID (read-only)",
-            "readOnly": true
-          },
-          "sleep_start": {
-            "type": "string",
-            "format": "time",
-            "description": "Sleep start time (HH:MM:SS)"
-          },
-          "sleep_end": {
-            "type": "string",
-            "format": "time",
-            "description": "Sleep end time (HH:MM:SS)"
-          },
-          "days_off": {
-            "type": "array",
-            "items": {
-              "type": "integer"
-            },
-            "description": "List of day IDs representing days off (1=Monday, 7=Sunday)"
-          }
-        },
-        "required": [
-          "sleep_start",
-          "sleep_end"
-        ]
-      },
-      "PreferenceCreate": {
-        "type": "object",
-        "properties": {
-          "sleep_start": {
-            "type": "string",
-            "format": "time",
-            "description": "Sleep start time (HH:MM:SS)"
-          },
-          "sleep_end": {
-            "type": "string",
-            "format": "time",
-            "description": "Sleep end time (HH:MM:SS)"
-          },
-          "days_off": {
-            "type": "array",
-            "items": {
-              "type": "integer"
-            },
-            "description": "List of day IDs representing days off (1=Monday, 7=Sunday)"
-          }
-        },
-        "required": [
-          "sleep_start",
-          "sleep_end"
-        ]
-      }
-    },
-    "securitySchemes": {
-      "tokenApiKey": {
-        "type": "apiKey",
-        "in": "header",
-        "name": "Authorization",
-        "description": "Token-based authentication from /authentication/session/. Format: 'Token <token_string>'"
-      }
     }
-  },
-  "tags": [
-    {
-      "name": "Authentication",
-      "description": "User authentication endpoints (register, login, logout)"
-    },
-    {
-      "name": "Tasks",
-      "description": "Task management endpoints (CRUD operations for tasks and calendar items)"
-    },
-    {
-      "name": "Events",
-      "description": "Event management endpoints (CRUD operations for events with reminders and recurrence)"
-    },
-    {
-      "name": "Categories",
-      "description": "Category management endpoints (read-only for public, full CRUD for authenticated users)"
-    },
-    {
-      "name": "Grades",
-      "description": "Grade management endpoints (CRUD operations for assessment grades)"
-    },
-    {
-      "name": "Preferences",
-      "description": "User preference management endpoints (sleep times, days off). Users can only have one preference record."
-    }
-  ]
 }

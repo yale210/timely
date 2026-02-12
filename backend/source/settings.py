@@ -77,6 +77,7 @@ INSTALLED_APPS = [
     "core.apps.CoreConfig",
     # Extra apps
     "rest_framework",
+    "drf_spectacular",
     "django_filters",
     "corsheaders",
     "knox",
@@ -176,6 +177,13 @@ REST_FRAMEWORK = {
         "knox.auth.TokenAuthentication",
         "rest_framework.authentication.SessionAuthentication",
     ),
+    "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
+}
+
+SPECTACULAR_SETTINGS = {
+    "TITLE": "Timely API",
+    "DESCRIPTION": "OpenAPI schema for Timely backend",
+    "VERSION": "1.0.0",
 }
 
 REST_KNOX = {
