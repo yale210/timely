@@ -1,0 +1,111 @@
+"""Event Seeder"""
+
+import random
+import datetime
+from datetime import timedelta
+from core.models import Event, Category
+
+from .fixtures.event_fixtures import events
+from django.contrib.auth import get_user_model
+from core.management.commands.seeders.base import BaseSeeder
+
+
+class EventSeeder(BaseSeeder):
+    help = "Handles seeding of events into the database."
+
+    def seed(self):
+        self._create_fixture_event()
+        self._populate_random_event()
+
+    def _create_fixture_event(self):
+        for event in events:
+            try:
+                self._create_event(event)
+            except Exception:
+                pass
+
+    def _create_event(self, data):
+        temporary_event, _ = Event.objects.get_or_create(
+            user=data["fields"]["user"],
+            title=data["fields"]["title"],
+            description=data["fields"]["description"],
+            location=data["fields"]["location"],
+            start_time=data["fields"]["start_time"],
+            end_time=data["fields"]["end_time"],
+            recurrence_interval=data["fields"]["recurrence_interval"],
+            recurrence_end=data["fields"]["recurrence_end"],
+        )
+
+        categories = data["fields"]["categories"]
+        if categories:
+            temporary_event.categories.set(categories)
+
+    def _populate_random_event(self):
+        User = get_user_model()
+        # Shuffle users and get a random user.
+        temporary_user = User.objects.order_by("?").first()
+
+        if temporary_user is None:
+            temporary_user = User.objects.create_user(
+                username=self.faker.user_name(),
+                email=self.faker.email(),
+                password="thomas123",
+            )
+
+        temporary_category = (
+            Category.objects.filter(user=temporary_user).order_by("?").first()
+        )
+
+        if temporary_category is None:
+            temporary_category = Category.objects.create(
+                user=temporary_user,
+                text=self.faker.word(),
+                colour=self.faker.hex_color(),
+                max_daily_study_time=random.randint(1, 24),
+            )
+
+        recurring = random.randint(0, 1) == 1
+
+        if recurring:
+            start = self.faker.date_object()
+            self._create_event(
+                {
+                    "fields": {
+                        "user": temporary_user,
+                        "categories": [temporary_category],
+                        "title": self.faker.sentence(),
+                        "description": self.faker.sentence(),
+                        "location": self.faker.word(),
+                        "recurring": True,
+                        "start_time": start,
+                        "end_time": start + timedelta(random.randint(0, 100)),
+                        "recurrence_interval": random.choice(
+                            ["daily", "weekly", "monthly", "yearly"]
+                        ),
+                        "recurrence_end": start + timedelta(random.randint(0, 100)),
+                    }
+                }
+            )
+        else:
+            start = self.faker.date_object()
+            self._create_event(
+                {
+                    "fields": {
+                        "user": temporary_user,
+                        "categories": [temporary_category],
+                        "title": self.faker.sentence(),
+                        "description": self.faker.sentence(),
+                        "location": self.faker.word(),
+                        "recurring": True,
+                        "start_time": start,
+                        "end_time": start + timedelta(random.randint(0, 100)),
+                        "recurrence_interval": None,
+                        "recurrence_end": None,
+                    }
+                }
+            )
+
+    def _random_time(self):
+        hours = random.randint(0, 23)
+        minutes = random.randint(0, 59)
+        return datetime.time(hour=hours, minute=minutes)

@@ -19,7 +19,6 @@ class EventTests(TestCase):
         event = Event.objects.create(
             user=self.user,
             title="Test Event",
-            importance=5,
             start_time=start_time,
             end_time=end_time,
         )
@@ -34,7 +33,6 @@ class EventTests(TestCase):
         event = Event.objects.create(
             user=self.user,
             title="Recurring Event",
-            importance=5,
             start_time=start_time,
             end_time=end_time,
             recurrence_interval="daily",
@@ -51,7 +49,6 @@ class EventTests(TestCase):
             event = Event(
                 user=self.user,
                 title="Invalid Event",
-                importance=5,
                 start_time=start_time,
                 end_time=end_time,
             )
@@ -63,7 +60,6 @@ class EventTests(TestCase):
         event = Event.objects.create(
             user=self.user,
             title="User Event",
-            importance=5,
             start_time=now,
             end_time=now + datetime.timedelta(hours=1),
         )
@@ -76,7 +72,6 @@ class EventTests(TestCase):
         event = Event(
             user=self.user,
             title="Never Ending Event",
-            importance=5,
             start_time=now,
             end_time=now + datetime.timedelta(hours=1),
             recurrence_interval="daily",
@@ -93,7 +88,6 @@ class EventTests(TestCase):
             event = Event(
                 user=self.user,
                 title="Missing Interval",
-                importance=5,
                 start_time=now,
                 end_time=now + datetime.timedelta(hours=1),
                 recurrence_end=now.date() + datetime.timedelta(days=7),
@@ -109,7 +103,6 @@ class EventTests(TestCase):
             event = Event(
                 user=self.user,
                 title="Invalid Recurrence End",
-                importance=5,
                 start_time=start_time,
                 end_time=start_time + datetime.timedelta(hours=1),
                 recurrence_interval="daily",
@@ -119,6 +112,6 @@ class EventTests(TestCase):
         self.assertIn("recurrence_end", context.exception.message_dict)
 
     def test_calculate_time_left_no_start_time(self):
-        event = Event(user=self.user, title="No Start Time", importance=5)
+        event = Event(user=self.user, title="No Start Time")
         event.start_time = None
         self.assertEqual(event.calculate_time_left(), 0)

@@ -1,11 +1,9 @@
 from django.conf import settings
 from django.core.exceptions import ValidationError
-from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 from django.utils.timezone import now
 
 from .category import Category
-from .importance_choices import ImportanceChoices
 
 
 class Event(models.Model):
@@ -22,12 +20,6 @@ class Event(models.Model):
         Category,
         blank=True,
         related_name="events",
-    )
-
-    importance = models.PositiveSmallIntegerField(
-        choices=ImportanceChoices.choices,
-        validators=[MinValueValidator(1), MaxValueValidator(10)],
-        default=ImportanceChoices.MEDIUM,
     )
 
     title = models.CharField(max_length=500, default="Untitled Event")
