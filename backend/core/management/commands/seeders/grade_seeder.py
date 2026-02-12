@@ -32,7 +32,7 @@ class GradeSeeder(BaseSeeder):
             date_achieved=data["fields"]["date_achieved"],
         )
 
-    def populate_random_grade(self):
+    def _populate_random_grade(self):
         User = get_user_model()
         # Shuffle users and get a random user.
         temporary_user = User.objects.order_by("?").first()
@@ -52,7 +52,7 @@ class GradeSeeder(BaseSeeder):
                     "category": Category.objects.order_by("?").first(),
                     "score": random.randint(0, 100),
                     "total_possible": 100,
-                    "date_achieved": self.faker.datetime(),
+                    "date_achieved": self.faker.date_time(),
                 }
             }
         )

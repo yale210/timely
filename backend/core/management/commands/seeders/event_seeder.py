@@ -2,6 +2,7 @@
 
 import random
 import datetime
+from datetime import timedelta
 import faker
 from core.models import Event, Category
 
@@ -60,24 +61,42 @@ class EventSeeder(BaseSeeder):
                 max_daily_study_time=random.randint(1, 24),
             )
 
-        self._create_event(
-            {
-                "fields": {
-                    "user": temporary_user,
-                    "event_category": temporary_category,
-                    "time": self._random_time(),
-                    "date": self.faker.date(),
-                    "recurring": random.randint(0, 1) == 1,
-                    "recurring_start": self.faker.date() if "recurring" == 1 else None,
-                    "recurring_end": self.faker.date() if "recurring" == 1 else None,
-                    "recurring_interval": random.choice(
-                        ["daily", "weekly", "monthly", "yearly"]
-                    )
-                    if "recurring" == 1
-                    else None,
+
+        recurring = random.randint(0, 1) == 1
+
+        if recurring:
+            start = self.faker.date_object()
+            self._create_event(
+                {
+                    "fields": {
+                        "user": temporary_user,
+                        "event_category": temporary_category,
+                        "time": None,
+                        "date": None,
+                        "recurring": True,
+                        "recurring_start": start,
+                        "recurring_end": start + timedelta(random.randint(0,100)),
+                        "recurring_interval": random.choice(
+                            ["daily", "weekly", "monthly", "yearly"]
+                        )
+                    }
                 }
-            }
-        )
+            )
+        else:
+            self._create_event(
+                {
+                    "fields": {
+                        "user": temporary_user,
+                        "event_category": temporary_category,
+                        "time": self._random_time(),
+                        "date": self.faker.date(),
+                        "recurring": False,
+                        "recurring_start": None,
+                        "recurring_end": None,
+                        "recurring_interval": None,
+                    }
+                }
+            )
 
     def _random_time(self):
         hours = random.randint(0, 23)

@@ -28,7 +28,7 @@ class SpecialDatesSeeder(BaseSeeder):
             text=data["fields"]["text"],
         )
 
-    def populate_random_special_date(self):
+    def _populate_random_special_date(self):
         User = get_user_model()
         # Shuffle users and get a random user.
         temporary_user = User.objects.order_by("?").first()
