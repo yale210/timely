@@ -3,7 +3,7 @@ from django.db import transaction
 from rest_framework import serializers
 from core.models import Event, EventReminder
 from core.models import Category
-from core.serializers.category_serializer import CategorySerializer
+from core.serializers.category import CategorySerializer
 
 
 class EventReminderSerializer(serializers.ModelSerializer):
@@ -47,7 +47,6 @@ class EventSerializer(serializers.ModelSerializer):
         return representation
 
     def validate(self, attributes):
-        # Validate max reminders
         reminders_data = attributes.get("reminders", [])
         if len(reminders_data) > MAX_REMINDERS_PER_EVENT:
             raise serializers.ValidationError(
@@ -56,10 +55,9 @@ class EventSerializer(serializers.ModelSerializer):
                 }
             )
 
-        # Create a temporary instance to run clean()
         attrs_copy = attributes.copy()
-        # Pop M2M and custom fields
-        reminders_data = attrs_copy.pop("reminders", None)
+
+        attrs_copy.pop("reminders", None)
         attrs_copy.pop("categories", None)
 
         event = self.instance or Event()

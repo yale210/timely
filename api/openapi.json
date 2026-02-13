@@ -18,8 +18,8 @@
                     }
                 ],
                 "responses": {
-                    "200": {
-                        "description": "No response body"
+                    "204": {
+                        "description": "Successfully logged out."
                     }
                 }
             }
@@ -37,8 +37,8 @@
                     }
                 ],
                 "responses": {
-                    "200": {
-                        "description": "No response body"
+                    "204": {
+                        "description": "Successfully logged out from all sessions."
                     }
                 }
             }
@@ -79,7 +79,7 @@
                     {}
                 ],
                 "responses": {
-                    "200": {
+                    "201": {
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -157,7 +157,14 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "No response body"
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/TestPermissionResponse"
+                                }
+                            }
+                        },
+                        "description": ""
                     }
                 }
             }
@@ -318,7 +325,7 @@
                         "in": "path",
                         "name": "id",
                         "schema": {
-                            "type": "string"
+                            "type": "integer"
                         },
                         "required": true
                     }
@@ -354,7 +361,7 @@
                         "in": "path",
                         "name": "id",
                         "schema": {
-                            "type": "string"
+                            "type": "integer"
                         },
                         "required": true
                     }
@@ -409,7 +416,7 @@
                         "in": "path",
                         "name": "id",
                         "schema": {
-                            "type": "string"
+                            "type": "integer"
                         },
                         "required": true
                     }
@@ -464,7 +471,7 @@
                         "in": "path",
                         "name": "id",
                         "schema": {
-                            "type": "string"
+                            "type": "integer"
                         },
                         "required": true
                     }
@@ -572,8 +579,9 @@
                         "in": "path",
                         "name": "id",
                         "schema": {
-                            "type": "string"
+                            "type": "integer"
                         },
+                        "description": "A unique integer value identifying this grade.",
                         "required": true
                     }
                 ],
@@ -608,8 +616,9 @@
                         "in": "path",
                         "name": "id",
                         "schema": {
-                            "type": "string"
+                            "type": "integer"
                         },
+                        "description": "A unique integer value identifying this grade.",
                         "required": true
                     }
                 ],
@@ -664,8 +673,9 @@
                         "in": "path",
                         "name": "id",
                         "schema": {
-                            "type": "string"
+                            "type": "integer"
                         },
+                        "description": "A unique integer value identifying this grade.",
                         "required": true
                     }
                 ],
@@ -719,8 +729,9 @@
                         "in": "path",
                         "name": "id",
                         "schema": {
-                            "type": "string"
+                            "type": "integer"
                         },
+                        "description": "A unique integer value identifying this grade.",
                         "required": true
                     }
                 ],
@@ -827,8 +838,9 @@
                         "in": "path",
                         "name": "id",
                         "schema": {
-                            "type": "string"
+                            "type": "integer"
                         },
+                        "description": "A unique integer value identifying this preference.",
                         "required": true
                     }
                 ],
@@ -863,8 +875,9 @@
                         "in": "path",
                         "name": "id",
                         "schema": {
-                            "type": "string"
+                            "type": "integer"
                         },
+                        "description": "A unique integer value identifying this preference.",
                         "required": true
                     }
                 ],
@@ -919,8 +932,9 @@
                         "in": "path",
                         "name": "id",
                         "schema": {
-                            "type": "string"
+                            "type": "integer"
                         },
+                        "description": "A unique integer value identifying this preference.",
                         "required": true
                     }
                 ],
@@ -974,8 +988,9 @@
                         "in": "path",
                         "name": "id",
                         "schema": {
-                            "type": "string"
+                            "type": "integer"
                         },
+                        "description": "A unique integer value identifying this preference.",
                         "required": true
                     }
                 ],
@@ -1002,12 +1017,48 @@
                 "operationId": "tasks_list",
                 "parameters": [
                     {
+                        "in": "query",
+                        "name": "categories",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "type": "integer"
+                            }
+                        },
+                        "description": "Multiple values may be separated by commas.",
+                        "explode": false,
+                        "style": "form"
+                    },
+                    {
+                        "in": "query",
+                        "name": "completed",
+                        "schema": {
+                            "type": "boolean"
+                        }
+                    },
+                    {
+                        "in": "query",
+                        "name": "deadline__lte",
+                        "schema": {
+                            "type": "string",
+                            "format": "date-time"
+                        }
+                    },
+                    {
                         "name": "ordering",
                         "required": false,
                         "in": "query",
                         "description": "Which field to use when ordering the results.",
                         "schema": {
                             "type": "string"
+                        }
+                    },
+                    {
+                        "in": "query",
+                        "name": "start_time__gte",
+                        "schema": {
+                            "type": "string",
+                            "format": "date-time"
                         }
                     }
                 ],
@@ -1029,7 +1080,7 @@
                                 "schema": {
                                     "type": "array",
                                     "items": {
-                                        "$ref": "#/components/schemas/Calendar"
+                                        "$ref": "#/components/schemas/CalendarResponse"
                                     }
                                 }
                             }
@@ -1076,7 +1127,7 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/Calendar"
+                                    "$ref": "#/components/schemas/CalendarResponse"
                                 }
                             }
                         },
@@ -1093,7 +1144,7 @@
                         "in": "path",
                         "name": "id",
                         "schema": {
-                            "type": "string"
+                            "type": "integer"
                         },
                         "required": true
                     }
@@ -1114,7 +1165,7 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/Calendar"
+                                    "$ref": "#/components/schemas/CalendarResponse"
                                 }
                             }
                         },
@@ -1129,7 +1180,7 @@
                         "in": "path",
                         "name": "id",
                         "schema": {
-                            "type": "string"
+                            "type": "integer"
                         },
                         "required": true
                     }
@@ -1170,7 +1221,7 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/Calendar"
+                                    "$ref": "#/components/schemas/CalendarResponse"
                                 }
                             }
                         },
@@ -1185,7 +1236,7 @@
                         "in": "path",
                         "name": "id",
                         "schema": {
-                            "type": "string"
+                            "type": "integer"
                         },
                         "required": true
                     }
@@ -1225,7 +1276,7 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/Calendar"
+                                    "$ref": "#/components/schemas/CalendarResponse"
                                 }
                             }
                         },
@@ -1240,7 +1291,7 @@
                         "in": "path",
                         "name": "id",
                         "schema": {
-                            "type": "string"
+                            "type": "integer"
                         },
                         "required": true
                     }
@@ -1331,6 +1382,68 @@
                     "title"
                 ]
             },
+            "CalendarResponse": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "readOnly": true
+                    },
+                    "title": {
+                        "type": "string",
+                        "maxLength": 500
+                    },
+                    "description": {
+                        "type": "string"
+                    },
+                    "categories": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/Category"
+                        },
+                        "readOnly": true
+                    },
+                    "estimated_minutes": {
+                        "type": "integer",
+                        "maximum": 9223372036854775807,
+                        "minimum": 1,
+                        "format": "int64"
+                    },
+                    "start_time": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "deadline": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "importance": {
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/ImportanceEnum"
+                            }
+                        ],
+                        "minimum": 1,
+                        "maximum": 10
+                    },
+                    "completed": {
+                        "type": "boolean"
+                    },
+                    "parent_task": {
+                        "type": "integer",
+                        "nullable": true
+                    }
+                },
+                "required": [
+                    "categories",
+                    "deadline",
+                    "estimated_minutes",
+                    "id",
+                    "importance",
+                    "start_time",
+                    "title"
+                ]
+            },
             "Category": {
                 "type": "object",
                 "properties": {
@@ -1371,15 +1484,6 @@
                         "items": {
                             "type": "integer"
                         }
-                    },
-                    "importance": {
-                        "allOf": [
-                            {
-                                "$ref": "#/components/schemas/ImportanceEnum"
-                            }
-                        ],
-                        "minimum": 1,
-                        "maximum": 10
                     },
                     "start_time": {
                         "type": "string",
@@ -1466,15 +1570,6 @@
                         },
                         "readOnly": true
                     },
-                    "importance": {
-                        "allOf": [
-                            {
-                                "$ref": "#/components/schemas/ImportanceEnum"
-                            }
-                        ],
-                        "minimum": 1,
-                        "maximum": 10
-                    },
                     "start_time": {
                         "type": "string",
                         "format": "date-time"
@@ -1538,6 +1633,7 @@
                     },
                     "category_name": {
                         "type": "string",
+                        "nullable": true,
                         "readOnly": true
                     },
                     "score": {
@@ -1551,7 +1647,8 @@
                         "minimum": 1
                     },
                     "percentage": {
-                        "type": "string",
+                        "type": "number",
+                        "format": "double",
                         "readOnly": true
                     },
                     "date_achieved": {
@@ -1559,7 +1656,8 @@
                         "format": "date"
                     },
                     "time_spent_minutes": {
-                        "type": "string",
+                        "type": "integer",
+                        "minimum": 0,
                         "readOnly": true
                     }
                 },
@@ -1688,15 +1786,6 @@
                             "type": "integer"
                         }
                     },
-                    "importance": {
-                        "allOf": [
-                            {
-                                "$ref": "#/components/schemas/ImportanceEnum"
-                            }
-                        ],
-                        "minimum": 1,
-                        "maximum": 10
-                    },
                     "start_time": {
                         "type": "string",
                         "format": "date-time"
@@ -1754,6 +1843,7 @@
                     },
                     "category_name": {
                         "type": "string",
+                        "nullable": true,
                         "readOnly": true
                     },
                     "score": {
@@ -1767,7 +1857,8 @@
                         "minimum": 1
                     },
                     "percentage": {
-                        "type": "string",
+                        "type": "number",
+                        "format": "double",
                         "readOnly": true
                     },
                     "date_achieved": {
@@ -1775,7 +1866,8 @@
                         "format": "date"
                     },
                     "time_spent_minutes": {
-                        "type": "string",
+                        "type": "integer",
+                        "minimum": 0,
                         "readOnly": true
                     }
                 }
@@ -1868,6 +1960,17 @@
                     "id",
                     "password",
                     "username"
+                ]
+            },
+            "TestPermissionResponse": {
+                "type": "object",
+                "properties": {
+                    "message": {
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "message"
                 ]
             },
             "TypeEnum": {
