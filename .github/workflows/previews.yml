@@ -5,6 +5,8 @@ on:
     types: [closed]
   pull_request_review_comment:
     types: [created]
+  issue_comment:
+    types: [created]
 
 jobs:
   preview-destroy:
@@ -24,24 +26,68 @@ jobs:
           repo_slug: ${{ github.repository }}
           branch: ${{ github.event.pull_request.head.ref }}
           ignore_missing_on_destroy: "true"
+
+  resolve-pr-context:
+    if: >-
+      (github.event_name == 'pull_request_review_comment' || github.event_name == 'issue_comment') &&
+      contains(github.event.comment.body, '/preview_start') &&
+      (github.event_name != 'issue_comment' || github.event.issue.pull_request)
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: read
+    outputs:
+      head_ref: ${{ steps.pr.outputs.head_ref }}
+      head_sha: ${{ steps.pr.outputs.head_sha }}
+      pr_number: ${{ steps.pr.outputs.pr_number }}
+    steps:
+      - name: Resolve PR head ref and SHA
+        id: pr
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const prNumber = context.payload.issue?.number ?? context.payload.pull_request?.number;
+
+            if (!prNumber) {
+              core.setFailed("Unable to resolve pull request number from event payload");
+              return;
+            }
+
+            const { data: pr } = await github.rest.pulls.get({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: prNumber,
+            });
+
+            core.setOutput("pr_number", String(pr.number));
+            core.setOutput("head_ref", pr.head.ref);
+            core.setOutput("head_sha", pr.head.sha);
   
   build:
-    if: github.event_name == 'pull_request_review_comment' && contains(github.event.comment.body, '/preview_start')
+    needs: [resolve-pr-context]
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.resolve-pr-context.outputs.head_ref }}
       - name: Build backend
         run: docker build -t backend-test backend
       - name: Build frontend  
         run: docker build -t frontend-test frontend
 
   preview-create-from-comment:
-    if: github.event_name == 'pull_request_review_comment' && contains(github.event.comment.body, '/preview_start')
-    needs: [build]
+    needs: [resolve-pr-context, build]
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      issues: write
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.resolve-pr-context.outputs.head_ref }}
 
       - name: Create preview from comment
         id: preview_create_comment
@@ -51,8 +97,8 @@ jobs:
           api_base_url: ${{ secrets.PREVIEW_API_URL }}
           api_key: ${{ secrets.PREVIEW_API_KEY }}
           repo_slug: ${{ github.repository }}
-          branch: ${{ github.event.pull_request.head.ref }}
-          commit_sha: ${{ github.event.pull_request.head.sha }}
+          branch: ${{ needs.resolve-pr-context.outputs.head_ref }}
+          commit_sha: ${{ needs.resolve-pr-context.outputs.head_sha }}
       - name: Upsert preview comment
         uses: actions/github-script@v7
         with:
