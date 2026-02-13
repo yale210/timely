@@ -50,7 +50,6 @@ const mockEvents: Event[] = [
     start_time: moment().subtract(1, 'day').toISOString(),
     end_time: moment().subtract(1, 'day').add(1, 'hour').toISOString(),
     location: 'Old Place',
-    importance: 5,
     reminders: [],
     categories: []
   },
@@ -60,7 +59,6 @@ const mockEvents: Event[] = [
     start_time: moment().toISOString(),
     end_time: moment().add(1, 'hour').toISOString(),
     location: 'Current Place',
-    importance: 5,
     reminders: [],
     categories: []
   },
@@ -70,7 +68,6 @@ const mockEvents: Event[] = [
     start_time: moment().add(1, 'day').toISOString(),
     end_time: moment().add(1, 'day').add(1, 'hour').toISOString(),
     location: 'Future Place',
-    importance: 5,
     reminders: [],
     categories: []
   }
@@ -142,7 +139,7 @@ describe('EventList', () => {
   })
 
   it('handles event submission', async () => {
-    vi.mocked(eventService.createEvent).mockResolvedValue({ id: 4, title: 'New Event', start_time: '', end_time: '', importance: 5, reminders: [], categories: [] })
+    vi.mocked(eventService.createEvent).mockResolvedValue({ id: 4, title: 'New Event', start_time: '', end_time: '', reminders: [], categories: [] })
     
     render(
       <MemoryRouter>
@@ -158,7 +155,7 @@ describe('EventList', () => {
   })
 
   it('handles event update', async () => {
-    vi.mocked(eventService.updateEvent).mockResolvedValue({ id: 2, title: 'Updated Event', start_time: '', end_time: '', importance: 5, reminders: [], categories: [] })
+    vi.mocked(eventService.updateEvent).mockResolvedValue({ id: 2, title: 'Updated Event', start_time: '', end_time: '', reminders: [], categories: [] })
     
     render(
       <MemoryRouter>
@@ -282,23 +279,6 @@ describe('EventList Sorting', () => {
     await waitFor(() => expect(screen.getByText('Today Event')).toBeDefined())
   })
 
-  it('sorts by importance', async () => {
-    render(
-      <MemoryRouter>
-        <EventList />
-      </MemoryRouter>
-    )
-
-    await waitFor(() => expect(screen.getByText('Today Event')).toBeDefined())
-
-    const sortButton = screen.getByRole('button', { name: /Sort/i })
-    fireEvent.click(sortButton)
-
-    fireEvent.click(screen.getByText('Importance'))
-
-    await waitFor(() => expect(screen.getByText('Today Event')).toBeDefined())
-  })
-
   it('sorts by title', async () => {
     render(
       <MemoryRouter>
@@ -328,25 +308,6 @@ describe('EventList Filtering Additional', () => {
     ])
   })
 
-  it('filters by high importance', async () => {
-    vi.mocked(eventService.getEvents).mockResolvedValue(mockEvents)
-
-    render(
-      <MemoryRouter>
-        <EventList />
-      </MemoryRouter>
-    )
-
-    await waitFor(() => expect(screen.getByText('Today Event')).toBeDefined())
-
-    const filterButton = screen.getByRole('button', { name: /Filter/i })
-    fireEvent.click(filterButton)
-
-    fireEvent.click(screen.getByText('High Importance Only'))
-
-    await waitFor(() => expect(screen.queryByText('Today Event')).toBeNull())
-  })
-
   it('filters by category', async () => {
     const eventsWithCategory = [
       { 
@@ -355,7 +316,7 @@ describe('EventList Filtering Additional', () => {
         start_time: moment().toISOString(),
         end_time: moment().add(1, 'hour').toISOString(),
         location: 'Office',
-        importance: 5,
+        
         reminders: [],
         categories: [{ id: 1, text: 'Work' }]
       }
@@ -406,7 +367,7 @@ describe('EventList Filtering Additional', () => {
       start_time: moment().toISOString(),
       end_time: moment().add(1, 'hour').toISOString(),
       location: 'Office',
-      importance: 5,
+      
       reminders: [],
       categories: [],
       recurrence_interval: 'weekly',
@@ -418,7 +379,7 @@ describe('EventList Filtering Additional', () => {
       start_time: moment().toISOString(),
       end_time: moment().add(1, 'hour').toISOString(),
       location: 'Office',
-      importance: 5,
+      
       reminders: [],
       categories: []
     }
@@ -455,7 +416,7 @@ describe('EventList Tomorrow Label', () => {
       start_time: moment().add(1, 'day').startOf('day').add(10, 'hours').toISOString(),
       end_time: moment().add(1, 'day').startOf('day').add(11, 'hours').toISOString(),
       location: 'Tomorrow Place',
-      importance: 5,
+      
       reminders: [],
       categories: []
     }
@@ -488,7 +449,7 @@ describe('EventList Recurring Events', () => {
       start_time: moment().startOf('day').add(9, 'hours').toISOString(),
       end_time: moment().startOf('day').add(10, 'hours').toISOString(),
       location: 'Conference Room',
-      importance: 5,
+      
       reminders: [],
       categories: [],
       recurrence_interval: 'daily',
@@ -512,7 +473,7 @@ describe('EventList Recurring Events', () => {
       start_time: moment().startOf('day').add(14, 'hours').toISOString(),
       end_time: moment().startOf('day').add(15, 'hours').toISOString(),
       location: 'Board Room',
-      importance: 5,
+      
       reminders: [],
       categories: [],
       recurrence_interval: 'weekly',
@@ -536,7 +497,7 @@ describe('EventList Recurring Events', () => {
       start_time: moment().startOf('day').add(11, 'hours').toISOString(),
       end_time: moment().startOf('day').add(12, 'hours').toISOString(),
       location: 'Office',
-      importance: 5,
+      
       reminders: [],
       categories: [],
       recurrence_interval: 'monthly',
@@ -560,7 +521,7 @@ describe('EventList Recurring Events', () => {
       start_time: moment().startOf('day').add(10, 'hours').toISOString(),
       end_time: moment().startOf('day').add(11, 'hours').toISOString(),
       location: 'Venue',
-      importance: 5,
+      
       reminders: [],
       categories: [],
       recurrence_interval: 'yearly',
@@ -584,7 +545,7 @@ describe('EventList Recurring Events', () => {
       start_time: moment().startOf('day').add(10, 'hours').toISOString(),
       end_time: moment().startOf('day').add(11, 'hours').toISOString(),
       location: 'Somewhere',
-      importance: 5,
+      
       reminders: [],
       categories: [],
       recurrence_interval: 'daily',

@@ -1,9 +1,30 @@
 import { it, describe, expect, vi, beforeEach } from "vitest"
 import axios from "axios"
-import * as eventService from "@/services/eventService"
 import { type Event, type EventSubmission } from "@/types"
 
-vi.mock("axios")
+vi.mock("axios", () => {
+  const mockAxios = {
+    get: vi.fn(),
+    post: vi.fn(),
+    patch: vi.fn(),
+    delete: vi.fn(),
+    create: vi.fn(),
+    interceptors: { request: { use: vi.fn() } },
+    defaults: {},
+  } satisfies {
+    get: ReturnType<typeof vi.fn>
+    post: ReturnType<typeof vi.fn>
+    patch: ReturnType<typeof vi.fn>
+    delete: ReturnType<typeof vi.fn>
+    create: ReturnType<typeof vi.fn>
+    interceptors: { request: { use: ReturnType<typeof vi.fn> } }
+    defaults: Record<string, unknown>
+  }
+  mockAxios.create.mockReturnValue(mockAxios)
+  return { default: mockAxios }
+})
+
+import * as eventService from "@/services/eventService"
 
 describe("eventService", () => {
   beforeEach(() => {
@@ -15,7 +36,6 @@ describe("eventService", () => {
     title: "Test Event",
     start_time: new Date().toISOString(),
     end_time: new Date(Date.now() + 3600000).toISOString(),
-    importance: 5,
     categories: [],
     reminders: []
   }
@@ -31,7 +51,6 @@ describe("eventService", () => {
   it("createEvent should call axios.post and return created event", async () => {
     const data: EventSubmission = {
       title: "New Event",
-      importance: 5,
       start_time: new Date().toISOString(),
       end_time: new Date(Date.now() + 3600000).toISOString()
     }

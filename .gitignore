@@ -712,3 +712,12 @@ FodyWeavers.xsd
 # Additional files built by Visual Studio
 
 # End of https://www.toptal.com/developers/gitignore/api/django,react,windows,pycharm+all,visualstudiocode,visualstudio
+frontend/public/planner.jpg
+frontend/src/components/Book.tsx
+.gitignore
+frontend/src/components/BookUI.tsx
+frontend/src/components/Page.tsx
+frontend/src/components/Page1.tsx
+frontend/src/components/SkinnedPage.tsx
+frontend/src/components/Stack.tsx
+frontend/src/styles/Home.css

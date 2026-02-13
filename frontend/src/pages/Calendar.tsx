@@ -2,43 +2,104 @@ import { useState, useEffect, useCallback } from "react";
 import { Calendar, momentLocalizer, type View, Views } from "react-big-calendar";
 import moment from "moment";
 import "react-big-calendar/lib/css/react-big-calendar.css";
+
 import { UnifiedSidebar } from "../components";
+import "../index.css"
 import AppLayout from "../layouts/AppLayout";
 import * as taskService from "../services/taskService";
-import * as eventService from "../services/eventService";
-import { type Task, type Category, type TaskSubmission, type Event, type EventSubmission } from "../types";
+import * as eventService from "@/services/eventService";
+import type {
+  Task,
+  Category,
+  TaskSubmission,
+  Event,
+  EventSubmission,
+} from "../types";
 
 const localizer = momentLocalizer(moment);
-
 /**
- * A functional component that renders a calendar view of tasks and events.
+ * A functional component that renders a calendar view of tasks.
  * @returns The rendered calendar page component.
  */
+
+interface CalendarEntry {
+  id: number;
+  title: string;
+  start: Date;
+  end: Date;
+  allDay: boolean;
+  kind: "task" | "event";
+  sourceId: number;
+  repeat?: boolean;
+  split?: boolean;
+  oneGo?: boolean;
+}
+
 const CalendarPage = () => {
   const [tasks, setTasks] = useState<Task[]>([]);
-  const [events, setEvents] = useState<Event[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const [selectedItem, setSelectedItem] = useState<Task | Event | undefined>(undefined);
-  const [sidebarMode, setSidebarMode] = useState<"task" | "event">("event");
+  const [selectedItem, setSelectedItem] = useState<Task | Event| undefined>(undefined);
   const [view, setView] = useState<View>(Views.MONTH);
   const [date, setDate] = useState(new Date());
+  const [sidebarMode, setSidebarMode] = useState<"task" | "event">("task");
+  const [events, setEvents] = useState<Event[]>([]);
 
   const fetchTasks = useCallback(async () => {
     try {
       const data = await taskService.getTasks();
       setTasks(data);
     } catch (err) {
+      console.log("Fetching tasks.")
+      const mockTasks: Task[] = [
+          {
+            id:1,
+            title: "Badminton",
+            description: "Placeholder",
+            start_time: new Date().toISOString(),
+            deadline: new Date().toISOString(),
+            importance: 3,
+            completed: false,
+            estimated_minutes: 120,
+            categories: [{id: 1, text: "sport"}],
+            //repeat: true,
+          },
+          {
+            id: 2,
+            title: "ITR revision",
+            description: "Placeholder",
+            start_time: new Date().toISOString(),
+            deadline: new Date().toISOString(),
+            importance: 2,
+            completed: false,
+            estimated_minutes: 120,
+            categories: [{id: 2, text: "revision"}],
+            //split: true,
+          },
+          {
+            id: 3,
+            title: "Kolling lecture",
+            description: "Placeholder",
+            start_time: new Date().toISOString(),
+            deadline: new Date().toISOString(),
+            importance: 100,
+            completed: false,
+            estimated_minutes: 120,
+            categories: [{id: 3, text: "lecture"}],
+          },
+      ];
       console.error(err);
-    }
-  }, []);
-
-  const fetchEvents = useCallback(async () => {
-    try {
-      const data = await eventService.getEvents();
-      setEvents(data);
-    } catch (err) {
-      console.error(err);
+      setTasks(mockTasks);
+      /*try {
+        //const res = await axios.get("/api/tasks/");
+        setTasks(res.data);
+        const data = Array.isArray(res.data) ? res.data : [];
+        setTasks(data.length ? data : mockTasks)
+      } catch (err) {
+        console.error(err);
+        setTasks(mockTasks);
+      }
+      console.error(err);*/
     }
   }, []);
 
@@ -47,63 +108,70 @@ const CalendarPage = () => {
       const data = await taskService.getCategories();
       setCategories(data);
     } catch (err) {
+      setCategories([])
       console.error(err);
     }
   }, []);
 
+  const fetchEvents = useCallback(async () => {
+    try {
+      const data = await eventService.getEvents();
+      setEvents(data);
+    } catch(err) {
+      console.error(err);
+      setEvents([]);
+    }
+  }, [])
+
   useEffect(() => {
     const init = async () => {
-      await Promise.all([fetchTasks(), fetchEvents(), fetchCategories()]);
+      await fetchTasks();
+      await fetchEvents();
+      await fetchCategories();
     };
     init().catch((err: unknown) => {
       console.error("Failed to initialise Calendar:", err);
     });
   }, [fetchTasks, fetchEvents, fetchCategories]);
 
-  interface CalendarEvent {
-    id: number;
-    title: string;
-    start: Date;
-    end: Date;
-    isEvent: boolean;
-    allDay?: boolean;
-  }
-
   const handleSelectSlot = ({ start }: { start: Date }) => {
-    setSelectedItem(undefined);
-    setSidebarMode("event");
-    // We can pass initial start_time via sharedData in UnifiedSidebar if we wanted,
-    // but here we'll just set it in the template if needed.
-    // Actually, UnifiedSidebar handles initialData.
-    const template: Partial<Event> = {
+    // Create a template for a new task
+    setSidebarMode("task");
+    setSelectedItem({
+      id: 0,
+      title: "",
+      description: "",
       start_time: start.toISOString(),
-      end_time: moment(start).add(1, "hour").toISOString(),
-    };
-    setSelectedItem(template as Event);
+      deadline: moment(start).add(1, "hour").toISOString(),
+      importance: 5,
+      completed: false,
+      categories: [],
+      estimated_minutes: 30,
+    });
     setIsSidebarOpen(true);
   };
 
-  const handleSelectEvent = (calendarEvent: CalendarEvent) => {
-    if (calendarEvent.isEvent) {
-      const event = events.find((e) => e.id === calendarEvent.id);
-      if (event) {
-        setSelectedItem(event);
-        setSidebarMode("event");
-        setIsSidebarOpen(true);
-      }
-    } else {
-      const task = tasks.find((t) => t.id === calendarEvent.id);
+  const handleSelectEvent = (entry: CalendarEntry) => {
+    if (entry.kind==="task") {
+      const task = tasks.find((t) =>t.id===entry.sourceId);
       if (task) {
-        setSelectedItem(task);
         setSidebarMode("task");
+        setSelectedItem(task);
         setIsSidebarOpen(true);
       }
+      return;
+    }
+    const event = events.find((ev) => ev.id===entry.sourceId);
+    if (event) {
+      setSidebarMode("event");
+      setSelectedItem(event);
+      setIsSidebarOpen(true);
     }
   };
 
   const handleSubmitTask = async (data: TaskSubmission) => {
     try {
-      if (selectedItem?.id && "deadline" in selectedItem) {
+      if (selectedItem && "deadline" in selectedItem && selectedItem.id !== 0) {
         await taskService.updateTask(selectedItem.id, data);
       } else {
         await taskService.createTask(data);
@@ -117,7 +185,7 @@ const CalendarPage = () => {
 
   const handleSubmitEvent = async (data: EventSubmission) => {
     try {
-      if (selectedItem?.id && "end_time" in selectedItem) {
+      if (selectedItem && "end_time" in selectedItem && selectedItem.id !== 0) {
         await eventService.updateEvent(selectedItem.id, data);
       } else {
         await eventService.createEvent(data);
@@ -129,88 +197,73 @@ const CalendarPage = () => {
     }
   };
 
-  const handleDelete = async () => {
-    if (!selectedItem?.id) return;
+  const handleDeleteSelected = async () => {
     try {
-      if ("deadline" in selectedItem) {
-        await taskService.deleteTask(selectedItem.id);
-        await fetchTasks();
-      } else {
+      if (!selectedItem?.id) {
+        console.error("There is either no item, or its id is not valid.");
+        return ;
+      }
+      if ("end_time" in selectedItem) {
         await eventService.deleteEvent(selectedItem.id);
         await fetchEvents();
+      } else {
+        await taskService.deleteTask(selectedItem.id);
+        await fetchTasks();
       }
       setIsSidebarOpen(false);
-    } catch (err) {
-      console.error(err);
+      setSelectedItem(undefined);
+    } catch (error) {
+      console.error(error);
     }
-  };
+  }
 
-  const expandRecurrence = (eventsToExpand: Event[]): CalendarEvent[] => {
-    const expanded: CalendarEvent[] = [];
-    const twoYearsFromNow = moment().add(2, "years");
-
-    eventsToExpand.forEach((event) => {
-      // If not recurring, add as-is
-      if (!event.recurrence_interval) {
-        expanded.push({
-          id: event.id,
-          title: event.title,
-          start: new Date(event.start_time),
-          end: new Date(event.end_time),
-          isEvent: true,
-        });
-        return;
-      }
-
-      // For recurring events, expand with 2-year hard limit
-      const currentStart = moment(event.start_time);
-      const currentEnd = moment(event.end_time);
-      // If recurrence_end is null ("never"), use the 2-year window as the limit
-      const recurrenceEnd = event.recurrence_end ? moment(event.recurrence_end) : twoYearsFromNow;
-      const limit = moment.min(recurrenceEnd, twoYearsFromNow);
-
-      while (currentStart.isBefore(limit) || currentStart.isSame(limit, "day")) {
-        expanded.push({
-          id: event.id,
-          title: event.title,
-          start: currentStart.toDate(),
-          end: currentEnd.toDate(),
-          isEvent: true,
-        });
-
-        if (event.recurrence_interval === "daily") {
-          currentStart.add(1, "day");
-          currentEnd.add(1, "day");
-        } else if (event.recurrence_interval === "weekly") {
-          currentStart.add(1, "week");
-          currentEnd.add(1, "week");
-        } else if (event.recurrence_interval === "monthly") {
-          currentStart.add(1, "month");
-          currentEnd.add(1, "month");
-        } else if (event.recurrence_interval === "yearly") {
-          currentStart.add(1, "year");
-          currentEnd.add(1, "year");
-        } else {
-          break;
-        }
-      }
-    });
-    return expanded;
-  };
-
-  const calendarEvents: CalendarEvent[] = [
-    ...tasks.map((task) => ({
-      id: task.id,
-      title: task.title,
-      start: new Date(task.start_time),
-      end: new Date(task.deadline),
-      isEvent: false,
-      allDay: moment(task.deadline).diff(moment(task.start_time), "hours") >= 24,
-    })),
-    ...expandRecurrence(events),
-  ];
-
+  const calendarEntries: CalendarEntry[] = [
+    ...tasks.map((task, index) => ({
+    id: task.id,
+    title: task.title,
+    start: new Date(task.start_time),
+    end: new Date(task.deadline),
+    allDay: moment(task.deadline).diff(moment(task.start_time), "hours") >= 24,
+    kind: "task" as const,
+    sourceId: task.id,
+    /*
+    repeat: boolean(task.repeat),
+    split: boolean(task.split),
+    oneGo: boolean(task["one-go"]),
+    */
+    repeat: index%3==0,
+    split: index%2==0,
+    setTime: index%3==1,
+    oneGo: index%3==1,
+  })),
+  ...events.map((event) => ({
+    id: 1000000 + event.id,
+    title: event.title,
+    start: new Date(event.start_time),
+    end: new Date(event.end_time),
+    allDay: false,
+    kind: "event" as const,
+    sourceId: event.id,
+  })),
+];
   return (
+    /*<div style={{ height: "80vh", padding: "2rem" }}>
+      <h1>Task Calendar</h1>
+      <div style={{ marginBottom: "1rem"}}>
+        <h2 style={{ fontWeight: 600}}>Debug</h2>
+        <p>Tasks loaded: {tasks.length}</p>
+        <pre style={{ fontSize: 12, background: "#f5f5f5", padding: 12, borderRadius: 8}}>
+          {JSON.stringify(tasks.slice(0, 3), null, 2)}
+        </pre>
+      </div>
+      <Calendar
+        localizer={localizer}
+        events={events}
+        startAccessor="start"
+        endAccessor="end"
+        style={{ height: "100%" }}
+      />
+    </div>*/
     <AppLayout>
       <div className="flex h-full flex-col overflow-hidden bg-white text-black">
         <header className="flex-none p-6 border-b border-gray-200 bg-white shadow-sm z-10">
@@ -276,26 +329,31 @@ const CalendarPage = () => {
 
         <main className="flex-grow flex overflow-hidden relative p-4 bg-white">
           <div className="flex-grow bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-            <Calendar
+            <Calendar<CalendarEntry>
               localizer={localizer}
-              events={calendarEvents}
+              events={calendarEntries}
               view={view}
               onView={setView}
               date={date}
               onNavigate={setDate}
               selectable
               onSelectSlot={handleSelectSlot}
-              onSelectEvent={handleSelectEvent}
+              onSelectEvent={(e) => {
+                handleSelectEvent(e)
+              }}
               toolbar={false}
               className="h-full"
-              eventPropGetter={(event) => ({
-                className: "font-medium border-l-4 rounded-md px-2 py-1 text-xs shadow-sm",
-                style: {
-                  backgroundColor: event.isEvent ? "#f97316" : "#3b82f6", // orange-500 : blue-500
-                  color: "#ffffff",
-                  borderColor: event.isEvent ? "#c2410c" : "#1d4ed8", // orange-700 : blue-700
-                },
-              })}
+              eventPropGetter={(event: CalendarEntry) => {
+                const className=[
+                  "event-slot",
+                  event.repeat ? "is-repeat": "",
+                  event.split ? "is-split" : "",
+                  event.oneGo ? "is-onego" : "",
+                ]
+                .filter(Boolean)
+                .join(" ");
+                return { className };
+              }}
             />
           </div>
         </main>
@@ -306,12 +364,12 @@ const CalendarPage = () => {
             setIsSidebarOpen(false);
             setSelectedItem(undefined);
           }}
-          initialMode={sidebarMode}
           categories={categories}
           initialData={selectedItem}
+          initialMode={sidebarMode}
           onSubmitTask={(data) => { void handleSubmitTask(data); }}
           onSubmitEvent={(data) => { void handleSubmitEvent(data); }}
-          onDelete={() => { void handleDelete(); }}
+          onDelete={() => { void handleDeleteSelected(); }}
         />
       </div>
     </AppLayout>
