@@ -4,10 +4,10 @@ interface StatcardProps {
 }
 
 /**
- *
- * @param root0
- * @param root0.title
- * @param root0.value
+ * Renders a stat card with a title and a checklist of values.
+ * @param root0 - The properties for the Statcard component.
+ * @param root0.title - The heading displayed at the top of the card.
+ * @param root0.value - The list of items rendered as a checkbox list.
  */
 export default function Statcard({title, value} : StatcardProps){
   const task_list = value.map(task =>
