@@ -53,6 +53,7 @@ jobs:
              
     docker-build-test:
         name: Test if frontend docker build will work
+        needs: [lint, test]
         runs-on: ubuntu-latest
         steps:
             - uses: actions/checkout@v6
