@@ -3,6 +3,7 @@ from django.db import transaction
 from rest_framework import serializers
 from core.models import Event, EventReminder
 from core.models import Category
+from core.serializers.category import CategorySerializer
 
 
 class EventReminderSerializer(serializers.ModelSerializer):
@@ -40,16 +41,12 @@ class EventSerializer(serializers.ModelSerializer):
 
     def to_representation(self, instance):
         representation = super().to_representation(instance)
-        # Use CategorySerializer for full objects in responses
-        from core.serializers.category_serializer import CategorySerializer
-
         representation["categories"] = CategorySerializer(
             instance.categories.all(), many=True
         ).data
         return representation
 
     def validate(self, attributes):
-        # Validate max reminders
         reminders_data = attributes.get("reminders", [])
         if len(reminders_data) > MAX_REMINDERS_PER_EVENT:
             raise serializers.ValidationError(
@@ -58,10 +55,9 @@ class EventSerializer(serializers.ModelSerializer):
                 }
             )
 
-        # Create a temporary instance to run clean()
         attrs_copy = attributes.copy()
-        # Pop M2M and custom fields
-        reminders_data = attrs_copy.pop("reminders", None)
+
+        attrs_copy.pop("reminders", None)
         attrs_copy.pop("categories", None)
 
         event = self.instance or Event()
@@ -104,3 +100,23 @@ class EventSerializer(serializers.ModelSerializer):
                 EventReminder.objects.create(event=instance, **reminder_data)
 
         return instance
+
+
+class EventResponseSerializer(serializers.ModelSerializer):
+    categories = CategorySerializer(many=True, read_only=True)
+    reminders = EventReminderSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = Event
+        fields = [
+            "id",
+            "title",
+            "description",
+            "location",
+            "categories",
+            "start_time",
+            "end_time",
+            "recurrence_interval",
+            "recurrence_end",
+            "reminders",
+        ]
