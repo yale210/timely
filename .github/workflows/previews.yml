@@ -2,23 +2,49 @@ name: Preview Environment
 
 on:
   pull_request:
-    types: [opened, reopened, synchronize, closed]
+    types: [closed]
   pull_request_review_comment:
     types: [created]
 
 jobs:
-  preview-create:
-    if: github.event_name == 'pull_request' && github.event.action != 'closed'
+  preview-destroy:
+    if: github.event_name == 'pull_request' && github.event.action == 'closed'
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      pull-requests: write
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Create or update preview
-        id: preview_create
+      - name: Destroy preview
+        id: preview_destroy
+        uses: SubhanAfz/branch-previewer-action@v1
+        with:
+          operation: destroy
+          api_base_url: ${{ secrets.PREVIEW_API_URL }}
+          api_key: ${{ secrets.PREVIEW_API_KEY }}
+          repo_slug: ${{ github.repository }}
+          branch: ${{ github.event.pull_request.head.ref }}
+          ignore_missing_on_destroy: "true"
+  
+  build:
+    if: github.event_name == 'pull_request_review_comment' && contains(github.event.comment.body, '/preview_start')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build backend
+        run: docker build -t backend-test backend
+      - name: Build frontend  
+        run: docker build -t frontend-test frontend
+
+  preview-create-from-comment:
+    if: github.event_name == 'pull_request_review_comment' && contains(github.event.comment.body, '/preview_start')
+    needs: [build]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Create preview from comment
+        id: preview_create_comment
         uses: SubhanAfz/branch-previewer-action@v1
         with:
           operation: create
@@ -27,25 +53,21 @@ jobs:
           repo_slug: ${{ github.repository }}
           branch: ${{ github.event.pull_request.head.ref }}
           commit_sha: ${{ github.event.pull_request.head.sha }}
-          timeout_seconds: "900"
-          retry_count: "3"
-          retry_backoff_seconds: "2"
-
       - name: Upsert preview comment
         uses: actions/github-script@v7
         with:
           script: |
             const marker = "<!-- preview-environment-comment -->";
-            const ip = `${{ steps.preview_create.outputs.ip || '' }}`.trim();
+            const ip = `${{ steps.preview_create_comment.outputs.ip || '' }}`.trim();
             const previewUrl = ip ? `http://${ip}` : "N/A";
 
             const body = `${marker}
             ## Preview Environment
             - **URL:** ${ip ? `[${previewUrl}](${previewUrl})` : "`N/A`"}
             - **IP:** \`${ip || "N/A"}\`
-            - **Droplet ID:** \`${{ steps.preview_create.outputs.droplet_id || 'N/A' }}\`
-            - **Created:** \`${{ steps.preview_create.outputs.created || 'N/A' }}\`
-            - **Expires In (s):** \`${{ steps.preview_create.outputs.seconds_remaining || 'N/A' }}\``;
+            - **Droplet ID:** \`${{ steps.preview_create_comment.outputs.droplet_id || 'N/A' }}\`
+            - **Created:** \`${{ steps.preview_create_comment.outputs.created || 'N/A' }}\`
+            - **Expires In (s):** \`${{ steps.preview_create_comment.outputs.seconds_remaining || 'N/A' }}\``;
 
             const { data: comments } = await github.rest.issues.listComments({
               owner: context.repo.owner,
@@ -72,39 +94,3 @@ jobs:
                 body,
               });
             }
-
-  preview-destroy:
-    if: github.event_name == 'pull_request' && github.event.action == 'closed'
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Destroy preview
-        id: preview_destroy
-        uses: SubhanAfz/branch-previewer-action@v1
-        with:
-          operation: destroy
-          api_base_url: ${{ secrets.PREVIEW_API_URL }}
-          api_key: ${{ secrets.PREVIEW_API_KEY }}
-          repo_slug: ${{ github.repository }}
-          branch: ${{ github.event.pull_request.head.ref }}
-          ignore_missing_on_destroy: "true"
-
-  preview-create-from-comment:
-    if: github.event_name == 'pull_request_review_comment' && contains(github.event.comment.body, '/preview_start')
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Create preview from comment
-        id: preview_create_comment
-        uses: SubhanAfz/branch-previewer-action@v1
-        with:
-          operation: create
-          api_base_url: ${{ secrets.PREVIEW_API_URL }}
-          api_key: ${{ secrets.PREVIEW_API_KEY }}
-          repo_slug: ${{ github.repository }}
-          branch: ${{ github.event.pull_request.head.ref }}
-          commit_sha: ${{ github.event.pull_request.head.sha }}
