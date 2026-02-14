@@ -31,4 +31,33 @@ describe("WeeklySummaryWidget", () => {
     );
     expect(screen.getByText(/You had no tasks planned/i)).toBeTruthy();
   });
+
+  it("renders full statistics when valid data is provided", () => {
+    const stats = { total_tasks: 5, completed_tasks: 2, completion_percentage: 40, total_minutes_planned: 100, daily_stats: [], difficulty_stats: [] } as any;
+    render(<WeeklySummaryWidget stats={stats} />);
+    expect(screen.getByText("40%"))
+      .toBeInTheDocument();
+    expect(screen.getByText("2/5")).toBeInTheDocument();
+  });
+
+  it("applies red colour when completion < 50%", () => {
+    const stats = { total_tasks: 10, completed_tasks: 1, completion_percentage: 10, total_minutes_planned: 0, daily_stats: [], difficulty_stats: [] } as any;
+    render(<WeeklySummaryWidget stats={stats} />);
+    const el = screen.getByText("10%");
+    expect(el.className).toContain("text-red-600");
+  });
+
+  it("applies amber colour when completion is 60%", () => {
+    const stats = { total_tasks: 10, completed_tasks: 6, completion_percentage: 60, total_minutes_planned: 0, daily_stats: [], difficulty_stats: [] } as any;
+    render(<WeeklySummaryWidget stats={stats} />);
+    const el = screen.getByText("60%");
+    expect(el.className).toContain("text-orange-500");
+  });
+
+  it("applies green colour when completion >= 70%", () => {
+    const stats = { total_tasks: 5, completed_tasks: 5, completion_percentage: 100, total_minutes_planned: 0, daily_stats: [], difficulty_stats: [] } as any;
+    render(<WeeklySummaryWidget stats={stats} />);
+    const el = screen.getByText("100%");
+    expect(el.className).toContain("text-green-600");
+  });
 });
