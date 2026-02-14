@@ -3,6 +3,7 @@
 These are thin, read-only serializers used to return the computed
 weekly summary from utility functions or views.
 """
+
 from rest_framework import serializers
 
 

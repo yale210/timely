@@ -16,9 +16,9 @@ const ChartAxes = ({ x, y }: { x: string; y: string }) => (
 );
 
 /**
- *
- * @param root0
- * @param root0.stats
+ * Daily time bar chart.
+ * @param props - Component props.
+ * @param props.stats - Weekly statistics (may be null while loading).
  */
 export default function DailyTimeBarChart({ stats }: { stats: WeeklyStats | null }) {
   if (!stats) return <div>Loading…</div>;

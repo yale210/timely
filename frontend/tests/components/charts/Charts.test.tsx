@@ -40,29 +40,29 @@ describe("Charts", () => {
   });
 
   it("DailyTimeBarChart executes data mapping and renders", () => {
-    const { container } = render(<DailyTimeBarChart stats={sampleStats as any} />);
+    const { container } = render(<DailyTimeBarChart stats={sampleStats} />);
     // Recharts ResponsiveContainer is mocked in setup; check presence
-    expect(container.querySelector(".recharts-responsive-container") || container.querySelector("svg")).toBeTruthy();
+  expect(container.querySelector(".recharts-responsive-container") ?? container.querySelector("svg")).toBeTruthy();
   });
 
   it("CompletionPieChart shows Not Done only when no completed tasks", () => {
-    const notDoneStats = { total_tasks: 3, completed_tasks: 0, completion_percentage: 0, total_minutes_planned: 0, daily_stats: [], difficulty_stats: [] } as any;
+    const notDoneStats: WeeklyStats = { total_tasks: 3, completed_tasks: 0, completion_percentage: 0, total_minutes_planned: 0, daily_stats: [], difficulty_stats: [] };
     const { container } = render(<CompletionPieChart stats={notDoneStats} />);
     expect(container.querySelector("svg")).toBeTruthy();
   });
 
   it("DifficultyBarChart shows no data when stats is null", () => {
-    const { getByText } = render(<DifficultyBarChart stats={null} /> as any);
+    const { getByText } = render(<DifficultyBarChart stats={null} />);
     expect(getByText(/No data/i)).toBeTruthy();
   });
 
   it("DailyTasksBarChart handles null stats gracefully", () => {
-    const { getByText } = render(<DailyTasksBarChart stats={null} /> as any);
+    const { getByText } = render(<DailyTasksBarChart stats={null} />);
     expect(getByText(/Loading/i)).toBeTruthy();
   });
 
   it("DailyTimeBarChart handles null stats gracefully", () => {
-    const { getByText } = render(<DailyTimeBarChart stats={null} /> as any);
+    const { getByText } = render(<DailyTimeBarChart stats={null} />);
     expect(getByText(/Loading/i)).toBeTruthy();
   });
 });

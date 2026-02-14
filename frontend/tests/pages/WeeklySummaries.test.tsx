@@ -32,7 +32,7 @@ describe("WeeklySummaries page", () => {
   });
 
   it("handles service rejection and logs error", async () => {
-    const spy = vi.spyOn(console, "error").mockImplementation(() => {});
+    const spy = vi.spyOn(console, "error").mockImplementation(() => undefined);
     vi.mocked(getWeeklySummary).mockRejectedValueOnce(new Error("fail"));
     render(<MemoryRouter><WeeklySummaries /></MemoryRouter>);
     await waitFor(() => expect(spy).toHaveBeenCalled());

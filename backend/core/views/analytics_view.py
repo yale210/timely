@@ -27,7 +27,11 @@ class WeeklySummaryView(APIView):
     def get(self, request):
         date_str = request.query_params.get("date")
         parsed = _parse_date(date_str)
-        now_dt = timezone.now() if parsed is None else timezone.make_aware(datetime.combine(parsed, datetime.min.time()))
+        now_dt = (
+            timezone.now()
+            if parsed is None
+            else timezone.make_aware(datetime.combine(parsed, datetime.min.time()))
+        )
         stats = calculate_weekly_stats(request.user, now=now_dt)
         serializer = WeeklySummarySerializer(stats)
         return Response(serializer.data)

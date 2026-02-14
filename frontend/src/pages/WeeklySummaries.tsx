@@ -22,7 +22,13 @@ const BackgroundTemplate = () => (
   </div>
 );
 
-/** Renders the week selector and the progress summary card. */
+/**
+ * Renders the week selector and the progress summary card.
+ * @param props - Component props.
+ * @param props.date - Currently selected week identifier.
+ * @param props.setDate - Setter to change the selected week.
+ * @param props.stats - Weekly statistics to display in the widget.
+ */
 const HeaderSection = ({ date, setDate, stats }: { date: string; setDate: (d: string) => void; stats: WeeklyStats | null }) => (
   <div className="flex flex-col items-center gap-6 w-full max-w-md mt-12 mb-20 z-10">
     <div className="relative z-50 w-full">
@@ -36,7 +42,11 @@ const HeaderSection = ({ date, setDate, stats }: { date: string; setDate: (d: st
   </div>
 );
 
-/** Left and right analytics grid: bar chart left, pie/legend right. */
+/**
+ * Left and right analytics grid: bar chart left, pie/legend right.
+ * @param props - Component props.
+ * @param props.stats - Weekly statistics provided to the charts.
+ */
 const AnalyticsGrid = ({ stats }: { stats: WeeklyStats | null }) => {
   const [mode, setMode] = useState("difficulty");
   return (
@@ -60,6 +70,8 @@ const AnalyticsGrid = ({ stats }: { stats: WeeklyStats | null }) => {
 
 /**
  * Small exported panel used by tests: bar chart left, pie right with selector.
+ * @param props - Component props.
+ * @param props.stats - Weekly statistics provided to the panel.
  */
 export function GraphsPanel({ stats }: { stats: WeeklyStats | null }) {
   const [mode, setMode] = useState("difficulty");

@@ -21,7 +21,9 @@ def get_current_week_range(now=None):
     )
 
     # Sunday end
-    end_of_week = start_of_week + timedelta(days=6, hours=23, minutes=59, seconds=59, microseconds=999999)
+    end_of_week = start_of_week + timedelta(
+        days=6, hours=23, minutes=59, seconds=59, microseconds=999999
+    )
     return start_of_week, end_of_week
 
 
@@ -41,7 +43,9 @@ def calculate_weekly_stats(user, now=None):
 
     qs = Task.objects.filter(Q(user=user))
     # Tasks with start_time or deadline inside the week
-    week_q = qs.filter(Q(start_time__range=(start, end)) | Q(deadline__range=(start, end)))
+    week_q = qs.filter(
+        Q(start_time__range=(start, end)) | Q(deadline__range=(start, end))
+    )
 
     total_tasks = week_q.count()
     completed_tasks = week_q.filter(completed=True).count()
@@ -73,11 +77,22 @@ def _get_daily_breakdown(week_q, start):
     days = []
     for i in range(7):
         day_start = start + timedelta(days=i)
-        day_end = day_start + timedelta(hours=23, minutes=59, seconds=59, microseconds=999999)
-        day_q = week_q.filter(Q(start_time__range=(day_start, day_end)) | Q(deadline__range=(day_start, day_end)))
+        day_end = day_start + timedelta(
+            hours=23, minutes=59, seconds=59, microseconds=999999
+        )
+        day_q = week_q.filter(
+            Q(start_time__range=(day_start, day_end))
+            | Q(deadline__range=(day_start, day_end))
+        )
         completed = day_q.filter(completed=True).count()
         minutes = day_q.aggregate(total=Sum("estimated_minutes")).get("total") or 0
-        days.append({"day": day_start.strftime("%a"), "completed_count": completed, "total_minutes": int(minutes)})
+        days.append(
+            {
+                "day": day_start.strftime("%a"),
+                "completed_count": completed,
+                "total_minutes": int(minutes),
+            }
+        )
     return days
 
 

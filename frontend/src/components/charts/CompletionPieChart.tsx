@@ -2,6 +2,8 @@ import { PieChart, Pie, Cell, Legend, Tooltip } from "recharts";
 import type { WeeklyStats } from "@/types";
 import { PRIMARY_BLUE, LIGHT_GREY } from "./constants";
 
+/* eslint-disable jsdoc/require-param */
+
 /**
  * Maps weekly stats to chart data and filters out zero-value segments so a full
  * completion shows as a single solid segment.
@@ -26,8 +28,13 @@ const PieConfigs = () => (
 const LoadingState = () => <div className="w-72 h-72 flex items-center justify-center">Loading…</div>;
 const NoDataCircle = () => <div className="w-72 h-72 rounded-full bg-gray-200" />;
 
-/** Completion Pie showing done vs not done with legend. */
-export default function CompletionPieChart({ stats }: { stats: WeeklyStats | null }) {
+/**
+ * Completion pie showing done vs not done with legend.
+ * @param props - Component props
+ * @param props.stats - Weekly statistics for the current week
+ */
+export default function CompletionPieChart(props: { stats: WeeklyStats | null }) {
+  const { stats } = props;
   if (!stats) return <LoadingState />;
   if (stats.total_tasks === 0) return <NoDataCircle />;
   const chartData = _mapData(stats);

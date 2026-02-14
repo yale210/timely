@@ -12,7 +12,9 @@ class WeeklySummaryViewTests(APITestCase):
     """Tests for the weekly summary API view and date parsing."""
 
     def setUp(self):
-        self.user = get_user_model().objects.create_user(username="tester", password="pwd", email="test@test.com")
+        self.user = get_user_model().objects.create_user(
+            username="tester", password="pwd", email="test@test.com"
+        )
         self.url = reverse("weekly-summary")
 
     def _create_test_task(self, **kwargs):
@@ -34,7 +36,10 @@ class WeeklySummaryViewTests(APITestCase):
         parsed = datetime.strptime(date_str, "%Y-%m-%d").date()
         now_dt = timezone.make_aware(datetime.combine(parsed, datetime.min.time()))
         # create task inside that week
-        self._create_test_task(start_time=now_dt + timezone.timedelta(days=1, hours=2), deadline=now_dt + timezone.timedelta(days=1, hours=3))
+        self._create_test_task(
+            start_time=now_dt + timezone.timedelta(days=1, hours=2),
+            deadline=now_dt + timezone.timedelta(days=1, hours=3),
+        )
         self.client.force_authenticate(user=self.user)
         resp = self.client.get(f"{self.url}?date={date_str}")
         self.assertEqual(resp.status_code, status.HTTP_200_OK)

@@ -38,9 +38,24 @@ class WeeklyStatsTests(TestCase):
     def test_only_incomplete_tasks(self):
         start, end = get_current_week_range()
         # create 3 incomplete tasks inside week
-        self._create_task(start_time=start + timedelta(hours=1), deadline=end - timedelta(hours=1), estimated_minutes=30, completed=False)
-        self._create_task(start_time=start + timedelta(days=1), deadline=end - timedelta(days=1), estimated_minutes=60, completed=False)
-        self._create_task(start_time=start + timedelta(days=2), deadline=end - timedelta(days=2), estimated_minutes=90, completed=False)
+        self._create_task(
+            start_time=start + timedelta(hours=1),
+            deadline=end - timedelta(hours=1),
+            estimated_minutes=30,
+            completed=False,
+        )
+        self._create_task(
+            start_time=start + timedelta(days=1),
+            deadline=end - timedelta(days=1),
+            estimated_minutes=60,
+            completed=False,
+        )
+        self._create_task(
+            start_time=start + timedelta(days=2),
+            deadline=end - timedelta(days=2),
+            estimated_minutes=90,
+            completed=False,
+        )
 
         stats = calculate_weekly_stats(self.user)
         self.assertEqual(stats["total_tasks"], 3)
@@ -50,8 +65,18 @@ class WeeklyStatsTests(TestCase):
 
     def test_only_completed_tasks(self):
         start, end = get_current_week_range()
-        self._create_task(start_time=start + timedelta(hours=2), deadline=end - timedelta(hours=2), estimated_minutes=45, completed=True)
-        self._create_task(start_time=start + timedelta(days=3), deadline=end - timedelta(days=3), estimated_minutes=75, completed=True)
+        self._create_task(
+            start_time=start + timedelta(hours=2),
+            deadline=end - timedelta(hours=2),
+            estimated_minutes=45,
+            completed=True,
+        )
+        self._create_task(
+            start_time=start + timedelta(days=3),
+            deadline=end - timedelta(days=3),
+            estimated_minutes=75,
+            completed=True,
+        )
 
         stats = calculate_weekly_stats(self.user)
         self.assertEqual(stats["total_tasks"], 2)
@@ -62,12 +87,27 @@ class WeeklyStatsTests(TestCase):
     def test_mixed_tasks_and_outside_week(self):
         start, end = get_current_week_range()
         # inside week
-        self._create_task(start_time=start + timedelta(days=1), deadline=start + timedelta(days=1, hours=2), estimated_minutes=20, completed=True)
-        self._create_task(start_time=start + timedelta(days=2), deadline=start + timedelta(days=2, hours=2), estimated_minutes=40, completed=False)
+        self._create_task(
+            start_time=start + timedelta(days=1),
+            deadline=start + timedelta(days=1, hours=2),
+            estimated_minutes=20,
+            completed=True,
+        )
+        self._create_task(
+            start_time=start + timedelta(days=2),
+            deadline=start + timedelta(days=2, hours=2),
+            estimated_minutes=40,
+            completed=False,
+        )
 
         # outside week (should be ignored)
         outside = start - timedelta(days=14)
-        self._create_task(start_time=outside, deadline=outside + timedelta(hours=1), estimated_minutes=999, completed=True)
+        self._create_task(
+            start_time=outside,
+            deadline=outside + timedelta(hours=1),
+            estimated_minutes=999,
+            completed=True,
+        )
 
         stats = calculate_weekly_stats(self.user)
         self.assertEqual(stats["total_tasks"], 2)
@@ -83,7 +123,11 @@ class WeeklyStatsTests(TestCase):
         now = timezone.make_aware(datetime(2026, 2, 16, 12, 0))
         start, end = get_current_week_range(now=now)
         # place a task inside the week
-        self._create_task(start_time=start + timedelta(hours=2), deadline=start + timedelta(hours=3), estimated_minutes=15)
+        self._create_task(
+            start_time=start + timedelta(hours=2),
+            deadline=start + timedelta(hours=3),
+            estimated_minutes=15,
+        )
         stats = calculate_weekly_stats(self.user, now=now)
         self.assertEqual(stats["total_tasks"], 1)
 
@@ -91,8 +135,17 @@ class WeeklyStatsTests(TestCase):
         """Daily stats should contain seven entries starting Monday."""
         start, _ = get_current_week_range()
         # create one task on Monday and one on Sunday
-        self._create_task(start_time=start, deadline=start + timedelta(hours=1), estimated_minutes=10, completed=True)
-        self._create_task(start_time=start + timedelta(days=6), deadline=start + timedelta(days=6, hours=1), estimated_minutes=20)
+        self._create_task(
+            start_time=start,
+            deadline=start + timedelta(hours=1),
+            estimated_minutes=10,
+            completed=True,
+        )
+        self._create_task(
+            start_time=start + timedelta(days=6),
+            deadline=start + timedelta(days=6, hours=1),
+            estimated_minutes=20,
+        )
         stats = calculate_weekly_stats(self.user)
         days = stats["daily_stats"]
         self.assertEqual(len(days), 7)
@@ -102,8 +155,18 @@ class WeeklyStatsTests(TestCase):
         """Difficulty stats must include levels 1..10."""
         start, _ = get_current_week_range()
         # create completed tasks at levels 1 and 10
-        self._create_task(start_time=start, deadline=start + timedelta(hours=1), importance=1, completed=True)
-        self._create_task(start_time=start, deadline=start + timedelta(hours=2), importance=10, completed=True)
+        self._create_task(
+            start_time=start,
+            deadline=start + timedelta(hours=1),
+            importance=1,
+            completed=True,
+        )
+        self._create_task(
+            start_time=start,
+            deadline=start + timedelta(hours=2),
+            importance=10,
+            completed=True,
+        )
         stats = calculate_weekly_stats(self.user)
         diff = stats["difficulty_stats"]
         self.assertEqual(len(diff), 10)
@@ -113,8 +176,14 @@ class WeeklyStatsTests(TestCase):
     def test_total_minutes_calculation(self):
         """Total minutes should sum estimated_minutes for week tasks."""
         start, _ = get_current_week_range()
-        self._create_task(start_time=start, deadline=start + timedelta(hours=1), estimated_minutes=5)
-        self._create_task(start_time=start + timedelta(days=1), deadline=start + timedelta(days=1, hours=1), estimated_minutes=7)
+        self._create_task(
+            start_time=start, deadline=start + timedelta(hours=1), estimated_minutes=5
+        )
+        self._create_task(
+            start_time=start + timedelta(days=1),
+            deadline=start + timedelta(days=1, hours=1),
+            estimated_minutes=7,
+        )
         stats = calculate_weekly_stats(self.user)
         self.assertEqual(stats["total_minutes_planned"], 12)
 

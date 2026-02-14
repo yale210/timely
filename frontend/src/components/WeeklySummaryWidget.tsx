@@ -35,6 +35,8 @@ const NoDataState = () => (
 
 /**
  * Renders the weekly statistics card with fixed width to match dropdown.
+ * @param root0 - Props object
+ * @param root0.stats - Weekly stats or null while loading
  */
 export default function WeeklySummaryWidget({ stats }: { stats: WeeklyStats | null }) {
   if (!stats) return <LoadingState />;

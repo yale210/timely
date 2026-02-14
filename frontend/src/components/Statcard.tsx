@@ -1,15 +1,15 @@
 interface StatcardProps {
-  title : string;
-  value : string[];
+  title: string;
+  value: string[];
 }
 
 /**
- *
- * @param root0
- * @param root0.title
- * @param root0.value
+ * Displays a stat card containing a list of task items.
+ * @param props - The component props.
+ * @param props.title - The card title.
+ * @param props.value - Array of task labels.
  */
-export default function Statcard({title, value} : StatcardProps){
+export default function Statcard({ title, value }: StatcardProps) {
   const task_list = value.map(task =>
     <li key={value.indexOf(task)}>
       <input type="checkbox" value={value.indexOf(task)} />

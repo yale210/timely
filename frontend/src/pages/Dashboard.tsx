@@ -2,9 +2,8 @@ import { Statcard } from "../components/index"
 import { CalendarPage } from "./index"
 
 
-
 /**
- *
+ * Simple dashboard page — shows quick stats and the calendar overview.
  */
 export default function Dashboard(){
   return(
