@@ -2,56 +2,99 @@ import { useState, useEffect } from "react";
 import { Navbar, Footer, WeeklySummaryWidget } from "@/components";
 import { getWeeklySummary } from "@/services/statsService";
 import { getPastWeeks } from "@/utils/dateUtils";
-import { type WeeklyStats } from "@/types";
+import type { WeeklyStats } from "@/types";
+import CompletionPieChart from "@/components/charts/CompletionPieChart";
+import DifficultyBarChart from "@/components/charts/DifficultyBarChart";
+import DailyTasksBarChart from "@/components/charts/DailyTasksBarChart";
+import DailyTimeBarChart from "@/components/charts/DailyTimeBarChart";
 
 const weekOptions = getPastWeeks(12);
 
-const WeekSelector = ({ date, onChange }: { date: string; onChange: (d: string) => void }) => (
-  <select
-    value={date}
-    onChange={(e) => onChange(e.target.value)}
-    className="p-2 border border-gray-300 rounded-md shadow-sm w-full max-w-xs"
-  >
-    {weekOptions.map((opt) => (
-      <option key={opt.value} value={opt.value}>
-        {opt.label}
-      </option>
-    ))}
-  </select>
+/** Renders the week selector and the progress summary card. */
+const HeaderSection = ({ date, setDate, stats }: { date: string; setDate: (d: string) => void; stats: WeeklyStats | null }) => (
+  <div className="flex flex-col items-center gap-6 w-full max-w-md mt-12 mb-20 z-10">
+    <div className="relative z-50 w-full">
+      <select value={date} onChange={(e) => setDate(e.target.value)} className="p-2 border border-gray-300 rounded-md shadow-sm w-full">
+        {weekOptions.map((o) => (
+          <option key={o.value} value={o.value}>{o.label}</option>
+        ))}
+      </select>
+    </div>
+    <WeeklySummaryWidget stats={stats} />
+  </div>
 );
 
+/** Left and right analytics grid: bar chart left, pie/legend right. */
+const AnalyticsGrid = ({ stats }: { stats: WeeklyStats | null }) => {
+  const [mode, setMode] = useState("difficulty");
+  return (
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-32 mx-auto w-full max-w-[1400px] justify-between">
+      <div>
+        <div className="relative z-50 mb-6">
+          <select value={mode} onChange={(e) => setMode(e.target.value)} className="p-2 border rounded w-full max-w-xs bg-white shadow-sm cursor-pointer">
+            <option value="difficulty">Difficulty</option>
+            <option value="tasks">Tasks/Day</option>
+            <option value="time">Time/Day</option>
+          </select>
+        </div>
+        <div className="h-96">{mode === "difficulty" ? <DifficultyBarChart stats={stats} /> : mode === "tasks" ? <DailyTasksBarChart stats={stats} /> : <DailyTimeBarChart stats={stats} />}</div>
+      </div>
+      <div className="flex flex-col items-center justify-center">
+        <div className="h-96 flex items-center justify-center"><CompletionPieChart stats={stats} /></div>
+      </div>
+    </div>
+  );
+};
+
 /**
- * A page for viewing weekly analytics with history.
+ * Small exported panel used by tests: bar chart left, pie right with selector.
  */
-export default function WeeklySummaries() {
+export function GraphsPanel({ stats }: { stats: WeeklyStats | null }) {
+  const [mode, setMode] = useState("difficulty");
+  return (
+    <div className="grid grid-cols-2 gap-6">
+      <div>
+        <div className="relative z-50 mb-6">
+          <label className="block text-xs font-bold text-gray-400 uppercase mb-2">Category</label>
+          <select value={mode} onChange={(e) => setMode(e.target.value)} className="p-2 border border-gray-200 rounded-lg bg-white shadow-sm w-48 cursor-pointer">
+            <option value="difficulty">Difficulty</option>
+            <option value="tasks">Tasks/Day</option>
+            <option value="time">Time/Day</option>
+          </select>
+        </div>
+        <div className="h-96">{mode === "difficulty" ? <DifficultyBarChart stats={stats} /> : mode === "tasks" ? <DailyTasksBarChart stats={stats} /> : <DailyTimeBarChart stats={stats} />}</div>
+      </div>
+      <div className="flex items-center justify-center"><CompletionPieChart stats={stats} /></div>
+    </div>
+  );
+}
+
+function useWeeklyData() {
   const [stats, setStats] = useState<WeeklyStats | null>(null);
   const [date, setDate] = useState<string>(weekOptions[0].value);
-
-  const handleDateChange = (d: string) => {
-    setStats(null); // Show loading state on change
-    setDate(d);
-  };
-
   useEffect(() => {
     let mounted = true;
-    getWeeklySummary(date)
-      .then((s) => {
-        if (mounted) setStats(s);
-      })
-      .catch(console.error);
-    return () => {
-      mounted = false;
-    };
+    getWeeklySummary(date).then((s) => mounted && setStats(s)).catch(console.error);
+    return () => void (mounted = false);
   }, [date]);
+  return { stats, date, setDate };
+}
 
+/**
+ * Main analytics page. Organises header and charts into a grid.
+ */
+export default function WeeklySummaries() {
+  const { stats, date, setDate } = useWeeklyData();
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col">
+    <div className="min-h-screen bg-gray-50 flex flex-col font-sans text-black">
       <Navbar />
-      <main className="flex-grow container mx-auto p-6 flex flex-col items-center justify-center gap-8">
-        <WeekSelector date={date} onChange={handleDateChange} />
-        <div className="w-full max-w-lg">
-          <WeeklySummaryWidget stats={stats} />
-        </div>
+      <main className="flex-grow flex flex-col items-center pt-24 pb-12 px-8 gap-16">
+        <HeaderSection date={date} setDate={setDate} stats={stats} />
+        <section className="w-full">
+          <div className="mx-auto w-full max-w-[1400px]">
+            <AnalyticsGrid stats={stats} />
+          </div>
+        </section>
       </main>
       <Footer />
     </div>

@@ -54,9 +54,37 @@ def calculate_weekly_stats(user, now=None):
     else:
         completion_percentage = round((completed_tasks / total_tasks) * 100.0, 2)
 
+    # Daily and difficulty breakdowns
+    daily_stats = _get_daily_breakdown(week_q, start)
+    difficulty_stats = _get_difficulty_breakdown(week_q)
+
     return {
         "total_tasks": total_tasks,
         "completed_tasks": completed_tasks,
         "completion_percentage": completion_percentage,
         "total_minutes_planned": int(total_minutes),
+        "daily_stats": daily_stats,
+        "difficulty_stats": difficulty_stats,
     }
+
+
+def _get_daily_breakdown(week_q, start):
+    """Return list for 7 days starting at `start` (Monday)."""
+    days = []
+    for i in range(7):
+        day_start = start + timedelta(days=i)
+        day_end = day_start + timedelta(hours=23, minutes=59, seconds=59, microseconds=999999)
+        day_q = week_q.filter(Q(start_time__range=(day_start, day_end)) | Q(deadline__range=(day_start, day_end)))
+        completed = day_q.filter(completed=True).count()
+        minutes = day_q.aggregate(total=Sum("estimated_minutes")).get("total") or 0
+        days.append({"day": day_start.strftime("%a"), "completed_count": completed, "total_minutes": int(minutes)})
+    return days
+
+
+def _get_difficulty_breakdown(week_q):
+    """Return list of importance levels 1..10 with completed counts."""
+    out = []
+    for level in range(1, 11):
+        c = week_q.filter(importance=level, completed=True).count()
+        out.append({"level": level, "completed_count": c})
+    return out

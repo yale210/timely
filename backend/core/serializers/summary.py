@@ -20,3 +20,6 @@ class WeeklySummarySerializer(serializers.Serializer):
     completed_tasks = serializers.IntegerField()
     completion_percentage = serializers.FloatField()
     total_minutes_planned = serializers.IntegerField()
+    # Breakdown fields returned from utils.stats; keep read-only to avoid write paths
+    daily_stats = serializers.ReadOnlyField()
+    difficulty_stats = serializers.ReadOnlyField()

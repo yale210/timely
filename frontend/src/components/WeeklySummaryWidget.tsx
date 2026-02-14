@@ -1,4 +1,4 @@
-import React from "react";
+import type React from "react";
 import type { WeeklyStats } from "../types";
 
 const LoadingState = () => (
@@ -20,7 +20,11 @@ const NoDataState = () => (
   </div>
 );
 
-/** Renders the weekly statistics card. */
+/**
+ * Renders the weekly statistics card.
+ * @param root0
+ * @param root0.stats
+ */
 export default function WeeklySummaryWidget({ stats }: { stats: WeeklyStats | null }) {
   if (!stats) return <LoadingState />;
   if (stats.total_tasks === 0) return <NoDataState />;
