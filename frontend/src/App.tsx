@@ -1,6 +1,7 @@
+import React from "react"
 import { Routes, Route } from "react-router-dom"
 import RequireAuth from "@/components/RequireAuth"
-import { Home, Login, Signup, Logout, CalendarPage, TaskList, EventList, Gradebook, Dashboard } from "./pages/index"
+import { Home, Login, Signup, Logout, CalendarPage, TaskList, EventList, Gradebook, Dashboard, WeeklySummaries } from "./pages/index"
 
 /**
  * The root component of the application which organises the routing logic.
@@ -42,6 +43,12 @@ export default function App() {
         <RequireAuth>
           <Dashboard />
         </RequireAuth>} 
+      />
+
+      <Route path="/weekly-summaries" element={
+        <RequireAuth>
+          <React.Suspense fallback={null}><WeeklySummaries /></React.Suspense>
+        </RequireAuth>}
       />
 
     </Routes>

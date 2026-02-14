@@ -21,8 +21,8 @@ describe("statsService", () => {
       total_minutes_planned: 90,
     };
     const spy = vi.spyOn(api, "get").mockResolvedValue({ data: mock });
-    const result = await statsService.getWeeklySummary();
-    expect(spy).toHaveBeenCalledWith("/api/stats/weekly/");
+  const result = await statsService.getWeeklySummary();
+  expect(spy).toHaveBeenCalledWith("/api/stats/weekly/", { params: {} });
     expect(result).toEqual(mock);
   });
 });

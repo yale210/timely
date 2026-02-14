@@ -11,6 +11,7 @@ const authedNavigation = [
     { name: 'Tasks', href: '/tasks' },
     { name: 'Events', href: '/events' },
     { name: 'Gradebook', href: '/gradebook' },
+    { name: 'Weekly Summaries', href: '/weekly-summaries' },
 ]
 
 const guestNavigation = [
