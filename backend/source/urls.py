@@ -24,8 +24,8 @@ from core.views import (
     PreferenceViewSet,
     GradeViewSet,
     CategoryViewSet,
+    WeeklySummaryView,
 )
-from core.views.analytics_view import WeeklySummaryView
 
 
 router = DefaultRouter()
