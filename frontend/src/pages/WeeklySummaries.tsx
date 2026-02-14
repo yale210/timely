@@ -53,8 +53,8 @@ export function GraphsPanel({ stats }: { stats: WeeklyStats | null }) {
   const [mode, setMode] = useState("difficulty");
   return (
     <div className="grid grid-cols-2 gap-6">
-      <div>
-        <div className="relative z-50 mb-6">
+      <div className="pl-8">
+        <div className="relative z-50 mb-3">
           <label className="block text-xs font-bold text-gray-400 uppercase mb-2">Category</label>
           <select value={mode} onChange={(e) => setMode(e.target.value)} className="p-2 border border-gray-200 rounded-lg bg-white shadow-sm w-48 cursor-pointer">
             <option value="difficulty">Difficulty</option>

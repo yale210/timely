@@ -21,16 +21,14 @@ const NoDataState = () => (
 );
 
 /**
- * Renders the weekly statistics card.
- * @param root0
- * @param root0.stats
+ * Renders the weekly statistics card with fixed width to match dropdown.
  */
 export default function WeeklySummaryWidget({ stats }: { stats: WeeklyStats | null }) {
   if (!stats) return <LoadingState />;
   if (stats.total_tasks === 0) return <NoDataState />;
 
   return (
-    <div className="rounded-lg bg-white p-6 shadow-sm ring-1 ring-gray-900/5">
+    <div className="rounded-lg bg-white p-6 shadow-sm ring-1 ring-gray-900/5 w-full max-w-xs">
       <Header percentage={stats.completion_percentage} />
       <div className="flex flex-col gap-2">
         <StatRow label="Tasks Completed" value={`${stats.completed_tasks}/${stats.total_tasks}`} />
