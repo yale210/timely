@@ -4,10 +4,10 @@ interface StatcardProps {
 }
 
 /**
- * Displays a stat card containing a list of task items.
- * @param props - The component props.
- * @param props.title - The card title.
- * @param props.value - Array of task labels.
+ * Renders a stat card with a title and a checklist of values.
+ * @param props - The properties for the Statcard component.
+ * @param props.title - The heading displayed at the top of the card.
+ * @param props.value - The list of items rendered as a checkbox list.
  */
 export default function Statcard({ title, value }: StatcardProps) {
   const task_list = value.map(task =>

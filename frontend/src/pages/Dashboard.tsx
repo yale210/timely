@@ -3,7 +3,7 @@ import { CalendarPage } from "./index"
 
 
 /**
- * Simple dashboard page — shows quick stats and the calendar overview.
+ * Renders the main dashboard page with stat cards and an embedded calendar.
  */
 export default function Dashboard(){
   return(

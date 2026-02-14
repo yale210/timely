@@ -4,7 +4,7 @@ import AppLayout from "../layouts/AppLayout";
 import * as eventService from "../services/eventService";
 import * as taskService from "../services/taskService";
 import { type Event, type Category, type EventSubmission } from "../types";
-import { UnifiedSidebar, EventCard } from "../components";
+import { EventSidebar, EventCard } from "../components";
 import moment from "moment";
 
 /**
@@ -437,18 +437,16 @@ const EventList = () => {
         </button>
       </div>
 
-      <UnifiedSidebar
+      <EventSidebar
         isOpen={isSidebarOpen}
         onClose={() => {
           setIsSidebarOpen(false);
           setSelectedEvent(undefined);
         }}
-        initialMode="event"
         categories={categories}
-        initialData={selectedEvent}
-        onSubmitTask={() => { /* Not used */ }}
-        onSubmitEvent={(data) => { void handleSubmitEvent(data); }}
+        onSubmit={(data) => { void handleSubmitEvent(data); }}
         onDelete={() => { void handleDeleteEvent(); }}
+        initialData={selectedEvent}
       />
     </AppLayout>
   );

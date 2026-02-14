@@ -21,21 +21,20 @@ window.ResizeObserver = ResizeObserver;
 interface MockSidebarProps {
   isOpen: boolean;
   onClose: () => void;
-  onSubmitEvent: (data: EventSubmission) => void;
+  onSubmit: (data: EventSubmission) => void;
   onDelete?: () => void;
   initialData?: Event;
 }
 
-// Mock UnifiedSidebar to avoid testing it here
 vi.mock("@/components", async () => {
   const actual = await vi.importActual("@/components");
   return {
     ...actual,
-    UnifiedSidebar: vi.fn(({ isOpen, onClose, onSubmitEvent, onDelete, initialData }: MockSidebarProps) => (
+    EventSidebar: vi.fn(({ isOpen, onClose, onSubmit, onDelete, initialData }: MockSidebarProps) => (
       isOpen ? (
         <div data-testid="mock-sidebar">
           <button onClick={onClose}>Close</button>
-          <button onClick={() => onSubmitEvent({ title: 'New Event' })}>Submit</button>
+          <button onClick={() => onSubmit({ title: 'New Event' })}>Submit</button>
           {initialData && onDelete && <button onClick={onDelete}>Delete</button>}
         </div>
       ) : null
