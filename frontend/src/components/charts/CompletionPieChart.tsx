@@ -2,11 +2,10 @@ import { PieChart, Pie, Cell, Legend, Tooltip } from "recharts";
 import type { WeeklyStats } from "@/types";
 import { PRIMARY_BLUE, LIGHT_GREY } from "./constants";
 
-/* eslint-disable jsdoc/require-param */
-
 /**
  * Maps weekly stats to chart data and filters out zero-value segments so a full
  * completion shows as a single solid segment.
+ * @param stats - The weekly statistics data used to generate chart segments.
  */
 function _mapData(stats: WeeklyStats) {
   const done = stats.completed_tasks;
