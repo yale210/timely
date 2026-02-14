@@ -25,6 +25,7 @@ from core.views import (
     GradeViewSet,
     CategoryViewSet,
 )
+from core.views.analytics_view import WeeklySummaryView
 
 
 router = DefaultRouter()
@@ -36,6 +37,7 @@ router.register(r"preferences", PreferenceViewSet, basename="preference")
 
 urlpatterns = [
     path("api/", include(router.urls)),
+    path("api/stats/weekly/", WeeklySummaryView.as_view(), name="weekly-summary"),
     path("api/admin/", admin.site.urls),
     path("api/authentication/", include("authentication.urls")),
 ]
