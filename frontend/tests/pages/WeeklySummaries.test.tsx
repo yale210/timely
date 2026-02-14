@@ -11,8 +11,8 @@ import WeeklySummaries from "@/pages/WeeklySummaries";
 
 describe("WeeklySummaries page", () => {
   it("fetches data on mount", async () => {
-  (getWeeklySummary as any).mockResolvedValue({ total_tasks: 0, completed_tasks: 0, completion_percentage: 0, total_minutes_planned: 0 });
-  render(<MemoryRouter><WeeklySummaries /></MemoryRouter>);
-  await waitFor(() => expect(getWeeklySummary).toHaveBeenCalled());
+    vi.mocked(getWeeklySummary).mockResolvedValue({ total_tasks: 0, completed_tasks: 0, completion_percentage: 0, total_minutes_planned: 0 });
+    render(<MemoryRouter><WeeklySummaries /></MemoryRouter>);
+    await waitFor(() => expect(getWeeklySummary).toHaveBeenCalled());
   });
 });
