@@ -82,7 +82,7 @@ def _get_daily_breakdown(week_q, start):
     A task is assigned to at most one day:
       - If start_time is set, the task is counted on the day of start_time.
       - If start_time is NULL, the task is counted on the day of deadline.
-          
+
     """
     days = []
     for i in range(7):
