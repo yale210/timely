@@ -36,7 +36,6 @@ describe("eventService", () => {
     title: "Test Event",
     start_time: new Date().toISOString(),
     end_time: new Date(Date.now() + 3600000).toISOString(),
-    importance: 5,
     categories: [],
     reminders: []
   }
@@ -52,7 +51,6 @@ describe("eventService", () => {
   it("createEvent should call axios.post and return created event", async () => {
     const data: EventSubmission = {
       title: "New Event",
-      importance: 5,
       start_time: new Date().toISOString(),
       end_time: new Date(Date.now() + 3600000).toISOString()
     }

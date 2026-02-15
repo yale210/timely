@@ -23,7 +23,7 @@ const localizer = momentLocalizer(moment);
  * @returns The rendered calendar page component.
  */
 
-type CalendarEntry = {
+interface CalendarEntry {
   id: number;
   title: string;
   start: Date;
@@ -154,9 +154,7 @@ const CalendarPage = () => {
 
   const handleSelectEvent = (entry: CalendarEntry) => {
     if (entry.kind==="task") {
-      const task = tasks.find((t) => {
-        t.id===entry.sourceId
-      });
+      const task = tasks.find((t) =>t.id===entry.sourceId);
       if (task) {
         setSidebarMode("task");
         setSelectedItem(task);
@@ -164,9 +162,7 @@ const CalendarPage = () => {
       }
       return;
     }
-    const event = events.find((ev) => {
-      ev.id===entry.sourceId
-    });
+    const event = events.find((ev) => ev.id===entry.sourceId);
     if (event) {
       setSidebarMode("event");
       setSelectedItem(event);
@@ -214,7 +210,7 @@ const CalendarPage = () => {
 
   const handleDeleteSelected = async () => {
     try {
-      if (!selectedItem || !selectedItem.id) {
+      if (!selectedItem?.id) {
         console.error("There is either no item, or its id is not valid.");
         return ;
       }
@@ -344,7 +340,7 @@ const CalendarPage = () => {
 
         <main className="flex-grow flex overflow-hidden relative p-4 bg-white">
           <div className="flex-grow bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-            <Calendar
+            <Calendar<CalendarEntry>
               localizer={localizer}
               events={calendarEntries}
               view={view}
@@ -354,18 +350,11 @@ const CalendarPage = () => {
               selectable
               onSelectSlot={handleSelectSlot}
               onSelectEvent={(e) => {
-                handleSelectEvent(e as CalendarEntry)
+                handleSelectEvent(e)
               }}
               toolbar={false}
               className="h-full"
               eventPropGetter={(event: CalendarEntry) => {
-                /*className:
-                  "bg-blue-100 text-blue-700 font-medium border-l-4 border-blue-500 rounded-md px-2 py-1 text-xs",
-                style: {
-                  backgroundColor: undefined,
-                  color: undefined,
-                  border: undefined,
-                },*/
                 const className=[
                   "event-slot",
                   event.repeat ? "is-repeat": "",

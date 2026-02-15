@@ -6,6 +6,7 @@ from core.serializers import GradeSerializer
 
 
 class GradeViewSet(viewsets.ModelViewSet):
+    queryset = Grade.objects.none()
     serializer_class = GradeSerializer
     permission_classes = [IsAuthenticated]
 
