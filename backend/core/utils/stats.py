@@ -28,15 +28,19 @@ def get_current_week_range(now=None):
 
 
 def calculate_weekly_stats(user, now=None):
-    """Calculate summary stats for the given user's current week.
+    """Calculate summary stats for the week containing the given 'now' datetime.
+
+    If 'now' is None, the current week's statistics are calculated.
 
     Returned dict:
       - total_tasks: int
       - completed_tasks: int
       - completion_percentage: float (0.0-100.0)
       - total_minutes_planned: int
+      - daily_stats: list of dicts with day breakdowns (completed count and total minutes)
+      - difficulty_stats: list of dicts with completed task counts per importance level (1-10)
 
-    The function considers a task to belong to the week if its start_time
+    A task is included in the week's overall statistics if its start_time
     or deadline falls within the week's inclusive start/end range.
     """
     start, end = get_current_week_range(now=now)
