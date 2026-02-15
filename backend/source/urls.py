@@ -24,8 +24,9 @@ from core.views import (
     PreferenceViewSet,
     GradeViewSet,
     CategoryViewSet,
+    
 )
-
+from core.views.export_view import ExportView
 
 router = DefaultRouter()
 router.register(r"tasks", TaskViewSet, basename="task")
@@ -38,4 +39,5 @@ urlpatterns = [
     path("api/", include(router.urls)),
     path("api/admin/", admin.site.urls),
     path("api/authentication/", include("authentication.urls")),
+    path("api/export/", ExportView.as_view()),
 ]
