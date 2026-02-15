@@ -48,18 +48,18 @@ const HeaderSection = ({ date, setDate, stats }: { date: string; setDate: (d: st
  * @param props.stats - Weekly statistics provided to the charts.
  */
 const AnalyticsGrid = ({ stats }: { stats: WeeklyStats | null }) => {
-  const [mode, setMode] = useState("difficulty");
+  const [mode, setMode] = useState("importance");
   return (
     <div className="relative z-10 grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-32 mx-auto w-full max-w-[1400px] justify-between">
       <div>
         <div className="relative z-50 mb-6">
           <select value={mode} onChange={(e) => setMode(e.target.value)} className="p-2 border rounded w-full max-w-xs bg-white shadow-sm cursor-pointer">
-            <option value="difficulty">Difficulty</option>
+            <option value="importance">Importance</option>
             <option value="tasks">Tasks/Day</option>
             <option value="time">Time/Day</option>
           </select>
         </div>
-        <div className="h-96">{mode === "difficulty" ? <DifficultyBarChart stats={stats} /> : mode === "tasks" ? <DailyTasksBarChart stats={stats} /> : <DailyTimeBarChart stats={stats} />}</div>
+        <div className="h-96">{mode === "importance" ? <DifficultyBarChart stats={stats} /> : mode === "tasks" ? <DailyTasksBarChart stats={stats} /> : <DailyTimeBarChart stats={stats} />}</div>
       </div>
       <div className="flex flex-col items-center justify-center">
         <div className="h-96 flex items-center justify-center"><CompletionPieChart stats={stats} /></div>
@@ -74,19 +74,19 @@ const AnalyticsGrid = ({ stats }: { stats: WeeklyStats | null }) => {
  * @param props.stats - Weekly statistics provided to the panel.
  */
 export function GraphsPanel({ stats }: { stats: WeeklyStats | null }) {
-  const [mode, setMode] = useState("difficulty");
+  const [mode, setMode] = useState("importance");
   return (
     <div className="grid grid-cols-2 gap-6">
       <div className="pl-8">
         <div className="relative z-50 mb-3">
           <label className="block text-xs font-bold text-gray-400 uppercase mb-2">Category</label>
           <select value={mode} onChange={(e) => setMode(e.target.value)} className="p-2 border border-gray-200 rounded-lg bg-white shadow-sm w-48 cursor-pointer">
-            <option value="difficulty">Difficulty</option>
+            <option value="importance">Importance</option>
             <option value="tasks">Tasks/Day</option>
             <option value="time">Time/Day</option>
           </select>
         </div>
-        <div className="h-96">{mode === "difficulty" ? <DifficultyBarChart stats={stats} /> : mode === "tasks" ? <DailyTasksBarChart stats={stats} /> : <DailyTimeBarChart stats={stats} />}</div>
+        <div className="h-96">{mode === "importance" ? <DifficultyBarChart stats={stats} /> : mode === "tasks" ? <DailyTasksBarChart stats={stats} /> : <DailyTimeBarChart stats={stats} />}</div>
       </div>
       <div className="flex items-center justify-center"><CompletionPieChart stats={stats} /></div>
     </div>

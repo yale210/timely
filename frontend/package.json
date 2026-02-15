@@ -11,7 +11,7 @@
     "client": "npm run dev",
     "server": "python ../backend/manage.py runserver",
     "main": "concurrently \"npm run server\" \"npm run client\"",
-  "test": "vitest run",
+    "test": "vitest run",
     "test:ui": "vitest --ui"
   },
   "dependencies": {
