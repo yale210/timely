@@ -72,12 +72,18 @@ def calculate_weekly_stats(user, now=None):
         "completion_percentage": completion_percentage,
         "total_minutes_planned": int(total_minutes),
         "daily_stats": daily_stats,
-    "importance_stats": importance_stats,
+        "importance_stats": importance_stats,
     }
 
 
 def _get_daily_breakdown(week_q, start):
-    """Return list for 7 days starting at `start` (Monday)."""
+    """Return list for 7 days starting at `start` (Monday).
+
+    A task is assigned to at most one day:
+      - If start_time is set, the task is counted on the day of start_time.
+      - If start_time is NULL, the task is counted on the day of deadline.
+          
+    """
     days = []
     for i in range(7):
         day_start = start + timedelta(days=i)
@@ -86,7 +92,7 @@ def _get_daily_breakdown(week_q, start):
         )
         day_q = week_q.filter(
             Q(start_time__range=(day_start, day_end))
-            | Q(deadline__range=(day_start, day_end))
+            | Q(start_time__isnull=True, deadline__range=(day_start, day_end))
         )
         completed = day_q.filter(completed=True).count()
         minutes = day_q.aggregate(total=Sum("estimated_minutes")).get("total") or 0
