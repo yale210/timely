@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest"
 import { render, screen, fireEvent, waitFor, cleanup } from "@testing-library/react"
-import { MemoryRouter, useNavigate } from "react-router-dom"
+import { MemoryRouter } from "react-router-dom"
 import Signup from "@/pages/Authentication/Signup"
 import { authService } from "@/services/authService"
 import "@testing-library/jest-dom/vitest"
