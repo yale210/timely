@@ -1,4 +1,3 @@
-import React from "react"
 import { Routes, Route } from "react-router-dom"
 import RequireAuth from "@/components/RequireAuth"
 import { Home, Login, Signup, Logout, CalendarPage, TaskList, EventList, Gradebook, Dashboard, WeeklySummaries } from "./pages/index"
@@ -47,7 +46,7 @@ export default function App() {
 
       <Route path="/weekly-summaries" element={
         <RequireAuth>
-          <React.Suspense fallback={null}><WeeklySummaries /></React.Suspense>
+          <WeeklySummaries />
         </RequireAuth>}
       />
 
