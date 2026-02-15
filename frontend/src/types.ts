@@ -67,7 +67,6 @@ export interface Event {
   start_time: string;
   end_time: string;
   categories: Category[];
-  importance: number;
   recurrence_interval?: "daily" | "weekly" | "monthly" | "yearly" | null;
   recurrence_end?: string | null;
   reminders: EventReminder[];

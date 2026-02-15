@@ -1,4 +1,7 @@
+from typing import Any
+
 from rest_framework import serializers
+from drf_spectacular.utils import extend_schema_field
 
 from core.models import Grade
 
@@ -24,10 +27,12 @@ class GradeSerializer(serializers.ModelSerializer):
         ]
         read_only_fields = ["user", "percentage", "time_spent_minutes"]
 
-    def get_category_name(self, obj):
+    @extend_schema_field(serializers.CharField(allow_null=True))
+    def get_category_name(self, obj: Any) -> str | None:
         return obj.category.text if obj.category else None
 
-    def get_time_spent_minutes(self, obj):
+    @extend_schema_field(serializers.IntegerField(min_value=0))
+    def get_time_spent_minutes(self, obj: Any) -> int:
         return obj.get_time_spent_minutes()
     
     def create(self, validated_data):

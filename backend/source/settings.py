@@ -66,8 +66,10 @@ CSRF_TRUSTED_ORIGINS = [
     "http://localhost:3000",
     "http://127.0.0.1:5173",
 ]
+
+
 if DEBUG:
-    ALLOWED_HOSTS.extend(["127.0.0.1", "localhost"])
+    ALLOWED_HOSTS.extend(["127.0.0.1", "localhost", "0.0.0.0", "[::1]"])
 else:
     ALLOWED_HOSTS.append("timely.subhan.work")
     CSRF_TRUSTED_ORIGINS = ["https://timely.subhan.work"]
@@ -89,6 +91,7 @@ INSTALLED_APPS = [
     "core.apps.CoreConfig",
     # Extra apps
     "rest_framework",
+    "drf_spectacular",
     "django_filters",
     "corsheaders",
     "knox",
@@ -189,6 +192,12 @@ REST_FRAMEWORK = {
         if DEBUG
         else ("rest_framework.renderers.JSONRenderer",)
     ),
+}
+
+SPECTACULAR_SETTINGS = {
+    "TITLE": "Timely API",
+    "DESCRIPTION": "OpenAPI schema for Timely backend",
+    "VERSION": "1.0.0",
 }
 
 REST_KNOX = {

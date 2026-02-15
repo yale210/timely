@@ -3,6 +3,7 @@ export { default as Footer } from "./Footer";
 export { default as TaskForm } from "./TaskForm";
 export { default as EventForm } from "./EventForm";
 export { default as TaskSidebar } from "./TaskSidebar";
+export { default as EventSidebar } from "./EventSidebar";
 export { default as UnifiedSidebar } from "./UnifiedSidebar";
 export { default as TaskCard } from "./TaskCard";
 export { default as EventCard } from "./EventCard";

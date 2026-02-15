@@ -1,7 +1,17 @@
 from django.contrib.auth import login
 from django.utils import timezone
-from knox.views import LoginView
-from rest_framework import status
+from drf_spectacular.utils import (
+    OpenApiResponse,
+    extend_schema,
+    extend_schema_view,
+    inline_serializer,
+)
+from knox.views import (
+    LoginView,
+    LogoutAllView as KnoxLogoutAllView,
+    LogoutView as KnoxLogoutView,
+)
+from rest_framework import serializers, status
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -13,6 +23,7 @@ class RegisterView(APIView):
     serializer_class = RegisterSerializer
     permission_classes = (AllowAny,)
 
+    @extend_schema(request=RegisterSerializer, responses={201: RegisterSerializer})
     def post(self, request):
         serializer = self.serializer_class(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -39,8 +50,40 @@ class LoginAPIView(LoginView):
         return Response(responses.data, status=status.HTTP_200_OK)
 
 
+@extend_schema_view(
+    post=extend_schema(
+        request=None,
+        responses={204: OpenApiResponse(description="Successfully logged out.")},
+    )
+)
+class LogoutAPIView(KnoxLogoutView):
+    pass
+
+
+@extend_schema_view(
+    post=extend_schema(
+        request=None,
+        responses={
+            204: OpenApiResponse(
+                description="Successfully logged out from all sessions."
+            )
+        },
+    )
+)
+class LogoutAllAPIView(KnoxLogoutAllView):
+    pass
+
+
 class TestPermissionView(APIView):
     permission_classes = (IsAuthenticated,)
 
+    @extend_schema(
+        responses={
+            200: inline_serializer(
+                name="TestPermissionResponseSerializer",
+                fields={"message": serializers.CharField()},
+            )
+        }
+    )
     def get(self, request):
         return Response({"message": "You are authenticated!: " + str(request.user)})
