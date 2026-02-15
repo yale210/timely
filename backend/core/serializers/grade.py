@@ -34,3 +34,7 @@ class GradeSerializer(serializers.ModelSerializer):
     @extend_schema_field(serializers.IntegerField(min_value=0))
     def get_time_spent_minutes(self, obj: Any) -> int:
         return obj.get_time_spent_minutes()
+
+    def create(self, validated_data):
+        validated_data["user"] = self.context["request"].user
+        return super().create(validated_data)

@@ -63,7 +63,7 @@ export const authStore = {
 import api from "./api"
 
 export const authService = {
-  async register(payload: { username: string; email: string; password: string }) {
+  async register(payload: { username: string; email: string; password: string; password2: string; }) {
     const { data } = await api.post<AuthResponse>("/api/authentication/register/", payload)
 
     const token = getTokenFromResponse(data)
