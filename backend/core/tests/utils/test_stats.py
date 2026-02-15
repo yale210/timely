@@ -151,8 +151,8 @@ class WeeklyStatsTests(TestCase):
         self.assertEqual(len(days), 7)
         self.assertEqual(days[0]["day"], start.strftime("%a"))
 
-    def test_difficulty_breakdown_contains_ten_levels(self):
-        """Difficulty stats must include levels 1..10."""
+    def test_importance_breakdown_contains_ten_levels(self):
+        """Importance stats must include levels 1..10."""
         start, _ = get_current_week_range()
         # create completed tasks at levels 1 and 10
         self._create_task(
@@ -168,7 +168,7 @@ class WeeklyStatsTests(TestCase):
             completed=True,
         )
         stats = calculate_weekly_stats(self.user)
-        diff = stats["difficulty_stats"]
+        diff = stats["importance_stats"]
         self.assertEqual(len(diff), 10)
         self.assertEqual(diff[0]["level"], 1)
         self.assertEqual(diff[-1]["level"], 10)

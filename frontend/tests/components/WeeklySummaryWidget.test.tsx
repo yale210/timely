@@ -26,7 +26,7 @@ describe("WeeklySummaryWidget", () => {
             { day: "Sat", completed_count: 0, total_minutes: 0 },
             { day: "Sun", completed_count: 0, total_minutes: 0 },
           ],
-          difficulty_stats: Array.from({ length: 10 }, () => ({ level: 1, completed_count: 0 })),
+          importance_stats: Array.from({ length: 10 }, () => ({ level: 1, completed_count: 0 })),
         }}
       />
     );
@@ -34,7 +34,7 @@ describe("WeeklySummaryWidget", () => {
   });
 
   it("renders full statistics when valid data is provided", () => {
-    const stats: WeeklyStats = { total_tasks: 5, completed_tasks: 2, completion_percentage: 40, total_minutes_planned: 100, daily_stats: [], difficulty_stats: [] };
+  const stats: WeeklyStats = { total_tasks: 5, completed_tasks: 2, completion_percentage: 40, total_minutes_planned: 100, daily_stats: [], importance_stats: [] };
     render(<WeeklySummaryWidget stats={stats} />);
     expect(screen.getByText("40%"))
       .toBeInTheDocument();
@@ -42,21 +42,21 @@ describe("WeeklySummaryWidget", () => {
   });
 
   it("applies red colour when completion < 50%", () => {
-    const stats: WeeklyStats = { total_tasks: 10, completed_tasks: 1, completion_percentage: 10, total_minutes_planned: 0, daily_stats: [], difficulty_stats: [] };
+  const stats: WeeklyStats = { total_tasks: 10, completed_tasks: 1, completion_percentage: 10, total_minutes_planned: 0, daily_stats: [], importance_stats: [] };
     render(<WeeklySummaryWidget stats={stats} />);
     const el = screen.getByText("10%");
     expect(el.className).toContain("text-red-600");
   });
 
   it("applies amber colour when completion is 60%", () => {
-    const stats: WeeklyStats = { total_tasks: 10, completed_tasks: 6, completion_percentage: 60, total_minutes_planned: 0, daily_stats: [], difficulty_stats: [] };
+  const stats: WeeklyStats = { total_tasks: 10, completed_tasks: 6, completion_percentage: 60, total_minutes_planned: 0, daily_stats: [], importance_stats: [] };
     render(<WeeklySummaryWidget stats={stats} />);
     const el = screen.getByText("60%");
     expect(el.className).toContain("text-orange-500");
   });
 
   it("applies green colour when completion >= 70%", () => {
-    const stats: WeeklyStats = { total_tasks: 5, completed_tasks: 5, completion_percentage: 100, total_minutes_planned: 0, daily_stats: [], difficulty_stats: [] };
+  const stats: WeeklyStats = { total_tasks: 5, completed_tasks: 5, completion_percentage: 100, total_minutes_planned: 0, daily_stats: [], importance_stats: [] };
     render(<WeeklySummaryWidget stats={stats} />);
     const el = screen.getByText("100%");
     expect(el.className).toContain("text-green-600");

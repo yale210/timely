@@ -3,12 +3,12 @@ import { describe, it, expect } from "vitest";
 
 import type { WeeklyStats } from "@/types";
 import CompletionPieChart from "@/components/charts/CompletionPieChart";
-import DifficultyBarChart from "@/components/charts/DifficultyBarChart";
+import ImportanceBarChart from "@/components/charts/ImportanceBarChart";
 import DailyTasksBarChart from "@/components/charts/DailyTasksBarChart";
 import DailyTimeBarChart from "@/components/charts/DailyTimeBarChart";
 import { GraphsPanel } from "@/pages/WeeklySummaries";
 
-const emptyStats = { total_tasks: 0, completed_tasks: 0, completion_percentage: 0, total_minutes_planned: 0, daily_stats: [], difficulty_stats: [] } as WeeklyStats;
+const emptyStats = { total_tasks: 0, completed_tasks: 0, completion_percentage: 0, total_minutes_planned: 0, daily_stats: [], importance_stats: [] } as WeeklyStats;
 const sampleStats = {
   total_tasks: 5,
   completed_tasks: 2,
@@ -18,7 +18,7 @@ const sampleStats = {
     { day: "Mon", completed_count: 1, total_minutes: 60 },
     { day: "Tue", completed_count: 0, total_minutes: 0 },
   ],
-  difficulty_stats: [ { level: 1, completed_count: 0 }, { level: 2, completed_count: 2 } ],
+  importance_stats: [ { level: 1, completed_count: 0 }, { level: 2, completed_count: 2 } ],
 } as WeeklyStats;
 
 describe("Charts", () => {
@@ -27,8 +27,8 @@ describe("Charts", () => {
     expect(container.querySelector(".rounded-full")).toBeTruthy();
   });
 
-  it("DifficultyBarChart renders SVG for valid stats", () => {
-    const { container } = render(<DifficultyBarChart stats={sampleStats} />);
+  it("ImportanceBarChart renders SVG for valid stats", () => {
+    const { container } = render(<ImportanceBarChart stats={sampleStats} />);
     expect(container.querySelector("svg")).toBeTruthy();
   });
 
@@ -46,13 +46,13 @@ describe("Charts", () => {
   });
 
   it("CompletionPieChart shows Not Done only when no completed tasks", () => {
-    const notDoneStats: WeeklyStats = { total_tasks: 3, completed_tasks: 0, completion_percentage: 0, total_minutes_planned: 0, daily_stats: [], difficulty_stats: [] };
+  const notDoneStats: WeeklyStats = { total_tasks: 3, completed_tasks: 0, completion_percentage: 0, total_minutes_planned: 0, daily_stats: [], importance_stats: [] };
     const { container } = render(<CompletionPieChart stats={notDoneStats} />);
     expect(container.querySelector("svg")).toBeTruthy();
   });
 
-  it("DifficultyBarChart shows no data when stats is null", () => {
-    const { getByText } = render(<DifficultyBarChart stats={null} />);
+  it("ImportanceBarChart shows no data when stats is null", () => {
+    const { getByText } = render(<ImportanceBarChart stats={null} />);
     expect(getByText(/No data/i)).toBeTruthy();
   });
 

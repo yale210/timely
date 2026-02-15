@@ -3,7 +3,7 @@ import type { WeeklyStats } from "@/types";
 import { PRIMARY_BLUE } from "./constants";
 
 function _map(stats?: WeeklyStats | null) {
-  return (stats?.difficulty_stats ?? []).map((d) => ({ name: String(d.level), value: d.completed_count }));
+  return (stats?.importance_stats ?? []).map((d) => ({ name: String(d.level), value: d.completed_count }));
 }
 
 const ChartAxes = ({ x, y }: { x: string; y: string }) => (
@@ -16,12 +16,12 @@ const ChartAxes = ({ x, y }: { x: string; y: string }) => (
 );
 
 /**
- * Difficulty bar chart.
+ * Importance bar chart.
  * @param props - Component props.
  * @param props.stats - Weekly statistics (may be null while loading).
  */
-export default function DifficultyBarChart({ stats }: { stats: WeeklyStats | null }) {
-  if (!stats?.difficulty_stats) return <div className="h-96 flex items-center">No data...</div>;
+export default function ImportanceBarChart({ stats }: { stats: WeeklyStats | null }) {
+  if (!stats?.importance_stats) return <div className="h-96 flex items-center">No data...</div>;
   return (
     <div className="h-96 w-full pt-4">
       <ResponsiveContainer width="100%" height="100%">

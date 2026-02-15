@@ -38,7 +38,7 @@ def calculate_weekly_stats(user, now=None):
       - completion_percentage: float (0.0-100.0)
       - total_minutes_planned: int
       - daily_stats: list of dicts with day breakdowns (completed count and total minutes)
-      - difficulty_stats: list of dicts with completed task counts per importance level (1-10)
+    - importance_stats: list of dicts with completed task counts per importance level (1-10)
 
     A task is included in the week's overall statistics if its start_time
     or deadline falls within the week's inclusive start/end range.
@@ -62,9 +62,9 @@ def calculate_weekly_stats(user, now=None):
     else:
         completion_percentage = round((completed_tasks / total_tasks) * 100.0, 2)
 
-    # Daily and difficulty breakdowns
+    # Daily and importance breakdowns
     daily_stats = _get_daily_breakdown(week_q, start)
-    difficulty_stats = _get_difficulty_breakdown(week_q)
+    importance_stats = _get_importance_breakdown(week_q)
 
     return {
         "total_tasks": total_tasks,
@@ -72,7 +72,7 @@ def calculate_weekly_stats(user, now=None):
         "completion_percentage": completion_percentage,
         "total_minutes_planned": int(total_minutes),
         "daily_stats": daily_stats,
-        "difficulty_stats": difficulty_stats,
+    "importance_stats": importance_stats,
     }
 
 
@@ -100,7 +100,7 @@ def _get_daily_breakdown(week_q, start):
     return days
 
 
-def _get_difficulty_breakdown(week_q):
+def _get_importance_breakdown(week_q):
     """Return list of importance levels 1..10 with completed counts."""
     out = []
     for level in range(1, 11):

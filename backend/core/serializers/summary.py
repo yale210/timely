@@ -23,4 +23,4 @@ class WeeklySummarySerializer(serializers.Serializer):
     total_minutes_planned = serializers.IntegerField()
     # Breakdown fields returned from utils.stats; keep read-only to avoid write paths
     daily_stats = serializers.ReadOnlyField()
-    difficulty_stats = serializers.ReadOnlyField()
+    importance_stats = serializers.ReadOnlyField()

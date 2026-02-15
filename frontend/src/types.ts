@@ -91,5 +91,5 @@ export interface WeeklyStats {
   completion_percentage: number;
   total_minutes_planned: number;
   daily_stats: { day: string; completed_count: number; total_minutes: number }[];
-  difficulty_stats: { level: number; completed_count: number }[];
+  importance_stats: { level: number; completed_count: number }[];
 }

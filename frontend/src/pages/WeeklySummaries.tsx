@@ -4,7 +4,7 @@ import { getWeeklySummary } from "@/services/statsService";
 import { getPastWeeks } from "@/utils/dateUtils";
 import type { WeeklyStats } from "@/types";
 import CompletionPieChart from "@/components/charts/CompletionPieChart";
-import DifficultyBarChart from "@/components/charts/DifficultyBarChart";
+import ImportanceBarChart from "@/components/charts/ImportanceBarChart";
 import DailyTasksBarChart from "@/components/charts/DailyTasksBarChart";
 import DailyTimeBarChart from "@/components/charts/DailyTimeBarChart";
 
@@ -59,7 +59,7 @@ const AnalyticsGrid = ({ stats }: { stats: WeeklyStats | null }) => {
             <option value="time">Time/Day</option>
           </select>
         </div>
-        <div className="h-96">{mode === "importance" ? <DifficultyBarChart stats={stats} /> : mode === "tasks" ? <DailyTasksBarChart stats={stats} /> : <DailyTimeBarChart stats={stats} />}</div>
+    <div className="h-96">{mode === "importance" ? <ImportanceBarChart stats={stats} /> : mode === "tasks" ? <DailyTasksBarChart stats={stats} /> : <DailyTimeBarChart stats={stats} />}</div>
       </div>
       <div className="flex flex-col items-center justify-center">
         <div className="h-96 flex items-center justify-center"><CompletionPieChart stats={stats} /></div>
@@ -86,7 +86,7 @@ export function GraphsPanel({ stats }: { stats: WeeklyStats | null }) {
             <option value="time">Time/Day</option>
           </select>
         </div>
-        <div className="h-96">{mode === "importance" ? <DifficultyBarChart stats={stats} /> : mode === "tasks" ? <DailyTasksBarChart stats={stats} /> : <DailyTimeBarChart stats={stats} />}</div>
+    <div className="h-96">{mode === "importance" ? <ImportanceBarChart stats={stats} /> : mode === "tasks" ? <DailyTasksBarChart stats={stats} /> : <DailyTimeBarChart stats={stats} />}</div>
       </div>
       <div className="flex items-center justify-center"><CompletionPieChart stats={stats} /></div>
     </div>
