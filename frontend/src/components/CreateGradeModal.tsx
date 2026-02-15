@@ -49,7 +49,8 @@ export default function CreateGradeModal(props: Props) {
 
   //Helper function either returns the matching cookie from the document, or null.
   function getCookie(name: string): string | null {
-    const match=document.cookie.match(new RegExp(`(^| )${name}=([^;]+)`));
+    const regex = new RegExp(`(^| )${name}=([^;]+)`);
+    const match=regex.exec(document.cookie);
     return match ? decodeURIComponent(match[2]) : null;
   }
 
