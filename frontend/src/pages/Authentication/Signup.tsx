@@ -11,6 +11,7 @@ export default function Signup() {
   const [email, setEmail] = useState("")
   const [username, setUsername] = useState("")
   const [password, setPassword] = useState("")
+  const [confirmPassword, setConfirmPassword] = useState("")
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
 
@@ -21,13 +22,54 @@ export default function Signup() {
     setError(null)
     setLoading(true)
 
+    if (password!=confirmPassword){
+      setError("Try again, your passwords did not match.")
+      setLoading(false)
+      return
+    }
+
     void authService
-      .register({ username, email, password })
+      .register({
+        username,
+        email,
+        password,
+        password2: confirmPassword,
+      })
       .then(() => {
         void navigate("/login")
       })
       .catch((err: unknown) => {
-        const message = err instanceof Error ? err.message : "Signup failed"
+        let message = "Signup failed";
+        if (typeof err === "object" && err !== null && "response" in err) {
+          const maybeAxios = err as {
+            response?: {
+              data?: unknown
+            }
+          }
+          const data = maybeAxios.response?.data
+          if (data && typeof data === "object"){
+            const obj= data as Record<string, unknown>;
+            const lines: string[] = []
+
+            for (const [field, value] of Object.entries(obj)) {
+              if (Array.isArray(value)) {
+                const joined = value.filter((v) => typeof v === "string").join(" ")
+                if (joined) {
+                  lines.push(`${field}: ${joined}`)
+                }
+              } else if (typeof value === "string"){
+                lines.push(`${field}: ${value}`)
+              }
+            }
+
+            if (lines.length>0) {
+              message=lines.join("\n")
+            }
+          }
+        } else if (err instanceof Error){
+          message = err.message
+        }
+        //message = err instanceof Error ? err.message : "Signup failed"
         setError(message)
       })
       .finally(() => {
@@ -57,7 +99,7 @@ export default function Signup() {
           <div className="mt-10 sm:mx-auto sm:w-full sm:max-w-sm">
             <form onSubmit={signup} className="space-y-6">
               {error && (
-                <div className="rounded-md bg-red-50 p-3 text-sm text-red-700">
+                <div className="rounded-md bg-red-50 p-3 text-sm text-red-700 whitespace-pre-line">
                   {error}
                 </div>
               )}
@@ -100,6 +142,22 @@ export default function Signup() {
                     required
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
+                    className="block w-full rounded-md bg-white px-3 py-1.5 text-gray-900 outline outline-1 outline-gray-300 focus:outline-2 focus:outline-indigo-600"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label htmlFor="signup-password2" className="block text-sm font-medium text-gray-900">
+                  Confirm password
+                </label>
+                <div className="mt-2">
+                  <input
+                    id="signup-password2"
+                    type="password"
+                    required
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
                     className="block w-full rounded-md bg-white px-3 py-1.5 text-gray-900 outline outline-1 outline-gray-300 focus:outline-2 focus:outline-indigo-600"
                   />
                 </div>

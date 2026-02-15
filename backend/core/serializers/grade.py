@@ -5,6 +5,7 @@ from core.models import Grade
 
 class GradeSerializer(serializers.ModelSerializer):
     category_name = serializers.SerializerMethodField()
+    percentage = serializers.FloatField(read_only=True)
     time_spent_minutes = serializers.SerializerMethodField()
 
     class Meta:
@@ -28,3 +29,7 @@ class GradeSerializer(serializers.ModelSerializer):
 
     def get_time_spent_minutes(self, obj):
         return obj.get_time_spent_minutes()
+    
+    def create(self, validated_data):
+        validated_data["user"] = self.context["request"].user
+        return super().create(validated_data)
