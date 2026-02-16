@@ -155,6 +155,13 @@ const mockTasks: Task[] = [
     estimated_minutes: 60,
     completed: false,
     categories: [],
+    allocation: [
+      {
+        start: new Date("2026-02-12T09:00:00.000Z").toISOString(),
+        end: new Date("2026-02-12T10:00:00.000Z").toISOString(),
+      },
+    ],
+    total_task_allocations: 1,
   },
 ];
 
@@ -304,8 +311,8 @@ describe("CalendarPage (lean tests)", () => {
     });
 
     it("opens sidebar in task mode when clicking a task entry", async () => {
-      await waitFor(() => expect(screen.getByTestId("mock-event-1")).toBeTruthy());
-      fireEvent.click(screen.getByTestId("mock-event-1"));
+      await waitFor(() => expect(screen.getByTestId("mock-event-1000")).toBeTruthy());
+      fireEvent.click(screen.getByTestId("mock-event-1000"));
 
       await waitFor(() => expect(screen.getByTestId("mock-sidebar")).toBeTruthy());
       expect(screen.getByTestId("sidebar-mode").textContent).toBe("task");
@@ -331,8 +338,8 @@ describe("CalendarPage (lean tests)", () => {
     });
 
     it("updates a task when existing task selected then submit-task", async () => {
-      await waitFor(() => expect (screen.getByTestId("mock-event-1")).toBeTruthy());
-      fireEvent.click(screen.getByTestId("mock-event-1"));
+      await waitFor(() => expect(screen.getByTestId("mock-event-1000")).toBeTruthy());
+      fireEvent.click(screen.getByTestId("mock-event-1000"));
       await waitFor(() => expect(screen.getByTestId("mock-sidebar")).toBeTruthy());
 
       fireEvent.click(screen.getByTestId("sidebar-submit-task"));
@@ -364,8 +371,8 @@ describe("CalendarPage (lean tests)", () => {
 
 
     it("deletes task when task selected then delete", async () => {
-      await waitFor(() => expect(screen.getByTestId("mock-event-1")).toBeTruthy());
-      fireEvent.click(screen.getByTestId("mock-event-1"));
+      await waitFor(() => expect(screen.getByTestId("mock-event-1000")).toBeTruthy());
+      fireEvent.click(screen.getByTestId("mock-event-1000"));
       await waitFor(() => expect(screen.getByTestId("mock-sidebar")).toBeTruthy());
 
       fireEvent.click(screen.getByTestId("sidebar-delete"));
