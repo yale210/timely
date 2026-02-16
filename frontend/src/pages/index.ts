@@ -7,4 +7,4 @@ export { default as EventList } from "./EventList";
 export { default as Gradebook } from "./Gradebook";
 export { Notifications } from "./Notifications";
 export { NotificationDetail } from "./NotificationDetail";
-
+export { default as AdminNotifications } from "./AdminNotifications";

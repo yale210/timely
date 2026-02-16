@@ -1,5 +1,5 @@
-import React from 'react';
-import { useNotifications } from '../hooks/useNotifications';
+import type React from 'react';
+import { useNotificationContext } from '../context/NotificationContext';
 import { NotificationCard } from '../components/NotificationCard';
 import { useNavigate } from 'react-router-dom';
 import { type Notification } from '../types/notification';
@@ -14,16 +14,16 @@ export const Notifications: React.FC = () => {
     fetchNotifications, 
     markAllRead,
     markRead
-  } = useNotifications();
+  } = useNotificationContext();
   const navigate = useNavigate();
 
   const handleNotificationClick = (notification: Notification) => {
-    markRead(notification.id);
-    navigate(`/notifications/${notification.id}`);
+    void markRead(notification.id);
+    void navigate(`/notifications/${notification.id}`);
   };
 
   const handleLoadMore = () => {
-    fetchNotifications(page + 1);
+    void fetchNotifications(page + 1);
   };
 
   return (
@@ -31,7 +31,7 @@ export const Notifications: React.FC = () => {
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold text-gray-900">Notifications</h1>
         <button
-          onClick={markAllRead}
+          onClick={() => void markAllRead()}
           className="text-sm font-medium text-indigo-600 hover:text-indigo-500"
         >
           Mark all as read
