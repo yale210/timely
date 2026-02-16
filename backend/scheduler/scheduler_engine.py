@@ -34,9 +34,11 @@ class Scheduler:
 
         self.preference = self._get_preference()
         self.tasks = self._get_unscheduled_tasks()
+        self.scheduled_tasks = self._get_scheduled_tasks()
         self.events = self._get_events()
         self.commutes = self._get_commutes()
         self.special_dates = self._get_special_dates()
+        self._scheduled_blocks: List[Tuple[datetime, datetime]] = []
 
     # ----- data access -------------------------------------------------
     def _get_preference(self):
@@ -52,6 +54,15 @@ class Scheduler:
                 completed=False,
                 allocation=[],
             ).order_by("-importance", "deadline")
+        )
+
+    def _get_scheduled_tasks(self) -> List[Task]:
+        return list(
+            Task.objects.filter(  # type: ignore[query-annotated]
+                user=self.user
+            )
+            .exclude(allocation=[])
+            .order_by("start_time")
         )
 
     def _get_events(self) -> List[Event]:
@@ -127,6 +138,20 @@ class Scheduler:
                 occupied.append(
                     (self._aware(event.start_time), self._aware(event.end_time))
                 )
+
+        for task in self.scheduled_tasks:
+            for slot in (task.allocation or []):
+                try:
+                    start = self._aware(datetime.fromisoformat(slot["start"]))
+                    end = self._aware(datetime.fromisoformat(slot["end"]))
+                except (KeyError, ValueError, TypeError):
+                    continue
+                if start.date() == target_date or end.date() == target_date:
+                    occupied.append((start, end))
+
+        for start, end in self._scheduled_blocks:
+            if start.date() == target_date or end.date() == target_date:
+                occupied.append((start, end))
 
         for commute in self.commutes:
             applies_today = True
@@ -295,5 +320,13 @@ class Scheduler:
             else:
                 result = self._schedule_task_no_split(task, start_date)
             results.append(result)
+            if (
+                result.success
+                and result.scheduled_start is not None
+                and result.scheduled_end is not None
+            ):
+                self._scheduled_blocks.append(
+                    (result.scheduled_start, result.scheduled_end)
+                )
 
         return results
