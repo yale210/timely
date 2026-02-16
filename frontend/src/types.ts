@@ -51,7 +51,8 @@ export interface TaskSubmission extends Omit<Partial<Task>, "categories"> {
  */
 export interface EventReminder {
   id?: number;
-  type: "email" | "popup";
+  send_email: boolean;
+  send_push: boolean;
   minutes_before: number;
 }
 
