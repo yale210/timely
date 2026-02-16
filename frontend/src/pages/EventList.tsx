@@ -4,7 +4,7 @@ import AppLayout from "../layouts/AppLayout";
 import * as eventService from "../services/eventService";
 import * as taskService from "../services/taskService";
 import { type Event, type Category, type EventSubmission } from "../types";
-import { UnifiedSidebar, EventCard } from "../components";
+import { EventSidebar, EventCard } from "../components";
 import moment from "moment";
 
 /**
@@ -22,7 +22,6 @@ const EventList = () => {
   // Sorting and Filtering States
   const [sortBy, setSortBy] = useState<string>("start_time");
   const [filterCategory, setFilterCategory] = useState<number | null>(null);
-  const [filterHighImportance, setFilterHighImportance] = useState(false);
   const [filterRecurring, setFilterRecurring] = useState(false);
 
   const fetchEvents = useCallback(async () => {
@@ -140,10 +139,9 @@ const EventList = () => {
   // Apply filters and sorting
   const filteredEvents = events.filter((e) => {
     const matchesSearch = e.title.toLowerCase().includes(search.toLowerCase());
-    const matchesHighImportance = !filterHighImportance || e.importance >= 8;
     const matchesRecurring = !filterRecurring || e.recurrence_interval !== null;
     const matchesCategory = !filterCategory || e.categories.some((c) => c.id === filterCategory);
-    return matchesSearch && matchesHighImportance && matchesRecurring && matchesCategory;
+    return matchesSearch && matchesRecurring && matchesCategory;
   });
 
   // Expand recurring events for today+upcoming
@@ -153,8 +151,6 @@ const EventList = () => {
   const sortedEvents = [...expandedEvents].sort((a, b) => {
     if (sortBy === "start_time") {
       return new Date(a.start_time).getTime() - new Date(b.start_time).getTime();
-    } else if (sortBy === "-importance") {
-      return b.importance - a.importance;
     } else if (sortBy === "title") {
       return a.title.localeCompare(b.title);
     }
@@ -242,21 +238,6 @@ const EventList = () => {
                   <MenuItem>
                     {({ focus }) => (
                       <button
-                        onClick={() => setFilterHighImportance(!filterHighImportance)}
-                        className={`${
-                          focus ? "bg-orange-50 text-orange-600" : "text-gray-700"
-                        } ${filterHighImportance ? "bg-orange-50 text-orange-600 font-bold" : ""} group flex w-full items-center rounded-md px-3 py-2 text-sm`}
-                      >
-                        <span className={`material-icons text-sm mr-2 ${filterHighImportance ? "text-orange-500" : "text-gray-400"}`}>
-                          {filterHighImportance ? "check_box" : "check_box_outline_blank"}
-                        </span>
-                        High Importance Only
-                      </button>
-                    )}
-                  </MenuItem>
-                  <MenuItem>
-                    {({ focus }) => (
-                      <button
                         onClick={() => setFilterRecurring(!filterRecurring)}
                         className={`${
                           focus ? "bg-orange-50 text-orange-600" : "text-gray-700"
@@ -311,7 +292,6 @@ const EventList = () => {
                 <div className="p-1">
                   {[
                     { label: "Date", value: "start_time" },
-                    { label: "Importance", value: "-importance" },
                     { label: "Title (A-Z)", value: "title" },
                   ].map((option) => (
                     <MenuItem key={option.value}>
@@ -457,18 +437,16 @@ const EventList = () => {
         </button>
       </div>
 
-      <UnifiedSidebar
+      <EventSidebar
         isOpen={isSidebarOpen}
         onClose={() => {
           setIsSidebarOpen(false);
           setSelectedEvent(undefined);
         }}
-        initialMode="event"
         categories={categories}
-        initialData={selectedEvent}
-        onSubmitTask={() => { /* Not used */ }}
-        onSubmitEvent={(data) => { void handleSubmitEvent(data); }}
+        onSubmit={(data) => { void handleSubmitEvent(data); }}
         onDelete={() => { void handleDeleteEvent(); }}
+        initialData={selectedEvent}
       />
     </AppLayout>
   );

@@ -24,6 +24,7 @@ from core.views import (
     PreferenceViewSet,
     GradeViewSet,
     CategoryViewSet,
+    WeeklySummaryView,
 )
 from scheduler.views import ScheduleTasksAPIView
 
@@ -38,6 +39,7 @@ router.register(r"preferences", PreferenceViewSet, basename="preference")
 urlpatterns = [
     path("api/", include(router.urls)),
     path("api/schedule/", ScheduleTasksAPIView.as_view(), name="schedule-tasks"),
+    path("api/stats/weekly/", WeeklySummaryView.as_view(), name="weekly-summary"),
     path("api/admin/", admin.site.urls),
     path("api/authentication/", include("authentication.urls")),
 ]

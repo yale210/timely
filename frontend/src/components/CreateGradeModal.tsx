@@ -47,24 +47,39 @@ export default function CreateGradeModal(props: Props) {
 
   if (!open) return null
 
+  //Helper function either returns the matching cookie from the document, or null.
+  function getCookie(name: string): string | null {
+    const regex = new RegExp(`(^| )${name}=([^;]+)`);
+    const match=regex.exec(document.cookie);
+    return match ? decodeURIComponent(match[2]) : null;
+  }
+
   async function createGrade(payload: Record<string, unknown>) {
+    const csrf = getCookie("csrftoken");
     return fetch("/api/grades/", {
       method: "POST",
       credentials: "include",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+        ...(csrf ? { "X-CSRFToken": csrf } : {})
+      },
       body: JSON.stringify(payload),
-    })
+    });
   }
 
   /** Create a grade record via the API. */
 
   async function updateGrade(id: number, payload: Record<string, unknown>) {
+    const csrf = getCookie("csrftoken");
     return fetch(`/api/grades/${id}/`, {
       method: "PUT",
       credentials: "include",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+        ...(csrf ? { "X-CSRFToken": csrf } : {})
+      },
       body: JSON.stringify(payload),
-    })
+    });
   }
 
   /** Update an existing grade via the API. */

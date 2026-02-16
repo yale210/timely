@@ -67,7 +67,6 @@ export interface Event {
   start_time: string;
   end_time: string;
   categories: Category[];
-  importance: number;
   recurrence_interval?: "daily" | "weekly" | "monthly" | "yearly" | null;
   recurrence_end?: string | null;
   reminders: EventReminder[];
@@ -95,4 +94,17 @@ export interface ScheduleResponse {
   scheduled_count: number;
   failed_count: number;
   results: ScheduleResult[];
+}
+
+/**
+ * Represents weekly task statistics.
+ * @interface WeeklyStats
+ */
+export interface WeeklyStats {
+  total_tasks: number;
+  completed_tasks: number;
+  completion_percentage: number;
+  total_minutes_planned: number;
+  daily_stats: { day: string; completed_count: number; total_minutes: number }[];
+  importance_stats: { level: number; completed_count: number }[];
 }

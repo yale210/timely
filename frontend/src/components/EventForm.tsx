@@ -74,7 +74,6 @@ const EventForm = ({
   const [selectedCategories, setSelectedCategories] = useState<number[]>(
     initialData?.categories?.map((c) => (typeof c === "object" ? c.id : c)) ?? []
   );
-  const [importance, setImportance] = useState(initialData?.importance ?? 5);
   
   const [recurrenceInterval, setRecurrenceInterval] = useState<string | null>(
     initialData?.recurrence_interval ?? null
@@ -91,7 +90,6 @@ const EventForm = ({
   const startDateTime = new Date(`${startDate}T${startTime}`);
   const endDateTime = new Date(`${endDate}T${endTime}`);
   const isTimeInvalid = startDateTime >= endDateTime;
-  const isImportanceInvalid = importance < 1 || importance > 10 || isNaN(importance);
   // Recurrence end date is optional now ("never" is valid)
   
   const MAX_REMINDERS = 5;
@@ -100,9 +98,6 @@ const EventForm = ({
   const errors: Record<string, boolean> = {};
   if (isTimeInvalid) {
     errors.time = true;
-  }
-  if (isImportanceInvalid) {
-    errors.importance = true;
   }
   
   const hasErrors = Object.keys(errors).length > 0;
@@ -118,7 +113,6 @@ const EventForm = ({
       start_time: startDateTime.toISOString(),
       end_time: endDateTime.toISOString(),
       categories: selectedCategories,
-      importance,
       recurrence_interval: (recurrenceInterval as Event["recurrence_interval"]) ?? null,
       recurrence_end: recurrenceEnd || null,
       reminders,
@@ -284,21 +278,6 @@ const EventForm = ({
               </label>
             ))}
           </div>
-        </div>
-
-        <div>
-          <label htmlFor="event-importance" className="block text-sm font-medium text-gray-700 mb-2">
-            Importance (1-10)
-          </label>
-          <input
-            id="event-importance"
-            className={`${baseInputClass} ${errors.importance ? errorClass : ""}`}
-            type="number"
-            min="1"
-            max="10"
-            value={importance}
-            onChange={(e) => setImportance(parseInt(e.target.value))}
-          />
         </div>
 
         <div className="border-t pt-4">

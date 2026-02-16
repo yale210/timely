@@ -17,7 +17,6 @@ const mockInitialData: Event = {
   start_time: '2026-02-03T10:00:00Z',
   end_time: '2026-02-03T11:00:00Z',
   categories: [],
-  importance: 8,
   recurrence_interval: 'weekly',
   recurrence_end: '2026-12-31',
   reminders: [
@@ -51,7 +50,6 @@ describe('EventForm', () => {
     expect(screen.getByLabelText(/Title/i)).toHaveValue('Existing Event')
     expect(screen.getByLabelText(/Location/i)).toHaveValue('Some place')
     expect(screen.getByLabelText(/Description/i)).toHaveValue('Some description')
-    expect(screen.getByLabelText(/Importance/i)).toHaveValue(8)
     expect(screen.getByLabelText(/Interval/i)).toHaveValue('weekly')
   })
 
@@ -104,22 +102,6 @@ describe('EventForm', () => {
     expect(screen.getByRole('button', { name: /Save Event/i })).toBeDisabled()
   })
 
-  it('validates importance range', () => {
-    render(
-      <EventForm
-        categories={mockCategories}
-        onSubmit={onSubmit}
-        onCancel={onCancel}
-      />
-    )
-
-    fireEvent.change(screen.getByLabelText(/Importance/i), { target: { value: '11' } })
-    expect(screen.getByRole('button', { name: /Save Event/i })).toBeDisabled()
-    
-    fireEvent.change(screen.getByLabelText(/Importance/i), { target: { value: '0' } })
-    expect(screen.getByRole('button', { name: /Save Event/i })).toBeDisabled()
-  })
-
   it('allows recurrence without end date (never)', () => {
     render(
       <EventForm
@@ -154,7 +136,7 @@ describe('EventForm', () => {
     const typeSelect = comboboxes[comboboxes.length - 1]  // Get the last combobox (reminder type)
     fireEvent.change(typeSelect, { target: { value: 'email' } })
     
-    const minutesInput = screen.getAllByRole('spinbutton')[1]
+    const minutesInput = screen.getAllByRole('spinbutton')[0]
     fireEvent.change(minutesInput, { target: { value: '45' } })
 
     fireEvent.click(screen.getByText(/delete/i))
