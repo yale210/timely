@@ -25,7 +25,11 @@ export default defineConfig({
   plugins: [react(), tailwindcss()], // Added tailwind plugin
   server: {
     proxy: {
-      "/api": "http://localhost:8000"
+      "/api": "http://localhost:8000",
+      "/ws": {
+        target: "http://localhost:8000",
+        ws: true,
+      },
     }
   },
   resolve: {
