@@ -46,6 +46,7 @@ const CalendarPage = () => {
   const [sidebarMode, setSidebarMode] = useState<"task" | "event">("task");
   const [events, setEvents] = useState<Event[]>([]);
   const [isScheduling, setIsScheduling] = useState(false);
+  const [isUnscheduling, setIsUnscheduling] = useState(false);
   const [scheduleStatus, setScheduleStatus] = useState<{ message: string; tone: "success" | "error" } | null>(null);
 
   const fetchTasks = useCallback(async () => {
@@ -246,6 +247,27 @@ const CalendarPage = () => {
     }
   };
 
+  const handleUnscheduleTasks = async () => {
+    setIsUnscheduling(true);
+    setScheduleStatus(null);
+    try {
+      const response = await schedulerService.unscheduleTasks();
+      await fetchTasks();
+      setScheduleStatus({
+        message: `Unscheduled ${response.unscheduled_count} task${response.unscheduled_count === 1 ? "" : "s"}.`,
+        tone: "success",
+      });
+    } catch (err) {
+      console.error(err);
+      setScheduleStatus({
+        message: "Failed to unschedule tasks. Please try again.",
+        tone: "error",
+      });
+    } finally {
+      setIsUnscheduling(false);
+    }
+  };
+
   const calendarEntries: CalendarEntry[] = [
     ...tasks.flatMap((task) => {
       const allocations = task.allocation ?? [];
@@ -324,18 +346,32 @@ const CalendarPage = () => {
               </div>
             </div>
             <div className="flex items-center gap-4">
-              <button
-                onClick={() => { void handleScheduleTasks(); }}
-                disabled={isScheduling}
-                className={`px-4 py-2 rounded-lg text-sm font-medium flex items-center shadow-sm transition-colors ${
-                  isScheduling
-                    ? "bg-gray-200 text-gray-500 cursor-not-allowed"
-                    : "bg-primary text-white hover:bg-blue-300"
-                }`}
-              >
-                <span className="material-icons text-lg mr-1.5">auto_awesome</span>
-                {isScheduling ? "Scheduling..." : "Schedule Tasks"}
-              </button>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => { void handleScheduleTasks(); }}
+                  disabled={isScheduling || isUnscheduling}
+                  className={`px-4 py-2 rounded-lg text-sm font-medium flex items-center shadow-sm transition-colors ${
+                    isScheduling || isUnscheduling
+                      ? "bg-gray-200 text-gray-500 cursor-not-allowed"
+                      : "bg-primary text-white hover:bg-blue-300"
+                  }`}
+                >
+                  <span className="material-icons text-lg mr-1.5">auto_awesome</span>
+                  {isScheduling ? "Scheduling..." : "Schedule Tasks"}
+                </button>
+                <button
+                  onClick={() => { void handleUnscheduleTasks(); }}
+                  disabled={isScheduling || isUnscheduling}
+                  className={`px-4 py-2 rounded-lg text-sm font-medium flex items-center shadow-sm transition-colors ${
+                    isScheduling || isUnscheduling
+                      ? "bg-gray-200 text-gray-500 cursor-not-allowed"
+                      : "bg-white text-gray-700 border border-gray-300 hover:bg-gray-50"
+                  }`}
+                >
+                  <span className="material-icons text-lg mr-1.5">event_busy</span>
+                  {isUnscheduling ? "Unscheduling..." : "Unschedule Tasks"}
+                </button>
+              </div>
               <div className="flex items-center bg-white border border-gray-200 rounded-lg overflow-hidden shadow-sm">
                 <button
                   onClick={() =>

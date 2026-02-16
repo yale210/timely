@@ -16,3 +16,8 @@ export const scheduleTasks = async (payload: ScheduleRequest): Promise<ScheduleR
   const response = await axios.post<ScheduleResponse>("/api/schedule/", payload);
   return response.data;
 };
+
+export const unscheduleTasks = async (): Promise<{ unscheduled_count: number }> => {
+  const response = await axios.post<{ unscheduled_count: number }>("/api/unschedule/");
+  return response.data;
+};
