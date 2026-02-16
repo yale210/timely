@@ -88,6 +88,22 @@
 .event-slot.is-completed {
   opacity: 0.55;
 }
+
+.event-slot.is-just-scheduled {
+  animation: schedule-pop 420ms ease-out forwards;
+  transform-origin: center;
+}
+
+@keyframes schedule-pop {
+  0% {
+    opacity: 0;
+    transform: scale(0.8);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
 /* Use Google-hosted decorative font 'Pacifico' for headings. */
 .font-young-coconut {
   font-family: 'Pacifico', "Poppins", system-ui, sans-serif;

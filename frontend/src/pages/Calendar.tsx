@@ -34,6 +34,7 @@ interface CalendarEntry {
   repeat?: boolean;
   split?: boolean;
   oneGo?: boolean;
+  scheduleIndex?: number;
 }
 
 const CalendarPage = () => {
@@ -48,6 +49,7 @@ const CalendarPage = () => {
   const [isScheduling, setIsScheduling] = useState(false);
   const [isUnscheduling, setIsUnscheduling] = useState(false);
   const [scheduleStatus, setScheduleStatus] = useState<{ message: string; tone: "success" | "error" } | null>(null);
+  const [scheduleOrder, setScheduleOrder] = useState<Record<number, number>>({});
 
   const fetchTasks = useCallback(async () => {
     try {
@@ -228,6 +230,13 @@ const CalendarPage = () => {
       const response = await schedulerService.scheduleTasks({
         start_date: moment(date).format("YYYY-MM-DD"),
       });
+      const nextOrder: Record<number, number> = {};
+      response.results
+        .filter((result) => result.success && result.scheduled_start && result.scheduled_end)
+        .forEach((result, index) => {
+          nextOrder[result.task_id] = index;
+        });
+      setScheduleOrder(nextOrder);
       await fetchTasks();
       const suffix = response.failed_count > 0
         ? ` ${response.failed_count} task${response.failed_count === 1 ? "" : "s"} couldn't be scheduled.`
@@ -253,6 +262,7 @@ const CalendarPage = () => {
     try {
       const response = await schedulerService.unscheduleTasks();
       await fetchTasks();
+      setScheduleOrder({});
       setScheduleStatus({
         message: `Unscheduled ${response.unscheduled_count} task${response.unscheduled_count === 1 ? "" : "s"}.`,
         tone: "success",
@@ -284,6 +294,7 @@ const CalendarPage = () => {
         sourceId: task.id,
         split: allocations.length > 1,
         oneGo: allocations.length === 1,
+        scheduleIndex: scheduleOrder[task.id],
       }));
     }),
     ...events.map((event) => ({
@@ -402,15 +413,6 @@ const CalendarPage = () => {
               </h2>
             </div>
           </div>
-          {scheduleStatus && (
-            <div
-              className={`mt-3 text-sm font-medium ${
-                scheduleStatus.tone === "success" ? "text-green-600" : "text-red-600"
-              }`}
-            >
-              {scheduleStatus.message}
-            </div>
-          )}
         </header>
 
         <main className="flex-grow flex overflow-hidden relative p-4 bg-white">
@@ -436,10 +438,14 @@ const CalendarPage = () => {
                   event.split ? "is-split" : "",
                   event.oneGo ? "is-onego" : "",
                   event.kind === "event" ? "is-event" : "",
+                  event.kind === "task" && typeof event.scheduleIndex === "number" ? "is-just-scheduled" : "",
                 ]
                 .filter(Boolean)
                 .join(" ");
-                return { className };
+                const style = event.kind === "task" && typeof event.scheduleIndex === "number"
+                  ? { animationDelay: `${event.scheduleIndex * 120}ms` }
+                  : undefined;
+                return { className, style };
               }}
             />
           </div>
