@@ -84,7 +84,11 @@ const EventForm = ({
   );
 
   const [reminders, setReminders] = useState<Omit<EventReminder, "id">[]>(
-    initialData?.reminders?.map(({ type, minutes_before }) => ({ type, minutes_before })) ?? []
+    initialData?.reminders?.map(({ send_email, send_push, minutes_before }) => ({
+      send_email,
+      send_push,
+      minutes_before,
+    })) ?? []
   );
 
   // Derived Validation
@@ -134,7 +138,7 @@ const EventForm = ({
 
   const addReminder = () => {
     if (canAddReminder) {
-      setReminders([...reminders, { type: "popup", minutes_before: 15 }]);
+      setReminders([...reminders, { send_email: false, send_push: true, minutes_before: 15 }]);
     }
   };
 
@@ -149,6 +153,21 @@ const EventForm = ({
   ) => {
     const newReminders = [...reminders];
     newReminders[index] = { ...newReminders[index], [field]: value };
+    setReminders(newReminders);
+  };
+
+  const toggleReminderChannel = (
+    index: number,
+    field: "send_email" | "send_push",
+    value: boolean
+  ) => {
+    const newReminders = [...reminders];
+    newReminders[index] = { ...newReminders[index], [field]: value };
+
+    if (!newReminders[index].send_email && !newReminders[index].send_push) {
+      newReminders[index].send_push = true;
+    }
+
     setReminders(newReminders);
   };
 
@@ -390,30 +409,45 @@ const EventForm = ({
           </div>
           <div className="space-y-3">
             {reminders.map((reminder, index) => (
-              <div key={index} className="flex items-center gap-2 bg-gray-50 p-2 rounded-lg border border-gray-200">
-                <select
-                  className="text-sm border-gray-300 rounded-md focus:ring-orange-500 focus:border-orange-500"
-                  value={reminder.type}
-                  onChange={(e) => updateReminder(index, "type", e.target.value as "email" | "popup")}
-                >
-                  <option value="popup">Popup</option>
-                  <option value="email">Email</option>
-                </select>
-                <input
-                  type="number"
-                  className="w-20 text-sm border-gray-300 rounded-md focus:ring-orange-500 focus:border-orange-500"
-                  value={reminder.minutes_before}
-                  onChange={(e) => updateReminder(index, "minutes_before", parseInt(e.target.value))}
-                  min="1"
-                />
-                <span className="text-xs text-gray-500">mins before</span>
-                <button
-                  type="button"
-                  onClick={() => removeReminder(index)}
-                  className="ml-auto text-gray-400 hover:text-red-500"
-                >
-                  <span className="material-icons text-sm">delete</span>
-                </button>
+              <div key={index} className="flex flex-col gap-2 bg-gray-50 p-3 rounded-lg border border-gray-200">
+                <div className="flex flex-wrap items-center gap-3">
+                  <span className="text-xs font-semibold text-gray-600">Reminder type</span>
+                  <label className="inline-flex items-center gap-2 text-xs text-gray-600">
+                    <input
+                      type="checkbox"
+                      checked={reminder.send_push}
+                      onChange={(e) => toggleReminderChannel(index, "send_push", e.target.checked)}
+                      className="h-4 w-4 rounded border-gray-300 text-orange-500 focus:ring-orange-500"
+                    />
+                    Popup
+                  </label>
+                  <label className="inline-flex items-center gap-2 text-xs text-gray-600">
+                    <input
+                      type="checkbox"
+                      checked={reminder.send_email}
+                      onChange={(e) => toggleReminderChannel(index, "send_email", e.target.checked)}
+                      className="h-4 w-4 rounded border-gray-300 text-orange-500 focus:ring-orange-500"
+                    />
+                    Email
+                  </label>
+                </div>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="number"
+                    className="w-20 text-sm border-gray-300 rounded-md focus:ring-orange-500 focus:border-orange-500"
+                    value={reminder.minutes_before}
+                    onChange={(e) => updateReminder(index, "minutes_before", parseInt(e.target.value))}
+                    min="1"
+                  />
+                  <span className="text-xs text-gray-500">mins before</span>
+                  <button
+                    type="button"
+                    onClick={() => removeReminder(index)}
+                    className="ml-auto text-gray-400 hover:text-red-500"
+                  >
+                    <span className="material-icons text-sm">delete</span>
+                  </button>
+                </div>
               </div>
             ))}
             {reminders.length === 0 && (
