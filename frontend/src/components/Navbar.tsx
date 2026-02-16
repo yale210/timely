@@ -1,11 +1,10 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { Dialog, DialogPanel } from '@headlessui/react'
 import { Bars3Icon, XMarkIcon } from '@heroicons/react/24/outline'
 import { Link, useNavigate } from "react-router-dom"
 import { NotificationBell } from './NotificationBell'
 import { NotificationDropdown } from './NotificationDropdown'
-import { useNotifications } from '../hooks/useNotifications'
-import { useWebSocket } from '../hooks/useWebSocket'
+import { useNotificationContext } from '../context/NotificationContext'
 import { type Notification } from '../types/notification'
 
 const navigation = [
@@ -14,31 +13,22 @@ const navigation = [
     { name: 'Tasks', href: '/tasks' },
     { name: 'Events', href: '/events' },
     { name: 'Gradebook', href: '/gradebook' },
+    { name: 'Admin notifications', href: '/admin/notifications' },
 ]
 
 export default function Navbar() {
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
     const navigate = useNavigate()
-    const { 
-        notifications, 
-        unreadCount, 
-        markRead, 
-        markAllRead, 
-        fetchUnreadCount,
-        setUnreadCount 
-    } = useNotifications()
-
-    const handleWebSocketMessage = (data: any) => {
-        if (data.type === 'unread_count') {
-            setUnreadCount(data.count)
-        }
-    }
-
-    useWebSocket('/ws/notifications/', handleWebSocketMessage)
+    const {
+        notifications,
+        unreadCount,
+        markRead,
+        markAllRead,
+    } = useNotificationContext()
 
     const handleNotificationClick = (notification: Notification) => {
-        markRead(notification.id)
-        navigate(`/notifications/${notification.id}`)
+        void markRead(notification.id)
+        void navigate(`/notifications/${notification.id}`)
     }
     
     return (
@@ -54,7 +44,7 @@ export default function Navbar() {
 
                     <div className="flex lg:hidden">
                         <div className="flex items-center gap-4 mr-4">
-                            <NotificationBell unreadCount={unreadCount} onClick={() => navigate('/notifications')} />
+                            <NotificationBell unreadCount={unreadCount} onClick={() => void navigate('/notifications')} />
                         </div>
                         <button
                         type="button"
@@ -78,7 +68,7 @@ export default function Navbar() {
                         <NotificationDropdown 
                             notifications={notifications}
                             unreadCount={unreadCount}
-                            onMarkAllRead={markAllRead}
+                            onMarkAllRead={() => void markAllRead()}
                             onItemClick={handleNotificationClick}
                         />
                         <Link to="/login" className="text-sm/6 font-semibold text-gray-900">
