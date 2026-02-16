@@ -1,4 +1,4 @@
-interface StatcardProps {
+interface StatCardProps {
   title: string;
   value: string[];
 }
@@ -9,7 +9,7 @@ interface StatcardProps {
  * @param props.title - The heading displayed at the top of the card.
  * @param props.value - The list of items rendered as a checkbox list.
  */
-export default function Statcard({ title, value }: StatcardProps) {
+export default function StatCard({ title, value }: StatCardProps) {
   const task_list = value.map(task =>
     <li key={value.indexOf(task)}>
       <input type="checkbox" value={value.indexOf(task)} />
