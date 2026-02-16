@@ -74,3 +74,18 @@ class ScheduleTasksAPIView(APIView):
             "results": ScheduleResultSerializer(results, many=True).data,
         }
         return Response(response_data, status=status.HTTP_200_OK)
+
+
+class UnscheduleTasksAPIView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request):
+        updated = (
+            Task.objects.filter(user=request.user)
+            .exclude(allocation=[])
+            .update(allocation=[], total_task_allocations=0)
+        )
+        return Response(
+            {"unscheduled_count": updated},
+            status=status.HTTP_200_OK,
+        )
