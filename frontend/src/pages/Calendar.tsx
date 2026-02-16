@@ -42,7 +42,7 @@ const CalendarPage = () => {
   const [categories, setCategories] = useState<Category[]>([]);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState<Task | Event| undefined>(undefined);
-  const [view, setView] = useState<View>(Views.MONTH);
+  const [view, setView] = useState<View>(Views.WEEK);
   const [date, setDate] = useState(new Date());
   const [sidebarMode, setSidebarMode] = useState<"task" | "event">("task");
   const [events, setEvents] = useState<Event[]>([]);
