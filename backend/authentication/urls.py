@@ -2,6 +2,7 @@ from django.urls import path
 from knox.views import LogoutView, LogoutAllView
 
 from .views import RegisterView, LoginAPIView, TestPermissionView
+from .views_admin import AdminUserListView
 
 urlpatterns = [
     path("register/", RegisterView.as_view(), name="register"),
@@ -9,4 +10,5 @@ urlpatterns = [
     path("logout/", LogoutView.as_view(), name="logout"),
     path("logoutall/", LogoutAllView.as_view(), name="logoutall"),
     path("test/", TestPermissionView.as_view(), name="test"),
+    path("admin/users/", AdminUserListView.as_view(), name="admin-users"),
 ]
