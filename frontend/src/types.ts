@@ -34,6 +34,8 @@ export interface Task {
   categories: Category[];
   estimated_minutes: number;
   parent_task?: number | null;
+  allocation?: { start: string; end: string }[];
+  total_task_allocations?: number;
 }
 
 /**

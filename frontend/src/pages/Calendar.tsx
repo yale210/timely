@@ -247,34 +247,33 @@ const CalendarPage = () => {
   };
 
   const calendarEntries: CalendarEntry[] = [
-    ...tasks.map((task, index) => ({
-    id: task.id,
-    title: task.title,
-    start: new Date(task.start_time),
-    end: new Date(task.deadline),
-    allDay: moment(task.deadline).diff(moment(task.start_time), "hours") >= 24,
-    kind: "task" as const,
-    sourceId: task.id,
-    /*
-    repeat: boolean(task.repeat),
-    split: boolean(task.split),
-    oneGo: boolean(task["one-go"]),
-    */
-    repeat: index%3==0,
-    split: index%2==0,
-    setTime: index%3==1,
-    oneGo: index%3==1,
-  })),
-  ...events.map((event) => ({
-    id: 1000000 + event.id,
-    title: event.title,
-    start: new Date(event.start_time),
-    end: new Date(event.end_time),
-    allDay: false,
-    kind: "event" as const,
-    sourceId: event.id,
-  })),
-];
+    ...tasks.flatMap((task) => {
+      const allocations = task.allocation ?? [];
+      if (allocations.length === 0) {
+        return [];
+      }
+      return allocations.map((slot, index) => ({
+        id: task.id * 1000 + index,
+        title: task.title,
+        start: new Date(slot.start),
+        end: new Date(slot.end),
+        allDay: moment(slot.end).diff(moment(slot.start), "hours") >= 24,
+        kind: "task" as const,
+        sourceId: task.id,
+        split: allocations.length > 1,
+        oneGo: allocations.length === 1,
+      }));
+    }),
+    ...events.map((event) => ({
+      id: 1000000 + event.id,
+      title: event.title,
+      start: new Date(event.start_time),
+      end: new Date(event.end_time),
+      allDay: false,
+      kind: "event" as const,
+      sourceId: event.id,
+    })),
+  ];
   return (
     /*<div style={{ height: "80vh", padding: "2rem" }}>
       <h1>Task Calendar</h1>
