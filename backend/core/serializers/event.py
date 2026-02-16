@@ -1,5 +1,8 @@
+from datetime import timedelta
+
 from django.core.exceptions import ValidationError as DjangoValidationError
 from django.db import transaction
+from django.utils import timezone
 from rest_framework import serializers
 from core.models import Event, EventReminder
 from core.models import Category
@@ -58,6 +61,20 @@ class EventSerializer(serializers.ModelSerializer):
                     "reminders": f"Maximum of {MAX_REMINDERS_PER_EVENT} reminders allowed per event."
                 }
             )
+
+        # Validate that no reminder would trigger in the past
+        start_time = attributes.get("start_time")
+        if start_time and reminders_data:
+            now = timezone.now()
+            for reminder in reminders_data:
+                minutes_before = reminder.get("minutes_before", 0)
+                trigger_at = start_time - timedelta(minutes=minutes_before)
+                if trigger_at <= now:
+                    raise serializers.ValidationError(
+                        {
+                            "reminders": f"Reminder set to {minutes_before} minutes before would trigger in the past."
+                        }
+                    )
 
         # Create a temporary instance to run clean()
         attrs_copy = attributes.copy()

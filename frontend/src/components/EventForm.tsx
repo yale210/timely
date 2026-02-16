@@ -1,5 +1,46 @@
 import { useState, useEffect, type FormEvent } from "react";
-import { type Category, type Event, type EventSubmission, type EventReminder } from "../types";
+import { type Category, type Event, type EventSubmission } from "../types";
+
+type TimeUnit = "minutes" | "hours" | "days" | "weeks" | "months" | "years";
+
+interface ReminderFormState {
+  send_email: boolean;
+  send_push: boolean;
+  value: number;
+  unit: TimeUnit;
+}
+
+const UNIT_TO_MINUTES: Record<TimeUnit, number> = {
+  minutes: 1,
+  hours: 60,
+  days: 1_440,
+  weeks: 10_080,
+  months: 43_200,
+  years: 525_600,
+};
+
+const UNIT_LABELS: { value: TimeUnit; label: string }[] = [
+  { value: "minutes", label: "minutes" },
+  { value: "hours", label: "hours" },
+  { value: "days", label: "days" },
+  { value: "weeks", label: "weeks" },
+  { value: "months", label: "months" },
+  { value: "years", label: "years" },
+];
+
+const toMinutesBefore = (val: number, unit: TimeUnit): number =>
+  val * UNIT_TO_MINUTES[unit];
+
+const fromMinutesBefore = (minutes: number): { value: number; unit: TimeUnit } => {
+  const units: TimeUnit[] = ["years", "months", "weeks", "days", "hours", "minutes"];
+  for (const unit of units) {
+    const factor = UNIT_TO_MINUTES[unit];
+    if (minutes >= factor && minutes % factor === 0) {
+      return { value: minutes / factor, unit };
+    }
+  }
+  return { value: minutes, unit: "minutes" };
+};
 
 interface EventFormProps {
   initialData?: Event;
@@ -83,12 +124,11 @@ const EventForm = ({
     initialData?.recurrence_end ?? ""
   );
 
-  const [reminders, setReminders] = useState<Omit<EventReminder, "id">[]>(
-    initialData?.reminders?.map(({ send_email, send_push, minutes_before }) => ({
-      send_email,
-      send_push,
-      minutes_before,
-    })) ?? []
+  const [reminders, setReminders] = useState<ReminderFormState[]>(
+    initialData?.reminders?.map(({ send_email, send_push, minutes_before }) => {
+      const { value, unit } = fromMinutesBefore(minutes_before);
+      return { send_email, send_push, value, unit };
+    }) ?? []
   );
 
   // Derived Validation
@@ -96,17 +136,29 @@ const EventForm = ({
   const endDateTime = new Date(`${endDate}T${endTime}`);
   const isTimeInvalid = startDateTime >= endDateTime;
   const isImportanceInvalid = importance < 1 || importance > 10 || isNaN(importance);
-  // Recurrence end date is optional now ("never" is valid)
-  
+
   const MAX_REMINDERS = 5;
   const canAddReminder = reminders.length < MAX_REMINDERS;
-  
+
+  const pastReminderIndices = new Set<number>();
+  const now = new Date();
+  reminders.forEach((reminder, index) => {
+    const minutesBefore = toMinutesBefore(reminder.value, reminder.unit);
+    const triggerAt = new Date(startDateTime.getTime() - minutesBefore * 60_000);
+    if (triggerAt <= now) {
+      pastReminderIndices.add(index);
+    }
+  });
+
   const errors: Record<string, boolean> = {};
   if (isTimeInvalid) {
     errors.time = true;
   }
   if (isImportanceInvalid) {
     errors.importance = true;
+  }
+  if (pastReminderIndices.size > 0) {
+    errors.reminders = true;
   }
   
   const hasErrors = Object.keys(errors).length > 0;
@@ -125,7 +177,11 @@ const EventForm = ({
       importance,
       recurrence_interval: (recurrenceInterval as Event["recurrence_interval"]) ?? null,
       recurrence_end: recurrenceEnd || null,
-      reminders,
+      reminders: reminders.map((r) => ({
+        send_email: r.send_email,
+        send_push: r.send_push,
+        minutes_before: toMinutesBefore(r.value, r.unit),
+      })),
     };
     onSubmit(data);
   };
@@ -138,7 +194,7 @@ const EventForm = ({
 
   const addReminder = () => {
     if (canAddReminder) {
-      setReminders([...reminders, { send_email: false, send_push: true, minutes_before: 15 }]);
+      setReminders([...reminders, { send_email: false, send_push: true, value: 15, unit: "minutes" }]);
     }
   };
 
@@ -146,10 +202,10 @@ const EventForm = ({
     setReminders(reminders.filter((_, i) => i !== index));
   };
 
-  const updateReminder = <K extends keyof Omit<EventReminder, "id">>(
+  const updateReminder = <K extends keyof ReminderFormState>(
     index: number,
     field: K,
-    value: Omit<EventReminder, "id">[K]
+    value: ReminderFormState[K]
   ) => {
     const newReminders = [...reminders];
     newReminders[index] = { ...newReminders[index], [field]: value };
@@ -408,7 +464,7 @@ const EventForm = ({
           </p>
           <div className="space-y-3">
             {reminders.map((reminder, index) => (
-              <div key={index} className="flex flex-col gap-2 bg-gray-50 p-3 rounded-lg border border-gray-200">
+              <div key={index} className={`flex flex-col gap-2 bg-gray-50 p-3 rounded-lg border ${pastReminderIndices.has(index) ? "border-red-400 bg-red-50" : "border-gray-200"}`}>
                 <div className="flex flex-wrap items-center gap-3">
                   <span className="text-xs font-semibold text-gray-600">Reminder type</span>
                   <label className="inline-flex items-center gap-2 text-xs text-gray-600">
@@ -434,11 +490,20 @@ const EventForm = ({
                   <input
                     type="number"
                     className="w-20 text-sm border-gray-300 rounded-md focus:ring-orange-500 focus:border-orange-500"
-                    value={reminder.minutes_before}
-                    onChange={(e) => updateReminder(index, "minutes_before", parseInt(e.target.value))}
+                    value={reminder.value}
+                    onChange={(e) => updateReminder(index, "value", parseInt(e.target.value) || 1)}
                     min="1"
                   />
-                  <span className="text-xs text-gray-500">mins before</span>
+                  <select
+                    className="text-sm border-gray-300 rounded-md focus:ring-orange-500 focus:border-orange-500"
+                    value={reminder.unit}
+                    onChange={(e) => updateReminder(index, "unit", e.target.value as TimeUnit)}
+                  >
+                    {UNIT_LABELS.map((opt) => (
+                      <option key={opt.value} value={opt.value}>{opt.label}</option>
+                    ))}
+                  </select>
+                  <span className="text-xs text-gray-500">before</span>
                   <button
                     type="button"
                     onClick={() => removeReminder(index)}
@@ -447,6 +512,11 @@ const EventForm = ({
                     <span className="material-icons text-sm">delete</span>
                   </button>
                 </div>
+                {pastReminderIndices.has(index) && (
+                  <p className="text-xs text-red-500">
+                    This reminder would trigger in the past.
+                  </p>
+                )}
               </div>
             ))}
             {reminders.length === 0 && (

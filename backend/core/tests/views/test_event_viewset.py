@@ -20,8 +20,8 @@ class EventViewSetTests(APITestCase):
         data = {
             "title": "API Event",
             "importance": 5,
-            "start_time": now + datetime.timedelta(hours=1),
-            "end_time": now + datetime.timedelta(hours=2),
+            "start_time": now + datetime.timedelta(hours=3),
+            "end_time": now + datetime.timedelta(hours=4),
             "reminders": [
                 {"send_push": True, "send_email": False, "minutes_before": 15},
                 {"send_push": False, "send_email": True, "minutes_before": 60},
@@ -42,8 +42,8 @@ class EventViewSetTests(APITestCase):
             user=self.user,
             title="Old Title",
             importance=5,
-            start_time=now,
-            end_time=now + datetime.timedelta(hours=1),
+            start_time=now + datetime.timedelta(hours=3),
+            end_time=now + datetime.timedelta(hours=4),
         )
         EventReminder.objects.create(event=event, send_push=True, minutes_before=10)
 
@@ -51,8 +51,8 @@ class EventViewSetTests(APITestCase):
         data = {
             "title": "New Title",
             "importance": 5,
-            "start_time": now,
-            "end_time": now + datetime.timedelta(hours=1),
+            "start_time": now + datetime.timedelta(hours=3),
+            "end_time": now + datetime.timedelta(hours=4),
             "reminders": [
                 {"send_push": False, "send_email": True, "minutes_before": 20}
             ],
@@ -91,8 +91,8 @@ class EventViewSetTests(APITestCase):
         data = {
             "title": "Event with 5 reminders",
             "importance": 5,
-            "start_time": now + datetime.timedelta(hours=1),
-            "end_time": now + datetime.timedelta(hours=2),
+            "start_time": now + datetime.timedelta(hours=3),
+            "end_time": now + datetime.timedelta(hours=4),
             "reminders": [
                 {"send_push": True, "minutes_before": 5},
                 {"send_push": True, "minutes_before": 10},
@@ -111,8 +111,8 @@ class EventViewSetTests(APITestCase):
         data = {
             "title": "Event with too many reminders",
             "importance": 5,
-            "start_time": now + datetime.timedelta(hours=1),
-            "end_time": now + datetime.timedelta(hours=2),
+            "start_time": now + datetime.timedelta(hours=5),
+            "end_time": now + datetime.timedelta(hours=6),
             "reminders": [
                 {"send_push": True, "minutes_before": 5},
                 {"send_push": True, "minutes_before": 10},
