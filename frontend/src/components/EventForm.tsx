@@ -164,10 +164,6 @@ const EventForm = ({
     const newReminders = [...reminders];
     newReminders[index] = { ...newReminders[index], [field]: value };
 
-    if (!newReminders[index].send_email && !newReminders[index].send_push) {
-      newReminders[index].send_push = true;
-    }
-
     setReminders(newReminders);
   };
 
@@ -396,7 +392,7 @@ const EventForm = ({
         </div>
 
         <div className="border-t pt-4">
-          <div className="flex justify-between items-center mb-4">
+          <div className="flex justify-between items-center mb-1">
             <h3 className="text-sm font-semibold text-gray-900">Reminders ({reminders.length}/{MAX_REMINDERS})</h3>
             <button
               type="button"
@@ -407,6 +403,9 @@ const EventForm = ({
               <span className="material-icons text-sm">add</span> Add Reminder
             </button>
           </div>
+          <p className="text-xs text-gray-500 mb-4">
+            In-app notifications are always sent. Select additional channels below:
+          </p>
           <div className="space-y-3">
             {reminders.map((reminder, index) => (
               <div key={index} className="flex flex-col gap-2 bg-gray-50 p-3 rounded-lg border border-gray-200">
