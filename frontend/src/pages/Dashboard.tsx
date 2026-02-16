@@ -2,7 +2,6 @@ import { Statcard } from "../components/index"
 import { CalendarPage } from "./index"
 
 
-
 /**
  * Renders the main dashboard page with stat cards and an embedded calendar.
  */
