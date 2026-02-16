@@ -294,6 +294,7 @@ const CalendarPage = () => {
       allDay: false,
       kind: "event" as const,
       sourceId: event.id,
+      oneGo: true,
     })),
   ];
   return (
@@ -434,6 +435,7 @@ const CalendarPage = () => {
                   event.repeat ? "is-repeat": "",
                   event.split ? "is-split" : "",
                   event.oneGo ? "is-onego" : "",
+                  event.kind === "event" ? "is-event" : "",
                 ]
                 .filter(Boolean)
                 .join(" ");
