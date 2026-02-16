@@ -4,7 +4,6 @@ from django.contrib.auth import get_user_model
 from core.models.event_reminder import EventReminder
 from core.models.notification import Notification
 from core.models.push_subscription import PushSubscription
-from core.utils.websocket import notify_user
 from pywebpush import webpush, WebPushException
 from django.conf import settings
 import json
@@ -28,11 +27,6 @@ def check_reminders():
             message=f"Your event '{event.title}' is starting soon.",
             notification_type=Notification.NotificationType.REMINDER,
         )
-
-        unread_count = Notification.objects.filter(
-            recipient=user, is_read=False
-        ).count()
-        notify_user(user.id, {"type": "unread_count", "count": unread_count})
 
         # Send push notification if enabled
         if reminder.send_push:
@@ -95,13 +89,7 @@ def broadcast_notification(title, message, target="all", user_ids=None):
             notification_type=Notification.NotificationType.ADMIN,
         )
 
-        unread_count = Notification.objects.filter(
-            recipient=user, is_read=False
-        ).count()
-        notify_user(user.id, {"type": "unread_count", "count": unread_count})
-
         # Optionally send push as well
-
         send_push_notification.delay(user.id, title, message)
 
     return f"Broadcasted to {recipients.count()} users"
