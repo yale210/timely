@@ -140,7 +140,7 @@ class Scheduler:
                 )
 
         for task in self.scheduled_tasks:
-            for slot in (task.allocation or []):
+            for slot in task.allocation or []:
                 try:
                     start = self._aware(datetime.fromisoformat(slot["start"]))
                     end = self._aware(datetime.fromisoformat(slot["end"]))
@@ -163,7 +163,9 @@ class Scheduler:
                 start_time = self._aware(
                     datetime.combine(target_date, commute.commute_start)
                 )
-                end_time = self._aware(datetime.combine(target_date, commute.commute_end))
+                end_time = self._aware(
+                    datetime.combine(target_date, commute.commute_end)
+                )
                 occupied.append((start_time, end_time))
 
         return occupied
@@ -186,7 +188,9 @@ class Scheduler:
         end_of_day = self._aware(datetime.combine(target_date, time.max))
         return start_of_day, end_of_day
 
-    def get_available_slots(self, target_date: date, min_minutes: int) -> List[Tuple[datetime, datetime]]:
+    def get_available_slots(
+        self, target_date: date, min_minutes: int
+    ) -> List[Tuple[datetime, datetime]]:
         window_start, window_end = self._working_window(target_date)
         occupied = self._get_occupied_slots(target_date)
         free_slots = self._subtract_intervals((window_start, window_end), occupied)
@@ -267,13 +271,22 @@ class Scheduler:
                 cursor = start
                 while remaining > 0 and cursor < end:
                     free_minutes = (end - cursor).total_seconds() / 60
-                    if free_minutes < self.min_block_minutes and remaining > self.min_block_minutes:
+                    if (
+                        free_minutes < self.min_block_minutes
+                        and remaining > self.min_block_minutes
+                    ):
                         break
 
                     chunk = min(remaining, free_minutes)
-                    if chunk < self.min_block_minutes and remaining > self.min_block_minutes:
+                    if (
+                        chunk < self.min_block_minutes
+                        and remaining > self.min_block_minutes
+                    ):
                         break
-                    if chunk < self.min_block_minutes and remaining <= self.min_block_minutes:
+                    if (
+                        chunk < self.min_block_minutes
+                        and remaining <= self.min_block_minutes
+                    ):
                         # last small piece fits
                         pass
                     scheduled_end = cursor + timedelta(minutes=chunk)

@@ -37,7 +37,7 @@ class SchedulerTest(TestCase):
             deadline=timezone.make_aware(datetime(2026, 2, 20, 17, 0)),
             completed=False,
         )
-        task2 = Task.objects.create(
+        Task.objects.create(
             user=self.user,
             title="Grocery Shopping",
             description="Buy groceries for the week",
@@ -104,7 +104,7 @@ class SchedulerTest(TestCase):
         self.assertFalse(scheduler._is_day_available(target_date))
 
     def test_schedule_single_task_no_split(self):
-        task = Task.objects.create(
+        Task.objects.create(
             user=self.user,
             title="Write summary",
             description="",
@@ -130,7 +130,7 @@ class SchedulerTest(TestCase):
             start_time=timezone.make_aware(datetime(2026, 2, 12, 8, 0)),
             end_time=timezone.make_aware(datetime(2026, 2, 12, 22, 0)),
         )
-        task = Task.objects.create(
+        Task.objects.create(
             user=self.user,
             title="Large task",
             description="",
