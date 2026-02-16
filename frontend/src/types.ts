@@ -81,3 +81,18 @@ export interface EventSubmission extends Omit<Partial<Event>, "reminders" | "cat
   reminders?: Omit<EventReminder, "id">[];
   categories?: number[];
 }
+
+export interface ScheduleResult {
+  task_id: number;
+  success: boolean;
+  scheduled_start: string | null;
+  scheduled_end: string | null;
+  reason?: string | null;
+}
+
+export interface ScheduleResponse {
+  start_date: string;
+  scheduled_count: number;
+  failed_count: number;
+  results: ScheduleResult[];
+}

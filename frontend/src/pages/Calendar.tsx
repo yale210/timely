@@ -6,6 +6,7 @@ import { UnifiedSidebar } from "../components";
 import AppLayout from "../layouts/AppLayout";
 import * as taskService from "../services/taskService";
 import * as eventService from "../services/eventService";
+import * as schedulerService from "../services/schedulerService";
 import { type Task, type Category, type TaskSubmission, type Event, type EventSubmission } from "../types";
 
 const localizer = momentLocalizer(moment);
@@ -23,6 +24,8 @@ const CalendarPage = () => {
   const [sidebarMode, setSidebarMode] = useState<"task" | "event">("event");
   const [view, setView] = useState<View>(Views.MONTH);
   const [date, setDate] = useState(new Date());
+  const [isScheduling, setIsScheduling] = useState(false);
+  const [scheduleStatus, setScheduleStatus] = useState<{ message: string; tone: "success" | "error" } | null>(null);
 
   const fetchTasks = useCallback(async () => {
     try {
@@ -145,6 +148,32 @@ const CalendarPage = () => {
     }
   };
 
+  const handleScheduleTasks = async () => {
+    setIsScheduling(true);
+    setScheduleStatus(null);
+    try {
+      const response = await schedulerService.scheduleTasks({
+        start_date: moment(date).format("YYYY-MM-DD"),
+      });
+      await fetchTasks();
+      const suffix = response.failed_count > 0
+        ? ` ${response.failed_count} task${response.failed_count === 1 ? "" : "s"} couldn't be scheduled.`
+        : "";
+      setScheduleStatus({
+        message: `Scheduled ${response.scheduled_count} task${response.scheduled_count === 1 ? "" : "s"}.${suffix}`,
+        tone: "success",
+      });
+    } catch (err) {
+      console.error(err);
+      setScheduleStatus({
+        message: "Failed to schedule tasks. Please try again.",
+        tone: "error",
+      });
+    } finally {
+      setIsScheduling(false);
+    }
+  };
+
   const expandRecurrence = (eventsToExpand: Event[]): CalendarEvent[] => {
     const expanded: CalendarEvent[] = [];
     const twoYearsFromNow = moment().add(2, "years");
@@ -243,6 +272,18 @@ const CalendarPage = () => {
               </div>
             </div>
             <div className="flex items-center gap-4">
+              <button
+                onClick={() => { void handleScheduleTasks(); }}
+                disabled={isScheduling}
+                className={`px-4 py-2 rounded-lg text-sm font-medium flex items-center shadow-sm transition-colors ${
+                  isScheduling
+                    ? "bg-gray-200 text-gray-500 cursor-not-allowed"
+                    : "bg-primary text-white hover:bg-blue-300"
+                }`}
+              >
+                <span className="material-icons text-lg mr-1.5">auto_awesome</span>
+                {isScheduling ? "Scheduling..." : "Schedule Tasks"}
+              </button>
               <div className="flex items-center bg-white border border-gray-200 rounded-lg overflow-hidden shadow-sm">
                 <button
                   onClick={() =>
@@ -272,6 +313,15 @@ const CalendarPage = () => {
               </h2>
             </div>
           </div>
+          {scheduleStatus && (
+            <div
+              className={`mt-3 text-sm font-medium ${
+                scheduleStatus.tone === "success" ? "text-green-600" : "text-red-600"
+              }`}
+            >
+              {scheduleStatus.message}
+            </div>
+          )}
         </header>
 
         <main className="flex-grow flex overflow-hidden relative p-4 bg-white">
