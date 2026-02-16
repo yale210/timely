@@ -90,6 +90,7 @@
 }
 
 .event-slot.is-just-scheduled {
+  opacity: 0;
   animation: schedule-pop 420ms ease-out forwards;
   transform-origin: center;
 }
