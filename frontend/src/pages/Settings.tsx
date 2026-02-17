@@ -75,9 +75,9 @@ const Settings = () => {
                 <button
                   type="button"
                   onClick={() => setActiveSection("profile")}
-                  className={`w-full text-left text-sm font-medium rounded-md px-3 py-2 transition-colors ${
+                  className={`w-full text-left text-base font-semibold rounded-md px-3 py-2.5 transition-colors ${
                     activeSection === "profile"
-                      ? "bg-blue-50 text-primary"
+                      ? "bg-cyan-50 text-cyan-700 ring-1 ring-cyan-100"
                       : "text-gray-600 hover:bg-gray-50"
                   }`}
                 >
@@ -86,9 +86,9 @@ const Settings = () => {
                 <button
                   type="button"
                   onClick={() => setActiveSection("features")}
-                  className={`mt-2 w-full text-left text-sm font-medium rounded-md px-3 py-2 transition-colors ${
+                  className={`mt-2 w-full text-left text-base font-semibold rounded-md px-3 py-2.5 transition-colors ${
                     activeSection === "features"
-                      ? "bg-blue-50 text-primary"
+                      ? "bg-cyan-50 text-cyan-700 ring-1 ring-cyan-100"
                       : "text-gray-600 hover:bg-gray-50"
                   }`}
                 >
@@ -97,9 +97,9 @@ const Settings = () => {
                 <button
                   type="button"
                   onClick={() => setActiveSection("preferences")}
-                  className={`mt-2 w-full text-left text-sm font-medium rounded-md px-3 py-2 transition-colors ${
+                  className={`mt-2 w-full text-left text-base font-semibold rounded-md px-3 py-2.5 transition-colors ${
                     activeSection === "preferences"
-                      ? "bg-blue-50 text-primary"
+                      ? "bg-cyan-50 text-cyan-700 ring-1 ring-cyan-100"
                       : "text-gray-600 hover:bg-gray-50"
                   }`}
                 >
@@ -108,9 +108,9 @@ const Settings = () => {
                 <button
                   type="button"
                   onClick={() => setActiveSection("theme")}
-                  className={`mt-2 w-full text-left text-sm font-medium rounded-md px-3 py-2 transition-colors ${
+                  className={`mt-2 w-full text-left text-base font-semibold rounded-md px-3 py-2.5 transition-colors ${
                     activeSection === "theme"
-                      ? "bg-blue-50 text-primary"
+                      ? "bg-cyan-50 text-cyan-700 ring-1 ring-cyan-100"
                       : "text-gray-600 hover:bg-gray-50"
                   }`}
                 >

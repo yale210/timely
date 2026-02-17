@@ -19,10 +19,19 @@
     --border-gray: #e2e8f0;
   }
 
-  body {
+body {
     @apply bg-white text-black antialiased;
     font-family: "Poppins", system-ui, sans-serif;
     font-size: 18px;
+  }
+
+  body.menu-open .app-shell {
+    transform: translateX(var(--drawer-width, 288px));
+    width: calc(100% - var(--drawer-width, 288px));
+  }
+
+  .app-shell {
+    transition: transform 200ms ease-out;
   }
 
   input, textarea, select {
