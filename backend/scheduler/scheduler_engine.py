@@ -132,12 +132,14 @@ class Scheduler:
 
     def _get_occupied_slots(self, target_date: date) -> List[Tuple[datetime, datetime]]:
         occupied: List[Tuple[datetime, datetime]] = []
+        day_start = self._aware(datetime.combine(target_date, time.min))
+        day_end = self._aware(datetime.combine(target_date, time.max))
 
         for event in self.events:
-            if event.start_time.date() == target_date:
-                occupied.append(
-                    (self._aware(event.start_time), self._aware(event.end_time))
-                )
+            start = self._aware(event.start_time)
+            end = self._aware(event.end_time)
+            if start < day_end and end > day_start:
+                occupied.append((start, end))
 
         for task in self.scheduled_tasks:
             for slot in task.allocation or []:
@@ -146,11 +148,11 @@ class Scheduler:
                     end = self._aware(datetime.fromisoformat(slot["end"]))
                 except (KeyError, ValueError, TypeError):
                     continue
-                if start.date() == target_date or end.date() == target_date:
+                if start < day_end and end > day_start:
                     occupied.append((start, end))
 
         for start, end in self._scheduled_blocks:
-            if start.date() == target_date or end.date() == target_date:
+            if start < day_end and end > day_start:
                 occupied.append((start, end))
 
         for commute in self.commutes:
