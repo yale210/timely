@@ -1,5 +1,6 @@
 import { useState } from "react"
 import { Link, NavLink } from "react-router-dom"
+import { Menu, MenuButton, MenuItems, MenuItem } from "@headlessui/react"
 
 const navItems = [
   { label: "Dashboard", to: "/dashboard" },
@@ -18,7 +19,7 @@ export default function AppNavbar() {
 
   return (
     <header className="sticky top-0 z-30 bg-white shadow-sm ring-1 ring-gray-200">
-      <div className="mx-auto flex justify-between max-w-6xl items-center gap-3 px-4 py-3">
+      <div className="flex w-full items-center justify-between gap-3 px-4 py-3">
         <button
           type="button"
           aria-label="Open navigation"
@@ -37,6 +38,41 @@ export default function AppNavbar() {
         <Link to="/dashboard" className="text-xl font-semibold text-gray-900 tracking-tight">
           Timely
         </Link>
+
+        <Menu as="div" className="relative">
+          <MenuButton className="inline-flex items-center justify-center rounded-full border border-gray-200 bg-white px-3 py-1.5 text-sm font-semibold text-gray-900 shadow-sm hover:bg-gray-50">
+            <span className="material-icons text-base mr-1">account_circle</span>
+            Account
+          </MenuButton>
+          <MenuItems className="absolute right-0 mt-2 w-44 origin-top-right rounded-lg border border-gray-200 bg-white shadow-lg focus:outline-none">
+            <div className="py-1">
+              <MenuItem>
+                {({ focus }) => (
+                  <Link
+                    to="/settings"
+                    className={`block px-4 py-2 text-sm ${
+                      focus ? "bg-gray-50 text-gray-900" : "text-gray-700"
+                    }`}
+                  >
+                    Settings
+                  </Link>
+                )}
+              </MenuItem>
+              <MenuItem>
+                {({ focus }) => (
+                  <Link
+                    to="/logout"
+                    className={`block px-4 py-2 text-sm ${
+                      focus ? "bg-gray-50 text-gray-900" : "text-gray-700"
+                    }`}
+                  >
+                    Log out
+                  </Link>
+                )}
+              </MenuItem>
+            </div>
+          </MenuItems>
+        </Menu>
       </div>
 
       {/* Backdrop */}

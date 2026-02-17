@@ -3,8 +3,8 @@ import moment from "moment";
 import AppLayout from "../layouts/AppLayout";
 import * as taskService from "../services/taskService";
 import type { Task } from "../types";
-import { StatCard, AppNavbar } from "../components/index"
-import { CalendarPage } from "./index"
+import { StatCard } from "../components/index";
+import { CalendarPage } from "./index";
 
 /**
  * Renders the main dashboard page with stat cards and an embedded calendar.
@@ -22,6 +22,7 @@ export default function Dashboard() {
     }
   }, []);
 
+  // eslint-disable-next-line react-hooks/set-state-in-effect -- load tasks on mount
   useEffect(() => {
     void fetchTasks();
   }, [fetchTasks]);
@@ -41,11 +42,9 @@ export default function Dashboard() {
       !moment(t.deadline).isSame(now, "day")
   );
   
-  return(
-  <div className="min-h-screen bg-white">
-    <AppNavbar />
+  return (
     <AppLayout>
-    <main className="mx-auto max-w-7xl px-6 lg:px-8 py-10">
+      <main className="w-full px-6 lg:px-10 pt-2 pb-10">
       <header className="mb-10">
           <h1 className="text-3xl font-semibold tracking-tight text-gray-900">
             Dashboard
@@ -80,6 +79,5 @@ export default function Dashboard() {
         </section>
       </main>
     </AppLayout>
-  </div> 
   );
 }

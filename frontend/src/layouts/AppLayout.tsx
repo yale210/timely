@@ -1,5 +1,5 @@
 import { type ReactNode } from "react";
-import Navbar from "../components/Navbar";
+import { AppNavbar } from "../components";
 
 interface AppLayoutProps {
   children: ReactNode;
@@ -9,7 +9,7 @@ interface AppLayoutProps {
 const AppLayout = ({ children, showNavbar = true }: AppLayoutProps) => {
   return (
     <div className="bg-white text-black transition-colors duration-200 h-screen flex flex-col">
-      {showNavbar && <Navbar />}
+      {showNavbar && <AppNavbar />}
       <main className={`flex-1 flex flex-col min-w-0 overflow-auto bg-white ${showNavbar ? "pt-16" : ""}`}>
         {children}
       </main>
