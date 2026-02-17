@@ -93,3 +93,22 @@ export interface WeeklyStats {
   daily_stats: { day: string; completed_count: number; total_minutes: number }[];
   importance_stats: { level: number; completed_count: number }[];
 }
+
+/**
+ * Represents user preferences.
+ * @interface Preference
+ */
+export interface Preference {
+    id: number
+    day_start: string
+    day_end: string
+    max_hours_study_per_day: number
+    days_off: number[]
+}
+/**
+ * Represents the data structure used to update a Preference
+ * @interface PreferenceUpdate
+ */
+export type PreferenceUpdate = Partial<Pick<
+    Preference, "day_start"|"day_end"|"max_hours_study_per_day"|"days_off"
+>>
