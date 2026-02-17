@@ -44,7 +44,7 @@ class Task(models.Model):
     )
 
     total_task_allocations = models.PositiveIntegerField(default=0)
-    allocation = models.JSONField(default=list, blank=True)
+    allocation = models.JSONField(default=list, blank=True, null=True)
 
     # 1 represents tasks of least importance.
     # 10 represents tasks of most importance.

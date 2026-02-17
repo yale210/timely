@@ -6,65 +6,115 @@ from django.db import migrations, models
 
 
 def convert_reminder_types(apps, schema_editor):
-    EventReminder = apps.get_model('core', 'EventReminder')
+    EventReminder = apps.get_model("core", "EventReminder")
     for reminder in EventReminder.objects.all():
-        if reminder.type == 'email':
+        if reminder.type == "email":
             reminder.send_email = True
-        elif reminder.type == 'popup':
+        elif reminder.type == "popup":
             reminder.send_push = True
         reminder.save()
 
-class Migration(migrations.Migration):
 
+class Migration(migrations.Migration):
     dependencies = [
-        ('core', '0010_event_importance'),
+        ("core", "0010_merge_20260212_2338"),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='eventreminder',
-            name='send_email',
+            model_name="eventreminder",
+            name="send_email",
             field=models.BooleanField(default=False),
         ),
         migrations.AddField(
-            model_name='eventreminder',
-            name='send_push',
+            model_name="eventreminder",
+            name="send_push",
             field=models.BooleanField(default=False),
         ),
         migrations.RunPython(convert_reminder_types),
         migrations.RemoveField(
-            model_name='eventreminder',
-            name='type',
+            model_name="eventreminder",
+            name="type",
         ),
         migrations.CreateModel(
-            name='Notification',
+            name="Notification",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('title', models.CharField(max_length=255)),
-                ('message', models.TextField()),
-                ('is_read', models.BooleanField(default=False)),
-                ('timestamp', models.DateTimeField(auto_now_add=True)),
-                ('notification_type', models.CharField(choices=[('REMINDER', 'Reminder'), ('ADMIN', 'Admin'), ('SYSTEM', 'System')], default='SYSTEM', max_length=20)),
-                ('recipient', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='notifications', to=settings.AUTH_USER_MODEL)),
-                ('sender', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='sent_notifications', to=settings.AUTH_USER_MODEL)),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("title", models.CharField(max_length=255)),
+                ("message", models.TextField()),
+                ("is_read", models.BooleanField(default=False)),
+                ("timestamp", models.DateTimeField(auto_now_add=True)),
+                (
+                    "notification_type",
+                    models.CharField(
+                        choices=[
+                            ("REMINDER", "Reminder"),
+                            ("ADMIN", "Admin"),
+                            ("SYSTEM", "System"),
+                        ],
+                        default="SYSTEM",
+                        max_length=20,
+                    ),
+                ),
+                (
+                    "recipient",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="notifications",
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
+                (
+                    "sender",
+                    models.ForeignKey(
+                        blank=True,
+                        null=True,
+                        on_delete=django.db.models.deletion.SET_NULL,
+                        related_name="sent_notifications",
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
             ],
             options={
-                'ordering': ['-timestamp'],
+                "ordering": ["-timestamp"],
             },
         ),
         migrations.CreateModel(
-            name='PushSubscription',
+            name="PushSubscription",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('endpoint', models.URLField(max_length=500)),
-                ('p256dh', models.CharField(max_length=255)),
-                ('auth', models.CharField(max_length=255)),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('user', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='push_subscriptions', to=settings.AUTH_USER_MODEL)),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("endpoint", models.URLField(max_length=500)),
+                ("p256dh", models.CharField(max_length=255)),
+                ("auth", models.CharField(max_length=255)),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
+                (
+                    "user",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="push_subscriptions",
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
             ],
             options={
-                'unique_together': {('user', 'endpoint')},
+                "unique_together": {("user", "endpoint")},
             },
         ),
     ]

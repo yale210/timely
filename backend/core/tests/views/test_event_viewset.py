@@ -19,7 +19,6 @@ class EventViewSetTests(APITestCase):
         now = timezone.now()
         data = {
             "title": "API Event",
-            "importance": 5,
             "start_time": now + datetime.timedelta(hours=3),
             "end_time": now + datetime.timedelta(hours=4),
             "reminders": [
@@ -41,7 +40,6 @@ class EventViewSetTests(APITestCase):
         event = Event.objects.create(
             user=self.user,
             title="Old Title",
-            importance=5,
             start_time=now + datetime.timedelta(hours=3),
             end_time=now + datetime.timedelta(hours=4),
         )
@@ -50,7 +48,6 @@ class EventViewSetTests(APITestCase):
         url = reverse("event-detail", args=[event.id])
         data = {
             "title": "New Title",
-            "importance": 5,
             "start_time": now + datetime.timedelta(hours=3),
             "end_time": now + datetime.timedelta(hours=4),
             "reminders": [
@@ -72,7 +69,6 @@ class EventViewSetTests(APITestCase):
         event = Event.objects.create(
             user=self.user,
             title="Event with Reminders",
-            importance=5,
             start_time=now,
             end_time=now + datetime.timedelta(hours=1),
         )
@@ -90,7 +86,6 @@ class EventViewSetTests(APITestCase):
         now = timezone.now()
         data = {
             "title": "Event with 5 reminders",
-            "importance": 5,
             "start_time": now + datetime.timedelta(hours=3),
             "end_time": now + datetime.timedelta(hours=4),
             "reminders": [
@@ -110,7 +105,6 @@ class EventViewSetTests(APITestCase):
         now = timezone.now()
         data = {
             "title": "Event with too many reminders",
-            "importance": 5,
             "start_time": now + datetime.timedelta(hours=5),
             "end_time": now + datetime.timedelta(hours=6),
             "reminders": [
@@ -135,7 +129,6 @@ class EventViewSetTests(APITestCase):
         now = timezone.now()
         data = {
             "title": "Never Ending Event",
-            "importance": 5,
             "start_time": now + datetime.timedelta(hours=1),
             "end_time": now + datetime.timedelta(hours=2),
             "recurrence_interval": "weekly",

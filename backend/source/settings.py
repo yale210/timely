@@ -61,11 +61,25 @@ else:
     if not SECRET_KEY:
         raise ImproperlyConfigured("SECRET_KEY not set!")
 
+ALLOWED_HOSTS = []
+CORS_ALLOWED_ORIGINS = ["http://localhost:5173", "http://localhost:3000"]
+
+CSRF_TRUSTED_ORIGINS = [
+    "http://localhost:5173",
+    "http://localhost:3000",
+    "http://127.0.0.1:5173",
+]
+
 
 if DEBUG:
-    ALLOWED_HOSTS = []
+    ALLOWED_HOSTS.extend(["127.0.0.1", "localhost", "0.0.0.0", "[::1]"])
 else:
-    ALLOWED_HOSTS = ["timely.subhan.work"]
+    ALLOWED_HOSTS.append("timely.subhan.work")
+    CSRF_TRUSTED_ORIGINS = ["https://timely.subhan.work"]
+    CORS_ALLOWED_ORIGINS = ["https://timely.subhan.work"]
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+    SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 
 
 # Application definition
@@ -81,11 +95,13 @@ INSTALLED_APPS = [
     "core.apps.CoreConfig",
     # Extra apps
     "rest_framework",
+    "drf_spectacular",
     "django_filters",
     "corsheaders",
     "knox",
     "authentication",
     "channels",
+    "scheduler",
 ]
 
 
@@ -102,13 +118,6 @@ MIDDLEWARE = [
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
 
-CORS_ALLOWED_ORIGINS = ["http://localhost:5173", "http://localhost:3000"]
-
-CSRF_TRUSTED_ORIGINS = [
-    "http://localhost:5173",
-    "http://localhost:3000",
-    "http://127.0.0.1:5173",
-]
 
 ROOT_URLCONF = "source.urls"
 
@@ -182,6 +191,20 @@ REST_FRAMEWORK = {
         "knox.auth.TokenAuthentication",
         "rest_framework.authentication.SessionAuthentication",
     ),
+    "DEFAULT_RENDERER_CLASSES": (
+        (
+            "rest_framework.renderers.JSONRenderer",
+            "rest_framework.renderers.BrowsableAPIRenderer",
+        )
+        if DEBUG
+        else ("rest_framework.renderers.JSONRenderer",)
+    ),
+}
+
+SPECTACULAR_SETTINGS = {
+    "TITLE": "Timely API",
+    "DESCRIPTION": "OpenAPI schema for Timely backend",
+    "VERSION": "1.0.0",
 }
 
 REST_KNOX = {

@@ -27,7 +27,9 @@ from core.views import (
     NotificationViewSet,
     PushSubscriptionViewSet,
     AdminSendNotificationView,
+    WeeklySummaryView,
 )
+from scheduler.views import ScheduleTasksAPIView, UnscheduleTasksAPIView
 
 
 router = DefaultRouter()
@@ -40,8 +42,15 @@ router.register(r"notifications", NotificationViewSet, basename="notification")
 router.register(r"push", PushSubscriptionViewSet, basename="push")
 
 urlpatterns = [
-    path("api/admin/send_notification/", AdminSendNotificationView.as_view(), name="admin-send-notification"),
+    path(
+        "api/admin/send_notification/",
+        AdminSendNotificationView.as_view(),
+        name="admin-send-notification",
+    ),
     path("api/", include(router.urls)),
+    path("api/schedule/", ScheduleTasksAPIView.as_view(), name="schedule-tasks"),
+    path("api/unschedule/", UnscheduleTasksAPIView.as_view(), name="unschedule-tasks"),
+    path("api/stats/weekly/", WeeklySummaryView.as_view(), name="weekly-summary"),
     path("api/admin/", admin.site.urls),
     path("api/authentication/", include("authentication.urls")),
 ]

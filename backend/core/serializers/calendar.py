@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from core.models import Task, Category
-from .category_serializer import CategorySerializer
+from .category import CategorySerializer
 
 
 class CalendarSerializer(serializers.ModelSerializer):
@@ -21,6 +21,8 @@ class CalendarSerializer(serializers.ModelSerializer):
             "importance",
             "completed",
             "parent_task",
+            "allocation",
+            "total_task_allocations",
         ]
 
     def to_representation(self, instance):
@@ -29,3 +31,22 @@ class CalendarSerializer(serializers.ModelSerializer):
             instance.categories.all(), many=True
         ).data
         return representation
+
+
+class CalendarResponseSerializer(serializers.ModelSerializer):
+    categories = CategorySerializer(many=True, read_only=True)
+
+    class Meta:
+        model = Task
+        fields = [
+            "id",
+            "title",
+            "description",
+            "categories",
+            "estimated_minutes",
+            "start_time",
+            "deadline",
+            "importance",
+            "completed",
+            "parent_task",
+        ]

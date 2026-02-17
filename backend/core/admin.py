@@ -5,7 +5,14 @@ from .models import Grade, Category, Task, Notification, PushSubscription
 
 @admin.register(Notification)
 class NotificationAdmin(admin.ModelAdmin):
-    list_display = ("title", "recipient", "sender", "notification_type", "is_read", "timestamp")
+    list_display = (
+        "title",
+        "recipient",
+        "sender",
+        "notification_type",
+        "is_read",
+        "timestamp",
+    )
     list_filter = ("notification_type", "is_read", "timestamp")
     search_fields = ("title", "message", "recipient__username", "sender__username")
     actions = ["mark_as_read"]

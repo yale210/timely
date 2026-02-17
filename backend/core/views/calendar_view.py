@@ -1,8 +1,10 @@
 from rest_framework import viewsets, permissions, filters
+from drf_spectacular.types import OpenApiTypes
+from drf_spectacular.utils import OpenApiParameter, extend_schema, extend_schema_view
 from django_filters import rest_framework as django_filters
 from core.models import Task, Category
-from core.serializers.calendar import CalendarSerializer
-from core.serializers.category_serializer import CategorySerializer
+from core.serializers.calendar import CalendarSerializer, CalendarResponseSerializer
+from core.serializers.category import CategorySerializer
 
 
 class TaskFilter(django_filters.FilterSet):
@@ -21,7 +23,40 @@ class TaskFilter(django_filters.FilterSet):
         fields = ["completed", "categories", "start_time__gte", "deadline__lte"]
 
 
+@extend_schema_view(
+    list=extend_schema(responses=CalendarResponseSerializer(many=True)),
+    create=extend_schema(
+        request=CalendarSerializer,
+        responses={201: CalendarResponseSerializer},
+    ),
+    retrieve=extend_schema(
+        parameters=[
+            OpenApiParameter("id", OpenApiTypes.INT, OpenApiParameter.PATH),
+        ],
+        responses=CalendarResponseSerializer,
+    ),
+    update=extend_schema(
+        parameters=[
+            OpenApiParameter("id", OpenApiTypes.INT, OpenApiParameter.PATH),
+        ],
+        request=CalendarSerializer,
+        responses=CalendarResponseSerializer,
+    ),
+    partial_update=extend_schema(
+        parameters=[
+            OpenApiParameter("id", OpenApiTypes.INT, OpenApiParameter.PATH),
+        ],
+        request=CalendarSerializer,
+        responses=CalendarResponseSerializer,
+    ),
+    destroy=extend_schema(
+        parameters=[
+            OpenApiParameter("id", OpenApiTypes.INT, OpenApiParameter.PATH),
+        ]
+    ),
+)
 class TaskViewSet(viewsets.ModelViewSet):
+    queryset = Task.objects.none()
     serializer_class = CalendarSerializer
     permission_classes = [permissions.IsAuthenticated]
     filter_backends = [django_filters.DjangoFilterBackend, filters.OrderingFilter]

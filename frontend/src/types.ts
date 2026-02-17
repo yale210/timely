@@ -34,6 +34,8 @@ export interface Task {
   categories: Category[];
   estimated_minutes: number;
   parent_task?: number | null;
+  allocation?: { start: string; end: string }[];
+  total_task_allocations?: number;
 }
 
 /**
@@ -68,7 +70,6 @@ export interface Event {
   start_time: string;
   end_time: string;
   categories: Category[];
-  importance: number;
   recurrence_interval?: "daily" | "weekly" | "monthly" | "yearly" | null;
   recurrence_end?: string | null;
   reminders: EventReminder[];
@@ -81,4 +82,32 @@ export interface Event {
 export interface EventSubmission extends Omit<Partial<Event>, "reminders" | "categories"> {
   reminders?: Omit<EventReminder, "id">[];
   categories?: number[];
+}
+
+export interface ScheduleResult {
+  task_id: number;
+  success: boolean;
+  scheduled_start: string | null;
+  scheduled_end: string | null;
+  reason?: string | null;
+}
+
+export interface ScheduleResponse {
+  start_date: string;
+  scheduled_count: number;
+  failed_count: number;
+  results: ScheduleResult[];
+}
+
+/**
+ * Represents weekly task statistics.
+ * @interface WeeklyStats
+ */
+export interface WeeklyStats {
+  total_tasks: number;
+  completed_tasks: number;
+  completion_percentage: number;
+  total_minutes_planned: number;
+  daily_stats: { day: string; completed_count: number; total_minutes: number }[];
+  importance_stats: { level: number; completed_count: number }[];
 }

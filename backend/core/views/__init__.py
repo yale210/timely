@@ -6,6 +6,7 @@ from .preference_view import PreferenceViewSet as PreferenceViewSet
 from .notification_view import NotificationViewSet
 from .push_view import PushSubscriptionViewSet
 from .admin_notification_view import AdminSendNotificationView
+from .analytics_view import WeeklySummaryView as WeeklySummaryView
 
 __all__ = [
     "TaskViewSet",
@@ -16,4 +17,5 @@ __all__ = [
     "NotificationViewSet",
     "PushSubscriptionViewSet",
     "AdminSendNotificationView",
+    "WeeklySummaryView",
 ]
