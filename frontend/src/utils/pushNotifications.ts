@@ -21,50 +21,44 @@ export const isPushSupported = () => {
 
 export const subscribeUserToPush = async () => {
   if (!isPushSupported()) {
-    return;
+    throw new Error("Push notifications are not supported in this browser.");
   }
 
-  try {
-    const registration = await navigator.serviceWorker.ready;
-    
-    const { public_key } = await getVapidPublicKey();
-    if (!public_key) {
-      return;
-    }
+  const registration = await navigator.serviceWorker.ready;
 
-    const subscribeOptions = {
-      userVisibleOnly: true,
-      applicationServerKey: urlBase64ToUint8Array(public_key)
-    };
-
-    const subscription = await registration.pushManager.subscribe(subscribeOptions);
-    
-    const subJSON = subscription.toJSON();
-    if (subJSON.endpoint && subJSON.keys?.p256dh && subJSON.keys?.auth) {
-      await subscribeToPush({
-        endpoint: subJSON.endpoint,
-        p256dh: subJSON.keys.p256dh,
-        auth: subJSON.keys.auth
-      });
-    }
-  } catch {
-    // silent: subscription errors are not actionable by users
+  const { public_key } = await getVapidPublicKey();
+  if (!public_key) {
+    throw new Error("Server did not return a VAPID public key. Push notifications are not configured.");
   }
+
+  const subscribeOptions = {
+    userVisibleOnly: true,
+    applicationServerKey: urlBase64ToUint8Array(public_key),
+  };
+
+  const subscription = await registration.pushManager.subscribe(subscribeOptions);
+
+  const subJSON = subscription.toJSON();
+  if (!subJSON.endpoint || !subJSON.keys?.p256dh || !subJSON.keys?.auth) {
+    throw new Error("Browser returned an incomplete push subscription.");
+  }
+
+  await subscribeToPush({
+    endpoint: subJSON.endpoint,
+    p256dh: subJSON.keys.p256dh,
+    auth: subJSON.keys.auth,
+  });
 };
 
 export const unsubscribeUserFromPush = async () => {
   if (!isPushSupported()) return;
 
-  try {
-    const registration = await navigator.serviceWorker.ready;
-    const subscription = await registration.pushManager.getSubscription();
-    
-    if (subscription) {
-      const endpoint = subscription.endpoint;
-      await subscription.unsubscribe();
-      await unsubscribeFromPush(endpoint);
-    }
-  } catch {
-    // silent: unsubscription errors are not actionable by users
+  const registration = await navigator.serviceWorker.ready;
+  const subscription = await registration.pushManager.getSubscription();
+
+  if (subscription) {
+    const endpoint = subscription.endpoint;
+    await subscription.unsubscribe();
+    await unsubscribeFromPush(endpoint);
   }
 };
