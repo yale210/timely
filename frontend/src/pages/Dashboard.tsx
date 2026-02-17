@@ -1,6 +1,5 @@
-import { StatCard } from "../components/index"
+import { StatCard, AppNavbar } from "../components/index"
 import { CalendarPage } from "./index"
-
 
 /**
  * Renders the main dashboard page with stat cards and an embedded calendar.
@@ -8,6 +7,7 @@ import { CalendarPage } from "./index"
 export default function Dashboard(){
   return(
   <div className="min-h-screen bg-white">
+    <AppNavbar />
     <main className="mx-auto max-w-7xl px-6 lg:px-8 py-10">
       <header className="mb-10">
           <h1 className="text-3xl font-semibold tracking-tight text-gray-900">

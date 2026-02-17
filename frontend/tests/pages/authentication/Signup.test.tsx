@@ -23,6 +23,7 @@ vi.mock("@/services/authService", () => ({
 
 vi.mock("@/components/index", () => ({
   HomeNavbar: () => <div data-testid="navbar" />,
+  BlurBackground: () => <div data-testid="blur-bg" />,
   Footer: () => <div data-testid="footer" />,
 }))
 
