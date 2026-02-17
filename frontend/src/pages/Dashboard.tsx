@@ -1,4 +1,4 @@
-import { Statcard } from "../components/index"
+import { StatCard } from "../components/index"
 import { CalendarPage } from "./index"
 
 
@@ -19,9 +19,9 @@ export default function Dashboard(){
       </header>
 
       <section className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-        <Statcard title="Today's Tasks" value={["do part one of courswork", "review pr for coursework"]}/>
-        <Statcard title="Pending Tasks" value={[]}/>
-        <Statcard title="Overdue Tasks" value={[]}/>
+        <StatCard title="Today's Tasks" value={["do part one of courswork", "review pr for coursework"]}/>
+        <StatCard title="Pending Tasks" value={[]}/>
+        <StatCard title="Overdue Tasks" value={[]}/>
 
         <section className=" col-span-3 rounded-lg bg-white p-6 shadow-sm ring-1 ring-gray-900/5 m-6">
           <CalendarPage />
