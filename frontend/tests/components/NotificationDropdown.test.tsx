@@ -36,8 +36,8 @@ describe('NotificationDropdown', () => {
         <NotificationDropdown 
           notifications={[]} 
           unreadCount={0} 
-          onMarkAllRead={() => {}} 
-          onItemClick={() => {}} 
+          onMarkAllRead={() => undefined} 
+          onItemClick={() => undefined} 
         />
       </BrowserRouter>
     );
@@ -50,8 +50,8 @@ describe('NotificationDropdown', () => {
         <NotificationDropdown 
           notifications={mockNotifications} 
           unreadCount={1} 
-          onMarkAllRead={() => {}} 
-          onItemClick={() => {}} 
+          onMarkAllRead={() => undefined} 
+          onItemClick={() => undefined} 
         />
       </BrowserRouter>
     );
@@ -71,7 +71,7 @@ describe('NotificationDropdown', () => {
           notifications={mockNotifications} 
           unreadCount={1} 
           onMarkAllRead={handleMarkAllRead} 
-          onItemClick={() => {}} 
+          onItemClick={() => undefined} 
         />
       </BrowserRouter>
     );
@@ -89,8 +89,8 @@ describe('NotificationDropdown', () => {
         <NotificationDropdown 
           notifications={[]} 
           unreadCount={0} 
-          onMarkAllRead={() => {}} 
-          onItemClick={() => {}} 
+          onMarkAllRead={() => undefined} 
+          onItemClick={() => undefined} 
         />
       </BrowserRouter>
     );

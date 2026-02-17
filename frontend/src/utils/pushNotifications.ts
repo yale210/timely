@@ -15,10 +15,24 @@ function urlBase64ToUint8Array(base64String: string) {
   return outputArray;
 }
 
+/**
+ * Checks whether the current browser supports service workers and push notifications.
+ * @returns True if push notifications are supported, false otherwise.
+ */
 export const isPushSupported = () => {
-  return 'serviceWorker' in navigator && 'PushManager' in window;
+  return "serviceWorker" in navigator && "PushManager" in window;
 };
 
+/**
+ * Subscribes the current user to push notifications.
+ *
+ * This function retrieves the VAPID key from the server, interacts with the
+ * browser's push manager to create a subscription, and then sends the
+ * subscription details to the backend.
+ * @returns A promise that resolves when the subscription process is complete.
+ * @throws {Error} If push notifications are unsupported, the VAPID key is missing,
+ *                 or the subscription is incomplete.
+ */
 export const subscribeUserToPush = async () => {
   if (!isPushSupported()) {
     throw new Error("Push notifications are not supported in this browser.");
@@ -50,6 +64,13 @@ export const subscribeUserToPush = async () => {
   });
 };
 
+/**
+ * Unsubscribes the current user from push notifications.
+ *
+ * This function locates the existing subscription, unsubscribes through the
+ * browser's push manager, and notifies the backend to remove the subscription record.
+ * @returns A promise that resolves when the unsubscription process is complete.
+ */
 export const unsubscribeUserFromPush = async () => {
   if (!isPushSupported()) return;
 
