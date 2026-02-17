@@ -20,6 +20,14 @@ const normalizeUserIds = (rawValue: string): number[] => {
     .filter((value) => Number.isFinite(value) && value > 0);
 };
 
+/**
+ * A page component for administrators to send notifications to users.
+ *
+ * This component provides an interface to broadcast messages to all users,
+ * staff members, or specific individuals. It includes tools to search for
+ * and select target users.
+ * @returns The rendered admin notification page.
+ */
 export default function AdminNotifications() {
   const [title, setTitle] = useState("");
   const [message, setMessage] = useState("");

@@ -1,15 +1,20 @@
-import React, { useState, useEffect } from 'react';
+import type React from 'react';
+import { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import axios from 'axios';
 import { type Notification } from '../types/notification';
 import { 
   ArrowLeftIcon, 
-  TrashIcon,
-  BellIcon,
-  InformationCircleIcon,
-  ExclamationTriangleIcon
+  TrashIcon
 } from '@heroicons/react/24/outline';
 
+/**
+ * A page component that displays the full details of a single notification.
+ *
+ * This component fetches the notification by ID from the URL parameters
+ * and allows users to view its content or delete it.
+ * @returns The rendered notification detail page.
+ */
 export const NotificationDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -34,14 +39,14 @@ export const NotificationDetail: React.FC = () => {
       }
     };
 
-    fetchNotification();
+    void fetchNotification();
   }, [id]);
 
   const handleDelete = async () => {
     if (window.confirm('Are you sure you want to delete this notification?')) {
       try {
         await axios.delete(`/api/notifications/${id}/`);
-        navigate('/notifications');
+        await navigate('/notifications');
       } catch (err) {
         console.error('Failed to delete notification', err);
       }
@@ -49,7 +54,7 @@ export const NotificationDetail: React.FC = () => {
   };
 
   if (loading) return <div className="p-8 text-center">Loading...</div>;
-  if (error || !notification) return <div className="p-8 text-center text-red-500">{error || 'Notification not found'}</div>;
+  if (error || !notification) return <div className="p-8 text-center text-red-500">{error ?? 'Notification not found'}</div>;
 
   return (
     <div className="max-w-4xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
@@ -71,7 +76,7 @@ export const NotificationDetail: React.FC = () => {
             </p>
           </div>
           <button
-            onClick={handleDelete}
+            onClick={() => void handleDelete()}
             className="inline-flex items-center p-2 border border-transparent rounded-full shadow-sm text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
           >
             <TrashIcon className="h-5 w-5" aria-hidden="true" />

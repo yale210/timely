@@ -83,6 +83,14 @@ const PushNotificationBanner = () => {
   );
 };
 
+/**
+ * A page component that displays the user's full list of notifications.
+ *
+ * This component provides pagination and functionality to mark all
+ * notifications as read, view individual notification details, or enable
+ * push notifications through specialized helper components.
+ * @returns The rendered notification list page.
+ */
 export const Notifications: React.FC = () => {
   const { 
     notifications, 
