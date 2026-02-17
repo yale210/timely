@@ -20,21 +20,15 @@ def check_reminders():
         event = reminder.event
         user = event.user
 
-        # Create in-app notification
-        Notification.objects.create(
+        notification = Notification(
             recipient=user,
             title=f"Reminder: {event.title}",
             message=f"Your event '{event.title}' is starting soon.",
             notification_type=Notification.NotificationType.REMINDER,
         )
-
-        # Send push notification if enabled
-        if reminder.send_push:
-            send_push_notification.delay(
-                user.id,
-                f"Reminder: {event.title}",
-                f"Your event '{event.title}' is starting soon.",
-            )
+        if not reminder.send_push:
+            notification._skip_push = True
+        notification.save()
 
         # Mark as processed
         reminder.processed = True
@@ -88,8 +82,5 @@ def broadcast_notification(title, message, target="all", user_ids=None):
             message=message,
             notification_type=Notification.NotificationType.ADMIN,
         )
-
-        # Optionally send push as well
-        send_push_notification.delay(user.id, title, message)
 
     return f"Broadcasted to {recipients.count()} users"

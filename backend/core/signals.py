@@ -3,14 +3,11 @@ from django.dispatch import receiver
 
 from core.models.notification import Notification
 from core.utils.websocket import notify_user
+from core.tasks import send_push_notification
 
 
 @receiver(post_save, sender=Notification)
 def push_notification_on_create(sender, instance, created, **kwargs):
-    """
-    When a Notification is created, push the full notification data
-    and updated unread count to the recipient via WebSocket.
-    """
     if not created:
         return
 
@@ -38,3 +35,8 @@ def push_notification_on_create(sender, instance, created, **kwargs):
             "unread_count": unread_count,
         },
     )
+
+    if not getattr(instance, "_skip_push", False):
+        send_push_notification.delay(
+            instance.recipient_id, instance.title, instance.message
+        )
