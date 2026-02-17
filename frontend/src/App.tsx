@@ -1,5 +1,6 @@
 import { Routes, Route } from "react-router-dom"
 import RequireAuth from "@/components/RequireAuth"
+import RequireAdmin from "@/components/RequireAdmin"
 import { Home, Login, Signup, Logout, CalendarPage, TaskList, EventList, Gradebook, Dashboard, WeeklySummaries } from "./pages/index"
 import { Notifications } from "./pages/Notifications"
 import { NotificationDetail } from "./pages/NotificationDetail"
@@ -66,9 +67,9 @@ export default function App() {
       } />
 
       <Route path="/admin/notifications" element={
-        <RequireAuth>
+        <RequireAdmin>
           <AdminNotifications />
-        </RequireAuth>
+        </RequireAdmin>
       } />
 
     </Routes>

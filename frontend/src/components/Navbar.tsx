@@ -16,6 +16,9 @@ const authedNavigation = [
     { name: 'Events', href: '/events' },
     { name: 'Gradebook', href: '/gradebook' },
     { name: 'Weekly Summaries', href: '/weekly-summaries' },
+]
+
+const adminNavigation = [
     { name: 'Admin notifications', href: '/admin/notifications' },
 ]
 
@@ -57,10 +60,16 @@ export default function Navbar({ hideSignupWhenAuthed = true }: NavbarProps = {}
         void navigate(`/notifications/${notification.id}`)
     }
 
+    const user = authStore.getUser()
+    const isStaff = Boolean(user?.is_staff)
+
     const filteredNavigation = isAuthed
-        ? (hideSignupWhenAuthed
-            ? authedNavigation.filter((item) => item.href !== "/signup")
-            : authedNavigation)
+        ? [
+            ...(hideSignupWhenAuthed
+                ? authedNavigation.filter((item) => item.href !== "/signup")
+                : authedNavigation),
+            ...(isStaff ? adminNavigation : []),
+        ]
         : guestNavigation
 
     useEffect(() => {
@@ -85,9 +94,11 @@ export default function Navbar({ hideSignupWhenAuthed = true }: NavbarProps = {}
                     </div>
 
                     <div className="flex lg:hidden">
-                        <div className="flex items-center gap-4 mr-4">
-                            <NotificationBell unreadCount={unreadCount} onClick={() => void navigate('/notifications')} />
-                        </div>
+                        {isAuthed && (
+                            <div className="flex items-center gap-4 mr-4">
+                                <NotificationBell unreadCount={unreadCount} onClick={() => void navigate('/notifications')} />
+                            </div>
+                        )}
                         <button
                         type="button"
                         onClick={() => setMobileMenuOpen(true)}
@@ -107,12 +118,14 @@ export default function Navbar({ hideSignupWhenAuthed = true }: NavbarProps = {}
                     </div>
 
                     <div className="hidden lg:flex lg:flex-1 lg:justify-end lg:items-center lg:gap-x-6">
-                        <NotificationDropdown 
-                            notifications={notifications}
-                            unreadCount={unreadCount}
-                            onMarkAllRead={() => void markAllRead()}
-                            onItemClick={handleNotificationClick}
-                        />
+                        {isAuthed && (
+                            <NotificationDropdown 
+                                notifications={notifications}
+                                unreadCount={unreadCount}
+                                onMarkAllRead={() => void markAllRead()}
+                                onItemClick={handleNotificationClick}
+                            />
+                        )}
                         {isAuthed ? (
                             <Link to="/logout" className="text-sm/6 font-semibold text-gray-900">
                                 Log out <span aria-hidden="true">&rarr;</span>
