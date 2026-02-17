@@ -8,6 +8,7 @@ import "../index.css"
 import AppLayout from "../layouts/AppLayout";
 import * as taskService from "../services/taskService";
 import * as eventService from "@/services/eventService";
+import * as schedulerService from "../services/schedulerService";
 import type {
   Task,
   Category,
@@ -23,7 +24,7 @@ const localizer = momentLocalizer(moment);
  */
 
 interface CalendarEntry {
-  id: number;
+  id: string;
   title: string;
   start: Date;
   end: Date;
@@ -33,6 +34,7 @@ interface CalendarEntry {
   repeat?: boolean;
   split?: boolean;
   oneGo?: boolean;
+  scheduleIndex?: number;
 }
 
 const CalendarPage = () => {
@@ -40,10 +42,13 @@ const CalendarPage = () => {
   const [categories, setCategories] = useState<Category[]>([]);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState<Task | Event| undefined>(undefined);
-  const [view, setView] = useState<View>(Views.MONTH);
+  const [view, setView] = useState<View>(Views.WEEK);
   const [date, setDate] = useState(new Date());
   const [sidebarMode, setSidebarMode] = useState<"task" | "event">("task");
   const [events, setEvents] = useState<Event[]>([]);
+  const [isScheduling, setIsScheduling] = useState(false);
+  const [isUnscheduling, setIsUnscheduling] = useState(false);
+  const [scheduleOrder, setScheduleOrder] = useState<Record<number, number>>({});
 
   const fetchTasks = useCallback(async () => {
     try {
@@ -217,35 +222,71 @@ const CalendarPage = () => {
     }
   }
 
+  const handleScheduleTasks = async () => {
+    setIsScheduling(true);
+    try {
+      const response = await schedulerService.scheduleTasks({
+        start_date: moment(date).format("YYYY-MM-DD"),
+      });
+      const nextOrder: Record<number, number> = {};
+      response.results
+        .filter((result) => result.success && result.scheduled_start && result.scheduled_end)
+        .forEach((result, index) => {
+          nextOrder[result.task_id] = index;
+        });
+      setScheduleOrder(nextOrder);
+      await fetchTasks();
+      void response;
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setIsScheduling(false);
+    }
+  };
+
+  const handleUnscheduleTasks = async () => {
+    setIsUnscheduling(true);
+    try {
+      await schedulerService.unscheduleTasks();
+      await fetchTasks();
+      setScheduleOrder({});
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setIsUnscheduling(false);
+    }
+  };
+
   const calendarEntries: CalendarEntry[] = [
-    ...tasks.map((task, index) => ({
-    id: task.id,
-    title: task.title,
-    start: new Date(task.start_time),
-    end: new Date(task.deadline),
-    allDay: moment(task.deadline).diff(moment(task.start_time), "hours") >= 24,
-    kind: "task" as const,
-    sourceId: task.id,
-    /*
-    repeat: boolean(task.repeat),
-    split: boolean(task.split),
-    oneGo: boolean(task["one-go"]),
-    */
-    repeat: index%3==0,
-    split: index%2==0,
-    setTime: index%3==1,
-    oneGo: index%3==1,
-  })),
-  ...events.map((event) => ({
-    id: 1000000 + event.id,
-    title: event.title,
-    start: new Date(event.start_time),
-    end: new Date(event.end_time),
-    allDay: false,
-    kind: "event" as const,
-    sourceId: event.id,
-  })),
-];
+    ...tasks.flatMap((task) => {
+      const allocations = task.allocation ?? [];
+      if (allocations.length === 0) {
+        return [];
+      }
+      return allocations.map((slot, index) => ({
+        id: `task-${task.id}-${index}`,
+        title: task.title,
+        start: new Date(slot.start),
+        end: new Date(slot.end),
+        allDay: moment(slot.end).diff(moment(slot.start), "hours") >= 24,
+        kind: "task" as const,
+        sourceId: task.id,
+        split: allocations.length > 1,
+        oneGo: allocations.length === 1,
+        scheduleIndex: scheduleOrder[task.id],
+      }));
+    }),
+    ...events.map((event) => ({
+      id: `event-${event.id}`,
+      title: event.title,
+      start: new Date(event.start_time),
+      end: new Date(event.end_time),
+      allDay: false,
+      kind: "event" as const,
+      sourceId: event.id,
+      oneGo: true,
+    })),
+  ];
   return (
     /*<div style={{ height: "80vh", padding: "2rem" }}>
       <h1>Task Calendar</h1>
@@ -296,6 +337,32 @@ const CalendarPage = () => {
               </div>
             </div>
             <div className="flex items-center gap-4">
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => { void handleScheduleTasks(); }}
+                  disabled={isScheduling || isUnscheduling}
+                  className={`px-4 py-2 rounded-lg text-sm font-medium flex items-center shadow-sm transition-colors ${
+                    isScheduling || isUnscheduling
+                      ? "bg-gray-200 text-gray-500 cursor-not-allowed"
+                      : "bg-primary text-white hover:bg-blue-300"
+                  }`}
+                >
+                  <span className="material-icons text-lg mr-1.5">auto_awesome</span>
+                  {isScheduling ? "Scheduling..." : "Schedule Tasks"}
+                </button>
+                <button
+                  onClick={() => { void handleUnscheduleTasks(); }}
+                  disabled={isScheduling || isUnscheduling}
+                  className={`px-4 py-2 rounded-lg text-sm font-medium flex items-center shadow-sm transition-colors ${
+                    isScheduling || isUnscheduling
+                      ? "bg-gray-200 text-gray-500 cursor-not-allowed"
+                      : "bg-white text-gray-700 border border-gray-300 hover:bg-gray-50"
+                  }`}
+                >
+                  <span className="material-icons text-lg mr-1.5">event_busy</span>
+                  {isUnscheduling ? "Unscheduling..." : "Unschedule Tasks"}
+                </button>
+              </div>
               <div className="flex items-center bg-white border border-gray-200 rounded-lg overflow-hidden shadow-sm">
                 <button
                   onClick={() =>
@@ -349,10 +416,15 @@ const CalendarPage = () => {
                   event.repeat ? "is-repeat": "",
                   event.split ? "is-split" : "",
                   event.oneGo ? "is-onego" : "",
+                  event.kind === "event" ? "is-event" : "",
+                  event.kind === "task" && typeof event.scheduleIndex === "number" ? "is-just-scheduled" : "",
                 ]
                 .filter(Boolean)
                 .join(" ");
-                return { className };
+                const style = event.kind === "task" && typeof event.scheduleIndex === "number"
+                  ? { animationDelay: `${event.scheduleIndex * 120}ms` }
+                  : undefined;
+                return { className, style };
               }}
             />
           </div>
