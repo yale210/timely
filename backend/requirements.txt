@@ -24,4 +24,5 @@ redis==6.4.0
 django-celery-beat==2.8.1
 django-celery-results==2.6.0
 pywebpush>=2.0.0
+python-dotenv>=1.0.0
 

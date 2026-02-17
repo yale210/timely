@@ -14,9 +14,12 @@ import os
 from datetime import timedelta
 from django.core.exceptions import ImproperlyConfigured
 from pathlib import Path
+from dotenv import load_dotenv
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
+
+load_dotenv(BASE_DIR / ".env")
 
 # only turn debug on when it is in debug mode
 DEBUG = os.getenv("DEBUG", "True") == "True"
@@ -204,16 +207,16 @@ USE_TZ = True
 STATIC_URL = "/api/static/"
 STATIC_ROOT = BASE_DIR / "staticfiles"
 
-ASGI_APPLICATION = 'source.asgi.application'
+ASGI_APPLICATION = "source.asgi.application"
 
-REDIS_URL = os.getenv('REDIS_URL', 'redis://localhost:6379/0')
+REDIS_URL = os.getenv("REDIS_URL", "redis://localhost:6379/0")
 CELERY_BROKER_URL = REDIS_URL
 CELERY_RESULT_BACKEND = REDIS_URL
-CELERY_TIMEZONE = 'UTC'
+CELERY_TIMEZONE = "UTC"
 CELERY_BEAT_SCHEDULE = {
-    'check_reminders': {
-        'task': 'core.tasks.check_reminders',
-        'schedule': 60.0,
+    "check_reminders": {
+        "task": "core.tasks.check_reminders",
+        "schedule": 60.0,
     },
 }
 
@@ -226,7 +229,6 @@ CHANNEL_LAYERS = {
     },
 }
 
-VAPID_PUBLIC_KEY = os.getenv('VAPID_PUBLIC_KEY')
-VAPID_PRIVATE_KEY = os.getenv('VAPID_PRIVATE_KEY')
-VAPID_ADMIN_EMAIL = os.getenv('VAPID_ADMIN_EMAIL')
-
+VAPID_PUBLIC_KEY = os.getenv("VAPID_PUBLIC_KEY")
+VAPID_PRIVATE_KEY = os.getenv("VAPID_PRIVATE_KEY")
+VAPID_ADMIN_EMAIL = os.getenv("VAPID_ADMIN_EMAIL")
