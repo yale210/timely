@@ -73,6 +73,13 @@ export default function Gradebook() {
     
   }, [])
 
+ useEffect(() => {
+    const savedTheme = localStorage.getItem("theme");
+    if (savedTheme) {
+      document.documentElement.dataset.theme = savedTheme;
+    }
+  }, []);
+
   async function fetchGrades() {
     setLoading(true)
     const res = await fetch("/api/grades/", { credentials: "include" })

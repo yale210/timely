@@ -1,0 +1,10 @@
+[data-theme="light"] {
+  --primary: #3b82f6;
+  --primary-hover: #93c5fd;
+
+  --background: #ffffff;
+  --primary-color: #000000;
+
+  --border: #e2e8f0;
+}
+

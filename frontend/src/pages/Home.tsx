@@ -1,14 +1,31 @@
 import { Navbar, Footer } from "@/components/index"
 import heroImage from "@/assets/hero-content-img.svg"
 import { Link } from "react-router-dom"
+import { useEffect } from "react"
 
 /**
  * A functional component that renders the homepage of the application.
  * @returns The rendered homepage component.
  */
 export default function Home() {
+
+  useEffect(() => {
+    const savedTheme = localStorage.getItem("theme");
+    //const savedFont = localStorage.getItem("font");
+    
+    if (savedTheme) {
+      document.documentElement.dataset.theme = savedTheme;
+      console.log("loaded saved theme")
+    }
+
+    const savedFont = localStorage.getItem("font");
+    if (savedFont) {
+      document.documentElement.dataset.font = savedFont;
+    }
+  }, []);
+
   return (
-    <div className="bg-white">
+    <div className="bg-[var(--background)] font-[var--(--primary-font)]">
       <Navbar />
     
       <div className="relative isolate px-6 lg:px-8">

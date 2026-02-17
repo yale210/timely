@@ -1,0 +1,17 @@
+@import url("https://fonts.googleapis.com/css2?family=Poppins&family=Inter&family=Pacifico&display=swap");
+
+[data-font="poppins"] {
+  --primary-font: "Poppins", system-ui, sans-serif;
+}
+
+[data-font="inter"] {
+  --primary-font: "Inter", system-ui, sans-serif;
+}
+
+[data-font="mono"] {
+  --primary-font: "JetBrains Mono", monospace;
+}
+
+[data-font="pacifico"]{
+  --primary-font: "Pacifico", cursive, system-ui, sans-serif;   
+}

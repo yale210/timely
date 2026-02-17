@@ -1,5 +1,5 @@
 import { Routes, Route } from "react-router-dom"
-import { Home, Login, Signup, CalendarPage, TaskList, EventList, Gradebook, Dashboard} from "./pages/index"
+import { Home, Login, Signup, CalendarPage, TaskList, EventList, Gradebook, Dashboard, Themes} from "./pages/index"
 
 /**
  * The root component of the application which organises the routing logic.
@@ -16,6 +16,7 @@ export default function App() {
       <Route path="/tasks" element={<TaskList />} />
       <Route path="/events" element={<EventList />} />
       <Route path="/gradebook" element={<Gradebook />} />
+      <Route path="/Themes" element={<Themes />} />
 
     </Routes>
   )

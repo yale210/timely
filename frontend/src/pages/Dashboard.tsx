@@ -8,7 +8,7 @@ import { CalendarPage } from "./index"
  */
 export default function Dashboard(){
   return(
-  <div className="min-h-screen bg-white">
+  <div className="min-h-screen bg-">
     <main className="mx-auto max-w-7xl px-6 lg:px-8 py-10">
       <header className="mb-10">
           <h1 className="text-3xl font-semibold tracking-tight text-gray-900">
