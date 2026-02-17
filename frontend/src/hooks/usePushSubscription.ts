@@ -42,6 +42,14 @@ const checkSubscription = async (): Promise<boolean> => {
   }
 };
 
+/**
+ * A custom hook to manage browser push notification subscriptions.
+ *
+ * This hook provides state and functions for managing subscriptions,
+ * checking browser support, handling user permissions, and subscribing
+ * or unsubscribing from push notifications using the VAPID key.
+ * @returns An object containing the subscription state and management functions.
+ */
 export const usePushSubscription = (): UsePushSubscriptionReturn => {
   const [isSubscribed, setIsSubscribed] = useState(false);
   const [permission, setPermission] = useState<PushPermission>(getPermission);

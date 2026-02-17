@@ -8,6 +8,14 @@ import {
 } from '../api/notifications';
 import { type Notification } from '../types/notification';
 
+/**
+ * A custom hook for managing and fetching notifications.
+ *
+ * This hook provides state and methods for retrieving a user's notifications,
+ * tracking the unread count, and performing actions like marking as read
+ * or deleting a notification.
+ * @returns An object containing notification state and management functions.
+ */
 export const useNotifications = () => {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
@@ -16,7 +24,7 @@ export const useNotifications = () => {
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(false);
 
-  const fetchNotifications = useCallback(async (pageNum: number = 1) => {
+  const fetchNotifications = useCallback(async (pageNum = 1) => {
     setLoading(true);
     try {
       const data = await getNotifications(pageNum);
@@ -81,8 +89,8 @@ export const useNotifications = () => {
   };
 
   useEffect(() => {
-    fetchNotifications(1);
-    fetchUnreadCount();
+    void fetchNotifications(1);
+    void fetchUnreadCount();
   }, [fetchNotifications, fetchUnreadCount]);
 
   return {
