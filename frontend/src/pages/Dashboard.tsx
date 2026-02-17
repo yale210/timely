@@ -1,5 +1,6 @@
 import { Statcard } from "../components/index"
 import { CalendarPage } from "./index"
+import AppLayout from "../layouts/AppLayout"
 
 
 /**
@@ -7,7 +8,7 @@ import { CalendarPage } from "./index"
  */
 export default function Dashboard(){
   return(
-  <div className="min-h-screen bg-white">
+  <AppLayout>
     <main className="mx-auto max-w-7xl px-6 lg:px-8 py-10">
       <header className="mb-10">
           <h1 className="text-3xl font-semibold tracking-tight text-gray-900">
@@ -24,11 +25,11 @@ export default function Dashboard(){
         <Statcard title="Overdue Tasks" value={[]}/>
 
         <section className=" col-span-3 rounded-lg bg-white p-6 shadow-sm ring-1 ring-gray-900/5 m-6">
-          <CalendarPage />
+          <CalendarPage showNavbar={false} />
         </section>
 
       </section>
     </main>
-  </div>
+  </AppLayout>
   )
 }
