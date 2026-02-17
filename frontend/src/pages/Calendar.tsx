@@ -236,9 +236,7 @@ const CalendarPage = () => {
         });
       setScheduleOrder(nextOrder);
       await fetchTasks();
-      const suffix = response.failed_count > 0
-        ? ` ${response.failed_count} task${response.failed_count === 1 ? "" : "s"} couldn't be scheduled.`
-        : "";
+      void response;
     } catch (err) {
       console.error(err);
     } finally {
@@ -249,7 +247,7 @@ const CalendarPage = () => {
   const handleUnscheduleTasks = async () => {
     setIsUnscheduling(true);
     try {
-      const response = await schedulerService.unscheduleTasks();
+      await schedulerService.unscheduleTasks();
       await fetchTasks();
       setScheduleOrder({});
     } catch (err) {
