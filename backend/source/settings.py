@@ -96,6 +96,8 @@ INSTALLED_APPS = [
     "corsheaders",
     "knox",
     "authentication",
+    "profiles"
+
 ]
 
 MIDDLEWARE = [
