@@ -1,6 +1,10 @@
+from datetime import time
+
 from django.db import models
 from django.conf import settings
 from django.core.validators import MinValueValidator
+from django.utils import timezone
+
 from .category import Category
 from .task import Task
 
@@ -49,7 +53,9 @@ class Grade(models.Model):
             user=self.user,
             categories=self.category,
             completed=True,
-            deadline__lte=self.date_achieved,
+            deadline__lte=timezone.make_aware(
+                timezone.datetime.combine(self.date_achieved, time.max)
+            ),
         )
         total = qs.aggregate(models.Sum("estimated_minutes"))["estimated_minutes__sum"]
         return int(total or 0)
