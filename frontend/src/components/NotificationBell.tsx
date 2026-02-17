@@ -1,4 +1,4 @@
-import React from 'react';
+import type React from 'react';
 import { BellIcon } from '@heroicons/react/24/outline';
 
 interface NotificationBellProps {
@@ -7,6 +7,17 @@ interface NotificationBellProps {
   as?: 'button' | 'div';
 }
 
+/**
+ * A reusable notification bell component.
+ *
+ * This component displays a bell icon with an optional unread count badge.
+ * It can be rendered as either a button or a div.
+ * @param props - The component's properties.
+ * @param props.unreadCount - The number of unread notifications to display.
+ * @param props.onClick - An optional callback function to execute when the bell is clicked.
+ * @param props.as - Determines the container element type, defaulting to 'button'.
+ * @returns The rendered notification bell.
+ */
 export const NotificationBell: React.FC<NotificationBellProps> = ({ 
   unreadCount, 
   onClick,

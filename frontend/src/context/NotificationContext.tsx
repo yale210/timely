@@ -38,6 +38,14 @@ interface NotificationContextValue {
 
 const NotificationContext = createContext<NotificationContextValue | null>(null);
 
+/**
+ * A custom hook to access the notification context.
+ *
+ * This hook provides access to notification data and management functions.
+ * It must be used within a NotificationProvider.
+ * @returns The notification context value.
+ * @throws {Error} If used outside of a NotificationProvider.
+ */
 export const useNotificationContext = (): NotificationContextValue => {
   const ctx = useContext(NotificationContext);
   if (!ctx) {
@@ -50,6 +58,15 @@ interface NotificationProviderProps {
   children: ReactNode;
 }
 
+/**
+ * A context provider for managing notifications throughout the application.
+ *
+ * This component handles fetching notifications, managing unread counts,
+ * and processing real-time notification updates via WebSockets.
+ * @param props - The component's properties.
+ * @param props.children - The children components to be wrapped by the provider.
+ * @returns The rendered provider component.
+ */
 export const NotificationProvider = ({ children }: NotificationProviderProps) => {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);

@@ -1,4 +1,4 @@
-import React from 'react';
+import type React from 'react';
 import { Popover, Transition } from '@headlessui/react';
 import { Fragment } from 'react';
 import { type Notification } from '../types/notification';
@@ -13,6 +13,18 @@ interface NotificationDropdownProps {
   onItemClick: (notification: Notification) => void;
 }
 
+/**
+ * A dropdown menu that displays a summary of recent notifications.
+ *
+ * This component provides functionality to view recent notifications,
+ * go to the full notification list, and mark all as read.
+ * @param props - The component's properties.
+ * @param props.notifications - An array of notification objects to display in the dropdown.
+ * @param props.unreadCount - The total number of unread notifications.
+ * @param props.onMarkAllRead - A callback function to mark all notifications as read.
+ * @param props.onItemClick - A callback function executed when an individual notification is clicked.
+ * @returns The rendered notification dropdown component.
+ */
 export const NotificationDropdown: React.FC<NotificationDropdownProps> = ({ 
   notifications, 
   unreadCount,
@@ -23,10 +35,10 @@ export const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
 
   return (
     <Popover className="relative">
-      {({ open }) => (
+      {() => (
         <>
           <Popover.Button as="div" className="focus:outline-none cursor-pointer">
-            <NotificationBell unreadCount={unreadCount} onClick={() => {}} />
+            <NotificationBell unreadCount={unreadCount} />
           </Popover.Button>
 
           <Transition

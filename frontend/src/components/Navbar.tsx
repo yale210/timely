@@ -16,6 +16,13 @@ const navigation = [
     { name: 'Admin notifications', href: '/admin/notifications' },
 ]
 
+/**
+ * The main navigation bar component for the application.
+ *
+ * This component renders the global navigation links, the notification bell,
+ * and handles both desktop and mobile menu states.
+ * @returns The rendered navigation bar.
+ */
 export default function Navbar() {
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
     const navigate = useNavigate()

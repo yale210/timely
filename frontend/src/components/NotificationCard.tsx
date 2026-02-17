@@ -1,4 +1,4 @@
-import React from 'react';
+import type React from 'react';
 import { type Notification, NotificationType } from '../types/notification';
 import { 
   BellIcon, 
@@ -11,6 +11,16 @@ interface NotificationCardProps {
   onClick: (notification: Notification) => void;
 }
 
+/**
+ * A component representing an individual notification in a list.
+ *
+ * This component displays notification details, including an icon determined
+ * by the notification type, the title, and the timestamp.
+ * @param props - The component's properties.
+ * @param props.notification - The notification data object to display.
+ * @param props.onClick - A callback function executed when the card is clicked.
+ * @returns The rendered notification card.
+ */
 export const NotificationCard: React.FC<NotificationCardProps> = ({ notification, onClick }) => {
   const getIcon = () => {
     switch (notification.notification_type) {
