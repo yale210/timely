@@ -48,7 +48,6 @@ const CalendarPage = () => {
   const [events, setEvents] = useState<Event[]>([]);
   const [isScheduling, setIsScheduling] = useState(false);
   const [isUnscheduling, setIsUnscheduling] = useState(false);
-  const [scheduleStatus, setScheduleStatus] = useState<{ message: string; tone: "success" | "error" } | null>(null);
   const [scheduleOrder, setScheduleOrder] = useState<Record<number, number>>({});
 
   const fetchTasks = useCallback(async () => {
@@ -225,7 +224,6 @@ const CalendarPage = () => {
 
   const handleScheduleTasks = async () => {
     setIsScheduling(true);
-    setScheduleStatus(null);
     try {
       const response = await schedulerService.scheduleTasks({
         start_date: moment(date).format("YYYY-MM-DD"),
@@ -241,16 +239,8 @@ const CalendarPage = () => {
       const suffix = response.failed_count > 0
         ? ` ${response.failed_count} task${response.failed_count === 1 ? "" : "s"} couldn't be scheduled.`
         : "";
-      setScheduleStatus({
-        message: `Scheduled ${response.scheduled_count} task${response.scheduled_count === 1 ? "" : "s"}.${suffix}`,
-        tone: "success",
-      });
     } catch (err) {
       console.error(err);
-      setScheduleStatus({
-        message: "Failed to schedule tasks. Please try again.",
-        tone: "error",
-      });
     } finally {
       setIsScheduling(false);
     }
@@ -258,21 +248,12 @@ const CalendarPage = () => {
 
   const handleUnscheduleTasks = async () => {
     setIsUnscheduling(true);
-    setScheduleStatus(null);
     try {
       const response = await schedulerService.unscheduleTasks();
       await fetchTasks();
       setScheduleOrder({});
-      setScheduleStatus({
-        message: `Unscheduled ${response.unscheduled_count} task${response.unscheduled_count === 1 ? "" : "s"}.`,
-        tone: "success",
-      });
     } catch (err) {
       console.error(err);
-      setScheduleStatus({
-        message: "Failed to unschedule tasks. Please try again.",
-        tone: "error",
-      });
     } finally {
       setIsUnscheduling(false);
     }
