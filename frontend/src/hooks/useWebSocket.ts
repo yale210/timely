@@ -1,11 +1,16 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 
-export enum ConnectionStatus {
-  CONNECTING = 'CONNECTING',
-  OPEN = 'OPEN',
-  CLOSING = 'CLOSING',
-  CLOSED = 'CLOSED',
-}
+/**
+ * Represents the possible states of a WebSocket connection.
+ */
+export type ConnectionStatus = 'CONNECTING' | 'OPEN' | 'CLOSING' | 'CLOSED';
+
+export const ConnectionStatusValues = {
+  CONNECTING: 'CONNECTING' as ConnectionStatus,
+  OPEN: 'OPEN' as ConnectionStatus,
+  CLOSING: 'CLOSING' as ConnectionStatus,
+  CLOSED: 'CLOSED' as ConnectionStatus,
+} as const;
 
 /**
  * A custom hook to manage a WebSocket connection with automatic reconnection.
@@ -18,16 +23,16 @@ export enum ConnectionStatus {
  * @returns An object containing the current connection status and the message history.
  */
 export const useWebSocket = (url: string | null, onMessage: (data: unknown) => void) => {
-  const [status, setStatus] = useState<ConnectionStatus>(ConnectionStatus.CLOSED);
+  const [status, setStatus] = useState<ConnectionStatus>(ConnectionStatusValues.CLOSED);
   const socketRef = useRef<WebSocket | null>(null);
   const reconnectTimeoutRef = useRef<number | null>(null);
   const reconnectAttemptsRef = useRef(0);
-  const connectRef = useRef<() => void>();
+  const connectRef = useRef<() => void>(undefined);
 
   const connect = useCallback(() => {
     if (!url) return;
 
-    setStatus(ConnectionStatus.CONNECTING);
+    setStatus(ConnectionStatusValues.CONNECTING);
     
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
     const host = window.location.host;
@@ -37,7 +42,7 @@ export const useWebSocket = (url: string | null, onMessage: (data: unknown) => v
     socketRef.current = socket;
 
     socket.onopen = () => {
-      setStatus(ConnectionStatus.OPEN);
+      setStatus(ConnectionStatusValues.OPEN);
       reconnectAttemptsRef.current = 0;
     };
 
@@ -51,7 +56,7 @@ export const useWebSocket = (url: string | null, onMessage: (data: unknown) => v
     };
 
     socket.onclose = (event) => {
-      setStatus(ConnectionStatus.CLOSED);
+      setStatus(ConnectionStatusValues.CLOSED);
       socketRef.current = null;
 
       if (event.code !== 1000) {
