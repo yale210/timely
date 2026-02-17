@@ -21,7 +21,7 @@ vi.mock("@/services/eventService");
 interface SlotInfo { start: Date };
 
 interface MockCalendarEventLike {
-  id: number;
+  id: string;
   title: string;
 }
 
@@ -311,17 +311,17 @@ describe("CalendarPage (lean tests)", () => {
     });
 
     it("opens sidebar in task mode when clicking a task entry", async () => {
-      await waitFor(() => expect(screen.getByTestId("mock-event-1000")).toBeTruthy());
-      fireEvent.click(screen.getByTestId("mock-event-1000"));
+      await waitFor(() => expect(screen.getByTestId("mock-event-task-1-0")).toBeTruthy());
+      fireEvent.click(screen.getByTestId("mock-event-task-1-0"));
 
       await waitFor(() => expect(screen.getByTestId("mock-sidebar")).toBeTruthy());
       expect(screen.getByTestId("sidebar-mode").textContent).toBe("task");
     });
 
     it("opens sidebar in event mode when clicking an event entry", async () => {
-      await waitFor(() => expect(screen.getByTestId("mock-event-1000001")).toBeTruthy());
+      await waitFor(() => expect(screen.getByTestId("mock-event-event-1")).toBeTruthy());
 
-      fireEvent.click(screen.getByTestId("mock-event-1000001"));
+      fireEvent.click(screen.getByTestId("mock-event-event-1"));
 
       await waitFor(() => expect(screen.getByTestId("mock-sidebar")).toBeTruthy());
       expect(screen.getByTestId("sidebar-mode").textContent).toBe("event");
@@ -338,8 +338,8 @@ describe("CalendarPage (lean tests)", () => {
     });
 
     it("updates a task when existing task selected then submit-task", async () => {
-      await waitFor(() => expect(screen.getByTestId("mock-event-1000")).toBeTruthy());
-      fireEvent.click(screen.getByTestId("mock-event-1000"));
+      await waitFor(() => expect(screen.getByTestId("mock-event-task-1-0")).toBeTruthy());
+      fireEvent.click(screen.getByTestId("mock-event-task-1-0"));
       await waitFor(() => expect(screen.getByTestId("mock-sidebar")).toBeTruthy());
 
       fireEvent.click(screen.getByTestId("sidebar-submit-task"));
@@ -349,8 +349,8 @@ describe("CalendarPage (lean tests)", () => {
     });
 
     it("updates an event when existing event selected then submit-event", async () => {
-      await waitFor(() => expect(screen.getByTestId("mock-event-1000001")).toBeTruthy());
-      fireEvent.click(screen.getByTestId("mock-event-1000001"));
+      await waitFor(() => expect(screen.getByTestId("mock-event-event-1")).toBeTruthy());
+      fireEvent.click(screen.getByTestId("mock-event-event-1"));
       await waitFor(() => expect(screen.getByTestId("mock-sidebar")).toBeTruthy());
 
       fireEvent.click(screen.getByTestId("sidebar-submit-event"));
@@ -371,8 +371,8 @@ describe("CalendarPage (lean tests)", () => {
 
 
     it("deletes task when task selected then delete", async () => {
-      await waitFor(() => expect(screen.getByTestId("mock-event-1000")).toBeTruthy());
-      fireEvent.click(screen.getByTestId("mock-event-1000"));
+      await waitFor(() => expect(screen.getByTestId("mock-event-task-1-0")).toBeTruthy());
+      fireEvent.click(screen.getByTestId("mock-event-task-1-0"));
       await waitFor(() => expect(screen.getByTestId("mock-sidebar")).toBeTruthy());
 
       fireEvent.click(screen.getByTestId("sidebar-delete"));
@@ -382,8 +382,8 @@ describe("CalendarPage (lean tests)", () => {
     });
 
     it("deletes event when event selected then delete", async () => {
-      await waitFor(() => expect(screen.getByTestId("mock-event-1000001")).toBeTruthy());
-      fireEvent.click(screen.getByTestId("mock-event-1000001"));
+      await waitFor(() => expect(screen.getByTestId("mock-event-event-1")).toBeTruthy());
+      fireEvent.click(screen.getByTestId("mock-event-event-1"));
       await waitFor(() => expect(screen.getByTestId("mock-sidebar")).toBeTruthy());
 
       fireEvent.click(screen.getByTestId("sidebar-delete"));
