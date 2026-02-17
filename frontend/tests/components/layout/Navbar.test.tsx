@@ -2,12 +2,15 @@ import { cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { it, expect, describe, beforeEach, afterEach } from 'vitest'
 import { Navbar } from '@/components'
 import { MemoryRouter } from 'react-router-dom'
+import { NotificationProvider } from '@/context/NotificationContext'
 
 describe('Navbar', () => {
     beforeEach(() => {
         render(
             <MemoryRouter>
-                <Navbar />
+                <NotificationProvider>
+                    <Navbar />
+                </NotificationProvider>
             </MemoryRouter>
         )
     })

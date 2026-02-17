@@ -8,7 +8,7 @@ import "@testing-library/jest-dom/vitest"
 const navigateMock = vi.fn()
 
 vi.mock("react-router-dom", async () => {
-  const actual = await vi.importActual<typeof import("react-router-dom")>("react-router-dom")
+  const actual = await vi.importActual<Record<string, unknown>>("react-router-dom")
   return {
     ...actual,
     useNavigate: () => navigateMock,

@@ -8,6 +8,7 @@ vi.mock("@/services/statsService", () => ({
 
 import { getWeeklySummary } from "@/services/statsService";
 import WeeklySummaries from "@/pages/WeeklySummaries";
+import { NotificationProvider } from "@/context/NotificationContext";
 
 describe("WeeklySummaries page", () => {
   it("fetches data on mount", async () => {
@@ -27,14 +28,14 @@ describe("WeeklySummaries page", () => {
       ],
   importance_stats: Array.from({ length: 10 }, () => ({ level: 1, completed_count: 0 })),
     });
-    render(<MemoryRouter><WeeklySummaries /></MemoryRouter>);
+    render(<MemoryRouter><NotificationProvider><WeeklySummaries /></NotificationProvider></MemoryRouter>);
     await waitFor(() => expect(getWeeklySummary).toHaveBeenCalled());
   });
 
   it("handles service rejection and logs error", async () => {
     const spy = vi.spyOn(console, "error").mockImplementation(() => undefined);
     vi.mocked(getWeeklySummary).mockRejectedValueOnce(new Error("fail"));
-    render(<MemoryRouter><WeeklySummaries /></MemoryRouter>);
+    render(<MemoryRouter><NotificationProvider><WeeklySummaries /></NotificationProvider></MemoryRouter>);
     await waitFor(() => expect(spy).toHaveBeenCalled());
     spy.mockRestore();
   });
@@ -48,6 +49,6 @@ describe("WeeklySummaries page", () => {
       daily_stats: [ { day: "Mon", completed_count: 1, total_minutes: 60 } ],
   importance_stats: Array.from({ length: 10 }, (_, i) => ({ level: i + 1, completed_count: 0 })),
     });
-    render(<MemoryRouter><WeeklySummaries /></MemoryRouter>);
+    render(<MemoryRouter><NotificationProvider><WeeklySummaries /></NotificationProvider></MemoryRouter>);
   });
 });

@@ -2,6 +2,7 @@ import { it, describe, expect, beforeEach, afterEach } from 'vitest'
 import { cleanup, render, screen } from '@testing-library/react'
 import { Home } from "@/pages/index"
 import { MemoryRouter } from 'react-router-dom'
+import { NotificationProvider } from '@/context/NotificationContext'
 
 describe('Home', () => {
 
@@ -9,7 +10,9 @@ describe('Home', () => {
     beforeEach(() => {
         render(
             <MemoryRouter>
-                <Home />
+                <NotificationProvider>
+                    <Home />
+                </NotificationProvider>
             </MemoryRouter>
         )
     })

@@ -129,16 +129,16 @@ describe('EventForm', () => {
     )
 
     fireEvent.click(screen.getByText(/Add Reminder/i))
-    expect(screen.getByText(/mins before/i)).toBeInTheDocument()
+    expect(screen.getByText(/minutes/i)).toBeInTheDocument()
 
     const emailCheckbox = screen.getAllByLabelText(/Email/i)[0]
     fireEvent.click(emailCheckbox)
 
-    const minutesInput = screen.getAllByRole('spinbutton')[1]
-    fireEvent.change(minutesInput, { target: { value: '45' } })
+    const minutesInput = screen.getAllByDisplayValue('15')
+    fireEvent.change(minutesInput[0], { target: { value: '45' } })
 
     fireEvent.click(screen.getByText(/delete/i))
-    expect(screen.queryByText(/mins before/i)).not.toBeInTheDocument()
+    expect(screen.queryByText(/minutes/i)).not.toBeInTheDocument()
   })
 
   it('calls onDataChange when fields change', () => {
