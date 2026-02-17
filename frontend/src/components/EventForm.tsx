@@ -1,5 +1,6 @@
 import { useState, useEffect, type FormEvent } from "react";
 import { type Category, type Event, type EventSubmission } from "../types";
+import { usePushSubscription } from "../hooks/usePushSubscription";
 
 type TimeUnit = "minutes" | "hours" | "days" | "weeks" | "months" | "years";
 
@@ -67,6 +68,8 @@ const EventForm = ({
   onCancel,
   onDataChange,
 }: EventFormProps) => {
+  const { isSubscribed, permission, subscribe, loading: pushLoading } = usePushSubscription();
+
   const [title, setTitle] = useState(initialData?.title ?? "");
   const [description, setDescription] = useState(initialData?.description ?? "");
   const [location, setLocation] = useState(initialData?.location ?? "");
@@ -467,14 +470,29 @@ const EventForm = ({
               <div key={index} className={`flex flex-col gap-2 bg-gray-50 p-3 rounded-lg border ${pastReminderIndices.has(index) ? "border-red-400 bg-red-50" : "border-gray-200"}`}>
                 <div className="flex flex-wrap items-center gap-3">
                   <span className="text-xs font-semibold text-gray-600">Reminder type</span>
-                  <label className="inline-flex items-center gap-2 text-xs text-gray-600">
+                  <label className={`inline-flex items-center gap-2 text-xs ${isSubscribed ? "text-gray-600" : "text-gray-400"}`}>
                     <input
                       type="checkbox"
                       checked={reminder.send_push}
-                      onChange={(e) => toggleReminderChannel(index, "send_push", e.target.checked)}
-                      className="h-4 w-4 rounded border-gray-300 text-orange-500 focus:ring-orange-500"
+                      disabled={!isSubscribed}
+                      onChange={(e) => {
+                        if (isSubscribed) {
+                          toggleReminderChannel(index, "send_push", e.target.checked);
+                        }
+                      }}
+                      className="h-4 w-4 rounded border-gray-300 text-orange-500 focus:ring-orange-500 disabled:opacity-50"
                     />
                     Popup
+                    {!isSubscribed && (
+                      <button
+                        type="button"
+                        disabled={pushLoading || permission === "denied"}
+                        onClick={() => void subscribe()}
+                        className="text-[10px] text-indigo-600 hover:text-indigo-800 underline disabled:opacity-50 disabled:no-underline"
+                      >
+                        {permission === "denied" ? "(blocked)" : pushLoading ? "..." : "(enable)"}
+                      </button>
+                    )}
                   </label>
                   <label className="inline-flex items-center gap-2 text-xs text-gray-600">
                     <input
