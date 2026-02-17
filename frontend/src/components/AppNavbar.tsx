@@ -19,16 +19,16 @@ export default function AppNavbar() {
 
   return (
     <header className="sticky top-0 z-30 bg-white shadow-sm ring-1 ring-gray-200">
-      <div className="flex w-full items-center justify-between gap-3 px-4 py-3">
+      <div className="flex w-full items-center justify-between gap-3 px-4 py-1.5">
         <button
           type="button"
           aria-label="Open navigation"
           aria-expanded={open}
           onClick={() => setOpen(true)}
-          className="inline-flex h-10 w-10 items-center justify-center rounded-md border border-gray-300 bg-white text-gray-800 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-1"
+          className="inline-flex h-9 w-9 items-center justify-center rounded-md text-gray-800 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-1"
         >
           <span className="sr-only">Open menu</span>
-          <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <svg className="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
             <line x1="4" x2="20" y1="7" y2="7" />
             <line x1="4" x2="20" y1="12" y2="12" />
             <line x1="4" x2="20" y1="17" y2="17" />
@@ -40,7 +40,7 @@ export default function AppNavbar() {
         </Link>
 
         <Menu as="div" className="relative">
-          <MenuButton className="inline-flex items-center justify-center rounded-full border border-gray-200 bg-white px-3 py-1.5 text-sm font-semibold text-gray-900 shadow-sm hover:bg-gray-50">
+          <MenuButton className="inline-flex items-center justify-center rounded-full px-2.5 py-1 text-sm font-semibold text-gray-900 hover:bg-gray-100">
             <span className="material-icons text-base mr-1">account_circle</span>
             Account
           </MenuButton>
