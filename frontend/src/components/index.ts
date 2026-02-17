@@ -1,4 +1,4 @@
-export { default as Navbar } from "./Navbar";
+export { default as HomeNavbar } from "./HomeNavbar";
 export { default as Footer } from "./Footer";
 export { default as HeroSection } from "./home/HeroSection"
 export { default as BlurBackground } from "./BlurBackground"

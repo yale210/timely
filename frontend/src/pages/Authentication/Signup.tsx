@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from "react"
-import { Navbar, Footer } from "@/components/index"
+import { HomeNavbar, Footer } from "@/components/index"
 import { authService } from "@/services/authService"
 import { useNavigate } from "react-router-dom"
 
@@ -79,7 +79,7 @@ export default function Signup() {
 
   return (
     <div className="bg-white">
-      <Navbar />
+      <HomeNavbar />
       <div className="relative isolate flex min-h-screen flex-col justify-center px-6 py-12 lg:px-8">
         {/* same background blob */}
         <div aria-hidden="true" className="absolute inset-x-0 -top-40 z-0 transform-gpu overflow-hidden blur-3xl sm:-top-80">

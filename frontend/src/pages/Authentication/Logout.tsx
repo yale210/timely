@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react"
 import { useNavigate } from "react-router-dom"
-import { Navbar, Footer } from "@/components"
+import { HomeNavbar, Footer } from "@/components"
 import { authService } from "@/services/authService"
 
 /**
@@ -30,7 +30,7 @@ export default function Logout() {
 
   return (
     <div className="bg-white min-h-screen flex flex-col">
-      <Navbar />
+      <HomeNavbar />
       <main className="flex-1 flex items-center justify-center px-6 py-12">
         <div className="text-center text-gray-700">{message}</div>
       </main>

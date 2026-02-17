@@ -1,4 +1,4 @@
-import { Navbar, Footer, BlurBackground, HeroSection } from "@/components/index"
+import { HomeNavbar, Footer, BlurBackground, HeroSection } from "@/components/index"
 
 /**
  * A functional component that renders the homepage of the application.
@@ -7,7 +7,7 @@ import { Navbar, Footer, BlurBackground, HeroSection } from "@/components/index"
 export default function Home() {
   return (
     <>
-      <Navbar />
+      <HomeNavbar />
         <HeroSection>
           <BlurBackground/>
         </HeroSection>
