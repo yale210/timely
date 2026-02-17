@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Dialog, DialogPanel } from '@headlessui/react'
+import { Dialog, DialogPanel, Menu, MenuButton, MenuItems, MenuItem } from '@headlessui/react'
 import { Bars3Icon, XMarkIcon } from '@heroicons/react/24/outline'
 import { Link } from "react-router-dom"
 import { authStore, AUTH_CHANGE_EVENT } from "@/services/authService"
@@ -86,9 +86,40 @@ export default function Navbar({ hideSignupWhenAuthed = true }: NavbarProps = {}
 
                     <div className="hidden lg:flex lg:flex-1 lg:justify-end">
                         {isAuthed ? (
-                            <Link to="/logout" className="text-sm/6 font-semibold text-gray-900">
-                                Log out <span aria-hidden="true">&rarr;</span>
-                            </Link>
+                            <Menu as="div" className="relative">
+                                <MenuButton className="inline-flex items-center justify-center rounded-full border border-gray-200 bg-white px-3 py-1.5 text-sm font-semibold text-gray-900 shadow-sm hover:bg-gray-50">
+                                    <span className="material-icons text-base mr-1">account_circle</span>
+                                    Account
+                                </MenuButton>
+                                <MenuItems className="absolute right-0 mt-2 w-44 origin-top-right rounded-lg border border-gray-200 bg-white shadow-lg focus:outline-none">
+                                    <div className="py-1">
+                                        <MenuItem>
+                                            {({ focus }) => (
+                                                <Link
+                                                    to="/settings"
+                                                    className={`block px-4 py-2 text-sm ${
+                                                        focus ? "bg-gray-50 text-gray-900" : "text-gray-700"
+                                                    }`}
+                                                >
+                                                    Settings
+                                                </Link>
+                                            )}
+                                        </MenuItem>
+                                        <MenuItem>
+                                            {({ focus }) => (
+                                                <Link
+                                                    to="/logout"
+                                                    className={`block px-4 py-2 text-sm ${
+                                                        focus ? "bg-gray-50 text-gray-900" : "text-gray-700"
+                                                    }`}
+                                                >
+                                                    Log out
+                                                </Link>
+                                            )}
+                                        </MenuItem>
+                                    </div>
+                                </MenuItems>
+                            </Menu>
                         ) : (
                             <Link to="/login" className="text-sm/6 font-semibold text-gray-900">
                                 Log in <span aria-hidden="true">&rarr;</span>
@@ -138,12 +169,20 @@ export default function Navbar({ hideSignupWhenAuthed = true }: NavbarProps = {}
                                 </div>
                                 <div className="py-6">
                                 {isAuthed ? (
-                                    <Link
-                                        to="/logout"
-                                        className="-mx-3 block rounded-lg px-3 py-2.5 text-base/7 font-semibold text-gray-900 hover:bg-gray-50"
-                                    >
-                                        Log out
-                                    </Link>
+                                    <>
+                                        <Link
+                                            to="/settings"
+                                            className="-mx-3 block rounded-lg px-3 py-2.5 text-base/7 font-semibold text-gray-900 hover:bg-gray-50"
+                                        >
+                                            Settings
+                                        </Link>
+                                        <Link
+                                            to="/logout"
+                                            className="-mx-3 block rounded-lg px-3 py-2.5 text-base/7 font-semibold text-gray-900 hover:bg-gray-50"
+                                        >
+                                            Log out
+                                        </Link>
+                                    </>
                                 ) : (
                                     <Link
                                         to="/login"

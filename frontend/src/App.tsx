@@ -1,6 +1,6 @@
 import { Routes, Route } from "react-router-dom"
 import RequireAuth from "@/components/RequireAuth"
-import { Home, Login, Signup, Logout, CalendarPage, TaskList, EventList, Gradebook, Dashboard, WeeklySummaries } from "./pages/index"
+import { Home, Login, Signup, Logout, CalendarPage, TaskList, EventList, Gradebook, Dashboard, WeeklySummaries, Settings } from "./pages/index"
 
 /**
  * The root component of the application which organises the routing logic.
@@ -47,6 +47,12 @@ export default function App() {
       <Route path="/weekly-summaries" element={
         <RequireAuth>
           <WeeklySummaries />
+        </RequireAuth>}
+      />
+
+      <Route path="/settings" element={
+        <RequireAuth>
+          <Settings />
         </RequireAuth>}
       />
 
