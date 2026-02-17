@@ -1,4 +1,5 @@
 from django.db import transaction
+from django.db.models import F
 from django.utils import timezone
 from rest_framework import permissions, status
 from rest_framework.response import Response
@@ -35,11 +36,8 @@ class ScheduleTasksAPIView(APIView):
 
         with transaction.atomic():
             for result in results:
-                if (
-                    not result.success
-                    or result.scheduled_start is None
-                    or result.scheduled_end is None
-                ):
+                segments = result.segments or []
+                if not result.success or not segments:
                     failed_count += 1
                     continue
 
@@ -50,12 +48,10 @@ class ScheduleTasksAPIView(APIView):
                     continue
 
                 allocation = [
-                    {
-                        "start": result.scheduled_start.isoformat(),
-                        "end": result.scheduled_end.isoformat(),
-                    }
+                    {"start": start.isoformat(), "end": end.isoformat()}
+                    for start, end in segments
                 ]
-                task.start_time = result.scheduled_start
+                task.start_time = segments[0][0]
                 task.allocation = allocation
                 task.total_task_allocations = len(allocation)
                 task.save(
@@ -83,7 +79,7 @@ class UnscheduleTasksAPIView(APIView):
         updated = (
             Task.objects.filter(user=request.user)
             .exclude(allocation=[])
-            .update(allocation=[], total_task_allocations=0)
+            .update(allocation=[], total_task_allocations=0, start_time=F("deadline"))
         )
         return Response(
             {"unscheduled_count": updated},

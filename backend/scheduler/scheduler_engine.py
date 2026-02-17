@@ -239,11 +239,13 @@ class Scheduler:
                         success=True,
                         scheduled_start=start,
                         scheduled_end=scheduled_end,
+                        segments=[(start, scheduled_end)],
                     )
         return ScheduleResult(
             task_id=task.id,  # type: ignore[arg-type]
             success=False,
             reason="No single slot available within horizon",
+            segments=[],
         )
 
     def _schedule_task_split(
@@ -304,12 +306,14 @@ class Scheduler:
                 success=True,
                 scheduled_start=segments[0][0],
                 scheduled_end=segments[-1][1],
+                segments=segments,
             )
 
         return ScheduleResult(
             task_id=task.id,  # type: ignore[arg-type]
             success=False,
             reason="Insufficient time within horizon",
+            segments=[],
         )
 
     def schedule_tasks(self, start_date: date) -> List[ScheduleResult]:

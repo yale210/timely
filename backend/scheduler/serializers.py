@@ -11,8 +11,21 @@ class ScheduleRequestSerializer(serializers.Serializer):
 
 
 class ScheduleResultSerializer(serializers.Serializer):
+    segments = serializers.ListField(
+        child=serializers.DictField(child=serializers.DateTimeField()),
+        required=False,
+    )
     task_id = serializers.IntegerField()
     success = serializers.BooleanField()
     scheduled_start = serializers.DateTimeField(allow_null=True)
     scheduled_end = serializers.DateTimeField(allow_null=True)
     reason = serializers.CharField(allow_null=True, required=False)
+
+    def to_representation(self, instance):
+        representation = super().to_representation(instance)
+        segments = getattr(instance, "segments", None)
+        if segments is not None:
+            representation["segments"] = [
+                {"start": start, "end": end} for start, end in segments
+            ]
+        return representation

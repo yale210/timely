@@ -26,4 +26,5 @@ class ScheduleResult:
     success: bool
     scheduled_start: datetime | None = None
     scheduled_end: datetime | None = None
+    segments: list[tuple[datetime, datetime]] | None = None
     reason: str | None = None
