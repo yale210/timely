@@ -1,5 +1,6 @@
 export { default as Navbar } from "./Navbar";
 export { default as Footer } from "./Footer";
+export { default as HeroSection } from "./home/HeroSection"
 export { default as BlurBackground } from "./BlurBackground"
 
 export { default as TaskForm } from "./TaskForm";
