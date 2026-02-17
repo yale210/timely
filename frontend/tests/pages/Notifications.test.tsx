@@ -2,10 +2,25 @@ import { render, screen, fireEvent } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { Notifications } from '../../src/pages/Notifications';
 import { BrowserRouter } from 'react-router-dom';
-import { useNotifications } from '../../src/hooks/useNotifications';
 import { NotificationType } from '../../src/types/notification';
 
-vi.mock('../../src/hooks/useNotifications');
+vi.mock('../../src/context/NotificationContext', () => ({
+  useNotificationContext: vi.fn(),
+}));
+
+import { useNotificationContext } from '../../src/context/NotificationContext';
+vi.mock('../../src/hooks/usePushSubscription', () => ({
+  usePushSubscription: () => ({
+    isSupported: false,
+    isSubscribed: false,
+    permission: 'default' as const,
+    loading: false,
+    error: null,
+    subscribe: vi.fn(),
+    unsubscribe: vi.fn(),
+    refresh: vi.fn(),
+  }),
+}));
 
 const mockNotifications = [
   {
@@ -21,22 +36,27 @@ const mockNotifications = [
   }
 ];
 
+const defaultContextValue = {
+  notifications: [] as typeof mockNotifications,
+  unreadCount: 0,
+  loading: false,
+  error: null,
+  hasMore: false,
+  page: 1,
+  fetchNotifications: vi.fn(),
+  fetchUnreadCount: vi.fn(),
+  markAllRead: vi.fn(),
+  markRead: vi.fn(),
+  deleteNotification: vi.fn(),
+};
+
 describe('Notifications Page', () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
 
   it('renders page title', () => {
-    (useNotifications as any).mockReturnValue({
-      notifications: [],
-      loading: false,
-      error: null,
-      hasMore: false,
-      page: 1,
-      fetchNotifications: vi.fn(),
-      markAllRead: vi.fn(),
-      markRead: vi.fn()
-    });
+    vi.mocked(useNotificationContext).mockReturnValue({ ...defaultContextValue });
 
     render(
       <BrowserRouter>
@@ -47,15 +67,9 @@ describe('Notifications Page', () => {
   });
 
   it('displays loading state', () => {
-    (useNotifications as any).mockReturnValue({
-      notifications: [],
+    vi.mocked(useNotificationContext).mockReturnValue({
+      ...defaultContextValue,
       loading: true,
-      error: null,
-      hasMore: false,
-      page: 1,
-      fetchNotifications: vi.fn(),
-      markAllRead: vi.fn(),
-      markRead: vi.fn()
     });
 
     render(
@@ -67,15 +81,9 @@ describe('Notifications Page', () => {
   });
 
   it('displays notifications list', () => {
-    (useNotifications as any).mockReturnValue({
+    vi.mocked(useNotificationContext).mockReturnValue({
+      ...defaultContextValue,
       notifications: mockNotifications,
-      loading: false,
-      error: null,
-      hasMore: false,
-      page: 1,
-      fetchNotifications: vi.fn(),
-      markAllRead: vi.fn(),
-      markRead: vi.fn()
     });
 
     render(
@@ -88,15 +96,10 @@ describe('Notifications Page', () => {
 
   it('calls markAllRead when button is clicked', () => {
     const markAllRead = vi.fn();
-    (useNotifications as any).mockReturnValue({
+    vi.mocked(useNotificationContext).mockReturnValue({
+      ...defaultContextValue,
       notifications: mockNotifications,
-      loading: false,
-      error: null,
-      hasMore: false,
-      page: 1,
-      fetchNotifications: vi.fn(),
       markAllRead,
-      markRead: vi.fn()
     });
 
     render(
