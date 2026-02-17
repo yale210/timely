@@ -1,11 +1,10 @@
 import { useCallback, useEffect, useState } from "react";
 import moment from "moment";
-import { Statcard } from "../components/index";
-import { CalendarPage } from "./index";
 import AppLayout from "../layouts/AppLayout";
 import * as taskService from "../services/taskService";
 import type { Task } from "../types";
-
+import { StatCard, AppNavbar } from "../components/index"
+import { CalendarPage } from "./index"
 
 /**
  * Renders the main dashboard page with stat cards and an embedded calendar.
@@ -41,11 +40,13 @@ export default function Dashboard() {
       moment(t.deadline).isAfter(now) &&
       !moment(t.deadline).isSame(now, "day")
   );
-
-  return (
+  
+  return(
+  <div className="min-h-screen bg-white">
+    <AppNavbar />
     <AppLayout>
-      <main className="w-full px-6 lg:px-10 pt-2 pb-10">
-        <header className="mb-10">
+    <main className="mx-auto max-w-7xl px-6 lg:px-8 py-10">
+      <header className="mb-10">
           <h1 className="text-3xl font-semibold tracking-tight text-gray-900">
             Dashboard
           </h1>
@@ -55,17 +56,17 @@ export default function Dashboard() {
         </header>
 
         <section className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          <Statcard
+          <StatCard
             title="Today's Tasks"
             value={todayTasks.map((t) => t.title)}
             seeMoreHref="/tasks"
           />
-          <Statcard
+          <StatCard
             title="Pending Tasks"
             value={pendingTasks.map((t) => t.title)}
             seeMoreHref="/tasks"
           />
-          <Statcard
+          <StatCard
             title="Overdue Tasks"
             value={overdueTasks.map((t) => t.title)}
             seeMoreHref="/tasks"
@@ -79,5 +80,6 @@ export default function Dashboard() {
         </section>
       </main>
     </AppLayout>
+  </div> 
   );
 }

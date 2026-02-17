@@ -12,7 +12,7 @@ interface StatcardProps {
  * @param props.title - The heading displayed at the top of the card.
  * @param props.value - The list of items rendered as a checkbox list.
  */
-export default function Statcard({ title, value, seeMoreHref = "/tasks" }: StatcardProps) {
+export default function StatCard({ title, value, seeMoreHref = "/tasks" }: StatcardProps) {
   const taskList = value.map((task, index) => {
     const inputId = `${title.replace(/\s+/g, "-").toLowerCase()}-${index}`;
     return (
