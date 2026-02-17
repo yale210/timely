@@ -2,15 +2,20 @@ import heroImage from "@/assets/hero-content-img.svg"
 import { Link } from "react-router-dom"
 import type { ReactNode } from "react"
 
+interface HeroSectionProps {
+    children?: ReactNode
+}
+
 /**
- * Hero section component for the homepage.
- * @param blurBackground - React node to render as a blurred background.
+ * HeroSection component displays the main hero area with a call to action and an image.
+ * @param {HeroSectionProps} props - The props for the HeroSection component.
+ * @returns {JSX.Element}
  */
-export default function HeroSection({blurBackground} : {blurBackground : ReactNode}) {
+export default function HeroSection({ children } : HeroSectionProps) {
     return (
         <div className="relative isolate px-6 lg:px-8">
 
-            {blurBackground}
+            { children }
         
             <div className="mx-auto max-w-7xl py-16 sm:py-24 sm:pt-32">
                 <div className="flex flex-col gap-12 lg:flex-row md:flex-row">
