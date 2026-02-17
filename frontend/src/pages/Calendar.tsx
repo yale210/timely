@@ -24,7 +24,7 @@ const localizer = momentLocalizer(moment);
  */
 
 interface CalendarEntry {
-  id: number;
+  id: string;
   title: string;
   start: Date;
   end: Date;
@@ -285,7 +285,7 @@ const CalendarPage = () => {
         return [];
       }
       return allocations.map((slot, index) => ({
-        id: task.id * 1000 + index,
+        id: `task-${task.id}-${index}`,
         title: task.title,
         start: new Date(slot.start),
         end: new Date(slot.end),
@@ -298,7 +298,7 @@ const CalendarPage = () => {
       }));
     }),
     ...events.map((event) => ({
-      id: 1000000 + event.id,
+      id: `event-${event.id}`,
       title: event.title,
       start: new Date(event.start_time),
       end: new Date(event.end_time),
