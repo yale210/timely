@@ -196,6 +196,12 @@ class Scheduler:
         window_start, window_end = self._working_window(target_date)
         occupied = self._get_occupied_slots(target_date)
         free_slots = self._subtract_intervals((window_start, window_end), occupied)
+        # Do not schedule into past time on the start date.
+        if target_date == timezone.localdate():
+            now = timezone.now()
+            if now > window_start:
+                window_start = now
+                free_slots = self._subtract_intervals((window_start, window_end), occupied)
         return [
             (start, end)
             for start, end in free_slots
