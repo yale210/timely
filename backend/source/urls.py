@@ -33,11 +33,12 @@ router.register(r"tasks", TaskViewSet, basename="task")
 router.register(r"grades", GradeViewSet, basename="grade")
 router.register(r"categories", CategoryViewSet, basename="category")
 router.register(r"events", EventViewSet, basename="event")
-router.register(r"preferences", PreferenceViewSet, basename="preference")
+router.register(r"pkreferences", PreferenceViewSet, basename="preference")
 
 urlpatterns = [
     path("api/", include(router.urls)),
     path("api/stats/weekly/", WeeklySummaryView.as_view(), name="weekly-summary"),
     path("api/admin/", admin.site.urls),
     path("api/authentication/", include("authentication.urls")),
+    path("api/profiles/", include("profiles.urls")),
 ]
