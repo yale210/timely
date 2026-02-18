@@ -1,6 +1,7 @@
 import { useState, useEffect, type FormEvent } from "react";
 import { type Category, type Event, type EventSubmission } from "../types";
 import { usePushSubscription } from "../hooks/usePushSubscription";
+import { getServerTime } from "../services/eventService";
 
 type TimeUnit = "minutes" | "hours" | "days" | "weeks" | "months" | "years";
 
@@ -28,6 +29,9 @@ const UNIT_LABELS: { value: TimeUnit; label: string }[] = [
   { value: "months", label: "months" },
   { value: "years", label: "years" },
 ];
+const CLOCK_SKEW_WARNING_THRESHOLD_MS = 5 * 60 * 1_000;
+const INITIAL_VALIDATION_NOW_MS = Date.now();
+const getCurrentTimestamp = (): number => Date.now();
 
 const toMinutesBefore = (val: number, unit: TimeUnit): number =>
   val * UNIT_TO_MINUTES[unit];
@@ -132,6 +136,45 @@ const EventForm = ({
       return { send_email, send_push, value, unit };
     }) ?? []
   );
+  const [validationNowMs, setValidationNowMs] = useState<number>(
+    INITIAL_VALIDATION_NOW_MS,
+  );
+  const [serverTimeOffsetMs, setServerTimeOffsetMs] = useState<number | null>(null);
+  const [clockSkewWarning, setClockSkewWarning] = useState<string | null>(null);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    const syncServerTime = async () => {
+      try {
+        const { server_time: serverTime } = await getServerTime();
+        const offsetMs = new Date(serverTime).getTime() - getCurrentTimestamp();
+        if (!isMounted) {
+          return;
+        }
+        setServerTimeOffsetMs(offsetMs);
+        setValidationNowMs(getCurrentTimestamp());
+        if (Math.abs(offsetMs) >= CLOCK_SKEW_WARNING_THRESHOLD_MS) {
+          setClockSkewWarning(
+            "Your device clock appears out of sync with the server. Reminder validation uses server time.",
+          );
+          return;
+        }
+        setClockSkewWarning(null);
+      } catch (err) {
+        console.error("Failed to sync server time for reminder validation", err);
+        if (isMounted) {
+          setValidationNowMs(getCurrentTimestamp());
+        }
+      }
+    };
+
+    void syncServerTime();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   // Derived Validation
   const startDateTime = new Date(`${startDate}T${startTime}`);
@@ -143,7 +186,7 @@ const EventForm = ({
   const canAddReminder = reminders.length < MAX_REMINDERS;
 
   const pastReminderIndices = new Set<number>();
-  const now = new Date();
+  const now = new Date(validationNowMs + (serverTimeOffsetMs ?? 0));
   reminders.forEach((reminder, index) => {
     const minutesBefore = toMinutesBefore(reminder.value, reminder.unit);
     const triggerAt = new Date(startDateTime.getTime() - minutesBefore * 60_000);
@@ -161,6 +204,9 @@ const EventForm = ({
   }
   
   const hasErrors = Object.keys(errors).length > 0;
+  const refreshValidationNow = () => {
+    setValidationNowMs(getCurrentTimestamp());
+  };
 
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
@@ -192,11 +238,13 @@ const EventForm = ({
 
   const addReminder = () => {
     if (canAddReminder) {
+      refreshValidationNow();
       setReminders([...reminders, { send_email: false, send_push: true, value: 15, unit: "minutes" }]);
     }
   };
 
   const removeReminder = (index: number) => {
+    refreshValidationNow();
     setReminders(reminders.filter((_, i) => i !== index));
   };
 
@@ -207,6 +255,7 @@ const EventForm = ({
   ) => {
     const newReminders = [...reminders];
     newReminders[index] = { ...newReminders[index], [field]: value };
+    refreshValidationNow();
     setReminders(newReminders);
   };
 
@@ -218,6 +267,7 @@ const EventForm = ({
     const newReminders = [...reminders];
     newReminders[index] = { ...newReminders[index], [field]: value };
 
+    refreshValidationNow();
     setReminders(newReminders);
   };
 
@@ -227,6 +277,12 @@ const EventForm = ({
   return (
     <form onSubmit={handleSubmit} className="flex flex-col h-full bg-white text-black">
       <div className="flex-grow overflow-y-auto p-6 space-y-6">
+        {clockSkewWarning && (
+          <div className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800">
+            {clockSkewWarning}
+          </div>
+        )}
+
         <div>
           <label htmlFor="event-title" className="block text-sm font-medium text-gray-700 mb-2">
             Title
@@ -266,7 +322,10 @@ const EventForm = ({
               className={`${baseInputClass} ${errors.time ? errorClass : ""}`}
               type="date"
               value={startDate}
-              onChange={(e) => setStartDate(e.target.value)}
+              onChange={(e) => {
+                refreshValidationNow();
+                setStartDate(e.target.value);
+              }}
               required
             />
           </div>
@@ -279,7 +338,10 @@ const EventForm = ({
               className={`${baseInputClass} ${errors.time ? errorClass : ""}`}
               type="time"
               value={startTime}
-              onChange={(e) => setStartTime(e.target.value)}
+              onChange={(e) => {
+                refreshValidationNow();
+                setStartTime(e.target.value);
+              }}
               required
             />
           </div>
