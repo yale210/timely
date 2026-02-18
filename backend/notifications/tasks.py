@@ -101,7 +101,8 @@ def broadcast_notification(title, message, target="all", user_ids=None):
         )
 
     notifications_by_recipient_id = {
-        notification.recipient_id: notification for notification in created_notifications
+        notification.recipient_id: notification
+        for notification in created_notifications
     }
 
     for user_id in recipient_ids:

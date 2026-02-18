@@ -131,7 +131,9 @@ class EventSerializerTests(TestCase):
         self.assertEqual(event.categories.count(), 1)
         self.assertEqual(event.categories.first(), category)
 
-    def test_serializer_partial_update_reminders_validates_against_existing_start_time(self):
+    def test_serializer_partial_update_reminders_validates_against_existing_start_time(
+        self,
+    ):
         now = timezone.now()
         event = Event.objects.create(
             user=self.user,
