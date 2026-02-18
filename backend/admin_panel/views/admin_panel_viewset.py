@@ -1,8 +1,14 @@
-from rest_framework import permissions, viewsets
+from rest_framework import pagination, permissions, viewsets
 
 from admin_panel.serializers import AdminUserListSerializer
 from admin_panel.views.notification_actions import AdminNotificationActionMixin
 from admin_panel.views.users_actions import AdminUsersActionMixin
+
+
+class AdminUserPagination(pagination.PageNumberPagination):
+    page_size = 50
+    page_size_query_param = "page_size"
+    max_page_size = 200
 
 
 class AdminPanelViewSet(
@@ -12,3 +18,4 @@ class AdminPanelViewSet(
 ):
     permission_classes = [permissions.IsAdminUser]
     serializer_class = AdminUserListSerializer
+    pagination_class = AdminUserPagination
