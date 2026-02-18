@@ -12,6 +12,7 @@ const targetOptions: { label: string; value: AdminNotificationTarget }[] = [
   { label: "Staff", value: "staff" },
   { label: "Specific users", value: "users" },
 ];
+const USERS_PAGE_SIZE = 50;
 
 const normalizeUserIds = (rawValue: string): number[] => {
   return rawValue
@@ -42,21 +43,43 @@ export default function AdminNotifications() {
   const [selectedUserIds, setSelectedUserIds] = useState<number[]>([]);
   const [isUsersLoading, setIsUsersLoading] = useState(false);
   const [usersError, setUsersError] = useState<string | null>(null);
+  const [usersPage, setUsersPage] = useState(1);
+  const [usersCount, setUsersCount] = useState(0);
+  const [hasUsersNextPage, setHasUsersNextPage] = useState(false);
+  const [hasUsersPreviousPage, setHasUsersPreviousPage] = useState(false);
 
   const parsedUserIds = useMemo(() => normalizeUserIds(userIdsInput), [userIdsInput]);
   const hasValidUserIds = target !== "users" || selectedUserIds.length > 0 || parsedUserIds.length > 0;
+  const isAllVisibleSelected =
+    users.length > 0 && users.every((user) => selectedUserIds.includes(user.id));
+
+  useEffect(() => {
+    setUsersPage(1);
+  }, [search, roleFilter, target]);
 
   useEffect(() => {
     const loadUsers = async () => {
       if (target !== "users") {
+        setUsers([]);
+        setUsersCount(0);
+        setHasUsersNextPage(false);
+        setHasUsersPreviousPage(false);
         return;
       }
 
       try {
         setIsUsersLoading(true);
         setUsersError(null);
-        const data = await getAdminUsers({ search, role: roleFilter });
-        setUsers(data);
+        const data = await getAdminUsers({
+          search,
+          role: roleFilter,
+          page: usersPage,
+          pageSize: USERS_PAGE_SIZE,
+        });
+        setUsers(data.results);
+        setUsersCount(data.count);
+        setHasUsersNextPage(Boolean(data.next));
+        setHasUsersPreviousPage(Boolean(data.previous));
       } catch (err) {
         console.error("Failed to load users", err);
         setUsersError("Failed to load users.");
@@ -66,7 +89,7 @@ export default function AdminNotifications() {
     };
 
     void loadUsers();
-  }, [search, roleFilter, target]);
+  }, [search, roleFilter, target, usersPage]);
 
   useEffect(() => {
     if (target !== "users") {
@@ -116,20 +139,18 @@ export default function AdminNotifications() {
     }
   };
 
-  useEffect(() => {
-    if (users.length === 0) {
-      setSelectedUserIds([]);
-      return;
-    }
-
-    setSelectedUserIds((prev) => prev.filter((id) => users.some((user) => user.id === id)));
-  }, [users]);
-
   const toggleSelectAll = (shouldSelect: boolean) => {
     if (shouldSelect) {
-      setSelectedUserIds(users.map((user) => user.id));
+      setSelectedUserIds((prev) => {
+        const userIdSet = new Set(prev);
+        for (const user of users) {
+          userIdSet.add(user.id);
+        }
+        return Array.from(userIdSet);
+      });
     } else {
-      setSelectedUserIds([]);
+      const currentPageIds = new Set(users.map((user) => user.id));
+      setSelectedUserIds((prev) => prev.filter((id) => !currentPageIds.has(id)));
     }
   };
 
@@ -265,7 +286,7 @@ export default function AdminNotifications() {
                         <th className="px-4 py-3">
                           <input
                             type="checkbox"
-                            checked={selectedUserIds.length > 0 && selectedUserIds.length === users.length}
+                            checked={isAllVisibleSelected}
                             onChange={(event) => toggleSelectAll(event.target.checked)}
                             className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
                           />
@@ -341,6 +362,30 @@ export default function AdminNotifications() {
                         })}
                     </tbody>
                   </table>
+                </div>
+              </div>
+
+              <div className="mt-3 flex items-center justify-between text-xs text-gray-500">
+                <span>
+                  Page {usersPage} of {Math.max(1, Math.ceil(usersCount / USERS_PAGE_SIZE))}
+                </span>
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setUsersPage((prev) => Math.max(1, prev - 1))}
+                    disabled={!hasUsersPreviousPage || isUsersLoading}
+                    className="rounded-md border border-gray-300 px-2 py-1 text-xs font-medium text-gray-700 disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    Previous
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setUsersPage((prev) => prev + 1)}
+                    disabled={!hasUsersNextPage || isUsersLoading}
+                    className="rounded-md border border-gray-300 px-2 py-1 text-xs font-medium text-gray-700 disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    Next
+                  </button>
                 </div>
               </div>
 
