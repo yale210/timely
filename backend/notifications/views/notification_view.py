@@ -5,6 +5,11 @@ from rest_framework.response import Response
 
 from notifications.models import Notification
 from notifications.serializers import NotificationSerializer
+from notifications.utils.unread_count import (
+    increment_unread_count,
+    refresh_unread_count,
+    set_unread_count,
+)
 
 
 class NotificationPagination(pagination.PageNumberPagination):
@@ -25,18 +30,22 @@ class NotificationViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=["post"])
     def mark_read(self, request, pk=None):
         notification = self.get_object()
-        notification.is_read = True
-        notification.save()
+        if not notification.is_read:
+            notification.is_read = True
+            notification.save(update_fields=["is_read"])
+            increment_unread_count(request.user.id, amount=-1)
         return Response({"status": "notification marked as read"})
 
     @action(detail=False, methods=["post"])
     def mark_all_read(self, request):
         self.get_queryset().filter(is_read=False).update(is_read=True)
+        set_unread_count(request.user.id, 0)
         return Response({"status": "all notifications marked as read"})
 
     @action(detail=False, methods=["delete"])
     def delete_all(self, request):
         self.get_queryset().delete()
+        set_unread_count(request.user.id, 0)
         return Response(
             {"status": "all notifications deleted"},
             status=status.HTTP_204_NO_CONTENT,
@@ -44,5 +53,5 @@ class NotificationViewSet(viewsets.ModelViewSet):
 
     @action(detail=False, methods=["get"])
     def unread_count(self, request):
-        count = self.get_queryset().filter(is_read=False).count()
+        count = refresh_unread_count(request.user.id)
         return Response({"count": count})

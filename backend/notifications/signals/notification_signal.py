@@ -3,6 +3,10 @@ from django.dispatch import receiver
 
 from notifications.models import Notification
 from notifications.tasks import send_push_notification
+from notifications.utils.unread_count import (
+    increment_unread_count,
+    refresh_unread_count,
+)
 from notifications.utils.websocket import notify_user
 
 
@@ -11,10 +15,10 @@ def push_notification_on_create(sender, instance, created, **kwargs):
     if not created:
         return
 
-    unread_count = Notification.objects.filter(
-        recipient=instance.recipient,
-        is_read=False,
-    ).count()
+    if instance.is_read:
+        unread_count = refresh_unread_count(instance.recipient_id)
+    else:
+        unread_count = increment_unread_count(instance.recipient_id, amount=1)
 
     notify_user(
         instance.recipient_id,
