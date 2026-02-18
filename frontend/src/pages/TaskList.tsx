@@ -24,6 +24,20 @@ const TaskList = () => {
   const [filterHighImportance, setFilterHighImportance] = useState(false);
   const [filterQuickWins, setFilterQuickWins] = useState(false);
 
+  useEffect(() => {
+    const savedTheme = localStorage.getItem("theme");    
+    if (savedTheme) {
+      document.documentElement.dataset.theme = savedTheme;
+      console.log("loaded saved theme")
+    }
+
+    const savedFont = localStorage.getItem("font");
+    if (savedFont) {
+      document.documentElement.dataset.font = savedFont;
+    }
+  }, []);
+
+
   const fetchTasks = useCallback(async () => {
     try {
       const params: Record<string, string | number> = {

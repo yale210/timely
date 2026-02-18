@@ -10,9 +10,7 @@ import { useEffect } from "react"
 export default function Home() {
 
   useEffect(() => {
-    const savedTheme = localStorage.getItem("theme");
-    //const savedFont = localStorage.getItem("font");
-    
+    const savedTheme = localStorage.getItem("theme");    
     if (savedTheme) {
       document.documentElement.dataset.theme = savedTheme;
       console.log("loaded saved theme")

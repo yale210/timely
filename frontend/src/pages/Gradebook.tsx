@@ -69,6 +69,20 @@ export default function Gradebook() {
   const { categories } = useCategories()
 
   useEffect(() => {
+    const savedTheme = localStorage.getItem("theme");    
+    if (savedTheme) {
+      document.documentElement.dataset.theme = savedTheme;
+      console.log("loaded saved theme")
+    }
+
+    const savedFont = localStorage.getItem("font");
+    if (savedFont) {
+      document.documentElement.dataset.font = savedFont;
+    }
+  }, []);
+
+
+  useEffect(() => {
     void fetchGrades()
     
   }, [])
