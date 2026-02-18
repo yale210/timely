@@ -130,3 +130,28 @@ class EventSerializerTests(TestCase):
         event = serializer.save()
         self.assertEqual(event.categories.count(), 1)
         self.assertEqual(event.categories.first(), category)
+
+    def test_serializer_partial_update_reminders_validates_against_existing_start_time(self):
+        now = timezone.now()
+        event = Event.objects.create(
+            user=self.user,
+            title="Existing Event",
+            start_time=now + datetime.timedelta(minutes=5),
+            end_time=now + datetime.timedelta(hours=1),
+        )
+        data = {
+            "reminders": [
+                {"send_push": True, "send_email": False, "minutes_before": 10},
+            ]
+        }
+        serializer = EventSerializer(
+            instance=event,
+            data=data,
+            partial=True,
+            context={"request": type("obj", (object,), {"user": self.user})},
+        )
+
+        with self.assertRaises(ValidationError) as context:
+            serializer.is_valid(raise_exception=True)
+
+        self.assertIn("reminders", context.exception.detail)
