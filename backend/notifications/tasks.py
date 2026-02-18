@@ -8,6 +8,7 @@ from pywebpush import WebPushException, webpush
 
 from core.models.event_reminder import EventReminder
 from notifications.models import Notification, PushSubscription
+from notifications.utils.websocket import send_websocket_notification
 
 User = get_user_model()
 
@@ -33,6 +34,11 @@ def check_reminders():
 
         reminder.processed = True
         reminder.save(update_fields=["processed"])
+
+
+@shared_task(ignore_result=True)
+def send_websocket_notification_task(user_id, data):
+    send_websocket_notification(user_id, data)
 
 
 @shared_task
