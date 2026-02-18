@@ -119,9 +119,12 @@ const Settings = () => {
                 <button
                   type="button"
                   onClick={() => {
-                    void authService.logout().then(() => {
-                      navigate("/login");
-                    });
+                    void authService
+                      .logout()
+                      .catch(() => undefined)
+                      .finally(() => {
+                        navigate("/login");
+                      });
                   }}
                   className="mt-6 w-full text-left text-sm font-semibold rounded-md px-3 py-2 text-red-700 hover:bg-red-50"
                 >
