@@ -13,6 +13,7 @@ https://docs.djangoproject.com/en/6.0/ref/settings/
 import os
 import sys
 from datetime import timedelta
+from celery.schedules import crontab
 from django.core.exceptions import ImproperlyConfigured
 from pathlib import Path
 from dotenv import load_dotenv
@@ -244,6 +245,10 @@ CELERY_BEAT_SCHEDULE = {
     "check_reminders": {
         "task": "notifications.tasks.check_reminders",
         "schedule": 60.0,
+    },
+    "cleanup_old_notifications": {
+        "task": "notifications.tasks.cleanup_old_notifications",
+        "schedule": crontab(hour=3, minute=0),
     },
 }
 
