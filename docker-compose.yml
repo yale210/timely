@@ -37,8 +37,10 @@ services:
 
   celery-beat:
     image: registry.digitalocean.com/segmajor/backend:latest
-    command: ["celery", "-A", "source", "beat", "--loglevel=info"]
+    command: ["celery", "-A", "source", "beat", "--loglevel=info", "--schedule=/data/celerybeat-schedule"]
     restart: always
+    volumes:
+      - ./data:/data
     environment:
       - DEBUG=False
       - POSTGRES=True
