@@ -3,7 +3,7 @@
   --primary-hover: #ffdc5e; /* neon yellow */
   
   --background: #1a1a1a;    /* dark background for contrast */
-  --primary-color: #f0f0f0;          /* off-white text */
+  --text-color: #f0f0f0;          /* off-white text */
   
   --border: #ff6ec7;        /* matches primary for highlight/borders */
 }

@@ -14,7 +14,7 @@ function fontController(fontName: string) :void {
 
 export default function Themes(){
   return(
-  <div className="bg-[var(--background)] font-[var(--primary-font)] text-[var(--primary-color)] min-h-screen p-4 grid grid-rows-2">
+  <div className="bg-[var(--background)] font-[var(--primary-font)] text-[var(--text-color)] min-h-screen p-4 grid grid-rows-2">
     <div>
       <Navbar />
     </div>
@@ -35,7 +35,10 @@ export default function Themes(){
         <section className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-5">
           <FontButton title="poppins" fontChangeFunction={fontController}/>
           <FontButton title="pacifico" fontChangeFunction={fontController}/>
-        </section>
+          <FontButton title="comic-sans" fontChangeFunction={fontController}/>
+          <FontButton title="bitcount" fontChangeFunction={fontController}/>
+          <FontButton title="bebas-neue" fontChangeFunction={fontController}/>
+          </section>
 
     </main>
     </div>

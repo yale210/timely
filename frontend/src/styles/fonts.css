@@ -1,17 +1,38 @@
 @import url("https://fonts.googleapis.com/css2?family=Poppins&family=Inter&family=Pacifico&display=swap");
+@import url('https://fonts.googleapis.com/css2?family=Bitcount+Grid+Double:wght@100..900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Bitcount+Grid+Double:wght@100..900&display=swap');
 
 [data-font="poppins"] {
   --primary-font: "Poppins", system-ui, sans-serif;
+  --slant: oblique 0deg;
 }
 
 [data-font="inter"] {
   --primary-font: "Inter", system-ui, sans-serif;
+  --slant: oblique 0deg;
 }
 
 [data-font="mono"] {
   --primary-font: "JetBrains Mono", monospace;
+  --slant: oblique 0deg;
 }
 
 [data-font="pacifico"]{
-  --primary-font: "Pacifico", cursive, system-ui, sans-serif;   
+  --primary-font: "Pacifico", cursive, system-ui, sans-serif;
+  --slant: oblique 0deg;
+}
+
+[data-font="comic-sans"]{
+  --primary-font: "Comic Sans MS", cursive, sans-serif;
+  --slant: oblique 0deg;
+}
+
+[data-font="bitcount"]{
+  --primary-font: "Bitcount Grid Double", system-ui;
+  --slant: oblique 0deg;
+}
+
+[data-font="bebas-neue"]{
+  --primary-font: "Bebas Neue", system-ui;
+  --slant: oblique 30deg;
 }

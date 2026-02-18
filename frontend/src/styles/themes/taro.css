@@ -3,7 +3,7 @@
   --primary-hover: #c3b0f7;  /* Lighter lavender hover */
   
   --background: #f6f3ff;     /* Very light pastel purple background */
-  --primary-color: #3b3053;           /* Dark purple-gray for readability */
+  --text-color: #3b3053;           /* Dark purple-gray for readability */
   
   --border: #a286f5;         /* Same as primary for accents */
 }

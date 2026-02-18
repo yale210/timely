@@ -9,22 +9,25 @@
     --primary: #3b82f6;
     --primary-hover: #93c5fd;
     --background: #ffffff;
-    --primary-color: #000000;
+    --text-color: #000000;
     --border: #e2e8f0;
     --primary-font: "Poppins";
+    --slant : oblique 0deg;
   }
 
   body {
     background-color: var(--background);
-    color: var(--primary-color);
+    color: var(--text-color);
     font-family: var(--primary-font);
+    font-style : var(--slant);
     font-size: 18px;
   }
 
   input, textarea, select, button{
     background-color: var(--background);
-    color: var(--primary-color);
+    color: var(--text-color);
     font-family: var(--primary-font);
+    font-style: var(--slant);
   }
 }
 
