@@ -1,9 +1,10 @@
-import { StrictMode } from 'react'
-import { createRoot } from 'react-dom/client'
-import { BrowserRouter } from 'react-router-dom'
-import { NotificationProvider } from './context/NotificationContext'
-import App from './App.tsx'
-import "./index.css"
+import { StrictMode } from "react";
+import { createRoot } from "react-dom/client";
+import { BrowserRouter } from "react-router-dom";
+
+import App from "./App.tsx";
+import { NotificationProvider } from "./context/NotificationContext";
+import "./index.css";
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
@@ -13,11 +14,12 @@ createRoot(document.getElementById("root")!).render(
       </NotificationProvider>
     </BrowserRouter>
   </StrictMode>,
-)
+);
 
-if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    void navigator.serviceWorker.register('/sw.js');
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", () => {
+    void navigator.serviceWorker.register("/sw.js").catch((error) => {
+      console.error("Service worker registration failed:", error);
+    });
   });
 }
-

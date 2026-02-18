@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect, useCallback, type ReactNode } from "react";
+import { createContext, useContext, useState, useEffect, useCallback, useRef, type ReactNode } from "react";
 import {
   getNotifications,
   getUnreadCount,
@@ -68,6 +68,7 @@ interface NotificationProviderProps {
  * @returns The rendered provider component.
  */
 export const NotificationProvider = ({ children }: NotificationProviderProps) => {
+  const hasPerformedInitialFetch = useRef(false);
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [loading, setLoading] = useState(false);
@@ -154,6 +155,10 @@ export const NotificationProvider = ({ children }: NotificationProviderProps) =>
   useWebSocket("/ws/notifications/", handleWebSocketMessage);
 
   useEffect(() => {
+    if (hasPerformedInitialFetch.current) {
+      return;
+    }
+    hasPerformedInitialFetch.current = true;
     void fetchNotifications(1);
     void fetchUnreadCount();
   }, [fetchNotifications, fetchUnreadCount]);
