@@ -3,12 +3,14 @@ import json
 from celery import shared_task
 from django.conf import settings
 from django.contrib.auth import get_user_model
+from django.db import transaction
 from django.utils import timezone
 from pywebpush import WebPushException, webpush
 
 from core.models.event_reminder import EventReminder
 from notifications.models import Notification, PushSubscription
-from notifications.utils.websocket import send_websocket_notification
+from notifications.utils.unread_count import increment_unread_count
+from notifications.utils.websocket import notify_user, send_websocket_notification
 
 User = get_user_model()
 
@@ -79,12 +81,53 @@ def broadcast_notification(title, message, target="all", user_ids=None):
     else:
         return "Invalid target"
 
-    for user in recipients:
-        Notification.objects.create(
-            recipient=user,
+    recipient_ids = list(recipients.values_list("id", flat=True))
+    if not recipient_ids:
+        return "Broadcasted to 0 users"
+
+    notifications = [
+        Notification(
+            recipient_id=user_id,
             title=title,
             message=message,
             notification_type=Notification.NotificationType.ADMIN,
         )
+        for user_id in recipient_ids
+    ]
+    with transaction.atomic():
+        created_notifications = Notification.objects.bulk_create(
+            notifications,
+            batch_size=1000,
+        )
 
-    return f"Broadcasted to {recipients.count()} users"
+    notifications_by_recipient_id = {
+        notification.recipient_id: notification for notification in created_notifications
+    }
+
+    for user_id in recipient_ids:
+        unread_count = increment_unread_count(user_id, amount=1)
+        notification = notifications_by_recipient_id.get(user_id)
+        if notification and notification.id and notification.timestamp:
+            notify_user(
+                user_id,
+                {
+                    "type": "new_notification",
+                    "notification": {
+                        "id": notification.id,
+                        "recipient": notification.recipient_id,
+                        "sender": notification.sender_id,
+                        "sender_username": None,
+                        "title": notification.title,
+                        "message": notification.message,
+                        "is_read": notification.is_read,
+                        "timestamp": notification.timestamp.isoformat(),
+                        "notification_type": notification.notification_type,
+                    },
+                    "unread_count": unread_count,
+                },
+            )
+        else:
+            notify_user(user_id, {"type": "unread_count", "count": unread_count})
+        send_push_notification.delay(user_id, title, message)
+
+    return f"Broadcasted to {len(recipient_ids)} users"

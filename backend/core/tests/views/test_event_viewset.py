@@ -139,3 +139,13 @@ class EventViewSetTests(APITestCase):
         event = Event.objects.first()
         self.assertEqual(event.recurrence_interval, "weekly")
         self.assertIsNone(event.recurrence_end)
+
+    def test_server_time_endpoint(self):
+        url = reverse("event-server-time")
+        response = self.client.get(url)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIn("server_time", response.data)
+        self.assertIsNotNone(
+            datetime.datetime.fromisoformat(response.data["server_time"])
+        )
