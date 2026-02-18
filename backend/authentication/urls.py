@@ -7,7 +7,6 @@ from .views import (
     RegisterView,
     TestPermissionView,
 )
-from .views_admin import AdminUserListView
 
 urlpatterns = [
     path("register/", RegisterView.as_view(), name="register"),
@@ -15,5 +14,4 @@ urlpatterns = [
     path("logout/", LogoutAPIView.as_view(), name="logout"),
     path("logoutall/", LogoutAllAPIView.as_view(), name="logoutall"),
     path("test/", TestPermissionView.as_view(), name="test"),
-    path("admin/users/", AdminUserListView.as_view(), name="admin-users"),
 ]
