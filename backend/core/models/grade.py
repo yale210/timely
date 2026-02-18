@@ -1,4 +1,4 @@
-from datetime import time
+from datetime import datetime, time
 
 from django.db import models
 from django.conf import settings
@@ -54,7 +54,7 @@ class Grade(models.Model):
             categories=self.category,
             completed=True,
             deadline__lte=timezone.make_aware(
-                timezone.datetime.combine(self.date_achieved, time.max)
+                datetime.combine(self.date_achieved, time.max)
             ),
         )
         total = qs.aggregate(models.Sum("estimated_minutes"))["estimated_minutes__sum"]

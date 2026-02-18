@@ -60,7 +60,10 @@ class EventSerializer(serializers.ModelSerializer):
             )
 
         # Validate that no reminder would trigger in the past
-        start_time = attributes.get("start_time")
+        start_time = attributes.get(
+            "start_time",
+            self.instance.start_time if self.instance else None,
+        )
         if start_time and reminders_data:
             now = timezone.now()
             for reminder in reminders_data:
