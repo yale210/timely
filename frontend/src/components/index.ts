@@ -10,6 +10,6 @@ export { default as TaskListSection } from "./TaskListSection";
 export { default as ConfirmationModal } from "./ConfirmationModal";
 export { default as CreateGradeModal } from "./CreateGradeModal";
 export {default as Statcard} from "./Statcard";
-export {default as TextButton} from "./TextButton";
+export {default as ThemeButton} from "./ThemeButton";
 export {default as FontButton} from "./FontButton"
 

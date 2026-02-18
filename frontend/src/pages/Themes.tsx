@@ -1,4 +1,4 @@
-import {TextButton, FontButton, Navbar} from "../components/index.ts"
+import {ThemeButton, FontButton, Navbar} from "../components/index.ts"
 
 function themeController(themeName : string) :void {
   document.documentElement.dataset.theme = themeName;
@@ -24,11 +24,11 @@ export default function Themes(){
 
         <h1 className="text-3xl"> Themes </h1>
         <section className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-5">
-          <TextButton title="dark" themeChangeFunction={themeController}/>
-          <TextButton title="light" themeChangeFunction={themeController}/>
-          <TextButton title="retro" themeChangeFunction={themeController}/>
-          <TextButton title="bento" themeChangeFunction={themeController}/>
-          <TextButton title="taro" themeChangeFunction={themeController}/>
+          <ThemeButton title="dark" themeChangeFunction={themeController}/>
+          <ThemeButton title="light" themeChangeFunction={themeController}/>
+          <ThemeButton title="retro" themeChangeFunction={themeController}/>
+          <ThemeButton title="bento" themeChangeFunction={themeController}/>
+          <ThemeButton title="taro" themeChangeFunction={themeController}/>
         </section>
 
         <h1 className="text-3xl"> Fonts </h1>
