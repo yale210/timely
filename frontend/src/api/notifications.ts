@@ -99,7 +99,7 @@ export const sendAdminNotification = async (payload: AdminNotificationPayload): 
  * @returns A promise that resolves to an array of admin user summaries.
  */
 export const getAdminUsers = async (params: { search?: string; role?: AdminUserRole }): Promise<AdminUserSummary[]> => {
-  const response = await api.get<AdminUserSummary[]>("/api/authentication/admin/users/", {
+  const response = await api.get<AdminUserSummary[]>("/api/admin/users/", {
     params: {
       search: params.search ?? undefined,
       // If the role is set to "all", we omit it from the request to fetch all users.

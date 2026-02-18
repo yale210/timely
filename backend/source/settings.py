@@ -95,6 +95,8 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "core.apps.CoreConfig",
+    "notifications.apps.NotificationsConfig",
+    "admin_panel.apps.AdminPanelConfig",
     # Extra apps
     "rest_framework",
     "drf_spectacular",
@@ -240,7 +242,7 @@ CELERY_RESULT_BACKEND = REDIS_URL
 CELERY_TIMEZONE = "UTC"
 CELERY_BEAT_SCHEDULE = {
     "check_reminders": {
-        "task": "core.tasks.check_reminders",
+        "task": "notifications.tasks.check_reminders",
         "schedule": 60.0,
     },
 }
