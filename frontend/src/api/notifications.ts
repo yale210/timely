@@ -1,11 +1,11 @@
-import api from '../services/api';
+import api from "../services/api";
 import type {
   NotificationListResponse,
   PushSubscriptionPayload,
   AdminNotificationPayload,
   AdminUserRole,
-  AdminUserSummary,
-} from '../types/notification';
+  AdminUserListResponse,
+} from "../types/notification";
 
 /**
  * Fetches paginated list of notifications for the current user.
@@ -22,7 +22,7 @@ export const getNotifications = async (page = 1): Promise<NotificationListRespon
  * @returns Promise containing the unread notification count
  */
 export const getUnreadCount = async (): Promise<{ count: number }> => {
-  const response = await api.get<{ count: number }>('/api/notifications/unread_count/');
+  const response = await api.get<{ count: number }>("/api/notifications/unread_count/");
   return response.data;
 };
 
@@ -38,7 +38,7 @@ export const markAsRead = async (id: number): Promise<void> => {
  * Marks all notifications as read for the current user.
  */
 export const markAllAsRead = async (): Promise<void> => {
-  await api.post('/api/notifications/mark_all_read/');
+  await api.post("/api/notifications/mark_all_read/");
 };
 
 /**
@@ -53,7 +53,7 @@ export const deleteNotification = async (id: number): Promise<void> => {
  * Deletes all notifications for the current user.
  */
 export const deleteAllNotifications = async (): Promise<void> => {
-  await api.delete('/api/notifications/delete_all/');
+  await api.delete("/api/notifications/delete_all/");
 };
 
 /**
@@ -61,7 +61,7 @@ export const deleteAllNotifications = async (): Promise<void> => {
  * @param payload - The push subscription payload containing endpoint and keys
  */
 export const subscribeToPush = async (payload: PushSubscriptionPayload): Promise<void> => {
-  await api.post('/api/push/subscribe/', payload);
+  await api.post("/api/push/subscribe/", payload);
 };
 
 /**
@@ -69,7 +69,7 @@ export const subscribeToPush = async (payload: PushSubscriptionPayload): Promise
  * @param endpoint - The push subscription endpoint to unsubscribe
  */
 export const unsubscribeFromPush = async (endpoint: string): Promise<void> => {
-  await api.post('/api/push/unsubscribe/', { endpoint });
+  await api.post("/api/push/unsubscribe/", { endpoint });
 };
 
 /**
@@ -77,7 +77,7 @@ export const unsubscribeFromPush = async (endpoint: string): Promise<void> => {
  * @returns Promise containing the VAPID public key
  */
 export const getVapidPublicKey = async (): Promise<{ public_key: string }> => {
-  const response = await api.get<{ public_key: string }>('/api/push/vapid_public_key/');
+  const response = await api.get<{ public_key: string }>("/api/push/vapid_public_key/");
   return response.data;
 };
 
@@ -87,7 +87,10 @@ export const getVapidPublicKey = async (): Promise<{ public_key: string }> => {
  * @returns Promise containing the async task ID and status
  */
 export const sendAdminNotification = async (payload: AdminNotificationPayload): Promise<{ task_id: string; status: string }> => {
-  const response = await api.post<{ task_id: string; status: string }>('/api/admin/send_notification/', payload);
+  const response = await api.post<{ task_id: string; status: string }>(
+    "/api/admin/send_notification/",
+    payload,
+  );
   return response.data;
 };
 
@@ -96,14 +99,23 @@ export const sendAdminNotification = async (payload: AdminNotificationPayload): 
  * @param params - The filtering parameters.
  * @param params.search - The search query to filter users by.
  * @param params.role - The user role to filter by.
- * @returns A promise that resolves to an array of admin user summaries.
+ * @param params.page - The page number to fetch.
+ * @param params.pageSize - Optional page size override.
+ * @returns A promise that resolves to paginated admin user summaries.
  */
-export const getAdminUsers = async (params: { search?: string; role?: AdminUserRole }): Promise<AdminUserSummary[]> => {
-  const response = await api.get<AdminUserSummary[]>("/api/admin/users/", {
+export const getAdminUsers = async (params: {
+  search?: string;
+  role?: AdminUserRole;
+  page?: number;
+  pageSize?: number;
+}): Promise<AdminUserListResponse> => {
+  const response = await api.get<AdminUserListResponse>("/api/admin/users/", {
     params: {
       search: params.search ?? undefined,
       // If the role is set to "all", we omit it from the request to fetch all users.
       role: params.role !== "all" ? params.role : undefined,
+      page: params.page ?? 1,
+      page_size: params.pageSize ?? undefined,
     },
   });
   return response.data;
