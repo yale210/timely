@@ -1,9 +1,10 @@
-from rest_framework import viewsets, status, pagination
+from rest_framework import pagination, status, viewsets
 from rest_framework.decorators import action
-from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
-from core.models.notification import Notification
-from core.serializers.notification import NotificationSerializer
+from rest_framework.response import Response
+
+from notifications.models import Notification
+from notifications.serializers import NotificationSerializer
 
 
 class NotificationPagination(pagination.PageNumberPagination):
@@ -37,7 +38,8 @@ class NotificationViewSet(viewsets.ModelViewSet):
     def delete_all(self, request):
         self.get_queryset().delete()
         return Response(
-            {"status": "all notifications deleted"}, status=status.HTTP_204_NO_CONTENT
+            {"status": "all notifications deleted"},
+            status=status.HTTP_204_NO_CONTENT,
         )
 
     @action(detail=False, methods=["get"])

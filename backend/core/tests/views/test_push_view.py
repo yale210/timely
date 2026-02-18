@@ -2,7 +2,7 @@ from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APITestCase
 from django.contrib.auth import get_user_model
-from core.models.push_subscription import PushSubscription
+from notifications.models import PushSubscription
 
 User = get_user_model()
 

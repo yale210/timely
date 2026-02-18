@@ -1,5 +1,5 @@
-from django.db import models
 from django.conf import settings
+from django.db import models
 
 
 class PushSubscription(models.Model):
@@ -15,6 +15,7 @@ class PushSubscription(models.Model):
 
     class Meta:
         unique_together = ("user", "endpoint")
+        db_table = "core_pushsubscription"
 
     def __str__(self):
         return f"PushSubscription for {self.user.username}"

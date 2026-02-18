@@ -3,9 +3,8 @@ from django.utils import timezone
 from django.contrib.auth import get_user_model
 from core.models.event import Event
 from core.models.event_reminder import EventReminder
-from core.models.notification import Notification
-from core.models.push_subscription import PushSubscription
-from core.tasks import (
+from notifications.models import Notification, PushSubscription
+from notifications.tasks import (
     check_reminders,
     send_push_notification,
     cleanup_old_notifications,
@@ -62,13 +61,13 @@ class TasksTests(TestCase):
         EventReminder.objects.filter(id=reminder.id).update(
             trigger_at=timezone.now() - timezone.timedelta(minutes=1)
         )
-        with patch("core.tasks.Notification.save", autospec=True) as mock_save:
+        with patch("notifications.tasks.Notification.save", autospec=True) as mock_save:
             check_reminders()
             self.assertTrue(mock_save.called)
             saved_instance = mock_save.call_args[0][0]
             self.assertTrue(getattr(saved_instance, "_skip_push", False))
 
-    @patch("core.tasks.webpush")
+    @patch("notifications.tasks.webpush")
     def test_send_push_notification(self, mock_webpush):
         PushSubscription.objects.create(
             user=self.user, endpoint="https://example.com", p256dh="p256dh", auth="auth"
@@ -76,7 +75,7 @@ class TasksTests(TestCase):
         send_push_notification(self.user.id, "Title", "Message")
         self.assertTrue(mock_webpush.called)
 
-    @patch("core.tasks.webpush")
+    @patch("notifications.tasks.webpush")
     def test_send_push_notification_error(self, mock_webpush):
         from pywebpush import WebPushException
 

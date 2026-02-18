@@ -1,12 +1,13 @@
-from celery import shared_task
-from django.utils import timezone
-from django.contrib.auth import get_user_model
-from core.models.event_reminder import EventReminder
-from core.models.notification import Notification
-from core.models.push_subscription import PushSubscription
-from pywebpush import webpush, WebPushException
-from django.conf import settings
 import json
+
+from celery import shared_task
+from django.conf import settings
+from django.contrib.auth import get_user_model
+from django.utils import timezone
+from pywebpush import WebPushException, webpush
+
+from core.models.event_reminder import EventReminder
+from notifications.models import Notification, PushSubscription
 
 User = get_user_model()
 
@@ -30,15 +31,13 @@ def check_reminders():
             notification._skip_push = True
         notification.save()
 
-        # Mark as processed
         reminder.processed = True
-        reminder.save()
+        reminder.save(update_fields=["processed"])
 
 
 @shared_task
 def send_push_notification(user_id, title, message):
     subscriptions = PushSubscription.objects.filter(user_id=user_id)
-
     payload = json.dumps({"title": title, "message": message})
 
     for sub in subscriptions:
@@ -53,7 +52,6 @@ def send_push_notification(user_id, title, message):
                 vapid_claims={"sub": f"mailto:{settings.VAPID_ADMIN_EMAIL}"},
             )
         except WebPushException as ex:
-            # If subscription is expired/invalid, we could delete it
             if ex.response and ex.response.status_code in [404, 410]:
                 sub.delete()
 

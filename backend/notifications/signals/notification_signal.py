@@ -1,9 +1,9 @@
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 
-from core.models.notification import Notification
-from core.utils.websocket import notify_user
-from core.tasks import send_push_notification
+from notifications.models import Notification
+from notifications.tasks import send_push_notification
+from notifications.utils.websocket import notify_user
 
 
 @receiver(post_save, sender=Notification)
@@ -12,7 +12,8 @@ def push_notification_on_create(sender, instance, created, **kwargs):
         return
 
     unread_count = Notification.objects.filter(
-        recipient=instance.recipient, is_read=False
+        recipient=instance.recipient,
+        is_read=False,
     ).count()
 
     notify_user(
@@ -38,5 +39,7 @@ def push_notification_on_create(sender, instance, created, **kwargs):
 
     if not getattr(instance, "_skip_push", False):
         send_push_notification.delay(
-            instance.recipient_id, instance.title, instance.message
+            instance.recipient_id,
+            instance.title,
+            instance.message,
         )

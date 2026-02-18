@@ -1,6 +1,6 @@
 from rest_framework import serializers
-from core.models.notification import Notification
-from core.models.push_subscription import PushSubscription
+
+from notifications.models import Notification, PushSubscription
 
 
 class NotificationSerializer(serializers.ModelSerializer):

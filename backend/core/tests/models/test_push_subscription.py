@@ -1,7 +1,7 @@
 from django.test import TestCase
 from django.contrib.auth import get_user_model
-from core.models.push_subscription import PushSubscription
 from django.db import IntegrityError
+from notifications.models import PushSubscription
 
 User = get_user_model()
 

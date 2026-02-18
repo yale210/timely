@@ -20,9 +20,7 @@ class AdminSendNotificationViewTests(APITestCase):
     def test_post_as_admin_success(self):
         self.client.force_authenticate(user=self.admin_user)
         data = {"title": "Admin Note", "message": "Hello everyone", "target": "all"}
-        with patch(
-            "core.views.admin_notification_view.broadcast_notification.delay"
-        ) as mock_task:
+        with patch("admin_panel.views.broadcast_notification.delay") as mock_task:
             mock_task.return_value.id = "task-123"
             response = self.client.post(self.url, data)
             self.assertEqual(response.status_code, status.HTTP_202_ACCEPTED)
