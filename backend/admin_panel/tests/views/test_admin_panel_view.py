@@ -26,7 +26,20 @@ class AdminUserListViewTests(APITestCase):
         response = self.client.get(self.url)
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(response.data), 2)
+        self.assertEqual(response.data["count"], 2)
+        self.assertEqual(len(response.data["results"]), 2)
+        self.assertIn("next", response.data)
+        self.assertIn("previous", response.data)
+
+    def test_admin_user_list_pagination(self):
+        self.client.force_authenticate(user=self.admin_user)
+
+        response = self.client.get(f"{self.url}?page_size=1")
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data["count"], 2)
+        self.assertEqual(len(response.data["results"]), 1)
+        self.assertIsNotNone(response.data["next"])
 
     def test_regular_user_is_forbidden(self):
         self.client.force_authenticate(user=self.regular_user)

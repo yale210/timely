@@ -35,3 +35,32 @@ class AdminSendNotificationViewTests(APITestCase):
         self.client.force_authenticate(user=self.admin_user)
         response = self.client.post(self.url, {"title": ""})
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_post_invalid_target(self):
+        self.client.force_authenticate(user=self.admin_user)
+        data = {"title": "Admin Note", "message": "Hello everyone", "target": "invalid"}
+        with patch("admin_panel.views.broadcast_notification.delay") as mock_task:
+            response = self.client.post(self.url, data)
+            self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+            mock_task.assert_not_called()
+
+    def test_post_users_target_without_user_ids(self):
+        self.client.force_authenticate(user=self.admin_user)
+        data = {"title": "Admin Note", "message": "Hello users", "target": "users"}
+        with patch("admin_panel.views.broadcast_notification.delay") as mock_task:
+            response = self.client.post(self.url, data)
+            self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+            mock_task.assert_not_called()
+
+    def test_post_users_target_with_empty_user_ids(self):
+        self.client.force_authenticate(user=self.admin_user)
+        data = {
+            "title": "Admin Note",
+            "message": "Hello users",
+            "target": "users",
+            "user_ids": [],
+        }
+        with patch("admin_panel.views.broadcast_notification.delay") as mock_task:
+            response = self.client.post(self.url, data)
+            self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+            mock_task.assert_not_called()
