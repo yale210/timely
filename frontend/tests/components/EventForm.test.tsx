@@ -1,8 +1,26 @@
 import { it, describe, expect, vi, beforeEach, afterEach } from 'vitest'
-import { render, screen, fireEvent, cleanup } from '@testing-library/react'
+import { render, screen, fireEvent, cleanup, waitFor } from '@testing-library/react'
 import '@testing-library/jest-dom'
 import EventForm from "@/components/EventForm"
 import { type Category, type Event } from "@/types"
+import { getServerTime } from "@/services/eventService"
+
+vi.mock("@/services/eventService", () => ({
+  getServerTime: vi.fn(),
+}))
+
+const toDateInputValue = (value: Date): string => {
+  const year = value.getFullYear()
+  const month = `${value.getMonth() + 1}`.padStart(2, "0")
+  const day = `${value.getDate()}`.padStart(2, "0")
+  return `${year}-${month}-${day}`
+}
+
+const toTimeInputValue = (value: Date): string => {
+  const hours = `${value.getHours()}`.padStart(2, "0")
+  const minutes = `${value.getMinutes()}`.padStart(2, "0")
+  return `${hours}:${minutes}`
+}
 
 const mockCategories: Category[] = [
   { id: 1, text: 'Work' },
@@ -31,6 +49,7 @@ describe('EventForm', () => {
 
   beforeEach(() => {
     vi.resetAllMocks()
+    vi.mocked(getServerTime).mockResolvedValue({ server_time: new Date().toISOString() })
   })
 
   afterEach(() => {
@@ -233,5 +252,56 @@ describe('EventForm', () => {
     
     fireEvent.change(intervalSelect, { target: { value: '' } })
     expect(intervalSelect).toHaveValue('')
+  })
+
+  it("shows a warning when client clock is out of sync with server time", async () => {
+    vi.mocked(getServerTime).mockResolvedValue({
+      server_time: new Date(Date.now() + (6 * 60 * 1000)).toISOString()
+    })
+
+    render(
+      <EventForm
+        categories={mockCategories}
+        onSubmit={onSubmit}
+        onCancel={onCancel}
+      />
+    )
+
+    expect(
+      await screen.findByText(/device clock appears out of sync with the server/i)
+    ).toBeInTheDocument()
+  })
+
+  it("uses server-adjusted time for past reminder validation", async () => {
+    vi.mocked(getServerTime).mockResolvedValue({
+      server_time: new Date(Date.now() + (10 * 60 * 1000)).toISOString()
+    })
+
+    const now = new Date()
+    const startDate = new Date(now.getTime() + (4 * 60 * 1000))
+    const endDate = new Date(startDate.getTime() + (60 * 60 * 1000))
+
+    render(
+      <EventForm
+        categories={mockCategories}
+        onSubmit={onSubmit}
+        onCancel={onCancel}
+      />
+    )
+
+    fireEvent.change(screen.getByLabelText(/Start Date/i), { target: { value: toDateInputValue(startDate) } })
+    fireEvent.change(screen.getByLabelText(/Start Time/i), { target: { value: toTimeInputValue(startDate) } })
+    fireEvent.change(screen.getByLabelText(/End Date/i, { selector: "#event-end-date" }), {
+      target: { value: toDateInputValue(endDate) },
+    })
+    fireEvent.change(screen.getByLabelText(/End Time/i), { target: { value: toTimeInputValue(endDate) } })
+
+    fireEvent.click(screen.getByText(/Add Reminder/i))
+    fireEvent.change(screen.getByDisplayValue("15"), { target: { value: "1" } })
+
+    await waitFor(() => {
+      expect(screen.getByText(/This reminder would trigger in the past/i)).toBeInTheDocument()
+    })
+    expect(screen.getByRole("button", { name: /Save Event/i })).toBeDisabled()
   })
 })

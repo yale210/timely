@@ -79,3 +79,13 @@ export interface AdminUserSummary {
   date_joined: string;
   last_login: string | null;
 }
+
+/**
+ * Paginated response payload for admin user listing endpoints.
+ */
+export interface AdminUserListResponse {
+  count: number;
+  next: string | null;
+  previous: string | null;
+  results: AdminUserSummary[];
+}
