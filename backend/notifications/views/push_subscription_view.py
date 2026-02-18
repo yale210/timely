@@ -54,4 +54,10 @@ class PushSubscriptionViewSet(viewsets.ModelViewSet):
 
     @action(detail=False, methods=["get"], permission_classes=[AllowAny])
     def vapid_public_key(self, request):
-        return Response({"public_key": settings.VAPID_PUBLIC_KEY})
+        vapid_public_key = settings.VAPID_PUBLIC_KEY
+        if not vapid_public_key:
+            return Response(
+                {"error": "VAPID public key is not configured on the server."},
+                status=status.HTTP_503_SERVICE_UNAVAILABLE,
+            )
+        return Response({"public_key": vapid_public_key})

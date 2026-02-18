@@ -1,4 +1,5 @@
 from django.urls import reverse
+from django.test import override_settings
 from rest_framework import status
 from rest_framework.test import APITestCase
 from django.contrib.auth import get_user_model
@@ -55,8 +56,17 @@ class PushSubscriptionViewSetTests(APITestCase):
         response = self.client.post(self.unsubscribe_url, {})
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
+    @override_settings(VAPID_PUBLIC_KEY="test-public-key")
     def test_vapid_public_key(self):
         self.client.logout()
         response = self.client.get(self.vapid_url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertIn("public_key", response.data)
+        self.assertEqual(response.data["public_key"], "test-public-key")
+
+    @override_settings(VAPID_PUBLIC_KEY=None)
+    def test_vapid_public_key_not_configured(self):
+        self.client.logout()
+        response = self.client.get(self.vapid_url)
+        self.assertEqual(response.status_code, status.HTTP_503_SERVICE_UNAVAILABLE)
+        self.assertIn("error", response.data)
