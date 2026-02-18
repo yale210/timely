@@ -39,3 +39,12 @@ export const updateEvent = async (id: number, data: EventSubmission): Promise<Ev
 export const deleteEvent = async (id: number): Promise<void> => {
   await api.delete(`/api/events/${id}/`);
 };
+
+/**
+ * Retrieves the backend server time for client/server clock skew checks.
+ * @returns A promise that resolves to an object containing the current server time in ISO format.
+ */
+export const getServerTime = async (): Promise<{ server_time: string }> => {
+  const response = await api.get<{ server_time: string }>("/api/events/server_time/");
+  return response.data;
+};
