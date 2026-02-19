@@ -2,7 +2,7 @@ from rest_framework import permissions
 from rest_framework.viewsets import ModelViewSet
 
 from profiles.models.preference import Preference
-from serializers.preference import PreferenceSerializer
+from profiles.serializers.preference_serializer import PreferenceSerializer
 
 
 class PreferenceViewSet(ModelViewSet):

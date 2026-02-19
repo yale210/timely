@@ -16,7 +16,6 @@ import type {
   Event,
   EventSubmission,
 } from "../types";
-import { title } from "process";
 
 const localizer = momentLocalizer(moment);
 /**

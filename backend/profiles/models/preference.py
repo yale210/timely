@@ -3,8 +3,8 @@ from datetime import datetime, timedelta
 from django.core.exceptions import ValidationError
 from django.db import models
 
-import settings
-from profiles.models.day_of_week import DayOfWeek
+from django.conf import settings
+from core.models.day_of_week import DayOfWeek
 
 
 class Preference(models.Model):
