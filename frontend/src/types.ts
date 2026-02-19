@@ -34,6 +34,8 @@ export interface Task {
   categories: Category[];
   estimated_minutes: number;
   parent_task?: number | null;
+  allocation?: { start: string; end: string }[];
+  total_task_allocations?: number;
 }
 
 /**
@@ -79,6 +81,21 @@ export interface Event {
 export interface EventSubmission extends Omit<Partial<Event>, "reminders" | "categories"> {
   reminders?: Omit<EventReminder, "id">[];
   categories?: number[];
+}
+
+export interface ScheduleResult {
+  task_id: number;
+  success: boolean;
+  scheduled_start: string | null;
+  scheduled_end: string | null;
+  reason?: string | null;
+}
+
+export interface ScheduleResponse {
+  start_date: string;
+  scheduled_count: number;
+  failed_count: number;
+  results: ScheduleResult[];
 }
 
 /**

@@ -21,6 +21,8 @@ class CalendarSerializer(serializers.ModelSerializer):
             "importance",
             "completed",
             "parent_task",
+            "allocation",
+            "total_task_allocations",
         ]
 
     def to_representation(self, instance):

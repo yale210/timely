@@ -26,6 +26,7 @@ from core.views import (
     CategoryViewSet,
     WeeklySummaryView,
 )
+from scheduler.views import ScheduleTasksAPIView, UnscheduleTasksAPIView
 
 
 router = DefaultRouter()
@@ -37,6 +38,8 @@ router.register(r"preferences", PreferenceViewSet, basename="preference")
 
 urlpatterns = [
     path("api/", include(router.urls)),
+    path("api/schedule/", ScheduleTasksAPIView.as_view(), name="schedule-tasks"),
+    path("api/unschedule/", UnscheduleTasksAPIView.as_view(), name="unschedule-tasks"),
     path("api/stats/weekly/", WeeklySummaryView.as_view(), name="weekly-summary"),
     path("api/admin/", admin.site.urls),
     path("api/authentication/", include("authentication.urls")),
