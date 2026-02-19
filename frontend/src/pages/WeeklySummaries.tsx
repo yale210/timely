@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Navbar, Footer, WeeklySummaryWidget } from "@/components";
+import { Footer, WeeklySummaryWidget } from "@/components";
 import { getWeeklySummary } from "@/services/statsService";
 import { getPastWeeks } from "@/utils/dateUtils";
 import type { WeeklyStats } from "@/types";
@@ -112,7 +112,6 @@ export default function WeeklySummaries() {
   return (
     <div className="relative isolate min-h-screen bg-white flex flex-col font-sans text-black">
       <BackgroundTemplate />
-      <Navbar />
       <main className="flex-grow flex flex-col items-center pt-24 pb-12 px-4 gap-12">
         <HeaderSection date={date} setDate={setDate} stats={stats} />
         <AnalyticsGrid stats={stats} />

@@ -2,6 +2,7 @@ import { useEffect, useState } from "react"
 import { Link } from "react-router-dom"
 import CreateGradeModal from "../components/CreateGradeModal.tsx"
 import useCategories from "../hooks/useCategories"
+import AppLayout from "../layouts/AppLayout"
 
 interface Grade {
   id: number
@@ -117,7 +118,8 @@ export default function Gradebook() {
   }
 
   return (
-  <div className="p-6 font-young-coconut">
+  <AppLayout>
+    <div className="p-6 font-young-coconut">
       <div className="flex justify-between items-center mb-6">
         <div className="flex items-center gap-4">
           <Link to="/" aria-label="Back to home" title="Back to home" className="p-2 rounded hover:bg-gray-100 transition">
@@ -259,5 +261,6 @@ export default function Gradebook() {
         }}
       />
     </div>
+  </AppLayout>
   )
 }
