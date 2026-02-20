@@ -34,7 +34,7 @@ router.register(r"tasks", TaskViewSet, basename="task")
 router.register(r"grades", GradeViewSet, basename="grade")
 router.register(r"categories", CategoryViewSet, basename="category")
 router.register(r"events", EventViewSet, basename="event")
-router.register(r"pkreferences", PreferenceViewSet, basename="preference")
+router.register(r"preferences", PreferenceViewSet, basename="preference")
 
 urlpatterns = [
     path("api/", include(router.urls)),
