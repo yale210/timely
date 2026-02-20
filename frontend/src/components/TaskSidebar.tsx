@@ -33,6 +33,7 @@ const TaskSidebar = ({
   initialData,
 }: TaskSidebarProps) => {
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const taskFormKey = `task-${initialData?.id ?? "new"}-${initialData?.start_time ?? "start"}`;
 
   return (
     <>
@@ -90,6 +91,7 @@ const TaskSidebar = ({
 
                       <div className="relative flex-1 overflow-y-auto bg-white">
                         <TaskForm
+                          key={taskFormKey}
                           initialData={initialData}
                           categories={categories}
                           onSubmit={(data) => {
