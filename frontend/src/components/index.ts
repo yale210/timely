@@ -12,4 +12,5 @@ export { default as ConfirmationModal } from "./ConfirmationModal";
 export { default as CreateGradeModal } from "./CreateGradeModal";
 export {default as Statcard} from "./Statcard";
 export {default as WeeklySummaryWidget} from "./WeeklySummaryWidget";
-
+export { default as RecurrenceScopeModal } from "./RecurrenceScopeModal";
+export { default as ScopeActionModal } from "./ScopeActionModal";
