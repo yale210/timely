@@ -6,6 +6,82 @@
         "description": "OpenAPI schema for Timely backend"
     },
     "paths": {
+        "/api/admin/send_notification/": {
+            "post": {
+                "operationId": "admin_send_notification_create",
+                "tags": [
+                    "admin"
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/AdminUserList"
+                            }
+                        },
+                        "application/x-www-form-urlencoded": {
+                            "schema": {
+                                "$ref": "#/components/schemas/AdminUserList"
+                            }
+                        },
+                        "multipart/form-data": {
+                            "schema": {
+                                "$ref": "#/components/schemas/AdminUserList"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "security": [
+                    {
+                        "knoxApiToken": []
+                    },
+                    {
+                        "cookieAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/AdminUserList"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/api/admin/users/": {
+            "get": {
+                "operationId": "admin_users_retrieve",
+                "tags": [
+                    "admin"
+                ],
+                "security": [
+                    {
+                        "knoxApiToken": []
+                    },
+                    {
+                        "cookieAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/AdminUserList"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            }
+        },
         "/api/authentication/logout/": {
             "post": {
                 "operationId": "authentication_logout_create",
@@ -244,6 +320,26 @@
         "/api/events/": {
             "get": {
                 "operationId": "events_list",
+                "parameters": [
+                    {
+                        "in": "query",
+                        "name": "end_date",
+                        "schema": {
+                            "type": "string",
+                            "format": "date"
+                        },
+                        "description": "End date for flattened event expansion (YYYY-MM-DD)."
+                    },
+                    {
+                        "in": "query",
+                        "name": "start_date",
+                        "schema": {
+                            "type": "string",
+                            "format": "date"
+                        },
+                        "description": "Start date for flattened event expansion (YYYY-MM-DD)."
+                    }
+                ],
                 "tags": [
                     "events"
                 ],
@@ -262,7 +358,7 @@
                                 "schema": {
                                     "type": "array",
                                     "items": {
-                                        "$ref": "#/components/schemas/EventResponse"
+                                        "$ref": "#/components/schemas/ExpandedEventInstance"
                                     }
                                 }
                             }
@@ -364,6 +460,23 @@
                             "type": "integer"
                         },
                         "required": true
+                    },
+                    {
+                        "in": "query",
+                        "name": "original_start_time",
+                        "schema": {
+                            "type": "string",
+                            "format": "date-time"
+                        },
+                        "description": "UTC ISO datetime anchor of interacted recurring instance."
+                    },
+                    {
+                        "in": "query",
+                        "name": "scope",
+                        "schema": {
+                            "type": "string"
+                        },
+                        "description": "Mutation scope: this, following, all."
                     }
                 ],
                 "tags": [
@@ -419,6 +532,23 @@
                             "type": "integer"
                         },
                         "required": true
+                    },
+                    {
+                        "in": "query",
+                        "name": "original_start_time",
+                        "schema": {
+                            "type": "string",
+                            "format": "date-time"
+                        },
+                        "description": "UTC ISO datetime anchor of interacted recurring instance."
+                    },
+                    {
+                        "in": "query",
+                        "name": "scope",
+                        "schema": {
+                            "type": "string"
+                        },
+                        "description": "Mutation scope: this, following, all."
                     }
                 ],
                 "tags": [
@@ -474,6 +604,23 @@
                             "type": "integer"
                         },
                         "required": true
+                    },
+                    {
+                        "in": "query",
+                        "name": "original_start_time",
+                        "schema": {
+                            "type": "string",
+                            "format": "date-time"
+                        },
+                        "description": "UTC ISO datetime anchor of interacted recurring instance."
+                    },
+                    {
+                        "in": "query",
+                        "name": "scope",
+                        "schema": {
+                            "type": "string"
+                        },
+                        "description": "Mutation scope: this, following, all."
                     }
                 ],
                 "tags": [
@@ -490,6 +637,94 @@
                 "responses": {
                     "204": {
                         "description": "No response body"
+                    }
+                }
+            }
+        },
+        "/api/events/{id}/revert-instance/": {
+            "post": {
+                "operationId": "events_revert_instance_create",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "id",
+                        "schema": {
+                            "type": "integer"
+                        },
+                        "required": true
+                    },
+                    {
+                        "in": "query",
+                        "name": "original_start_time",
+                        "schema": {
+                            "type": "string",
+                            "format": "date-time"
+                        },
+                        "description": "UTC ISO datetime anchor of the overridden recurring instance.",
+                        "required": true
+                    }
+                ],
+                "tags": [
+                    "events"
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/Event"
+                            }
+                        },
+                        "application/x-www-form-urlencoded": {
+                            "schema": {
+                                "$ref": "#/components/schemas/Event"
+                            }
+                        },
+                        "multipart/form-data": {
+                            "schema": {
+                                "$ref": "#/components/schemas/Event"
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "knoxApiToken": []
+                    },
+                    {
+                        "cookieAuth": []
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No response body"
+                    }
+                }
+            }
+        },
+        "/api/events/server_time/": {
+            "get": {
+                "operationId": "events_server_time_retrieve",
+                "tags": [
+                    "events"
+                ],
+                "security": [
+                    {
+                        "knoxApiToken": []
+                    },
+                    {
+                        "cookieAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Event"
+                                }
+                            }
+                        },
+                        "description": ""
                     }
                 }
             }
@@ -753,6 +988,424 @@
                 }
             }
         },
+        "/api/notifications/": {
+            "get": {
+                "operationId": "notifications_list",
+                "parameters": [
+                    {
+                        "name": "page",
+                        "required": false,
+                        "in": "query",
+                        "description": "A page number within the paginated result set.",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "tags": [
+                    "notifications"
+                ],
+                "security": [
+                    {
+                        "knoxApiToken": []
+                    },
+                    {
+                        "cookieAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/PaginatedNotificationList"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            },
+            "post": {
+                "operationId": "notifications_create",
+                "tags": [
+                    "notifications"
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/Notification"
+                            }
+                        },
+                        "application/x-www-form-urlencoded": {
+                            "schema": {
+                                "$ref": "#/components/schemas/Notification"
+                            }
+                        },
+                        "multipart/form-data": {
+                            "schema": {
+                                "$ref": "#/components/schemas/Notification"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "security": [
+                    {
+                        "knoxApiToken": []
+                    },
+                    {
+                        "cookieAuth": []
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Notification"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/api/notifications/{id}/": {
+            "get": {
+                "operationId": "notifications_retrieve",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "id",
+                        "schema": {
+                            "type": "string"
+                        },
+                        "required": true
+                    }
+                ],
+                "tags": [
+                    "notifications"
+                ],
+                "security": [
+                    {
+                        "knoxApiToken": []
+                    },
+                    {
+                        "cookieAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Notification"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            },
+            "put": {
+                "operationId": "notifications_update",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "id",
+                        "schema": {
+                            "type": "string"
+                        },
+                        "required": true
+                    }
+                ],
+                "tags": [
+                    "notifications"
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/Notification"
+                            }
+                        },
+                        "application/x-www-form-urlencoded": {
+                            "schema": {
+                                "$ref": "#/components/schemas/Notification"
+                            }
+                        },
+                        "multipart/form-data": {
+                            "schema": {
+                                "$ref": "#/components/schemas/Notification"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "security": [
+                    {
+                        "knoxApiToken": []
+                    },
+                    {
+                        "cookieAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Notification"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            },
+            "patch": {
+                "operationId": "notifications_partial_update",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "id",
+                        "schema": {
+                            "type": "string"
+                        },
+                        "required": true
+                    }
+                ],
+                "tags": [
+                    "notifications"
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/PatchedNotification"
+                            }
+                        },
+                        "application/x-www-form-urlencoded": {
+                            "schema": {
+                                "$ref": "#/components/schemas/PatchedNotification"
+                            }
+                        },
+                        "multipart/form-data": {
+                            "schema": {
+                                "$ref": "#/components/schemas/PatchedNotification"
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "knoxApiToken": []
+                    },
+                    {
+                        "cookieAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Notification"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            },
+            "delete": {
+                "operationId": "notifications_destroy",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "id",
+                        "schema": {
+                            "type": "string"
+                        },
+                        "required": true
+                    }
+                ],
+                "tags": [
+                    "notifications"
+                ],
+                "security": [
+                    {
+                        "knoxApiToken": []
+                    },
+                    {
+                        "cookieAuth": []
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No response body"
+                    }
+                }
+            }
+        },
+        "/api/notifications/{id}/mark_read/": {
+            "post": {
+                "operationId": "notifications_mark_read_create",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "id",
+                        "schema": {
+                            "type": "string"
+                        },
+                        "required": true
+                    }
+                ],
+                "tags": [
+                    "notifications"
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/Notification"
+                            }
+                        },
+                        "application/x-www-form-urlencoded": {
+                            "schema": {
+                                "$ref": "#/components/schemas/Notification"
+                            }
+                        },
+                        "multipart/form-data": {
+                            "schema": {
+                                "$ref": "#/components/schemas/Notification"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "security": [
+                    {
+                        "knoxApiToken": []
+                    },
+                    {
+                        "cookieAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Notification"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/api/notifications/delete_all/": {
+            "delete": {
+                "operationId": "notifications_delete_all_destroy",
+                "tags": [
+                    "notifications"
+                ],
+                "security": [
+                    {
+                        "knoxApiToken": []
+                    },
+                    {
+                        "cookieAuth": []
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No response body"
+                    }
+                }
+            }
+        },
+        "/api/notifications/mark_all_read/": {
+            "post": {
+                "operationId": "notifications_mark_all_read_create",
+                "tags": [
+                    "notifications"
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/Notification"
+                            }
+                        },
+                        "application/x-www-form-urlencoded": {
+                            "schema": {
+                                "$ref": "#/components/schemas/Notification"
+                            }
+                        },
+                        "multipart/form-data": {
+                            "schema": {
+                                "$ref": "#/components/schemas/Notification"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "security": [
+                    {
+                        "knoxApiToken": []
+                    },
+                    {
+                        "cookieAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Notification"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/api/notifications/unread_count/": {
+            "get": {
+                "operationId": "notifications_unread_count_retrieve",
+                "tags": [
+                    "notifications"
+                ],
+                "security": [
+                    {
+                        "knoxApiToken": []
+                    },
+                    {
+                        "cookieAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Notification"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            }
+        },
         "/api/preferences/": {
             "get": {
                 "operationId": "preferences_list",
@@ -1007,6 +1660,433 @@
                 ],
                 "responses": {
                     "204": {
+                        "description": "No response body"
+                    }
+                }
+            }
+        },
+        "/api/push/": {
+            "get": {
+                "operationId": "push_list",
+                "tags": [
+                    "push"
+                ],
+                "security": [
+                    {
+                        "knoxApiToken": []
+                    },
+                    {
+                        "cookieAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/PushSubscription"
+                                    }
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            },
+            "post": {
+                "operationId": "push_create",
+                "tags": [
+                    "push"
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/PushSubscription"
+                            }
+                        },
+                        "application/x-www-form-urlencoded": {
+                            "schema": {
+                                "$ref": "#/components/schemas/PushSubscription"
+                            }
+                        },
+                        "multipart/form-data": {
+                            "schema": {
+                                "$ref": "#/components/schemas/PushSubscription"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "security": [
+                    {
+                        "knoxApiToken": []
+                    },
+                    {
+                        "cookieAuth": []
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/PushSubscription"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/api/push/{id}/": {
+            "get": {
+                "operationId": "push_retrieve",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "id",
+                        "schema": {
+                            "type": "integer"
+                        },
+                        "description": "A unique integer value identifying this push subscription.",
+                        "required": true
+                    }
+                ],
+                "tags": [
+                    "push"
+                ],
+                "security": [
+                    {
+                        "knoxApiToken": []
+                    },
+                    {
+                        "cookieAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/PushSubscription"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            },
+            "put": {
+                "operationId": "push_update",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "id",
+                        "schema": {
+                            "type": "integer"
+                        },
+                        "description": "A unique integer value identifying this push subscription.",
+                        "required": true
+                    }
+                ],
+                "tags": [
+                    "push"
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/PushSubscription"
+                            }
+                        },
+                        "application/x-www-form-urlencoded": {
+                            "schema": {
+                                "$ref": "#/components/schemas/PushSubscription"
+                            }
+                        },
+                        "multipart/form-data": {
+                            "schema": {
+                                "$ref": "#/components/schemas/PushSubscription"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "security": [
+                    {
+                        "knoxApiToken": []
+                    },
+                    {
+                        "cookieAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/PushSubscription"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            },
+            "patch": {
+                "operationId": "push_partial_update",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "id",
+                        "schema": {
+                            "type": "integer"
+                        },
+                        "description": "A unique integer value identifying this push subscription.",
+                        "required": true
+                    }
+                ],
+                "tags": [
+                    "push"
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/PatchedPushSubscription"
+                            }
+                        },
+                        "application/x-www-form-urlencoded": {
+                            "schema": {
+                                "$ref": "#/components/schemas/PatchedPushSubscription"
+                            }
+                        },
+                        "multipart/form-data": {
+                            "schema": {
+                                "$ref": "#/components/schemas/PatchedPushSubscription"
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "knoxApiToken": []
+                    },
+                    {
+                        "cookieAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/PushSubscription"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            },
+            "delete": {
+                "operationId": "push_destroy",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "id",
+                        "schema": {
+                            "type": "integer"
+                        },
+                        "description": "A unique integer value identifying this push subscription.",
+                        "required": true
+                    }
+                ],
+                "tags": [
+                    "push"
+                ],
+                "security": [
+                    {
+                        "knoxApiToken": []
+                    },
+                    {
+                        "cookieAuth": []
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No response body"
+                    }
+                }
+            }
+        },
+        "/api/push/subscribe/": {
+            "post": {
+                "operationId": "push_subscribe_create",
+                "tags": [
+                    "push"
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/PushSubscription"
+                            }
+                        },
+                        "application/x-www-form-urlencoded": {
+                            "schema": {
+                                "$ref": "#/components/schemas/PushSubscription"
+                            }
+                        },
+                        "multipart/form-data": {
+                            "schema": {
+                                "$ref": "#/components/schemas/PushSubscription"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "security": [
+                    {
+                        "knoxApiToken": []
+                    },
+                    {
+                        "cookieAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/PushSubscription"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/api/push/unsubscribe/": {
+            "post": {
+                "operationId": "push_unsubscribe_create",
+                "tags": [
+                    "push"
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/PushSubscription"
+                            }
+                        },
+                        "application/x-www-form-urlencoded": {
+                            "schema": {
+                                "$ref": "#/components/schemas/PushSubscription"
+                            }
+                        },
+                        "multipart/form-data": {
+                            "schema": {
+                                "$ref": "#/components/schemas/PushSubscription"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "security": [
+                    {
+                        "knoxApiToken": []
+                    },
+                    {
+                        "cookieAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/PushSubscription"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/api/push/vapid_public_key/": {
+            "get": {
+                "operationId": "push_vapid_public_key_retrieve",
+                "tags": [
+                    "push"
+                ],
+                "security": [
+                    {
+                        "knoxApiToken": []
+                    },
+                    {
+                        "cookieAuth": []
+                    },
+                    {}
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/PushSubscription"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/api/schedule/": {
+            "post": {
+                "operationId": "schedule_create",
+                "tags": [
+                    "schedule"
+                ],
+                "security": [
+                    {
+                        "knoxApiToken": []
+                    },
+                    {
+                        "cookieAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "No response body"
+                    }
+                }
+            }
+        },
+        "/api/stats/weekly/": {
+            "get": {
+                "operationId": "stats_weekly_retrieve",
+                "description": "Retrieve weekly statistics for the authenticated user.",
+                "tags": [
+                    "stats"
+                ],
+                "security": [
+                    {
+                        "knoxApiToken": []
+                    },
+                    {
+                        "cookieAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
                         "description": "No response body"
                     }
                 }
@@ -1313,10 +2393,74 @@
                     }
                 }
             }
+        },
+        "/api/unschedule/": {
+            "post": {
+                "operationId": "unschedule_create",
+                "tags": [
+                    "unschedule"
+                ],
+                "security": [
+                    {
+                        "knoxApiToken": []
+                    },
+                    {
+                        "cookieAuth": []
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "No response body"
+                    }
+                }
+            }
         }
     },
     "components": {
         "schemas": {
+            "AdminUserList": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "readOnly": true
+                    },
+                    "username": {
+                        "type": "string",
+                        "maxLength": 255
+                    },
+                    "email": {
+                        "type": "string",
+                        "format": "email",
+                        "maxLength": 255
+                    },
+                    "is_staff": {
+                        "type": "boolean"
+                    },
+                    "is_superuser": {
+                        "type": "boolean"
+                    },
+                    "is_active": {
+                        "type": "boolean"
+                    },
+                    "date_joined": {
+                        "type": "string",
+                        "format": "date-time",
+                        "readOnly": true
+                    },
+                    "last_login": {
+                        "type": "string",
+                        "format": "date-time",
+                        "nullable": true
+                    }
+                },
+                "required": [
+                    "date_joined",
+                    "email",
+                    "id",
+                    "username"
+                ]
+            },
             "BlankEnum": {
                 "enum": [
                     ""
@@ -1371,6 +2515,15 @@
                     "parent_task": {
                         "type": "integer",
                         "nullable": true
+                    },
+                    "allocation": {
+                        "nullable": true
+                    },
+                    "total_task_allocations": {
+                        "type": "integer",
+                        "maximum": 9223372036854775807,
+                        "minimum": 0,
+                        "format": "int64"
                     }
                 },
                 "required": [
@@ -1530,8 +2683,11 @@
                         "type": "integer",
                         "readOnly": true
                     },
-                    "type": {
-                        "$ref": "#/components/schemas/TypeEnum"
+                    "send_push": {
+                        "type": "boolean"
+                    },
+                    "send_email": {
+                        "type": "boolean"
                     },
                     "minutes_before": {
                         "type": "integer",
@@ -1609,6 +2765,102 @@
                     "categories",
                     "id",
                     "reminders"
+                ]
+            },
+            "ExpandedEventInstance": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "integer"
+                    },
+                    "title": {
+                        "type": "string"
+                    },
+                    "description": {
+                        "type": "string"
+                    },
+                    "location": {
+                        "type": "string"
+                    },
+                    "categories": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/Category"
+                        }
+                    },
+                    "start_time": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "end_time": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "recurrence_interval": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "recurrence_end": {
+                        "type": "string",
+                        "format": "date",
+                        "nullable": true
+                    },
+                    "reminders": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/ExpandedEventReminder"
+                        }
+                    },
+                    "is_override": {
+                        "type": "boolean"
+                    },
+                    "source_event_id": {
+                        "type": "integer"
+                    },
+                    "original_start_time": {
+                        "type": "string",
+                        "format": "date-time",
+                        "nullable": true
+                    },
+                    "instance_id": {
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "categories",
+                    "description",
+                    "end_time",
+                    "id",
+                    "instance_id",
+                    "is_override",
+                    "location",
+                    "reminders",
+                    "source_event_id",
+                    "start_time",
+                    "title"
+                ]
+            },
+            "ExpandedEventReminder": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "integer"
+                    },
+                    "send_push": {
+                        "type": "boolean",
+                        "default": false
+                    },
+                    "send_email": {
+                        "type": "boolean",
+                        "default": false
+                    },
+                    "minutes_before": {
+                        "type": "integer",
+                        "minimum": 0
+                    }
+                },
+                "required": [
+                    "minutes_before"
                 ]
             },
             "Grade": {
@@ -1705,10 +2957,99 @@
                     "username"
                 ]
             },
+            "Notification": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "readOnly": true
+                    },
+                    "recipient": {
+                        "type": "integer",
+                        "readOnly": true
+                    },
+                    "sender": {
+                        "type": "integer",
+                        "readOnly": true,
+                        "nullable": true
+                    },
+                    "sender_username": {
+                        "type": "string",
+                        "readOnly": true
+                    },
+                    "title": {
+                        "type": "string",
+                        "maxLength": 255
+                    },
+                    "message": {
+                        "type": "string"
+                    },
+                    "is_read": {
+                        "type": "boolean"
+                    },
+                    "timestamp": {
+                        "type": "string",
+                        "format": "date-time",
+                        "readOnly": true
+                    },
+                    "notification_type": {
+                        "$ref": "#/components/schemas/NotificationTypeEnum"
+                    }
+                },
+                "required": [
+                    "id",
+                    "message",
+                    "recipient",
+                    "sender",
+                    "sender_username",
+                    "timestamp",
+                    "title"
+                ]
+            },
+            "NotificationTypeEnum": {
+                "enum": [
+                    "REMINDER",
+                    "ADMIN",
+                    "SYSTEM"
+                ],
+                "type": "string",
+                "description": "* `REMINDER` - Reminder\n* `ADMIN` - Admin\n* `SYSTEM` - System"
+            },
             "NullEnum": {
                 "enum": [
                     null
                 ]
+            },
+            "PaginatedNotificationList": {
+                "type": "object",
+                "required": [
+                    "count",
+                    "results"
+                ],
+                "properties": {
+                    "count": {
+                        "type": "integer",
+                        "example": 123
+                    },
+                    "next": {
+                        "type": "string",
+                        "nullable": true,
+                        "format": "uri",
+                        "example": "http://api.example.org/accounts/?page=4"
+                    },
+                    "previous": {
+                        "type": "string",
+                        "nullable": true,
+                        "format": "uri",
+                        "example": "http://api.example.org/accounts/?page=2"
+                    },
+                    "results": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/Notification"
+                        }
+                    }
+                }
             },
             "PatchedCalendar": {
                 "type": "object",
@@ -1759,6 +3100,15 @@
                     "parent_task": {
                         "type": "integer",
                         "nullable": true
+                    },
+                    "allocation": {
+                        "nullable": true
+                    },
+                    "total_task_allocations": {
+                        "type": "integer",
+                        "maximum": 9223372036854775807,
+                        "minimum": 0,
+                        "format": "int64"
                     }
                 }
             },
@@ -1872,6 +3222,46 @@
                     }
                 }
             },
+            "PatchedNotification": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "readOnly": true
+                    },
+                    "recipient": {
+                        "type": "integer",
+                        "readOnly": true
+                    },
+                    "sender": {
+                        "type": "integer",
+                        "readOnly": true,
+                        "nullable": true
+                    },
+                    "sender_username": {
+                        "type": "string",
+                        "readOnly": true
+                    },
+                    "title": {
+                        "type": "string",
+                        "maxLength": 255
+                    },
+                    "message": {
+                        "type": "string"
+                    },
+                    "is_read": {
+                        "type": "boolean"
+                    },
+                    "timestamp": {
+                        "type": "string",
+                        "format": "date-time",
+                        "readOnly": true
+                    },
+                    "notification_type": {
+                        "$ref": "#/components/schemas/NotificationTypeEnum"
+                    }
+                }
+            },
             "PatchedPreference": {
                 "type": "object",
                 "properties": {
@@ -1892,6 +3282,33 @@
                         "items": {
                             "type": "integer"
                         }
+                    }
+                }
+            },
+            "PatchedPushSubscription": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "readOnly": true
+                    },
+                    "endpoint": {
+                        "type": "string",
+                        "format": "uri",
+                        "maxLength": 500
+                    },
+                    "p256dh": {
+                        "type": "string",
+                        "maxLength": 255
+                    },
+                    "auth": {
+                        "type": "string",
+                        "maxLength": 255
+                    },
+                    "created_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "readOnly": true
                     }
                 }
             },
@@ -1921,6 +3338,40 @@
                     "id",
                     "sleep_end",
                     "sleep_start"
+                ]
+            },
+            "PushSubscription": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "readOnly": true
+                    },
+                    "endpoint": {
+                        "type": "string",
+                        "format": "uri",
+                        "maxLength": 500
+                    },
+                    "p256dh": {
+                        "type": "string",
+                        "maxLength": 255
+                    },
+                    "auth": {
+                        "type": "string",
+                        "maxLength": 255
+                    },
+                    "created_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "readOnly": true
+                    }
+                },
+                "required": [
+                    "auth",
+                    "created_at",
+                    "endpoint",
+                    "id",
+                    "p256dh"
                 ]
             },
             "RecurrenceIntervalEnum": {
@@ -1972,14 +3423,6 @@
                 "required": [
                     "message"
                 ]
-            },
-            "TypeEnum": {
-                "enum": [
-                    "email",
-                    "popup"
-                ],
-                "type": "string",
-                "description": "* `email` - Email\n* `popup` - Popup"
             }
         },
         "securitySchemes": {
