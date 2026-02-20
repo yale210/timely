@@ -12,6 +12,24 @@ interface ReminderFormState {
   unit: TimeUnit;
 }
 
+interface NormalisedEventReminder {
+  send_email: boolean;
+  send_push: boolean;
+  minutes_before: number;
+}
+
+interface NormalisedEventSubmission {
+  title: string;
+  description: string;
+  location: string;
+  start_time: string;
+  end_time: string;
+  categories: number[];
+  recurrence_interval: Event["recurrence_interval"];
+  recurrence_end: string | null;
+  reminders: NormalisedEventReminder[];
+}
+
 const UNIT_TO_MINUTES: Record<TimeUnit, number> = {
   minutes: 1,
   hours: 60,
@@ -32,9 +50,56 @@ const UNIT_LABELS: { value: TimeUnit; label: string }[] = [
 const CLOCK_SKEW_WARNING_THRESHOLD_MS = 5 * 60 * 1_000;
 const INITIAL_VALIDATION_NOW_MS = Date.now();
 const getCurrentTimestamp = (): number => Date.now();
+const ONE_HOUR_MS = 60 * 60 * 1_000;
+
+const withTime = (base: Date, hour: number, minute: number): Date => {
+  const value = new Date(base);
+  value.setHours(hour, minute, 0, 0);
+  return value;
+};
+
+const toLocalDateInputValue = (value: Date): string => {
+  const year = value.getFullYear();
+  const month = String(value.getMonth() + 1).padStart(2, "0");
+  const day = String(value.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+};
 
 const toMinutesBefore = (val: number, unit: TimeUnit): number =>
   val * UNIT_TO_MINUTES[unit];
+
+const normaliseEventSubmission = (
+  submission: EventSubmission,
+): NormalisedEventSubmission => ({
+  title: submission.title ?? "",
+  description: submission.description ?? "",
+  location: submission.location ?? "",
+  start_time: submission.start_time ?? "",
+  end_time: submission.end_time ?? "",
+  categories: [...(submission.categories ?? [])].sort((a, b) => a - b),
+  recurrence_interval: submission.recurrence_interval ?? null,
+  recurrence_end: submission.recurrence_end ?? null,
+  reminders: [...(submission.reminders ?? [])]
+    .map((reminder) => ({
+      send_email: Boolean(reminder.send_email),
+      send_push: Boolean(reminder.send_push),
+      minutes_before: Number(reminder.minutes_before),
+    }))
+    .sort((left, right) => {
+      if (left.minutes_before !== right.minutes_before) {
+        return left.minutes_before - right.minutes_before;
+      }
+      if (left.send_email !== right.send_email) {
+        return Number(left.send_email) - Number(right.send_email);
+      }
+      return Number(left.send_push) - Number(right.send_push);
+    }),
+});
+
+const isEventSubmissionEqual = (
+  left: NormalisedEventSubmission,
+  right: NormalisedEventSubmission,
+): boolean => JSON.stringify(left) === JSON.stringify(right);
 
 const fromMinutesBefore = (minutes: number): { value: number; unit: TimeUnit } => {
   const units: TimeUnit[] = ["years", "months", "weeks", "days", "hours", "minutes"];
@@ -74,23 +139,29 @@ const EventForm = ({
 }: EventFormProps) => {
   const { isSubscribed, permission, subscribe, loading: pushLoading } = usePushSubscription();
 
+  const fallbackStartDateTime = withTime(new Date(), 10, 0);
+  const initialStartDateTime = initialData?.start_time
+    ? new Date(initialData.start_time)
+    : fallbackStartDateTime;
+  const initialEndDateTime = initialData?.end_time
+    ? new Date(initialData.end_time)
+    : initialData?.start_time
+      ? new Date(initialStartDateTime.getTime() + ONE_HOUR_MS)
+      : withTime(initialStartDateTime, 11, 0);
+
   const [title, setTitle] = useState(initialData?.title ?? "");
   const [description, setDescription] = useState(initialData?.description ?? "");
   const [location, setLocation] = useState(initialData?.location ?? "");
   
   const [startDate, setStartDate] = useState(
-    initialData?.start_time
-      ? new Date(initialData.start_time).toISOString().split("T")[0]
-      : new Date().toISOString().split("T")[0]
+    toLocalDateInputValue(initialStartDateTime)
   );
   const [startTime, setStartTime] = useState(
-    initialData?.start_time
-      ? new Date(initialData.start_time).toLocaleTimeString([], {
-          hour: "2-digit",
-          minute: "2-digit",
-          hour12: false,
-        })
-      : "10:00"
+    initialStartDateTime.toLocaleTimeString([], {
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: false,
+    })
   );
 
   useEffect(() => {
@@ -105,18 +176,14 @@ const EventForm = ({
   }, [title, description, startDate, startTime, onDataChange]);
   
   const [endDate, setEndDate] = useState(
-    initialData?.end_time
-      ? new Date(initialData.end_time).toISOString().split("T")[0]
-      : new Date().toISOString().split("T")[0]
+    toLocalDateInputValue(initialEndDateTime)
   );
   const [endTime, setEndTime] = useState(
-    initialData?.end_time
-      ? new Date(initialData.end_time).toLocaleTimeString([], {
-          hour: "2-digit",
-          minute: "2-digit",
-          hour12: false,
-        })
-      : "11:00"
+    initialEndDateTime.toLocaleTimeString([], {
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: false,
+    })
   );
 
   const [selectedCategories, setSelectedCategories] = useState<number[]>(
@@ -208,25 +275,36 @@ const EventForm = ({
     setValidationNowMs(getCurrentTimestamp());
   };
 
+  const buildSubmission = (): EventSubmission => ({
+    title,
+    description,
+    location,
+    start_time: startDateTime.toISOString(),
+    end_time: endDateTime.toISOString(),
+    categories: selectedCategories,
+    recurrence_interval: (recurrenceInterval as Event["recurrence_interval"]) ?? null,
+    recurrence_end: recurrenceEnd || null,
+    reminders: reminders.map((r) => ({
+      send_email: r.send_email,
+      send_push: r.send_push,
+      minutes_before: toMinutesBefore(r.value, r.unit),
+    })),
+  });
+
+  const normalisedCurrentSubmission = normaliseEventSubmission(buildSubmission());
+  const [initialSubmission] = useState<NormalisedEventSubmission>(
+    () => normalisedCurrentSubmission,
+  );
+  const hasChanges = !isEventSubmissionEqual(
+    normalisedCurrentSubmission,
+    initialSubmission,
+  );
+
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
-    if (hasErrors) return;
+    if (hasErrors || !hasChanges) return;
 
-    const data: EventSubmission = {
-      title,
-      description,
-      location,
-      start_time: startDateTime.toISOString(),
-      end_time: endDateTime.toISOString(),
-      categories: selectedCategories,
-      recurrence_interval: (recurrenceInterval as Event["recurrence_interval"]) ?? null,
-      recurrence_end: recurrenceEnd || null,
-      reminders: reminders.map((r) => ({
-        send_email: r.send_email,
-        send_push: r.send_push,
-        minutes_before: toMinutesBefore(r.value, r.unit),
-      })),
-    };
+    const data = buildSubmission();
     onSubmit(data);
   };
 
@@ -596,9 +674,9 @@ const EventForm = ({
         </button>
         <button
           type="submit"
-          disabled={hasErrors}
+          disabled={hasErrors || !hasChanges}
           className={`flex-1 px-4 py-2 text-white font-medium rounded-lg shadow-md transition-all flex items-center justify-center gap-2 ${
-            hasErrors
+            hasErrors || !hasChanges
               ? "bg-gray-400 cursor-not-allowed"
               : "bg-orange-500 hover:bg-orange-600 hover:shadow-lg"
           }`}
