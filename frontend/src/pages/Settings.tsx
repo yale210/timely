@@ -73,6 +73,27 @@ const Settings = () => {
     }
   }
 
+  const validatePref = (p: Preference) => {
+    const errors: Record<string, string[]> = {};
+    const max = p.max_hours_study_per_day
+    if (Number.isNaN(max)){
+      errors.max_hours_study_per_day=["Must be a number."]
+    } else if (max<0) {
+      errors.max_hours_study_per_day=["Must be at least 0."]
+    } else if (max>24){
+      errors.max_hours_study_per_day=["Must be 24 or less."]
+    }
+
+    if (!p.day_start){
+      errors.day_start=["Required."]
+    }
+    if (!p.day_end){
+      errors.day_end=["Required."]
+    }
+
+    return errors;
+  }
+
   useEffect(() => {
     if (activeSection !== "preferences") { return }
 
@@ -115,6 +136,14 @@ const Settings = () => {
         }
         const save = async () => {
           if (!pref) { return }
+
+          const clientErrors=validatePref(pref)
+          if (Object.keys(clientErrors).length>0){
+            setFieldErrors(clientErrors)
+            setPrefError("Please fix the highlited field.")
+            return;
+          }
+
           setPrefSaving(true)
           setPrefError(null)
           setFieldErrors({})
