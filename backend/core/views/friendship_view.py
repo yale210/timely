@@ -21,3 +21,6 @@ class FriendshipViewSet(viewsets.ModelViewSet):
         )
 
         serializer.instance = friendship
+
+
+    # TODO: ADD CUSTOM ACTIONS FRO ACCEPT / DECLINE
