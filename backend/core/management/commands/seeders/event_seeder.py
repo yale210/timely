@@ -15,7 +15,8 @@ class EventSeeder(BaseSeeder):
 
     def seed(self):
         self._create_fixture_event()
-        self._populate_random_event()
+        for i in range(200):
+            self._populate_random_event()
 
     def _create_fixture_event(self):
         for event in events:
