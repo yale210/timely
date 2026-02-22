@@ -2,7 +2,7 @@
 
 import random
 from core.models import Friendship
-
+from django.db.models import Q
 from .fixtures.friendship_fixtures import friendships
 from django.contrib.auth import get_user_model
 from core.management.commands.seeders.base import BaseSeeder
@@ -23,17 +23,48 @@ class FriendshipSeeder(BaseSeeder):
                 pass
 
     def _create_friendship(self, data):
-        Friendship.objects.get_or_create(
-            
-        )
+        User = get_user_model()
+
+        sender = User.objects.get(id=data["fields"]["sender"])
+        receiver = User.objects.get(id=data["fields"]["receiver"])
+
+        # Check for existing friendship
+        request_exists = (
+            Friendship.objects.filter(
+                Q(sender=sender, receiver=receiver)
+                | Q(sender=receiver, receiver=sender)
+            )
+        ).first()
+
+        if request_exists:
+            return request_exists
+        else:
+            # No request existed so make one.
+            return Friendship.objects.create(
+                id=data.get("pk"),
+                sender=sender,
+                receiver=receiver,
+                state=data["fields"]["state"],
+            )
 
     def _populate_random_friendship(self):
         User = get_user_model()
-        # Shuffle users and get a random user.
-        temporary_user = User.objects.order_by("?").first()
 
-        if temporary_user is None:
-            temporary_user = User.objects.create_user(
+        # Shuffle users and get a random user.
+        temporary_sender = User.objects.order_by("?").first()
+        temporary_receiver = User.objects.order_by("?").last()
+
+        if (
+            temporary_sender is None
+            or temporary_receiver is None
+            or temporary_sender == temporary_receiver
+        ):
+            temporary_sender = User.objects.create_user(
+                username=self.faker.user_name(),
+                email=self.faker.email(),
+                password="thomas123",
+            )
+            temporary_receiver = User.objects.create_user(
                 username=self.faker.user_name(),
                 email=self.faker.email(),
                 password="thomas123",
@@ -41,8 +72,17 @@ class FriendshipSeeder(BaseSeeder):
 
         self._create_friendship(
             {
+                "pk": None,
                 "fields": {
-                    
-                }
+                    "sender": temporary_sender.id,
+                    "receiver": temporary_receiver.id,
+                    "state": random.choice(
+                        [
+                            Friendship.State.SENT,
+                            Friendship.State.ACCEPTED,
+                            Friendship.State.DECLINED,
+                        ]
+                    ),
+                },
             }
         )
