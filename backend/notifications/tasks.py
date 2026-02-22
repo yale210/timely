@@ -9,7 +9,7 @@ from pywebpush import WebPushException, webpush
 
 from core.models.event_reminder import EventReminder
 from notifications.models import Notification, PushSubscription
-from notifications.utils.unread_count import increment_unread_count
+from notifications.utils.unread_count import refresh_unread_count
 from notifications.utils.websocket import notify_user, send_websocket_notification
 
 User = get_user_model()
@@ -106,7 +106,7 @@ def broadcast_notification(title, message, target="all", user_ids=None):
     }
 
     for user_id in recipient_ids:
-        unread_count = increment_unread_count(user_id, amount=1)
+        unread_count = refresh_unread_count(user_id)
         notification = notifications_by_recipient_id.get(user_id)
         if notification and notification.id and notification.timestamp:
             notify_user(

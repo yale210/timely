@@ -171,8 +171,8 @@ class TasksTests(TestCase):
             return_value=mocked_notifications,
         ):
             with patch(
-                "notifications.tasks.increment_unread_count", return_value=5
-            ) as mock_increment_unread_count:
+                "notifications.tasks.refresh_unread_count", return_value=5
+            ) as mock_refresh_unread_count:
                 with patch("notifications.tasks.notify_user") as mock_notify_user:
                     with patch(
                         "notifications.tasks.send_push_notification.delay"
@@ -185,7 +185,7 @@ class TasksTests(TestCase):
                         )
 
         self.assertEqual(result, "Broadcasted to 1 users")
-        mock_increment_unread_count.assert_called_once_with(self.user.id, amount=1)
+        mock_refresh_unread_count.assert_called_once_with(self.user.id)
         mock_notify_user.assert_called_once_with(
             self.user.id, {"type": "unread_count", "count": 5}
         )
