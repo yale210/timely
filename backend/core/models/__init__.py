@@ -8,7 +8,7 @@ from .category import Category
 from .task import Task
 from .profile import Profile
 from .grade import Grade
-from .friend import Friendship
+from .friendship import Friendship
 
 __all__ = [
     "Commute",
