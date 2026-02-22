@@ -8,6 +8,7 @@ from .category import Category
 from .task import Task
 from .profile import Profile
 from .grade import Grade
+from .friend import Friendship
 
 __all__ = [
     "Commute",
@@ -20,4 +21,5 @@ __all__ = [
     "Task",
     "Profile",
     "Grade",
+    "Friendship"
 ]
