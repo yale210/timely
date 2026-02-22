@@ -21,5 +21,5 @@ __all__ = [
     "Task",
     "Profile",
     "Grade",
-    "Friendship"
+    "Friendship",
 ]
