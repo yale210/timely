@@ -20,6 +20,17 @@ interface NotificationDropdownProps {
 
 type DropdownConfirmationAction = "mark_all_read" | "delete_all" | null;
 
+/**
+ * Popover dropdown that displays the most recent notifications with bulk actions.
+ * @param root0 - The component props.
+ * @param root0.notifications - Array of notifications to display.
+ * @param root0.unreadCount - Number of unread notifications.
+ * @param root0.onMarkAllRead - Callback to mark all notifications as read.
+ * @param root0.onDeleteAll - Callback to delete all notifications.
+ * @param root0.onItemClick - Callback when a notification item is clicked.
+ * @param root0.onToggleRead - Callback to toggle read/unread state of a notification.
+ * @param root0.onDeleteItem - Callback to delete a single notification.
+ */
 export const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
   notifications,
   unreadCount,
