@@ -258,4 +258,155 @@ describe("UnifiedSidebar", () => {
     fireEvent.click(screen.getByText("close")); // material icon text
     expect(onClose).toHaveBeenCalled();
   });
+
+  it("detects Task mode when transitioning from closed to open with Task data", () => {
+    const mockTask: Task = {
+      id: 1,
+      title: "Task Title",
+      description: "Task Description",
+      deadline: "2023-01-01T10:00:00Z",
+      start_time: "2023-01-01T08:00:00Z",
+      categories: [mockCategories[0]],
+      importance: 1,
+      completed: false,
+      estimated_minutes: 60
+    };
+
+    const { rerender } = render(
+      <UnifiedSidebar
+        isOpen={false}
+        onClose={vi.fn()}
+        categories={mockCategories}
+        onSubmitTask={vi.fn()}
+        onSubmitEvent={vi.fn()}
+      />
+    );
+
+    rerender(
+      <UnifiedSidebar
+        isOpen={true}
+        onClose={vi.fn()}
+        categories={mockCategories}
+        onSubmitTask={vi.fn()}
+        onSubmitEvent={vi.fn()}
+        initialData={mockTask}
+      />
+    );
+
+    expect(screen.getByText(/Edit Task/i)).toBeInTheDocument();
+  });
+
+  it("detects Event mode when transitioning from closed to open with Event data", () => {
+    const mockEvent: Event = {
+      id: 2,
+      title: "Event Title",
+      description: "Event Description",
+      start_time: "2023-01-01T10:00:00Z",
+      end_time: "2023-01-01T11:00:00Z",
+      categories: [mockCategories[0]],
+      reminders: []
+    };
+
+    const { rerender } = render(
+      <UnifiedSidebar
+        isOpen={false}
+        onClose={vi.fn()}
+        categories={mockCategories}
+        onSubmitTask={vi.fn()}
+        onSubmitEvent={vi.fn()}
+      />
+    );
+
+    rerender(
+      <UnifiedSidebar
+        isOpen={true}
+        onClose={vi.fn()}
+        categories={mockCategories}
+        onSubmitTask={vi.fn()}
+        onSubmitEvent={vi.fn()}
+        initialData={mockEvent}
+      />
+    );
+
+    expect(screen.getByText(/Edit Event/i)).toBeInTheDocument();
+  });
+
+  it("updates mode and sharedData when initialData changes while open", () => {
+    const { rerender } = render(
+      <UnifiedSidebar
+        isOpen={true}
+        onClose={vi.fn()}
+        categories={mockCategories}
+        onSubmitTask={vi.fn()}
+        onSubmitEvent={vi.fn()}
+      />
+    );
+
+    expect(screen.getByText("Create New")).toBeInTheDocument();
+
+    const mockTask: Task = {
+      id: 1,
+      title: "New Task",
+      deadline: "2023-01-01T10:00:00Z",
+      start_time: "2023-01-01T08:00:00Z",
+      categories: [mockCategories[0]],
+      importance: 1,
+      completed: false,
+      estimated_minutes: 60
+    };
+
+    rerender(
+      <UnifiedSidebar
+        isOpen={true}
+        onClose={vi.fn()}
+        categories={mockCategories}
+        onSubmitTask={vi.fn()}
+        onSubmitEvent={vi.fn()}
+        initialData={mockTask}
+      />
+    );
+
+    expect(screen.getByText(/Edit Task/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/Title/i)).toHaveValue("New Task");
+  });
+
+  it("resets mode and sharedData when reopening without initialData", () => {
+    const { rerender } = render(
+      <UnifiedSidebar
+        isOpen={true}
+        onClose={vi.fn()}
+        categories={mockCategories}
+        onSubmitTask={vi.fn()}
+        onSubmitEvent={vi.fn()}
+      />
+    );
+
+    // Change some data
+    const titleInput = screen.getByLabelText(/Title/i);
+    fireEvent.change(titleInput, { target: { value: "Temporary Title" } });
+
+    // Close
+    rerender(
+      <UnifiedSidebar
+        isOpen={false}
+        onClose={vi.fn()}
+        categories={mockCategories}
+        onSubmitTask={vi.fn()}
+        onSubmitEvent={vi.fn()}
+      />
+    );
+
+    // Reopen without initialData
+    rerender(
+      <UnifiedSidebar
+        isOpen={true}
+        onClose={vi.fn()}
+        categories={mockCategories}
+        onSubmitTask={vi.fn()}
+        onSubmitEvent={vi.fn()}
+      />
+    );
+
+    expect(screen.getByLabelText(/Title/i)).toHaveValue("");
+  });
 });
