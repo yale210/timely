@@ -11,7 +11,7 @@ const mockNotifications = [
     message: 'Message 1',
     is_read: false,
     timestamp: new Date().toISOString(),
-    notification_type: NotificationType.REMINDER,
+    notification_type: NotificationType.CALENDAR,
     recipient: 1,
     sender: null,
     sender_username: null
@@ -22,7 +22,7 @@ const mockNotifications = [
     message: 'Message 2',
     is_read: true,
     timestamp: new Date().toISOString(),
-    notification_type: NotificationType.ADMIN,
+    notification_type: NotificationType.SYSTEM,
     recipient: 1,
     sender: null,
     sender_username: null
@@ -37,7 +37,10 @@ describe('NotificationDropdown', () => {
           notifications={[]} 
           unreadCount={0} 
           onMarkAllRead={() => undefined} 
+          onDeleteAll={() => undefined}
           onItemClick={() => undefined} 
+          onToggleRead={() => undefined}
+          onDeleteItem={() => undefined}
         />
       </BrowserRouter>
     );
@@ -51,14 +54,17 @@ describe('NotificationDropdown', () => {
           notifications={mockNotifications} 
           unreadCount={1} 
           onMarkAllRead={() => undefined} 
+          onDeleteAll={() => undefined}
           onItemClick={() => undefined} 
+          onToggleRead={() => undefined}
+          onDeleteItem={() => undefined}
         />
       </BrowserRouter>
     );
     
     fireEvent.click(screen.getByLabelText('View notifications'));
     
-    expect(await screen.findByText('Notifications')).toBeDefined();
+    expect(await screen.findByText(/Notifications \(/)).toBeDefined();
     expect(screen.getByText('Test Notification 1')).toBeDefined();
     expect(screen.getByText('Test Notification 2')).toBeDefined();
   });
@@ -71,14 +77,18 @@ describe('NotificationDropdown', () => {
           notifications={mockNotifications} 
           unreadCount={1} 
           onMarkAllRead={handleMarkAllRead} 
+          onDeleteAll={() => undefined}
           onItemClick={() => undefined} 
+          onToggleRead={() => undefined}
+          onDeleteItem={() => undefined}
         />
       </BrowserRouter>
     );
     
     fireEvent.click(screen.getByLabelText('View notifications'));
-    const markAllReadBtn = await screen.findByText('Mark all read');
+    const markAllReadBtn = await screen.findByLabelText('Mark all as read');
     fireEvent.click(markAllReadBtn);
+    fireEvent.click(await screen.findByText('Mark all'));
     
     expect(handleMarkAllRead).toHaveBeenCalledTimes(1);
   });
@@ -90,7 +100,10 @@ describe('NotificationDropdown', () => {
           notifications={[]} 
           unreadCount={0} 
           onMarkAllRead={() => undefined} 
+          onDeleteAll={() => undefined}
           onItemClick={() => undefined} 
+          onToggleRead={() => undefined}
+          onDeleteItem={() => undefined}
         />
       </BrowserRouter>
     );
