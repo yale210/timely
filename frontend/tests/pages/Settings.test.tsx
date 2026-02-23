@@ -18,8 +18,10 @@ vi.mock("@/services/authService", () => ({
 }))
 
 // Mock preferenceService calls
-const getMyPreference = vi.fn<Promise<Preference>, []>()
-const updateMyPreference = vi.fn<Promise<Preference>, [PreferenceUpdate]>()
+const { getMyPreference, updateMyPreference } = vi.hoisted(() => ({
+  getMyPreference: vi.fn<Promise<Preference>, []>(),
+  updateMyPreference: vi.fn<Promise<Preference>, [PreferenceUpdate]>(),
+}))
 
 vi.mock("@/services/preferenceService", () => ({
   preferenceService: {
