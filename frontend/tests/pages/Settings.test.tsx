@@ -19,8 +19,8 @@ vi.mock("@/services/authService", () => ({
 
 // Mock preferenceService calls
 const { getMyPreference, updateMyPreference } = vi.hoisted(() => ({
-  getMyPreference: vi.fn<Promise<Preference>, []>(),
-  updateMyPreference: vi.fn<Promise<Preference>, [PreferenceUpdate]>(),
+  getMyPreference: vi.fn<() => Promise<Preference>>(),
+  updateMyPreference: vi.fn<(payload: PreferenceUpdate) => Promise<Preference>>(),
 }))
 
 vi.mock("@/services/preferenceService", () => ({
@@ -112,7 +112,7 @@ describe("Settings page - Scheduling section", () => {
         })
       )
     })
-    const payload = updateMyPreference.mock.calls[0]?.[0]
+    const payload = updateMyPreference.mock.calls[0]?.[0] as PreferenceUpdate | undefined
     expect(payload?.days_off).toEqual(expect.arrayContaining([1, 3]))
 
     // After save resolves, still selected
