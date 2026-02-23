@@ -20,6 +20,7 @@ const authedNavigation = [
 
 const adminNavigation = [
     { name: 'Admin notifications', href: '/admin/notifications' },
+    { name: 'Notification history', href: '/admin/notifications/history' },
 ]
 
 const guestNavigation = [
@@ -52,7 +53,10 @@ export default function Navbar({ hideSignupWhenAuthed = true }: NavbarProps = {}
         notifications,
         unreadCount,
         markRead,
+        markUnread,
         markAllRead,
+        deleteNotification,
+        deleteAllNotifications,
     } = useNotificationContext()
 
     const handleNotificationClick = (notification: Notification) => {
@@ -123,7 +127,14 @@ export default function Navbar({ hideSignupWhenAuthed = true }: NavbarProps = {}
                                 notifications={notifications}
                                 unreadCount={unreadCount}
                                 onMarkAllRead={() => void markAllRead()}
+                                onDeleteAll={() => void deleteAllNotifications()}
                                 onItemClick={handleNotificationClick}
+                                onToggleRead={(notification) =>
+                                    notification.is_read
+                                        ? markUnread(notification.id)
+                                        : markRead(notification.id)
+                                }
+                                onDeleteItem={(notification) => deleteNotification(notification.id)}
                             />
                         )}
                         {isAuthed ? (

@@ -22,7 +22,17 @@ class NotificationViewSet(viewsets.ModelViewSet):
     pagination_class = NotificationPagination
 
     def get_queryset(self):
-        return Notification.objects.filter(recipient=self.request.user)
+        queryset = Notification.objects.filter(recipient=self.request.user)
+
+        is_read = self.request.query_params.get("is_read")
+        if is_read in {"true", "false"}:
+            queryset = queryset.filter(is_read=(is_read == "true"))
+
+        notification_type = self.request.query_params.get("notification_type")
+        if notification_type in Notification.NotificationType.values:
+            queryset = queryset.filter(notification_type=notification_type)
+
+        return queryset
 
     def perform_create(self, serializer):
         serializer.save(recipient=self.request.user)
@@ -35,6 +45,15 @@ class NotificationViewSet(viewsets.ModelViewSet):
             notification.save(update_fields=["is_read"])
             increment_unread_count(request.user.id, amount=-1)
         return Response({"status": "notification marked as read"})
+
+    @action(detail=True, methods=["post"])
+    def mark_unread(self, request, pk=None):
+        notification = self.get_object()
+        if notification.is_read:
+            notification.is_read = False
+            notification.save(update_fields=["is_read"])
+            increment_unread_count(request.user.id, amount=1)
+        return Response({"status": "notification marked as unread"})
 
     @action(detail=False, methods=["post"])
     def mark_all_read(self, request):

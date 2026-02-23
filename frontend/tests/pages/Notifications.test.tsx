@@ -1,19 +1,25 @@
-import { render, screen, fireEvent } from '@testing-library/react';
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { Notifications } from '../../src/pages/Notifications';
-import { BrowserRouter } from 'react-router-dom';
-import { NotificationType } from '../../src/types/notification';
+import { render, screen, fireEvent } from "@testing-library/react";
+import { describe, it, expect, vi, beforeEach } from "vitest";
+import { Notifications } from "../../src/pages/Notifications";
+import { BrowserRouter } from "react-router-dom";
+import { NotificationType } from "../../src/types/notification";
 
-vi.mock('../../src/context/NotificationContext', () => ({
+vi.mock("../../src/context/NotificationContext", () => ({
   useNotificationContext: vi.fn(),
 }));
 
-import { useNotificationContext } from '../../src/context/NotificationContext';
-vi.mock('../../src/hooks/usePushSubscription', () => ({
+vi.mock("../../src/api/notifications", () => ({
+  getNotifications: vi.fn(),
+}));
+
+import { useNotificationContext } from "../../src/context/NotificationContext";
+import { getNotifications } from "../../src/api/notifications";
+
+vi.mock("../../src/hooks/usePushSubscription", () => ({
   usePushSubscription: () => ({
     isSupported: false,
     isSubscribed: false,
-    permission: 'default' as const,
+    permission: "default" as const,
     loading: false,
     error: null,
     subscribe: vi.fn(),
@@ -25,15 +31,15 @@ vi.mock('../../src/hooks/usePushSubscription', () => ({
 const mockNotifications = [
   {
     id: 1,
-    title: 'Test Notification 1',
-    message: 'Message 1',
+    title: "Test Notification 1",
+    message: "Message 1",
     is_read: false,
     timestamp: new Date().toISOString(),
-    notification_type: NotificationType.REMINDER,
+    notification_type: NotificationType.SYSTEM,
     recipient: 1,
     sender: null,
-    sender_username: null
-  }
+    sender_username: null,
+  },
 ];
 
 const defaultContextValue = {
@@ -41,74 +47,86 @@ const defaultContextValue = {
   unreadCount: 0,
   loading: false,
   error: null,
-  hasMore: false,
-  page: 1,
   fetchNotifications: vi.fn(),
   fetchUnreadCount: vi.fn(),
   markAllRead: vi.fn(),
   markRead: vi.fn(),
+  markUnread: vi.fn(),
   deleteNotification: vi.fn(),
+  deleteAllNotifications: vi.fn(),
 };
 
-describe('Notifications Page', () => {
+describe("Notifications Page", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.mocked(getNotifications).mockResolvedValue({
+      count: mockNotifications.length,
+      next: null,
+      previous: null,
+      results: mockNotifications,
+    });
   });
 
-  it('renders page title', () => {
+  it("renders page title", async () => {
     vi.mocked(useNotificationContext).mockReturnValue({ ...defaultContextValue });
 
     render(
       <BrowserRouter>
         <Notifications />
-      </BrowserRouter>
+      </BrowserRouter>,
     );
-    expect(screen.getByText('Notifications')).toBeDefined();
+    expect(screen.getByText("Notifications")).toBeDefined();
+    expect(await screen.findByText("Test Notification 1")).toBeDefined();
   });
 
-  it('displays loading state', () => {
+  it("displays loading state", () => {
     vi.mocked(useNotificationContext).mockReturnValue({
       ...defaultContextValue,
       loading: true,
     });
+    vi.mocked(getNotifications).mockImplementation(
+      () =>
+        new Promise(() => {
+          // keep unresolved to preserve loading UI
+        }),
+    );
 
     render(
       <BrowserRouter>
         <Notifications />
-      </BrowserRouter>
+      </BrowserRouter>,
     );
-    expect(screen.getByText('Loading notifications...')).toBeDefined();
+    expect(screen.getByText("Loading notifications...")).toBeDefined();
   });
 
-  it('displays notifications list', () => {
+  it("displays notifications list", async () => {
     vi.mocked(useNotificationContext).mockReturnValue({
       ...defaultContextValue,
-      notifications: mockNotifications,
     });
 
     render(
       <BrowserRouter>
         <Notifications />
-      </BrowserRouter>
+      </BrowserRouter>,
     );
-    expect(screen.getByText('Test Notification 1')).toBeDefined();
+    expect(await screen.findByText("Test Notification 1")).toBeDefined();
   });
 
-  it('calls markAllRead when button is clicked', () => {
-    const markAllRead = vi.fn();
+  it("calls markAllRead when action is confirmed", async () => {
+    const markAllRead = vi.fn().mockResolvedValue(undefined);
     vi.mocked(useNotificationContext).mockReturnValue({
       ...defaultContextValue,
-      notifications: mockNotifications,
       markAllRead,
     });
 
     render(
       <BrowserRouter>
         <Notifications />
-      </BrowserRouter>
+      </BrowserRouter>,
     );
-    
-    fireEvent.click(screen.getByText('Mark all as read'));
+
+    fireEvent.click(await screen.findByLabelText("Mark all as read"));
+    fireEvent.click(await screen.findByText("Mark all"));
     expect(markAllRead).toHaveBeenCalledTimes(1);
   });
 });

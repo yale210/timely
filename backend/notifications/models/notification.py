@@ -4,9 +4,9 @@ from django.db import models
 
 class Notification(models.Model):
     class NotificationType(models.TextChoices):
-        REMINDER = "REMINDER", "Reminder"
-        ADMIN = "ADMIN", "Admin"
         SYSTEM = "SYSTEM", "System"
+        TASK = "TASK", "Task"
+        CALENDAR = "CALENDAR", "Calendar"
 
     recipient = models.ForeignKey(
         settings.AUTH_USER_MODEL,

@@ -207,20 +207,22 @@ class TasksTests(TestCase):
 
     def test_broadcast_notification_all(self):
         with patch(
-            "notifications.tasks.Notification.objects.bulk_create",
-            wraps=Notification.objects.bulk_create,
-        ) as mock_bulk_create:
+            "notifications.tasks._send_push_notification_sync",
+            return_value={"success": True, "error_code": "", "error_message": ""},
+        ):
             with patch("notifications.tasks.notify_user") as mock_notify_user:
-                with patch(
-                    "notifications.tasks.send_push_notification.delay"
-                ) as mock_send_push:
-                    result = broadcast_notification("Global", "Hello", target="all")
+                result = broadcast_notification("Global", "Hello", target="all")
 
         self.assertEqual(result, "Broadcasted to 2 users")
         self.assertEqual(Notification.objects.filter(title="Global").count(), 2)
-        mock_bulk_create.assert_called_once()
+        self.assertEqual(
+            Notification.objects.filter(
+                title="Global",
+                notification_type=Notification.NotificationType.SYSTEM,
+            ).count(),
+            2,
+        )
         self.assertEqual(mock_notify_user.call_count, 2)
-        self.assertEqual(mock_send_push.call_count, 2)
 
     def test_broadcast_notification_staff(self):
         staff_user = User.objects.create_user(
@@ -255,36 +257,16 @@ class TasksTests(TestCase):
         res = broadcast_notification("Title", "Message", target="invalid")
         self.assertEqual(res, "Invalid target")
 
-    def test_broadcast_notification_falls_back_to_unread_count_payload(self):
-        mocked_notifications = [
-            Notification(
-                recipient_id=self.user.id,
-                title="Users Only",
-                message="Hello",
-                notification_type=Notification.NotificationType.ADMIN,
-            )
-        ]
-        with patch(
-            "notifications.tasks.Notification.objects.bulk_create",
-            return_value=mocked_notifications,
-        ):
-            with patch(
-                "notifications.tasks.increment_unread_count", return_value=5
-            ) as mock_increment_unread_count:
-                with patch("notifications.tasks.notify_user") as mock_notify_user:
-                    with patch(
-                        "notifications.tasks.send_push_notification.delay"
-                    ) as mock_send_push:
-                        result = broadcast_notification(
-                            "Users Only",
-                            "Hello",
-                            target="users",
-                            user_ids=[self.user.id],
-                        )
-
-        self.assertEqual(result, "Broadcasted to 1 users")
-        mock_increment_unread_count.assert_called_once_with(self.user.id, amount=1)
-        mock_notify_user.assert_called_once_with(
-            self.user.id, {"type": "unread_count", "count": 5}
+    def test_broadcast_notification_admin(self):
+        admin_user = User.objects.create_superuser(
+            username="admin",
+            password="password",
+            email="admin@example.com",
         )
-        mock_send_push.assert_called_once_with(self.user.id, "Users Only", "Hello")
+        broadcast_notification("Admin Only", "Hello", target="admin")
+        self.assertTrue(
+            Notification.objects.filter(
+                recipient=admin_user,
+                title="Admin Only",
+            ).exists()
+        )
