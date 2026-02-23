@@ -2,9 +2,9 @@
  * Represents the various types of notifications supported by the system.
  */
 export const NotificationType = {
-  REMINDER: "REMINDER",
-  ADMIN: "ADMIN",
   SYSTEM: "SYSTEM",
+  TASK: "TASK",
+  CALENDAR: "CALENDAR",
 } as const;
 
 /**
@@ -15,7 +15,7 @@ export type NotificationType = (typeof NotificationType)[keyof typeof Notificati
 /**
  * Defines the target audience categories for administrative notifications.
  */
-export type AdminNotificationTarget = "all" | "staff" | "users";
+export type AdminNotificationTarget = "all" | "staff" | "admin" | "users";
 
 /**
  * Represents a single notification record from the backend.
@@ -59,6 +59,112 @@ export interface AdminNotificationPayload {
   message: string;
   target: AdminNotificationTarget;
   user_ids?: number[];
+}
+
+export interface AdminAudienceCounts {
+  all: number;
+  staff: number;
+  admin: number;
+  selected_users: number;
+}
+
+export type BroadcastDeliveryStatus =
+  | "QUEUED"
+  | "IN_PROGRESS"
+  | "COMPLETED"
+  | "PARTIAL"
+  | "FAILED";
+
+export interface BroadcastJobSummary {
+  id: number;
+  title: string;
+  target: string;
+  status: BroadcastDeliveryStatus;
+  recipient_count: number;
+  delivered_count: number;
+  failed_count: number;
+  sender: number | null;
+  sender_username: string | null;
+  queued_at: string;
+  completed_at: string | null;
+}
+
+export interface BroadcastRecipientDetail {
+  id: number;
+  recipient: number;
+  username: string;
+  email: string;
+  status: "PENDING" | "SENT" | "FAILED";
+  error_code: string;
+  error_message: string;
+  last_attempt_at: string | null;
+  notification: number | null;
+}
+
+export interface BroadcastJobDetail {
+  id: number;
+  title: string;
+  message: string;
+  target: string;
+  status: BroadcastDeliveryStatus;
+  task_id: string;
+  recipient_count: number;
+  delivered_count: number;
+  failed_count: number;
+  sender: number | null;
+  sender_username: string | null;
+  audience_filters: Record<string, unknown>;
+  audience_snapshot: {
+    recipient_ids?: number[];
+    recipient_count?: number;
+  };
+  provider_errors: {
+    recipient_id: number;
+    code: string;
+    message: string;
+  }[];
+  queued_at: string;
+  started_at: string | null;
+  completed_at: string | null;
+  retry_of: number | null;
+  recipients: BroadcastRecipientDetail[];
+}
+
+export interface BroadcastJobStatusResponse {
+  id: number;
+  status: BroadcastDeliveryStatus;
+  recipient_count: number;
+  delivered_count: number;
+  failed_count: number;
+  queued_at: string;
+  started_at: string | null;
+  completed_at: string | null;
+  task_id: string;
+  updated_at: string;
+}
+
+export interface AdminNotificationSendResponse {
+  status: BroadcastDeliveryStatus;
+  broadcast_id: number;
+  task_id: string;
+  queued_at: string;
+  recipient_count: number;
+}
+
+export interface RetryBroadcastResponse {
+  status: BroadcastDeliveryStatus;
+  broadcast_id: number;
+  task_id: string;
+  queued_at: string;
+  recipient_count: number;
+}
+
+export interface ApiErrorResponse {
+  error: {
+    code: string;
+    message: string;
+    errors?: Record<string, unknown>;
+  };
 }
 
 /**
