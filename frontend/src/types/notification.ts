@@ -61,6 +61,9 @@ export interface AdminNotificationPayload {
   user_ids?: number[];
 }
 
+/**
+ * Audience size counters returned by the admin audience-counts endpoint.
+ */
 export interface AdminAudienceCounts {
   all: number;
   staff: number;
@@ -68,6 +71,9 @@ export interface AdminAudienceCounts {
   selected_users: number;
 }
 
+/**
+ * Lifecycle statuses a broadcast delivery job can be in.
+ */
 export type BroadcastDeliveryStatus =
   | "QUEUED"
   | "IN_PROGRESS"
@@ -75,6 +81,9 @@ export type BroadcastDeliveryStatus =
   | "PARTIAL"
   | "FAILED";
 
+/**
+ * Summary of a broadcast job used in paginated history listings.
+ */
 export interface BroadcastJobSummary {
   id: number;
   title: string;
@@ -89,6 +98,9 @@ export interface BroadcastJobSummary {
   completed_at: string | null;
 }
 
+/**
+ * Per-recipient delivery details within a broadcast job.
+ */
 export interface BroadcastRecipientDetail {
   id: number;
   recipient: number;
@@ -101,6 +113,9 @@ export interface BroadcastRecipientDetail {
   notification: number | null;
 }
 
+/**
+ * Full details for a broadcast job including recipients and provider errors.
+ */
 export interface BroadcastJobDetail {
   id: number;
   title: string;
@@ -130,6 +145,9 @@ export interface BroadcastJobDetail {
   recipients: BroadcastRecipientDetail[];
 }
 
+/**
+ * Polling response containing the current status counters for a broadcast job.
+ */
 export interface BroadcastJobStatusResponse {
   id: number;
   status: BroadcastDeliveryStatus;
@@ -143,6 +161,9 @@ export interface BroadcastJobStatusResponse {
   updated_at: string;
 }
 
+/**
+ * Response returned after successfully queuing an admin notification broadcast.
+ */
 export interface AdminNotificationSendResponse {
   status: BroadcastDeliveryStatus;
   broadcast_id: number;
@@ -151,6 +172,9 @@ export interface AdminNotificationSendResponse {
   recipient_count: number;
 }
 
+/**
+ * Response returned after retrying failed recipients of a broadcast job.
+ */
 export interface RetryBroadcastResponse {
   status: BroadcastDeliveryStatus;
   broadcast_id: number;
@@ -159,6 +183,9 @@ export interface RetryBroadcastResponse {
   recipient_count: number;
 }
 
+/**
+ * Standardized API error envelope returned by the backend on failure.
+ */
 export interface ApiErrorResponse {
   error: {
     code: string;
