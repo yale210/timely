@@ -43,4 +43,5 @@ urlpatterns = [
     path("api/stats/weekly/", WeeklySummaryView.as_view(), name="weekly-summary"),
     path("api/admin/", admin.site.urls),
     path("api/authentication/", include("authentication.urls")),
+    path("api/profiles/", include("profiles.urls")),
 ]
