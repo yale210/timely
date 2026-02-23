@@ -17,6 +17,8 @@ export { default as UnifiedSidebar } from "./UnifiedSidebar";
 
 export { default as ConfirmationModal } from "./ConfirmationModal";
 export { default as CreateGradeModal } from "./CreateGradeModal";
+export {default as ThemeButton} from "./ThemeButton";
+export {default as FontButton} from "./FontButton"
 
 export { default as WeeklySummaryWidget } from "./WeeklySummaryWidget";
 export { default as AppNavbar } from "./AppNavbar"

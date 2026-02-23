@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from "react"
+import { useState, useEffect, type FormEvent } from "react"
 import { HomeNavbar, Footer, BlurBackground } from "@/components/index"
 import { authService } from "@/services/authService"
 import { useNavigate } from "react-router-dom"
@@ -76,6 +76,19 @@ export default function Signup() {
         setLoading(false)
       })
   }
+
+  useEffect(() => {
+    const savedTheme = localStorage.getItem("theme");    
+    if (savedTheme) {
+      document.documentElement.dataset.theme = savedTheme;
+      console.log("loaded saved theme")
+    }
+
+    const savedFont = localStorage.getItem("font");
+    if (savedFont) {
+      document.documentElement.dataset.font = savedFont;
+    }
+  }, []);
 
   return (
     <div className="bg-white">

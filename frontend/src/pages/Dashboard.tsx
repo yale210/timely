@@ -44,7 +44,7 @@ export default function Dashboard() {
   
   return (
     <AppLayout>
-      <main className="w-full px-6 lg:px-10 pt-2 pb-10">
+      <main className="w-full px-6 lg:px-10 pt-2 pb-10 min-h-screen bg-">
       <header className="mb-10">
           <h1 className="text-3xl font-semibold tracking-tight text-gray-900">
             Dashboard
