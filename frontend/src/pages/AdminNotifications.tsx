@@ -1,5 +1,6 @@
 import { type FormEvent, useMemo, useState, useEffect, useCallback } from "react";
-import { InformationCircleIcon } from "@heroicons/react/24/outline";
+import { InformationCircleIcon, ClockIcon } from "@heroicons/react/24/outline";
+import { Link } from "react-router-dom";
 import {
   getAdminUsers,
   sendAdminNotification,
@@ -273,7 +274,6 @@ export default function AdminNotifications() {
         updated_at: response.queued_at,
       };
       setDeliveryStatus(queuedStatus);
-      setConfirmationChecked(false);
       const statusResponse = await getBroadcastStatus(response.broadcast_id);
       setDeliveryStatus(statusResponse);
     } catch (submitError) {
@@ -304,8 +304,10 @@ export default function AdminNotifications() {
             Broadcast announcements to all users, staff, admins, or specific accounts.
           </p>
         </div>
-        <div className="rounded-full bg-indigo-50 px-4 py-2 text-sm text-indigo-700">
-          Delivered via push notifications
+        <div className="flex items-center gap-2">
+          <div className="rounded-full bg-indigo-50 px-4 py-2 text-sm text-indigo-700">
+            Delivered via push notifications
+          </div>
         </div>
       </div>
 
@@ -614,7 +616,16 @@ export default function AdminNotifications() {
           </div>
 
           <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
-            <h2 className="text-sm font-semibold text-gray-900">Delivery status</h2>
+            <div className="flex items-center justify-between">
+              <h2 className="text-sm font-semibold text-gray-900">Delivery status</h2>
+              <Link
+                to="/admin/notifications/history"
+                className="inline-flex h-8 w-8 items-center justify-center rounded-md border border-gray-200 text-gray-500 hover:bg-gray-50 hover:text-indigo-600 transition-colors"
+                title="Notification history"
+              >
+                <ClockIcon className="h-5 w-5" />
+              </Link>
+            </div>
             {deliveryStatus ? (
               <div className="mt-4 space-y-2 text-sm">
                 <p className="text-gray-600">

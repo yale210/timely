@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
+import { MemoryRouter } from "react-router-dom";
 
 import AdminNotifications from "../../src/pages/AdminNotifications";
 import {
@@ -17,6 +18,13 @@ vi.mock("../../src/api/notifications", () => ({
 }));
 
 describe("AdminNotifications Page", () => {
+  const renderPage = () =>
+    render(
+      <MemoryRouter>
+        <AdminNotifications />
+      </MemoryRouter>,
+    );
+
   beforeEach(() => {
     vi.clearAllMocks();
     vi.mocked(getAdminUsers).mockResolvedValue({
@@ -66,7 +74,7 @@ describe("AdminNotifications Page", () => {
   });
 
   it("sends notification to selected users after confirmation", async () => {
-    render(<AdminNotifications />);
+    renderPage();
 
     fireEvent.change(screen.getByLabelText(/Target audience/i), {
       target: { value: "users" },
@@ -102,5 +110,10 @@ describe("AdminNotifications Page", () => {
     expect(sentPayload?.target).toBe("users");
     expect(sentPayload?.user_ids).toEqual([1]);
     await waitFor(() => expect(getBroadcastStatus).toHaveBeenCalledWith(12));
+    expect(screen.getByRole("checkbox", { name: /I confirm/i })).toBeChecked();
+    expect(screen.getByRole("link", { name: /Notification history/i })).toHaveAttribute(
+      "href",
+      "/admin/notifications/history",
+    );
   });
 });
