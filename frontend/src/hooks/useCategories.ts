@@ -23,6 +23,8 @@ export default function useCategories() {
           const data = await res.json() as Category[]
           if (mounted) setCategories(data)
         }
+      } catch (error) {
+        console.error("Failed to load categories:", error)
       } finally {
         if (mounted) setLoading(false)
       }
