@@ -1,3 +1,4 @@
+import { NotificationProvider } from "@/context/NotificationContext"
 import { it, describe, expect, vi, beforeEach, afterEach } from 'vitest'
 import { render, screen, fireEvent, waitFor, cleanup } from '@testing-library/react'
 import TaskList from "@/pages/TaskList"
@@ -96,9 +97,9 @@ describe('TaskList Error Handling', () => {
         vi.mocked(taskService.getCategories).mockResolvedValue([])
 
         render(
-            <MemoryRouter>
+            <MemoryRouter><NotificationProvider>
                 <TaskList />
-            </MemoryRouter>
+            </NotificationProvider></MemoryRouter>
         )
 
         await waitFor(() => {
@@ -114,9 +115,9 @@ describe('TaskList Error Handling', () => {
         vi.mocked(taskService.getCategories).mockRejectedValue(new Error('Categories failed'))
 
         render(
-            <MemoryRouter>
+            <MemoryRouter><NotificationProvider>
                 <TaskList />
-            </MemoryRouter>
+            </NotificationProvider></MemoryRouter>
         )
 
         await waitFor(() => {
@@ -133,9 +134,9 @@ describe('TaskList Error Handling', () => {
         vi.mocked(taskService.updateTask).mockRejectedValue(new Error('Toggle failed'))
 
         render(
-            <MemoryRouter>
+            <MemoryRouter><NotificationProvider>
                 <TaskList />
-            </MemoryRouter>
+            </NotificationProvider></MemoryRouter>
         )
 
         await waitFor(() => expect(screen.getByText('High Importance Task')).toBeDefined())
@@ -162,9 +163,9 @@ describe('TaskList Filtering', () => {
 
     it('should filter by High Importance', async () => {
         render(
-            <MemoryRouter>
+            <MemoryRouter><NotificationProvider>
                 <TaskList />
-            </MemoryRouter>
+            </NotificationProvider></MemoryRouter>
         )
 
         await waitFor(() => expect(screen.getByText('High Importance Task')).toBeDefined())
@@ -183,9 +184,9 @@ describe('TaskList Filtering', () => {
 
     it('should filter by Quick Wins', async () => {
         render(
-            <MemoryRouter>
+            <MemoryRouter><NotificationProvider>
                 <TaskList />
-            </MemoryRouter>
+            </NotificationProvider></MemoryRouter>
         )
 
         await waitFor(() => expect(screen.getByText('Quick Win Task')).toBeDefined())
@@ -214,9 +215,9 @@ describe('TaskList Sorting', () => {
 
     it('should sort by Date', async () => {
         render(
-            <MemoryRouter>
+            <MemoryRouter><NotificationProvider>
                 <TaskList />
-            </MemoryRouter>
+            </NotificationProvider></MemoryRouter>
         )
 
         await waitFor(() => expect(screen.getByText('High Importance Task')).toBeDefined())
@@ -238,9 +239,9 @@ describe('TaskList Sorting', () => {
 
     it('should sort by Importance', async () => {
         render(
-            <MemoryRouter>
+            <MemoryRouter><NotificationProvider>
                 <TaskList />
-            </MemoryRouter>
+            </NotificationProvider></MemoryRouter>
         )
 
         await waitFor(() => expect(screen.getByText('High Importance Task')).toBeDefined())
@@ -262,9 +263,9 @@ describe('TaskList Sorting', () => {
 
     it('should sort by Estimated Time', async () => {
         render(
-            <MemoryRouter>
+            <MemoryRouter><NotificationProvider>
                 <TaskList />
-            </MemoryRouter>
+            </NotificationProvider></MemoryRouter>
         )
 
         await waitFor(() => expect(screen.getByText('High Importance Task')).toBeDefined())
@@ -311,9 +312,9 @@ describe('TaskList Upcoming Tasks', () => {
         vi.mocked(taskService.getCategories).mockResolvedValue([])
 
         render(
-            <MemoryRouter>
+            <MemoryRouter><NotificationProvider>
                 <TaskList />
-            </MemoryRouter>
+            </NotificationProvider></MemoryRouter>
         )
 
         await waitFor(() => {
@@ -347,9 +348,9 @@ describe('TaskList Upcoming Tasks', () => {
         vi.mocked(taskService.getCategories).mockResolvedValue([])
 
         render(
-            <MemoryRouter>
+            <MemoryRouter><NotificationProvider>
                 <TaskList />
-            </MemoryRouter>
+            </NotificationProvider></MemoryRouter>
         )
 
         await waitFor(() => {
@@ -371,9 +372,9 @@ describe('TaskList Search', () => {
 
     it('should filter tasks by search term', async () => {
         render(
-            <MemoryRouter>
+            <MemoryRouter><NotificationProvider>
                 <TaskList />
-            </MemoryRouter>
+            </NotificationProvider></MemoryRouter>
         )
 
         await waitFor(() => expect(screen.getByText('High Importance Task')).toBeDefined())
@@ -407,9 +408,9 @@ describe('TaskList Toggle Complete', () => {
 
     it('should toggle task completion when checkbox is clicked', async () => {
         render(
-            <MemoryRouter>
+            <MemoryRouter><NotificationProvider>
                 <TaskList />
-            </MemoryRouter>
+            </NotificationProvider></MemoryRouter>
         )
 
         await waitFor(() => expect(screen.getByText('High Importance Task')).toBeDefined())
@@ -445,9 +446,9 @@ describe('TaskList Sidebar Operations', () => {
 
     it('should open sidebar when task card is clicked', async () => {
         render(
-            <MemoryRouter>
+            <MemoryRouter><NotificationProvider>
                 <TaskList />
-            </MemoryRouter>
+            </NotificationProvider></MemoryRouter>
         )
 
         await waitFor(() => expect(screen.getByText('High Importance Task')).toBeDefined())
@@ -461,9 +462,9 @@ describe('TaskList Sidebar Operations', () => {
 
     it('should call createTask when submitting new task', async () => {
         render(
-            <MemoryRouter>
+            <MemoryRouter><NotificationProvider>
                 <TaskList />
-            </MemoryRouter>
+            </NotificationProvider></MemoryRouter>
         )
 
         await waitFor(() => expect(screen.getByText('High Importance Task')).toBeDefined())
@@ -483,9 +484,9 @@ describe('TaskList Sidebar Operations', () => {
 
     it('should call updateTask when submitting existing task', async () => {
         render(
-            <MemoryRouter>
+            <MemoryRouter><NotificationProvider>
                 <TaskList />
-            </MemoryRouter>
+            </NotificationProvider></MemoryRouter>
         )
 
         await waitFor(() => expect(screen.getByText('High Importance Task')).toBeDefined())
@@ -505,9 +506,9 @@ describe('TaskList Sidebar Operations', () => {
 
     it('should call deleteTask when deleting a task', async () => {
         render(
-            <MemoryRouter>
+            <MemoryRouter><NotificationProvider>
                 <TaskList />
-            </MemoryRouter>
+            </NotificationProvider></MemoryRouter>
         )
 
         await waitFor(() => expect(screen.getByText('High Importance Task')).toBeDefined())
@@ -527,9 +528,9 @@ describe('TaskList Sidebar Operations', () => {
 
     it('should close sidebar when close button is clicked', async () => {
         render(
-            <MemoryRouter>
+            <MemoryRouter><NotificationProvider>
                 <TaskList />
-            </MemoryRouter>
+            </NotificationProvider></MemoryRouter>
         )
 
         await waitFor(() => expect(screen.getByText('High Importance Task')).toBeDefined())
@@ -552,9 +553,9 @@ describe('TaskList Sidebar Operations', () => {
         vi.mocked(taskService.updateTask).mockRejectedValueOnce(new Error('Submit failed'))
 
         render(
-            <MemoryRouter>
+            <MemoryRouter><NotificationProvider>
                 <TaskList />
-            </MemoryRouter>
+            </NotificationProvider></MemoryRouter>
         )
 
         await waitFor(() => expect(screen.getByText('High Importance Task')).toBeDefined())
@@ -579,9 +580,9 @@ describe('TaskList Sidebar Operations', () => {
         vi.mocked(taskService.deleteTask).mockRejectedValueOnce(new Error('Delete failed'))
 
         render(
-            <MemoryRouter>
+            <MemoryRouter><NotificationProvider>
                 <TaskList />
-            </MemoryRouter>
+            </NotificationProvider></MemoryRouter>
         )
 
         await waitFor(() => expect(screen.getByText('High Importance Task')).toBeDefined())
@@ -616,9 +617,9 @@ describe('TaskList Category Filter', () => {
         vi.mocked(taskService.getCategories).mockResolvedValue(mockCategories)
 
         render(
-            <MemoryRouter>
+            <MemoryRouter><NotificationProvider>
                 <TaskList />
-            </MemoryRouter>
+            </NotificationProvider></MemoryRouter>
         )
 
         await waitFor(() => expect(screen.getByText('High Importance Task')).toBeDefined())
@@ -641,9 +642,9 @@ describe('TaskList Category Filter', () => {
         vi.mocked(taskService.getCategories).mockResolvedValue([])
 
         render(
-            <MemoryRouter>
+            <MemoryRouter><NotificationProvider>
                 <TaskList />
-            </MemoryRouter>
+            </NotificationProvider></MemoryRouter>
         )
 
         await waitFor(() => expect(screen.getByText('High Importance Task')).toBeDefined())
@@ -666,9 +667,9 @@ describe('TaskList Category Filter', () => {
         vi.mocked(taskService.getCategories).mockResolvedValue([])
 
         render(
-            <MemoryRouter>
+            <MemoryRouter><NotificationProvider>
                 <TaskList />
-            </MemoryRouter>
+            </NotificationProvider></MemoryRouter>
         )
 
         await waitFor(() => expect(screen.getByText('High Importance Task')).toBeDefined())

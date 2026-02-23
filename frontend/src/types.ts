@@ -53,7 +53,8 @@ export interface TaskSubmission extends Omit<Partial<Task>, "categories"> {
  */
 export interface EventReminder {
   id?: number;
-  type: "email" | "popup";
+  send_email: boolean;
+  send_push: boolean;
   minutes_before: number;
 }
 
@@ -84,7 +85,7 @@ export interface EventSubmission extends Omit<Partial<Event>, "reminders" | "cat
 }
 
 /**
- *
+ * Represents a single result of a task scheduling operation.
  */
 export interface ScheduleResult {
   task_id: number;
@@ -95,7 +96,7 @@ export interface ScheduleResult {
 }
 
 /**
- *
+ * Represents the response from the task scheduling API.
  */
 export interface ScheduleResponse {
   start_date: string;

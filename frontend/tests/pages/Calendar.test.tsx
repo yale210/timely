@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { render, screen, fireEvent, waitFor, cleanup } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
+import { NotificationProvider } from '@/context/NotificationContext'
 import moment from "moment";
 
 import CalendarPage from "@/pages/Calendar";
@@ -184,7 +185,9 @@ const mockCategories: Category[] = [{ id: 1, text: "Work" }];
 const renderPage = () =>
   render(
     <MemoryRouter>
-      <CalendarPage />
+      <NotificationProvider>
+        <CalendarPage />
+      </NotificationProvider>
     </MemoryRouter>
   );
 

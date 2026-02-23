@@ -1,8 +1,12 @@
 import { useEffect, useState } from 'react'
 import { Dialog, DialogPanel, Menu, MenuButton, MenuItems, MenuItem } from '@headlessui/react'
 import { Bars3Icon, XMarkIcon } from '@heroicons/react/24/outline'
-import { Link } from "react-router-dom"
+import { Link, useNavigate } from "react-router-dom"
 import { authStore, AUTH_CHANGE_EVENT } from "@/services/authService"
+import { NotificationBell } from './NotificationBell'
+import { NotificationDropdown } from './NotificationDropdown'
+import { useNotificationContext } from '../context/NotificationContext'
+import { type Notification } from '../types/notification'
 
 const authedNavigation = [
     { name: 'Calendar', href: '/calendar' },
@@ -11,6 +15,11 @@ const authedNavigation = [
     { name: 'Gradebook', href: '/gradebook' },
     { name: 'Dashboard', href: '/dashboard' },
     { name: 'Weekly Summaries', href: '/weekly-summaries' },
+]
+
+const adminNavigation = [
+    { name: 'Admin notifications', href: '/admin/notifications' },
+    { name: 'Notification history', href: '/admin/notifications/history' },
 ]
 
 const guestNavigation = [
@@ -35,12 +44,33 @@ interface HomeNavbarProps {
 export default function HomeNavbar({ hideSignupWhenAuthed = true }: HomeNavbarProps = {}) {
 
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+    const navigate = useNavigate()
     const [isAuthed, setIsAuthed] = useState(Boolean(authStore.getToken()))
+    const {
+        notifications,
+        unreadCount,
+        markRead,
+        markUnread,
+        markAllRead,
+        deleteNotification,
+        deleteAllNotifications,
+    } = useNotificationContext()
+
+    const handleNotificationClick = (notification: Notification) => {
+        void markRead(notification.id)
+        void navigate(`/notifications/${notification.id}`)
+    }
+
+    const user = authStore.getUser()
+    const isStaff = Boolean(user?.is_staff)
 
     const filteredNavigation = isAuthed
-        ? (hideSignupWhenAuthed
-            ? authedNavigation.filter((item) => item.href !== "/signup")
-            : authedNavigation)
+        ? [
+            ...(hideSignupWhenAuthed
+                ? authedNavigation.filter((item) => item.href !== "/signup")
+                : authedNavigation),
+            ...(isStaff ? adminNavigation : []),
+        ]
         : guestNavigation
 
     useEffect(() => {
@@ -79,6 +109,11 @@ export default function HomeNavbar({ hideSignupWhenAuthed = true }: HomeNavbarPr
 
                     {!showHamburger && (
                         <div className="flex lg:hidden">
+                            {isAuthed && (
+                                <div className="flex items-center gap-4 mr-4">
+                                    <NotificationBell unreadCount={unreadCount} onClick={() => void navigate('/notifications')} />
+                                </div>
+                            )}
                             <button
                             type="button"
                             onClick={() => setMobileMenuOpen(true)}
@@ -100,7 +135,22 @@ export default function HomeNavbar({ hideSignupWhenAuthed = true }: HomeNavbarPr
                         </div>
                     )}
 
-                    <div className="hidden lg:flex lg:flex-1 lg:justify-end">
+                    <div className="hidden lg:flex lg:flex-1 lg:justify-end lg:items-center lg:gap-x-6">
+                        {isAuthed && (
+                            <NotificationDropdown 
+                                notifications={notifications}
+                                unreadCount={unreadCount}
+                                onMarkAllRead={() => void markAllRead()}
+                                onDeleteAll={() => void deleteAllNotifications()}
+                                onItemClick={handleNotificationClick}
+                                onToggleRead={(notification) =>
+                                    notification.is_read
+                                        ? markUnread(notification.id)
+                                        : markRead(notification.id)
+                                }
+                                onDeleteItem={(notification) => deleteNotification(notification.id)}
+                            />
+                        )}
                         {isAuthed ? (
                             <Menu as="div" className="relative">
                                 <MenuButton className="inline-flex items-center justify-center rounded-full border border-gray-200 bg-white px-3 py-1.5 text-sm font-semibold text-gray-900 shadow-sm hover:bg-gray-50">

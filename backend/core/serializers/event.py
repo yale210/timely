@@ -1,5 +1,8 @@
+from datetime import timedelta
+
 from django.core.exceptions import ValidationError as DjangoValidationError
 from django.db import transaction
+from django.utils import timezone
 from rest_framework import serializers
 from core.models import Event, EventReminder
 from core.models import Category
@@ -9,7 +12,7 @@ from core.serializers.category import CategorySerializer
 class EventReminderSerializer(serializers.ModelSerializer):
     class Meta:
         model = EventReminder
-        fields = ["id", "type", "minutes_before"]
+        fields = ["id", "send_push", "send_email", "minutes_before"]
 
 
 MAX_REMINDERS_PER_EVENT = 5
@@ -47,6 +50,7 @@ class EventSerializer(serializers.ModelSerializer):
         return representation
 
     def validate(self, attributes):
+        # Validate max reminders
         reminders_data = attributes.get("reminders", [])
         if len(reminders_data) > MAX_REMINDERS_PER_EVENT:
             raise serializers.ValidationError(
@@ -55,9 +59,27 @@ class EventSerializer(serializers.ModelSerializer):
                 }
             )
 
-        attrs_copy = attributes.copy()
+        # Validate that no reminder would trigger in the past
+        start_time = attributes.get(
+            "start_time",
+            self.instance.start_time if self.instance else None,
+        )
+        if start_time and reminders_data:
+            now = timezone.now()
+            for reminder in reminders_data:
+                minutes_before = reminder.get("minutes_before", 0)
+                trigger_at = start_time - timedelta(minutes=minutes_before)
+                if trigger_at <= now:
+                    raise serializers.ValidationError(
+                        {
+                            "reminders": f"Reminder set to {minutes_before} minutes before would trigger in the past."
+                        }
+                    )
 
-        attrs_copy.pop("reminders", None)
+        # Create a temporary instance to run clean()
+        attrs_copy = attributes.copy()
+        # Pop M2M and custom fields
+        reminders_data = attrs_copy.pop("reminders", None)
         attrs_copy.pop("categories", None)
 
         event = self.instance or Event()

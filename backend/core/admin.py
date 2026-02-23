@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import Grade, Category, Task
+from .models import Category, Grade, Task
 
 
 @admin.register(Category)
@@ -37,7 +37,6 @@ class TaskAdmin(admin.ModelAdmin):
     search_fields = ("title", "user__username")
     raw_id_fields = ("parent_task",)
 
+    @admin.display(description="Categories")
     def get_categories(self, obj):
         return ", ".join([c.text for c in obj.categories.all()])
-
-    get_categories.short_description = "Categories"

@@ -2,7 +2,13 @@ import { useEffect } from "react"
 import { Routes, Route } from "react-router-dom"
 import RequireAuth from "@/components/auth/RequireAuth"
 import RedirectAuth from "@/components/auth/RedirectAuth"
-import { Home, Login, Signup, Logout, CalendarPage, TaskList, EventList, Gradebook, Dashboard, WeeklySummaries, Settings , Themes} from "./pages/index"
+import RequireAdmin from "@/components/RequireAdmin"
+import { Home, Login, Signup, Logout, CalendarPage, TaskList, EventList, Gradebook, Dashboard, WeeklySummaries, Settings, Themes } from "./pages/index"
+import { Notifications } from "./pages/Notifications"
+import { NotificationDetail } from "./pages/NotificationDetail"
+import { default as AdminNotifications } from "./pages/AdminNotifications"
+import { AdminNotificationHistory } from "./pages/AdminNotificationHistory"
+import { AdminNotificationHistoryDetail } from "./pages/AdminNotificationHistoryDetail"
 
 /**
  * The root component of the application which organises the routing logic.
@@ -52,7 +58,7 @@ export default function App() {
       <Route path="/tasks" element={
         <RequireAuth>
           <TaskList />
-        </RequireAuth>} 
+        </RequireAuth>}
       />
 
       <Route path="/events" element={
@@ -64,13 +70,13 @@ export default function App() {
       <Route path="/gradebook" element={
         <RequireAuth>
           <Gradebook />
-        </RequireAuth>} 
+        </RequireAuth>}
       />
-      
+
       <Route path="/dashboard" element={
         <RequireAuth>
           <Dashboard />
-        </RequireAuth>} 
+        </RequireAuth>}
       />
 
       <Route path="/weekly-summaries" element={
@@ -79,12 +85,36 @@ export default function App() {
         </RequireAuth>}
       />
 
+      <Route path="/notifications" element={
+        <RequireAuth>
+          <Notifications />
+        </RequireAuth>
+      } />
+      <Route path="/notifications/:id" element={
+        <RequireAuth>
+          <NotificationDetail />
+        </RequireAuth>
+      } />
+      <Route path="/admin/notifications" element={
+        <RequireAdmin>
+          <AdminNotifications />
+        </RequireAdmin>
+      } />
+      <Route path="/admin/notifications/history" element={
+        <RequireAdmin>
+          <AdminNotificationHistory />
+        </RequireAdmin>
+      } />
+      <Route path="/admin/notifications/history/:id" element={
+        <RequireAdmin>
+          <AdminNotificationHistoryDetail />
+        </RequireAdmin>
+      } />
       <Route path="/settings" element={
         <RequireAuth>
           <Settings />
         </RequireAuth>}
       />
-
       <Route path="/themes" element={
         <RequireAuth>
           <Themes />
