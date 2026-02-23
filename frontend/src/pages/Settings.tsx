@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import AppLayout from "../layouts/AppLayout";
 import { authService } from "../services/authService";
 import { useEffect } from "react";
-import { preferenceService } from "../services/preferenceService";
+import { preferenceService } from "@/services/preferenceService";
 import { type Preference } from "@/types";
 
 /**
@@ -130,17 +130,18 @@ const Settings = () => {
             ...pref,
             days_off: has ? pref.days_off.filter((day) => day !== dayId) : [
               ...pref.days_off,
-              dayId
+              dayId,
             ]
           })
         }
         const save = async () => {
+          console.log("Save clicked", pref)
           if (!pref) { return }
 
           const clientErrors=validatePref(pref)
           if (Object.keys(clientErrors).length>0){
             setFieldErrors(clientErrors)
-            setPrefError("Please fix the highlited field.")
+            setPrefError("Please fix the highlighted fields.")
             return;
           }
 
@@ -150,8 +151,8 @@ const Settings = () => {
 
           try {
             const updated = await preferenceService.updateMyPreference({
-              day_start: pref.day_start,
-              day_end: pref.day_end,
+              day_start: pref.day_start.slice(0,5),
+              day_end: pref.day_end.slice(0,5),
               max_hours_study_per_day: pref.max_hours_study_per_day,
               days_off: pref.days_off,
             })
@@ -188,8 +189,9 @@ const Settings = () => {
               <div className="mt-6 space-y-6">
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
                   <div>
-                    <label className="block text-sm font-medium text-gray-900">Day start</label>
+                    <label htmlFor="pref-day-start" className="block text-sm font-medium text-gray-900">Day start</label>
                     <input
+                      id="pref-day-start"
                       type="time"
                       value={pref.day_start?.slice(0,5) ?? "08:00"}
                       onChange={(e) => setPref({
@@ -208,8 +210,9 @@ const Settings = () => {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-900">Day end</label>
+                  <label htmlFor="pref-day-end" className="block text-sm font-medium text-gray-900">Day end</label>
                   <input
+                    id="pref-day-end"
                     type="time"
                     value={pref.day_end?.slice(0,5) ?? "22:00"}
                       onChange={(e) => setPref({
@@ -228,8 +231,9 @@ const Settings = () => {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-900">Max study hours per day</label>
+                  <label htmlFor="pref-max-hours" className="block text-sm font-medium text-gray-900">Max study hours per day</label>
                   <input
+                    id="pref-max-hours"
                     type="number"
                     min={0}
                     max={24}
@@ -282,7 +286,7 @@ const Settings = () => {
                 type="button"
                 onClick={() => void save()}
                 disabled={prefSaving}
-                className="text-sm font-semibold text-red rounded-md bg-turquoise-600 px-4 py-2
+                className="text-sm font-semibold text-red-600 rounded-md bg-turquoise-600 px-4 py-2
                 hover:bg-turquoise-500 disabled:opacity-60"
               >
                 {prefSaving ? "Saving..." : "Save changes"}

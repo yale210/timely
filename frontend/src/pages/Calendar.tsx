@@ -37,7 +37,7 @@ interface CalendarEntry {
   scheduleIndex?: number;
 }
 
-const CalendarPage = ({ showNavbar = true }: { showNavbar?: boolean }) => {
+const CalendarPage = () => {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -188,16 +188,6 @@ const CalendarPage = ({ showNavbar = true }: { showNavbar?: boolean }) => {
     }
   };
 
-  const handleDeleteTask = async (id: number) => {
-    try {
-      await taskService.deleteTask(id);
-      await fetchTasks();
-      setIsSidebarOpen(false);
-    } catch (err) {
-      console.error(err);
-    }
-  };
-
   const handleSubmitEvent = async (data: EventSubmission) => {
     try {
       if (selectedItem && "end_time" in selectedItem && selectedItem.id !== 0) {
@@ -315,7 +305,7 @@ const CalendarPage = ({ showNavbar = true }: { showNavbar?: boolean }) => {
         style={{ height: "100%" }}
       />
     </div>*/
-    <AppLayout showNavbar={showNavbar}>
+    <AppLayout>
       <div className="flex h-full flex-col overflow-hidden bg-white text-black">
         <header className="flex-none p-6 border-b border-gray-200 bg-white shadow-sm z-10">
           <div className="flex flex-col md:flex-row justify-between items-center gap-4">
