@@ -53,10 +53,10 @@ class SchedulerViewsTests(APITestCase):
         self.assertEqual(task.total_task_allocations, len(task.allocation))
 
     def test_schedule_split_creates_multiple_segments(self):
-        today = timezone.localdate()
-        day1_start = timezone.make_aware(datetime.combine(today, time.min))
+        base_date = timezone.localdate() + timedelta(days=1)
+        day1_start = timezone.make_aware(datetime.combine(base_date, time.min))
         day1_block_start = day1_start + timedelta(hours=1)
-        day2 = today + timedelta(days=1)
+        day2 = base_date + timedelta(days=1)
         day2_start = timezone.make_aware(datetime.combine(day2, time.min))
         day2_block_start = day2_start + timedelta(hours=1)
 
@@ -88,7 +88,7 @@ class SchedulerViewsTests(APITestCase):
         response = self.client.post(
             self.schedule_url,
             {
-                "start_date": today.isoformat(),
+                "start_date": base_date.isoformat(),
                 "allow_split": True,
                 "min_block_minutes": 30,
                 "max_days_ahead": 2,

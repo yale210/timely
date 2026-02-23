@@ -174,14 +174,12 @@ class Scheduler:
 
     def _working_window(self, target_date: date) -> Tuple[datetime, datetime]:
         if self.preference:
-            sleep_start = self._aware(
-                datetime.combine(target_date, self.preference.sleep_start)  # type: ignore[attr-defined]
+            day_start = self._aware(
+                datetime.combine(target_date, self.preference.day_start)  # type: ignore[attr-defined]
             )
-            sleep_end = self._aware(
-                datetime.combine(target_date, self.preference.sleep_end)  # type: ignore[attr-defined]
+            day_end = self._aware(
+                datetime.combine(target_date, self.preference.day_end)  # type: ignore[attr-defined]
             )
-            day_start = sleep_end
-            day_end = sleep_start
             if day_end <= day_start:  # crosses midnight
                 day_end += timedelta(days=1)
             return day_start, day_end
@@ -196,6 +194,14 @@ class Scheduler:
         window_start, window_end = self._working_window(target_date)
         occupied = self._get_occupied_slots(target_date)
         free_slots = self._subtract_intervals((window_start, window_end), occupied)
+        # Do not schedule into past time on the start date.
+        if target_date == timezone.localdate():
+            now = timezone.now()
+            if now > window_start:
+                window_start = now
+                free_slots = self._subtract_intervals(
+                    (window_start, window_end), occupied
+                )
         return [
             (start, end)
             for start, end in free_slots

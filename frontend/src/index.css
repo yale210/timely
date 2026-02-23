@@ -1,28 +1,55 @@
 @import url("https://fonts.googleapis.com/icon?family=Material+Icons");
-@import url("https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&family=Pacifico&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap");
+@import "./styles/fonts.css";
+@import "./styles/index_theme.css";
 @import "tailwindcss";
 
 @theme {
-  --color-primary: #3b82f6;
-  --color-primary-hover: #93c5fd; /* Light Blue-300 */
-  --color-background-white: #ffffff;
-  --color-text-black: #000000;
-  --color-border-gray: #e2e8f0;
+  --color-primary: var(--primary);
+  --color-primary-hover: var(--primary-hover);
+  --color-border: var(--border);
+  --color-background: var(--background);
+  --color-text: var(--text-color);
+  --color-white: var(--background);
+  --color-black: var(--text-color);
+  --color-gray-900: var(--text-color);
+  --color-gray-800: color-mix(in srgb, var(--text-color) 92%, var(--background));
+  --color-gray-700: color-mix(in srgb, var(--text-color) 80%, var(--background));
+  --color-gray-600: color-mix(in srgb, var(--text-color) 68%, var(--background));
+  --color-gray-500: color-mix(in srgb, var(--text-color) 56%, var(--background));
+  --color-gray-400: color-mix(in srgb, var(--text-color) 32%, var(--background));
+  --color-gray-300: color-mix(in srgb, var(--text-color) 20%, var(--background));
+  --color-gray-200: color-mix(in srgb, var(--text-color) 12%, var(--background));
+  --color-gray-100: color-mix(in srgb, var(--text-color) 8%, var(--background));
+  --color-gray-50: color-mix(in srgb, var(--text-color) 4%, var(--background));
 }
 
 @layer base {
   :root {
     --primary: #3b82f6;
     --primary-hover: #93c5fd;
-    --background-white: #ffffff;
-    --text-black: #000000;
-    --border-gray: #e2e8f0;
+    --background: #ffffff;
+    --text-color: #000000;
+    --border: #e2e8f0;
+    --primary-font: "Poppins";
+    --slant : oblique 0deg;
   }
 
-  body {
-    @apply bg-white text-black antialiased;
-    font-family: "Poppins", system-ui, sans-serif;
+body {
+    background-color: var(--background);
+    color: var(--text-color);
+    font-family: var(--primary-font);
+    font-style : var(--slant);
     font-size: 18px;
+  }
+
+  body.menu-open .app-shell {
+    transform: translateX(var(--drawer-width, 288px));
+    width: calc(100% - var(--drawer-width, 288px));
+  }
+
+  .app-shell {
+    transition: transform 200ms ease-out;
   }
 
   input, textarea, select {
@@ -107,7 +134,7 @@
 }
 /* Use Google-hosted decorative font 'Pacifico' for headings. */
 .font-young-coconut {
-  font-family: 'Pacifico', "Poppins", system-ui, sans-serif;
+  font-family: "Poppins", system-ui, sans-serif;
 }
 
 /* Custom Scrollbar */

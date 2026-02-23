@@ -4,11 +4,12 @@ import { MemoryRouter } from "react-router-dom"
 import Signup from "@/pages/Authentication/Signup"
 import { authService } from "@/services/authService"
 import "@testing-library/jest-dom/vitest"
+import type * as ReactRouterDom from "react-router-dom"
 
 const navigateMock = vi.fn()
 
 vi.mock("react-router-dom", async () => {
-  const actual = await vi.importActual<typeof import("react-router-dom")>("react-router-dom")
+  const actual: typeof ReactRouterDom = await vi.importActual("react-router-dom")
   return {
     ...actual,
     useNavigate: () => navigateMock,
@@ -22,7 +23,8 @@ vi.mock("@/services/authService", () => ({
 }))
 
 vi.mock("@/components/index", () => ({
-  Navbar: () => <div data-testid="navbar" />,
+  HomeNavbar: () => <div data-testid="navbar" />,
+  BlurBackground: () => <div data-testid="blur-bg" />,
   Footer: () => <div data-testid="footer" />,
 }))
 
