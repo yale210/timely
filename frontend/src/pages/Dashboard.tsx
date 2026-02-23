@@ -22,8 +22,9 @@ export default function Dashboard() {
     }
   }, []);
 
-  // eslint-disable-next-line react-hooks/set-state-in-effect -- load tasks on mount
+   
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     void fetchTasks();
   }, [fetchTasks]);
 

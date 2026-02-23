@@ -8,8 +8,9 @@ interface HeroSectionProps {
 
 /**
  * HeroSection component displays the main hero area with a call to action and an image.
- * @param {HeroSectionProps} props - The props for the HeroSection component.
- * @returns {JSX.Element}
+ * @param props - The props for the HeroSection component.
+ * @param props.children - Optional content to render above the hero body.
+ * @returns The rendered hero section.
  */
 export default function HeroSection({ children } : HeroSectionProps) {
     return (
@@ -36,7 +37,7 @@ export default function HeroSection({ children } : HeroSectionProps) {
                         Plan Your Day. <span className="bg-gradient-to-r from-indigo-600 to-emerald-500 bg-clip-text text-transparent">Protect Your Time.</span>
                         </h1>
                         <p className="mt-8 text-md font-medium text-pretty text-gray-500 sm:max-w-md md:max-w-lg lg:max-w-xl">
-                        A simple personal scheduler that helps you capture tasks, block time, and stay on top of deadlines—
+                        A simple personal scheduler that helps you capture tasks, block time, and stay on top of deadlines--
                         without turning your calendar into a horror movie.
                         </p>
                         <div className="mt-10 flex items-center justify-start gap-x-6">
@@ -47,7 +48,7 @@ export default function HeroSection({ children } : HeroSectionProps) {
                             Get started
                         </Link>
                         <Link to="/signup" className="text-sm/6 font-semibold text-gray-900">
-                            Learn more <span aria-hidden="true">→</span>
+                            Learn more <span aria-hidden="true">-&gt;</span>
                         </Link>
                         </div>
                     </div>

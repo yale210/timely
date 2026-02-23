@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach } from "vitest"
 import { render, screen, fireEvent, waitFor } from "@testing-library/react"
 import "@testing-library/jest-dom/vitest"
 import { MemoryRouter } from "react-router-dom"
+import type { Preference, PreferenceUpdate } from "@/types"
 
 // IMPORTANT: adjust import path if yours differs
 import Settings from "@/pages/Settings"
@@ -17,13 +18,13 @@ vi.mock("@/services/authService", () => ({
 }))
 
 // Mock preferenceService calls
-const getMyPreference = vi.fn()
-const updateMyPreference = vi.fn()
+const getMyPreference = vi.fn<Promise<Preference>, []>()
+const updateMyPreference = vi.fn<Promise<Preference>, [PreferenceUpdate]>()
 
 vi.mock("@/services/preferenceService", () => ({
   preferenceService: {
-    getMyPreference: (...args: unknown[]) => getMyPreference(...args),
-    updateMyPreference: (...args: unknown[]) => updateMyPreference(...args),
+    getMyPreference,
+    updateMyPreference,
   },
 }))
 
@@ -101,13 +102,16 @@ describe("Settings page - Scheduling section", () => {
     fireEvent.click(screen.getByRole("button", { name: /save changes/i }))
 
     await waitFor(() => {
-      expect(updateMyPreference).toHaveBeenCalledWith({
-        day_start: "08:00",
-        day_end: "22:00",
-        max_hours_study_per_day: 4,
-        days_off: expect.arrayContaining([1, 3]),
-      })
+      expect(updateMyPreference).toHaveBeenCalledWith(
+        expect.objectContaining({
+          day_start: "08:00",
+          day_end: "22:00",
+          max_hours_study_per_day: 4,
+        })
+      )
     })
+    const payload = updateMyPreference.mock.calls[0]?.[0]
+    expect(payload?.days_off).toEqual(expect.arrayContaining([1, 3]))
 
     // After save resolves, still selected
     expect(screen.getByRole("button", { name: "Mon" })).toHaveAttribute("aria-pressed", "true")

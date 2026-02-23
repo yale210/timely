@@ -11,6 +11,7 @@ interface StatcardProps {
  * @param props - The properties for the Statcard component.
  * @param props.title - The heading displayed at the top of the card.
  * @param props.value - The list of items rendered as a checkbox list.
+ * @param props.seeMoreHref - Optional link to view more details.
  */
 export default function StatCard({ title, value, seeMoreHref = "/tasks" }: StatcardProps) {
   const taskList = value.map((task, index) => {

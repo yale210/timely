@@ -4,6 +4,8 @@ import type { ReactNode } from "react"
 
 /**
  * Redirects authenticated users to the dashboard; otherwise renders children.
+ * @param root0 - Component props.
+ * @param root0.children - Content to render when the user is not authenticated.
  */
 export default function RedirectIfAuth({ children }: { children: ReactNode}) {
     const user = authStore.getToken()

@@ -1,7 +1,7 @@
 /**
  * BlurBackground component that renders a decorative blurred gradient background.
  * Used as a visual accent element with absolute positioning and z-index layering.
- * @returns {JSX.Element} A decorative background div with blur and gradient effects
+ * @returns A decorative background div with blur and gradient effects
  */
 export default function BlurBackground() {
     return (

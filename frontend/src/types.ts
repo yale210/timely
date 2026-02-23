@@ -83,6 +83,9 @@ export interface EventSubmission extends Omit<Partial<Event>, "reminders" | "cat
   categories?: number[];
 }
 
+/**
+ *
+ */
 export interface ScheduleResult {
   task_id: number;
   success: boolean;
@@ -91,6 +94,9 @@ export interface ScheduleResult {
   reason?: string | null;
 }
 
+/**
+ *
+ */
 export interface ScheduleResponse {
   start_date: string;
   scheduled_count: number;

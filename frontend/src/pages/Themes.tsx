@@ -12,6 +12,9 @@ function fontController(fontName: string) :void {
   console.log("font changed")
 }
 
+/**
+ * Renders the standalone themes and fonts selection page.
+ */
 export default function Themes(){
   return(
   <div>

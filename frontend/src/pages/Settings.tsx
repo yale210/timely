@@ -1,8 +1,7 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import AppLayout from "../layouts/AppLayout";
 import { authService } from "../services/authService";
-import { useEffect } from "react";
 import { preferenceService } from "@/services/preferenceService";
 import { type Preference } from "@/types";
 import { ThemeButton, FontButton } from "@/components";
@@ -25,66 +24,97 @@ function fontController(fontName: string) :void {
  */
 type SettingsSection = "profile" | "preferences" | "theme" | "features";
 
+interface ApiErrorResponse {
+  status?: number;
+  data?: unknown;
+}
+
+interface ApiError {
+  response?: ApiErrorResponse;
+}
+
+const isApiError = (error: unknown): error is ApiError =>
+  typeof error === "object" && error !== null && "response" in error;
+
+const formatDFRError = (
+  error: unknown
+): { message: string; fieldErrors: Record<string, string[]> } => {
+  const fallback = {
+    message: "Something went wrong",
+    fieldErrors: {} as Record<string, string[]>,
+  };
+  const response = isApiError(error) ? error.response : undefined;
+
+  const status: number | undefined = response?.status;
+  const data: unknown = response?.data;
+  const dataRecord =
+    data && typeof data === "object"
+      ? (data as Record<string, unknown>)
+      : null;
+
+  const detail = dataRecord?.detail;
+  if (typeof detail === "string") {
+    return {
+      message: detail,
+      fieldErrors: {},
+    };
+  }
+
+  if (status === 401) {
+    return {
+      message: "You are not signed in. Please log in again.",
+      fieldErrors: {},
+    };
+  }
+
+  if (!dataRecord) {
+    return fallback;
+  }
+
+  const field: Record<string, string[]> & { non_field_errors?: string[] } = {};
+  for (const [key, potentialArray] of Object.entries(dataRecord)) {
+    if (Array.isArray(potentialArray)) {
+      field[key] = potentialArray.filter((x): x is string => typeof x === "string");
+    }
+  }
+
+  const nonField = field.non_field_errors?.join(" ").trim();
+  const firstFieldMessage = Object.entries(field)
+    .filter(([k]) => k !== "non_field_errors")
+    .flatMap(([, msgs]) => msgs)
+    .find(Boolean) ?? "";
+  const message = nonField?.length
+    ? nonField
+    : firstFieldMessage?.length
+      ? firstFieldMessage
+      : "Please fix the highlighted fields.";
+  return {
+    message,
+    fieldErrors: field,
+  };
+};
+
 const Settings = () => {
   const [activeSection, setActiveSection] = useState<SettingsSection>("profile");
   const navigate = useNavigate();
 
-  const [pref, setPref] = useState<Preference|null>(null);
+  const [pref, setPref] = useState<Preference | null>(null);
   const [prefLoading, setPrefLoading] = useState(false);
   const [prefSaving, setPrefSaving] = useState(false);
-  const [prefError, setPrefError] = useState<string|null>(null);
+  const [prefError, setPrefError] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string[]>>({});
 
-  function formatDFRError(error: unknown): {
-    message: string;
-    fieldErrors: Record<string, string[]>;
-  } {
-    const fallback = {
-      message: "Something went wrong",
-      fieldErrors: {} as Record<string, string[]>
-    }
-    if (!error || typeof error !== "object") { return fallback }
-    const anyError = error as any
-
-    const status: number | undefined = anyError?.response?.status
-    const data: unknown = anyError?.response?.data
-
-    if (data && typeof data === "object" && typeof (data as any).detail === "string") {
-      return {
-        message: (data as any).detail,
-        fieldErrors: {},
+  const handleLogout = () => {
+    void (async () => {
+      try {
+        await authService.logout();
+      } catch {
+        // ignore logout failures and still navigate
+      } finally {
+        await navigate("/login");
       }
-    }
-
-    if (status === 401) {
-      return {
-        message: "You are not signed in. Please log in again.",
-        fieldErrors: {},
-      }
-    }
-
-    if (!data || typeof data !== "object") { return fallback }
-    const field: Record<string, string[]> = {}
-    for (const [key, potentialArray] of Object.entries(data as Record<string, unknown>)) {
-      if (Array.isArray(potentialArray)) {
-        field[key] = potentialArray.filter((x): x is string => typeof x === "string")
-      }
-    }
-
-    const nonField = field.non_field_errors?.join(" ").trim()
-    const firstFieldMessage = Object.entries(field)
-      .filter(([k]) => k !== "non_field_errors")
-      .flatMap(([, msgs]) => msgs)
-      .find(Boolean) ?? "";
-    const message =
-      nonField ||
-      firstFieldMessage ||
-      "Please fix the highlighted fields."
-    return {
-      message,
-      fieldErrors: field
-    }
-  }
+    })();
+  };
 
   const validatePref = (p: Preference) => {
     const errors: Record<string, string[]> = {};
@@ -126,100 +156,99 @@ const Settings = () => {
 
   const renderContent = () => {
     if (activeSection === "preferences") {
-      try {
-        const dayLabels: Array<[number, string]> = [
-          [1, "Mon"],
-          [2, "Tue"],
-          [3, "Wed"],
-          [4, "Thu"],
-          [5, "Fri"],
-          [6, "Sat"],
-          [7, "Sun"],
-        ]
-        const toggleDayOnOff = (dayId: number) => {
-          if (!pref) { return }
-          const has = pref.days_off.includes(dayId)
-          setPref({
-            ...pref,
-            days_off: has ? pref.days_off.filter((day) => day !== dayId) : [
-              ...pref.days_off,
-              dayId,
-            ]
-          })
-        }
-        const save = async () => {
-          console.log("Save clicked", pref)
-          if (!pref) { return }
+      const dayLabels: [number, string][] = [
+        [1, "Mon"],
+        [2, "Tue"],
+        [3, "Wed"],
+        [4, "Thu"],
+        [5, "Fri"],
+        [6, "Sat"],
+        [7, "Sun"],
+      ];
+      const toggleDayOnOff = (dayId: number) => {
+        if (!pref) { return }
+        const has = pref.days_off.includes(dayId);
+        setPref({
+          ...pref,
+          days_off: has ? pref.days_off.filter((day) => day !== dayId) : [
+            ...pref.days_off,
+            dayId,
+          ],
+        });
+      };
+      const save = async () => {
+        console.log("Save clicked", pref);
+        if (!pref) { return }
 
-          const clientErrors=validatePref(pref)
-          if (Object.keys(clientErrors).length>0){
-            setFieldErrors(clientErrors)
-            setPrefError("Please fix the highlighted fields.")
-            return;
-          }
-
-          setPrefSaving(true)
-          setPrefError(null)
-          setFieldErrors({})
-
-          try {
-            const updated = await preferenceService.updateMyPreference({
-              day_start: pref.day_start.slice(0,5),
-              day_end: pref.day_end.slice(0,5),
-              max_hours_study_per_day: pref.max_hours_study_per_day,
-              days_off: pref.days_off,
-            })
-            setPref(updated)
-          } catch (error) {
-            const parsed = formatDFRError(error)
-            setPrefError(parsed.message)
-            setFieldErrors(parsed.fieldErrors)
-          } finally {
-            setPrefSaving(false);
-          }
+        const clientErrors = validatePref(pref);
+        if (Object.keys(clientErrors).length > 0) {
+          setFieldErrors(clientErrors);
+          setPrefError("Please fix the highlighted fields.");
+          return;
         }
 
-        return (
-          <>
-            <h2 className="text-lg font-semibold">Scheduling</h2>
-            <p className="mt-2 text-sm text-gray-600">
-              Set your day's start and end, and max hours of study time per day.
-            </p>
+        setPrefSaving(true);
+        setPrefError(null);
+        setFieldErrors({});
 
-            {prefError && (
-              <div className="mt-4 text-sm text-red-700 rounded-md bg-red-50 p-3">
-                {prefError}
-              </div>
-            )}
+        try {
+          const updated = await preferenceService.updateMyPreference({
+            day_start: pref.day_start.slice(0, 5),
+            day_end: pref.day_end.slice(0, 5),
+            max_hours_study_per_day: pref.max_hours_study_per_day,
+            days_off: pref.days_off,
+          });
+          setPref(updated);
+        } catch (error) {
+          const parsed = formatDFRError(error);
+          setPrefError(parsed.message);
+          setFieldErrors(parsed.fieldErrors);
+        } finally {
+          setPrefSaving(false);
+        }
+      };
 
-            {prefLoading && (
-              <div className="mt-4 text-sm text-gray-600">
-                Loading...
-              </div>
-            )}
+      return (
+        <>
+          <h2 className="text-lg font-semibold">Scheduling</h2>
+          <p className="mt-2 text-sm text-gray-600">
+            Set your day&apos;s start and end, and max hours of study time per day.
+          </p>
 
-            {!prefLoading && pref && (
-              <div className="mt-6 space-y-6">
-                <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-                  <div>
-                    <label htmlFor="pref-day-start" className="block text-sm font-medium text-gray-900">Day start</label>
-                    <input
-                      id="pref-day-start"
-                      type="time"
-                      value={pref.day_start?.slice(0,5) ?? "08:00"}
-                      onChange={(e) => setPref({
-                        ...pref,
-                        day_start: e.target.value
-                      })}
-                      className={`mt-2 bg-white px-3 py-2 block outline outline-1 w-full rounded-md ${
-                        fieldErrors.day_start ? "outline-red-300" : "outline-gray-300"
-                      } focus: outline-2 focus:outline-turquoise-600`}
-                    />
-                    {fieldErrors.day_start?.length ? (
-                      <div className="mt-1 text-xs text-red-700">
-                        {fieldErrors.day_start.join(" ")}
-                      </div>
-                    ) : null}
+          {prefError && (
+            <div className="mt-4 text-sm text-red-700 rounded-md bg-red-50 p-3">
+              {prefError}
+            </div>
+          )}
+
+          {prefLoading && (
+            <div className="mt-4 text-sm text-gray-600">
+              Loading...
+            </div>
+          )}
+
+          {!prefLoading && pref && (
+            <div className="mt-6 space-y-6">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+                <div>
+                  <label htmlFor="pref-day-start" className="block text-sm font-medium text-gray-900">Day start</label>
+                  <input
+                    id="pref-day-start"
+                    type="time"
+                    value={pref.day_start?.slice(0, 5) ?? "08:00"}
+                    onChange={(e) => setPref({
+                      ...pref,
+                      day_start: e.target.value,
+                    })}
+                    className={`mt-2 bg-white px-3 py-2 block outline outline-1 w-full rounded-md ${
+                      fieldErrors.day_start ? "outline-red-300" : "outline-gray-300"
+                    } focus: outline-2 focus:outline-turquoise-600`}
+                  />
+                  {fieldErrors.day_start?.length ? (
+                    <div className="mt-1 text-xs text-red-700">
+                      {fieldErrors.day_start.join(" ")}
+                    </div>
+                  ) : null}
                 </div>
 
                 <div>
@@ -227,10 +256,10 @@ const Settings = () => {
                   <input
                     id="pref-day-end"
                     type="time"
-                    value={pref.day_end?.slice(0,5) ?? "22:00"}
-                      onChange={(e) => setPref({
+                    value={pref.day_end?.slice(0, 5) ?? "22:00"}
+                    onChange={(e) => setPref({
                       ...pref,
-                      day_end: e.target.value
+                      day_end: e.target.value,
                     })}
                     className={`mt-2 bg-white px-3 py-2 block outline outline-1 w-full rounded-md ${
                       fieldErrors.day_end ? "outline-red-300" : "outline-gray-300"
@@ -253,7 +282,7 @@ const Settings = () => {
                     value={pref.max_hours_study_per_day ?? 6}
                     onChange={(e) => setPref({
                       ...pref,
-                      max_hours_study_per_day: Number(e.target.value)
+                      max_hours_study_per_day: Number(e.target.value),
                     })}
                     className={`mt-2 bg-white px-3 py-2 block outline outline-1 w-full rounded-md ${
                       fieldErrors.max_hours_study_per_day ? "outline-red-300" : "outline-gray-300"
@@ -268,9 +297,9 @@ const Settings = () => {
 
                 <div>
                   <div className="text-sm font-medium text-gray-900">Days off</div>
-                  <div className="mt-2 flex flew-wrap gap-2">
+                  <div className="mt-2 flex flex-wrap gap-2">
                     {dayLabels.map(([id, label]) => {
-                      const selected = pref.days_off.includes(id)
+                      const selected = pref.days_off.includes(id);
                       return (
                         <button
                           key={id}
@@ -284,7 +313,7 @@ const Settings = () => {
                         >
                           {label}
                         </button>
-                      )
+                      );
                     })}
                   </div>
                   {fieldErrors.days_off?.length ? (
@@ -294,31 +323,21 @@ const Settings = () => {
                   ) : null}
                 </div>
               </div>
-            <div className="flex justify-end">
-              <button
-                type="button"
-                onClick={() => void save()}
-                disabled={prefSaving}
-                className="text-sm font-semibold text-red-600 rounded-md bg-turquoise-600 px-4 py-2
-                hover:bg-turquoise-500 disabled:opacity-60"
-              >
-                {prefSaving ? "Saving..." : "Save changes"}
-              </button>
+              <div className="flex justify-end">
+                <button
+                  type="button"
+                  onClick={() => void save()}
+                  disabled={prefSaving}
+                  className="text-sm font-semibold text-red-600 rounded-md bg-turquoise-600 px-4 py-2
+                  hover:bg-turquoise-500 disabled:opacity-60"
+                >
+                  {prefSaving ? "Saving..." : "Save changes"}
+                </button>
+              </div>
             </div>
-          </div>
           )}
-          </>
-        )
-      } catch (error) {
-        return (
-          <>
-            <h2 className="text-lg font-semibold">Scheduling</h2>
-            <p className="mt-2 text-sm text-gray-600">
-              Preferences controls will go here.
-            </p>
-          </>
-        );
-      }
+        </>
+      );
     }
 
     if (activeSection === "theme") {
@@ -326,32 +345,27 @@ const Settings = () => {
         <>
           <h2 className="text-lg font-semibold">Theme</h2>
           <p className="mt-2 text-sm text-gray-600">
-            <div>
-              <div>
-                <main className="mx-auto px-6 lg:px-8 py-10">
-          
-                  <h1 className="text-3xl mb-4"> Themes </h1>
-                  <section className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-5 mb-10">
-                    <ThemeButton title="dark" themeChangeFunction={themeController}/>
-                    <ThemeButton title="light" themeChangeFunction={themeController}/>
-                    <ThemeButton title="retro" themeChangeFunction={themeController}/>
-                    <ThemeButton title="bento" themeChangeFunction={themeController}/>
-                    <ThemeButton title="taro" themeChangeFunction={themeController}/>
-                  </section>
-          
-                  <h1 className="text-3xl mb-4"> Fonts </h1>
-                  <section className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-5">
-                    <FontButton title="poppins" fontChangeFunction={fontController}/>
-                    <FontButton title="pacifico" fontChangeFunction={fontController}/>
-                    <FontButton title="comic-sans" fontChangeFunction={fontController}/>
-                    <FontButton title="bitcount" fontChangeFunction={fontController}/>
-                    <FontButton title="bebas-neue" fontChangeFunction={fontController}/>
-                    </section>
-          
-              </main>
-              </div>
-            </div>
+            Choose a theme and font for your dashboard.
           </p>
+          <div className="mt-6">
+            <h3 className="text-xl font-semibold mb-4">Themes</h3>
+            <section className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-5 mb-10">
+              <ThemeButton title="dark" themeChangeFunction={themeController}/>
+              <ThemeButton title="light" themeChangeFunction={themeController}/>
+              <ThemeButton title="retro" themeChangeFunction={themeController}/>
+              <ThemeButton title="bento" themeChangeFunction={themeController}/>
+              <ThemeButton title="taro" themeChangeFunction={themeController}/>
+            </section>
+
+            <h3 className="text-xl font-semibold mb-4">Fonts</h3>
+            <section className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-5">
+              <FontButton title="poppins" fontChangeFunction={fontController}/>
+              <FontButton title="pacifico" fontChangeFunction={fontController}/>
+              <FontButton title="comic-sans" fontChangeFunction={fontController}/>
+              <FontButton title="bitcount" fontChangeFunction={fontController}/>
+              <FontButton title="bebas-neue" fontChangeFunction={fontController}/>
+            </section>
+          </div>
         </>
       );
     }
@@ -438,14 +452,7 @@ const Settings = () => {
                 </button>
                 <button
                   type="button"
-                  onClick={() => {
-                    void authService
-                      .logout()
-                      .catch(() => undefined)
-                      .finally(() => {
-                        navigate("/login");
-                      });
-                  }}
+                  onClick={handleLogout}
                   className="mt-6 w-full text-left text-sm font-semibold rounded-md px-3 py-2 text-red-700 hover:bg-red-50"
                 >
                   Log out
