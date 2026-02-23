@@ -107,6 +107,7 @@ INSTALLED_APPS = [
     "authentication",
     "channels",
     "scheduler",
+    "profiles",
 ]
 
 

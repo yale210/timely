@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Dialog, DialogPanel } from '@headlessui/react'
+import { Dialog, DialogPanel, Menu, MenuButton, MenuItems, MenuItem } from '@headlessui/react'
 import { Bars3Icon, XMarkIcon } from '@heroicons/react/24/outline'
 import { Link, useNavigate } from "react-router-dom"
 import { authStore, AUTH_CHANGE_EVENT } from "@/services/authService"
@@ -9,12 +9,11 @@ import { useNotificationContext } from '../context/NotificationContext'
 import { type Notification } from '../types/notification'
 
 const authedNavigation = [
-    { name: 'Home', href: '/' },
-    { name: 'Signup', href: '/signup' },
     { name: 'Calendar', href: '/calendar' },
     { name: 'Tasks', href: '/tasks' },
     { name: 'Events', href: '/events' },
     { name: 'Gradebook', href: '/gradebook' },
+    { name: 'Dashboard', href: '/dashboard' },
     { name: 'Weekly Summaries', href: '/weekly-summaries' },
 ]
 
@@ -28,7 +27,7 @@ const guestNavigation = [
     { name: 'Signup', href: '/signup' },
 ]
 
-interface NavbarProps {
+interface HomeNavbarProps {
     /**
      * When true, hide the Signup link for authenticated users.
      * Defaults to true to prevent logged-in users from navigating back to signup.
@@ -37,15 +36,13 @@ interface NavbarProps {
 }
 
 /**
- * The main navigation bar component for the application.
- *
- * This component renders the global navigation links, the notification bell,
- * and handles both desktop and mobile menu states.
+ * Renders the navigation bar, including mobile menu logic.
  * @param root0 Component props.
  * @param root0.hideSignupWhenAuthed When true, hide the Signup link for authed users.
  * @returns The rendered navigation bar component.
  */
-export default function Navbar({ hideSignupWhenAuthed = true }: NavbarProps = {}) {
+export default function HomeNavbar({ hideSignupWhenAuthed = true }: HomeNavbarProps = {}) {
+
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
     const navigate = useNavigate()
     const [isAuthed, setIsAuthed] = useState(Boolean(authStore.getToken()))
@@ -86,40 +83,57 @@ export default function Navbar({ hideSignupWhenAuthed = true }: NavbarProps = {}
         }
     }, [])
     
+    const headerPadding = isAuthed ? "p-3 lg:px-6" : "p-6 lg:px-8"
+    const showHamburger = isAuthed
+
     return (
         <>
             <header className="absolute inset-x-0 top-0 z-50" data-testid="navbar">
-                <nav aria-label="Global" className="flex items-center justify-between p-6 lg:px-8">
+                <nav aria-label="Global" className={`flex items-center justify-between ${headerPadding}`}>
 
-                    <div className="flex lg:flex-1">
+                    <div className="flex items-center gap-3 lg:flex-1">
+                        {showHamburger && (
+                            <button
+                                type="button"
+                                onClick={() => setMobileMenuOpen(true)}
+                                className="inline-flex items-center justify-center rounded-md p-2 text-gray-700 hover:bg-gray-100"
+                            >
+                                <span className="sr-only">Open menu</span>
+                                <Bars3Icon aria-hidden="true" className="size-6" />
+                            </button>
+                        )}
                         <Link to="/" className="-m-1.5 p-1.5 flex flex-row gap-1.5 justify-center items-center">
                             <p className="font-bold text-lg">Timely</p>
                         </Link>
                     </div>
 
-                    <div className="flex lg:hidden">
-                        {isAuthed && (
-                            <div className="flex items-center gap-4 mr-4">
-                                <NotificationBell unreadCount={unreadCount} onClick={() => void navigate('/notifications')} />
-                            </div>
-                        )}
-                        <button
-                        type="button"
-                        onClick={() => setMobileMenuOpen(true)}
-                        className="-m-2.5 inline-flex items-center justify-center rounded-md p-2.5 text-gray-700"
-                        >
-                        <span className="sr-only">Open main menu</span>
-                        <Bars3Icon aria-hidden="true" className="size-6" />
-                        </button>
-                    </div>
+                    {!showHamburger && (
+                        <div className="flex lg:hidden">
+                            {isAuthed && (
+                                <div className="flex items-center gap-4 mr-4">
+                                    <NotificationBell unreadCount={unreadCount} onClick={() => void navigate('/notifications')} />
+                                </div>
+                            )}
+                            <button
+                            type="button"
+                            onClick={() => setMobileMenuOpen(true)}
+                            className="-m-2.5 inline-flex items-center justify-center rounded-md p-2.5 text-gray-700"
+                            >
+                            <span className="sr-only">Open main menu</span>
+                            <Bars3Icon aria-hidden="true" className="size-6" />
+                            </button>
+                        </div>
+                    )}
 
-                    <div className="hidden lg:flex lg:gap-x-12">
-                        {filteredNavigation.map((item) => (
-                        <Link key={item.name} to={item.href} className="text-sm/6 font-semibold text-gray-900">
-                            {item.name}
-                        </Link>
-                        ))}
-                    </div>
+                    {!isAuthed && (
+                        <div className="hidden lg:flex lg:gap-x-12">
+                            {filteredNavigation.map((item) => (
+                                <Link key={item.name} to={item.href} className="text-sm/6 font-semibold text-gray-900">
+                                    {item.name}
+                                </Link>
+                            ))}
+                        </div>
+                    )}
 
                     <div className="hidden lg:flex lg:flex-1 lg:justify-end lg:items-center lg:gap-x-6">
                         {isAuthed && (
@@ -138,9 +152,40 @@ export default function Navbar({ hideSignupWhenAuthed = true }: NavbarProps = {}
                             />
                         )}
                         {isAuthed ? (
-                            <Link to="/logout" className="text-sm/6 font-semibold text-gray-900">
-                                Log out <span aria-hidden="true">&rarr;</span>
-                            </Link>
+                            <Menu as="div" className="relative">
+                                <MenuButton className="inline-flex items-center justify-center rounded-full border border-gray-200 bg-white px-3 py-1.5 text-sm font-semibold text-gray-900 shadow-sm hover:bg-gray-50">
+                                    <span className="material-icons text-base mr-1">account_circle</span>
+                                    Account
+                                </MenuButton>
+                                <MenuItems className="absolute right-0 mt-2 w-44 origin-top-right rounded-lg border border-gray-200 bg-white shadow-lg focus:outline-none">
+                                    <div className="py-1">
+                                        <MenuItem>
+                                            {({ focus }) => (
+                                                <Link
+                                                    to="/settings"
+                                                    className={`block px-4 py-2 text-sm ${
+                                                        focus ? "bg-gray-50 text-gray-900" : "text-gray-700"
+                                                    }`}
+                                                >
+                                                    Settings
+                                                </Link>
+                                            )}
+                                        </MenuItem>
+                                        <MenuItem>
+                                            {({ focus }) => (
+                                                <Link
+                                                    to="/logout"
+                                                    className={`block px-4 py-2 text-sm ${
+                                                        focus ? "bg-gray-50 text-gray-900" : "text-gray-700"
+                                                    }`}
+                                                >
+                                                    Log out
+                                                </Link>
+                                            )}
+                                        </MenuItem>
+                                    </div>
+                                </MenuItems>
+                            </Menu>
                         ) : (
                             <Link to="/login" className="text-sm/6 font-semibold text-gray-900">
                                 Log in <span aria-hidden="true">&rarr;</span>
@@ -150,19 +195,18 @@ export default function Navbar({ hideSignupWhenAuthed = true }: NavbarProps = {}
 
                 </nav>
 
-
-                <Dialog open={mobileMenuOpen} onClose={setMobileMenuOpen} className="lg:hidden">
+                <Dialog open={mobileMenuOpen} onClose={setMobileMenuOpen} className={showHamburger ? "" : "lg:hidden"}>
                     <div className="fixed inset-0 z-50" />
 
-                    <DialogPanel className="fixed inset-y-0 right-0 z-50 w-full overflow-y-auto bg-white p-6 sm:max-w-sm sm:ring-1 sm:ring-gray-900/10">
+                    <DialogPanel className={`fixed inset-y-0 left-0 z-50 w-full overflow-y-auto bg-white p-6 sm:max-w-sm sm:ring-1 sm:ring-gray-900/10 ${showHamburger ? "sm:max-w-xs" : ""}`}>
                     
                         <div className="flex items-center justify-between">
                             <a href="#" className="-m-1.5 p-1.5">
                                 <span className="sr-only">Your Company</span>
                                 <img
-                                alt=""
-                                src="https://tailwindcss.com/plus-assets/img/logos/mark.svg?color=indigo&shade=600"
-                                className="h-8 w-auto"
+                                alt="Timely"
+                                src="/t.png"
+                                className="h-8 w-8"
                                 />
                             </a>
                             <button
@@ -191,12 +235,20 @@ export default function Navbar({ hideSignupWhenAuthed = true }: NavbarProps = {}
                                 </div>
                                 <div className="py-6">
                                 {isAuthed ? (
-                                    <Link
-                                        to="/logout"
-                                        className="-mx-3 block rounded-lg px-3 py-2.5 text-base/7 font-semibold text-gray-900 hover:bg-gray-50"
-                                    >
-                                        Log out
-                                    </Link>
+                                    <>
+                                        <Link
+                                            to="/settings"
+                                            className="-mx-3 block rounded-lg px-3 py-2.5 text-base/7 font-semibold text-gray-900 hover:bg-gray-50"
+                                        >
+                                            Settings
+                                        </Link>
+                                        <Link
+                                            to="/logout"
+                                            className="-mx-3 block rounded-lg px-3 py-2.5 text-base/7 font-semibold text-gray-900 hover:bg-gray-50"
+                                        >
+                                            Log out
+                                        </Link>
+                                    </>
                                 ) : (
                                     <Link
                                         to="/login"
