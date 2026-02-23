@@ -6,7 +6,6 @@ from profiles.serializers.preference_serializer import PreferenceSerializer
 
 
 class PreferenceViewSet(ModelViewSet):
-
     queryset = Preference.objects.all()
     serializer_class = PreferenceSerializer
     permission_classes = [permissions.IsAuthenticated]

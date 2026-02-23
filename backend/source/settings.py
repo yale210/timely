@@ -97,8 +97,7 @@ INSTALLED_APPS = [
     "knox",
     "authentication",
     "scheduler",
-    "profiles"
-
+    "profiles",
 ]
 
 MIDDLEWARE = [

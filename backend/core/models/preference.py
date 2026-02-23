@@ -29,16 +29,13 @@ class Preference(models.Model):
     day_end = models.TimeField(default="22:00")
 
     max_hours_study_per_day = models.PositiveSmallIntegerField(
-        default=4,
-        validators=[MinValueValidator(0), MaxValueValidator(24)]
+        default=4, validators=[MinValueValidator(0), MaxValueValidator(24)]
     )
 
     def clean(self):
         super().clean()
         if self.day_start == self.day_end:
-            raise ValidationError({
-                "day_end": "day_start must be different to day_end"
-            })
+            raise ValidationError({"day_end": "day_start must be different to day_end"})
 
         # midnight crossing
         start = datetime.combine(datetime.today(), self.day_start)
@@ -47,11 +44,13 @@ class Preference(models.Model):
         if end <= start:
             end += timedelta(days=1)  # Sleep crosses midnight
 
-        minutesAvailable = int((end-start).total_seconds() // 60)
+        minutesAvailable = int((end - start).total_seconds() // 60)
         if self.max_hours_study_per_day * 60 > minutesAvailable:
-            raise ValidationError({
-                "max_hours_study_per_day": "Max study hours exceeds your available day length."
-            })
+            raise ValidationError(
+                {
+                    "max_hours_study_per_day": "Max study hours exceeds your available day length."
+                }
+            )
 
     # Retrieve all UK holidays for inputted year.
     def get_holidays_for_year(self, input_year):

@@ -1,11 +1,9 @@
-from django.contrib.auth import get_user_model
 from django.db import models
 
 from source import settings
 
 
 class Profile(models.Model):
-
     user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     name = models.CharField(max_length=255)
     date_of_birth = models.DateField(null=True, blank=True)

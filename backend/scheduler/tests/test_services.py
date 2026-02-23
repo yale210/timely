@@ -18,8 +18,8 @@ class SchedulerTest(TestCase):
         )
         self.preference = Preference.objects.create(
             user=self.user,
-            sleep_start=time(23, 0),
-            sleep_end=time(7, 0),
+            day_start=time(7, 0),
+            day_end=time(23, 0),
         )
 
     def test_get_preference(self):

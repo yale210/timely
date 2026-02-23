@@ -5,6 +5,7 @@ from core.serializers.preference import PreferenceSerializer
 from rest_framework.decorators import action
 from rest_framework.response import Response
 
+
 class PreferenceViewSet(viewsets.ModelViewSet):
     queryset = Preference.objects.none()
     serializer_class = PreferenceSerializer
@@ -18,15 +19,15 @@ class PreferenceViewSet(viewsets.ModelViewSet):
             raise ValidationError("This user already has a set preference.")
         serializer.save()
 
-    #Handles url requests without needing to create new url patterns in urls.py
-    #Now available:
-    #GET /api/preferences/me/
-    #PATCH /api/preferences/me/
+    # Handles url requests without needing to create new url patterns in urls.py
+    # Now available:
+    # GET /api/preferences/me/
+    # PATCH /api/preferences/me/
     @action(detail=False, methods=["get"], url_path="me")
     def me(self, request):
         pref, _ = Preference.objects.get_or_create(user=request.user)
         return Response(self.get_serializer(pref).data)
-    
+
     @me.mapping.patch
     def me_path(self, request):
         pref, _ = Preference.objects.get_or_create(user=request.user)

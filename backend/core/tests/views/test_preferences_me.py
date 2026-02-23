@@ -4,6 +4,7 @@ from rest_framework import status
 
 User = get_user_model()
 
+
 class PreferenceMeTests(APITestCase):
     def setUp(self):
         self.user = User.objects.create_user(
