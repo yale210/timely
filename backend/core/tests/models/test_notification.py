@@ -20,14 +20,14 @@ class NotificationModelTest(TestCase):
             sender=self.sender,
             title="Test Title",
             message="Test Message",
-            notification_type=Notification.NotificationType.REMINDER,
+            notification_type=Notification.NotificationType.CALENDAR,
         )
         self.assertEqual(notification.recipient, self.user)
         self.assertEqual(notification.sender, self.sender)
         self.assertEqual(notification.title, "Test Title")
         self.assertEqual(notification.message, "Test Message")
         self.assertEqual(
-            notification.notification_type, Notification.NotificationType.REMINDER
+            notification.notification_type, Notification.NotificationType.CALENDAR
         )
         self.assertFalse(notification.is_read)
         self.assertIsNotNone(notification.timestamp)
@@ -48,7 +48,7 @@ class NotificationModelTest(TestCase):
             recipient=self.user,
             title="Test Title",
             message="Test Message",
-            notification_type=Notification.NotificationType.REMINDER,
+            notification_type=Notification.NotificationType.CALENDAR,
         )
         self.user.delete()
         self.assertEqual(Notification.objects.count(), 0)
