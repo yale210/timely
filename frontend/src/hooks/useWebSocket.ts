@@ -30,47 +30,55 @@ export const useWebSocket = (url: string | null, onMessage: (data: unknown) => v
   const connectRef = useRef<() => void>(undefined);
 
   const connect = useCallback(() => {
-    if (!url) return;
+    // avoid synchronous state updates in useEffect
+    setTimeout(() => {
+      if (!url) {
+        return;
+      }
 
-    setStatus(ConnectionStatusValues.CONNECTING);
-    
-    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-    const host = window.location.host;
-    const fullUrl = url.startsWith('ws') ? url : `${protocol}//${host}${url}`;
+      const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
+      const host = window.location.host;
+      const fullUrl = `${protocol}//${host}${url}`;
 
-    const socket = new WebSocket(fullUrl);
-    socketRef.current = socket;
-
-    socket.onopen = () => {
-      setStatus(ConnectionStatusValues.OPEN);
-      reconnectAttemptsRef.current = 0;
-    };
-
-    socket.onmessage = (event) => {
       try {
-        const data = JSON.parse(event.data as string) as unknown;
-        onMessage(data);
-      } catch {
-        // silent: malformed messages are ignored
+        setStatus(ConnectionStatusValues.CONNECTING);
+        const socket = new WebSocket(fullUrl);
+        socketRef.current = socket;
+
+        socket.onopen = () => {
+          setStatus(ConnectionStatusValues.OPEN);
+          reconnectAttemptsRef.current = 0;
+        };
+
+        socket.onmessage = (event) => {
+          try {
+            const data = JSON.parse(event.data as string) as unknown;
+            onMessage(data);
+          } catch {
+            // silent: malformed messages are ignored
+          }
+        };
+
+        socket.onclose = (event) => {
+          setStatus(ConnectionStatusValues.CLOSED);
+          socketRef.current = null;
+
+          if (event.code !== 1000) {
+            const timeout = Math.min(1000 * Math.pow(2, reconnectAttemptsRef.current), 30000);
+            reconnectTimeoutRef.current = window.setTimeout(() => {
+              reconnectAttemptsRef.current += 1;
+              connectRef.current?.();
+            }, timeout);
+          }
+        };
+
+        socket.onerror = () => {
+          socket.close();
+        };
+      } catch (error) {
+        console.error('WebSocket error', error);
       }
-    };
-
-    socket.onclose = (event) => {
-      setStatus(ConnectionStatusValues.CLOSED);
-      socketRef.current = null;
-
-      if (event.code !== 1000) {
-        const timeout = Math.min(1000 * Math.pow(2, reconnectAttemptsRef.current), 30000);
-        reconnectTimeoutRef.current = window.setTimeout(() => {
-          reconnectAttemptsRef.current += 1;
-          connectRef.current?.();
-        }, timeout);
-      }
-    };
-
-    socket.onerror = () => {
-      socket.close();
-    };
+    }, 0);
   }, [url, onMessage]);
 
   useEffect(() => {
