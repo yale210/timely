@@ -208,7 +208,9 @@ describe("CalendarPage (lean tests)", () => {
     });
 
     it("renders header + view buttons + current month", async () => {
-      await waitFor(() => expect(screen.getByText("Calendar")).toBeTruthy());
+      await waitFor(() =>
+        expect(screen.getByRole("heading", { name: "Calendar" })).toBeTruthy()
+      );
 
       expect(screen.getByText("Today")).toBeTruthy();
       expect(screen.getByText("Month")).toBeTruthy();
@@ -247,7 +249,9 @@ describe("CalendarPage (lean tests)", () => {
 
       renderPage();
 
-      await waitFor(() => expect(screen.getByText("Calendar")).toBeTruthy());
+      await waitFor(() =>
+        expect(screen.getByRole("heading", { name: "Calendar" })).toBeTruthy()
+      );
       await waitFor(() => expect(consoleSpy).toHaveBeenCalled());
 
       consoleSpy.mockRestore();
@@ -262,7 +266,9 @@ describe("CalendarPage (lean tests)", () => {
 
       renderPage();
 
-      await waitFor(() => expect(screen.getByText("Calendar")).toBeTruthy());
+      await waitFor(() =>
+        expect(screen.getByRole("heading", { name: "Calendar" })).toBeTruthy()
+      );
       await waitFor(() => expect(consoleSpy).toHaveBeenCalled());
 
       consoleSpy.mockRestore();
@@ -277,7 +283,9 @@ describe("CalendarPage (lean tests)", () => {
 
       renderPage();
 
-      await waitFor(() => expect(screen.getByText("Calendar")).toBeTruthy());
+      await waitFor(() =>
+        expect(screen.getByRole("heading", { name: "Calendar" })).toBeTruthy()
+      );
       await waitFor(() => expect(consoleSpy).toHaveBeenCalled());
 
       consoleSpy.mockRestore();
@@ -302,7 +310,9 @@ describe("CalendarPage (lean tests)", () => {
     });
 
     it("opens sidebar on slot select (defaults to task mode)", async () => {
-      await waitFor(() => expect(screen.getByText("Calendar")).toBeTruthy());
+      await waitFor(() =>
+        expect(screen.getByRole("heading", { name: "Calendar" })).toBeTruthy()
+      );
 
       fireEvent.click(screen.getByTestId("mock-select-slot"));
 
