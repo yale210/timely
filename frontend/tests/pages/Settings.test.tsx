@@ -3,6 +3,7 @@ import { render, screen, fireEvent, waitFor } from "@testing-library/react"
 import "@testing-library/jest-dom/vitest"
 import { MemoryRouter } from "react-router-dom"
 import type { Preference, PreferenceUpdate } from "@/types"
+import { authService } from "@/services/authService"
 
 // IMPORTANT: adjust import path if yours differs
 import Settings from "@/pages/Settings"
@@ -128,11 +129,11 @@ describe("Settings page - Scheduling section", () => {
       days_off: [],
     })
 
-    // Mimic axios error shape with response.data
     updateMyPreference.mockRejectedValue({
       response: {
+        status: 400,
         data: {
-          max_hours_study_per_day: ["Ensure this value is less than or equal to 24."],
+          day_start: ["Invalid time format"],
         },
       },
     })
@@ -144,14 +145,64 @@ describe("Settings page - Scheduling section", () => {
     )
 
     fireEvent.click(screen.getByRole("button", { name: /scheduling/i }))
-    await screen.findByLabelText(/max study hours per day/i)
+    await screen.findByLabelText(/day start/i)
 
-    fireEvent.change(screen.getByLabelText(/max study hours per day/i), { target: { value: "40" } })
-    fireEvent.click(screen.getByRole("button", { name: /save changes/i }))
+    // Trigger save - day_start is 08:00 which is valid for client but we force API error
+    fireEvent.click(screen.getByRole("button", { name: /save/i }))
 
-    expect(await screen.findByText(/please fix the highlighted fields/i)).toBeInTheDocument()
-    expect(
-      await screen.findByText(/Must be 24 or less/i)
-    ).toBeInTheDocument()
+    // Error message should appear from API. Since there are multiple (top summary + field), use getAll
+    await waitFor(async () => {
+      const msgs = await screen.findAllByText(/Invalid time format/i)
+      expect(msgs.length).toBeGreaterThan(0)
+    })
   })
-})
+
+  it("switches between settings sections", () => {
+    render(
+      <MemoryRouter>
+        <Settings />
+      </MemoryRouter>
+    )
+
+    // Should start at profile
+    expect(screen.getByText(/Profile settings will go here/i)).toBeInTheDocument()
+
+    // Switch to Theme
+    fireEvent.click(screen.getByRole("button", { name: /^theme$/i }))
+    expect(screen.getByText(/Choose a theme and font for your dashboard/i)).toBeInTheDocument()
+
+    // Switch to Features (notifications)
+    fireEvent.click(screen.getByRole("button", { name: /^features$/i }))
+    expect(screen.getByText(/Feature toggles will go here/i)).toBeInTheDocument()
+
+    // Logout button in sidebar
+    const logoutBtn = screen.getByRole("button", { name: /log out/i })
+    fireEvent.click(logoutBtn)
+    expect(vi.mocked(authService.logout)).toHaveBeenCalled()
+  })
+
+  it("shows client-side validation errors for invalid input", async () => {
+    getMyPreference.mockResolvedValue({
+      id: 1,
+      day_start: "08:00:00",
+      day_end: "22:00:00",
+      max_hours_study_per_day: 4,
+      days_off: [],
+    })
+
+    render(
+      <MemoryRouter>
+        <Settings />
+      </MemoryRouter>
+    )
+
+    fireEvent.click(screen.getByRole("button", { name: /scheduling/i }))
+    await screen.findByLabelText(/day start/i)
+
+    // Set invalid max hours
+    fireEvent.change(screen.getByLabelText(/max study hours per day/i), { target: { value: 25 } })
+    fireEvent.click(screen.getByRole("button", { name: /save/i }))
+
+    expect(await screen.findByText(/Must be 24 or less./i)).toBeInTheDocument()
+  })
+});

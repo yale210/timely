@@ -416,4 +416,80 @@ describe("CalendarPage (lean tests)", () => {
       });
     });
   });
+
+  it("handles event submission (create and update)", async () => {
+    vi.mocked(eventService.createEvent).mockResolvedValue({ id: 99, title: "New Event" } as any);
+    vi.mocked(eventService.updateEvent).mockResolvedValue({ id: 10, title: "Updated Event" } as any);
+    vi.mocked(eventService.getEvents).mockResolvedValue([{ id: 10, title: "Existing Event", start_time: "2026-01-01", end_time: "2026-01-01" }] as any);
+
+    render(
+      <MemoryRouter>
+        <NotificationProvider>
+          <CalendarPage />
+        </NotificationProvider>
+      </MemoryRouter>
+    );
+
+    // Create Event
+    await waitFor(() => expect(sidebarProps).not.toBeNull());
+    sidebarProps!.onSubmitEvent({ title: "New Event" } as any);
+    expect(eventService.createEvent).toHaveBeenCalled();
+
+    // Update Event: first click it to select it
+    const eventBtn = await screen.findByTestId("mock-event-event-10");
+    fireEvent.click(eventBtn);
+    
+    sidebarProps!.onSubmitEvent({ title: "Updated Event" } as any);
+    expect(eventService.updateEvent).toHaveBeenCalledWith(10, { title: "Updated Event" });
+  });
+
+  it("handles scheduling and unscheduling tasks", async () => {
+    // Correct path relative to this test file
+    const schedulerService = await import("../../src/services/schedulerService");
+    const scheduleTasksMock = vi.spyOn(schedulerService, "scheduleTasks").mockResolvedValue({
+      results: [{ task_id: 1, success: true, scheduled_start: "s", scheduled_end: "e" }],
+      start_date: "2026-01-01",
+      scheduled_count: 1,
+      failed_count: 0,
+    });
+    const unscheduleTasksMock = vi.spyOn(schedulerService, "unscheduleTasks").mockResolvedValue({
+      unscheduled_count: 1,
+    });
+
+    render(
+      <MemoryRouter>
+        <NotificationProvider>
+          <CalendarPage />
+        </NotificationProvider>
+      </MemoryRouter>
+    );
+
+    const scheduleBtn = screen.getByRole("button", { name: /auto_awesome\s*Schedule Tasks/i });
+    fireEvent.click(scheduleBtn);
+    await waitFor(() => expect(scheduleTasksMock).toHaveBeenCalled());
+
+    const unscheduleBtn = screen.getByRole("button", { name: /event_busy\s*Unschedule Tasks/i });
+    fireEvent.click(unscheduleBtn);
+    await waitFor(() => expect(unscheduleTasksMock).toHaveBeenCalled());
+  });
+
+  it("handles selecting an event from the calendar (event kind)", async () => {
+    const mockEvents = [{ id: 10, title: "Meeting", start_time: new Date().toISOString(), end_time: new Date().toISOString() }];
+    vi.mocked(eventService.getEvents).mockResolvedValue(mockEvents as any);
+
+    render(
+      <MemoryRouter>
+        <NotificationProvider>
+          <CalendarPage />
+        </NotificationProvider>
+      </MemoryRouter>
+    );
+
+    // Wait for event to render
+    const eventBtn = await screen.findByTestId("mock-event-event-10");
+    fireEvent.click(eventBtn);
+
+    expect(sidebarProps?.isOpen).toBe(true);
+    expect(sidebarProps?.initialData?.id).toBe(10);
+  });
 });
