@@ -5,6 +5,8 @@ import { Home, Login, Signup, Logout, CalendarPage, TaskList, EventList, Gradebo
 import { Notifications } from "./pages/Notifications"
 import { NotificationDetail } from "./pages/NotificationDetail"
 import { default as AdminNotifications } from "./pages/AdminNotifications"
+import { AdminNotificationHistory } from "./pages/AdminNotificationHistory"
+import { AdminNotificationHistoryDetail } from "./pages/AdminNotificationHistoryDetail"
 
 /**
  * The root component of the application which organises the routing logic.
@@ -69,6 +71,18 @@ export default function App() {
       <Route path="/admin/notifications" element={
         <RequireAdmin>
           <AdminNotifications />
+        </RequireAdmin>
+      } />
+
+      <Route path="/admin/notifications/history" element={
+        <RequireAdmin>
+          <AdminNotificationHistory />
+        </RequireAdmin>
+      } />
+
+      <Route path="/admin/notifications/history/:id" element={
+        <RequireAdmin>
+          <AdminNotificationHistoryDetail />
         </RequireAdmin>
       } />
 

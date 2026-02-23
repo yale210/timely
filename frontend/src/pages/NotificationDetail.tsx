@@ -1,38 +1,33 @@
-import type React from 'react';
-import { useState, useEffect } from 'react';
-import { useParams, useNavigate, Link } from 'react-router-dom';
-import axios from 'axios';
-import { type Notification } from '../types/notification';
-import { 
-  ArrowLeftIcon, 
-  TrashIcon
-} from '@heroicons/react/24/outline';
+import type React from "react";
+import { useEffect, useState } from "react";
+import { useParams, useNavigate, Link } from "react-router-dom";
+import { ArrowLeftIcon, EnvelopeIcon, EnvelopeOpenIcon, TrashIcon } from "@heroicons/react/24/outline";
+import api from "../services/api";
+import { type Notification } from "../types/notification";
+import { useNotificationContext } from "../context/NotificationContext";
+import ConfirmationModal from "../components/ConfirmationModal";
 
-/**
- * A page component that displays the full details of a single notification.
- *
- * This component fetches the notification by ID from the URL parameters
- * and allows users to view its content or delete it.
- * @returns The rendered notification detail page.
- */
 export const NotificationDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const { markRead, markUnread, deleteNotification, fetchNotifications } = useNotificationContext();
   const [notification, setNotification] = useState<Notification | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isDeleteOpen, setIsDeleteOpen] = useState(false);
 
   useEffect(() => {
     const fetchNotification = async () => {
       try {
-        const response = await axios.get<Notification>(`/api/notifications/${id}/`);
-        setNotification(response.data);
-        
-        if (!response.data.is_read) {
-          await axios.post(`/api/notifications/${id}/mark_read/`);
+        const response = await api.get<Notification>(`/api/notifications/${id}/`);
+        const data = response.data;
+        setNotification(data);
+        if (!data.is_read) {
+          await markRead(data.id);
+          setNotification({ ...data, is_read: true });
         }
       } catch (err) {
-        setError('Failed to fetch notification details');
+        setError("Failed to fetch notification details");
         console.error(err);
       } finally {
         setLoading(false);
@@ -40,62 +35,118 @@ export const NotificationDetail: React.FC = () => {
     };
 
     void fetchNotification();
-  }, [id]);
+  }, [id, markRead]);
 
-  const handleDelete = async () => {
-    if (window.confirm('Are you sure you want to delete this notification?')) {
-      try {
-        await axios.delete(`/api/notifications/${id}/`);
-        await navigate('/notifications');
-      } catch (err) {
-        console.error('Failed to delete notification', err);
+  const handleToggleRead = async () => {
+    if (!notification) {
+      return;
+    }
+
+    try {
+      if (notification.is_read) {
+        await markUnread(notification.id);
+        setNotification({ ...notification, is_read: false });
+      } else {
+        await markRead(notification.id);
+        setNotification({ ...notification, is_read: true });
       }
+      await fetchNotifications();
+    } catch (err) {
+      console.error("Failed to toggle notification status", err);
     }
   };
 
-  if (loading) return <div className="p-8 text-center">Loading...</div>;
-  if (error || !notification) return <div className="p-8 text-center text-red-500">{error ?? 'Notification not found'}</div>;
+  const handleDelete = async () => {
+    if (!notification) {
+      return;
+    }
+
+    try {
+      await deleteNotification(notification.id);
+      await fetchNotifications();
+      await navigate("/notifications");
+    } catch (err) {
+      console.error("Failed to delete notification", err);
+    }
+  };
+
+  if (loading) {
+    return <div className="p-8 text-center">Loading...</div>;
+  }
+  if (error || !notification) {
+    return (
+      <div className="p-8 text-center text-red-500">{error ?? "Notification not found"}</div>
+    );
+  }
 
   return (
-    <div className="max-w-4xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
+    <div className="mx-auto max-w-3xl px-4 py-8 sm:px-6 lg:px-8">
       <div className="mb-6">
-        <Link to="/notifications" className="flex items-center text-sm font-medium text-indigo-600 hover:text-indigo-500">
-          <ArrowLeftIcon className="h-4 w-4 mr-1" />
+        <Link
+          to="/notifications"
+          className="flex items-center text-sm font-medium text-indigo-600 hover:text-indigo-500"
+        >
+          <ArrowLeftIcon className="mr-1 h-4 w-4" />
           Back to notifications
         </Link>
       </div>
 
-      <div className="bg-white shadow overflow-hidden sm:rounded-lg border border-gray-200">
-        <div className="px-4 py-5 sm:px-6 flex justify-between items-start">
-          <div>
-            <h3 className="text-lg leading-6 font-medium text-gray-900">
-              {notification.title}
-            </h3>
-            <p className="mt-1 max-w-2xl text-sm text-gray-500">
+      <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
+        <div className="flex items-start justify-between px-6 py-5">
+          <div className="min-w-0">
+            <h1 className="truncate text-xl font-semibold text-gray-900">{notification.title}</h1>
+            <p className="mt-1 text-sm text-gray-500">
               {new Date(notification.timestamp).toLocaleString()}
             </p>
-          </div>
-          <button
-            onClick={() => void handleDelete()}
-            className="inline-flex items-center p-2 border border-transparent rounded-full shadow-sm text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
-          >
-            <TrashIcon className="h-5 w-5" aria-hidden="true" />
-          </button>
-        </div>
-        <div className="border-t border-gray-200 px-4 py-5 sm:p-6">
-          <div className="text-sm text-gray-900 whitespace-pre-wrap">
-            {notification.message}
-          </div>
-          
-          {notification.sender_username && (
-            <div className="mt-6 pt-6 border-t border-gray-100">
-              <p className="text-xs text-gray-500">
-                Sent by: <span className="font-medium text-gray-700">{notification.sender_username}</span>
+            {notification.sender_username && (
+              <p className="mt-1 text-xs text-gray-500">
+                Sent by <span className="font-medium text-gray-700">{notification.sender_username}</span>
               </p>
-            </div>
-          )}
+            )}
+          </div>
+          <div className="ml-4 flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => void handleToggleRead()}
+              className="rounded-md p-2 text-gray-500 hover:bg-gray-100 hover:text-gray-700"
+              title={notification.is_read ? "Mark as unread" : "Mark as read"}
+              aria-label={notification.is_read ? "Mark as unread" : "Mark as read"}
+            >
+              {notification.is_read ? (
+                <EnvelopeIcon className="h-5 w-5" />
+              ) : (
+                <EnvelopeOpenIcon className="h-5 w-5" />
+              )}
+            </button>
+            <button
+              type="button"
+              onClick={() => setIsDeleteOpen(true)}
+              className="rounded-md p-2 text-gray-500 hover:bg-red-50 hover:text-red-600"
+              title="Delete notification"
+              aria-label="Delete notification"
+            >
+              <TrashIcon className="h-5 w-5" />
+            </button>
+          </div>
+        </div>
+
+        <div className="border-t border-gray-100 px-6 py-6">
+          <p className="whitespace-pre-wrap text-sm leading-relaxed text-gray-700">
+            {notification.message}
+          </p>
         </div>
       </div>
+
+      <ConfirmationModal
+        isOpen={isDeleteOpen}
+        onClose={() => setIsDeleteOpen(false)}
+        onConfirm={() => {
+          void handleDelete();
+        }}
+        title="Delete notification?"
+        message="This action cannot be undone."
+        confirmText="Delete"
+      />
     </div>
   );
 };
