@@ -7,6 +7,9 @@ import { type Notification } from "../types/notification";
 import { useNotificationContext } from "../context/NotificationContext";
 import ConfirmationModal from "../components/ConfirmationModal";
 
+/**
+ * Full-page view of a single notification with read toggle and delete actions.
+ */
 export const NotificationDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();

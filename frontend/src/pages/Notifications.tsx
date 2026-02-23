@@ -118,6 +118,9 @@ const buildNotificationFilter = (tab: NotificationFilterTab) => {
   return {};
 };
 
+/**
+ * Paginated notification inbox with filter tabs, bulk actions, and push subscription banner.
+ */
 export const Notifications: React.FC = () => {
   const navigate = useNavigate();
   const {
