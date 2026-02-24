@@ -84,7 +84,7 @@ describe('EventForm', () => {
           start_time: start.toISOString(),
           categories: [],
           reminders: [],
-        } as Event}
+        } as unknown as Event}
         categories={mockCategories}
         onSubmit={onSubmit}
         onCancel={onCancel}
