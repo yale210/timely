@@ -1,4 +1,4 @@
-﻿import { describe, it, expect, vi, beforeEach } from 'vitest';
+﻿import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { renderHook, waitFor, act } from '@testing-library/react';
 import { usePushSubscription } from '../../src/hooks/usePushSubscription';
 import * as pushUtils from '../../src/utils/pushNotifications';
@@ -9,6 +9,10 @@ describe('usePushSubscription', () => {
     beforeEach(() => {
         vi.resetAllMocks();
         vi.stubGlobal('Notification', { permission: 'default' });
+    });
+
+    afterEach(() => {
+        vi.unstubAllGlobals();
     });
 
     it('should initialize with correct default state when supported', async () => {
