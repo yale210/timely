@@ -47,7 +47,7 @@ vi.mock("../../src/components/ConfirmationModal", () => ({
 
 describe("EventSidebar", () => {
   const mockCategories: Category[] = [
-    { id: 1, name: "Work", color: "#FF0000" },
+    { id: 1, text: "Work" },
   ];
 
   const mockOnClose = vi.fn();
@@ -90,8 +90,8 @@ describe("EventSidebar", () => {
       title: "Existing Event",
       start_time: "2023-01-01T10:00:00Z",
       end_time: "2023-01-01T11:00:00Z",
-      category: 1,
-      importance: 1,
+      categories: [],
+      reminders: [],
     };
 
     render(
@@ -161,8 +161,8 @@ describe("EventSidebar", () => {
       title: "Existing Event",
       start_time: "2023-01-01T10:00:00Z",
       end_time: "2023-01-01T11:00:00Z",
-      category: 1,
-      importance: 1,
+      categories: [],
+      reminders: [],
     };
 
     render(
@@ -190,8 +190,8 @@ describe("EventSidebar", () => {
       title: "Existing Event",
       start_time: "2023-01-01T10:00:00Z",
       end_time: "2023-01-01T11:00:00Z",
-      category: 1,
-      importance: 1,
+      categories: [],
+      reminders: [],
     };
 
     render(
@@ -217,8 +217,8 @@ describe("EventSidebar", () => {
       title: "Existing Event",
       start_time: "2023-01-01T10:00:00Z",
       end_time: "2023-01-01T11:00:00Z",
-      category: 1,
-      importance: 1,
+      categories: [],
+      reminders: [],
     };
 
     render(

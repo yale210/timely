@@ -17,7 +17,9 @@ describe('schedulerService', () => {
         };
 
         const mockResponse: ScheduleResponse = {
+            start_date: '2026-02-24',
             scheduled_count: 5,
+            failed_count: 0,
             results: [{ task_id: 1, success: true, scheduled_start: '2023-01-01T10:00:00', scheduled_end: '2023-01-01T11:00:00' }]
         };
 

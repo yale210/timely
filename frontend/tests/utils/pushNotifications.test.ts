@@ -67,7 +67,7 @@ describe('pushNotifications utility', () => {
             });
 
             vi.mocked(notificationsApi.getVapidPublicKey).mockResolvedValueOnce({ public_key: 'mock-public-key' });
-            vi.mocked(notificationsApi.subscribeToPush).mockResolvedValueOnce({});
+            vi.mocked(notificationsApi.subscribeToPush).mockResolvedValueOnce(undefined);
 
             await subscribeUserToPush();
 
@@ -144,7 +144,7 @@ describe('pushNotifications utility', () => {
                 PushManager: {}
             });
 
-            vi.mocked(notificationsApi.unsubscribeFromPush).mockResolvedValueOnce({});
+            vi.mocked(notificationsApi.unsubscribeFromPush).mockResolvedValueOnce(undefined);
 
             await unsubscribeUserFromPush();
 

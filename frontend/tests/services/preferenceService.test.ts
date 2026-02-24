@@ -16,8 +16,7 @@ describe('preferenceService', () => {
             day_start: '08:00:00',
             day_end: '22:00:00',
             max_hours_study_per_day: 4,
-            days_off: [0, 6],
-            user: 1
+            days_off: [0, 6]
         };
 
         const spy = vi.spyOn(api, 'get').mockResolvedValueOnce({ data: mockPreference });
@@ -38,8 +37,7 @@ describe('preferenceService', () => {
             day_start: '08:00:00',
             day_end: '22:00:00',
             max_hours_study_per_day: 5,
-            days_off: [0, 6],
-            user: 1
+            days_off: [0, 6]
         };
 
         const spy = vi.spyOn(api, 'patch').mockResolvedValueOnce({ data: mockPreference });
