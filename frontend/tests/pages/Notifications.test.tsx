@@ -160,7 +160,7 @@ describe("Notifications Page", () => {
     expect(getNotifications).toHaveBeenLastCalledWith(2, {});
   });
 
-  it("shows push notification banner and handles actions", async () => {
+  it("shows push notification banner and handles actions", () => {
     const subscribeMock = vi.fn();
     const unsubscribeMock = vi.fn();
     
@@ -228,7 +228,7 @@ describe("Notifications Page", () => {
     expect(screen.getByText(/Push notifications blocked/i)).toBeInTheDocument();
   });
 
-  it("handles bulk actions: mark all as read", async () => {
+  it("handles bulk actions: mark all as read", () => {
     const markAllRead = vi.fn().mockResolvedValue(undefined);
     vi.mocked(useNotificationContext).mockReturnValue({
       ...defaultContextValue,
@@ -247,7 +247,7 @@ describe("Notifications Page", () => {
     expect(markAllRead).toHaveBeenCalled();
   });
 
-  it("handles bulk actions: delete all", async () => {
+  it("handles bulk actions: delete all", () => {
     const deleteAllNotifications = vi.fn().mockResolvedValue(undefined);
     vi.mocked(useNotificationContext).mockReturnValue({
       ...defaultContextValue,
@@ -267,7 +267,7 @@ describe("Notifications Page", () => {
     expect(deleteAllNotifications).toHaveBeenCalled();
   });
 
-  it("handles push subscription interactions", async () => {
+  it("handles push subscription interactions", () => {
     const mockSubscribe = vi.fn().mockResolvedValue(undefined);
     const mockUnsubscribe = vi.fn().mockResolvedValue(undefined);
     

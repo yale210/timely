@@ -28,7 +28,7 @@ describe("authStore", () => {
         authStore.setToken("test-token");
         expect(authStore.getToken()).toBe("test-token");
         expect(localStorage.getItem("auth_token")).toBe("test-token");
-        expect(spy).toHaveBeenCalled();
+        expect(vi.mocked(spy)).toHaveBeenCalled();
     });
 
     it("gets and sets user", () => {
@@ -66,11 +66,11 @@ describe("authService", () => {
     it("successfully registers", async () => {
         const payload = { username: "u", email: "e@m.com", password: "p", password2: "p" };
         const responseData = { token: "token123", user: { username: "u", email: "e@m.com", id: 1 } };
-        vi.mocked(api.post).mockResolvedValueOnce({ data: responseData });
+        const spy = vi.spyOn(api, "post").mockResolvedValueOnce({ data: responseData });
 
         const result = await authService.register(payload);
 
-        expect(api.post).toHaveBeenCalledWith("/api/authentication/register/", payload);
+        expect(spy).toHaveBeenCalledWith("/api/authentication/register/", payload);
         expect(authStore.getToken()).toBe("token123");
         expect(result).toEqual(responseData);
     });
@@ -78,38 +78,38 @@ describe("authService", () => {
     it("successfully logins", async () => {
         const payload = { username: "u", password: "p" };
         const responseData = { token: "token456", user: { username: "u", email: "e@m.com", id: 2 } };
-        vi.mocked(api.post).mockResolvedValueOnce({ data: responseData });
+        const spy = vi.spyOn(api, "post").mockResolvedValueOnce({ data: responseData });
 
         const result = await authService.login(payload);
 
-        expect(api.post).toHaveBeenCalledWith("/api/authentication/session/", payload);
+        expect(spy).toHaveBeenCalledWith("/api/authentication/session/", payload);
         expect(authStore.getToken()).toBe("token456");
         expect(result).toEqual(responseData);
     });
 
     it("throws error if login returns no token", async () => {
-        vi.mocked(api.post).mockResolvedValueOnce({ data: { user: {} } });
+        vi.spyOn(api, "post").mockResolvedValueOnce({ data: { user: {} } });
         await expect(authService.login({ username: "u", password: "p" }))
             .rejects.toThrow("Login succeeded but no token was returned.");
     });
 
     it("successfully logouts and clears store", async () => {
         authStore.setToken("t");
-        vi.mocked(api.post).mockResolvedValueOnce({ data: {} });
+        const spy = vi.spyOn(api, "post").mockResolvedValueOnce({ data: {} });
 
         await authService.logout();
 
-        expect(api.post).toHaveBeenCalledWith("/api/authentication/logout/");
+        expect(spy).toHaveBeenCalledWith("/api/authentication/logout/");
         expect(authStore.getToken()).toBeNull();
     });
 
     it("clears store even if logout API fails", async () => {
         authStore.setToken("t");
-        vi.mocked(api.post).mockRejectedValueOnce(new Error("Logout error"));
+        vi.spyOn(api, "post").mockRejectedValueOnce(new Error("Logout error"));
         
         try {
             await authService.logout();
-        } catch (e) {
+        } catch {
             // expected
         }
         

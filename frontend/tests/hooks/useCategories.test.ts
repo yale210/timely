@@ -8,22 +8,22 @@ describe('useCategories hook', () => {
 
     beforeEach(() => {
         mockFetch.mockReset();
-        vi.spyOn(console, 'error').mockImplementation(() => {});
+        vi.spyOn(console, "error").mockImplementation(() => { /* skip */ });
     });
 
     afterEach(() => {
         vi.restoreAllMocks();
     });
 
-    it('should load categories successfully', async () => {
+    it("should load categories successfully", async () => {
         const mockCategories = [
-            { id: 1, text: 'Homework' },
-            { id: 2, text: 'Exam' }
+            { id: 1, text: "Homework" },
+            { id: 2, text: "Exam" }
         ];
 
         mockFetch.mockResolvedValueOnce({
             ok: true,
-            json: async () => mockCategories,
+            json: () => Promise.resolve(mockCategories),
         });
 
         const { result } = renderHook(() => useCategories());
@@ -61,21 +61,21 @@ describe('useCategories hook', () => {
         expect(console.error).toHaveBeenCalledWith('Failed to load categories:', error);
     });
 
-    it('should not update state if component is unmounted', async () => {
-        let resolveFetch: (value: any) => void;
+    it("should not update state if component is unmounted", () => {
+        let resolveFetch: (value: unknown) => void;
         const fetchPromise = new Promise((resolve) => {
             resolveFetch = resolve;
         });
 
         mockFetch.mockReturnValueOnce(fetchPromise);
 
-        const { unmount, result } = renderHook(() => useCategories());
+        const { unmount } = renderHook(() => useCategories());
 
         unmount();
 
         resolveFetch!({
             ok: true,
-            json: async () => [{ id: 1, text: 'Never set' }],
+            json: () => Promise.resolve([{ id: 1, text: "Never set" }]),
         });
 
         // We can't easily assert on internal state after unmount,

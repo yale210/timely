@@ -3,6 +3,8 @@ import { render, screen, waitFor, fireEvent } from "@testing-library/react";
 import { AdminNotificationHistory } from "@/pages/AdminNotificationHistory";
 import { BrowserRouter } from "react-router-dom";
 import * as notificationsApi from "@/api/notifications";
+import type { BroadcastJobSummary } from "@/types/notification";
+import type * as RouterDOM from "react-router-dom";
 
 vi.mock("@/api/notifications", () => ({
     getBroadcastHistory: vi.fn(),
@@ -10,7 +12,7 @@ vi.mock("@/api/notifications", () => ({
 
 const mockNavigate = vi.fn();
 vi.mock("react-router-dom", async (importActual) => {
-    const actual = await importActual<typeof import("react-router-dom")>();
+    const actual = await importActual<typeof RouterDOM>();
     return {
         ...actual,
         useNavigate: () => mockNavigate,
@@ -18,37 +20,48 @@ vi.mock("react-router-dom", async (importActual) => {
 });
 
 describe("AdminNotificationHistory Page", () => {
-    const mockData = {
+    const mockData: {
+        count: number;
+        next: string | null;
+        previous: string | null;
+        results: BroadcastJobSummary[];
+    } = {
         count: 2,
         next: null,
         previous: null,
         results: [
             {
-                id: "job-1",
+                id: 1,
                 title: "Test Broadcast 1",
                 status: "COMPLETED",
-                target_audience: "all",
-                total_count: 10,
-                success_count: 10,
-                failure_count: 0,
-                created_at: "2023-01-01T10:00:00Z",
+                target: "all",
+                recipient_count: 10,
+                delivered_count: 10,
+                failed_count: 0,
+                queued_at: "2023-01-01T10:00:00Z",
+                completed_at: "2023-01-01T10:05:00Z",
+                sender: 1,
+                sender_username: "admin",
             },
             {
-                id: "job-2",
+                id: 2,
                 title: "Test Broadcast 2",
                 status: "FAILED",
-                target_audience: "staff",
-                total_count: 5,
-                success_count: 2,
-                failure_count: 3,
-                created_at: "2023-01-02T10:00:00Z",
+                target: "staff",
+                recipient_count: 5,
+                delivered_count: 2,
+                failed_count: 3,
+                queued_at: "2023-01-02T10:00:00Z",
+                completed_at: "2023-01-02T10:05:00Z",
+                sender: 1,
+                sender_username: "admin",
             },
         ],
     };
 
     beforeEach(() => {
         vi.clearAllMocks();
-        vi.mocked(notificationsApi.getBroadcastHistory).mockResolvedValue(mockData as any);
+        vi.mocked(notificationsApi.getBroadcastHistory).mockResolvedValue(mockData);
     });
 
     it("renders the history table and handles loading state", async () => {
@@ -94,7 +107,7 @@ describe("AdminNotificationHistory Page", () => {
         });
     })
 
-    it("navigates to new notification page", async () => {
+    it("navigates to new notification page", () => {
         render(
             <BrowserRouter>
                 <AdminNotificationHistory />
@@ -117,11 +130,11 @@ describe("AdminNotificationHistory Page", () => {
         await waitFor(() => expect(screen.getByText("Test Broadcast 1")).toBeDefined());
 
         fireEvent.click(screen.getByText("Test Broadcast 1"));
-        expect(mockNavigate).toHaveBeenCalledWith("/admin/notifications/history/job-1");
+        expect(mockNavigate).toHaveBeenCalledWith("/admin/notifications/history/1");
     })
 
     it("handles error when fetching history fails", async () => {
-        vi.spyOn(console, "error").mockImplementation(() => {});
+        vi.spyOn(console, "error").mockImplementation(() => { /* skip */ });
         vi.mocked(notificationsApi.getBroadcastHistory).mockRejectedValue(new Error("API Error"));
 
         render(

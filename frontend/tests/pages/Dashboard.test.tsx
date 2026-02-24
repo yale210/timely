@@ -4,6 +4,9 @@ import Dashboard from "@/pages/Dashboard";
 import * as taskService from "@/services/taskService";
 import { BrowserRouter } from "react-router-dom";
 import moment from "moment";
+import { type Task } from "@/types";
+import type * as Components from "@/components/index";
+import type * as Pages from "@/pages/index";
 
 // Mock AppLayout to just render children
 vi.mock("@/layouts/AppLayout", () => ({
@@ -21,7 +24,7 @@ vi.mock("@/services/taskService", () => ({
 
 // Mock components
 vi.mock("@/components/index", async (importActual) => {
-  const actual = await importActual<typeof import("@/components/index")>();
+  const actual = await importActual<typeof Components>();
   return {
     ...actual,
     StatCard: ({ title, value }: { title: string; value: string[] }) => (
@@ -35,7 +38,7 @@ vi.mock("@/components/index", async (importActual) => {
 
 // Mock CalendarPage to avoid heavy rendering
 vi.mock("@/pages/index", async (importActual) => {
-  const actual = await importActual<typeof import("@/pages/index")>();
+  const actual = await importActual<typeof Pages>();
   return {
     ...actual,
     CalendarPage: () => <div data-testid="calendar-mock">Calendar</div>,
@@ -44,30 +47,54 @@ vi.mock("@/pages/index", async (importActual) => {
 
 describe("Dashboard Page", () => {
   const now = moment();
-  const mockTasks = [
+  const mockTasks: Task[] = [
     {
       id: 1,
       title: "Today's Task",
+      description: "Description 1",
+      start_time: now.format(),
       deadline: now.format(), // Today
+      importance: 3,
       completed: false,
+      categories: [],
+      estimated_minutes: 30,
+      parent_task: null,
     },
     {
       id: 2,
       title: "Pending Task",
+      description: "Description 2",
+      start_time: now.clone().add(2, "days").format(),
       deadline: now.clone().add(2, "days").format(), // Future
+      importance: 2,
       completed: false,
+      categories: [],
+      estimated_minutes: 45,
+      parent_task: null,
     },
     {
       id: 3,
       title: "Overdue Task",
+      description: "Description 3",
+      start_time: now.clone().subtract(2, "days").format(),
       deadline: now.clone().subtract(2, "days").format(), // Past
+      importance: 1,
       completed: false,
+      categories: [],
+      estimated_minutes: 60,
+      parent_task: null,
     },
     {
       id: 4,
       title: "Completed Task",
+      description: "Description 4",
+      start_time: now.format(),
       deadline: now.format(),
+      importance: 4,
       completed: true,
+      categories: [],
+      estimated_minutes: 15,
+      parent_task: null,
     },
   ];
 
@@ -76,7 +103,7 @@ describe("Dashboard Page", () => {
   });
 
   it("renders the dashboard with tasks categorized correctly", async () => {
-    vi.mocked(taskService.getTasks).mockResolvedValue(mockTasks as any);
+    vi.mocked(taskService.getTasks).mockResolvedValue(mockTasks);
 
     render(
       <BrowserRouter>
@@ -105,7 +132,7 @@ describe("Dashboard Page", () => {
   });
 
   it("handles fetch error gracefully", async () => {
-    const errorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+    const errorSpy = vi.spyOn(console, "error").mockImplementation(() => { /* skip */ });
     vi.mocked(taskService.getTasks).mockRejectedValue(new Error("Fetch failed"));
 
     render(

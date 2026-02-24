@@ -3,10 +3,14 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import AppNavbar from "../../../src/components/AppNavbar";
 import { BrowserRouter } from "react-router-dom";
 import { useNotificationContext } from "../../../src/context/NotificationContext";
+import type { NotificationContextValue } from "../../../src/context/NotificationContext";
+import type { Notification } from "../../../src/types/notification";
 import { authStore } from "../../../src/services/authService";
+import type { User } from "../../../src/services/authService";
+import type * as NotificationContextModule from "../../../src/context/NotificationContext";
 
 vi.mock("../../../src/context/NotificationContext", async () => {
-    const actual = await vi.importActual("../../../src/context/NotificationContext");
+    const actual = await vi.importActual<typeof NotificationContextModule>("../../../src/context/NotificationContext");
     return {
         ...actual,
         useNotificationContext: vi.fn(),
@@ -19,22 +23,30 @@ vi.mock("../../../src/services/authService", () => ({
   },
 }));
 
+interface MockDropdownProps {
+  onItemClick: (n: Notification) => void;
+  onMarkAllRead: () => void;
+  onDeleteAll: () => void;
+  onToggleRead: (n: Notification) => void;
+  onDeleteItem: (n: Notification) => void;
+}
+
 // Mock NotificationDropdown to focus on AppNavbar logic
 vi.mock("../../../src/components/NotificationDropdown", () => ({
-  NotificationDropdown: ({ onItemClick, onMarkAllRead, onDeleteAll, onToggleRead, onDeleteItem }: any) => (
+  NotificationDropdown: ({ onItemClick, onMarkAllRead, onDeleteAll, onToggleRead, onDeleteItem }: MockDropdownProps) => (
     <div data-testid="mock-notification-dropdown">
-       <button onClick={() => onItemClick({ id: 1, title: "Test" })}>Click Notification</button>
+       <button onClick={() => onItemClick({ id: 1, title: "Test", message: "", is_read: false } as Notification)}>Click Notification</button>
        <button onClick={onMarkAllRead}>Mark All Read</button>
        <button onClick={onDeleteAll}>Delete All</button>
-       <button onClick={() => onToggleRead({ id: 1, is_read: false })}>Toggle Read</button>
-       <button onClick={() => onToggleRead({ id: 1, is_read: true })}>Toggle Unread</button>
-       <button onClick={() => onDeleteItem({ id: 1 })}>Delete Item</button>
+       <button onClick={() => onToggleRead({ id: 1, is_read: false } as Notification)}>Toggle Read</button>
+       <button onClick={() => onToggleRead({ id: 1, is_read: true } as Notification)}>Toggle Unread</button>
+       <button onClick={() => onDeleteItem({ id: 1 } as Notification)}>Delete Item</button>
     </div>
   ),
 }));
 
 describe("AppNavbar Component", () => {
-  const mockContext = {
+  const mockContext: Partial<NotificationContextValue> = {
     notifications: [],
     unreadCount: 0,
     markRead: vi.fn().mockResolvedValue(undefined),
@@ -46,8 +58,8 @@ describe("AppNavbar Component", () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    vi.mocked(authStore.getUser).mockReturnValue({ id: 1, username: "testuser", is_staff: false } as any);
-    vi.mocked(useNotificationContext).mockReturnValue(mockContext as any);
+    vi.spyOn(authStore, "getUser").mockReturnValue({ id: 1, username: "testuser", is_staff: false } as User);
+    vi.mocked(useNotificationContext).mockReturnValue(mockContext as NotificationContextValue);
   });
 
   it("renders branding and basic elements", () => {
@@ -60,7 +72,7 @@ describe("AppNavbar Component", () => {
     expect(screen.getByText("Timely")).toBeInTheDocument();
   });
 
-  it("opens and closes the sliding drawer", async () => {
+  it("opens and closes the sliding drawer", () => {
     render(
       <BrowserRouter>
           <AppNavbar />
@@ -80,7 +92,7 @@ describe("AppNavbar Component", () => {
   });
 
   it("displays admin links only when user is staff", () => {
-    const { rerender } = render(
+    render(
       <BrowserRouter>
           <AppNavbar />
       </BrowserRouter>
@@ -89,8 +101,8 @@ describe("AppNavbar Component", () => {
     fireEvent.click(screen.getByRole("button", { name: /Open navigation/i }));
     expect(screen.queryByText("Admin notifications")).not.toBeInTheDocument();
 
-    vi.mocked(authStore.getUser).mockReturnValue({ id: 1, is_staff: true } as any);
-    rerender(
+    vi.spyOn(authStore, "getUser").mockReturnValue({ id: 1, is_staff: true } as User);
+    render(
       <BrowserRouter>
           <AppNavbar />
       </BrowserRouter>
@@ -114,7 +126,7 @@ describe("AppNavbar Component", () => {
     expect(nav).toHaveClass("-translate-x-full");
   });
 
-  it("handles notification dropdown callbacks", async () => {
+  it("handles notification dropdown callbacks", () => {
     render(
       <BrowserRouter>
           <AppNavbar />
@@ -141,7 +153,7 @@ describe("AppNavbar Component", () => {
     expect(mockContext.markRead).toHaveBeenCalledWith(1);
   });
 
-  it("opens account menu", async () => {
+  it("opens account menu", () => {
     render(
       <BrowserRouter>
           <AppNavbar />

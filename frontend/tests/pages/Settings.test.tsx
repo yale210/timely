@@ -177,8 +177,9 @@ describe("Settings page - Scheduling section", () => {
 
     // Logout button in sidebar
     const logoutBtn = screen.getByRole("button", { name: /log out/i })
+    const spy = vi.spyOn(authService, "logout");
     fireEvent.click(logoutBtn)
-    expect(vi.mocked(authService.logout)).toHaveBeenCalled()
+    expect(spy).toHaveBeenCalled()
   })
 
   it("shows client-side validation errors for invalid input", async () => {

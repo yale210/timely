@@ -20,11 +20,11 @@ describe('preferenceService', () => {
             user: 1
         };
 
-        vi.mocked(api.get).mockResolvedValueOnce({ data: mockPreference });
+        const spy = vi.spyOn(api, 'get').mockResolvedValueOnce({ data: mockPreference });
 
         const result = await preferenceService.getMyPreference();
 
-        expect(api.get).toHaveBeenCalledWith('/api/preferences/me/');
+        expect(spy).toHaveBeenCalledWith('/api/preferences/me/');
         expect(result).toEqual(mockPreference);
     });
 
@@ -42,11 +42,11 @@ describe('preferenceService', () => {
             user: 1
         };
 
-        vi.mocked(api.patch).mockResolvedValueOnce({ data: mockPreference });
+        const spy = vi.spyOn(api, 'patch').mockResolvedValueOnce({ data: mockPreference });
 
         const result = await preferenceService.updateMyPreference(patch);
 
-        expect(api.patch).toHaveBeenCalledWith('/api/preferences/me/', patch);
+        expect(spy).toHaveBeenCalledWith('/api/preferences/me/', patch);
         expect(result).toEqual(mockPreference);
     });
 });

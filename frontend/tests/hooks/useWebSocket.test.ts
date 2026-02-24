@@ -9,13 +9,13 @@ vi.unmock('@/hooks/useWebSocket');
 class MockWebSocket {
     static instances: MockWebSocket[] = [];
     url: string;
-    readyState: number = 0;
+    readyState = 0;
     onopen: (() => void) | null = null;
-    onclose: ((event: any) => void) | null = null;
+    onclose: ((event: { code: number }) => void) | null = null;
     onerror: (() => void) | null = null;
-    onmessage: ((ev: any) => void) | null = null;
+    onmessage: ((ev: { data: string }) => void) | null = null;
     send = vi.fn();
-    close = vi.fn(function() {
+    close = vi.fn(function(this: MockWebSocket) {
         if (this.onclose) this.onclose({ code: 1000 });
     });
 
@@ -40,7 +40,7 @@ describe('useWebSocket with unmock', () => {
         vi.useRealTimers();
     });
 
-    it('should create a websocket and update status fully', async () => {
+    it('should create a websocket and update status fully', () => {
         const onMessage = vi.fn();
         const { result } = renderHook(() => useWebSocket('/ws/test', onMessage));
 

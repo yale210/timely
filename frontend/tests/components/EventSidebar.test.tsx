@@ -1,4 +1,4 @@
-﻿import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+﻿import { render, screen, fireEvent } from "@testing-library/react";
 import { vi, describe, it, expect, beforeEach } from "vitest";
 import EventSidebar from "../../src/components/EventSidebar";
 import type { Category, Event } from "../../src/types";
@@ -8,23 +8,23 @@ vi.mock("@headlessui/react", async () => {
   const actual = await vi.importActual("@headlessui/react");
   return {
     ...actual,
-    Transition: ({ children, show }: any) => (show ? children : null),
-    TransitionChild: ({ children }: any) => children,
-    Dialog: ({ children, onClose }: any) => (
+    Transition: ({ children, show }: { children: React.ReactNode; show: boolean }) => (show ? children : null),
+    TransitionChild: ({ children }: { children: React.ReactNode }) => children,
+    Dialog: ({ children, onClose }: { children: React.ReactNode; onClose: () => void }) => (
         <div data-testid="dialog">
             {children}
             {/* Simulation of clicking outside or technical close */}
             <button data-testid="dialog-close-trigger" onClick={onClose}>Trigger onClose</button>
         </div>
     ),
-    DialogPanel: ({ children }: any) => <div>{children}</div>,
-    DialogTitle: ({ children }: any) => <h2>{children}</h2>,
+    DialogPanel: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
+    DialogTitle: ({ children }: { children: React.ReactNode }) => <h2>{children}</h2>,
   };
 });
 
 // Mock EventForm
 vi.mock("../../src/components/EventForm", () => ({
-  default: ({ onSubmit, onCancel, initialData }: any) => (
+  default: ({ onSubmit, onCancel, initialData }: { onSubmit: (data: unknown) => void; onCancel: () => void; initialData?: Event }) => (
     <div data-testid="event-form">
       <span>{initialData ? "Edit Form" : "Add Form"}</span>
       <button onClick={() => onSubmit({ title: "New Event" })}>Submit Form</button>
@@ -35,7 +35,7 @@ vi.mock("../../src/components/EventForm", () => ({
 
 // Mock ConfirmationModal
 vi.mock("../../src/components/ConfirmationModal", () => ({
-  default: ({ isOpen, onClose, onConfirm, title }: any) =>
+  default: ({ isOpen, onClose, onConfirm, title }: { isOpen: boolean; onClose: () => void; onConfirm: () => void; title: string }) =>
     isOpen ? (
       <div data-testid="confirmation-modal">
         <h2>{title}</h2>
@@ -124,7 +124,7 @@ describe("EventSidebar", () => {
     expect(mockOnClose).toHaveBeenCalled();
   });
 
-  it("calls onSubmit and onClose when form is submitted", async () => {
+  it("calls onSubmit and onClose when form is submitted", () => {
     render(
       <EventSidebar
         isOpen={true}
@@ -155,7 +155,7 @@ describe("EventSidebar", () => {
     expect(mockOnClose).toHaveBeenCalled();
   });
 
-  it("opens delete confirmation modal and handles deletion", async () => {
+  it("opens delete confirmation modal and handles deletion", () => {
     const initialData: Event = {
       id: 123,
       title: "Existing Event",

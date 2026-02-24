@@ -1,11 +1,12 @@
 ﻿import { renderHook, waitFor, act } from "@testing-library/react";
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import React from "react";
+import type React from "react";
 import * as api from "../../src/api/notifications";
 import { useWebSocket } from "../../src/hooks/useWebSocket";
+import type * as NotificationContextModule from "../../src/context/NotificationContext";
 
 // We need to import the actual module to test it, despite the global mock in setupTests.ts
-const { NotificationProvider, useNotificationContext } = await vi.importActual<typeof import("../../src/context/NotificationContext")>("../../src/context/NotificationContext");
+const { NotificationProvider, useNotificationContext } = await vi.importActual<typeof NotificationContextModule>("../../src/context/NotificationContext");
 
 vi.mock("../../src/api/notifications", () => ({
   getNotifications: vi.fn(),
@@ -35,14 +36,14 @@ describe("NotificationContext Provider", () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    vi.mocked(api.getNotifications).mockResolvedValue({
+    vi.spyOn(api, "getNotifications").mockResolvedValue({
       results: mockNotifications,
       count: 2,
       next: null,
       previous: null,
     });
-    vi.mocked(api.getUnreadCount).mockResolvedValue({ count: 1 });
-    vi.spyOn(console, "error").mockImplementation(() => {});
+    vi.spyOn(api, "getUnreadCount").mockResolvedValue({ count: 1 });
+    vi.spyOn(console, "error").mockImplementation(vi.fn());
   });
 
   afterEach(() => {
@@ -54,16 +55,18 @@ describe("NotificationContext Provider", () => {
   );
 
   it("successfully fetches notifications on mount", async () => {
+    const spy = vi.spyOn(api, "getNotifications");
     const { result } = renderHook(() => useNotificationContext(), { wrapper });
 
     await waitFor(() => {
       expect(result.current.notifications).toHaveLength(2);
     });
     expect(result.current.unreadCount).toBe(1);
-    expect(api.getNotifications).toHaveBeenCalled();
+    expect(spy).toHaveBeenCalled();
   });
 
   it("successfully marks a notification as read", async () => {
+    const spy = vi.spyOn(api, "markAsRead");
     const { result } = renderHook(() => useNotificationContext(), { wrapper });
     await waitFor(() => expect(result.current.notifications).toHaveLength(2));
 
@@ -71,13 +74,14 @@ describe("NotificationContext Provider", () => {
       await result.current.markRead(1);
     });
 
-    expect(api.markAsRead).toHaveBeenCalledWith(1);
+    expect(spy).toHaveBeenCalledWith(1);
     expect(result.current.notifications.find(n => n.id === 1)?.is_read).toBe(true);
     // unreadCount should decrease from 1 to 0
     expect(result.current.unreadCount).toBe(0);
   });
 
   it("does not decrease unread count when marking an already read notification as read", async () => {
+    const spy = vi.spyOn(api, "markAsRead");
     const { result } = renderHook(() => useNotificationContext(), { wrapper });
     await waitFor(() => expect(result.current.notifications).toHaveLength(2));
 
@@ -85,12 +89,13 @@ describe("NotificationContext Provider", () => {
       await result.current.markRead(2); // notification 2 is already read
     });
 
-    expect(api.markAsRead).toHaveBeenCalledWith(2);
+    expect(spy).toHaveBeenCalledWith(2);
     // unreadCount should remain 1
     expect(result.current.unreadCount).toBe(1);
   });
 
   it("successfully marks a notification as unread", async () => {
+    const spy = vi.spyOn(api, "markAsUnread");
     const { result } = renderHook(() => useNotificationContext(), { wrapper });
     await waitFor(() => expect(result.current.notifications).toHaveLength(2));
 
@@ -98,13 +103,14 @@ describe("NotificationContext Provider", () => {
       await result.current.markUnread(2);
     });
 
-    expect(api.markAsUnread).toHaveBeenCalledWith(2);
+    expect(spy).toHaveBeenCalledWith(2);
     expect(result.current.notifications.find(n => n.id === 2)?.is_read).toBe(false);
     // unreadCount should increase from 1 to 2
     expect(result.current.unreadCount).toBe(2);
   });
 
   it("does not increase unread count when marking an already unread notification as unread", async () => {
+    const spy = vi.spyOn(api, "markAsUnread");
     const { result } = renderHook(() => useNotificationContext(), { wrapper });
     await waitFor(() => expect(result.current.notifications).toHaveLength(2));
 
@@ -112,12 +118,13 @@ describe("NotificationContext Provider", () => {
       await result.current.markUnread(1); // notification 1 is already unread
     });
 
-    expect(api.markAsUnread).toHaveBeenCalledWith(1);
+    expect(spy).toHaveBeenCalledWith(1);
     // unreadCount should remain 1
     expect(result.current.unreadCount).toBe(1);
   });
 
   it("successfully marks all as read", async () => {
+    const spy = vi.spyOn(api, "markAllAsRead");
     const { result } = renderHook(() => useNotificationContext(), { wrapper });
     await waitFor(() => expect(result.current.notifications).toHaveLength(2));
 
@@ -125,12 +132,13 @@ describe("NotificationContext Provider", () => {
       await result.current.markAllRead();
     });
 
-    expect(api.markAllAsRead).toHaveBeenCalled();
+    expect(spy).toHaveBeenCalled();
     expect(result.current.notifications.every(n => n.is_read)).toBe(true);
     expect(result.current.unreadCount).toBe(0);
   });
 
   it("successfully deletes a notification", async () => {
+    const spy = vi.spyOn(api, "deleteNotification");
     const { result } = renderHook(() => useNotificationContext(), { wrapper });
     await waitFor(() => expect(result.current.notifications).toHaveLength(2));
 
@@ -138,7 +146,7 @@ describe("NotificationContext Provider", () => {
       await result.current.deleteNotification(1);
     });
 
-    expect(api.deleteNotification).toHaveBeenCalledWith(1);
+    expect(spy).toHaveBeenCalledWith(1);
     expect(result.current.notifications).toHaveLength(1);
     expect(result.current.notifications.find(n => n.id === 1)).toBeUndefined();
     expect(result.current.unreadCount).toBe(0);
@@ -148,7 +156,7 @@ describe("NotificationContext Provider", () => {
       const { result } = renderHook(() => useNotificationContext(), { wrapper });
       await waitFor(() => expect(result.current.notifications).toHaveLength(2));
       
-      const unreadCountSpy = vi.mocked(api.getUnreadCount).mockResolvedValue({ count: 3 });
+      const unreadCountSpy = vi.spyOn(api, "getUnreadCount").mockResolvedValue({ count: 3 });
       
       await act(async () => {
         await result.current.deleteNotification(999);
@@ -159,6 +167,7 @@ describe("NotificationContext Provider", () => {
   });
 
   it("successfully deletes all notifications", async () => {
+    const spy = vi.spyOn(api, "deleteAllNotifications");
     const { result } = renderHook(() => useNotificationContext(), { wrapper });
     await waitFor(() => expect(result.current.notifications).toHaveLength(2));
 
@@ -166,13 +175,13 @@ describe("NotificationContext Provider", () => {
       await result.current.deleteAllNotifications();
     });
 
-    expect(api.deleteAllNotifications).toHaveBeenCalled();
+    expect(spy).toHaveBeenCalled();
     expect(result.current.notifications).toHaveLength(0);
     expect(result.current.unreadCount).toBe(0);
   });
 
   it("handles fetch errors gracefully", async () => {
-    vi.mocked(api.getNotifications).mockRejectedValueOnce(new Error("Fetch failed"));
+    vi.spyOn(api, "getNotifications").mockRejectedValueOnce(new Error("Fetch failed"));
     
     const { result } = renderHook(() => useNotificationContext(), { wrapper });
     
@@ -183,7 +192,7 @@ describe("NotificationContext Provider", () => {
   });
 
   it("handles fetchUnreadCount errors gracefully", async () => {
-      vi.mocked(api.getUnreadCount).mockRejectedValueOnce(new Error("Count failed"));
+      vi.spyOn(api, "getUnreadCount").mockRejectedValueOnce(new Error("Count failed"));
       
       renderHook(() => useNotificationContext(), { wrapper });
       
@@ -196,7 +205,7 @@ describe("NotificationContext Provider", () => {
       const { result } = renderHook(() => useNotificationContext(), { wrapper });
       await waitFor(() => expect(result.current.notifications).toHaveLength(2));
       
-      vi.mocked(api.markAsRead).mockRejectedValueOnce(new Error("Mark failed"));
+      vi.spyOn(api, "markAsRead").mockRejectedValueOnce(new Error("Mark failed"));
       
       await act(async () => {
           await result.current.markRead(1);
@@ -209,7 +218,7 @@ describe("NotificationContext Provider", () => {
       const { result } = renderHook(() => useNotificationContext(), { wrapper });
       await waitFor(() => expect(result.current.notifications).toHaveLength(2));
       
-      vi.mocked(api.markAsUnread).mockRejectedValueOnce(new Error("Mark failed"));
+      vi.spyOn(api, "markAsUnread").mockRejectedValueOnce(new Error("Mark failed"));
       
       await act(async () => {
           await result.current.markUnread(2);
@@ -222,7 +231,7 @@ describe("NotificationContext Provider", () => {
       const { result } = renderHook(() => useNotificationContext(), { wrapper });
       await waitFor(() => expect(result.current.notifications).toHaveLength(2));
       
-      vi.mocked(api.markAllAsRead).mockRejectedValueOnce(new Error("Mark all failed"));
+      vi.spyOn(api, "markAllAsRead").mockRejectedValueOnce(new Error("Mark all failed"));
       
       await act(async () => {
           await result.current.markAllRead();
@@ -235,7 +244,7 @@ describe("NotificationContext Provider", () => {
       const { result } = renderHook(() => useNotificationContext(), { wrapper });
       await waitFor(() => expect(result.current.notifications).toHaveLength(2));
       
-      vi.mocked(api.deleteNotification).mockRejectedValueOnce(new Error("Delete failed"));
+      vi.spyOn(api, "deleteNotification").mockRejectedValueOnce(new Error("Delete failed"));
       
       await act(async () => {
           await result.current.deleteNotification(1);
@@ -248,7 +257,7 @@ describe("NotificationContext Provider", () => {
       const { result } = renderHook(() => useNotificationContext(), { wrapper });
       await waitFor(() => expect(result.current.notifications).toHaveLength(2));
       
-      vi.mocked(api.deleteAllNotifications).mockRejectedValueOnce(new Error("Delete all failed"));
+      vi.spyOn(api, "deleteAllNotifications").mockRejectedValueOnce(new Error("Delete all failed"));
       
       await act(async () => {
           await result.current.deleteAllNotifications();
@@ -258,7 +267,7 @@ describe("NotificationContext Provider", () => {
   });
 
   it("handles WebSocket 'new_notification' message", async () => {
-      let wsCallback: (data: any) => void = () => {};
+      let wsCallback: (data: unknown) => void = vi.fn();
       vi.mocked(useWebSocket).mockImplementation((_url, onMessage) => {
           wsCallback = onMessage;
           return { status: "OPEN", sendMessage: vi.fn(), history: [] };
@@ -269,7 +278,7 @@ describe("NotificationContext Provider", () => {
       
       const newNotif = { id: 3, title: "N3", message: "M3", is_read: false };
       
-      await act(async () => {
+      act(() => {
           wsCallback({ type: "new_notification", notification: newNotif, unread_count: 5 });
       });
       
@@ -279,7 +288,7 @@ describe("NotificationContext Provider", () => {
   });
 
   it("ignores WebSocket 'new_notification' message if already exists", async () => {
-      let wsCallback: (data: any) => void = () => {};
+      let wsCallback: (data: unknown) => void = vi.fn();
       vi.mocked(useWebSocket).mockImplementation((_url, onMessage) => {
           wsCallback = onMessage;
           return { status: "OPEN", sendMessage: vi.fn(), history: [] };
@@ -290,7 +299,7 @@ describe("NotificationContext Provider", () => {
       
       const existingNotif = mockNotifications[0];
       
-      await act(async () => {
+      act(() => {
           wsCallback({ type: "new_notification", notification: existingNotif, unread_count: 10 });
       });
       
@@ -300,7 +309,7 @@ describe("NotificationContext Provider", () => {
   });
 
   it("handles WebSocket 'unread_count' message", async () => {
-      let wsCallback: (data: any) => void = () => {};
+      let wsCallback: (data: unknown) => void = vi.fn();
       vi.mocked(useWebSocket).mockImplementation((_url, onMessage) => {
           wsCallback = onMessage;
           return { status: "OPEN", sendMessage: vi.fn(), history: [] };
@@ -309,7 +318,7 @@ describe("NotificationContext Provider", () => {
       const { result } = renderHook(() => useNotificationContext(), { wrapper });
       await waitFor(() => expect(result.current.notifications).toHaveLength(2));
       
-      await act(async () => {
+      act(() => {
           wsCallback({ type: "unread_count", count: 42 });
       });
       
@@ -317,7 +326,7 @@ describe("NotificationContext Provider", () => {
   });
 
   it("limits notifications list to 20 when receiving via WebSocket", async () => {
-    let wsCallback: (data: any) => void = () => {};
+    let wsCallback: (data: unknown) => void = vi.fn();
     vi.mocked(useWebSocket).mockImplementation((_url, onMessage) => {
         wsCallback = onMessage;
         return { status: "OPEN", sendMessage: vi.fn(), history: [] };
@@ -338,7 +347,7 @@ describe("NotificationContext Provider", () => {
     await waitFor(() => expect(result.current.notifications).toHaveLength(20));
     
     // Add one more via WS
-    await act(async () => {
+    act(() => {
         wsCallback({ 
             type: "new_notification", 
             notification: { id: 21, title: "N21", message: "M21", is_read: false },

@@ -2,8 +2,11 @@ import { cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { it, expect, describe, beforeEach, afterEach, vi } from 'vitest'
 import { HomeNavbar } from "@/components/index"
 import { MemoryRouter } from 'react-router-dom'
-import { NotificationProvider, useNotificationContext } from '@/context/NotificationContext'
-import { authStore, AUTH_CHANGE_EVENT } from "@/services/authService"
+import { useNotificationContext } from '@/context/NotificationContext'
+import type { NotificationContextValue } from '@/context/NotificationContext'
+import { authStore } from "@/services/authService"
+import type { User } from "@/services/authService"
+import type { Notification } from '@/types/notification'
 
 vi.mock("@/services/authService", () => ({
     authStore: {
@@ -16,29 +19,33 @@ vi.mock("@/services/authService", () => ({
 
 vi.mock("@/context/NotificationContext", () => ({
     useNotificationContext: vi.fn(),
-    NotificationProvider: ({ children }: any) => <div>{children}</div>
+    NotificationProvider: ({ children }: { children: React.ReactNode }) => <div>{children}</div>
 }))
 
-const mockNotifications = [
-    { id: 1, title: 'Test 1', message: 'Msg 1', is_read: false, created_at: '2023-01-01' },
-    { id: 2, title: 'Test 2', message: 'Msg 2', is_read: true, created_at: '2023-01-01' }
+const mockNotifications: Notification[] = [
+    { id: 1, title: 'Test 1', message: 'Msg 1', is_read: false, notification_type: 'SYSTEM', recipient: 1, sender: null, sender_username: null, timestamp: '2023-01-01' },
+    { id: 2, title: 'Test 2', message: 'Msg 2', is_read: true, notification_type: 'SYSTEM', recipient: 1, sender: null, sender_username: null, timestamp: '2023-01-01' }
 ];
 
 describe('Navbar', () => {
-    let mockContextValue: any;
+    let mockContextValue: NotificationContextValue;
 
     beforeEach(() => {
-        vi.mocked(authStore.getToken).mockReturnValue(null)
-        vi.mocked(authStore.getUser).mockReturnValue(null)
+        vi.spyOn(authStore, "getToken").mockReturnValue(null)
+        vi.spyOn(authStore, "getUser").mockReturnValue(null)
         
         mockContextValue = {
             notifications: mockNotifications,
             unreadCount: 1,
-            markRead: vi.fn(),
-            markUnread: vi.fn(),
-            markAllRead: vi.fn(),
-            deleteNotification: vi.fn(),
-            deleteAllNotifications: vi.fn(),
+            loading: false,
+            error: null,
+            fetchNotifications: vi.fn(),
+            fetchUnreadCount: vi.fn(),
+            markRead: vi.fn().mockResolvedValue(undefined),
+            markUnread: vi.fn().mockResolvedValue(undefined),
+            markAllRead: vi.fn().mockResolvedValue(undefined),
+            deleteNotification: vi.fn().mockResolvedValue(undefined),
+            deleteAllNotifications: vi.fn().mockResolvedValue(undefined),
         };
         vi.mocked(useNotificationContext).mockReturnValue(mockContextValue);
 
@@ -69,13 +76,8 @@ describe('Navbar', () => {
 
     it("opens mobile menu when clicking 'Open menu'", () => {
         // Change button name to 'Open menu' as per HomeNavbar.tsx if authed, or 'Open main menu' if not.
-        // But for guest it's 'Open main menu' usually? Actually if isAuthed is false, showHamburger is false.
-        // Wait, HomeNavbar.tsx: const showHamburger = isAuthed
-        // If isAuthed is false, showHamburger is false.
-        
-        // Let's re-render as authed
         cleanup()
-        vi.mocked(authStore.getToken).mockReturnValue("fake-token")
+        vi.spyOn(authStore, "getToken").mockReturnValue("fake-token")
         render(
             <MemoryRouter>
                 <HomeNavbar />
@@ -89,12 +91,10 @@ describe('Navbar', () => {
 
     it("renders authed links when logged in", () => {
         cleanup()
-        vi.mocked(authStore.getToken).mockReturnValue("fake-token")
+        vi.spyOn(authStore, "getToken").mockReturnValue("fake-token")
         render(
             <MemoryRouter>
-                <NotificationProvider>
-                    <HomeNavbar />
-                </NotificationProvider>
+                <HomeNavbar />
             </MemoryRouter>
         )
         
@@ -108,13 +108,11 @@ describe('Navbar', () => {
 
     it("renders admin links when logged in as staff", () => {
         cleanup()
-        vi.mocked(authStore.getToken).mockReturnValue("fake-token")
-        vi.mocked(authStore.getUser).mockReturnValue({ username: "admin", email: "a@a.com", is_staff: true })
+        vi.spyOn(authStore, "getToken").mockReturnValue("fake-token")
+        vi.spyOn(authStore, "getUser").mockReturnValue({ username: "admin", email: "a@a.com", is_staff: true } as User)
         render(
             <MemoryRouter>
-                <NotificationProvider>
-                    <HomeNavbar />
-                </NotificationProvider>
+                <HomeNavbar />
             </MemoryRouter>
         )
         
@@ -128,13 +126,11 @@ describe('Navbar', () => {
     it("syncs auth state on storage/auth events", () => {
         // Trigger event
         fireEvent(window, new Event("storage"))
-        // we can't easily check internal state, but we can check if it re-renders
-        // or just ensure the listener is attached and doesn't crash.
     })
 
-    it("interacts with notifications", async () => {
+    it("interacts with notifications", () => {
         cleanup()
-        vi.mocked(authStore.getToken).mockReturnValue("fake-token")
+        vi.spyOn(authStore, "getToken").mockReturnValue("fake-token")
         render(
             <MemoryRouter>
                 <HomeNavbar />

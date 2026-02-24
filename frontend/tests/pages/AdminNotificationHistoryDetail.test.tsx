@@ -3,6 +3,12 @@ import { render, screen, waitFor, fireEvent } from "@testing-library/react";
 import { AdminNotificationHistoryDetail } from "../../src/pages/AdminNotificationHistoryDetail";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
 import * as notificationsApi from "../../src/api/notifications";
+import type { 
+    BroadcastJobDetail, 
+    BroadcastJobStatusResponse, 
+    RetryBroadcastResponse,
+    BroadcastRecipientDetail 
+} from "../../src/types/notification";
 
 vi.mock("../../src/api/notifications", () => ({
     getBroadcastDetail: vi.fn(),
@@ -10,7 +16,7 @@ vi.mock("../../src/api/notifications", () => ({
     retryFailedBroadcast: vi.fn(),
 }));
 
-const mockDetail = {
+const mockDetail: BroadcastJobDetail = {
     id: 1,
     title: "Test Job",
     message: "Test Message",
@@ -30,12 +36,34 @@ const mockDetail = {
     completed_at: "2200-10-01T10:00:05Z",
     retry_of: null,
     recipients: [
-        { id: 1, recipient: 1, username: "user1", email: "user1@test.com", status: "FAILED", error_code: "500", error_message: "Network Error", last_attempt_at: null, notification: null },
-        { id: 2, recipient: 2, username: "user2", email: "user2@test.com", status: "SENT", error_code: "", error_message: "", last_attempt_at: null, notification: null },
+        { 
+            id: 1, 
+            recipient: 1, 
+            username: "user1", 
+            email: "user1@test.com", 
+            status: "FAILED", 
+            error_code: "500", 
+            error_message: "Network Error", 
+            last_attempt_at: null, 
+            notification: null,
+            delivered_at: null,
+        } as BroadcastRecipientDetail,
+        { 
+            id: 2, 
+            recipient: 2, 
+            username: "user2", 
+            email: "user2@test.com", 
+            status: "SENT", 
+            error_code: "", 
+            error_message: "", 
+            last_attempt_at: null, 
+            notification: null,
+            delivered_at: null,
+        } as BroadcastRecipientDetail,
     ],
 };
 
-const mockStatus = {
+const mockStatus: BroadcastJobStatusResponse = {
     id: 1,
     status: "COMPLETED",
     recipient_count: 2,
@@ -51,8 +79,8 @@ const mockStatus = {
 describe("AdminNotificationHistoryDetail Page", () => {
     beforeEach(() => {
         vi.clearAllMocks();
-        vi.mocked(notificationsApi.getBroadcastDetail).mockResolvedValue(mockDetail as any);
-        vi.mocked(notificationsApi.getBroadcastStatus).mockResolvedValue(mockStatus as any);
+        vi.mocked(notificationsApi.getBroadcastDetail).mockResolvedValue(mockDetail);
+        vi.mocked(notificationsApi.getBroadcastStatus).mockResolvedValue(mockStatus);
     });
 
     afterEach(() => {
@@ -84,14 +112,14 @@ describe("AdminNotificationHistoryDetail Page", () => {
     });
 
     it("handles API failure in load", async () => {
-        vi.spyOn(console, "error").mockImplementation(() => {});
+        vi.spyOn(console, "error").mockImplementation(() => { /* skip */ });
         vi.mocked(notificationsApi.getBroadcastDetail).mockRejectedValue(new Error("API Error"));
         renderWithRouter();
         expect(await screen.findByText("Failed to load broadcast detail.")).toBeDefined();
     });
 
     it("handles retry of failed broadcast", async () => {
-        vi.mocked(notificationsApi.retryFailedBroadcast).mockResolvedValue({ broadcast_id: 1 } as any);
+        vi.mocked(notificationsApi.retryFailedBroadcast).mockResolvedValue({ broadcast_id: 1 } as RetryBroadcastResponse);
         
         renderWithRouter();
 

@@ -2,6 +2,7 @@ import { vi, afterEach, expect as vitestExpect } from "vitest";
 import React from "react";
 import "@testing-library/jest-dom/vitest";
 import { cleanup } from "@testing-library/react";
+import type * as authServiceModule from "@/services/authService";
 
 // Ensure the DOM is cleaned between tests (Vitest + Testing Library)
 afterEach(() => cleanup());
@@ -29,13 +30,13 @@ vi.mock("recharts", async () => {
     if (!React.isValidElement(maybeChild)) return React.createElement("div", { style });
     return React.cloneElement(maybeChild, { ...(maybeChild.props ?? {}), ...style });
   };
-  return { ...(original as object), ResponsiveContainer };
+  return { ...original, ResponsiveContainer };
 });
 
 // Fix for headless UI and other components expecting window.matchMedia
-Object.defineProperty(window, 'matchMedia', {
+Object.defineProperty(window, "matchMedia", {
   writable: true,
-  value: vi.fn().mockImplementation(query => ({
+  value: vi.fn().mockImplementation((query: string) => ({
     matches: false,
     media: query,
     onchange: null,
@@ -67,7 +68,7 @@ vi.mock("@/context/NotificationContext", () => ({
 
 // Global mock for auth store to avoid network calls and provide default auth state
 vi.mock("@/services/authService", async (importActual) => {
-  const actual = await importActual<typeof import("@/services/authService")>();
+  const actual = await importActual<typeof authServiceModule>();
   return {
     ...actual,
     authStore: {

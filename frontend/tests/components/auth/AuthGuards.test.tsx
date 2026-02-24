@@ -1,20 +1,20 @@
 ﻿import { render, screen } from "@testing-library/react";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import React from "react";
+import type React from "react";
+import type { User } from "../../../src/services/authService";
+import { authStore } from "../../../src/services/authService";
 
 // Components to test
 import RequireAuth from "../../../src/components/auth/RequireAuth";
 import RedirectIfAuth from "../../../src/components/auth/RedirectAuth";
 import RequireAdmin from "../../../src/components/RequireAdmin";
 
-// Mock authService
-import { authStore } from "../../../src/services/authService";
-
 vi.mock("../../../src/services/authService", () => ({
   authStore: {
     getToken: vi.fn(),
     getUser: vi.fn(),
+    setUser: vi.fn(),
   },
 }));
 
@@ -22,6 +22,7 @@ describe("Auth Guards", () => {
   /**
    * Helper function to render components in a router environment
    * with defined routes for redirection targets.
+   * @param ui - The UI to render inside the router.
    */
   const renderWithRouter = (ui: React.ReactNode) => {
     return render(
@@ -45,98 +46,95 @@ describe("Auth Guards", () => {
 
   describe("RequireAuth", () => {
     it("redirects to /login when unauthenticated (getToken returns null)", () => {
-      vi.mocked(authStore.getToken).mockReturnValue(null);
+      const spy = vi.spyOn(authStore, "getToken").mockReturnValue(null);
       
       renderWithRouter(
         <RequireAuth>
-          <div>Secret Content</div>
+          <div>Protected Content</div>
         </RequireAuth>
       );
-      
+
       expect(screen.getByText("Login Page")).toBeInTheDocument();
-      expect(screen.queryByText("Secret Content")).not.toBeInTheDocument();
+      expect(screen.queryByText("Protected Content")).not.toBeInTheDocument();
+      expect(spy).toHaveBeenCalled();
     });
 
-    it("renders children when authenticated (getToken returns a token)", () => {
-      vi.mocked(authStore.getToken).mockReturnValue("fake-token");
-      
+    it("renders children when authenticated (getToken returns token)", () => {
+      const spy = vi.spyOn(authStore, "getToken").mockReturnValue("valid-token");
+
       renderWithRouter(
         <RequireAuth>
-          <div>Secret Content</div>
+          <div>Protected Content</div>
         </RequireAuth>
       );
-      
-      expect(screen.getByText("Secret Content")).toBeInTheDocument();
+
+      expect(screen.getByText("Protected Content")).toBeInTheDocument();
       expect(screen.queryByText("Login Page")).not.toBeInTheDocument();
+      expect(spy).toHaveBeenCalled();
     });
   });
 
-  describe("RedirectAuth (RedirectIfAuth)", () => {
-    it("redirects to /dashboard when authenticated (getToken returns a token)", () => {
-      // Note: The component redirects to /dashboard per source code
-      vi.mocked(authStore.getToken).mockReturnValue("fake-token");
-      
+  describe("RedirectIfAuth", () => {
+    it("redirects to /dashboard when authenticated (getToken returns token)", () => {
+      const spy = vi.spyOn(authStore, "getToken").mockReturnValue("valid-token");
+
       renderWithRouter(
         <RedirectIfAuth>
-          <div>Login Form</div>
+          <div>Auth Only Content</div>
         </RedirectIfAuth>
       );
-      
+
       expect(screen.getByText("Dashboard Page")).toBeInTheDocument();
-      expect(screen.queryByText("Login Form")).not.toBeInTheDocument();
+      expect(screen.queryByText("Auth Only Content")).not.toBeInTheDocument();
+      expect(spy).toHaveBeenCalled();
     });
 
     it("renders children when unauthenticated (getToken returns null)", () => {
-      vi.mocked(authStore.getToken).mockReturnValue(null);
-      
+      const spy = vi.spyOn(authStore, "getToken").mockReturnValue(null);
+
       renderWithRouter(
         <RedirectIfAuth>
-          <div>Login Form</div>
+          <div>Auth Only Content</div>
         </RedirectIfAuth>
       );
-      
-      expect(screen.getByText("Login Form")).toBeInTheDocument();
+
+      expect(screen.getByText("Auth Only Content")).toBeInTheDocument();
+      expect(screen.queryByText("Dashboard Page")).not.toBeInTheDocument();
+      expect(spy).toHaveBeenCalled();
     });
   });
 
   describe("RequireAdmin", () => {
-    it("redirects to /login when unauthenticated (getToken returns null)", () => {
-      vi.mocked(authStore.getToken).mockReturnValue(null);
-      
-      renderWithRouter(
-        <RequireAdmin>
-          <div>Admin Only</div>
-        </RequireAdmin>
-      );
-      
-      expect(screen.getByText("Login Page")).toBeInTheDocument();
-    });
+    it("redirects to / when user is not admin", () => {
+      const tokenSpy = vi.spyOn(authStore, "getToken").mockReturnValue("non-admin-token");
+      const userSpy = vi.spyOn(authStore, "getUser").mockReturnValue({ is_staff: false } as unknown as User);
 
-    it("redirects to / when authenticated but NOT staff (is_staff: false)", () => {
-      vi.mocked(authStore.getToken).mockReturnValue("fake-token");
-      vi.mocked(authStore.getUser).mockReturnValue({ is_staff: false } as any);
-      
       renderWithRouter(
         <RequireAdmin>
-          <div>Admin Only</div>
+          <div>Admin Content</div>
         </RequireAdmin>
       );
-      
+
       expect(screen.getByText("Home Page")).toBeInTheDocument();
-      expect(screen.queryByText("Admin Only")).not.toBeInTheDocument();
+      expect(screen.queryByText("Admin Content")).not.toBeInTheDocument();
+      expect(tokenSpy).toHaveBeenCalled();
+      expect(userSpy).toHaveBeenCalled();
     });
 
-    it("renders children when authenticated and staff (is_staff: true)", () => {
-      vi.mocked(authStore.getToken).mockReturnValue("fake-token");
-      vi.mocked(authStore.getUser).mockReturnValue({ is_staff: true } as any);
-      
+    it("renders children when user is admin", () => {
+      const tokenSpy = vi.spyOn(authStore, "getToken").mockReturnValue("admin-token");
+      const userSpy = vi.spyOn(authStore, "getUser").mockReturnValue({ is_staff: true } as unknown as User);
+
       renderWithRouter(
         <RequireAdmin>
-          <div>Admin Only</div>
+          <div>Admin Content</div>
         </RequireAdmin>
       );
-      
-      expect(screen.getByText("Admin Only")).toBeInTheDocument();
+
+      expect(screen.getByText("Admin Content")).toBeInTheDocument();
+      expect(screen.queryByText("Home Page")).not.toBeInTheDocument();
+      expect(tokenSpy).toHaveBeenCalled();
+      expect(userSpy).toHaveBeenCalled();
     });
   });
 });

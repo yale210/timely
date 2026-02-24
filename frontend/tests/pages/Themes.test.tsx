@@ -4,10 +4,10 @@ import Themes from "../../src/pages/Themes";
 import { BrowserRouter } from "react-router-dom";
 
 vi.mock("../../src/components/index.ts", () => ({
-    ThemeButton: ({ title, themeChangeFunction }: any) => (
+    ThemeButton: ({ title, themeChangeFunction }: { title: string; themeChangeFunction: (theme: string) => void }) => (
         <button onClick={() => themeChangeFunction(title)}>{title}</button>
     ),
-    FontButton: ({ title, fontChangeFunction }: any) => (
+    FontButton: ({ title, fontChangeFunction }: { title: string; fontChangeFunction: (font: string) => void }) => (
         <button onClick={() => fontChangeFunction(title)}>{title}</button>
     ),
     AppNavbar: () => <nav>Navbar</nav>,

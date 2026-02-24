@@ -21,14 +21,18 @@ describe("CreateGradeModal Component", () => {
     onUpdated: vi.fn(),
   };
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let fetchSpy: any;
+
   beforeEach(() => {
     vi.clearAllMocks();
     vi.mocked(useCategories).mockReturnValue({
       categories: mockCategories,
       loading: false,
     });
+    
     // Mock global fetch
-    global.fetch = vi.fn().mockResolvedValue({
+    fetchSpy = vi.spyOn(global, "fetch").mockResolvedValue({
       ok: true,
       json: () => Promise.resolve({}),
     } as Response);
@@ -71,7 +75,7 @@ describe("CreateGradeModal Component", () => {
     expect(screen.getByDisplayValue("20")).toBeInTheDocument();
     expect(screen.getByDisplayValue("2023-11-01")).toBeInTheDocument();
     
-    const select = screen.getByLabelText("Category") as HTMLSelectElement;
+    const select = screen.getByLabelText<HTMLSelectElement>("Category");
     expect(select.value).toBe("2");
     
     expect(screen.getByRole("button", { name: /Update/i })).toBeInTheDocument();
@@ -97,14 +101,14 @@ describe("CreateGradeModal Component", () => {
     fireEvent.click(screen.getByRole("button", { name: "Create" }));
 
     await waitFor(() => {
-      expect(global.fetch).toHaveBeenCalledWith(
+      expect(fetchSpy).toHaveBeenCalledWith(
         "/api/grades/",
         expect.objectContaining({
           method: "POST",
           headers: expect.objectContaining({
             "Content-Type": "application/json",
             "X-CSRFToken": "testtoken",
-          }),
+          }) as HeadersInit,
           body: JSON.stringify({
             name: "Exam 1",
             category: 1,
@@ -122,10 +126,10 @@ describe("CreateGradeModal Component", () => {
     const initialData = {
       id: 50,
       name: "Old Grade",
-      score: 10,
-      total: 10,
+      score: 10 as number | "",
+      total: 10 as number | "",
       date: "2023-01-01",
-      categoryId: null,
+      categoryId: null as number | null,
     };
     render(<CreateGradeModal {...defaultProps} initialData={initialData} />);
 
@@ -133,11 +137,11 @@ describe("CreateGradeModal Component", () => {
     fireEvent.click(screen.getByRole("button", { name: "Update" }));
 
     await waitFor(() => {
-      expect(global.fetch).toHaveBeenCalledWith(
+      expect(fetchSpy).toHaveBeenCalledWith(
         "/api/grades/50/",
         expect.objectContaining({
           method: "PUT",
-          body: expect.stringContaining('"name":"Updated Grade"'),
+          body: expect.stringContaining('"name":"Updated Grade"') as unknown as string,
         })
       );
       expect(defaultProps.onUpdated).toHaveBeenCalled();

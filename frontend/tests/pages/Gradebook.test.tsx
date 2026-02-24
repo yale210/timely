@@ -15,8 +15,16 @@ vi.mock("@/hooks/useCategories", () => ({
 }));
 
 // Mock CreateGradeModal
+interface MockCreateGradeModalProps {
+  open: boolean;
+  onClose: () => void;
+  onCreated: () => void;
+  onUpdated: () => void;
+  initialData?: { name?: string };
+}
+
 vi.mock("@/components/CreateGradeModal.tsx", () => ({
-  default: ({ open, onClose, onCreated, onUpdated, initialData }: any) => {
+  default: ({ open, onClose, onCreated, onUpdated, initialData }: MockCreateGradeModalProps) => {
     if (!open) return null;
     return (
       <div data-testid="create-grade-modal">

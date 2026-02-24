@@ -418,9 +418,9 @@ describe("CalendarPage (lean tests)", () => {
   });
 
   it("handles event submission (create and update)", async () => {
-    vi.mocked(eventService.createEvent).mockResolvedValue({ id: 99, title: "New Event" } as any);
-    vi.mocked(eventService.updateEvent).mockResolvedValue({ id: 10, title: "Updated Event" } as any);
-    vi.mocked(eventService.getEvents).mockResolvedValue([{ id: 10, title: "Existing Event", start_time: "2026-01-01", end_time: "2026-01-01" }] as any);
+    vi.mocked(eventService.createEvent).mockResolvedValue({ id: 99, title: "New Event" } as Event);
+    vi.mocked(eventService.updateEvent).mockResolvedValue({ id: 10, title: "Updated Event" } as Event);
+    vi.mocked(eventService.getEvents).mockResolvedValue([{ id: 10, title: "Existing Event", start_time: "2026-01-01", end_time: "2026-01-01" } as Event]);
 
     render(
       <MemoryRouter>
@@ -432,14 +432,14 @@ describe("CalendarPage (lean tests)", () => {
 
     // Create Event
     await waitFor(() => expect(sidebarProps).not.toBeNull());
-    sidebarProps!.onSubmitEvent({ title: "New Event" } as any);
+    sidebarProps!.onSubmitEvent({ title: "New Event" } as EventSubmission);
     expect(eventService.createEvent).toHaveBeenCalled();
 
     // Update Event: first click it to select it
     const eventBtn = await screen.findByTestId("mock-event-event-10");
     fireEvent.click(eventBtn);
     
-    sidebarProps!.onSubmitEvent({ title: "Updated Event" } as any);
+    sidebarProps!.onSubmitEvent({ title: "Updated Event" } as EventSubmission);
     expect(eventService.updateEvent).toHaveBeenCalledWith(10, { title: "Updated Event" });
   });
 
@@ -447,11 +447,13 @@ describe("CalendarPage (lean tests)", () => {
     // Correct path relative to this test file
     const schedulerService = await import("../../src/services/schedulerService");
     const scheduleTasksMock = vi.spyOn(schedulerService, "scheduleTasks").mockResolvedValue({
-      results: [{ task_id: 1, success: true, scheduled_start: "s", scheduled_end: "e" }],
       start_date: "2026-01-01",
+      results: [{ task_id: 1, success: true, scheduled_start: "s", scheduled_end: "e", reason: null }],
       scheduled_count: 1,
-      failed_count: 0,
+      failed_count: 0
     });
+    vi.mocked(eventService.getEvents).mockResolvedValue([] as Event[]);
+
     const unscheduleTasksMock = vi.spyOn(schedulerService, "unscheduleTasks").mockResolvedValue({
       unscheduled_count: 1,
     });
@@ -474,8 +476,8 @@ describe("CalendarPage (lean tests)", () => {
   });
 
   it("handles selecting an event from the calendar (event kind)", async () => {
-    const mockEvents = [{ id: 10, title: "Meeting", start_time: new Date().toISOString(), end_time: new Date().toISOString() }];
-    vi.mocked(eventService.getEvents).mockResolvedValue(mockEvents as any);
+    const mockEvents = [{ id: 10, title: "Meeting", start_time: new Date().toISOString(), end_time: new Date().toISOString() } as Event];
+    vi.mocked(eventService.getEvents).mockResolvedValue(mockEvents);
 
     render(
       <MemoryRouter>

@@ -4,6 +4,7 @@ import { MemoryRouter, Routes, Route } from "react-router-dom"
 import { NotificationDetail } from "@/pages/NotificationDetail"
 import api from "@/services/api"
 import { useNotificationContext } from "@/context/NotificationContext"
+import type { NotificationContextValue } from "@/context/NotificationContext"
 
 // Mock dependencies
 vi.mock("@/services/api")
@@ -20,7 +21,7 @@ describe("NotificationDetail", () => {
     sender_username: "admin"
   }
 
-  const mockContext = {
+  const mockContext: Partial<NotificationContextValue> = {
     markRead: vi.fn(),
     markUnread: vi.fn(),
     deleteNotification: vi.fn(),
@@ -29,11 +30,11 @@ describe("NotificationDetail", () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    (useNotificationContext as any).mockReturnValue(mockContext)
+    vi.mocked(useNotificationContext).mockReturnValue(mockContext as NotificationContextValue)
   })
 
   it("successfully fetches and displays notification details", async () => {
-    (api.get as any).mockResolvedValue({ data: mockNotification })
+    vi.spyOn(api, "get").mockResolvedValue({ data: mockNotification })
 
     render(
       <MemoryRouter initialEntries={["/notifications/1"]}>
@@ -55,7 +56,7 @@ describe("NotificationDetail", () => {
   })
 
   it("displays error message if fetching fails", async () => {
-    (api.get as any).mockRejectedValue(new Error("Failed"))
+    vi.spyOn(api, "get").mockRejectedValue(new Error("Failed"))
 
     render(
       <MemoryRouter initialEntries={["/notifications/1"]}>
@@ -71,7 +72,7 @@ describe("NotificationDetail", () => {
   })
 
   it("toggles read status successfully", async () => {
-    (api.get as any).mockResolvedValue({ data: { ...mockNotification, is_read: true } })
+    vi.spyOn(api, "get").mockResolvedValue({ data: { ...mockNotification, is_read: true } })
 
     render(
       <MemoryRouter initialEntries={["/notifications/1"]}>
@@ -92,7 +93,7 @@ describe("NotificationDetail", () => {
   })
 
   it("successfully deletes the notification after confirmation", async () => {
-    (api.get as any).mockResolvedValue({ data: mockNotification })
+    vi.spyOn(api, "get").mockResolvedValue({ data: mockNotification })
 
     render(
       <MemoryRouter initialEntries={["/notifications/1"]}>
