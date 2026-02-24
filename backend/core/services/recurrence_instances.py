@@ -107,7 +107,7 @@ def _generate_occurrence_starts(
     event: Event, range_start: datetime, range_end: datetime
 ) -> list[datetime]:
     if not event.recurrence_interval:
-        if range_start <= event.start_time <= range_end:
+        if event.start_time <= range_end and event.end_time >= range_start:
             return [event.start_time]
         return []
 
@@ -240,14 +240,19 @@ def expand_event_instances(
         if occurrence_start.date().isoformat() in exception_dates:
             continue
 
-        if range_start <= occurrence_start <= range_end:
+        occurrence_end = occurrence_start + duration
+        if range_start <= occurrence_start <= range_end or (
+            not event.recurrence_interval
+            and occurrence_start <= range_end
+            and occurrence_end >= range_start
+        ):
             instances.append(
                 _build_expanded_instance(
                     source_event=event,
                     categories=category_cache,
                     reminders=reminder_cache,
                     start_time=occurrence_start,
-                    end_time=occurrence_start + duration,
+                    end_time=occurrence_end,
                     is_override=False,
                     original_start_time=(
                         occurrence_start if event.recurrence_interval else None

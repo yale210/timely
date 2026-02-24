@@ -7,6 +7,7 @@ from celery import shared_task
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.db import IntegrityError, transaction
+from django.db.models import Max, Q
 from django.utils import timezone
 from pywebpush import WebPushException, webpush
 
@@ -134,9 +135,26 @@ def check_reminders():
     if not settings.ENABLE_RECURRENCE_OVERRIDES:
         return
 
+    max_offset_minutes = (
+        EventReminder.objects.filter(
+            event__recurrence_interval__isnull=False,
+        ).aggregate(max_minutes=Max("minutes_before"))["max_minutes"]
+        or 0
+    )
+    max_offset = timedelta(minutes=max_offset_minutes)
+
     recurring_events = (
         Event.objects.filter(recurrence_interval__isnull=False)
+        .filter(
+            Q(reminders__isnull=False) | Q(overrides__isnull=False),
+        )
+        .filter(start_time__lte=now + max_offset)
+        .filter(
+            Q(recurrence_end__isnull=True)
+            | Q(recurrence_end__gte=due_window_start.date()),
+        )
         .prefetch_related("reminders", "overrides", "overrides__categories")
+        .distinct()
         .order_by("id")
     )
 

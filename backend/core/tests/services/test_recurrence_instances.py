@@ -144,3 +144,59 @@ class RecurrenceExpansionServiceTests(TestCase):
             [instance.title for instance in instances[:2]],
             ["Earlier Event", "Later Event"],
         )
+
+    def test_non_recurring_event_overlapping_window_start_is_included(self):
+        """Non-recurring event that starts before range_start but ends within the window."""
+        now = timezone.now().replace(minute=0, second=0, microsecond=0)
+        event = Event.objects.create(
+            user=self.user,
+            title="Long Meeting",
+            start_time=now - timedelta(hours=2),
+            end_time=now + timedelta(hours=1),
+        )
+
+        instances = expand_event_instances(
+            event,
+            now,
+            now + timedelta(days=1),
+        )
+
+        self.assertEqual(len(instances), 1)
+        self.assertEqual(instances[0].title, "Long Meeting")
+
+    def test_non_recurring_event_fully_before_window_is_excluded(self):
+        """Non-recurring event that ends before range_start is excluded."""
+        now = timezone.now().replace(minute=0, second=0, microsecond=0)
+        event = Event.objects.create(
+            user=self.user,
+            title="Past Meeting",
+            start_time=now - timedelta(hours=3),
+            end_time=now - timedelta(hours=1),
+        )
+
+        instances = expand_event_instances(
+            event,
+            now,
+            now + timedelta(days=1),
+        )
+
+        self.assertEqual(len(instances), 0)
+
+    def test_expand_user_events_includes_overlapping_non_recurring_event(self):
+        """expand_user_events includes non-recurring events starting before the window."""
+        now = timezone.now().replace(minute=0, second=0, microsecond=0)
+        Event.objects.create(
+            user=self.user,
+            title="Spanning Event",
+            start_time=now - timedelta(hours=2),
+            end_time=now + timedelta(hours=1),
+        )
+
+        instances = expand_user_events(
+            self.user,
+            now,
+            now + timedelta(days=1),
+        )
+
+        titles = [instance.title for instance in instances]
+        self.assertIn("Spanning Event", titles)

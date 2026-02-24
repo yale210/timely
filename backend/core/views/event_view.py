@@ -4,12 +4,17 @@ from datetime import datetime, time
 from django.conf import settings
 from django.utils import timezone
 from django.utils.dateparse import parse_datetime
-from rest_framework import permissions, status, viewsets
+from rest_framework import permissions, serializers, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
 from drf_spectacular.types import OpenApiTypes
-from drf_spectacular.utils import OpenApiParameter, extend_schema, extend_schema_view
+from drf_spectacular.utils import (
+    OpenApiParameter,
+    extend_schema,
+    extend_schema_view,
+    inline_serializer,
+)
 from core.models import Event
 from core.serializers.event import (
     EventResponseSerializer,
@@ -232,6 +237,7 @@ class EventViewSet(viewsets.ModelViewSet):
 
     @extend_schema(
         parameters=REVERT_PARAMETERS,
+        request=None,
         responses={status.HTTP_204_NO_CONTENT: None},
     )
     @action(detail=True, methods=["post"], url_path="revert-instance")
@@ -266,6 +272,12 @@ class EventViewSet(viewsets.ModelViewSet):
             )
         return Response(status=status.HTTP_204_NO_CONTENT)
 
+    @extend_schema(
+        responses=inline_serializer(
+            name="ServerTimeResponseSerializer",
+            fields={"server_time": serializers.CharField()},
+        ),
+    )
     @action(detail=False, methods=["get"])
     def server_time(self, request):
         return Response({"server_time": timezone.now().isoformat()})
