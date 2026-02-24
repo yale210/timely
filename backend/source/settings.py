@@ -108,6 +108,7 @@ INSTALLED_APPS = [
     "authentication",
     "channels",
     "scheduler",
+    "profiles.apps.ProfilesConfig",
 ]
 
 

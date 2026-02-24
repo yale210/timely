@@ -46,6 +46,9 @@ const parseApiError = (error: unknown): string => {
   return maybeError.response?.data?.error?.message ?? "Failed to send admin notification.";
 };
 
+/**
+ * Admin form for composing and broadcasting notifications to targeted user groups.
+ */
 export default function AdminNotifications() {
   const [title, setTitle] = useState("");
   const [message, setMessage] = useState("");

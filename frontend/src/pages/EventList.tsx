@@ -56,6 +56,20 @@ const EventList = () => {
   }, []);
 
   useEffect(() => {
+    const savedTheme = localStorage.getItem("theme");    
+    if (savedTheme) {
+      document.documentElement.dataset.theme = savedTheme;
+      console.log("loaded saved theme")
+    }
+
+    const savedFont = localStorage.getItem("font");
+    if (savedFont) {
+      document.documentElement.dataset.font = savedFont;
+    }
+  }, []);
+
+
+  useEffect(() => {
     const loadData = async () => {
       await fetchEvents();
       await fetchCategories();

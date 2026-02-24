@@ -1,0 +1,9 @@
+[data-theme="dark"] {
+  --primary: #60a5fa;
+  --primary-hover: #93c5fd;
+
+  --background: #000000;
+  --text-color: #ffffff;
+
+  --border: #374151;
+}

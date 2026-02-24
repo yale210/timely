@@ -17,6 +17,9 @@ import type {
 /**
  * Fetches paginated list of notifications for the current user.
  * @param page - The page number to fetch (defaults to 1)
+ * @param filters - Optional filters to narrow the results
+ * @param filters.isRead - Filter by read status
+ * @param filters.notificationType - Filter by notification type
  * @returns Promise containing notification list and pagination info
  */
 export const getNotifications = async (
@@ -141,6 +144,10 @@ export const getAudienceCounts = async (userIds?: number[]): Promise<AdminAudien
 /**
  * Retrieves paginated broadcast history for admin notifications.
  * @param params - Optional filters for search and status.
+ * @param params.page - The page number to fetch.
+ * @param params.q - Search query string to filter by title.
+ * @param params.target - Filter by target audience.
+ * @param params.status - Filter by delivery status.
  * @returns A paginated list of broadcast summaries.
  */
 export const getBroadcastHistory = async (params?: {

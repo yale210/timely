@@ -1,6 +1,6 @@
 import { cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { it, expect, describe, beforeEach, afterEach } from 'vitest'
-import { Navbar } from '@/components'
+import { HomeNavbar } from "@/components/index"
 import { MemoryRouter } from 'react-router-dom'
 import { NotificationProvider } from '@/context/NotificationContext'
 
@@ -9,7 +9,7 @@ describe('Navbar', () => {
         render(
             <MemoryRouter>
                 <NotificationProvider>
-                    <Navbar />
+                    <HomeNavbar />
                 </NotificationProvider>
             </MemoryRouter>
         )

@@ -3,6 +3,9 @@ import { useNavigate } from "react-router-dom";
 import { getBroadcastHistory } from "../api/notifications";
 import { type BroadcastJobSummary } from "../types/notification";
 
+/**
+ * Admin page that displays a paginated, filterable table of past notification broadcasts.
+ */
 export const AdminNotificationHistory = () => {
   const navigate = useNavigate();
   const [items, setItems] = useState<BroadcastJobSummary[]>([]);

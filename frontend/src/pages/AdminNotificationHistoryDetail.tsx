@@ -13,6 +13,9 @@ const POLL_INTERVAL_MS = 3000;
 const isTerminal = (status: string) =>
   status === "COMPLETED" || status === "PARTIAL" || status === "FAILED";
 
+/**
+ * Detail view for a single broadcast job showing payload, recipient delivery, and metrics.
+ */
 export const AdminNotificationHistoryDetail = () => {
   const { id } = useParams<{ id: string }>();
   const broadcastId = Number(id);

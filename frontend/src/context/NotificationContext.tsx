@@ -48,6 +48,9 @@ interface NotificationContextValue {
 
 const NotificationContext = createContext<NotificationContextValue | null>(null);
 
+/**
+ * Retrieves the current notification context value, throwing if used outside a provider.
+ */
 export const useNotificationContext = (): NotificationContextValue => {
   const ctx = useContext(NotificationContext);
   if (!ctx) {
@@ -60,6 +63,11 @@ interface NotificationProviderProps {
   children: ReactNode;
 }
 
+/**
+ * Provides notification state and actions to descendant components via context.
+ * @param root0 - The component props.
+ * @param root0.children - Child components that consume the notification context.
+ */
 export const NotificationProvider = ({ children }: NotificationProviderProps) => {
   const hasPerformedInitialFetch = useRef(false);
   const [notifications, setNotifications] = useState<Notification[]>([]);

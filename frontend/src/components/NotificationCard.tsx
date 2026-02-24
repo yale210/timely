@@ -19,6 +19,17 @@ interface NotificationCardProps {
   unreadIndicatorPlacement?: "right" | "left";
 }
 
+/**
+ * Renders a single notification item with icon, title, message, and optional action buttons.
+ * @param root0 - The component props.
+ * @param root0.notification - The notification data to display.
+ * @param root0.onClick - Callback when the card is clicked.
+ * @param root0.onToggleRead - Callback to toggle read/unread state.
+ * @param root0.onDelete - Callback to delete the notification.
+ * @param root0.showActions - Whether to show action buttons.
+ * @param root0.compact - Whether to render in compact mode.
+ * @param root0.unreadIndicatorPlacement - Position of the unread indicator dot.
+ */
 export const NotificationCard: React.FC<NotificationCardProps> = ({
   notification,
   onClick,

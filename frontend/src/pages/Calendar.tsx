@@ -68,7 +68,11 @@ const getCalendarWindow = (
   };
 };
 
-const CalendarPage = () => {
+interface CalendarPageProps {
+  showNavbar?: boolean;
+}
+
+const CalendarPage = ({ showNavbar = true }: CalendarPageProps) => {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -361,7 +365,7 @@ const CalendarPage = () => {
         style={{ height: "100%" }}
       />
     </div>*/
-    <AppLayout>
+    <AppLayout showNavbar={showNavbar}>
       <div className="flex h-full flex-col overflow-hidden bg-white text-black">
         <header className="flex-none p-6 border-b border-gray-200 bg-white shadow-sm z-10">
           <div className="flex flex-col md:flex-row justify-between items-center gap-4">

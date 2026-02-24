@@ -1,3 +1,4 @@
+import { NotificationProvider } from "@/context/NotificationContext"
 import { it, describe, expect, vi, beforeEach, afterEach } from 'vitest'
 import { render, screen, fireEvent, waitFor, cleanup } from '@testing-library/react'
 import EventList from "@/pages/EventList"
@@ -83,9 +84,9 @@ describe('EventList', () => {
 
   it('renders events correctly', async () => {
     render(
-      <MemoryRouter>
+      <MemoryRouter><NotificationProvider>
         <EventList />
-      </MemoryRouter>
+      </NotificationProvider></MemoryRouter>
     )
 
     await waitFor(() => expect(screen.getByText('Today Event')).toBeDefined())
@@ -96,9 +97,9 @@ describe('EventList', () => {
 
   it('toggles past events', async () => {
     render(
-      <MemoryRouter>
+      <MemoryRouter><NotificationProvider>
         <EventList />
-      </MemoryRouter>
+      </NotificationProvider></MemoryRouter>
     )
 
     const toggleButton = await screen.findByRole('button', { name: /Past Events/i })
@@ -112,9 +113,9 @@ describe('EventList', () => {
 
   it('opens sidebar for new event', () => {
     render(
-      <MemoryRouter>
+      <MemoryRouter><NotificationProvider>
         <EventList />
-      </MemoryRouter>
+      </NotificationProvider></MemoryRouter>
     )
 
     const newEventButton = screen.getAllByText(/New Event/i)[0]
@@ -125,9 +126,9 @@ describe('EventList', () => {
 
   it('opens sidebar for editing event', async () => {
     render(
-      <MemoryRouter>
+      <MemoryRouter><NotificationProvider>
         <EventList />
-      </MemoryRouter>
+      </NotificationProvider></MemoryRouter>
     )
 
     const eventItem = await screen.findByText('Today Event')
@@ -141,9 +142,9 @@ describe('EventList', () => {
     vi.mocked(eventService.createEvent).mockResolvedValue({ id: 4, title: 'New Event', start_time: '', end_time: '', reminders: [], categories: [] })
     
     render(
-      <MemoryRouter>
+      <MemoryRouter><NotificationProvider>
         <EventList />
-      </MemoryRouter>
+      </NotificationProvider></MemoryRouter>
     )
 
     fireEvent.click(screen.getAllByText(/New Event/i)[0])
@@ -157,9 +158,9 @@ describe('EventList', () => {
     vi.mocked(eventService.updateEvent).mockResolvedValue({ id: 2, title: 'Updated Event', start_time: '', end_time: '', reminders: [], categories: [] })
     
     render(
-      <MemoryRouter>
+      <MemoryRouter><NotificationProvider>
         <EventList />
-      </MemoryRouter>
+      </NotificationProvider></MemoryRouter>
     )
 
     const eventItem = await screen.findByText('Today Event')
@@ -173,9 +174,9 @@ describe('EventList', () => {
     vi.mocked(eventService.deleteEvent).mockResolvedValue(undefined)
     
     render(
-      <MemoryRouter>
+      <MemoryRouter><NotificationProvider>
         <EventList />
-      </MemoryRouter>
+      </NotificationProvider></MemoryRouter>
     )
 
     const eventItem = await screen.findByText('Today Event')
@@ -190,9 +191,9 @@ describe('EventList', () => {
     vi.mocked(eventService.getEvents).mockRejectedValue(new Error('Fetch failed'))
     
     render(
-      <MemoryRouter>
+      <MemoryRouter><NotificationProvider>
         <EventList />
-      </MemoryRouter>
+      </NotificationProvider></MemoryRouter>
     )
 
     await waitFor(() => expect(consoleSpy).toHaveBeenCalled())
@@ -204,9 +205,9 @@ describe('EventList', () => {
     vi.mocked(eventService.createEvent).mockRejectedValue(new Error('Submit failed'))
     
     render(
-      <MemoryRouter>
+      <MemoryRouter><NotificationProvider>
         <EventList />
-      </MemoryRouter>
+      </NotificationProvider></MemoryRouter>
     )
 
     fireEvent.click(screen.getAllByText(/New Event/i)[0])
@@ -221,9 +222,9 @@ describe('EventList', () => {
     vi.mocked(eventService.deleteEvent).mockRejectedValue(new Error('Delete failed'))
     
     render(
-      <MemoryRouter>
+      <MemoryRouter><NotificationProvider>
         <EventList />
-      </MemoryRouter>
+      </NotificationProvider></MemoryRouter>
     )
 
     const eventItem = await screen.findByText('Today Event')
@@ -238,9 +239,9 @@ describe('EventList', () => {
     vi.mocked(eventService.getEvents).mockResolvedValue([])
     
     render(
-      <MemoryRouter>
+      <MemoryRouter><NotificationProvider>
         <EventList />
-      </MemoryRouter>
+      </NotificationProvider></MemoryRouter>
     )
 
     await waitFor(() => expect(screen.getByText('No events scheduled for today.')).toBeDefined())
@@ -263,9 +264,9 @@ describe('EventList Sorting', () => {
 
   it('sorts by start_time (Date) - default behavior', async () => {
     render(
-      <MemoryRouter>
+      <MemoryRouter><NotificationProvider>
         <EventList />
-      </MemoryRouter>
+      </NotificationProvider></MemoryRouter>
     )
 
     await waitFor(() => expect(screen.getByText('Today Event')).toBeDefined())
@@ -280,9 +281,9 @@ describe('EventList Sorting', () => {
 
   it('sorts by title', async () => {
     render(
-      <MemoryRouter>
+      <MemoryRouter><NotificationProvider>
         <EventList />
-      </MemoryRouter>
+      </NotificationProvider></MemoryRouter>
     )
 
     await waitFor(() => expect(screen.getByText('Today Event')).toBeDefined())
@@ -323,9 +324,9 @@ describe('EventList Filtering Additional', () => {
     vi.mocked(eventService.getEvents).mockResolvedValue(eventsWithCategory)
 
     render(
-      <MemoryRouter>
+      <MemoryRouter><NotificationProvider>
         <EventList />
-      </MemoryRouter>
+      </NotificationProvider></MemoryRouter>
     )
 
     await waitFor(() => expect(screen.getByText('Work Event')).toBeDefined())
@@ -343,9 +344,9 @@ describe('EventList Filtering Additional', () => {
     vi.mocked(eventService.getEvents).mockResolvedValue(mockEvents)
     
     render(
-      <MemoryRouter>
+      <MemoryRouter><NotificationProvider>
         <EventList />
-      </MemoryRouter>
+      </NotificationProvider></MemoryRouter>
     )
 
     await waitFor(() => expect(screen.getByText('Today Event')).toBeDefined())
@@ -385,9 +386,9 @@ describe('EventList Filtering Additional', () => {
     vi.mocked(eventService.getEvents).mockResolvedValue([recurringEvent, nonRecurringEvent])
 
     render(
-      <MemoryRouter>
+      <MemoryRouter><NotificationProvider>
         <EventList />
-      </MemoryRouter>
+      </NotificationProvider></MemoryRouter>
     )
 
     await waitFor(() => expect(screen.getAllByText('Recurring Event').length).toBeGreaterThan(0))
@@ -423,9 +424,9 @@ describe('EventList Tomorrow Label', () => {
     vi.mocked(taskService.getCategories).mockResolvedValue([])
 
     render(
-      <MemoryRouter>
+      <MemoryRouter><NotificationProvider>
         <EventList />
-      </MemoryRouter>
+      </NotificationProvider></MemoryRouter>
     )
 
     await waitFor(() => expect(screen.getByText('Tomorrow Event Test')).toBeDefined())
@@ -457,9 +458,9 @@ describe('EventList Recurring Events', () => {
     vi.mocked(eventService.getEvents).mockResolvedValue([dailyEvent])
 
     render(
-      <MemoryRouter>
+      <MemoryRouter><NotificationProvider>
         <EventList />
-      </MemoryRouter>
+      </NotificationProvider></MemoryRouter>
     )
 
     await waitFor(() => expect(screen.getAllByText('Daily Standup').length).toBeGreaterThan(0))
@@ -481,9 +482,9 @@ describe('EventList Recurring Events', () => {
     vi.mocked(eventService.getEvents).mockResolvedValue([weeklyEvent])
 
     render(
-      <MemoryRouter>
+      <MemoryRouter><NotificationProvider>
         <EventList />
-      </MemoryRouter>
+      </NotificationProvider></MemoryRouter>
     )
 
     await waitFor(() => expect(screen.getAllByText('Weekly Meeting').length).toBeGreaterThan(0))
@@ -505,9 +506,9 @@ describe('EventList Recurring Events', () => {
     vi.mocked(eventService.getEvents).mockResolvedValue([monthlyEvent])
 
     render(
-      <MemoryRouter>
+      <MemoryRouter><NotificationProvider>
         <EventList />
-      </MemoryRouter>
+      </NotificationProvider></MemoryRouter>
     )
 
     await waitFor(() => expect(screen.getByText('Monthly Review')).toBeDefined())
@@ -529,9 +530,9 @@ describe('EventList Recurring Events', () => {
     vi.mocked(eventService.getEvents).mockResolvedValue([yearlyEvent])
 
     render(
-      <MemoryRouter>
+      <MemoryRouter><NotificationProvider>
         <EventList />
-      </MemoryRouter>
+      </NotificationProvider></MemoryRouter>
     )
 
     await waitFor(() => expect(screen.getByText('Annual Event')).toBeDefined())
@@ -553,9 +554,9 @@ describe('EventList Recurring Events', () => {
     vi.mocked(eventService.getEvents).mockResolvedValue([invalidEvent])
 
     render(
-      <MemoryRouter>
+      <MemoryRouter><NotificationProvider>
         <EventList />
-      </MemoryRouter>
+      </NotificationProvider></MemoryRouter>
     )
 
     await waitFor(() => expect(screen.getByText('My Events')).toBeDefined())
@@ -573,9 +574,9 @@ describe('EventList Sidebar Close', () => {
 
   it('closes sidebar when close button is clicked', async () => {
     render(
-      <MemoryRouter>
+      <MemoryRouter><NotificationProvider>
         <EventList />
-      </MemoryRouter>
+      </NotificationProvider></MemoryRouter>
     )
 
     await waitFor(() => expect(screen.getByText('Today Event')).toBeDefined())
@@ -591,9 +592,9 @@ describe('EventList Sidebar Close', () => {
 
   it('opens sidebar via Add New Event button at bottom', async () => {
     render(
-      <MemoryRouter>
+      <MemoryRouter><NotificationProvider>
         <EventList />
-      </MemoryRouter>
+      </NotificationProvider></MemoryRouter>
     )
 
     await waitFor(() => expect(screen.getByText('Today Event')).toBeDefined())
@@ -613,9 +614,9 @@ describe('EventList FetchCategories Error', () => {
     vi.mocked(taskService.getCategories).mockRejectedValue(new Error('Categories fetch failed'))
 
     render(
-      <MemoryRouter>
+      <MemoryRouter><NotificationProvider>
         <EventList />
-      </MemoryRouter>
+      </NotificationProvider></MemoryRouter>
     )
 
     await waitFor(() => expect(consoleSpy).toHaveBeenCalled())
