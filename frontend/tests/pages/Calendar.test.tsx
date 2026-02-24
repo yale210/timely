@@ -7,6 +7,7 @@ import moment from "moment";
 import CalendarPage from "@/pages/Calendar";
 import * as taskService from "@/services/taskService";
 import * as eventService from "@/services/eventService";
+import * as schedulerService from "@/services/schedulerService";
 import type { Task, Event, Category, TaskSubmission, EventSubmission } from "@/types";
 
 // ----------------------
@@ -14,6 +15,7 @@ import type { Task, Event, Category, TaskSubmission, EventSubmission } from "@/t
 // ----------------------
 vi.mock("@/services/taskService");
 vi.mock("@/services/eventService");
+vi.mock("@/services/schedulerService");
 
 // Mock react-big-calendar so we don't depend on rbc DOM internals.
 // We provide 2 buttons:
@@ -444,19 +446,16 @@ describe("CalendarPage (lean tests)", () => {
   });
 
   it("handles scheduling and unscheduling tasks", async () => {
-    // Correct path relative to this test file
-    const schedulerService = await import("../../src/services/schedulerService");
-    const scheduleTasksMock = vi.spyOn(schedulerService, "scheduleTasks").mockResolvedValue({
-      start_date: "2026-01-01",
-      results: [{ task_id: 1, success: true, scheduled_start: "s", scheduled_end: "e", reason: null }],
+    vi.mocked(schedulerService.scheduleTasks).mockResolvedValue({
+      start_date: "2026-02-24",
       scheduled_count: 1,
-      failed_count: 0
+      failed_count: 0,
+      results: [],
     });
-    vi.mocked(eventService.getEvents).mockResolvedValue([] as Event[]);
-
-    const unscheduleTasksMock = vi.spyOn(schedulerService, "unscheduleTasks").mockResolvedValue({
+    vi.mocked(schedulerService.unscheduleTasks).mockResolvedValue({
       unscheduled_count: 1,
     });
+    vi.mocked(eventService.getEvents).mockResolvedValue([] as Event[]);
 
     render(
       <MemoryRouter>
@@ -468,11 +467,11 @@ describe("CalendarPage (lean tests)", () => {
 
     const scheduleBtn = screen.getByRole("button", { name: /auto_awesome\s*Schedule Tasks/i });
     fireEvent.click(scheduleBtn);
-    await waitFor(() => expect(scheduleTasksMock).toHaveBeenCalled());
+    await waitFor(() => expect(vi.mocked(schedulerService.scheduleTasks)).toHaveBeenCalled());
 
     const unscheduleBtn = screen.getByRole("button", { name: /event_busy\s*Unschedule Tasks/i });
     fireEvent.click(unscheduleBtn);
-    await waitFor(() => expect(unscheduleTasksMock).toHaveBeenCalled());
+    await waitFor(() => expect(vi.mocked(schedulerService.unscheduleTasks)).toHaveBeenCalled());
   });
 
   it("handles selecting an event from the calendar (event kind)", async () => {
