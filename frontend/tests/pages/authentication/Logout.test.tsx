@@ -39,7 +39,7 @@ describe("Logout Component", () => {
     })
   })
 
-  it("displays error message if logout fails", async () => {
+  it("redirects to login even if logout fails", async () => {
     vi.spyOn(authService, "logout").mockRejectedValue(new Error("Server down"))
     
     render(
