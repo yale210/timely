@@ -28,16 +28,16 @@ class MockWebSocket {
     }
 }
 
-vi.stubGlobal('WebSocket', MockWebSocket);
-
 describe('useWebSocket with unmock', () => {
     beforeEach(() => {
+        vi.stubGlobal('WebSocket', MockWebSocket);
         vi.useFakeTimers();
         MockWebSocket.instances = [];
     });
 
     afterEach(() => {
         vi.useRealTimers();
+        vi.unstubAllGlobals();
     });
 
     it('should create a websocket and update status fully', () => {

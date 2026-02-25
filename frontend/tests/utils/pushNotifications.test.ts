@@ -28,7 +28,7 @@ describe('pushNotifications utility', () => {
     describe('subscribeUserToPush', () => {
         it('should throw error if push is not supported', async () => {
             vi.stubGlobal('navigator', {});
-            await expect(subscribeUserToPush()).rejects.toThrow('Push notifications are not supported');
+            await expect(subscribeUserToPush()).rejects.toThrow(/Push notifications are not supported/);
             vi.unstubAllGlobals();
         });
 
@@ -37,7 +37,7 @@ describe('pushNotifications utility', () => {
             vi.stubGlobal('window', { PushManager: {} });
             vi.mocked(notificationsApi.getVapidPublicKey).mockResolvedValueOnce({ public_key: '' });
 
-            await expect(subscribeUserToPush()).rejects.toThrow('Server did not return a VAPID public key');
+            await expect(subscribeUserToPush()).rejects.toThrow(/Server did not return a VAPID public key/);
             vi.unstubAllGlobals();
         });
 
@@ -109,7 +109,7 @@ describe('pushNotifications utility', () => {
 
             vi.mocked(notificationsApi.getVapidPublicKey).mockResolvedValueOnce({ public_key: 'mock-public-key' });
 
-            await expect(subscribeUserToPush()).rejects.toThrow('Browser returned an incomplete push subscription');
+            await expect(subscribeUserToPush()).rejects.toThrow(/Browser returned an incomplete push subscription/);
             
             vi.unstubAllGlobals();
         });

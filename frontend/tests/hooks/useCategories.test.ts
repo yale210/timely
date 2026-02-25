@@ -4,15 +4,16 @@ import useCategories from '../../src/hooks/useCategories';
 
 describe('useCategories hook', () => {
     const mockFetch = vi.fn();
-    vi.stubGlobal('fetch', mockFetch);
 
     beforeEach(() => {
+        vi.stubGlobal('fetch', mockFetch);
         mockFetch.mockReset();
         vi.spyOn(console, "error").mockImplementation(() => { /* skip */ });
     });
 
     afterEach(() => {
         vi.restoreAllMocks();
+        vi.unstubAllGlobals();
     });
 
     it("should load categories successfully", async () => {
