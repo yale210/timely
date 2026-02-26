@@ -34,9 +34,28 @@ export const useWebSocket = (url: string | null, onMessage: (data: unknown) => v
       return;
     }
 
-    const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
-    const host = window.location.host;
-    const fullUrl = `${protocol}//${host}${url}`;
+      const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
+      const host = window.location.host;
+
+      // Construct the websocket URL intelligently:
+      // - If caller passed an absolute URL (has a scheme like ws://, wss://, http://, https://), use it as-is.
+      // - If it's protocol-relative (//example.com/path), prefix the ws/wss scheme.
+      // - If it's an absolute path (/path), prefix with the current origin and ws/wss scheme.
+      // - Otherwise treat as a relative path and prefix with origin + leading '/'.
+      let fullUrl: string;
+      if (/^[a-zA-Z][a-zA-Z0-9+.-]*:\/\//.test(url)) {
+        // absolute URL with scheme
+        fullUrl = url;
+      } else if (url.startsWith('//')) {
+        // protocol-relative (//host/path)
+        fullUrl = `${protocol}${url}`;
+      } else if (url.startsWith('/')) {
+        // path-absolute
+        fullUrl = `${protocol}//${host}${url}`;
+      } else {
+        // relative path without leading slash
+        fullUrl = `${protocol}//${host}/${url}`;
+      }
 
     try {
       setStatus(ConnectionStatusValues.CONNECTING);
