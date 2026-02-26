@@ -27,7 +27,8 @@ export const useWebSocket = (url: string | null, onMessage: (data: unknown) => v
   const socketRef = useRef<WebSocket | null>(null);
   const reconnectTimeoutRef = useRef<number | null>(null);
   const reconnectAttemptsRef = useRef(0);
-  const connectRef = useRef<() => void>(undefined);
+  // store the connect function; nullable so it can be safely initialized
+  const connectRef = useRef<(() => void) | null>(null);
 
   const connect = useCallback(() => {
     if (!url) {

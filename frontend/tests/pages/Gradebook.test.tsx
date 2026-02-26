@@ -1,5 +1,6 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { render, screen, waitFor, fireEvent } from "@testing-library/react";
+import type React from "react";
 import Gradebook from "@/pages/Gradebook";
 import { BrowserRouter } from "react-router-dom";
 import useCategories from "@/hooks/useCategories";
@@ -75,8 +76,8 @@ describe("Gradebook Page", () => {
       loading: false,
     });
 
-    // Mock global fetch
-    global.fetch = vi.fn().mockImplementation((url) => {
+    // Mock global fetch using vitest global stub so it can be restored
+    vi.stubGlobal('fetch', vi.fn().mockImplementation((url: string) => {
       if (url === "/api/grades/") {
         return Promise.resolve({
           ok: true,
@@ -84,7 +85,13 @@ describe("Gradebook Page", () => {
         } as Response);
       }
       return Promise.resolve({ ok: true } as Response);
-    });
+    }));
+  });
+
+  afterEach(() => {
+    // Restore any global stubs to avoid leaking into other tests
+    vi.unstubAllGlobals();
+    vi.clearAllMocks();
   });
 
   it("renders the gradebook and fetches data", async () => {

@@ -270,8 +270,9 @@ describe("Notifications Page", () => {
   it("handles push subscription interactions", () => {
     const mockSubscribe = vi.fn().mockResolvedValue(undefined);
     const mockUnsubscribe = vi.fn().mockResolvedValue(undefined);
-    
-        vi.mocked(usePushSubscription).mockReturnValue({
+    vi.mocked(useNotificationContext).mockReturnValue({ ...defaultContextValue });
+
+    vi.mocked(usePushSubscription).mockReturnValue({
             isSupported: true,
             isSubscribed: false,
             permission: "default",

@@ -1,5 +1,6 @@
 ﻿import { render, screen, fireEvent } from "@testing-library/react";
 import { vi, describe, it, expect, beforeEach } from "vitest";
+import type React from "react";
 import EventSidebar from "../../src/components/EventSidebar";
 import type { Category, Event } from "../../src/types";
 

@@ -1,4 +1,4 @@
-﻿import { describe, it, expect, vi, beforeEach } from "vitest";
+﻿import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import CreateGradeModal from "@/components/CreateGradeModal";
 import useCategories from "@/hooks/useCategories";
@@ -31,17 +31,23 @@ describe("CreateGradeModal Component", () => {
       loading: false,
     });
     
-    // Mock global fetch
-    fetchSpy = vi.spyOn(global, "fetch").mockResolvedValue({
+    // Mock global fetch using a spy and stub it globally so tests can assert calls
+    fetchSpy = vi.fn().mockResolvedValue({
       ok: true,
       json: () => Promise.resolve({}),
     } as Response);
+    vi.stubGlobal('fetch', fetchSpy as unknown as typeof fetch);
 
     // Mock document.cookie for CSRF
     Object.defineProperty(document, 'cookie', {
       writable: true,
       value: 'csrftoken=testtoken',
     });
+  });
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
+    vi.clearAllMocks();
   });
 
   it("does not render when closed", () => {

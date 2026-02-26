@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, waitFor } from "@testing-library/react";
 import Dashboard from "@/pages/Dashboard";
+import type React from "react";
 import * as taskService from "@/services/taskService";
 import { BrowserRouter } from "react-router-dom";
 import moment from "moment";
