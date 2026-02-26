@@ -5,7 +5,6 @@ from django.db import migrations
 
 class Migration(migrations.Migration):
     dependencies = [
-        ("core", "0014_drop_event_importance_column"),
         ("core", "0011_remove_eventreminder_type_eventreminder_send_email_and_more"),
     ]
 
