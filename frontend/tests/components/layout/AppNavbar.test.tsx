@@ -92,7 +92,9 @@ describe("AppNavbar Component", () => {
   });
 
   it("displays admin links only when user is staff", () => {
-    render(
+    // Render once, then update the mocked user and rerender to avoid leaving
+    // multiple Navbar instances mounted in the DOM which can make queries flaky.
+    const { rerender, unmount } = render(
       <BrowserRouter>
           <AppNavbar />
       </BrowserRouter>
@@ -101,14 +103,18 @@ describe("AppNavbar Component", () => {
     fireEvent.click(screen.getByRole("button", { name: /Open navigation/i }));
     expect(screen.queryByText("Admin notifications")).not.toBeInTheDocument();
 
+    // Change the user to a staff user and rerender the same tree
     vi.spyOn(authStore, "getUser").mockReturnValue({ id: 1, is_staff: true } as User);
-    render(
+    rerender(
       <BrowserRouter>
           <AppNavbar />
       </BrowserRouter>
     );
 
     expect(screen.getByText("Admin notifications")).toBeInTheDocument();
+
+    // cleanup to be explicit in tests that modify global mocks/state
+    unmount();
   });
 
   it("navigates and closes drawer when a link is clicked", () => {
