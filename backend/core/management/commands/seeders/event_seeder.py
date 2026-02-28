@@ -4,7 +4,7 @@ import random
 import datetime
 from datetime import timedelta
 from core.models import Event, Category
-
+from django.utils import timezone
 from .fixtures.event_fixtures import events
 from django.contrib.auth import get_user_model
 from core.management.commands.seeders.base import BaseSeeder
@@ -68,7 +68,7 @@ class EventSeeder(BaseSeeder):
         recurring = random.randint(0, 1) == 1
 
         if recurring:
-            start = self.faker.date_object()
+            start = timezone.make_aware(self.faker.date_time())
             self._create_event(
                 {
                     "fields": {
@@ -77,18 +77,20 @@ class EventSeeder(BaseSeeder):
                         "title": self.faker.sentence(),
                         "description": self.faker.sentence(),
                         "location": self.faker.word(),
-                        "recurring": True,
                         "start_time": start,
+
                         "end_time": start + timedelta(random.randint(0, 100)),
                         "recurrence_interval": random.choice(
                             ["daily", "weekly", "monthly", "yearly"]
                         ),
-                        "recurrence_end": start + timedelta(random.randint(0, 100)),
+                        "recurrence_end": start + timedelta(random.randint(0, 100)).date(),
                     }
                 }
             )
         else:
-            start = self.faker.date_object()
+            start = timezone.make_aware(self.faker.date_time())
+            end = start + timedelta(random.randint(0, 60))
+
             self._create_event(
                 {
                     "fields": {
@@ -97,9 +99,9 @@ class EventSeeder(BaseSeeder):
                         "title": self.faker.sentence(),
                         "description": self.faker.sentence(),
                         "location": self.faker.word(),
-                        "recurring": True,
+                        
                         "start_time": start,
-                        "end_time": start + timedelta(random.randint(0, 100)),
+                        "end_time": end,
                         "recurrence_interval": None,
                         "recurrence_end": None,
                     }
