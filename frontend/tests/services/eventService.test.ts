@@ -74,4 +74,12 @@ describe("eventService", () => {
     await eventService.deleteEvent(1)
     expect(spy).toHaveBeenCalledWith("/api/events/1/")
   })
+
+  it("getServerTime should call axios.get and return server time", async () => {
+    const payload = { server_time: new Date().toISOString() }
+    const spy = vi.spyOn(axios, "get").mockResolvedValue({ data: payload })
+    const result = await eventService.getServerTime()
+    expect(spy).toHaveBeenCalledWith("/api/events/server_time/")
+    expect(result).toEqual(payload)
+  })
 })

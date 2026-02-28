@@ -1,5 +1,51 @@
 import { useState, useEffect, type FormEvent } from "react";
-import { type Category, type Event, type EventSubmission, type EventReminder } from "../types";
+import { type Category, type Event, type EventSubmission } from "../types";
+import { usePushSubscription } from "../hooks/usePushSubscription";
+import { getServerTime } from "../services/eventService";
+
+type TimeUnit = "minutes" | "hours" | "days" | "weeks" | "months" | "years";
+
+interface ReminderFormState {
+  send_email: boolean;
+  send_push: boolean;
+  value: number;
+  unit: TimeUnit;
+}
+
+const UNIT_TO_MINUTES: Record<TimeUnit, number> = {
+  minutes: 1,
+  hours: 60,
+  days: 1_440,
+  weeks: 10_080,
+  months: 43_200,
+  years: 525_600,
+};
+
+const UNIT_LABELS: { value: TimeUnit; label: string }[] = [
+  { value: "minutes", label: "minutes" },
+  { value: "hours", label: "hours" },
+  { value: "days", label: "days" },
+  { value: "weeks", label: "weeks" },
+  { value: "months", label: "months" },
+  { value: "years", label: "years" },
+];
+const CLOCK_SKEW_WARNING_THRESHOLD_MS = 5 * 60 * 1_000;
+const INITIAL_VALIDATION_NOW_MS = Date.now();
+const getCurrentTimestamp = (): number => Date.now();
+
+const toMinutesBefore = (val: number, unit: TimeUnit): number =>
+  val * UNIT_TO_MINUTES[unit];
+
+const fromMinutesBefore = (minutes: number): { value: number; unit: TimeUnit } => {
+  const units: TimeUnit[] = ["years", "months", "weeks", "days", "hours", "minutes"];
+  for (const unit of units) {
+    const factor = UNIT_TO_MINUTES[unit];
+    if (minutes >= factor && minutes % factor === 0) {
+      return { value: minutes / factor, unit };
+    }
+  }
+  return { value: minutes, unit: "minutes" };
+};
 
 interface EventFormProps {
   initialData?: Event;
@@ -26,6 +72,8 @@ const EventForm = ({
   onCancel,
   onDataChange,
 }: EventFormProps) => {
+  const { isSubscribed, permission, subscribe, loading: pushLoading } = usePushSubscription();
+
   const [title, setTitle] = useState(initialData?.title ?? "");
   const [description, setDescription] = useState(initialData?.description ?? "");
   const [location, setLocation] = useState(initialData?.location ?? "");
@@ -82,9 +130,51 @@ const EventForm = ({
     initialData?.recurrence_end ?? ""
   );
 
-  const [reminders, setReminders] = useState<Omit<EventReminder, "id">[]>(
-    initialData?.reminders?.map(({ type, minutes_before }) => ({ type, minutes_before })) ?? []
+  const [reminders, setReminders] = useState<ReminderFormState[]>(
+    initialData?.reminders?.map(({ send_email, send_push, minutes_before }) => {
+      const { value, unit } = fromMinutesBefore(minutes_before);
+      return { send_email, send_push, value, unit };
+    }) ?? []
   );
+  const [validationNowMs, setValidationNowMs] = useState<number>(
+    INITIAL_VALIDATION_NOW_MS,
+  );
+  const [serverTimeOffsetMs, setServerTimeOffsetMs] = useState<number | null>(null);
+  const [clockSkewWarning, setClockSkewWarning] = useState<string | null>(null);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    const syncServerTime = async () => {
+      try {
+        const { server_time: serverTime } = await getServerTime();
+        const offsetMs = new Date(serverTime).getTime() - getCurrentTimestamp();
+        if (!isMounted) {
+          return;
+        }
+        setServerTimeOffsetMs(offsetMs);
+        setValidationNowMs(getCurrentTimestamp());
+        if (Math.abs(offsetMs) >= CLOCK_SKEW_WARNING_THRESHOLD_MS) {
+          setClockSkewWarning(
+            "Your device clock appears out of sync with the server. Reminder validation uses server time.",
+          );
+          return;
+        }
+        setClockSkewWarning(null);
+      } catch (err) {
+        console.error("Failed to sync server time for reminder validation", err);
+        if (isMounted) {
+          setValidationNowMs(getCurrentTimestamp());
+        }
+      }
+    };
+
+    void syncServerTime();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   // Derived Validation
   const startDateTime = new Date(`${startDate}T${startTime}`);
@@ -94,13 +184,29 @@ const EventForm = ({
   
   const MAX_REMINDERS = 5;
   const canAddReminder = reminders.length < MAX_REMINDERS;
-  
+
+  const pastReminderIndices = new Set<number>();
+  const now = new Date(validationNowMs + (serverTimeOffsetMs ?? 0));
+  reminders.forEach((reminder, index) => {
+    const minutesBefore = toMinutesBefore(reminder.value, reminder.unit);
+    const triggerAt = new Date(startDateTime.getTime() - minutesBefore * 60_000);
+    if (triggerAt <= now) {
+      pastReminderIndices.add(index);
+    }
+  });
+
   const errors: Record<string, boolean> = {};
   if (isTimeInvalid) {
     errors.time = true;
   }
+  if (pastReminderIndices.size > 0) {
+    errors.reminders = true;
+  }
   
   const hasErrors = Object.keys(errors).length > 0;
+  const refreshValidationNow = () => {
+    setValidationNowMs(getCurrentTimestamp());
+  };
 
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
@@ -115,7 +221,11 @@ const EventForm = ({
       categories: selectedCategories,
       recurrence_interval: (recurrenceInterval as Event["recurrence_interval"]) ?? null,
       recurrence_end: recurrenceEnd || null,
-      reminders,
+      reminders: reminders.map((r) => ({
+        send_email: r.send_email,
+        send_push: r.send_push,
+        minutes_before: toMinutesBefore(r.value, r.unit),
+      })),
     };
     onSubmit(data);
   };
@@ -128,21 +238,36 @@ const EventForm = ({
 
   const addReminder = () => {
     if (canAddReminder) {
-      setReminders([...reminders, { type: "popup", minutes_before: 15 }]);
+      refreshValidationNow();
+      setReminders([...reminders, { send_email: false, send_push: true, value: 15, unit: "minutes" }]);
     }
   };
 
   const removeReminder = (index: number) => {
+    refreshValidationNow();
     setReminders(reminders.filter((_, i) => i !== index));
   };
 
-  const updateReminder = <K extends keyof Omit<EventReminder, "id">>(
+  const updateReminder = <K extends keyof ReminderFormState>(
     index: number,
     field: K,
-    value: Omit<EventReminder, "id">[K]
+    value: ReminderFormState[K]
   ) => {
     const newReminders = [...reminders];
     newReminders[index] = { ...newReminders[index], [field]: value };
+    refreshValidationNow();
+    setReminders(newReminders);
+  };
+
+  const toggleReminderChannel = (
+    index: number,
+    field: "send_email" | "send_push",
+    value: boolean
+  ) => {
+    const newReminders = [...reminders];
+    newReminders[index] = { ...newReminders[index], [field]: value };
+
+    refreshValidationNow();
     setReminders(newReminders);
   };
 
@@ -152,6 +277,12 @@ const EventForm = ({
   return (
     <form onSubmit={handleSubmit} className="flex flex-col h-full bg-white text-black">
       <div className="flex-grow overflow-y-auto p-6 space-y-6">
+        {clockSkewWarning && (
+          <div className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800">
+            {clockSkewWarning}
+          </div>
+        )}
+
         <div>
           <label htmlFor="event-title" className="block text-sm font-medium text-gray-700 mb-2">
             Title
@@ -191,7 +322,10 @@ const EventForm = ({
               className={`${baseInputClass} ${errors.time ? errorClass : ""}`}
               type="date"
               value={startDate}
-              onChange={(e) => setStartDate(e.target.value)}
+              onChange={(e) => {
+                refreshValidationNow();
+                setStartDate(e.target.value);
+              }}
               required
             />
           </div>
@@ -204,7 +338,10 @@ const EventForm = ({
               className={`${baseInputClass} ${errors.time ? errorClass : ""}`}
               type="time"
               value={startTime}
-              onChange={(e) => setStartTime(e.target.value)}
+              onChange={(e) => {
+                refreshValidationNow();
+                setStartTime(e.target.value);
+              }}
               required
             />
           </div>
@@ -356,7 +493,7 @@ const EventForm = ({
         </div>
 
         <div className="border-t pt-4">
-          <div className="flex justify-between items-center mb-4">
+          <div className="flex justify-between items-center mb-1">
             <h3 className="text-sm font-semibold text-gray-900">Reminders ({reminders.length}/{MAX_REMINDERS})</h3>
             <button
               type="button"
@@ -367,32 +504,79 @@ const EventForm = ({
               <span className="material-icons text-sm">add</span> Add Reminder
             </button>
           </div>
+          <p className="text-xs text-gray-500 mb-4">
+            In-app notifications are always sent. Select additional channels below:
+          </p>
           <div className="space-y-3">
             {reminders.map((reminder, index) => (
-              <div key={index} className="flex items-center gap-2 bg-gray-50 p-2 rounded-lg border border-gray-200">
-                <select
-                  className="text-sm border-gray-300 rounded-md focus:ring-orange-500 focus:border-orange-500"
-                  value={reminder.type}
-                  onChange={(e) => updateReminder(index, "type", e.target.value as "email" | "popup")}
-                >
-                  <option value="popup">Popup</option>
-                  <option value="email">Email</option>
-                </select>
-                <input
-                  type="number"
-                  className="w-20 text-sm border-gray-300 rounded-md focus:ring-orange-500 focus:border-orange-500"
-                  value={reminder.minutes_before}
-                  onChange={(e) => updateReminder(index, "minutes_before", parseInt(e.target.value))}
-                  min="1"
-                />
-                <span className="text-xs text-gray-500">mins before</span>
-                <button
-                  type="button"
-                  onClick={() => removeReminder(index)}
-                  className="ml-auto text-gray-400 hover:text-red-500"
-                >
-                  <span className="material-icons text-sm">delete</span>
-                </button>
+              <div key={index} className={`flex flex-col gap-2 bg-gray-50 p-3 rounded-lg border ${pastReminderIndices.has(index) ? "border-red-400 bg-red-50" : "border-gray-200"}`}>
+                <div className="flex flex-wrap items-center gap-3">
+                  <span className="text-xs font-semibold text-gray-600">Reminder type</span>
+                  <label className={`inline-flex items-center gap-2 text-xs ${isSubscribed ? "text-gray-600" : "text-gray-400"}`}>
+                    <input
+                      type="checkbox"
+                      checked={reminder.send_push}
+                      disabled={!isSubscribed}
+                      onChange={(e) => {
+                        if (isSubscribed) {
+                          toggleReminderChannel(index, "send_push", e.target.checked);
+                        }
+                      }}
+                      className="h-4 w-4 rounded border-gray-300 text-orange-500 focus:ring-orange-500 disabled:opacity-50"
+                    />
+                    Popup
+                    {!isSubscribed && (
+                      <button
+                        type="button"
+                        disabled={pushLoading || permission === "denied"}
+                        onClick={() => void subscribe()}
+                        className="text-[10px] text-indigo-600 hover:text-indigo-800 underline disabled:opacity-50 disabled:no-underline"
+                      >
+                        {permission === "denied" ? "(blocked)" : pushLoading ? "..." : "(enable)"}
+                      </button>
+                    )}
+                  </label>
+                  <label className="inline-flex items-center gap-2 text-xs text-gray-600">
+                    <input
+                      type="checkbox"
+                      checked={reminder.send_email}
+                      onChange={(e) => toggleReminderChannel(index, "send_email", e.target.checked)}
+                      className="h-4 w-4 rounded border-gray-300 text-orange-500 focus:ring-orange-500"
+                    />
+                    Email
+                  </label>
+                </div>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="number"
+                    className="w-20 text-sm border-gray-300 rounded-md focus:ring-orange-500 focus:border-orange-500"
+                    value={reminder.value}
+                    onChange={(e) => updateReminder(index, "value", parseInt(e.target.value) || 1)}
+                    min="1"
+                  />
+                  <select
+                    className="text-sm border-gray-300 rounded-md focus:ring-orange-500 focus:border-orange-500"
+                    value={reminder.unit}
+                    onChange={(e) => updateReminder(index, "unit", e.target.value as TimeUnit)}
+                  >
+                    {UNIT_LABELS.map((opt) => (
+                      <option key={opt.value} value={opt.value}>{opt.label}</option>
+                    ))}
+                  </select>
+                  <span className="text-xs text-gray-500">before</span>
+                  <button
+                    type="button"
+                    onClick={() => removeReminder(index)}
+                    className="ml-auto text-gray-400 hover:text-red-500"
+                  >
+                    <span className="material-icons text-sm">delete</span>
+                  </button>
+                </div>
+                {pastReminderIndices.has(index) && (
+                  <p className="text-xs text-red-500">
+                    This reminder would trigger in the past.
+                  </p>
+                )}
               </div>
             ))}
             {reminders.length === 0 && (

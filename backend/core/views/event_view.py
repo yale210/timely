@@ -1,4 +1,7 @@
+from django.utils import timezone
 from rest_framework import viewsets, permissions
+from rest_framework.decorators import action
+from rest_framework.response import Response
 from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import OpenApiParameter, extend_schema, extend_schema_view
 from core.models import Event
@@ -40,3 +43,7 @@ class EventViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         return Event.objects.filter(user=self.request.user).order_by("id")
+
+    @action(detail=False, methods=["get"])
+    def server_time(self, request):
+        return Response({"server_time": timezone.now().isoformat()})
