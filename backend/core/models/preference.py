@@ -1,6 +1,6 @@
 from django.db import models
 from django.conf import settings
-from holidays.countries.united_kingdom import UnitedKingdom
+
 from django.core.exceptions import ValidationError
 from datetime import datetime, timedelta
 from django.core.validators import MinValueValidator, MaxValueValidator
