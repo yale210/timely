@@ -88,12 +88,12 @@ export default function SignupForm({ children }: SignupFormProps) {
 
         <div className="relative z-10">
           <div className="sm:mx-auto sm:w-full sm:max-w-sm">
-            <h2 className="mt-10 text-center text-2xl font-bold tracking-tight text-gray-900">
+            <h2 className="mt-16 text-center text-2xl font-bold tracking-tight text-gray-900">
               Create your account
             </h2>
           </div>
 
-          <div className="mt-10 sm:mx-auto sm:w-full sm:max-w-sm">
+          <div className="mt-6 sm:mx-auto sm:w-full sm:max-w-sm">
             <form onSubmit={signup} className="space-y-6">
               {error && (
                 <div className="rounded-md bg-red-50 p-3 text-sm text-red-700 whitespace-pre-line">
