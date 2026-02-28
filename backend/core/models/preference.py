@@ -32,6 +32,9 @@ class Preference(models.Model):
         default=4, validators=[MinValueValidator(0), MaxValueValidator(24)]
     )
 
+    # Store as IANA timezone. Enables us to use timezone aware features (like adjusting for the clocks going forward or back).
+    timezone = models.CharField(max_length=50, default="Europe/London")
+
     def clean(self):
         super().clean()
         if self.day_start == self.day_end:
