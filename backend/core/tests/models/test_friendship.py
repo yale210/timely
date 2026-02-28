@@ -1,13 +1,12 @@
-import datetime
 from django.contrib.auth import get_user_model
 from django.test import TestCase
 from core.models import Friendship
 from django.core.exceptions import ValidationError
 from django.db import IntegrityError
 
-#SENT = "SENT", "Sent"
-#ACCEPTED = "ACCEPTED", "Accepted"
-#DECLINED = "DECLINED", "Declined"
+# SENT = "SENT", "Sent"
+# ACCEPTED = "ACCEPTED", "Accepted"
+# DECLINED = "DECLINED", "Declined"
 
 
 class FriendshipTests(TestCase):
@@ -17,10 +16,10 @@ class FriendshipTests(TestCase):
         )
 
         self.receiver = get_user_model().objects.create_user(
-            username="testinguser223232", password="password123", email="testing3321313@email.com"
+            username="testinguser223232",
+            password="password123",
+            email="testing3321313@email.com",
         )
-
-
 
     def test_friendship_can_be_created(self):
         friendship = Friendship.objects.create(
@@ -28,7 +27,6 @@ class FriendshipTests(TestCase):
             receiver=self.receiver,
             state="SENT",
         )
-        
 
         self.assertEqual(friendship.sender, self.sender)
         self.assertEqual(friendship.receiver, self.receiver)
@@ -40,9 +38,11 @@ class FriendshipTests(TestCase):
             receiver=self.receiver,
             state="SENT",
         )
-        
-        self.assertEqual(str(friendship), f"User: {self.sender} sent a friend request to {self.receiver}. State: SENT")
 
+        self.assertEqual(
+            str(friendship),
+            f"User: {self.sender} sent a friend request to {self.receiver}. State: SENT",
+        )
 
     def test_user_cannot_friend_themselves(self):
         friendship = Friendship(
@@ -51,10 +51,8 @@ class FriendshipTests(TestCase):
             state="SENT",
         )
 
-        
         with self.assertRaises(ValidationError):
             friendship.full_clean()
-
 
     def test_user_cannot_send_duplicate_friend_request(self):
         friendship = Friendship(
@@ -66,8 +64,6 @@ class FriendshipTests(TestCase):
         friendship.full_clean()
         friendship.save()
 
-
-        
         with self.assertRaises(IntegrityError):
             duplicate = Friendship.objects.create(
                 sender=self.sender,
@@ -76,11 +72,9 @@ class FriendshipTests(TestCase):
             )
 
             duplicate.save()
-        
-
 
     def test_decline_friend_request_changes_state(self):
-        friendship =Friendship.objects.create(
+        friendship = Friendship.objects.create(
             sender=self.sender,
             receiver=self.receiver,
             state="SENT",
@@ -90,7 +84,7 @@ class FriendshipTests(TestCase):
         self.assertEqual(friendship.state, "DECLINED")
 
     def test_accept_friend_request_changes_state(self):
-        friendship =Friendship.objects.create(
+        friendship = Friendship.objects.create(
             sender=self.sender,
             receiver=self.receiver,
             state="SENT",
