@@ -3,6 +3,8 @@ export { default as Footer } from "./Footer";
 export { default as HeroSection } from "./home/HeroSection"
 export { default as BlurBackground } from "./BlurBackground"
 
+export { default as LoginForm } from "./auth/login/LoginForm"
+
 export { default as TaskForm } from "./TaskForm";
 export { default as TaskSidebar } from "./TaskSidebar";
 export { default as TaskCard } from "./TaskCard";
