@@ -1,7 +1,7 @@
 from django.contrib.auth import get_user_model
 from django.test import TestCase
 from django.utils import timezone
-
+import datetime
 from core.models import SpecialDates
 
 
@@ -38,3 +38,16 @@ class SpecialDatesTests(TestCase):
 
         self.assertEqual(special_date.user, self.user)
         self.assertEqual(self.user.special_dates.count(), 1)
+
+    def test_get_holidays_for_year_contains_christmas(self):
+        special_dates = SpecialDates(user=self.user)
+        holidays = special_dates.get_holidays_for_year(2026)
+        self.assertIn(
+            datetime.date(2026, 12, 25),
+            holidays,
+        )
+
+    def test_get_holidays_for_year_returns_data(self):
+        special_dates = SpecialDates(user=self.user)
+        holidays = special_dates.get_holidays_for_year(2025)
+        self.assertGreater(len(holidays), 0)
