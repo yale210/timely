@@ -22,11 +22,15 @@ vi.mock("@/services/authService", () => ({
   },
 }))
 
-vi.mock("@/components/index", () => ({
-  HomeNavbar: () => <div data-testid="navbar" />,
-  BlurBackground: () => <div data-testid="blur-bg" />,
-  Footer: () => <div data-testid="footer" />,
-}))
+vi.mock("@/components/index", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@/components/index")>()
+  return {
+    ...actual,
+    HomeNavbar: () => <div data-testid="navbar" />,
+    BlurBackground: () => <div data-testid="blur-bg" />,
+    Footer: () => <div data-testid="footer" />,
+  }
+})
 
 describe("Signup page", () => {
   beforeEach(() => {
