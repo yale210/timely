@@ -4,6 +4,7 @@ export { default as HeroSection } from "./home/HeroSection"
 export { default as BlurBackground } from "./BlurBackground"
 
 export { default as LoginForm } from "./auth/LoginForm"
+export { default as SignupForm } from "./auth/SignupForm"
 
 export { default as TaskForm } from "./TaskForm";
 export { default as TaskSidebar } from "./TaskSidebar";

@@ -1,5 +1,4 @@
 import { useState, type FormEvent, type ReactNode } from "react"
-import { BlurBackground } from "@/components/index"
 import { authService } from "@/services/authService"
 import { useNavigate } from "react-router-dom"
 
@@ -9,6 +8,8 @@ interface LoginFormProps {
 
 /**
  * A functional component that renders the login page.
+ * @param root0 - The component props.
+ * @param root0.children - Optional child elements to render.
  * @returns The rendered login page component.
  */
 export default function LoginForm({ children }: LoginFormProps ) {
