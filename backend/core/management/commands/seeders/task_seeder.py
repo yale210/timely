@@ -8,6 +8,7 @@ from django.contrib.auth import get_user_model
 from core.management.commands.seeders.base import BaseSeeder
 from django.utils import timezone
 
+
 class TaskSeeder(BaseSeeder):
     help = "Handles seeding of tasks into the database."
 

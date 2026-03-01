@@ -60,7 +60,6 @@ class PreferenceSeeder(BaseSeeder):
                     "day_start": self._random_time(),
                     "day_end": self._random_time(),
                     "timezone": "Europe/London",
-                    
                 }
             }
         )
