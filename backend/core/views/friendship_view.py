@@ -26,7 +26,7 @@ class FriendshipViewSet(viewsets.ModelViewSet):
         serializer.instance = friendship
 
     # Specific object, only post allowed
-    @action(detail=True, methods=["post"])
+    @action(detail=True, methods=["post"], url_path="accept")
     def accept_request(self, request, pk=None):
         friend_request = self.get_object()
         # Validate user is the one request was sent to.
@@ -37,7 +37,7 @@ class FriendshipViewSet(viewsets.ModelViewSet):
             return Response(status=status.HTTP_204_NO_CONTENT)
 
     # Specific object, only post allowed
-    @action(detail=True, methods=["post"])
+    @action(detail=True, methods=["post"], url_path="decline")
     def decline_request(self, request, pk=None):
         friend_request = self.get_object()
         # Validate user is the one request was sent to.
