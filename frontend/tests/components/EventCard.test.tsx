@@ -1,6 +1,6 @@
 import { it, describe, expect, vi, afterEach } from "vitest"
 import { render, screen, fireEvent, cleanup } from "@testing-library/react"
-import EventCard from "@/components/EventCard"
+import EventCard from "@/components/event/EventCard"
 import moment from "moment"
 
 describe("EventCard", () => {

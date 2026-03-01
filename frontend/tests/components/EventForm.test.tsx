@@ -1,7 +1,7 @@
 import { it, describe, expect, vi, beforeEach, afterEach } from 'vitest'
 import { render, screen, fireEvent, cleanup, waitFor } from '@testing-library/react'
 import '@testing-library/jest-dom'
-import EventForm from "@/components/EventForm"
+import EventForm from "@/components/event/EventForm"
 import { type Category, type Event } from "@/types"
 import { getServerTime } from "@/services/eventService"
 

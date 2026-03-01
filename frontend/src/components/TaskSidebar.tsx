@@ -1,7 +1,7 @@
 import { Fragment, useState } from "react";
 import { Dialog, Transition, TransitionChild, DialogPanel, DialogTitle } from "@headlessui/react";
 import TaskForm from "./TaskForm";
-import ConfirmationModal from "./ConfirmationModal";
+import ConfirmationModal from "./modals/ConfirmationModal";
 import { type Category, type Task, type TaskSubmission } from "../types";
 
 interface TaskSidebarProps {

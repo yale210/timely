@@ -44,7 +44,7 @@ vi.mock("@/components/TaskForm", () => ({
   )
 }));
 
-vi.mock("@/components/EventForm", () => ({
+vi.mock("@/components/event/EventForm", () => ({
   default: ({ initialData, onDataChange, onSubmit, onCancel }: MockEventFormProps) => (
     <div data-testid="mock-event-form">
       <label htmlFor="event-title">Title</label>

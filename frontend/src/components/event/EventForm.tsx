@@ -1,7 +1,7 @@
 import { useState, useEffect, type FormEvent } from "react";
-import { type Category, type Event, type EventSubmission } from "../types";
-import { usePushSubscription } from "../hooks/usePushSubscription";
-import { getServerTime } from "../services/eventService";
+import { type Category, type Event, type EventSubmission } from "@/types";
+import { usePushSubscription } from "@/hooks/usePushSubscription";
+import { getServerTime } from "@/services/eventService";
 
 type TimeUnit = "minutes" | "hours" | "days" | "weeks" | "months" | "years";
 

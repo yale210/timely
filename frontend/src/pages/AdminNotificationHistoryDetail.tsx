@@ -6,7 +6,7 @@ import {
   retryFailedBroadcast,
 } from "../api/notifications";
 import { type BroadcastJobDetail, type BroadcastJobStatusResponse } from "../types/notification";
-import ConfirmationModal from "../components/ConfirmationModal";
+import ConfirmationModal from "../components/modals/ConfirmationModal";
 
 const POLL_INTERVAL_MS = 3000;
 

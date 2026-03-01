@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { CheckCircleIcon, TrashIcon } from "@heroicons/react/24/outline";
 import { getNotifications } from "../api/notifications";
 import { NotificationCard } from "../components/NotificationCard";
-import ConfirmationModal from "../components/ConfirmationModal";
+import ConfirmationModal from "../components/modals/ConfirmationModal";
 import { useNotificationContext } from "../context/NotificationContext";
 import { type Notification, NotificationType } from "../types/notification";
 import { usePushSubscription } from "../hooks/usePushSubscription";

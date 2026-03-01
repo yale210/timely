@@ -6,7 +6,7 @@ import { NotificationCard } from "./NotificationCard";
 import { NotificationBell } from "./NotificationBell";
 import { Link } from "react-router-dom";
 import { CheckCircleIcon, TrashIcon } from "@heroicons/react/24/outline";
-import ConfirmationModal from "./ConfirmationModal";
+import ConfirmationModal from "./modals/ConfirmationModal";
 
 interface NotificationDropdownProps {
   notifications: Notification[];

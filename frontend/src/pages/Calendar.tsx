@@ -99,16 +99,6 @@ const CalendarPage = ({ showNavbar = true }: CalendarPageProps) => {
       ];
       console.error(err);
       setTasks(mockTasks);
-      /*try {
-        //const res = await axios.get("/api/tasks/");
-        setTasks(res.data);
-        const data = Array.isArray(res.data) ? res.data : [];
-        setTasks(data.length ? data : mockTasks)
-      } catch (err) {
-        console.error(err);
-        setTasks(mockTasks);
-      }
-      console.error(err);*/
     }
   }, []);
 
