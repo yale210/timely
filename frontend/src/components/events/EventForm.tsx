@@ -276,7 +276,7 @@ const EventForm = ({
 
   return (
     <form onSubmit={handleSubmit} className="flex flex-col h-full bg-white text-black">
-      <div className="flex-grow overflow-y-auto p-6 space-y-6">
+      <div className="grow overflow-y-auto p-6 space-y-6">
         {clockSkewWarning && (
           <div className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800">
             {clockSkewWarning}
@@ -377,7 +377,7 @@ const EventForm = ({
         </div>
 
         {errors.time && (
-          <p className="text-xs text-red-500 mt-[-1rem]">
+          <p className="text-xs text-red-500 -mt-4">
             Start time must be before end time.
           </p>
         )}

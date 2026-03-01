@@ -72,7 +72,7 @@ const EventCard = ({ event, onClick }: EventCardProps) => {
               {event.location && (
                 <span className="flex items-center">
                   <span className="material-icons text-sm mr-1">place</span>
-                  <span className="truncate max-w-[150px]">{event.location}</span>
+                  <span className="truncate max-w-37.5">{event.location}</span>
                 </span>
               )}
               {event.categories && event.categories.length > 0 && (
@@ -103,7 +103,7 @@ const EventCard = ({ event, onClick }: EventCardProps) => {
           className="mt-3 pt-3 border-t border-gray-100 animate-in fade-in slide-in-from-top-2 duration-200 w-full overflow-hidden"
           aria-expanded={isExpanded}
         >
-          <p className={`text-xs text-gray-600 leading-relaxed whitespace-pre-wrap break-words ${isExpanded ? "" : "line-clamp-2"}`}>
+          <p className={`text-xs text-gray-600 leading-relaxed whitespace-pre-wrap wrap-break-word ${isExpanded ? "" : "line-clamp-2"}`}>
             {event.description}
           </p>
           {event.description.length > 60 && (

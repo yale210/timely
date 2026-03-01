@@ -388,8 +388,8 @@ const CalendarPage = ({ showNavbar = true }: CalendarPageProps) => {
           </div>
         </header>
 
-        <main className="flex-grow flex overflow-hidden relative p-4 bg-white">
-          <div className="flex-grow bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+        <main className="grow flex overflow-hidden relative p-4 bg-white">
+          <div className="grow bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
             <Calendar<CalendarEntry>
               localizer={localizer}
               events={calendarEntries}

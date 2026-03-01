@@ -124,7 +124,7 @@ const UnifiedSidebar = ({
         </div>
       )}
 
-      <div className="flex-grow overflow-hidden">
+      <div className="grow overflow-hidden">
         {mode === "task" ? (
           <TaskForm
             key={`task-${initialData?.id ?? 'new'}`}

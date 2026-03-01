@@ -240,7 +240,7 @@ const Settings = () => {
                       ...pref,
                       day_start: e.target.value,
                     })}
-                    className={`mt-2 bg-white px-3 py-2 block outline outline-1 w-full rounded-md ${
+                    className={`mt-2 bg-white px-3 py-2 block outline w-full rounded-md ${
                       fieldErrors.day_start ? "outline-red-300" : "outline-gray-300"
                     } focus: outline-2 focus:outline-turquoise-600`}
                   />
@@ -261,7 +261,7 @@ const Settings = () => {
                       ...pref,
                       day_end: e.target.value,
                     })}
-                    className={`mt-2 bg-white px-3 py-2 block outline outline-1 w-full rounded-md ${
+                    className={`mt-2 bg-white px-3 py-2 block outline w-full rounded-md ${
                       fieldErrors.day_end ? "outline-red-300" : "outline-gray-300"
                     } focus: outline-2 focus:outline-turquoise-600`}
                   />
@@ -284,7 +284,7 @@ const Settings = () => {
                       ...pref,
                       max_hours_study_per_day: Number(e.target.value),
                     })}
-                    className={`mt-2 bg-white px-3 py-2 block outline outline-1 w-full rounded-md ${
+                    className={`mt-2 bg-white px-3 py-2 block outline w-full rounded-md ${
                       fieldErrors.max_hours_study_per_day ? "outline-red-300" : "outline-gray-300"
                     } focus: outline-2 focus:outline-turquoise-600`}
                   />
@@ -404,7 +404,7 @@ const Settings = () => {
         </header>
         <main className="p-6">
           <div className="flex gap-6">
-            <aside className="w-[10%] min-w-[140px]">
+            <aside className="w-[10%] min-w-35">
               <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
                 <button
                   type="button"

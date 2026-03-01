@@ -99,7 +99,7 @@ export const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
                     </div>
                   </div>
 
-                  <div className="max-h-[420px] overflow-y-auto">
+                  <div className="max-h-105 overflow-y-auto">
                     {displayNotifications.length > 0 ? (
                       displayNotifications.map((notification) => (
                         <NotificationCard

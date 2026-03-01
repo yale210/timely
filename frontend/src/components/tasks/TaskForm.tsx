@@ -120,7 +120,7 @@ const TaskForm = ({
 
   return (
     <form onSubmit={handleSubmit} className="flex flex-col h-full bg-white text-black">
-      <div className="flex-grow overflow-y-auto p-6 space-y-6">
+      <div className="grow overflow-y-auto p-6 space-y-6">
         <div>
           <label htmlFor="task-title" className="block text-sm font-medium text-gray-700 mb-2">
             Title
@@ -215,7 +215,7 @@ const TaskForm = ({
         </div>
 
         {errors.deadline && (
-          <p className="text-xs text-red-500 mt-[-1rem]">
+          <p className="text-xs text-red-500 -mt-4">
             Start time must be before the deadline.
           </p>
         )}

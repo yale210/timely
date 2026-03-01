@@ -50,7 +50,7 @@ const HeaderSection = ({ date, setDate, stats }: { date: string; setDate: (d: st
 const AnalyticsGrid = ({ stats }: { stats: WeeklyStats | null }) => {
   const [mode, setMode] = useState("importance");
   return (
-    <div className="relative z-10 grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-32 mx-auto w-full max-w-[1400px] justify-between">
+    <div className="relative z-10 grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-32 mx-auto w-full max-w-350 justify-between">
       <div>
         <div className="relative z-50 mb-6">
           <select value={mode} onChange={(e) => setMode(e.target.value)} className="p-2 border rounded w-full max-w-xs bg-white shadow-sm cursor-pointer">
@@ -112,7 +112,7 @@ export default function WeeklySummaries() {
   return (
     <div className="relative isolate min-h-screen bg-white flex flex-col font-sans text-black">
       <BackgroundTemplate />
-      <main className="flex-grow flex flex-col items-center pt-24 pb-12 px-4 gap-12">
+      <main className="grow flex flex-col items-center pt-24 pb-12 px-4 gap-12">
         <HeaderSection date={date} setDate={setDate} stats={stats} />
         <AnalyticsGrid stats={stats} />
       </main>

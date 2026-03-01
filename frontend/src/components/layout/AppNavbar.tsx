@@ -61,7 +61,7 @@ export default function AppNavbar() {
 
   return (
     <header className="sticky top-0 z-30 bg-white shadow-sm ring-1 ring-gray-200">
-      <div className="grid w-full grid-cols-3 items-center gap-3 px-4 py-2 min-h-[48px]">
+      <div className="grid w-full grid-cols-3 items-center gap-3 px-4 py-2 min-h-12">
         <div className="flex justify-start">
           <button
             type="button"
@@ -139,12 +139,12 @@ export default function AppNavbar() {
 
       {/* Sliding drawer */}
       <nav
-        className={`fixed inset-y-0 left-0 z-50 w-[280px] max-w-full transform bg-white shadow-xl ring-1 ring-gray-200 transition-transform duration-300 ease-out ${
+        className={`fixed inset-y-0 left-0 z-50 w-70 max-w-full transform bg-white shadow-xl ring-1 ring-gray-200 transition-transform duration-300 ease-out ${
           open ? "translate-x-0" : "-translate-x-full"
         }`}
         aria-label="Main"
       >
-        <div className="flex items-center justify-between px-4 py-2 border-b border-gray-200 min-h-[40px]">
+        <div className="flex items-center justify-between px-4 py-2 border-b border-gray-200 min-h-10">
           <Link to="/dashboard" className="flex items-center" onClick={() => setOpen(false)}>
             <img src="/t.png" alt="Timely" className="h-6 w-6" />
           </Link>

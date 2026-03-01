@@ -141,7 +141,7 @@ const TaskCard = ({ task, onToggleComplete, onClick }: TaskCardProps) => {
           className="mt-3 pt-3 border-t border-gray-100 animate-in fade-in slide-in-from-top-2 duration-200 w-full overflow-hidden"
           aria-expanded={isExpanded}
         >
-          <p className={`text-xs text-gray-600 leading-relaxed whitespace-pre-wrap break-words ${isExpanded ? "" : "line-clamp-2"}`}>
+          <p className={`text-xs text-gray-600 leading-relaxed whitespace-pre-wrap wrap-break-word ${isExpanded ? "" : "line-clamp-2"}`}>
             {task.description}
           </p>
           {task.description.length > 60 && (

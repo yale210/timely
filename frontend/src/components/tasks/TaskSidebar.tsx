@@ -63,7 +63,7 @@ const TaskSidebar = ({
                   leaveFrom="translate-x-0"
                   leaveTo="translate-x-full"
                 >
-                  <DialogPanel className="pointer-events-auto w-screen max-w-[400px]">
+                  <DialogPanel className="pointer-events-auto w-screen max-w-100">
                     <div className="flex h-full flex-col bg-white shadow-xl">
                       <div className="p-6 border-b border-gray-200 flex justify-between items-center bg-white">
                         <div className="flex items-center gap-4">
