@@ -8,10 +8,10 @@ export { default as SignupForm } from "./auth/SignupForm"
 
 export { default as LogoutMessage } from "./auth/LogoutMessage"
 
-export { default as TaskForm } from "./TaskForm";
-export { default as TaskSidebar } from "./TaskSidebar";
-export { default as TaskCard } from "./TaskCard";
-export { default as TaskListSection } from "./TaskListSection";
+export { default as TaskForm } from "./tasks/TaskForm";
+export { default as TaskSidebar } from "./tasks/TaskSidebar";
+export { default as TaskCard } from "./tasks/TaskCard";
+export { default as TaskListSection } from "./tasks/TaskListSection";
 export { default as StatCard } from "./StatCard";
 
 export { default as EventForm } from "./events/EventForm";

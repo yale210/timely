@@ -1,5 +1,5 @@
 import { useState, useEffect, type FormEvent } from "react";
-import { type Category, type Task, type TaskSubmission } from "../types";
+import { type Category, type Task, type TaskSubmission } from "../../types";
 
 interface TaskFormProps {
   initialData?: Task;

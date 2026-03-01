@@ -7,9 +7,23 @@ import { MemoryRouter } from 'react-router-dom'
 import type { TaskSubmission, Task, Category } from "@/types"
 
 vi.mock("@/services/taskService")
+vi.mock("@/context/NotificationContext", () => ({
+  NotificationProvider: ({ children }: { children: any }) => <>{children}</>,
+  useNotificationContext: () => ({
+    notifications: [],
+    unreadCount: 0,
+    markRead: vi.fn(),
+    markUnread: vi.fn(),
+    markAllRead: vi.fn(),
+    deleteNotification: vi.fn(),
+    deleteAllNotifications: vi.fn(),
+  }),
+}))
 
-vi.mock("@/components/TaskSidebar", () => ({
-  default: (props: {
+vi.mock("@/components", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@/components")>()
+
+  const MockTaskSidebar = (props: {
     isOpen: boolean;
     onSubmit: (data: TaskSubmission) => void;
     onDelete?: (id: number) => void;
@@ -21,22 +35,22 @@ vi.mock("@/components/TaskSidebar", () => ({
     return (
       <div data-testid="mock-task-sidebar">
         <span>{props.initialData?.id ? "Edit Task" : "Add New Task"}</span>
-        <button 
-          data-testid="sidebar-submit" 
-          onClick={() => props.onSubmit({ 
-            title: "Test Task", 
-            description: "", 
-            deadline: new Date().toISOString(), 
-            importance: 5, 
-            estimated_minutes: 30, 
-            categories: [] 
+        <button
+          data-testid="sidebar-submit"
+          onClick={() => props.onSubmit({
+            title: "Test Task",
+            description: "",
+            deadline: new Date().toISOString(),
+            importance: 5,
+            estimated_minutes: 30,
+            categories: []
           })}
         >
           Submit
         </button>
         {props.initialData?.id && props.onDelete && (
-          <button 
-            data-testid="sidebar-delete" 
+          <button
+            data-testid="sidebar-delete"
             onClick={() => props.onDelete?.(props.initialData!.id)}
           >
             Delete
@@ -46,7 +60,12 @@ vi.mock("@/components/TaskSidebar", () => ({
       </div>
     )
   }
-}))
+
+  return {
+    ...actual,
+    TaskSidebar: MockTaskSidebar,
+  }
+})
 
 class ResizeObserver {
   observe = vi.fn();

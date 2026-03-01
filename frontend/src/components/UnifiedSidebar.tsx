@@ -1,6 +1,6 @@
 import { useState, useCallback } from "react";
 import { type Category, type Task, type Event, type TaskSubmission, type EventSubmission } from "@/types";
-import TaskForm from "@/components/TaskForm";
+import TaskForm from "@/components/tasks/TaskForm";
 import EventForm from "@/components/events/EventForm";
 
 interface UnifiedSidebarProps {
