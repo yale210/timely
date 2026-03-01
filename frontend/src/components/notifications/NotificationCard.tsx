@@ -1,5 +1,5 @@
 import type React from "react";
-import { type Notification, NotificationType } from "../types/notification";
+import { type Notification, NotificationType } from "@/types/notification";
 import {
   CalendarDaysIcon,
   CheckCircleIcon,

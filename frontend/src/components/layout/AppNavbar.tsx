@@ -2,7 +2,7 @@ import { useEffect, useState } from "react"
 import { Link, NavLink, useNavigate } from "react-router-dom"
 import { Menu, MenuButton, MenuItems, MenuItem } from "@headlessui/react"
 import { authStore } from "@/services/authService"
-import { NotificationDropdown } from '@/components/NotificationDropdown'
+import { NotificationDropdown } from '@/components/notifications/NotificationDropdown'
 import { useNotificationContext } from '@/context/NotificationContext'
 import { type Notification } from '@/types/notification'
 

@@ -1,12 +1,12 @@
 import type React from "react";
 import { Popover, Transition } from "@headlessui/react";
 import { Fragment, useState } from "react";
-import { type Notification } from "../types/notification";
+import { type Notification } from "@/types/notification";
 import { NotificationCard } from "./NotificationCard";
 import { NotificationBell } from "./NotificationBell";
 import { Link } from "react-router-dom";
 import { CheckCircleIcon, TrashIcon } from "@heroicons/react/24/outline";
-import ConfirmationModal from "./modals/ConfirmationModal";
+import { ConfirmationModal } from "@/components/index";
 
 interface NotificationDropdownProps {
   notifications: Notification[];

@@ -17,7 +17,7 @@ import {
   type ApiErrorResponse,
   NotificationType,
 } from "../types/notification";
-import { NotificationCard } from "../components/NotificationCard";
+import { NotificationCard } from "../components/notifications/NotificationCard";
 import ConfirmationModal from "../components/modals/ConfirmationModal";
 
 const USERS_PAGE_SIZE = 50;

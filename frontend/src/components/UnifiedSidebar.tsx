@@ -1,7 +1,7 @@
 import { useState, useCallback } from "react";
-import { type Category, type Task, type Event, type TaskSubmission, type EventSubmission } from "../types";
-import TaskForm from "./TaskForm";
-import EventForm from "./event/EventForm";
+import { type Category, type Task, type Event, type TaskSubmission, type EventSubmission } from "@/types";
+import TaskForm from "@/components/TaskForm";
+import EventForm from "@/components/events/EventForm";
 
 interface UnifiedSidebarProps {
   isOpen: boolean;
