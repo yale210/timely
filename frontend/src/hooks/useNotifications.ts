@@ -5,8 +5,8 @@ import {
   markAsRead as apiMarkAsRead, 
   markAllAsRead as apiMarkAllAsRead, 
   deleteNotification as apiDeleteNotification 
-} from '../api/notifications';
-import { type Notification } from '../types/notification';
+} from '@/api/notifications';
+import { type Notification } from '@/types/notification';
 
 /**
  * A custom hook for managing and fetching notifications.

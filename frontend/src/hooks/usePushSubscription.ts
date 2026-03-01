@@ -3,7 +3,7 @@ import {
   isPushSupported,
   subscribeUserToPush,
   unsubscribeUserFromPush,
-} from "../utils/pushNotifications";
+} from "@/utils/pushNotifications";
 
 type PushPermission = NotificationPermission | "unsupported";
 

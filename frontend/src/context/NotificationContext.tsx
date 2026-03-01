@@ -1,12 +1,4 @@
-import {
-  createContext,
-  useContext,
-  useState,
-  useEffect,
-  useCallback,
-  useRef,
-  type ReactNode,
-} from "react";
+import { createContext, useContext, useState, useEffect, useCallback, useRef, type ReactNode} from "react";
 import {
   deleteAllNotifications as apiDeleteAllNotifications,
   deleteNotification as apiDeleteNotification,
@@ -15,9 +7,9 @@ import {
   markAllAsRead as apiMarkAllAsRead,
   markAsRead as apiMarkAsRead,
   markAsUnread as apiMarkAsUnread,
-} from "../api/notifications";
-import { useWebSocket } from "../hooks/useWebSocket";
-import { type Notification } from "../types/notification";
+} from "@/api/notifications";
+import { useWebSocket } from "@/hooks/useWebSocket";
+import { type Notification } from "@/types/notification";
 
 interface WebSocketNotificationMessage {
   type: "new_notification";

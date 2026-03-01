@@ -1,5 +1,5 @@
 import { type ReactNode } from "react";
-import { AppNavbar } from "../components";
+import { AppNavbar } from "@/components/index";
 
 interface AppLayoutProps {
   children: ReactNode;

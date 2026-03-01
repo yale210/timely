@@ -1,5 +1,5 @@
 import api from "./api";
-import { type ScheduleResponse } from "../types";
+import { type ScheduleResponse } from "@/types";
 
 /**
  * Represents the request payload for scheduling tasks.
