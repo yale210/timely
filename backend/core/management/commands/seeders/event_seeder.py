@@ -83,7 +83,7 @@ class EventSeeder(BaseSeeder):
                         "recurrence_interval": random.choice(
                             ["daily", "weekly", "monthly", "yearly"]
                         ),
-                        "recurrence_end": start + timedelta(random.randint(0, 100)).date(),
+                        "recurrence_end": (start + timedelta(random.randint(0, 100))).date(),
                     }
                 }
             )
@@ -93,7 +93,7 @@ class EventSeeder(BaseSeeder):
 
             self._create_event(
                 {
-                    "fields": {
+                    "fields": { 
                         "user": temporary_user,
                         "categories": [temporary_category],
                         "title": self.faker.sentence(),
