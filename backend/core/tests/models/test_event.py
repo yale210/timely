@@ -123,14 +123,14 @@ class EventTests(TestCase):
         self.assertEqual(event.calculate_time_left(), 0)
 
     def test_user_has_no_preference_returns_zero_for_get_time_left(self):
-        user = get_user_model().objects.create_user(
-            username="thomas23112123213",password="password",email="test@email.com"
+        new_user = get_user_model().objects.create_user(
+            username="thomas23112123213", password="password", email="test@email.com"
         )
         now = timezone.now()
         start_time = now
         recurrence_end = (now + datetime.timedelta(days=100)).date()
         event = Event(
-            user=self.user,
+            user=new_user,
             title="Test Event",
             start_time=start_time,
             end_time=start_time + datetime.timedelta(hours=1),
@@ -139,6 +139,3 @@ class EventTests(TestCase):
         )
         event.full_clean()
         self.assertEqual(event.calculate_time_left(), 0)
-
-
-    
