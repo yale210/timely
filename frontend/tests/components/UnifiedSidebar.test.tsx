@@ -1,8 +1,8 @@
 import { render, screen, fireEvent, cleanup } from "@testing-library/react";
 import { describe, it, expect, vi, afterEach } from "vitest";
 import '@testing-library/jest-dom'
-import UnifiedSidebar from "./UnifiedSidebar";
-import { type Category, type Task, type Event, type TaskSubmission, type EventSubmission } from "../types";
+import UnifiedSidebar from "@/components/UnifiedSidebar";
+import { type Category, type Task, type Event, type TaskSubmission, type EventSubmission } from "@/types";
 
 const mockCategories: Category[] = [
   { id: 1, text: "Work" },
@@ -23,7 +23,7 @@ interface MockEventFormProps {
   onCancel: () => void;
 }
 
-vi.mock("./TaskForm", () => ({
+vi.mock("@/components/TaskForm", () => ({
   default: ({ initialData, onDataChange, onSubmit, onCancel }: MockTaskFormProps) => (
     <div data-testid="mock-task-form">
       <label htmlFor="task-title">Title</label>
@@ -44,7 +44,7 @@ vi.mock("./TaskForm", () => ({
   )
 }));
 
-vi.mock("./EventForm", () => ({
+vi.mock("@/components/EventForm", () => ({
   default: ({ initialData, onDataChange, onSubmit, onCancel }: MockEventFormProps) => (
     <div data-testid="mock-event-form">
       <label htmlFor="event-title">Title</label>
