@@ -1,7 +1,7 @@
 export { default as HomeNavbar } from "./home/HomeNavbar";
-export { default as Footer } from "./Footer";
+export { default as Footer } from "./layout/Footer";
 export { default as HeroSection } from "./home/HeroSection"
-export { default as BlurBackground } from "./BlurBackground"
+export { default as BlurBackground } from "./layout/BlurBackground"
 
 export { default as LoginForm } from "./auth/LoginForm"
 export { default as SignupForm } from "./auth/SignupForm"
@@ -26,4 +26,4 @@ export {default as ThemeButton} from "./ThemeButton";
 export {default as FontButton} from "./FontButton"
 
 export { default as WeeklySummaryWidget } from "./WeeklySummaryWidget";
-export { default as AppNavbar } from "./AppNavbar"
+export { default as AppNavbar } from "./layout/AppNavbar"
