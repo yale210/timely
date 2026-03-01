@@ -14,14 +14,14 @@ export { default as TaskCard } from "./TaskCard";
 export { default as TaskListSection } from "./TaskListSection";
 export { default as StatCard } from "./StatCard";
 
-export { default as EventForm } from "./EventForm";
-export { default as EventSidebar } from "./EventSidebar";
-export { default as EventCard } from "./EventCard";
+export { default as EventForm } from "./event/EventForm";
+export { default as EventSidebar } from "./event/EventSidebar";
+export { default as EventCard } from "./event/EventCard";
 
 export { default as UnifiedSidebar } from "./UnifiedSidebar";
 
-export { default as ConfirmationModal } from "./ConfirmationModal";
-export { default as CreateGradeModal } from "./CreateGradeModal";
+export { default as ConfirmationModal } from "./modals/ConfirmationModal";
+export { default as CreateGradeModal } from "./modals/CreateGradeModal";
 export {default as ThemeButton} from "./ThemeButton";
 export {default as FontButton} from "./FontButton"
 
