@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 
-interface StatcardProps {
+interface StatCardProps {
   title: string;
   value: string[];
   seeMoreHref?: string;
@@ -8,12 +8,12 @@ interface StatcardProps {
 
 /**
  * Renders a stat card with a title and a checklist of values.
- * @param props - The properties for the Statcard component.
+ * @param props - The properties for the StatCard component.
  * @param props.title - The heading displayed at the top of the card.
  * @param props.value - The list of items rendered as a checkbox list.
  * @param props.seeMoreHref - Optional link to view more details.
  */
-export default function StatCard({ title, value, seeMoreHref = "/tasks" }: StatcardProps) {
+export default function StatCard({ title, value, seeMoreHref = "/tasks" }: StatCardProps) {
   const taskList = value.map((task, index) => {
     const inputId = `${title.replace(/\s+/g, "-").toLowerCase()}-${index}`;
     return (
