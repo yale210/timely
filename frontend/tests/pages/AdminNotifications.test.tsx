@@ -2,7 +2,7 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 
-import AdminNotifications from "../../src/pages/AdminNotifications";
+import AdminNotifications from "../../src/pages/Notification/AdminNotifications";
 import {
   getAdminUsers,
   sendAdminNotification,

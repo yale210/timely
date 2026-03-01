@@ -4,11 +4,11 @@ import RequireAuth from "@/components/auth/RequireAuth"
 import RedirectAuth from "@/components/auth/RedirectAuth"
 import RequireAdmin from "@/components/auth/RequireAdmin"
 import { Home, Login, Signup, Logout, CalendarPage, TaskList, EventList, Gradebook, Dashboard, WeeklySummaries, Settings, Themes } from "./pages/index"
-import { Notifications } from "./pages/Notifications"
-import { NotificationDetail } from "./pages/NotificationDetail"
-import { default as AdminNotifications } from "./pages/AdminNotifications"
-import { AdminNotificationHistory } from "./pages/AdminNotificationHistory"
-import { AdminNotificationHistoryDetail } from "./pages/AdminNotificationHistoryDetail"
+import { Notifications } from "./pages/Notification/Notifications"
+import { NotificationDetail } from "./pages/Notification/NotificationDetail"
+import { default as AdminNotifications } from "./pages/Notification/AdminNotifications"
+import { AdminNotificationHistory } from "./pages/Notification/AdminNotificationHistory"
+import { AdminNotificationHistoryDetail } from "./pages/Notification/AdminNotificationHistoryDetail"
 
 /**
  * The root component of the application which organises the routing logic.
