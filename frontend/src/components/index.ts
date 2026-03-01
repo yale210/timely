@@ -6,6 +6,8 @@ export { default as BlurBackground } from "./BlurBackground"
 export { default as LoginForm } from "./auth/LoginForm"
 export { default as SignupForm } from "./auth/SignupForm"
 
+export { default as LogoutMessage } from "./auth/LogoutMessage"
+
 export { default as TaskForm } from "./TaskForm";
 export { default as TaskSidebar } from "./TaskSidebar";
 export { default as TaskCard } from "./TaskCard";
