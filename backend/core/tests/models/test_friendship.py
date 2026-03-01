@@ -105,7 +105,7 @@ class FriendshipTests(TestCase):
         self.assertEqual(friendship.state, "SENT")
 
     def test_send_request_causes_error_if_request_already_sent(self):
-        friendship = Friendship.objects.create(
+        Friendship.objects.create(
             sender=self.sender,
             receiver=self.receiver,
             state="SENT",
@@ -116,7 +116,7 @@ class FriendshipTests(TestCase):
             Friendship.send_request(sender=self.sender, receiver=self.receiver)
 
     def test_send_request_causes_error_if_users_are_already_friends(self):
-        friendship = Friendship.objects.create(
+        Friendship.objects.create(
             sender=self.sender,
             receiver=self.receiver,
             state="ACCEPTED",
