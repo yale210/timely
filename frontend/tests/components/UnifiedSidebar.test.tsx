@@ -1,7 +1,7 @@
 import { render, screen, fireEvent, cleanup } from "@testing-library/react";
 import { describe, it, expect, vi, afterEach } from "vitest";
 import '@testing-library/jest-dom'
-import UnifiedSidebar from "@/components/UnifiedSidebar";
+import UnifiedSidebar from "@/components/tasks/UnifiedSidebar";
 import { type Category, type Task, type Event, type TaskSubmission, type EventSubmission } from "@/types";
 
 const mockCategories: Category[] = [

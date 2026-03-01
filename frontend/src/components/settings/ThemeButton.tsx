@@ -1,4 +1,4 @@
-import "../styles/index_theme.css"
+import "@/styles/index_theme.css"
 
 interface textButtonProps {
   title: string;
@@ -28,4 +28,3 @@ export default function TextButton({title, themeChangeFunction}: textButtonProps
     </div>
   )
 }
-
