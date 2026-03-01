@@ -2,10 +2,10 @@ import type React from "react";
 import { useEffect, useState } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { ArrowLeftIcon, EnvelopeIcon, EnvelopeOpenIcon, TrashIcon } from "@heroicons/react/24/outline";
-import api from "../services/api";
-import { type Notification } from "../types/notification";
-import { useNotificationContext } from "../context/NotificationContext";
-import ConfirmationModal from "../components/modals/ConfirmationModal";
+import api from "@/services/api";
+import { type Notification } from "@/types/notification";
+import { useNotificationContext } from "@/context/NotificationContext";
+import ConfirmationModal from "@/components/modals/ConfirmationModal";
 
 /**
  * Full-page view of a single notification with read toggle and delete actions.

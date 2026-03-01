@@ -1,12 +1,7 @@
 import { type FormEvent, useMemo, useState, useEffect, useCallback } from "react";
 import { InformationCircleIcon, ClockIcon } from "@heroicons/react/24/outline";
 import { Link } from "react-router-dom";
-import {
-  getAdminUsers,
-  sendAdminNotification,
-  getAudienceCounts,
-  getBroadcastStatus,
-} from "../api/notifications";
+import { getAdminUsers, sendAdminNotification, getAudienceCounts, getBroadcastStatus } from "@/api/notifications";
 import {
   type AdminNotificationPayload,
   type AdminNotificationTarget,
@@ -16,9 +11,9 @@ import {
   type BroadcastJobStatusResponse,
   type ApiErrorResponse,
   NotificationType,
-} from "../types/notification";
-import { NotificationCard } from "../components/notifications/NotificationCard";
-import ConfirmationModal from "../components/modals/ConfirmationModal";
+} from "@/types/notification";
+import { NotificationCard } from "@/components/notifications/NotificationCard";
+import ConfirmationModal from "@/components/modals/ConfirmationModal";
 
 const USERS_PAGE_SIZE = 50;
 const TITLE_LIMIT = 60;

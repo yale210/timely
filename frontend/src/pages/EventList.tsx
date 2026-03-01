@@ -1,10 +1,10 @@
 import { useState, useEffect, useCallback } from "react";
 import { Menu, MenuButton, MenuItems, MenuItem } from "@headlessui/react";
-import AppLayout from "../layouts/AppLayout";
-import * as eventService from "../services/eventService";
-import * as taskService from "../services/taskService";
-import { type Event, type Category, type EventSubmission } from "../types";
-import { EventSidebar, EventCard } from "../components";
+import AppLayout from "@/layouts/AppLayout";
+import * as eventService from "@/services/eventService";
+import * as taskService from "@/services/taskService";
+import { type Event, type Category, type EventSubmission } from "@/types";
+import { EventSidebar, EventCard } from "@/components";
 import moment from "moment";
 
 /**

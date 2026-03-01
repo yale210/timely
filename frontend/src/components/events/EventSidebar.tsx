@@ -1,6 +1,6 @@
 import { Fragment, useState } from "react";
 import { Dialog, Transition, TransitionChild, DialogPanel, DialogTitle } from "@headlessui/react";
-import EventForm from "./EventForm";
+import EventForm from "@/components/events/EventForm";
 import ConfirmationModal from "@/components/modals/ConfirmationModal";
 import { type Category, type Event, type EventSubmission } from "@/types";
 

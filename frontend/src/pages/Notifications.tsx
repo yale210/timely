@@ -2,12 +2,12 @@ import type React from "react";
 import { useCallback, useMemo, useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { CheckCircleIcon, TrashIcon } from "@heroicons/react/24/outline";
-import { getNotifications } from "../api/notifications";
-import { NotificationCard } from "../components/notifications/NotificationCard";
-import ConfirmationModal from "../components/modals/ConfirmationModal";
-import { useNotificationContext } from "../context/NotificationContext";
-import { type Notification, NotificationType } from "../types/notification";
-import { usePushSubscription } from "../hooks/usePushSubscription";
+import { getNotifications } from "@/api/notifications";
+import { NotificationCard } from "@/components/notifications/NotificationCard";
+import ConfirmationModal from "@/components/modals/ConfirmationModal";
+import { useNotificationContext } from "@/context/NotificationContext";
+import { type Notification, NotificationType } from "@/types/notification";
+import { usePushSubscription } from "@/hooks/usePushSubscription";
 
 const PAGE_SIZE = 10;
 

@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import AppLayout from "../layouts/AppLayout";
-import { authService } from "../services/authService";
+import AppLayout from "@/layouts/AppLayout";
+import { authService } from "@/services/authService";
 import { preferenceService } from "@/services/preferenceService";
 import { type Preference } from "@/types";
 import { ThemeButton, FontButton } from "@/components";

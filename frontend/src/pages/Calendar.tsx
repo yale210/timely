@@ -1,21 +1,14 @@
+import "react-big-calendar/lib/css/react-big-calendar.css";
+import moment from "moment";
 import { useState, useEffect, useCallback } from "react";
 import { Calendar, momentLocalizer, type View, Views } from "react-big-calendar";
-import moment from "moment";
-import "react-big-calendar/lib/css/react-big-calendar.css";
-
-import { UnifiedSidebar } from "../components";
-import "../index.css"
-import AppLayout from "../layouts/AppLayout";
-import * as taskService from "../services/taskService";
+import { UnifiedSidebar } from "@/components/index";
+import "@/index.css"
+import AppLayout from "@/layouts/AppLayout";
+import * as taskService from "@/services/taskService";
 import * as eventService from "@/services/eventService";
-import * as schedulerService from "../services/schedulerService";
-import type {
-  Task,
-  Category,
-  TaskSubmission,
-  Event,
-  EventSubmission,
-} from "../types";
+import * as schedulerService from "@/services/schedulerService";
+import type { Task, Category, TaskSubmission, Event, EventSubmission,} from "@/types";
 
 const localizer = momentLocalizer(moment);
 /**

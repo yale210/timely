@@ -1,10 +1,10 @@
 import { useState, useEffect, useCallback } from "react";
 import moment from "moment";
 import { Menu, MenuButton, MenuItems, MenuItem } from "@headlessui/react";
-import AppLayout from "../layouts/AppLayout";
-import { TaskListSection, TaskSidebar, TaskCard } from "../components";
-import * as taskService from "../services/taskService";
-import { type Task, type Category, type TaskSubmission } from "../types";
+import AppLayout from "@/layouts/AppLayout";
+import { TaskListSection, TaskSidebar, TaskCard } from "@/components";
+import * as taskService from "@/services/taskService";
+import { type Task, type Category, type TaskSubmission } from "@/types";
 
 /**
  * A functional component that renders a list of tasks with filtering and sorting capabilities.
