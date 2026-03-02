@@ -21,7 +21,7 @@ export default function HeroSection({ children } : HeroSectionProps) {
             <div className="mx-auto max-w-7xl py-16 sm:py-24 sm:pt-32">
                 <div className="flex flex-col gap-12 lg:flex-row md:flex-row">
 
-                    <div className="flex-[3]">
+                    <div className="flex-3">
                     <div className="hidden sm:mb-8 sm:flex sm:justify-start">
                         <div className="relative rounded-full px-3 py-1 text-sm/6 text-gray-600 ring-1 ring-gray-900/10 hover:ring-gray-900/20">
                         Work Timeless. {' '}
@@ -34,7 +34,7 @@ export default function HeroSection({ children } : HeroSectionProps) {
                     
                     <div className="text-left">
                         <h1 className="text-5xl font-semibold tracking-tight text-balance text-gray-900 sm:text-7xl">
-                        Plan Your Day. <span className="bg-gradient-to-r from-indigo-600 to-emerald-500 bg-clip-text text-transparent">Protect Your Time.</span>
+                        Plan Your Day. <span className="bg-linear-to-r from-indigo-600 to-emerald-500 bg-clip-text text-transparent">Protect Your Time.</span>
                         </h1>
                         <p className="mt-8 text-md font-medium text-pretty text-gray-500 sm:max-w-md md:max-w-lg lg:max-w-xl">
                         A simple personal scheduler that helps you capture tasks, block time, and stay on top of deadlines--
@@ -54,8 +54,8 @@ export default function HeroSection({ children } : HeroSectionProps) {
                     </div>
                     </div>
 
-                    <div className="flex-[2] flex justify-center items-center">
-                    <img src={heroImage} className="w-full lg:w-96 sm:w-82 w-48" alt="Person managing schedule"/>
+                    <div className="flex-2 flex justify-center items-center">
+                    <img src={heroImage} className="w-48 lg:w-96 sm:w-82" alt="Person managing schedule"/>
                     </div>
                     
                 </div>

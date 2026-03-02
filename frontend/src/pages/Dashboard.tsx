@@ -1,10 +1,10 @@
 import { useCallback, useEffect, useState } from "react";
 import moment from "moment";
-import AppLayout from "../layouts/AppLayout";
-import * as taskService from "../services/taskService";
-import type { Task } from "../types";
-import { StatCard } from "../components/index";
-import { CalendarPage } from "./index";
+import AppLayout from "@/layouts/AppLayout";
+import * as taskService from "@/services/taskService";
+import type { Task } from "@/types";
+import { StatCard } from "@/components/index";
+import { CalendarPage } from "@/pages/index";
 
 /**
  * Renders the main dashboard page with stat cards and an embedded calendar.
@@ -46,7 +46,7 @@ export default function Dashboard() {
   return (
     <AppLayout>
       <main className="w-full px-6 lg:px-10 pt-2 pb-10 min-h-screen bg-">
-      <header className="mb-10">
+        <header className="mb-10 text-center">
           <h1 className="text-3xl font-semibold tracking-tight text-gray-900">
             Dashboard
           </h1>

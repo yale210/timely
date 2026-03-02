@@ -1,9 +1,5 @@
 import api from "./api";
-import {
-  type Event,
-  type EventMutationContext,
-  type EventSubmission,
-} from "../types";
+import { type Event, type EventSubmission, type EventMutationContext } from "@/types";
 
 /**
  * Retrieves a list of events from the server.

@@ -1,22 +1,14 @@
+import "react-big-calendar/lib/css/react-big-calendar.css";
+import moment from "moment";
 import { useState, useEffect, useCallback } from "react";
 import { Calendar, momentLocalizer, type View, Views } from "react-big-calendar";
-import moment from "moment";
-import "react-big-calendar/lib/css/react-big-calendar.css";
-
-import { UnifiedSidebar } from "../components";
-import "../index.css"
-import AppLayout from "../layouts/AppLayout";
-import * as taskService from "../services/taskService";
+import { UnifiedSidebar } from "@/components/index";
+import "@/index.css"
+import AppLayout from "@/layouts/AppLayout";
+import * as taskService from "@/services/taskService";
 import * as eventService from "@/services/eventService";
-import * as schedulerService from "../services/schedulerService";
-import type {
-  Task,
-  Category,
-  TaskSubmission,
-  Event,
-  EventMutationContext,
-  EventSubmission,
-} from "../types";
+import * as schedulerService from "@/services/schedulerService";
+import type { Task, Category, TaskSubmission, Event, EventSubmission, EventMutationContext} from "@/types";
 
 const localizer = momentLocalizer(moment);
 /**
@@ -130,16 +122,6 @@ const CalendarPage = ({ showNavbar = true }: CalendarPageProps) => {
       ];
       console.error(err);
       setTasks(mockTasks);
-      /*try {
-        //const res = await axios.get("/api/tasks/");
-        setTasks(res.data);
-        const data = Array.isArray(res.data) ? res.data : [];
-        setTasks(data.length ? data : mockTasks)
-      } catch (err) {
-        console.error(err);
-        setTasks(mockTasks);
-      }
-      console.error(err);*/
     }
   }, []);
 
@@ -454,8 +436,8 @@ const CalendarPage = ({ showNavbar = true }: CalendarPageProps) => {
           </div>
         </header>
 
-        <main className="flex-grow flex overflow-hidden relative p-4 bg-white">
-          <div className="flex-grow bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+        <main className="grow flex overflow-hidden relative p-4 bg-white">
+          <div className="grow bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
             <Calendar<CalendarEntry>
               localizer={localizer}
               events={calendarEntries}

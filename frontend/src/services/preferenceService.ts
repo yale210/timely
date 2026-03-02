@@ -1,5 +1,5 @@
 import api from "@/services/api"
-import type { Preference, PreferenceUpdate } from "../types";
+import type { Preference, PreferenceUpdate } from "@/types";
 
 export const preferenceService = {
     async getMyPreference(): Promise<Preference> {

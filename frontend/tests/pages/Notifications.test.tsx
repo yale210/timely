@@ -1,6 +1,6 @@
 import { render, screen, fireEvent } from "@testing-library/react";
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { Notifications } from "../../src/pages/Notifications";
+import { Notifications } from "../../src/pages/Notification/Notifications";
 import { BrowserRouter } from "react-router-dom";
 import { NotificationType } from "../../src/types/notification";
 
