@@ -1,7 +1,7 @@
 import { describe, it, expect, vi } from "vitest";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 
-import EventSidebar from "@/components/EventSidebar";
+import EventSidebar from "@/components/events/EventSidebar";
 import type { Event } from "@/types";
 
 const recurringEvent: Event = {

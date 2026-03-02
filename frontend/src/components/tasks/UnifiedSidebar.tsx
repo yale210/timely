@@ -1,9 +1,4 @@
 import { useState, useCallback } from "react";
-<<<<<<< HEAD:frontend/src/components/tasks/UnifiedSidebar.tsx
-import { type Category, type Task, type Event, type TaskSubmission, type EventSubmission } from "@/types";
-import TaskForm from "@/components/tasks/TaskForm";
-import EventForm from "@/components/events/EventForm";
-=======
 import {
   type Category,
   type Event,
@@ -11,14 +6,13 @@ import {
   type EventSubmission,
   type Task,
   type TaskSubmission,
-} from "../types";
-import { useRecurrenceScopeActions } from "../hooks/useRecurrenceScopeActions";
-import TaskForm from "./TaskForm";
-import EventForm from "./EventForm";
-import ConfirmationModal from "./ConfirmationModal";
-import RecurrenceScopeModal from "./RecurrenceScopeModal";
-import ScopeActionModal from "./ScopeActionModal";
->>>>>>> e70261fdef03b4b1964cc7860e9968033de47f52:frontend/src/components/UnifiedSidebar.tsx
+} from "@/types";
+import { useRecurrenceScopeActions } from "@/hooks/useRecurrenceScopeActions";
+import TaskForm from "@/components/tasks/TaskForm";
+import EventForm from "@/components/events/EventForm";
+import ConfirmationModal from "@/components/modals/ConfirmationModal";
+import RecurrenceScopeModal from "@/components/modals/RecurrenceScopeModal";
+import ScopeActionModal from "@/components/modals/ScopeActionModal";
 
 interface UnifiedSidebarProps {
   isOpen: boolean;
