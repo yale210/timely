@@ -28,8 +28,8 @@ class PreferenceSeeder(BaseSeeder):
         temporary_preference, created = Preference.objects.get_or_create(
             user=data["fields"]["user"],
             defaults={
-                "sleep_start": data["fields"]["sleep_start"],
-                "sleep_end": data["fields"]["sleep_end"],
+                "day_start": data["fields"]["day_start"],
+                "day_end": data["fields"]["day_end"],
             },
         )
 
@@ -57,8 +57,9 @@ class PreferenceSeeder(BaseSeeder):
             {
                 "fields": {
                     "user": temporary_user,
-                    "sleep_start": self._random_time(),
-                    "sleep_end": self._random_time(),
+                    "day_start": self._random_time(),
+                    "day_end": self._random_time(),
+                    "timezone": "Europe/London",
                 }
             }
         )

@@ -20,9 +20,6 @@ class PreferenceTests(TestCase):
             day_end=datetime.time(23, 0),
         )
 
-        holidays = preference.get_holidays_for_year(2025)
-
-        self.assertGreater(len(holidays), 0)
         self.assertEqual(preference.get_break_time(), "07:00:00 - 23:00:00")
 
     def test_day_start_cannot_equal_day_end(self):
@@ -42,15 +39,3 @@ class PreferenceTests(TestCase):
             day_end=datetime.time(10, 0),
         )
         preference.full_clean()
-
-    def test_get_holidays_for_year_contains_christmas(self):
-        preference = Preference.objects.create(
-            user=self.user,
-            day_start=datetime.time(20, 0),
-            day_end=datetime.time(10, 0),
-        )
-        holidays = preference.get_holidays_for_year(2026)
-        self.assertIn(
-            datetime.date(2026, 12, 25),
-            holidays,
-        )

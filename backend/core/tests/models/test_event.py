@@ -3,13 +3,19 @@ from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
 from django.test import TestCase
 from django.utils import timezone
-from core.models import Event
+from core.models import Event, Preference
 
 
 class EventTests(TestCase):
     def setUp(self):
         self.user = get_user_model().objects.create_user(
             username="testuser", password="password123", email="test@user.com"
+        )
+        Preference.objects.create(
+            user=self.user,
+            day_start=datetime.time(7, 0),
+            day_end=datetime.time(23, 0),
+            timezone="Europe/London",
         )
 
     def test_event_calculate_time_left_one_off(self):
