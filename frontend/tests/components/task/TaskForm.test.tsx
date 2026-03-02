@@ -43,4 +43,31 @@ describe('TaskForm', () => {
         const callData = onSubmit.mock.calls[0][0] as TaskSubmission
         expect(callData.title).toBe('New Task')
     })
+
+    it("disables Save Task until at least one field changes", () => {
+        render(
+            <TaskForm
+                categories={categories}
+                onSubmit={vi.fn()}
+                onCancel={vi.fn()}
+                initialData={{
+                    id: 1,
+                    title: "Existing Task",
+                    description: "Task description",
+                    start_time: "2026-02-20T10:00:00.000Z",
+                    deadline: "2026-02-20T11:00:00.000Z",
+                    importance: 5,
+                    completed: false,
+                    categories: [],
+                    estimated_minutes: 30,
+                }}
+            />
+        )
+
+        const saveButton = screen.getByRole("button", { name: /Save Task/i })
+        expect(saveButton).toBeDisabled()
+
+        fireEvent.change(screen.getByLabelText(/Title/i), { target: { value: "Existing Task Updated" } })
+        expect(saveButton).not.toBeDisabled()
+    })
 })

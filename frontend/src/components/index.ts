@@ -33,6 +33,8 @@ export { default as Footer } from "./layout/Footer";
 // Modal Components
 export { default as ConfirmationModal } from "./modals/ConfirmationModal";
 export { default as CreateGradeModal } from "./modals/CreateGradeModal";
+export { default as RecurrenceScopeModal } from "./modals/RecurrenceScopeModal";
+export { default as ScopeActionModal } from "./modals/ScopeActionModal";
 
 // Notification Components -> Cannot be exported due to no exported member 'default'
 
@@ -46,6 +48,3 @@ export { default as TaskSidebar } from "./tasks/TaskSidebar";
 export { default as TaskCard } from "./tasks/TaskCard";
 export { default as TaskListSection } from "./tasks/TaskListSection";
 export { default as UnifiedSidebar } from "./tasks/UnifiedSidebar";
-
-
-

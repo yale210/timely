@@ -10,7 +10,8 @@ class UserSeeder(BaseSeeder):
 
     def seed(self):
         self._create_fixture_user()
-        self._populate_random_user()
+        for i in range(1000):
+            self._populate_random_user()
 
     def _create_fixture_user(self):
         for user in users:
@@ -21,10 +22,21 @@ class UserSeeder(BaseSeeder):
 
     def _create_user(self, data):
         User = get_user_model()
+
+        username = data["fields"]["username"]
+        email = data["fields"]["email"]
+
+        if User.objects.filter(username=username).exists():
+            return None
+        if User.objects.filter(email=email).exists():
+            return None
+
         User.objects.get_or_create(
-            username=data["fields"]["username"],
-            email=data["fields"]["email"],
-            password=data["fields"]["password"],
+            username=username,
+            defaults={
+                "email": email,
+                "password": data["fields"]["password"],
+            },
         )
 
     def _populate_random_user(self):

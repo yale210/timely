@@ -1,10 +1,12 @@
 from django.db import models
 from django.conf import settings
-from holidays.countries.united_kingdom import UnitedKingdom
+
 from django.core.exceptions import ValidationError
 from datetime import datetime, timedelta
 from django.core.validators import MinValueValidator, MaxValueValidator
-
+from zoneinfo import available_timezones
+from zoneinfo import ZoneInfo
+from django.utils import timezone
 from .day_of_week import DayOfWeek
 
 
@@ -32,14 +34,23 @@ class Preference(models.Model):
         default=4, validators=[MinValueValidator(0), MaxValueValidator(24)]
     )
 
+    # Store as IANA timezone. Enables us to use timezone aware features (like adjusting for the clocks going forward or back).
+    timezone = models.CharField(max_length=100, default="Europe/London")
+
     def clean(self):
         super().clean()
         if self.day_start == self.day_end:
             raise ValidationError({"day_end": "day_start must be different to day_end"})
 
+        if self.timezone not in available_timezones():
+            raise ValidationError({"timezone": "Timezone is not valid"})
+
+        user_timezone = ZoneInfo(self.timezone)
+        today = timezone.now().astimezone(user_timezone).date()
+
         # midnight crossing
-        start = datetime.combine(datetime.today(), self.day_start)
-        end = datetime.combine(datetime.today(), self.day_end)
+        start = datetime.combine(today, self.day_start, tzinfo=user_timezone)
+        end = datetime.combine(today, self.day_end, tzinfo=user_timezone)
 
         if end <= start:
             end += timedelta(days=1)  # Sleep crosses midnight
@@ -51,10 +62,6 @@ class Preference(models.Model):
                     "max_hours_study_per_day": "Max study hours exceeds your available day length."
                 }
             )
-
-    # Retrieve all UK holidays for inputted year.
-    def get_holidays_for_year(self, input_year):
-        return UnitedKingdom(years=[input_year])
 
     # Get the sleep length of the user.
     def get_break_time(self):

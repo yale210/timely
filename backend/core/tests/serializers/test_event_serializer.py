@@ -157,3 +157,32 @@ class EventSerializerTests(TestCase):
             serializer.is_valid(raise_exception=True)
 
         self.assertIn("reminders", context.exception.detail)
+
+    def test_partial_validate_does_not_mutate_instance_fields(self):
+        now = timezone.now().replace(minute=0, second=0, microsecond=0)
+        event = Event.objects.create(
+            user=self.user,
+            title="Recurring Event",
+            start_time=now,
+            end_time=now + datetime.timedelta(hours=1),
+            recurrence_interval=Event.RecurrenceInterval.DAILY,
+            recurrence_end=(now + datetime.timedelta(days=10)).date(),
+        )
+
+        occurrence_start = now + datetime.timedelta(days=3)
+        serializer = EventSerializer(
+            instance=event,
+            data={
+                "title": "Updated Title",
+                "start_time": occurrence_start,
+                "end_time": occurrence_start + datetime.timedelta(hours=1),
+                "recurrence_interval": Event.RecurrenceInterval.DAILY,
+                "recurrence_end": event.recurrence_end,
+            },
+            partial=True,
+            context={"request": type("obj", (object,), {"user": self.user})},
+        )
+
+        self.assertTrue(serializer.is_valid(), serializer.errors)
+        event.refresh_from_db()
+        self.assertEqual(event.start_time, now)
