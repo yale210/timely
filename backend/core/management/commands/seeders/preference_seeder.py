@@ -13,7 +13,9 @@ class PreferenceSeeder(BaseSeeder):
 
     def seed(self):
         self._create_fixture_preference()
-        self._populate_random_preference()
+
+        for i in range(100):
+            self._populate_random_preference()
 
     def _create_fixture_preference(self):
         for temporary_preference in preferences:
@@ -23,7 +25,7 @@ class PreferenceSeeder(BaseSeeder):
                 pass
 
     def _create_preference(self, data):
-        temporary_preference, _ = Preference.objects.get_or_create(
+        temporary_preference, created = Preference.objects.get_or_create(
             user=data["fields"]["user"],
             defaults={
                 "sleep_start": data["fields"]["sleep_start"],
@@ -37,6 +39,8 @@ class PreferenceSeeder(BaseSeeder):
         for day in days:
             temporary_preference.days_off.add(day)
 
+        return created
+
     def _populate_random_preference(self):
         User = get_user_model()
         # Shuffle users and get a random user.
@@ -49,7 +53,7 @@ class PreferenceSeeder(BaseSeeder):
                 password="thomas123",
             )
 
-        self._create_preference(
+        return self._create_preference(
             {
                 "fields": {
                     "user": temporary_user,

@@ -13,7 +13,8 @@ class TaskSeeder(BaseSeeder):
 
     def seed(self):
         self._create_fixture_task()
-        self._populate_random_task()
+        for i in range(200):
+            self._populate_random_task()
 
     def _create_fixture_task(self):
         for task in tasks:

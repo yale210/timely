@@ -5,7 +5,7 @@ python manage.py unseed
 """
 
 from django.core.management.base import BaseCommand
-from django.contrib.auth import get_user_model as User
+from django.contrib.auth import get_user_model
 from core.models import (
     Category,
     Commute,
@@ -16,6 +16,7 @@ from core.models import (
     Preference,
     Profile,
     SpecialDates,
+    Friendship,
 )
 
 
@@ -29,32 +30,49 @@ class Command(BaseCommand):
         Deletes all objects from the database, unseeding it and allowing for a fresh seed.
         """
 
-        count = User().objects.all().delete()[0]
-        print(f"Deleted {count} users.")
+        User = get_user_model()
 
-        count = Category.objects.all().delete()[0]
-        print(f"Deleted {count} categories.")
+        user_count = User.objects.count()
+        category_count = Category.objects.count()
+        commute_count = Commute.objects.count()
+        day_of_week_count = DayOfWeek.objects.count()
+        event_count = Event.objects.count()
+        task_count = Task.objects.count()
+        grade_count = Grade.objects.count()
+        preference_count = Preference.objects.count()
+        profile_count = Profile.objects.count()
+        special_date_count = SpecialDates.objects.count()
+        friendship_count = Friendship.objects.count()
 
-        count = Commute.objects.all().delete()[0]
-        print(f"Deleted {count} commutes.")
+        User.objects.all().delete()
+        print(f"Deleted {user_count} users.")
 
-        count = DayOfWeek.objects.all().delete()[0]
-        print(f"Deleted {count} days of the week.")
+        Category.objects.all().delete()
+        print(f"Deleted {category_count} categories.")
 
-        count = Event.objects.all().delete()[0]
-        print(f"Deleted {count} event.")
+        Commute.objects.all().delete()
+        print(f"Deleted {commute_count} commutes.")
 
-        count = Task.objects.all().delete()[0]
-        print(f"Deleted {count} tasks.")
+        DayOfWeek.objects.all().delete()
+        print(f"Deleted {day_of_week_count} days of the week.")
 
-        count = Grade.objects.all().delete()[0]
-        print(f"Deleted {count} grades.")
+        Event.objects.all().delete()
+        print(f"Deleted {event_count} event.")
 
-        count = Preference.objects.all().delete()[0]
-        print(f"Deleted {count} preferences.")
+        Task.objects.all().delete()
+        print(f"Deleted {task_count} tasks.")
 
-        count = Profile.objects.all().delete()[0]
-        print(f"Deleted {count} profiles.")
+        Grade.objects.all().delete()
+        print(f"Deleted {grade_count} grades.")
 
-        count = SpecialDates.objects.all().delete()[0]
-        print(f"Deleted {count} special dates.")
+        Preference.objects.all().delete()
+        print(f"Deleted {preference_count} preferences.")
+
+        Profile.objects.all().delete()
+        print(f"Deleted {profile_count} profiles.")
+
+        SpecialDates.objects.all().delete()
+        print(f"Deleted {special_date_count} special dates.")
+
+        Friendship.objects.all().delete()
+        print(f"Deleted {friendship_count} friendships.")
