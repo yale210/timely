@@ -1,7 +1,18 @@
 import { useState, useCallback } from "react";
-import { type Category, type Task, type Event, type TaskSubmission, type EventSubmission } from "../types";
+import {
+  type Category,
+  type Event,
+  type EventMutationContext,
+  type EventSubmission,
+  type Task,
+  type TaskSubmission,
+} from "../types";
+import { useRecurrenceScopeActions } from "../hooks/useRecurrenceScopeActions";
 import TaskForm from "./TaskForm";
 import EventForm from "./EventForm";
+import ConfirmationModal from "./ConfirmationModal";
+import RecurrenceScopeModal from "./RecurrenceScopeModal";
+import ScopeActionModal from "./ScopeActionModal";
 
 interface UnifiedSidebarProps {
   isOpen: boolean;
@@ -10,8 +21,9 @@ interface UnifiedSidebarProps {
   categories: Category[];
   initialData?: Task | Event;
   onSubmitTask: (data: TaskSubmission) => void;
-  onSubmitEvent: (data: EventSubmission) => void;
-  onDelete?: () => void;
+  onSubmitEvent: (data: EventSubmission, context?: EventMutationContext) => void;
+  onDelete?: (context?: EventMutationContext) => void;
+  onRevertToSeries?: (context: EventMutationContext) => void;
 }
 
 /**
@@ -25,6 +37,7 @@ interface UnifiedSidebarProps {
  * @param props.onSubmitTask - The callback function to handle task submission.
  * @param props.onSubmitEvent - The callback function to handle event submission.
  * @param props.onDelete - An optional callback function to handle deletion.
+ * @param props.onRevertToSeries - Optional callback to revert an overridden event instance.
  * @returns The rendered unified sidebar component.
  */
 const UnifiedSidebar = ({
@@ -36,6 +49,7 @@ const UnifiedSidebar = ({
   onSubmitTask,
   onSubmitEvent,
   onDelete,
+  onRevertToSeries,
 }: UnifiedSidebarProps) => {
   const [mode, setMode] = useState<"task" | "event">(initialMode);
   
@@ -78,15 +92,61 @@ const UnifiedSidebar = ({
 
   // Merge sharedData into initialData for the forms
   const mergedData = { ...initialData, ...sharedData };
+  const selectedEvent =
+    initialData && "end_time" in initialData ? initialData : undefined;
+  const {
+    isEditingRecurringEvent,
+    openSaveScope,
+    openDeleteScope,
+    openRevertModal,
+    recurrenceScopeModalProps,
+    scopeActionModalProps,
+    revertModalProps,
+  } = useRecurrenceScopeActions({
+    selectedEvent,
+    onSubmitEvent,
+    onDelete,
+    onRevertToSeries,
+    onClose,
+  });
+
+  const eventFormInstanceKey =
+    selectedEvent?.instance_id ??
+    selectedEvent?.original_start_time ??
+    selectedEvent?.start_time ??
+    "new";
+  const eventFormKey = `event-${selectedEvent?.id ?? "new"}-${eventFormInstanceKey}`;
+
 
   if (!isOpen) return null;
 
   return (
     <div className="fixed inset-y-0 right-0 w-96 bg-white shadow-2xl z-50 flex flex-col border-l border-gray-200 transition-transform duration-300 transform translate-x-0">
       <div className="p-4 border-b border-gray-200 flex justify-between items-center bg-gray-50">
-        <h2 className="text-lg font-bold text-gray-900">
-          {initialData?.id ? `Edit ${mode === "task" ? "Task" : "Event"}` : `Create New`}
-        </h2>
+        <div className="flex items-center gap-3">
+          <h2 className="text-lg font-bold text-gray-900">
+            {initialData?.id ? `Edit ${mode === "task" ? "Task" : "Event"}` : `Create New`}
+          </h2>
+          {mode === "event" && selectedEvent?.is_override && (
+            <span className="rounded-full border border-orange-200 bg-orange-50 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-orange-700">
+              Modified Instance
+            </span>
+          )}
+          {mode === "event" && selectedEvent?.is_split_series && (
+            <span className="rounded-full border border-sky-200 bg-sky-50 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-sky-700">
+              Split Series
+            </span>
+          )}
+          {mode === "event" && selectedEvent?.is_override && onRevertToSeries && (
+            <button
+              type="button"
+              onClick={openRevertModal}
+              className="rounded-md border border-orange-200 bg-orange-50 px-2 py-1 text-[10px] font-semibold uppercase tracking-wide text-orange-700 hover:bg-orange-100"
+            >
+              Revert To Series
+            </button>
+          )}
+        </div>
         <button
           onClick={onClose}
           className="p-2 hover:bg-gray-200 rounded-full transition-colors"
@@ -130,16 +190,26 @@ const UnifiedSidebar = ({
             key={`task-${initialData?.id ?? 'new'}`}
             initialData={mergedData as Task}
             categories={categories}
-            onSubmit={onSubmitTask}
+            onSubmit={(data) => {
+              onSubmitTask(data);
+              onClose();
+            }}
             onCancel={onClose}
             onDataChange={handleDataChange}
           />
         ) : (
           <EventForm
-            key={`event-${initialData?.id ?? 'new'}`}
+            key={eventFormKey}
             initialData={mergedData as Event}
             categories={categories}
-            onSubmit={onSubmitEvent}
+            onSubmit={(data) => {
+              if (isEditingRecurringEvent) {
+                openSaveScope(data);
+                return;
+              }
+              onSubmitEvent(data);
+              onClose();
+            }}
             onCancel={onClose}
             onDataChange={handleDataChange}
           />
@@ -149,7 +219,14 @@ const UnifiedSidebar = ({
       {onDelete && initialData?.id && (
         <div className="p-4 bg-red-50 border-t border-red-100">
           <button
-            onClick={onDelete}
+            onClick={() => {
+              if (mode === "event" && isEditingRecurringEvent) {
+                openDeleteScope();
+                return;
+              }
+              onDelete();
+              onClose();
+            }}
             className="w-full py-2 text-red-600 font-medium hover:bg-red-100 rounded-lg transition-colors flex items-center justify-center gap-2"
           >
             <span className="material-icons text-sm">delete</span>
@@ -157,6 +234,12 @@ const UnifiedSidebar = ({
           </button>
         </div>
       )}
+
+      <RecurrenceScopeModal {...recurrenceScopeModalProps} />
+
+      <ScopeActionModal {...scopeActionModalProps} />
+
+      <ConfirmationModal {...revertModalProps} />
     </div>
   );
 };

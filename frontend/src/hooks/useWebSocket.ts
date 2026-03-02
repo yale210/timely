@@ -28,10 +28,11 @@ export const useWebSocket = (url: string | null, onMessage: (data: unknown) => v
   const reconnectTimeoutRef = useRef<number | null>(null);
   const reconnectAttemptsRef = useRef(0);
   const connectRef = useRef<() => void>(undefined);
-
+  const disposedRef = useRef(false);
   const connect = useCallback(() => {
     if (!url) return;
 
+    if (disposedRef.current) return;
     setStatus(ConnectionStatusValues.CONNECTING);
     
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
@@ -42,6 +43,7 @@ export const useWebSocket = (url: string | null, onMessage: (data: unknown) => v
     socketRef.current = socket;
 
     socket.onopen = () => {
+      if (disposedRef.current) return;
       setStatus(ConnectionStatusValues.OPEN);
       reconnectAttemptsRef.current = 0;
     };
@@ -56,6 +58,7 @@ export const useWebSocket = (url: string | null, onMessage: (data: unknown) => v
     };
 
     socket.onclose = (event) => {
+      if (disposedRef.current) return;
       setStatus(ConnectionStatusValues.CLOSED);
       socketRef.current = null;
 
@@ -78,12 +81,14 @@ export const useWebSocket = (url: string | null, onMessage: (data: unknown) => v
   }, [connect]);
 
   useEffect(() => {
+    disposedRef.current = false;
     // Calling connect asynchronously to avoid synchronous setState in effect
     const timeoutId = setTimeout(() => {
       connect();
     }, 0);
 
     return () => {
+      disposedRef.current = true;
       clearTimeout(timeoutId);
       if (socketRef.current) {
         socketRef.current.close(1000, 'Component unmounting');

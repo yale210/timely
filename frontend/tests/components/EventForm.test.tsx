@@ -72,6 +72,32 @@ describe('EventForm', () => {
     expect(screen.getByLabelText(/Interval/i)).toHaveValue('weekly')
   })
 
+  it("defaults end date/time to start + 1 hour when start_time exists without end_time", () => {
+    const start = new Date("2026-02-15T09:30:00.000Z")
+    const expectedEnd = new Date(start.getTime() + (60 * 60 * 1000))
+
+    render(
+      <EventForm
+        initialData={{
+          id: 0,
+          title: "",
+          start_time: start.toISOString(),
+          categories: [],
+          reminders: [],
+        } as unknown as Event}
+        categories={mockCategories}
+        onSubmit={onSubmit}
+        onCancel={onCancel}
+      />
+    )
+
+    expect(screen.getByLabelText(/Start Date/i)).toHaveValue(toDateInputValue(start))
+    expect(screen.getByLabelText(/End Date/i, { selector: "#event-end-date" })).toHaveValue(
+      toDateInputValue(expectedEnd),
+    )
+    expect(screen.getByLabelText(/End Time/i)).toHaveValue(toTimeInputValue(expectedEnd))
+  })
+
   it('calls onCancel when cancel button is clicked', () => {
     render(
       <EventForm
@@ -103,6 +129,28 @@ describe('EventForm', () => {
       title: 'New Event',
       location: 'New Place'
     }))
+  })
+
+  it("disables Save Event until at least one field changes", () => {
+    const editableInitialData: Event = {
+      ...mockInitialData,
+      reminders: [],
+    }
+
+    render(
+      <EventForm
+        initialData={editableInitialData}
+        categories={mockCategories}
+        onSubmit={onSubmit}
+        onCancel={onCancel}
+      />
+    )
+
+    const saveButton = screen.getByRole("button", { name: /Save Event/i })
+    expect(saveButton).toBeDisabled()
+
+    fireEvent.change(screen.getByLabelText(/Title/i), { target: { value: "Existing Event Updated" } })
+    expect(saveButton).not.toBeDisabled()
   })
 
   it('validates time (start before end)', () => {
