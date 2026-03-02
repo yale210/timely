@@ -2,14 +2,23 @@ import { Fragment, useState } from "react";
 import { Dialog, Transition, TransitionChild, DialogPanel, DialogTitle } from "@headlessui/react";
 import EventForm from "./EventForm";
 import ConfirmationModal from "./ConfirmationModal";
-import { type Category, type Event, type EventSubmission } from "../types";
+import RecurrenceScopeModal from "./RecurrenceScopeModal";
+import ScopeActionModal from "./ScopeActionModal";
+import {
+  type Category,
+  type Event,
+  type EventMutationContext,
+  type EventSubmission,
+  } from "../types";
+import { useRecurrenceScopeActions } from "../hooks/useRecurrenceScopeActions";
 
 interface EventSidebarProps {
   isOpen: boolean;
   onClose: () => void;
   categories: Category[];
-  onSubmit: (data: EventSubmission) => void;
-  onDelete?: () => void;
+  onSubmit: (data: EventSubmission, context?: EventMutationContext) => void;
+  onDelete?: (context?: EventMutationContext) => void;
+  onRevertToSeries?: (context: EventMutationContext) => void;
   initialData?: Event;
 }
 
@@ -21,6 +30,7 @@ interface EventSidebarProps {
  * @param props.categories - The list of available categories.
  * @param props.onSubmit - The callback function to handle event submission.
  * @param props.onDelete - An optional callback function to handle event deletion.
+ * @param props.onRevertToSeries - Optional callback to revert an overridden instance.
  * @param props.initialData - The initial data for the event being edited.
  * @returns The rendered event sidebar component.
  */
@@ -30,9 +40,35 @@ const EventSidebar = ({
   categories,
   onSubmit,
   onDelete,
+  onRevertToSeries,
   initialData,
 }: EventSidebarProps) => {
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+
+  const {
+    isEditingRecurringEvent,
+    openSaveScope,
+    openDeleteScope,
+    openRevertModal,
+    recurrenceScopeModalProps,
+    scopeActionModalProps,
+    revertModalProps,
+  } = useRecurrenceScopeActions({
+    selectedEvent: initialData,
+    onSubmitEvent: onSubmit,
+    onDelete,
+    onRevertToSeries,
+    onClose,
+  });
+
+  const originalAnchor = initialData?.original_start_time ?? initialData?.start_time;
+  const eventInstanceKey =
+    initialData?.instance_id ??
+    initialData?.original_start_time ??
+    initialData?.start_time ??
+    "new";
+  const eventFormKey = `event-${initialData?.id ?? "new"}-${eventInstanceKey}`;
+
 
   return (
     <>
@@ -70,9 +106,34 @@ const EventSidebar = ({
                           <DialogTitle className="text-lg font-bold text-black">
                             {initialData?.id ? "Edit Event" : "Add New Event"}
                           </DialogTitle>
+                          {initialData?.is_override && (
+                            <span className="rounded-full border border-orange-200 bg-orange-50 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-orange-700">
+                              Modified Instance
+                            </span>
+                          )}
+                          {initialData?.is_split_series && (
+                            <span className="rounded-full border border-sky-200 bg-sky-50 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-sky-700">
+                              Split Series
+                            </span>
+                          )}
+                          {initialData?.is_override && onRevertToSeries && originalAnchor && (
+                            <button
+                              type="button"
+                              onClick={openRevertModal}
+                              className="rounded-md border border-orange-200 bg-orange-50 px-2 py-1 text-[10px] font-semibold uppercase tracking-wide text-orange-700 hover:bg-orange-100"
+                            >
+                              Revert To Series
+                            </button>
+                          )}
                           {initialData?.id !== undefined && initialData.id !== 0 && onDelete && (
                             <button
-                              onClick={() => setIsDeleteModalOpen(true)}
+                              onClick={() => {
+                                if (isEditingRecurringEvent) {
+                                  openDeleteScope();
+                                  return;
+                                }
+                                setIsDeleteModalOpen(true);
+                              }}
                               className="text-red-500 hover:text-red-700 transition-colors p-1 rounded-md hover:bg-red-50"
                               title="Delete Event"
                             >
@@ -90,9 +151,14 @@ const EventSidebar = ({
 
                       <div className="relative flex-1 overflow-y-auto bg-white">
                         <EventForm
+                          key={eventFormKey}
                           initialData={initialData}
                           categories={categories}
                           onSubmit={(data) => {
+                            if (isEditingRecurringEvent) {
+                              openSaveScope(data);
+                              return;
+                            }
                             onSubmit(data);
                             onClose();
                           }}
@@ -121,6 +187,12 @@ const EventSidebar = ({
         message="Are you sure you want to delete this event? This action cannot be undone."
         confirmText="Delete"
       />
+
+      <RecurrenceScopeModal {...recurrenceScopeModalProps} />
+
+      <ScopeActionModal {...scopeActionModalProps} />
+
+      <ConfirmationModal {...revertModalProps} />
     </>
   );
 };

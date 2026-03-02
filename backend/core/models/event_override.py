@@ -1,0 +1,32 @@
+from django.db import models
+
+from .base_event import BaseEventModel
+from .category import Category
+from .event import Event
+
+
+class EventOverride(BaseEventModel):
+    parent_event = models.ForeignKey(
+        Event,
+        on_delete=models.CASCADE,
+        related_name="overrides",
+    )
+    original_start_time = models.DateTimeField(db_index=True)
+    categories = models.ManyToManyField(
+        Category,
+        blank=True,
+        related_name="event_overrides",
+    )
+    reminders_snapshot = models.JSONField(default=list, blank=True)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["parent_event", "original_start_time"],
+                name="unique_event_override_anchor",
+            )
+        ]
+
+    def save(self, *args, **kwargs):
+        self.full_clean()
+        return super().save(*args, **kwargs)

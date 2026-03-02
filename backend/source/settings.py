@@ -26,6 +26,7 @@ load_dotenv(BASE_DIR / ".env")
 # only turn debug on when it is in debug mode
 
 DEBUG = os.getenv("DEBUG", "True") == "True"
+ENABLE_RECURRENCE_OVERRIDES = os.getenv("ENABLE_RECURRENCE_OVERRIDES", "True") == "True"
 
 # only turn SQLite on when using SQLite instead of PostgreSQL databasa
 POSTGRES = os.getenv("POSTGRES", "False") == "True"
@@ -193,6 +194,7 @@ AUTHENTICATION_BACKENDS = (
 AUTH_USER_MODEL = "authentication.User"
 
 REST_FRAMEWORK = {
+    "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
     "DEFAULT_AUTHENTICATION_CLASSES": (
         "knox.auth.TokenAuthentication",
         "rest_framework.authentication.SessionAuthentication",

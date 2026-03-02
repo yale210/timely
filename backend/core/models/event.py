@@ -3,10 +3,11 @@ from django.core.exceptions import ValidationError
 from django.db import models
 from django.utils.timezone import now
 
+from .base_event import BaseEventModel
 from .category import Category
 
 
-class Event(models.Model):
+class Event(BaseEventModel):
     """
     Model used to allow for events to be created.
     Events can be one-off, or recurring and with set intervals.
@@ -22,13 +23,6 @@ class Event(models.Model):
         related_name="events",
     )
 
-    title = models.CharField(max_length=500, default="Untitled Event")
-    description = models.TextField(blank=True)
-    location = models.CharField(max_length=255, blank=True)
-
-    start_time = models.DateTimeField(default=now)
-    end_time = models.DateTimeField(default=now)
-
     class RecurrenceInterval(models.TextChoices):
         DAILY = "daily", "Daily"
         WEEKLY = "weekly", "Weekly"
@@ -39,11 +33,18 @@ class Event(models.Model):
         max_length=20, choices=RecurrenceInterval.choices, null=True, blank=True
     )
     recurrence_end = models.DateField(null=True, blank=True)
+    exception_dates = models.JSONField(default=list, blank=True)
+    split_from_event = models.ForeignKey(
+        "self",
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="split_child_events",
+    )
 
     def clean(self):
+        super().clean()
         errors = {}
-        if self.start_time and self.end_time and self.end_time < self.start_time:
-            errors["end_time"] = "End time must be after or equal to start time."
 
         # If recurrence_end is provided, it must have an interval
         if self.recurrence_end and not self.recurrence_interval:

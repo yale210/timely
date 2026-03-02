@@ -1,6 +1,35 @@
 import { useState, useEffect, type FormEvent } from "react";
 import { type Category, type Task, type TaskSubmission } from "../types";
 
+interface NormalisedTaskSubmission {
+  title: string;
+  description: string;
+  start_time: string;
+  deadline: string;
+  categories: number[];
+  importance: number;
+  estimated_minutes: number;
+  completed: boolean;
+}
+
+const normaliseTaskSubmission = (
+  submission: TaskSubmission,
+): NormalisedTaskSubmission => ({
+  title: submission.title ?? "",
+  description: submission.description ?? "",
+  start_time: submission.start_time ?? "",
+  deadline: submission.deadline ?? "",
+  categories: [...(submission.categories ?? [])].sort((a, b) => a - b),
+  importance: Number(submission.importance ?? 5),
+  estimated_minutes: Number(submission.estimated_minutes ?? 30),
+  completed: Boolean(submission.completed),
+});
+
+const isTaskSubmissionEqual = (
+  left: NormalisedTaskSubmission,
+  right: NormalisedTaskSubmission,
+): boolean => JSON.stringify(left) === JSON.stringify(right);
+
 interface TaskFormProps {
   initialData?: Task;
   categories: Category[];
@@ -92,20 +121,31 @@ const TaskForm = ({
   
   const hasErrors = Object.keys(errors).length > 0;
 
+  const buildSubmission = (): TaskSubmission => ({
+    title,
+    description,
+    start_time: startDateTime.toISOString(),
+    deadline: endDateTime.toISOString(),
+    categories: selectedCategories,
+    importance,
+    estimated_minutes: estimatedMinutes,
+    completed: initialData?.completed ?? false,
+  });
+
+  const normalisedCurrentSubmission = normaliseTaskSubmission(buildSubmission());
+  const [initialSubmission] = useState<NormalisedTaskSubmission>(
+    () => normalisedCurrentSubmission,
+  );
+  const hasChanges = !isTaskSubmissionEqual(
+    normalisedCurrentSubmission,
+    initialSubmission,
+  );
+
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
-    if (hasErrors) return;
+    if (hasErrors || !hasChanges) return;
 
-    const data: TaskSubmission = {
-      title,
-      description,
-      start_time: startDateTime.toISOString(),
-      deadline: endDateTime.toISOString(),
-      categories: selectedCategories,
-      importance,
-      estimated_minutes: estimatedMinutes,
-      completed: initialData?.completed ?? false,
-    };
+    const data = buildSubmission();
     onSubmit(data);
   };
 
@@ -296,9 +336,9 @@ const TaskForm = ({
         </button>
         <button
           type="submit"
-          disabled={Object.keys(errors).length > 0}
+          disabled={hasErrors || !hasChanges}
           className={`flex-1 px-4 py-2 text-white font-medium rounded-lg shadow-md transition-all flex items-center justify-center gap-2 ${
-            Object.keys(errors).length > 0
+            hasErrors || !hasChanges
               ? "bg-gray-400 cursor-not-allowed"
               : "bg-primary hover:bg-blue-300 hover:shadow-lg"
           }`}

@@ -21,4 +21,6 @@ export {default as ThemeButton} from "./ThemeButton";
 export {default as FontButton} from "./FontButton"
 
 export { default as WeeklySummaryWidget } from "./WeeklySummaryWidget";
+export { default as RecurrenceScopeModal } from "./RecurrenceScopeModal";
+export { default as ScopeActionModal } from "./ScopeActionModal";
 export { default as AppNavbar } from "./AppNavbar"

@@ -60,6 +60,16 @@ vi.mock("./EventForm", () => ({
         onChange={(e) => onDataChange({ description: e.target.value })}
       />
       <button onClick={() => onSubmit({ title: "Submitted Event" })}>Save Event</button>
+      <button
+        onClick={() =>
+          onSubmit({
+            title: "Submitted Event",
+            recurrence_interval: "monthly",
+          })
+        }
+      >
+        Save Event Recurrence
+      </button>
       <button onClick={onCancel}>Cancel</button>
     </div>
   )
@@ -193,6 +203,96 @@ describe("UnifiedSidebar", () => {
     expect(screen.getByTestId("mock-event-form")).toBeInTheDocument();
   });
 
+  it("shows modified-instance badge for override event instances", () => {
+    const event: Event = {
+      id: 1,
+      title: "Existing Event",
+      description: "Event Desc",
+      start_time: new Date().toISOString(),
+      end_time: new Date().toISOString(),
+      categories: [],
+      reminders: [],
+      is_override: true,
+    };
+
+    render(
+      <UnifiedSidebar
+        isOpen={true}
+        onClose={vi.fn()}
+        categories={mockCategories}
+        initialData={event}
+        initialMode="event"
+        onSubmitTask={vi.fn()}
+        onSubmitEvent={vi.fn()}
+      />
+    );
+
+    expect(screen.getByText("Modified Instance")).toBeInTheDocument();
+  });
+
+  it("shows split-series badge for split recurring events", () => {
+    const event: Event = {
+      id: 1,
+      title: "Split Event",
+      description: "Event Desc",
+      start_time: new Date().toISOString(),
+      end_time: new Date().toISOString(),
+      categories: [],
+      reminders: [],
+      is_split_series: true,
+    };
+
+    render(
+      <UnifiedSidebar
+        isOpen={true}
+        onClose={vi.fn()}
+        categories={mockCategories}
+        initialData={event}
+        initialMode="event"
+        onSubmitTask={vi.fn()}
+        onSubmitEvent={vi.fn()}
+      />
+    );
+
+    expect(screen.getByText("Split Series")).toBeInTheDocument();
+  });
+
+  it("shows revert action for override event instances and calls onRevertToSeries", () => {
+    const onRevertToSeries = vi.fn();
+    const event: Event = {
+      id: 1,
+      title: "Existing Event",
+      description: "Event Desc",
+      start_time: "2026-02-20T10:00:00.000Z",
+      end_time: "2026-02-20T11:00:00.000Z",
+      categories: [],
+      reminders: [],
+      is_override: true,
+      original_start_time: "2026-02-20T10:00:00.000Z",
+    };
+
+    render(
+      <UnifiedSidebar
+        isOpen={true}
+        onClose={vi.fn()}
+        categories={mockCategories}
+        initialData={event}
+        initialMode="event"
+        onSubmitTask={vi.fn()}
+        onSubmitEvent={vi.fn()}
+        onRevertToSeries={onRevertToSeries}
+      />
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "Revert To Series" }));
+    fireEvent.click(screen.getByRole("button", { name: "Revert" }));
+
+    expect(onRevertToSeries).toHaveBeenCalledWith({
+      scope: "this",
+      original_start_time: event.original_start_time,
+    });
+  });
+
   it("handles initialData without id (Create mode)", () => {
     const template: Partial<Event> = {
       title: "Template Title",
@@ -256,6 +356,82 @@ describe("UnifiedSidebar", () => {
       />
     );
     fireEvent.click(screen.getByText("close")); // material icon text
+    expect(onClose).toHaveBeenCalled();
+  });
+
+  it("disables this-event scope when recurrence pattern changes", () => {
+    const event: Event = {
+      id: 1,
+      title: "Recurring Event",
+      description: "Event Desc",
+      start_time: "2026-02-20T10:00:00.000Z",
+      end_time: "2026-02-20T11:00:00.000Z",
+      recurrence_interval: "weekly",
+      recurrence_end: "2026-05-01",
+      categories: [],
+      reminders: [],
+      original_start_time: "2026-02-20T10:00:00.000Z",
+    };
+
+    render(
+      <UnifiedSidebar
+        isOpen={true}
+        onClose={vi.fn()}
+        categories={mockCategories}
+        initialData={event}
+        initialMode="event"
+        onSubmitTask={vi.fn()}
+        onSubmitEvent={vi.fn()}
+      />
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "Save Event Recurrence" }));
+
+    expect(screen.getByRole("button", { name: "This event" })).toBeDisabled();
+    expect(
+      screen.getByText(/Pattern changes require This and following or All events/i),
+    ).toBeInTheDocument();
+  });
+
+  it("uses in-app scope confirmation for recurring delete", () => {
+    const onDelete = vi.fn();
+    const onClose = vi.fn();
+    const event: Event = {
+      id: 1,
+      title: "Recurring Event",
+      description: "Event Desc",
+      start_time: "2026-02-20T10:00:00.000Z",
+      end_time: "2026-02-20T11:00:00.000Z",
+      recurrence_interval: "weekly",
+      recurrence_end: "2026-05-01",
+      categories: [],
+      reminders: [],
+      original_start_time: "2026-02-20T10:00:00.000Z",
+    };
+
+    render(
+      <UnifiedSidebar
+        isOpen={true}
+        onClose={onClose}
+        categories={mockCategories}
+        initialData={event}
+        initialMode="event"
+        onSubmitTask={vi.fn()}
+        onSubmitEvent={vi.fn()}
+        onDelete={onDelete}
+      />
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: /Delete Event/i }));
+    fireEvent.click(screen.getByRole("button", { name: "All events" }));
+
+    expect(screen.getByText("Delete all events in this series?")).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Delete All Events" }));
+
+    expect(onDelete).toHaveBeenCalledWith({
+      scope: "all",
+      original_start_time: event.original_start_time,
+    });
     expect(onClose).toHaveBeenCalled();
   });
 });

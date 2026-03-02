@@ -16,7 +16,7 @@ Services you will run locally:
 Key config locations in the repo:
 - `backend/source/asgi.py` — Channels ASGI entry point
 - `backend/source/celery.py` — Celery app
-- `backend/source/settings.py` — `REDIS_URL`, `CHANNEL_LAYERS`, `CELERY_*`
+- `backend/source/settings.py` — `REDIS_URL`, `CHANNEL_LAYERS`, `CELERY_*`, `ENABLE_RECURRENCE_OVERRIDES`
 - `backend/.env.example` — environment variable template
 
 ## 1) Prerequisites
@@ -129,6 +129,7 @@ cp backend/.env.example backend/.env
 Important variables:
 - `REDIS_URL=redis://localhost:6379/0`
 - `POSTGRES=False` (use SQLite for local dev)
+- `ENABLE_RECURRENCE_OVERRIDES=True` (enables backend-flattened recurring instances + scoped recurring mutations)
 - `VAPID_*` keys only needed if testing push notifications
 
 Run migrations:
