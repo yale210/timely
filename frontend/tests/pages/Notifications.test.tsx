@@ -75,7 +75,7 @@ describe("Notifications Page", () => {
         <Notifications />
       </BrowserRouter>,
     );
-    expect(screen.getByText("Notifications")).toBeDefined();
+    expect(screen.getByRole("heading", { name: "Notifications" })).toBeDefined();
     expect(await screen.findByText("Test Notification 1")).toBeDefined();
   });
 
