@@ -2,15 +2,15 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 
-import AdminNotifications from "../../src/pages/Notification/AdminNotifications";
+import AdminNotifications from "@/pages/Notification/AdminNotifications";
 import {
   getAdminUsers,
   sendAdminNotification,
   getAudienceCounts,
   getBroadcastStatus,
-} from "../../src/api/notifications";
+} from "@/api/notifications";
 
-vi.mock("../../src/api/notifications", () => ({
+vi.mock("@/api/notifications", () => ({
   getAdminUsers: vi.fn(),
   sendAdminNotification: vi.fn(),
   getAudienceCounts: vi.fn(),
