@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
+import { NotificationProvider } from "@/context/NotificationContext";
 
 import { AdminNotifications } from "@/pages/Admin/Notifications/AdminNotifications";
 import {
@@ -21,7 +22,9 @@ describe("AdminNotifications Page", () => {
   const renderPage = () =>
     render(
       <MemoryRouter>
-        <AdminNotifications />
+        <NotificationProvider>
+          <AdminNotifications />
+        </NotificationProvider>
       </MemoryRouter>,
     );
 
