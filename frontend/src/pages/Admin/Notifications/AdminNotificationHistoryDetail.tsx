@@ -1,8 +1,8 @@
 import { Link } from "react-router-dom";
 import ConfirmationModal from "@/components/modals/ConfirmationModal";
-import { AdminHistoryDetailPayload } from "@/components/admin/AdminHistoryDetailPayload";
-import { AdminHistoryDetailRecipientsTable } from "@/components/admin/AdminHistoryDetailRecipientsTable";
-import { AdminHistoryDetailMetrics } from "@/components/admin/AdminHistoryDetailMetrics";
+import { AdminHistoryDetailPayload } from "@/components/admin/notifications/AdminHistoryDetailPayload";
+import { AdminHistoryDetailRecipientsTable } from "@/components/admin/notifications/AdminHistoryDetailRecipientsTable";
+import { AdminHistoryDetailMetrics } from "@/components/admin/notifications/AdminHistoryDetailMetrics";
 import { useAdminHistoryDetail } from "@/hooks/useAdminHistoryDetail";
 
 /**

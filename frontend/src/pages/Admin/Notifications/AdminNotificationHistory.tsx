@@ -1,6 +1,6 @@
 import { useNavigate } from "react-router-dom";
-import { AdminHistoryFilters } from "@/components/admin/AdminHistoryFilters";
-import { AdminHistoryTable } from "@/components/admin/AdminHistoryTable";
+import { AdminHistoryFilters } from "@/components/admin/notifications/AdminHistoryFilters";
+import { AdminHistoryTable } from "@/components/admin/notifications/AdminHistoryTable";
 import { useAdminHistory } from "@/hooks/useAdminHistory";
 
 /**

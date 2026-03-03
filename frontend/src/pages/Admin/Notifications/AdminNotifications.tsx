@@ -1,14 +1,14 @@
 import { InformationCircleIcon, ClockIcon } from "@heroicons/react/24/outline";
 import { Link } from "react-router-dom";
 import ConfirmationModal from "@/components/modals/ConfirmationModal";
-import { AdminBroadcastForm } from "@/components/admin/AdminBroadcastForm";
-import { AdminLivePreview } from "@/components/admin/AdminLivePreview";
+import { AdminBroadcastForm } from "@/components/admin/notifications/AdminBroadcastForm";
+import { AdminLivePreview } from "@/components/admin/notifications/AdminLivePreview";
 import { useAdminBroadcastForm } from "@/hooks/useAdminBroadcastForm";
 
 /**
  * Renders the admin broadcast composer and delivery preview panel.
  */
-export default function AdminNotifications() {
+export const AdminNotifications = () => {
   const { state, loading, error, constants, actions } = useAdminBroadcastForm();
 
 return (
