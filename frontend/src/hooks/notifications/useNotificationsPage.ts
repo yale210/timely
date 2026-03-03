@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { getNotifications } from "@/api/notifications";
 import { useNotificationContext } from "@/context/NotificationContext";
@@ -71,6 +71,7 @@ interface UseNotificationsPageReturn {
 export const useNotificationsPage = (): UseNotificationsPageReturn => {
   const navigate = useNavigate();
   const {
+    notifications: contextNotifications,
     loading: contextLoading,
     error: contextError,
     markRead,
@@ -111,6 +112,14 @@ export const useNotificationsPage = (): UseNotificationsPageReturn => {
   useEffect(() => {
     void fetchPage();
   }, [fetchPage]);
+
+  const prevContextNotificationsRef = useRef(contextNotifications);
+  useEffect(() => {
+    if (contextNotifications !== prevContextNotificationsRef.current) {
+      prevContextNotificationsRef.current = contextNotifications;
+      void fetchPage();
+    }
+  }, [contextNotifications, fetchPage]);
 
   useEffect(() => {
     if (page > totalPages) {
