@@ -1,10 +1,11 @@
 import { useEffect, useState } from "react"
-import { Link, NavLink, useNavigate } from "react-router-dom"
+import { Link, NavLink, useNavigate, useLocation } from "react-router-dom"
 import { Menu, MenuButton, MenuItems, MenuItem } from "@headlessui/react"
 import { authStore } from "@/services/authService"
 import { NotificationDropdown } from '@/components/notifications/NotificationDropdown'
 import { useNotificationContext } from '@/context/NotificationContext'
 import { type Notification } from '@/types/notification'
+import AdminSidebar from "@/components/layout/AdminSidebar"
 
 const navItems = [
   { label: "Dashboard", to: "/dashboard" },
@@ -15,10 +16,6 @@ const navItems = [
   { label: "Weekly Summaries", to: "/weekly-summaries" },
 ]
 
-const adminNavItems = [
-  { label: "Admin notifications", to: "/admin/notifications" },
-  { label: "Notification history", to: "/admin/notifications/history" },
-]
 
 const accountItems = [
   { label: "Settings", to: "/settings" },
@@ -32,6 +29,8 @@ export default function AppNavbar() {
   const [open, setOpen] = useState(false)
   const drawerWidth = 280
   const navigate = useNavigate()
+  const location = useLocation()
+  const isAdminRoute = location.pathname.startsWith("/admin")
   const {
     notifications,
     unreadCount,
@@ -139,12 +138,12 @@ export default function AppNavbar() {
 
       {/* Sliding drawer */}
       <nav
-        className={`fixed inset-y-0 left-0 z-50 w-70 max-w-full transform bg-white shadow-xl ring-1 ring-gray-200 transition-transform duration-300 ease-out ${
+        className={`fixed inset-y-0 left-0 z-50 flex w-70 max-w-full flex-col transform bg-white shadow-xl ring-1 ring-gray-200 transition-transform duration-300 ease-out ${
           open ? "translate-x-0" : "-translate-x-full"
         }`}
         aria-label="Main"
       >
-        <div className="flex items-center justify-between px-4 py-2 border-b border-gray-200 min-h-10">
+        <div className="flex items-center justify-between px-4 py-2 border-b border-gray-200 min-h-10 flex-none">
           <Link to="/dashboard" className="flex items-center" onClick={() => setOpen(false)}>
             <img src="/t.png" alt="Timely" className="h-6 w-6" />
           </Link>
@@ -160,55 +159,14 @@ export default function AppNavbar() {
           </button>
         </div>
 
-        <div className="flex h-full flex-col">
-          <ul className="space-y-2 px-4 py-4 text-base">
-            {navItems.map(item => (
-              <li key={item.to}>
-                <NavLink
-                to={item.to}
-                onClick={() => setOpen(false)}
-                className={({ isActive }) =>
-                  [
-                    "flex items-center rounded-md px-3 py-2.5 text-base font-semibold transition-colors",
-                    isActive ? "bg-cyan-50 text-cyan-700 ring-1 ring-cyan-100" : "text-gray-800 hover:bg-gray-100",
-                  ].join(" ")
-                }
-              >
-                {item.label}
-              </NavLink>
-            </li>
-          ))}
-          </ul>
-
-          <div className="mx-4 border-t-2 border-gray-200" />
-
-          <ul className="space-y-2 px-4 py-4 text-base">
-            <li>
-              <NavLink
-                to="/notifications"
-                onClick={() => setOpen(false)}
-                className={({ isActive }) =>
-                  [
-                    "flex items-center justify-between rounded-md px-3 py-2.5 text-base font-semibold transition-colors",
-                    isActive ? "bg-cyan-50 text-cyan-700 ring-1 ring-cyan-100" : "text-gray-800 hover:bg-gray-100",
-                  ].join(" ")
-                }
-              >
-                Notifications
-                {unreadCount > 0 && (
-                  <span className="ml-2 inline-flex items-center justify-center rounded-full bg-red-500 px-2 py-0.5 text-xs font-bold text-white">
-                    {unreadCount}
-                  </span>
-                )}
-              </NavLink>
-            </li>
-          </ul>
-
-          {isStaff && (
+        <div className="flex flex-1 flex-col overflow-y-auto">
+          {isAdminRoute ? (
+            <AdminSidebar onClose={() => setOpen(false)} />
+          ) : (
+            /* ── Main sidebar ── */
             <>
-              <div className="mx-4 border-t-2 border-gray-200" />
               <ul className="space-y-2 px-4 py-4 text-base">
-                {adminNavItems.map(item => (
+                {navItems.map(item => (
                   <li key={item.to}>
                     <NavLink
                       to={item.to}
@@ -225,27 +183,69 @@ export default function AppNavbar() {
                   </li>
                 ))}
               </ul>
+
+              <div className="mx-4 border-t-2 border-gray-200" />
+
+              <ul className="space-y-2 px-4 py-4 text-base">
+                <li>
+                  <NavLink
+                    to="/notifications"
+                    onClick={() => setOpen(false)}
+                    className={({ isActive }) =>
+                      [
+                        "flex items-center justify-between rounded-md px-3 py-2.5 text-base font-semibold transition-colors",
+                        isActive ? "bg-cyan-50 text-cyan-700 ring-1 ring-cyan-100" : "text-gray-800 hover:bg-gray-100",
+                      ].join(" ")
+                    }
+                  >
+                    Notifications
+                    {unreadCount > 0 && (
+                      <span className="ml-2 inline-flex items-center justify-center rounded-full bg-red-500 px-2 py-0.5 text-xs font-bold text-white">
+                        {unreadCount}
+                      </span>
+                    )}
+                  </NavLink>
+                </li>
+              </ul>
+
+              {isStaff && (
+                <>
+                  <div className="mx-4 border-t-2 border-gray-200" />
+                  <ul className="space-y-2 px-4 py-4 text-base">
+                    <li>
+                      <Link
+                        to="/admin/notifications"
+                        onClick={() => setOpen(false)}
+                        className="flex items-center rounded-md px-3 py-2.5 text-base font-semibold text-indigo-600 hover:bg-indigo-50 transition-colors"
+                      >
+                        <span className="material-icons text-lg mr-2">admin_panel_settings</span>
+                        Admin Panel
+                      </Link>
+                    </li>
+                  </ul>
+                </>
+              )}
+
+              <div className="mx-4 border-t-2 border-gray-200" />
+              <ul className="space-y-2 px-4 py-4 text-base">
+                {accountItems.map(item => (
+                  <li key={item.to}>
+                    <Link
+                      to={item.to}
+                      onClick={() => setOpen(false)}
+                      className={`flex items-center rounded-md px-3 py-2.5 text-base font-semibold ${
+                        item.to === "/logout"
+                          ? "text-red-500 hover:bg-red-50"
+                          : "text-gray-800 hover:bg-gray-100"
+                      }`}
+                    >
+                      {item.label}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
             </>
           )}
-
-          <div className="mx-4 border-t-2 border-gray-200" />
-          <ul className="space-y-2 px-4 py-4 text-base">
-            {accountItems.map(item => (
-              <li key={item.to}>
-                <Link
-                  to={item.to}
-                  onClick={() => setOpen(false)}
-                  className={`flex items-center rounded-md px-3 py-2.5 text-base font-semibold ${
-                    item.to === "/logout"
-                      ? "text-red-500 hover:bg-red-50"
-                      : "text-gray-800 hover:bg-gray-100"
-                  }`}
-                >
-                  {item.label}
-                </Link>
-              </li>
-            ))}
-          </ul>
         </div>
       </nav>
     </header>
