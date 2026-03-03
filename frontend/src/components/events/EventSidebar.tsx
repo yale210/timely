@@ -5,7 +5,7 @@ import ConfirmationModal from "@/components/modals/ConfirmationModal";
 import RecurrenceScopeModal from "@/components/modals/RecurrenceScopeModal";
 import ScopeActionModal from "@/components/modals/ScopeActionModal";
 import { type Category, type Event, type EventSubmission, type EventMutationContext } from "@/types";
-import { useRecurrenceScopeActions } from "@/hooks/useRecurrenceScopeActions";
+import { useRecurrenceScopeActions } from "@/hooks/tasks/useRecurrenceScopeActions";
 
 interface EventSidebarProps {
   isOpen: boolean;

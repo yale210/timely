@@ -1,4 +1,4 @@
-import { usePushSubscription } from "@/hooks/usePushSubscription";
+import { usePushSubscription } from "@/hooks/notifications/usePushSubscription";
 
 /**
  * Displays push notification subscription status and controls.

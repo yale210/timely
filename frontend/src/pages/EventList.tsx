@@ -5,7 +5,7 @@ import EventListToolbar from "@/components/events/EventListToolbar";
 import EventPastSection from "@/components/events/EventPastSection";
 import EventTodaySection from "@/components/events/EventTodaySection";
 import EventUpcomingSection from "@/components/events/EventUpcomingSection";
-import { useEventList } from "@/hooks/useEventList";
+import { useEventList } from "@/hooks/events/useEventList";
 
 const EventList = () => {
   const { state, loading, error, actions } = useEventList();

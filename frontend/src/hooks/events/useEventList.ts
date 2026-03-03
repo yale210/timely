@@ -8,7 +8,7 @@ import {
   type EventMutationContext,
   type EventSubmission,
 } from "@/types";
-import { useThemeFont } from "@/hooks/useThemeFont";
+import { useThemeFont } from "@/hooks/common/useThemeFont";
 
 const getEventWindow = () => ({
   start_date: moment().subtract(30, "days").format("YYYY-MM-DD"),

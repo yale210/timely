@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import ConfirmationModal from "@/components/modals/ConfirmationModal";
 import { AdminBroadcastForm } from "@/components/admin/notifications/AdminBroadcastForm";
 import { AdminLivePreview } from "@/components/admin/notifications/AdminLivePreview";
-import { useAdminBroadcastForm } from "@/hooks/useAdminBroadcastForm";
+import { useAdminBroadcastForm } from "@/hooks/admin/notifications/useAdminBroadcastForm";
 
 /**
  * Renders the admin broadcast composer and delivery preview panel.

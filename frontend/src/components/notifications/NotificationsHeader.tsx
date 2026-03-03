@@ -1,5 +1,5 @@
 import { CheckCircleIcon, TrashIcon } from "@heroicons/react/24/outline";
-import { type NotificationFilterTab, filterTabs } from "@/hooks/useNotificationsPage";
+import { type NotificationFilterTab, filterTabs } from "@/hooks/notifications/useNotificationsPage";
 
 interface NotificationsHeaderProps {
   activeTab: NotificationFilterTab;

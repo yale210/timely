@@ -3,7 +3,7 @@ import ConfirmationModal from "@/components/modals/ConfirmationModal";
 import { AdminHistoryDetailPayload } from "@/components/admin/notifications/AdminHistoryDetailPayload";
 import { AdminHistoryDetailRecipientsTable } from "@/components/admin/notifications/AdminHistoryDetailRecipientsTable";
 import { AdminHistoryDetailMetrics } from "@/components/admin/notifications/AdminHistoryDetailMetrics";
-import { useAdminHistoryDetail } from "@/hooks/useAdminHistoryDetail";
+import { useAdminHistoryDetail } from "@/hooks/admin/notifications/useAdminHistoryDetail";
 
 /**
  * Renders details and recipient status for a broadcast history item.

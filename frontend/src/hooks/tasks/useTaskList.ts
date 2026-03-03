@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import moment from "moment";
 import * as taskService from "@/services/taskService";
 import { type Category, type Task, type TaskSubmission } from "@/types";
-import { useThemeFont } from "@/hooks/useThemeFont";
+import { useThemeFont } from "@/hooks/common/useThemeFont";
 
 type TaskCompletionFilter = "all" | "completed" | "pending";
 

@@ -1,5 +1,5 @@
 import { useState } from "react"
-import useCategories from "@/hooks/useCategories"
+import useCategories from "@/hooks/tasks/useCategories"
 
 interface Category { id: number; text: string }
 

@@ -8,7 +8,7 @@ import {
   markAsRead as apiMarkAsRead,
   markAsUnread as apiMarkAsUnread,
 } from "@/api/notifications";
-import { useWebSocket } from "@/hooks/useWebSocket";
+import { useWebSocket } from "@/hooks/common/useWebSocket";
 import { authStore, AUTH_CHANGE_EVENT } from "@/services/authService";
 import { type Notification } from "@/types/notification";
 

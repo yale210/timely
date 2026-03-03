@@ -3,7 +3,7 @@ import ConfirmationModal from "@/components/modals/ConfirmationModal";
 import { NotificationsHeader } from "@/components/notifications/NotificationsHeader";
 import { NotificationsList } from "@/components/notifications/NotificationsList";
 import { PushNotificationBanner } from "@/components/notifications/PushNotificationBanner";
-import { useNotificationsPage } from "@/hooks/useNotificationsPage";
+import { useNotificationsPage } from "@/hooks/notifications/useNotificationsPage";
 
 /**
  * Renders the notifications inbox page.

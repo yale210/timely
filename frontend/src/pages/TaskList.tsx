@@ -3,7 +3,7 @@ import { TaskListSection, TaskSidebar } from "@/components";
 import TaskListHeader from "@/components/tasks/TaskListHeader";
 import TaskListToolbar from "@/components/tasks/TaskListToolbar";
 import TaskUpcomingSection from "@/components/tasks/TaskUpcomingSection";
-import { useTaskList } from "@/hooks/useTaskList";
+import { useTaskList } from "@/hooks/tasks/useTaskList";
 
 const TaskList = () => {
   const { state, loading, error, actions } = useTaskList();

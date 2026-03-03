@@ -4,7 +4,7 @@ import { ArrowLeftIcon } from "@heroicons/react/24/outline";
 import ConfirmationModal from "@/components/modals/ConfirmationModal";
 import { NotificationDetailBody } from "@/components/notifications/NotificationDetailBody";
 import { NotificationDetailHeader } from "@/components/notifications/NotificationDetailHeader";
-import { useNotificationDetail } from "@/hooks/useNotificationDetail";
+import { useNotificationDetail } from "@/hooks/notifications/useNotificationDetail";
 
 /**
  * Renders a single notification detail page.
