@@ -1,6 +1,6 @@
 import { Dialog, DialogPanel, DialogTitle, Transition, TransitionChild } from "@headlessui/react";
 import { Fragment } from "react";
-import { type RecurrenceScope } from "../../types";
+import { type RecurrenceScope } from "@/types";
 
 interface ScopeActionModalProps {
   isOpen: boolean;

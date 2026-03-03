@@ -4,7 +4,7 @@ import type {
   EventMutationContext,
   EventSubmission,
   RecurrenceScope,
-} from "../types";
+} from "@/types";
 
 interface UseRecurrenceScopeActionsParams {
   selectedEvent: Event | undefined;
