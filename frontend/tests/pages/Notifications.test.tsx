@@ -15,7 +15,7 @@ vi.mock("@/api/notifications", () => ({
 import { useNotificationContext } from "@/context/NotificationContext";
 import { getNotifications } from "@/api/notifications";
 
-vi.mock("@/hooks/usePushSubscription", () => ({
+vi.mock("@/hooks/notifications/usePushSubscription", () => ({
   usePushSubscription: () => ({
     isSupported: false,
     isSubscribed: false,
