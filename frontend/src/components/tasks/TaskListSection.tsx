@@ -1,5 +1,5 @@
 import { useState } from "react";
-import TaskCard from "./TaskCard";
+import TaskCard from "@/components/tasks/TaskCard";
 import { type Task } from "@/types";
 
 interface TaskListSectionProps {
@@ -41,13 +41,29 @@ const TaskListSection = ({
 
   return (
     <div className="mb-8 bg-white">
-      <div 
+      <div
         className={`flex items-center justify-between mb-4 ${isCollapsible ? "cursor-pointer select-none" : ""}`}
-        onClick={() => isCollapsible && setIsCollapsed(!isCollapsed)}
+        onClick={() => isCollapsible && setIsCollapsed((prev) => !prev)}
+        role={isCollapsible ? "button" : undefined}
+        tabIndex={isCollapsible ? 0 : undefined}
+        onKeyDown={(event) => {
+          if (!isCollapsible) {
+            return;
+          }
+          if (event.key === "Enter" || event.key === " ") {
+            event.preventDefault();
+            setIsCollapsed((prev) => !prev);
+          }
+        }}
+        aria-expanded={isCollapsible ? !isCollapsed : undefined}
       >
         <h3 className="text-lg font-semibold text-black flex items-center">
           {isCollapsible && (
-            <span className={`material-icons text-gray-400 mr-2 transition-transform duration-200 ${isCollapsed ? "-rotate-90" : ""}`}>
+            <span
+              className={`material-icons text-gray-400 mr-2 transition-transform duration-200 ${
+                isCollapsed ? "-rotate-90" : ""
+              }`}
+            >
               expand_more
             </span>
           )}

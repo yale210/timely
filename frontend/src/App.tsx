@@ -6,9 +6,9 @@ import RequireAdmin from "@/components/auth/RequireAdmin"
 import { Home, Login, Signup, Logout, CalendarPage, TaskList, EventList, Gradebook, Dashboard, WeeklySummaries, Settings, Themes } from "./pages/index"
 import { Notifications } from "@/pages/Notification/Notifications"
 import { NotificationDetail } from "@/pages/Notification/NotificationDetail"
-import { default as AdminNotifications } from "@/pages/Notification/AdminNotifications"
-import { AdminNotificationHistory } from "@/pages/Notification/AdminNotificationHistory"
-import { AdminNotificationHistoryDetail } from "@/pages/Notification/AdminNotificationHistoryDetail"
+import { AdminNotifications } from "@/pages/Admin/Notifications/AdminNotifications"
+import { AdminNotificationHistory } from "@/pages/Admin/Notifications/AdminNotificationHistory"
+import { AdminNotificationHistoryDetail } from "@/pages/Admin/Notifications/AdminNotificationHistoryDetail"
 
 /**
  * The root component of the application which organises the routing logic.

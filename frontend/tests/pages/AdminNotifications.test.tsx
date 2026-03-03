@@ -1,16 +1,17 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
+import { NotificationProvider } from "@/context/NotificationContext";
 
-import AdminNotifications from "../../src/pages/Notification/AdminNotifications";
+import { AdminNotifications } from "@/pages/Admin/Notifications/AdminNotifications";
 import {
   getAdminUsers,
   sendAdminNotification,
   getAudienceCounts,
   getBroadcastStatus,
-} from "../../src/api/notifications";
+} from "@/api/notifications";
 
-vi.mock("../../src/api/notifications", () => ({
+vi.mock("@/api/notifications", () => ({
   getAdminUsers: vi.fn(),
   sendAdminNotification: vi.fn(),
   getAudienceCounts: vi.fn(),
@@ -21,7 +22,9 @@ describe("AdminNotifications Page", () => {
   const renderPage = () =>
     render(
       <MemoryRouter>
-        <AdminNotifications />
+        <NotificationProvider>
+          <AdminNotifications />
+        </NotificationProvider>
       </MemoryRouter>,
     );
 

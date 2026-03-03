@@ -1,6 +1,6 @@
 import { Fragment, useState } from "react";
 import { Dialog, Transition, TransitionChild, DialogPanel, DialogTitle } from "@headlessui/react";
-import TaskForm from "./TaskForm";
+import TaskForm from "@/components/tasks/TaskForm";
 import ConfirmationModal from "@/components/modals/ConfirmationModal";
 import { type Category, type Task, type TaskSubmission } from "@/types";
 

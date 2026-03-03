@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from "vitest"
 import { render, screen, fireEvent, waitFor } from "@testing-library/react"
 import { MemoryRouter } from "react-router-dom"
 import Login from "@/pages/Authentication/Login"
+import type * as ComponentsIndexModule from "@/components/index"
 import { authService } from "@/services/authService"
 import "@testing-library/jest-dom/vitest"
 
@@ -12,7 +13,7 @@ vi.mock("@/services/authService", () => ({
 }))
 
 vi.mock("@/components/index", async (importOriginal) => {
-  const actual = await importOriginal<typeof import("@/components/index")>()
+  const actual = await importOriginal<typeof ComponentsIndexModule>()
   return {
     ...actual,
     HomeNavbar: () => <div data-testid="navbar" />,

@@ -1,4 +1,6 @@
 import { NotificationProvider } from "@/context/NotificationContext"
+import type { ReactNode } from "react"
+import type * as ComponentsModule from "@/components"
 import { it, describe, expect, vi, beforeEach, afterEach } from 'vitest'
 import { render, screen, fireEvent, waitFor, cleanup } from '@testing-library/react'
 import TaskList from "@/pages/TaskList"
@@ -8,7 +10,7 @@ import type { TaskSubmission, Task, Category } from "@/types"
 
 vi.mock("@/services/taskService")
 vi.mock("@/context/NotificationContext", () => ({
-  NotificationProvider: ({ children }: { children: any }) => <>{children}</>,
+  NotificationProvider: ({ children }: { children: ReactNode }) => <>{children}</>,
   useNotificationContext: () => ({
     notifications: [],
     unreadCount: 0,
@@ -21,7 +23,7 @@ vi.mock("@/context/NotificationContext", () => ({
 }))
 
 vi.mock("@/components", async (importOriginal) => {
-  const actual = await importOriginal<typeof import("@/components")>()
+  const actual = await importOriginal<typeof ComponentsModule>()
 
   const MockTaskSidebar = (props: {
     isOpen: boolean;

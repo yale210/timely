@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect, useCallback, useRef, type ReactNode} from "react";
+import { createContext, useContext, useState, useEffect, useCallback, type ReactNode} from "react";
 import {
   deleteAllNotifications as apiDeleteAllNotifications,
   deleteNotification as apiDeleteNotification,
@@ -8,7 +8,8 @@ import {
   markAsRead as apiMarkAsRead,
   markAsUnread as apiMarkAsUnread,
 } from "@/api/notifications";
-import { useWebSocket } from "@/hooks/useWebSocket";
+import { useWebSocket } from "@/hooks/common/useWebSocket";
+import { authStore, AUTH_CHANGE_EVENT } from "@/services/authService";
 import { type Notification } from "@/types/notification";
 
 interface WebSocketNotificationMessage {
@@ -61,13 +62,19 @@ interface NotificationProviderProps {
  * @param root0.children - Child components that consume the notification context.
  */
 export const NotificationProvider = ({ children }: NotificationProviderProps) => {
-  const hasPerformedInitialFetch = useRef(false);
+  const [hasAuthToken, setHasAuthToken] = useState(() => Boolean(authStore.getToken()));
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const fetchNotifications = useCallback(async () => {
+    if (!authStore.getToken()) {
+      setNotifications([]);
+      setError(null);
+      return;
+    }
+
     setLoading(true);
     try {
       const data = await getNotifications(1);
@@ -82,6 +89,11 @@ export const NotificationProvider = ({ children }: NotificationProviderProps) =>
   }, []);
 
   const fetchUnreadCount = useCallback(async () => {
+    if (!authStore.getToken()) {
+      setUnreadCount(0);
+      return;
+    }
+
     try {
       const data = await getUnreadCount();
       setUnreadCount(data.count);
@@ -184,16 +196,26 @@ export const NotificationProvider = ({ children }: NotificationProviderProps) =>
     }
   }, []);
 
-  useWebSocket("/ws/notifications/", handleWebSocketMessage);
+  useWebSocket(hasAuthToken ? "/ws/notifications/" : null, handleWebSocketMessage);
 
   useEffect(() => {
-    if (hasPerformedInitialFetch.current) {
-      return;
+    const handleAuthChange = () => {
+      setHasAuthToken(Boolean(authStore.getToken()));
+    };
+    window.addEventListener(AUTH_CHANGE_EVENT, handleAuthChange);
+    return () => window.removeEventListener(AUTH_CHANGE_EVENT, handleAuthChange);
+  }, []);
+
+  useEffect(() => {
+    if (hasAuthToken) {
+      void fetchNotifications();
+      void fetchUnreadCount();
+    } else {
+      setNotifications([]);
+      setUnreadCount(0);
+      setError(null);
     }
-    hasPerformedInitialFetch.current = true;
-    void fetchNotifications();
-    void fetchUnreadCount();
-  }, [fetchNotifications, fetchUnreadCount]);
+  }, [hasAuthToken, fetchNotifications, fetchUnreadCount]);
 
   const value: NotificationContextValue = {
     notifications,

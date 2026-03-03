@@ -1,4 +1,4 @@
-import api from "../services/api";
+import api from "@/services/api";
 import type {
   AdminAudienceCounts,
   AdminNotificationSendResponse,
@@ -12,7 +12,7 @@ import type {
   BroadcastJobDetail,
   BroadcastJobStatusResponse,
   RetryBroadcastResponse,
-} from "../types/notification";
+} from "@/types/notification";
 
 /**
  * Fetches paginated list of notifications for the current user.

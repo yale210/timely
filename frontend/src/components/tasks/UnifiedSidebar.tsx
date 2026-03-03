@@ -7,7 +7,7 @@ import {
   type Task,
   type TaskSubmission,
 } from "@/types";
-import { useRecurrenceScopeActions } from "@/hooks/useRecurrenceScopeActions";
+import { useRecurrenceScopeActions } from "@/hooks/tasks/useRecurrenceScopeActions";
 import TaskForm from "@/components/tasks/TaskForm";
 import EventForm from "@/components/events/EventForm";
 import ConfirmationModal from "@/components/modals/ConfirmationModal";

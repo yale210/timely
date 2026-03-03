@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react"
 import { Link } from "react-router-dom"
 import CreateGradeModal from "@/components/modals/CreateGradeModal.tsx"
-import useCategories from "@/hooks/useCategories"
+import useCategories from "@/hooks/tasks/useCategories"
 import AppLayout from "@/layouts/AppLayout"
 
 interface Grade {
