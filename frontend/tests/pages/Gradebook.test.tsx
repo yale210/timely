@@ -149,7 +149,7 @@ describe("Gradebook Page", () => {
 
     await waitFor(() => screen.getByText("Midterm"));
 
-  const deleteBtns = screen.getAllByLabelText(/Delete this grade/i);
+  const deleteBtns = screen.getAllByLabelText(/Delete grade/i);
     fireEvent.click(deleteBtns[0]);
 
     expect(window.confirm).toHaveBeenCalled();
