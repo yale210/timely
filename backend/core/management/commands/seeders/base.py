@@ -1,3 +1,5 @@
+"""Base Seeder"""
+
 from faker import Faker
 
 

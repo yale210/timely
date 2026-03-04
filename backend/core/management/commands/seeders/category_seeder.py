@@ -57,14 +57,3 @@ class CategorySeeder(BaseSeeder):
             colour=data["fields"].get("colour", None),
             max_daily_study_time=data["fields"].get("max_daily_study_time", None),
         )
-
-
-# text = models.CharField(max_length=20, blank=False, null=False)
-# colour = models.CharField(
-#    max_length=10, blank=True, null=True
-# )  # Store the hex code
-# max_daily_study_time = models.PositiveSmallIntegerField(
-#    validators=[MinValueValidator(0), MaxValueValidator(24)],
-#    null=True,
-#    blank=True,
-# )
