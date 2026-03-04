@@ -1,6 +1,6 @@
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from "recharts";
 import type { WeeklyStats } from "@/types";
-import { PRIMARY_BLUE } from "./constants";
+import { PRIMARY_BLUE } from "@/components/charts/constants";
 
 function _map(stats?: WeeklyStats | null) {
   return (stats?.daily_stats ?? []).map((d) => ({ name: d.day, value: d.completed_count }));

@@ -2,7 +2,9 @@ from django.test import TestCase
 from django.utils import timezone
 from django.contrib.auth import get_user_model
 from core.models.event import Event
+from core.models.event_override import EventOverride
 from core.models.event_reminder import EventReminder
+from core.models.reminder_dispatch_log import ReminderDispatchLog
 from notifications.models import Notification, PushSubscription
 from notifications.tasks import (
     check_reminders,
@@ -69,6 +71,102 @@ class TasksTests(TestCase):
             self.assertTrue(mock_save.called)
             saved_instance = mock_save.call_args[0][0]
             self.assertTrue(getattr(saved_instance, "_skip_push", False))
+
+    def test_check_recurring_reminders_dispatches_once_with_dedupe(self):
+        recurring_start = timezone.now() - timezone.timedelta(seconds=10)
+        recurring_event = Event.objects.create(
+            user=self.user,
+            title="Recurring Reminder",
+            start_time=recurring_start,
+            end_time=recurring_start + timezone.timedelta(hours=1),
+            recurrence_interval=Event.RecurrenceInterval.DAILY,
+            recurrence_end=(recurring_start + timezone.timedelta(days=1)).date(),
+        )
+        EventReminder.objects.create(
+            event=recurring_event,
+            minutes_before=0,
+            send_push=False,
+        )
+
+        check_reminders()
+        first_count = Notification.objects.filter(
+            recipient=self.user,
+            title__contains="Recurring Reminder",
+        ).count()
+        self.assertEqual(first_count, 1)
+        self.assertEqual(ReminderDispatchLog.objects.count(), 1)
+
+        check_reminders()
+        second_count = Notification.objects.filter(
+            recipient=self.user,
+            title__contains="Recurring Reminder",
+        ).count()
+        self.assertEqual(second_count, 1)
+        self.assertEqual(ReminderDispatchLog.objects.count(), 1)
+
+    def test_check_recurring_reminders_skips_exception_date(self):
+        recurring_start = timezone.now() - timezone.timedelta(seconds=10)
+        recurring_event = Event.objects.create(
+            user=self.user,
+            title="Recurring Skipped",
+            start_time=recurring_start,
+            end_time=recurring_start + timezone.timedelta(hours=1),
+            recurrence_interval=Event.RecurrenceInterval.DAILY,
+            recurrence_end=(recurring_start + timezone.timedelta(days=1)).date(),
+            exception_dates=[recurring_start.date().isoformat()],
+        )
+        EventReminder.objects.create(
+            event=recurring_event,
+            minutes_before=0,
+            send_push=False,
+        )
+
+        check_reminders()
+        self.assertFalse(
+            Notification.objects.filter(
+                recipient=self.user,
+                title__contains="Recurring Skipped",
+            ).exists()
+        )
+        self.assertEqual(ReminderDispatchLog.objects.count(), 0)
+
+    def test_check_recurring_reminders_uses_override_snapshot(self):
+        recurring_start = timezone.now() - timezone.timedelta(days=1, seconds=10)
+        original_start = recurring_start + timezone.timedelta(days=1)
+        recurring_event = Event.objects.create(
+            user=self.user,
+            title="Base Title",
+            start_time=recurring_start,
+            end_time=recurring_start + timezone.timedelta(hours=1),
+            recurrence_interval=Event.RecurrenceInterval.DAILY,
+            recurrence_end=(recurring_start + timezone.timedelta(days=2)).date(),
+            exception_dates=[original_start.date().isoformat()],
+        )
+        EventReminder.objects.create(
+            event=recurring_event,
+            minutes_before=30,
+            send_push=False,
+        )
+        EventOverride.objects.create(
+            parent_event=recurring_event,
+            title="Override Title",
+            description="",
+            location="",
+            start_time=original_start,
+            end_time=original_start + timezone.timedelta(hours=1),
+            original_start_time=original_start,
+            reminders_snapshot=[
+                {"minutes_before": 0, "send_push": False, "send_email": False}
+            ],
+        )
+
+        check_reminders()
+        self.assertTrue(
+            Notification.objects.filter(
+                recipient=self.user,
+                title__contains="Override Title",
+            ).exists()
+        )
 
     @patch("notifications.tasks.webpush")
     def test_send_push_notification(self, mock_webpush):

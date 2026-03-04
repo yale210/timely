@@ -1,3 +1,7 @@
+export * from "./common/useWebSocket";
+
+// Compatibility shim: some tests and older imports expect hooks at the flat path
+export { useWebSocket as default } from "./common/useWebSocket";
 import { useState, useEffect, useRef, useCallback } from 'react';
 
 /**

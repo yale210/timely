@@ -1,8 +1,8 @@
 import { render, screen, fireEvent } from '@testing-library/react';
 import { describe, it, expect, vi } from 'vitest';
-import { NotificationDropdown } from '../../src/components/NotificationDropdown';
+import { NotificationDropdown } from '@/components/notifications/NotificationDropdown';
 import { BrowserRouter } from 'react-router-dom';
-import { NotificationType } from '../../src/types/notification';
+import { NotificationType } from '@/types/notification';
 
 const mockNotifications = [
   {

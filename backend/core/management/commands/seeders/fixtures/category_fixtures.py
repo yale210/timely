@@ -33,7 +33,7 @@ categories = [
         "model": "core.category",
         "pk": 6,
         "user": 1,
-        "fields": {"text": "Uni", "colour": "234AAA", "max_daily_study_time": 6},
+        "fields": {"text": "Uni", "colour": "#234AAA", "max_daily_study_time": 6},
     },
     {
         "model": "core.category",
@@ -129,7 +129,7 @@ categories = [
         "model": "core.category",
         "pk": 22,
         "user": 4,
-        "fields": {"text": "Work", "colour": "#153235", "max_daily_study_time": ""},
+        "fields": {"text": "Work", "colour": "#153235", "max_daily_study_time": None},
     },
     {
         "model": "core.category",

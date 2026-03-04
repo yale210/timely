@@ -1,6 +1,6 @@
 import { render, screen, fireEvent } from '@testing-library/react';
 import { describe, it, expect, vi } from 'vitest';
-import { NotificationBell } from '../../src/components/NotificationBell';
+import { NotificationBell } from '@/components/notifications/NotificationBell';
 
 describe('NotificationBell', () => {
   it('renders bell icon', () => {

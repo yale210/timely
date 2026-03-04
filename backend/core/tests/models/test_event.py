@@ -3,13 +3,19 @@ from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
 from django.test import TestCase
 from django.utils import timezone
-from core.models import Event
+from core.models import Event, Preference
 
 
 class EventTests(TestCase):
     def setUp(self):
         self.user = get_user_model().objects.create_user(
             username="testuser", password="password123", email="test@user.com"
+        )
+        Preference.objects.create(
+            user=self.user,
+            day_start=datetime.time(7, 0),
+            day_end=datetime.time(23, 0),
+            timezone="Europe/London",
         )
 
     def test_event_calculate_time_left_one_off(self):
@@ -114,4 +120,22 @@ class EventTests(TestCase):
     def test_calculate_time_left_no_start_time(self):
         event = Event(user=self.user, title="No Start Time")
         event.start_time = None
+        self.assertEqual(event.calculate_time_left(), 0)
+
+    def test_user_has_no_preference_returns_zero_for_get_time_left(self):
+        new_user = get_user_model().objects.create_user(
+            username="thomas23112123213", password="password", email="test@email.com"
+        )
+        now = timezone.now()
+        start_time = now
+        recurrence_end = (now + datetime.timedelta(days=100)).date()
+        event = Event(
+            user=new_user,
+            title="Test Event",
+            start_time=start_time,
+            end_time=start_time + datetime.timedelta(hours=1),
+            recurrence_interval="daily",
+            recurrence_end=recurrence_end,
+        )
+        event.full_clean()
         self.assertEqual(event.calculate_time_left(), 0)

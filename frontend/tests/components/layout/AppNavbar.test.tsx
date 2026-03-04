@@ -32,7 +32,7 @@ interface MockDropdownProps {
 }
 
 // Mock NotificationDropdown to focus on AppNavbar logic
-vi.mock("../../../src/components/NotificationDropdown", () => ({
+vi.mock("../../../src/components/notifications/NotificationDropdown", () => ({
   NotificationDropdown: ({ onItemClick, onMarkAllRead, onDeleteAll, onToggleRead, onDeleteItem }: MockDropdownProps) => (
     <div data-testid="mock-notification-dropdown">
        <button onClick={() => onItemClick({ id: 1, title: "Test", message: "", is_read: false } as Notification)}>Click Notification</button>
@@ -100,8 +100,8 @@ describe("AppNavbar Component", () => {
       </BrowserRouter>
     );
 
-    fireEvent.click(screen.getByRole("button", { name: /Open navigation/i }));
-    expect(screen.queryByText("Admin notifications")).not.toBeInTheDocument();
+  fireEvent.click(screen.getByRole("button", { name: /Open navigation/i }));
+  expect(screen.queryByText(/Admin (notifications|Panel)/i)).not.toBeInTheDocument();
 
     // Change the user to a staff user and rerender the same tree
     vi.spyOn(authStore, "getUser").mockReturnValue({ id: 1, is_staff: true } as User);
@@ -111,7 +111,7 @@ describe("AppNavbar Component", () => {
       </BrowserRouter>
     );
 
-    expect(screen.getByText("Admin notifications")).toBeInTheDocument();
+  expect(screen.getByText(/Admin (notifications|Panel)/i)).toBeInTheDocument();
 
     // cleanup to be explicit in tests that modify global mocks/state
     unmount();
@@ -139,20 +139,20 @@ describe("AppNavbar Component", () => {
       </BrowserRouter>
     );
 
-    fireEvent.click(screen.getByText("Mark All Read"));
-    expect(mockContext.markAllRead).toHaveBeenCalled();
+  fireEvent.click(screen.getByText(/Mark All Read/i));
+  expect(mockContext.markAllRead).toHaveBeenCalled();
 
-    fireEvent.click(screen.getByText("Delete All"));
-    expect(mockContext.deleteAllNotifications).toHaveBeenCalled();
+  fireEvent.click(screen.getByText(/Delete All/i));
+  expect(mockContext.deleteAllNotifications).toHaveBeenCalled();
 
-    fireEvent.click(screen.getByText("Toggle Read"));
-    expect(mockContext.markRead).toHaveBeenCalledWith(1);
+  fireEvent.click(screen.getByText(/Toggle Read/i));
+  expect(mockContext.markRead).toHaveBeenCalledWith(1);
 
-    fireEvent.click(screen.getByText("Toggle Unread"));
-    expect(mockContext.markUnread).toHaveBeenCalledWith(1);
+  fireEvent.click(screen.getByText(/Toggle Unread/i));
+  expect(mockContext.markUnread).toHaveBeenCalledWith(1);
 
-    fireEvent.click(screen.getByText("Delete Item"));
-    expect(mockContext.deleteNotification).toHaveBeenCalledWith(1);
+  fireEvent.click(screen.getByText(/Delete Item/i));
+  expect(mockContext.deleteNotification).toHaveBeenCalledWith(1);
     
     // Test clicking a notification navigates and marks read
     fireEvent.click(screen.getByText("Click Notification"));

@@ -1,14 +1,11 @@
 ﻿import { renderHook, waitFor, act } from "@testing-library/react";
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import type React from "react";
-import * as api from "../../src/api/notifications";
-import { useWebSocket } from "../../src/hooks/useWebSocket";
-import type * as NotificationContextModule from "../../src/context/NotificationContext";
 
-// We need to import the actual module to test it, despite the global mock in setupTests.ts
-const { NotificationProvider, useNotificationContext } = await vi.importActual<typeof NotificationContextModule>("../../src/context/NotificationContext");
-
-vi.mock("../../src/api/notifications", () => ({
+// Declare mocks first (they must exist before module evaluation of the
+// NotificationProvider). Use the same alias-style specifiers the app uses so
+// mocked modules line up with imports inside the provider.
+vi.mock("@/api/notifications", () => ({
   getNotifications: vi.fn(),
   getUnreadCount: vi.fn(),
   markAsRead: vi.fn(),
@@ -18,7 +15,7 @@ vi.mock("../../src/api/notifications", () => ({
   deleteAllNotifications: vi.fn(),
 }));
 
-vi.mock("../../src/hooks/useWebSocket", () => ({
+vi.mock("@/hooks/common/useWebSocket", () => ({
   useWebSocket: vi.fn(),
   ConnectionStatusValues: {
     CONNECTING: "CONNECTING",
@@ -28,19 +25,87 @@ vi.mock("../../src/hooks/useWebSocket", () => ({
   },
 }));
 
+// Import the mocked instances after declaring the vi.mock factories so we
+// receive the mocked implementations that tests will control.
+const api = await vi.importMock<typeof import("@/api/notifications")>("@/api/notifications");
+const useWebSocketModule = await vi.importMock<typeof import("@/hooks/common/useWebSocket")>(
+  "@/hooks/common/useWebSocket",
+);
+const { useWebSocket } = useWebSocketModule;
+import type * as NotificationContextModule from "@/context/NotificationContext";
+
+// Ensure the provider believes we're authenticated in these tests so it will
+// attempt to fetch notifications on mount. The global setup in
+// `src/setupTests.ts` mocks the auth service to return `null` for
+// `authStore.getToken()`, so override it here for this file's scope.
+vi.mock("@/services/authService", async (importActual) => {
+  const actual = await importActual<typeof import("../../src/services/authService")>();
+  return {
+    ...actual,
+    authStore: {
+      ...actual.authStore,
+      getToken: vi.fn().mockReturnValue("test-token"),
+      getUser: vi.fn().mockReturnValue(null),
+    },
+  };
+});
+
+// Import the actual NotificationContext after we've set up mocks so the
+// module's dependencies (api and useWebSocket) are replaced by the mocks
+// above. Use the same alias specifier as the app code.
+// We'll import the actual NotificationContext inside beforeEach so each test
+// gets a fresh provider instance that closes over the current mocked
+// implementations. Declare placeholders which we will assign per-test.
+let NotificationProvider: React.ComponentType<{ children: React.ReactNode }>;
+let useNotificationContext: () => NotificationContextModule.NotificationContextValue;
+
 describe("NotificationContext Provider", () => {
   const mockNotifications = [
     { id: 1, title: "N1", message: "M1", is_read: false, timestamp: new Date().toISOString(), notification_type: "SYSTEM" as const, recipient: 1, sender: null, sender_username: null },
     { id: 2, title: "N2", message: "M2", is_read: true, timestamp: new Date().toISOString(), notification_type: "SYSTEM" as const, recipient: 1, sender: null, sender_username: null },
   ];
 
-  beforeEach(() => {
+  beforeEach(async () => {
     vi.clearAllMocks();
-    vi.spyOn(api, "getNotifications").mockResolvedValue({
-      results: mockNotifications,
-      count: 2,
-      next: null,
-      previous: null,
+
+  // We'll import the actual NotificationContext inside beforeEach so each test
+  // gets a fresh provider instance that closes over the current mocked
+  // implementations. We'll assign the placeholders declared at file scope.
+    // Ensure the mocked authStore returns a token for each test run so the
+    // NotificationProvider will perform its initial fetches. Import the
+    // mocked authService module and override getToken here to be explicit and
+    // robust against global setup mocks.
+    const authModule = await vi.importMock<typeof import("@/services/authService")>(
+      "@/services/authService",
+    );
+    if (authModule?.authStore) {
+      vi.spyOn(authModule.authStore, "getToken").mockReturnValue("test-token");
+    }
+
+    // Import the actual NotificationContext AFTER we've set up per-test
+    // mocks so the provider closes over the mocked implementations.
+    const NotificationContextModuleImported = await vi.importActual<
+      typeof import("@/context/NotificationContext")
+    >("@/context/NotificationContext");
+    NotificationProvider = NotificationContextModuleImported.NotificationProvider as React.ComponentType<{
+      children: React.ReactNode;
+    }>;
+    useNotificationContext = NotificationContextModuleImported.useNotificationContext as () =>
+      NotificationContextModule.NotificationContextValue;
+
+    vi.spyOn(api, "getNotifications").mockImplementation(() => {
+      // Diagnostic: log when the mocked API is invoked to ensure the
+      // NotificationProvider calls the mocked implementation during tests.
+      // This helps detect cases where the provider uses a different module
+      // instance than the one the test is mocking.
+      // eslint-disable-next-line no-console
+      console.log("[test] mocked getNotifications invoked");
+      return Promise.resolve({
+        results: mockNotifications,
+        count: 2,
+        next: null,
+        previous: null,
+      });
     });
     vi.spyOn(api, "getUnreadCount").mockResolvedValue({ count: 1 });
     vi.spyOn(console, "error").mockImplementation(vi.fn());
@@ -75,7 +140,7 @@ describe("NotificationContext Provider", () => {
     });
 
     expect(spy).toHaveBeenCalledWith(1);
-    expect(result.current.notifications.find(n => n.id === 1)?.is_read).toBe(true);
+  expect(result.current.notifications.find((n) => n.id === 1)?.is_read).toBe(true);
     // unreadCount should decrease from 1 to 0
     expect(result.current.unreadCount).toBe(0);
   });
@@ -104,7 +169,7 @@ describe("NotificationContext Provider", () => {
     });
 
     expect(spy).toHaveBeenCalledWith(2);
-    expect(result.current.notifications.find(n => n.id === 2)?.is_read).toBe(false);
+  expect(result.current.notifications.find((n) => n.id === 2)?.is_read).toBe(false);
     // unreadCount should increase from 1 to 2
     expect(result.current.unreadCount).toBe(2);
   });
@@ -133,7 +198,7 @@ describe("NotificationContext Provider", () => {
     });
 
     expect(spy).toHaveBeenCalled();
-    expect(result.current.notifications.every(n => n.is_read)).toBe(true);
+  expect(result.current.notifications.every((n) => n.is_read)).toBe(true);
     expect(result.current.unreadCount).toBe(0);
   });
 
@@ -148,7 +213,7 @@ describe("NotificationContext Provider", () => {
 
     expect(spy).toHaveBeenCalledWith(1);
     expect(result.current.notifications).toHaveLength(1);
-    expect(result.current.notifications.find(n => n.id === 1)).toBeUndefined();
+  expect(result.current.notifications.find((n) => n.id === 1)).toBeUndefined();
     expect(result.current.unreadCount).toBe(0);
   });
 
@@ -268,7 +333,7 @@ describe("NotificationContext Provider", () => {
 
   it("handles WebSocket 'new_notification' message", async () => {
       let wsCallback: (data: unknown) => void = vi.fn();
-      vi.mocked(useWebSocket).mockImplementation((_url, onMessage) => {
+  vi.mocked(useWebSocket).mockImplementation((_url: string | null, onMessage: (data: unknown) => void) => {
           wsCallback = onMessage;
           return { status: "OPEN", sendMessage: vi.fn(), history: [] };
       });
@@ -289,7 +354,7 @@ describe("NotificationContext Provider", () => {
 
   it("ignores WebSocket 'new_notification' message if already exists", async () => {
       let wsCallback: (data: unknown) => void = vi.fn();
-      vi.mocked(useWebSocket).mockImplementation((_url, onMessage) => {
+  vi.mocked(useWebSocket).mockImplementation((_url: string | null, onMessage: (data: unknown) => void) => {
           wsCallback = onMessage;
           return { status: "OPEN", sendMessage: vi.fn(), history: [] };
       });
@@ -310,7 +375,7 @@ describe("NotificationContext Provider", () => {
 
   it("handles WebSocket 'unread_count' message", async () => {
       let wsCallback: (data: unknown) => void = vi.fn();
-      vi.mocked(useWebSocket).mockImplementation((_url, onMessage) => {
+  vi.mocked(useWebSocket).mockImplementation((_url: string | null, onMessage: (data: unknown) => void) => {
           wsCallback = onMessage;
           return { status: "OPEN", sendMessage: vi.fn(), history: [] };
       });
@@ -327,7 +392,7 @@ describe("NotificationContext Provider", () => {
 
   it("limits notifications list to 20 when receiving via WebSocket", async () => {
     let wsCallback: (data: unknown) => void = vi.fn();
-    vi.mocked(useWebSocket).mockImplementation((_url, onMessage) => {
+  vi.mocked(useWebSocket).mockImplementation((_url: string | null, onMessage: (data: unknown) => void) => {
         wsCallback = onMessage;
         return { status: "OPEN", sendMessage: vi.fn(), history: [] };
     });

@@ -73,6 +73,12 @@ export interface Event {
   recurrence_interval?: "daily" | "weekly" | "monthly" | "yearly" | null;
   recurrence_end?: string | null;
   reminders: EventReminder[];
+  is_override?: boolean;
+  is_split_series?: boolean;
+  source_event_id?: number;
+  split_from_event_id?: number | null;
+  original_start_time?: string | null;
+  instance_id?: string;
 }
 
 /**
@@ -82,6 +88,19 @@ export interface Event {
 export interface EventSubmission extends Omit<Partial<Event>, "reminders" | "categories"> {
   reminders?: Omit<EventReminder, "id">[];
   categories?: number[];
+}
+
+/**
+ * Mutation scope for recurring event updates/deletes.
+ */
+export type RecurrenceScope = "this" | "following" | "all";
+
+/**
+ * Optional query context for scoped recurring mutations.
+ */
+export interface EventMutationContext {
+  scope?: RecurrenceScope;
+  original_start_time?: string;
 }
 
 /**

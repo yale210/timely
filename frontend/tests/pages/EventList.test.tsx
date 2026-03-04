@@ -7,7 +7,7 @@ import * as taskService from "@/services/taskService"
 import { MemoryRouter } from 'react-router-dom'
 import moment from 'moment'
 
-import { type Event, type EventSubmission } from "@/types"
+import { type Event, type EventMutationContext, type EventSubmission } from "@/types"
 
 vi.mock("@/services/eventService")
 vi.mock("@/services/taskService")
@@ -22,8 +22,8 @@ window.ResizeObserver = ResizeObserver;
 interface MockSidebarProps {
   isOpen: boolean;
   onClose: () => void;
-  onSubmit: (data: EventSubmission) => void;
-  onDelete?: () => void;
+  onSubmit: (data: EventSubmission, context?: EventMutationContext) => void;
+  onDelete?: (context?: EventMutationContext) => void;
   initialData?: Event;
 }
 
@@ -36,7 +36,7 @@ vi.mock("@/components", async () => {
         <div data-testid="mock-sidebar">
           <button onClick={onClose}>Close</button>
           <button onClick={() => onSubmit({ title: 'New Event' })}>Submit</button>
-          {initialData && onDelete && <button onClick={onDelete}>Delete</button>}
+          {initialData && onDelete && <button onClick={() => onDelete()}>Delete</button>}
         </div>
       ) : null
     ))
@@ -167,7 +167,7 @@ describe('EventList', () => {
     fireEvent.click(eventItem)
     fireEvent.click(screen.getByText('Submit'))
 
-    await waitFor(() => expect(eventService.updateEvent).toHaveBeenCalledWith(2, expect.anything()))
+    await waitFor(() => expect(eventService.updateEvent).toHaveBeenCalledWith(2, expect.anything(), undefined))
   })
 
   it('handles event deletion', async () => {
@@ -183,7 +183,7 @@ describe('EventList', () => {
     fireEvent.click(eventItem)
     fireEvent.click(screen.getByText('Delete'))
 
-    await waitFor(() => expect(eventService.deleteEvent).toHaveBeenCalledWith(2))
+    await waitFor(() => expect(eventService.deleteEvent).toHaveBeenCalledWith(2, undefined))
   })
 
   it('handles fetch errors gracefully', async () => {

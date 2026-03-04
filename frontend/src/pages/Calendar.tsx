@@ -1,21 +1,14 @@
+import "react-big-calendar/lib/css/react-big-calendar.css";
+import moment from "moment";
 import { useState, useEffect, useCallback } from "react";
 import { Calendar, momentLocalizer, type View, Views } from "react-big-calendar";
-import moment from "moment";
-import "react-big-calendar/lib/css/react-big-calendar.css";
-
-import { UnifiedSidebar } from "../components";
-import "../index.css"
-import AppLayout from "../layouts/AppLayout";
-import * as taskService from "../services/taskService";
+import { UnifiedSidebar } from "@/components/index";
+import "@/index.css"
+import AppLayout from "@/layouts/AppLayout";
+import * as taskService from "@/services/taskService";
 import * as eventService from "@/services/eventService";
-import * as schedulerService from "../services/schedulerService";
-import type {
-  Task,
-  Category,
-  TaskSubmission,
-  Event,
-  EventSubmission,
-} from "../types";
+import * as schedulerService from "@/services/schedulerService";
+import type { Task, Category, TaskSubmission, Event, EventSubmission, EventMutationContext} from "@/types";
 
 const localizer = momentLocalizer(moment);
 /**
@@ -35,7 +28,37 @@ interface CalendarEntry {
   split?: boolean;
   oneGo?: boolean;
   scheduleIndex?: number;
+  eventData?: Event;
 }
+
+const getCalendarWindow = (
+  currentView: View,
+  currentDate: Date,
+): { start_date: string; end_date: string } => {
+  const anchor = moment(currentDate);
+  if (currentView === Views.MONTH) {
+    return {
+      start_date: anchor.clone().startOf("month").startOf("week").format("YYYY-MM-DD"),
+      end_date: anchor.clone().endOf("month").endOf("week").format("YYYY-MM-DD"),
+    };
+  }
+  if (currentView === Views.WEEK) {
+    return {
+      start_date: anchor.clone().startOf("week").format("YYYY-MM-DD"),
+      end_date: anchor.clone().endOf("week").format("YYYY-MM-DD"),
+    };
+  }
+  if (currentView === Views.DAY) {
+    return {
+      start_date: anchor.clone().startOf("day").format("YYYY-MM-DD"),
+      end_date: anchor.clone().endOf("day").format("YYYY-MM-DD"),
+    };
+  }
+  return {
+    start_date: anchor.clone().startOf("day").format("YYYY-MM-DD"),
+    end_date: anchor.clone().add(30, "days").endOf("day").format("YYYY-MM-DD"),
+  };
+};
 
 interface CalendarPageProps {
   showNavbar?: boolean;
@@ -99,16 +122,6 @@ const CalendarPage = ({ showNavbar = true }: CalendarPageProps) => {
       ];
       console.error(err);
       setTasks(mockTasks);
-      /*try {
-        //const res = await axios.get("/api/tasks/");
-        setTasks(res.data);
-        const data = Array.isArray(res.data) ? res.data : [];
-        setTasks(data.length ? data : mockTasks)
-      } catch (err) {
-        console.error(err);
-        setTasks(mockTasks);
-      }
-      console.error(err);*/
     }
   }, []);
 
@@ -122,9 +135,9 @@ const CalendarPage = ({ showNavbar = true }: CalendarPageProps) => {
     }
   }, []);
 
-  const fetchEvents = useCallback(async () => {
+  const fetchEvents = useCallback(async (activeView: View, activeDate: Date) => {
     try {
-      const data = await eventService.getEvents();
+      const data = await eventService.getEvents(getCalendarWindow(activeView, activeDate));
       setEvents(data);
     } catch(err) {
       console.error(err);
@@ -135,13 +148,16 @@ const CalendarPage = ({ showNavbar = true }: CalendarPageProps) => {
   useEffect(() => {
     const init = async () => {
       await fetchTasks();
-      await fetchEvents();
       await fetchCategories();
     };
     init().catch((err: unknown) => {
       console.error("Failed to initialise Calendar:", err);
     });
-  }, [fetchTasks, fetchEvents, fetchCategories]);
+  }, [fetchTasks, fetchCategories]);
+
+  useEffect(() => {
+    void fetchEvents(view, date);
+  }, [fetchEvents, view, date]);
 
   const handleSelectSlot = ({ start }: { start: Date }) => {
     // Create a template for a new task
@@ -170,7 +186,7 @@ const CalendarPage = ({ showNavbar = true }: CalendarPageProps) => {
       }
       return;
     }
-    const event = events.find((ev) => ev.id===entry.sourceId);
+    const event = entry.eventData;
     if (event) {
       setSidebarMode("event");
       setSelectedItem(event);
@@ -192,29 +208,32 @@ const CalendarPage = ({ showNavbar = true }: CalendarPageProps) => {
     }
   };
 
-  const handleSubmitEvent = async (data: EventSubmission) => {
+  const handleSubmitEvent = async (
+    data: EventSubmission,
+    context?: EventMutationContext,
+  ) => {
     try {
       if (selectedItem && "end_time" in selectedItem && selectedItem.id !== 0) {
-        await eventService.updateEvent(selectedItem.id, data);
+        await eventService.updateEvent(selectedItem.id, data, context);
       } else {
         await eventService.createEvent(data);
       }
-      await fetchEvents();
+      await fetchEvents(view, date);
       setIsSidebarOpen(false);
     } catch (err) {
       console.error(err);
     }
   };
 
-  const handleDeleteSelected = async () => {
+  const handleDeleteSelected = async (context?: EventMutationContext) => {
     try {
       if (!selectedItem?.id) {
         console.error("There is either no item, or its id is not valid.");
         return ;
       }
       if ("end_time" in selectedItem) {
-        await eventService.deleteEvent(selectedItem.id);
-        await fetchEvents();
+        await eventService.deleteEvent(selectedItem.id, context);
+        await fetchEvents(view, date);
       } else {
         await taskService.deleteTask(selectedItem.id);
         await fetchTasks();
@@ -225,6 +244,24 @@ const CalendarPage = ({ showNavbar = true }: CalendarPageProps) => {
       console.error(error);
     }
   }
+
+  const handleRevertSelectedEvent = async (context: EventMutationContext) => {
+    try {
+      if (!selectedItem || !("end_time" in selectedItem)) {
+        return;
+      }
+      if (!context.original_start_time) {
+        return;
+      }
+
+      await eventService.revertEventInstance(selectedItem.id, context.original_start_time);
+      await fetchEvents(view, date);
+      setIsSidebarOpen(false);
+      setSelectedItem(undefined);
+    } catch (error) {
+      console.error(error);
+    }
+  };
 
   const handleScheduleTasks = async () => {
     setIsScheduling(true);
@@ -281,7 +318,7 @@ const CalendarPage = ({ showNavbar = true }: CalendarPageProps) => {
       }));
     }),
     ...events.map((event) => ({
-      id: `event-${event.id}`,
+      id: event.instance_id ?? `event-${event.id}-${event.start_time}`,
       title: event.title,
       start: new Date(event.start_time),
       end: new Date(event.end_time),
@@ -289,6 +326,7 @@ const CalendarPage = ({ showNavbar = true }: CalendarPageProps) => {
       kind: "event" as const,
       sourceId: event.id,
       oneGo: true,
+      eventData: event,
     })),
   ];
   return (
@@ -398,8 +436,8 @@ const CalendarPage = ({ showNavbar = true }: CalendarPageProps) => {
           </div>
         </header>
 
-        <main className="flex-grow flex overflow-hidden relative p-4 bg-white">
-          <div className="flex-grow bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+        <main className="grow flex overflow-hidden relative p-4 bg-white">
+          <div className="grow bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
             <Calendar<CalendarEntry>
               localizer={localizer}
               events={calendarEntries}
@@ -444,8 +482,9 @@ const CalendarPage = ({ showNavbar = true }: CalendarPageProps) => {
           initialData={selectedItem}
           initialMode={sidebarMode}
           onSubmitTask={(data) => { void handleSubmitTask(data); }}
-          onSubmitEvent={(data) => { void handleSubmitEvent(data); }}
-          onDelete={() => { void handleDeleteSelected(); }}
+          onSubmitEvent={(data, context) => { void handleSubmitEvent(data, context); }}
+          onDelete={(context) => { void handleDeleteSelected(context); }}
+          onRevertToSeries={(context) => { void handleRevertSelectedEvent(context); }}
         />
       </div>
     </AppLayout>

@@ -1,1999 +1,2359 @@
-{
-    "openapi": "3.0.3",
-    "info": {
-        "title": "Timely API",
-        "version": "1.0.0",
-        "description": "OpenAPI schema for Timely backend"
-    },
-    "paths": {
-        "/api/authentication/logout/": {
-            "post": {
-                "operationId": "authentication_logout_create",
-                "tags": [
-                    "authentication"
-                ],
-                "security": [
-                    {
-                        "knoxApiToken": []
-                    }
-                ],
-                "responses": {
-                    "204": {
-                        "description": "Successfully logged out."
-                    }
-                }
-            }
-        },
-        "/api/authentication/logoutall/": {
-            "post": {
-                "operationId": "authentication_logoutall_create",
-                "description": "Log the user out of all sessions\nI.E. deletes all auth tokens for the user",
-                "tags": [
-                    "authentication"
-                ],
-                "security": [
-                    {
-                        "knoxApiToken": []
-                    }
-                ],
-                "responses": {
-                    "204": {
-                        "description": "Successfully logged out from all sessions."
-                    }
-                }
-            }
-        },
-        "/api/authentication/register/": {
-            "post": {
-                "operationId": "authentication_register_create",
-                "tags": [
-                    "authentication"
-                ],
-                "requestBody": {
-                    "content": {
-                        "application/json": {
-                            "schema": {
-                                "$ref": "#/components/schemas/Register"
-                            }
-                        },
-                        "application/x-www-form-urlencoded": {
-                            "schema": {
-                                "$ref": "#/components/schemas/Register"
-                            }
-                        },
-                        "multipart/form-data": {
-                            "schema": {
-                                "$ref": "#/components/schemas/Register"
-                            }
-                        }
-                    },
-                    "required": true
-                },
-                "security": [
-                    {
-                        "knoxApiToken": []
-                    },
-                    {
-                        "cookieAuth": []
-                    },
-                    {}
-                ],
-                "responses": {
-                    "201": {
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/Register"
-                                }
-                            }
-                        },
-                        "description": ""
-                    }
-                }
-            }
-        },
-        "/api/authentication/session/": {
-            "post": {
-                "operationId": "authentication_session_create",
-                "tags": [
-                    "authentication"
-                ],
-                "requestBody": {
-                    "content": {
-                        "application/json": {
-                            "schema": {
-                                "$ref": "#/components/schemas/Login"
-                            }
-                        },
-                        "application/x-www-form-urlencoded": {
-                            "schema": {
-                                "$ref": "#/components/schemas/Login"
-                            }
-                        },
-                        "multipart/form-data": {
-                            "schema": {
-                                "$ref": "#/components/schemas/Login"
-                            }
-                        }
-                    },
-                    "required": true
-                },
-                "security": [
-                    {
-                        "knoxApiToken": []
-                    },
-                    {
-                        "cookieAuth": []
-                    },
-                    {}
-                ],
-                "responses": {
-                    "200": {
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/Login"
-                                }
-                            }
-                        },
-                        "description": ""
-                    }
-                }
-            }
-        },
-        "/api/authentication/test/": {
-            "get": {
-                "operationId": "authentication_test_retrieve",
-                "tags": [
-                    "authentication"
-                ],
-                "security": [
-                    {
-                        "knoxApiToken": []
-                    },
-                    {
-                        "cookieAuth": []
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/TestPermissionResponse"
-                                }
-                            }
-                        },
-                        "description": ""
-                    }
-                }
-            }
-        },
-        "/api/categories/": {
-            "get": {
-                "operationId": "categories_list",
-                "tags": [
-                    "categories"
-                ],
-                "security": [
-                    {
-                        "knoxApiToken": []
-                    },
-                    {
-                        "cookieAuth": []
-                    },
-                    {}
-                ],
-                "responses": {
-                    "200": {
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "type": "array",
-                                    "items": {
-                                        "$ref": "#/components/schemas/Category"
-                                    }
-                                }
-                            }
-                        },
-                        "description": ""
-                    }
-                }
-            }
-        },
-        "/api/categories/{id}/": {
-            "get": {
-                "operationId": "categories_retrieve",
-                "parameters": [
-                    {
-                        "in": "path",
-                        "name": "id",
-                        "schema": {
-                            "type": "integer"
-                        },
-                        "description": "A unique integer value identifying this category.",
-                        "required": true
-                    }
-                ],
-                "tags": [
-                    "categories"
-                ],
-                "security": [
-                    {
-                        "knoxApiToken": []
-                    },
-                    {
-                        "cookieAuth": []
-                    },
-                    {}
-                ],
-                "responses": {
-                    "200": {
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/Category"
-                                }
-                            }
-                        },
-                        "description": ""
-                    }
-                }
-            }
-        },
-        "/api/events/": {
-            "get": {
-                "operationId": "events_list",
-                "tags": [
-                    "events"
-                ],
-                "security": [
-                    {
-                        "knoxApiToken": []
-                    },
-                    {
-                        "cookieAuth": []
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "type": "array",
-                                    "items": {
-                                        "$ref": "#/components/schemas/EventResponse"
-                                    }
-                                }
-                            }
-                        },
-                        "description": ""
-                    }
-                }
-            },
-            "post": {
-                "operationId": "events_create",
-                "tags": [
-                    "events"
-                ],
-                "requestBody": {
-                    "content": {
-                        "application/json": {
-                            "schema": {
-                                "$ref": "#/components/schemas/Event"
-                            }
-                        },
-                        "application/x-www-form-urlencoded": {
-                            "schema": {
-                                "$ref": "#/components/schemas/Event"
-                            }
-                        },
-                        "multipart/form-data": {
-                            "schema": {
-                                "$ref": "#/components/schemas/Event"
-                            }
-                        }
-                    }
-                },
-                "security": [
-                    {
-                        "knoxApiToken": []
-                    },
-                    {
-                        "cookieAuth": []
-                    }
-                ],
-                "responses": {
-                    "201": {
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/EventResponse"
-                                }
-                            }
-                        },
-                        "description": ""
-                    }
-                }
-            }
-        },
-        "/api/events/{id}/": {
-            "get": {
-                "operationId": "events_retrieve",
-                "parameters": [
-                    {
-                        "in": "path",
-                        "name": "id",
-                        "schema": {
-                            "type": "integer"
-                        },
-                        "required": true
-                    }
-                ],
-                "tags": [
-                    "events"
-                ],
-                "security": [
-                    {
-                        "knoxApiToken": []
-                    },
-                    {
-                        "cookieAuth": []
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/EventResponse"
-                                }
-                            }
-                        },
-                        "description": ""
-                    }
-                }
-            },
-            "put": {
-                "operationId": "events_update",
-                "parameters": [
-                    {
-                        "in": "path",
-                        "name": "id",
-                        "schema": {
-                            "type": "integer"
-                        },
-                        "required": true
-                    }
-                ],
-                "tags": [
-                    "events"
-                ],
-                "requestBody": {
-                    "content": {
-                        "application/json": {
-                            "schema": {
-                                "$ref": "#/components/schemas/Event"
-                            }
-                        },
-                        "application/x-www-form-urlencoded": {
-                            "schema": {
-                                "$ref": "#/components/schemas/Event"
-                            }
-                        },
-                        "multipart/form-data": {
-                            "schema": {
-                                "$ref": "#/components/schemas/Event"
-                            }
-                        }
-                    }
-                },
-                "security": [
-                    {
-                        "knoxApiToken": []
-                    },
-                    {
-                        "cookieAuth": []
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/EventResponse"
-                                }
-                            }
-                        },
-                        "description": ""
-                    }
-                }
-            },
-            "patch": {
-                "operationId": "events_partial_update",
-                "parameters": [
-                    {
-                        "in": "path",
-                        "name": "id",
-                        "schema": {
-                            "type": "integer"
-                        },
-                        "required": true
-                    }
-                ],
-                "tags": [
-                    "events"
-                ],
-                "requestBody": {
-                    "content": {
-                        "application/json": {
-                            "schema": {
-                                "$ref": "#/components/schemas/PatchedEvent"
-                            }
-                        },
-                        "application/x-www-form-urlencoded": {
-                            "schema": {
-                                "$ref": "#/components/schemas/PatchedEvent"
-                            }
-                        },
-                        "multipart/form-data": {
-                            "schema": {
-                                "$ref": "#/components/schemas/PatchedEvent"
-                            }
-                        }
-                    }
-                },
-                "security": [
-                    {
-                        "knoxApiToken": []
-                    },
-                    {
-                        "cookieAuth": []
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/EventResponse"
-                                }
-                            }
-                        },
-                        "description": ""
-                    }
-                }
-            },
-            "delete": {
-                "operationId": "events_destroy",
-                "parameters": [
-                    {
-                        "in": "path",
-                        "name": "id",
-                        "schema": {
-                            "type": "integer"
-                        },
-                        "required": true
-                    }
-                ],
-                "tags": [
-                    "events"
-                ],
-                "security": [
-                    {
-                        "knoxApiToken": []
-                    },
-                    {
-                        "cookieAuth": []
-                    }
-                ],
-                "responses": {
-                    "204": {
-                        "description": "No response body"
-                    }
-                }
-            }
-        },
-        "/api/grades/": {
-            "get": {
-                "operationId": "grades_list",
-                "tags": [
-                    "grades"
-                ],
-                "security": [
-                    {
-                        "knoxApiToken": []
-                    },
-                    {
-                        "cookieAuth": []
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "type": "array",
-                                    "items": {
-                                        "$ref": "#/components/schemas/Grade"
-                                    }
-                                }
-                            }
-                        },
-                        "description": ""
-                    }
-                }
-            },
-            "post": {
-                "operationId": "grades_create",
-                "tags": [
-                    "grades"
-                ],
-                "requestBody": {
-                    "content": {
-                        "application/json": {
-                            "schema": {
-                                "$ref": "#/components/schemas/Grade"
-                            }
-                        },
-                        "application/x-www-form-urlencoded": {
-                            "schema": {
-                                "$ref": "#/components/schemas/Grade"
-                            }
-                        },
-                        "multipart/form-data": {
-                            "schema": {
-                                "$ref": "#/components/schemas/Grade"
-                            }
-                        }
-                    },
-                    "required": true
-                },
-                "security": [
-                    {
-                        "knoxApiToken": []
-                    },
-                    {
-                        "cookieAuth": []
-                    }
-                ],
-                "responses": {
-                    "201": {
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/Grade"
-                                }
-                            }
-                        },
-                        "description": ""
-                    }
-                }
-            }
-        },
-        "/api/grades/{id}/": {
-            "get": {
-                "operationId": "grades_retrieve",
-                "parameters": [
-                    {
-                        "in": "path",
-                        "name": "id",
-                        "schema": {
-                            "type": "integer"
-                        },
-                        "description": "A unique integer value identifying this grade.",
-                        "required": true
-                    }
-                ],
-                "tags": [
-                    "grades"
-                ],
-                "security": [
-                    {
-                        "knoxApiToken": []
-                    },
-                    {
-                        "cookieAuth": []
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/Grade"
-                                }
-                            }
-                        },
-                        "description": ""
-                    }
-                }
-            },
-            "put": {
-                "operationId": "grades_update",
-                "parameters": [
-                    {
-                        "in": "path",
-                        "name": "id",
-                        "schema": {
-                            "type": "integer"
-                        },
-                        "description": "A unique integer value identifying this grade.",
-                        "required": true
-                    }
-                ],
-                "tags": [
-                    "grades"
-                ],
-                "requestBody": {
-                    "content": {
-                        "application/json": {
-                            "schema": {
-                                "$ref": "#/components/schemas/Grade"
-                            }
-                        },
-                        "application/x-www-form-urlencoded": {
-                            "schema": {
-                                "$ref": "#/components/schemas/Grade"
-                            }
-                        },
-                        "multipart/form-data": {
-                            "schema": {
-                                "$ref": "#/components/schemas/Grade"
-                            }
-                        }
-                    },
-                    "required": true
-                },
-                "security": [
-                    {
-                        "knoxApiToken": []
-                    },
-                    {
-                        "cookieAuth": []
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/Grade"
-                                }
-                            }
-                        },
-                        "description": ""
-                    }
-                }
-            },
-            "patch": {
-                "operationId": "grades_partial_update",
-                "parameters": [
-                    {
-                        "in": "path",
-                        "name": "id",
-                        "schema": {
-                            "type": "integer"
-                        },
-                        "description": "A unique integer value identifying this grade.",
-                        "required": true
-                    }
-                ],
-                "tags": [
-                    "grades"
-                ],
-                "requestBody": {
-                    "content": {
-                        "application/json": {
-                            "schema": {
-                                "$ref": "#/components/schemas/PatchedGrade"
-                            }
-                        },
-                        "application/x-www-form-urlencoded": {
-                            "schema": {
-                                "$ref": "#/components/schemas/PatchedGrade"
-                            }
-                        },
-                        "multipart/form-data": {
-                            "schema": {
-                                "$ref": "#/components/schemas/PatchedGrade"
-                            }
-                        }
-                    }
-                },
-                "security": [
-                    {
-                        "knoxApiToken": []
-                    },
-                    {
-                        "cookieAuth": []
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/Grade"
-                                }
-                            }
-                        },
-                        "description": ""
-                    }
-                }
-            },
-            "delete": {
-                "operationId": "grades_destroy",
-                "parameters": [
-                    {
-                        "in": "path",
-                        "name": "id",
-                        "schema": {
-                            "type": "integer"
-                        },
-                        "description": "A unique integer value identifying this grade.",
-                        "required": true
-                    }
-                ],
-                "tags": [
-                    "grades"
-                ],
-                "security": [
-                    {
-                        "knoxApiToken": []
-                    },
-                    {
-                        "cookieAuth": []
-                    }
-                ],
-                "responses": {
-                    "204": {
-                        "description": "No response body"
-                    }
-                }
-            }
-        },
-        "/api/preferences/": {
-            "get": {
-                "operationId": "preferences_list",
-                "tags": [
-                    "preferences"
-                ],
-                "security": [
-                    {
-                        "knoxApiToken": []
-                    },
-                    {
-                        "cookieAuth": []
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "type": "array",
-                                    "items": {
-                                        "$ref": "#/components/schemas/Preference"
-                                    }
-                                }
-                            }
-                        },
-                        "description": ""
-                    }
-                }
-            },
-            "post": {
-                "operationId": "preferences_create",
-                "tags": [
-                    "preferences"
-                ],
-                "requestBody": {
-                    "content": {
-                        "application/json": {
-                            "schema": {
-                                "$ref": "#/components/schemas/Preference"
-                            }
-                        },
-                        "application/x-www-form-urlencoded": {
-                            "schema": {
-                                "$ref": "#/components/schemas/Preference"
-                            }
-                        },
-                        "multipart/form-data": {
-                            "schema": {
-                                "$ref": "#/components/schemas/Preference"
-                            }
-                        }
-                    },
-                    "required": true
-                },
-                "security": [
-                    {
-                        "knoxApiToken": []
-                    },
-                    {
-                        "cookieAuth": []
-                    }
-                ],
-                "responses": {
-                    "201": {
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/Preference"
-                                }
-                            }
-                        },
-                        "description": ""
-                    }
-                }
-            }
-        },
-        "/api/preferences/{id}/": {
-            "get": {
-                "operationId": "preferences_retrieve",
-                "parameters": [
-                    {
-                        "in": "path",
-                        "name": "id",
-                        "schema": {
-                            "type": "integer"
-                        },
-                        "description": "A unique integer value identifying this preference.",
-                        "required": true
-                    }
-                ],
-                "tags": [
-                    "preferences"
-                ],
-                "security": [
-                    {
-                        "knoxApiToken": []
-                    },
-                    {
-                        "cookieAuth": []
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/Preference"
-                                }
-                            }
-                        },
-                        "description": ""
-                    }
-                }
-            },
-            "put": {
-                "operationId": "preferences_update",
-                "parameters": [
-                    {
-                        "in": "path",
-                        "name": "id",
-                        "schema": {
-                            "type": "integer"
-                        },
-                        "description": "A unique integer value identifying this preference.",
-                        "required": true
-                    }
-                ],
-                "tags": [
-                    "preferences"
-                ],
-                "requestBody": {
-                    "content": {
-                        "application/json": {
-                            "schema": {
-                                "$ref": "#/components/schemas/Preference"
-                            }
-                        },
-                        "application/x-www-form-urlencoded": {
-                            "schema": {
-                                "$ref": "#/components/schemas/Preference"
-                            }
-                        },
-                        "multipart/form-data": {
-                            "schema": {
-                                "$ref": "#/components/schemas/Preference"
-                            }
-                        }
-                    },
-                    "required": true
-                },
-                "security": [
-                    {
-                        "knoxApiToken": []
-                    },
-                    {
-                        "cookieAuth": []
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/Preference"
-                                }
-                            }
-                        },
-                        "description": ""
-                    }
-                }
-            },
-            "patch": {
-                "operationId": "preferences_partial_update",
-                "parameters": [
-                    {
-                        "in": "path",
-                        "name": "id",
-                        "schema": {
-                            "type": "integer"
-                        },
-                        "description": "A unique integer value identifying this preference.",
-                        "required": true
-                    }
-                ],
-                "tags": [
-                    "preferences"
-                ],
-                "requestBody": {
-                    "content": {
-                        "application/json": {
-                            "schema": {
-                                "$ref": "#/components/schemas/PatchedPreference"
-                            }
-                        },
-                        "application/x-www-form-urlencoded": {
-                            "schema": {
-                                "$ref": "#/components/schemas/PatchedPreference"
-                            }
-                        },
-                        "multipart/form-data": {
-                            "schema": {
-                                "$ref": "#/components/schemas/PatchedPreference"
-                            }
-                        }
-                    }
-                },
-                "security": [
-                    {
-                        "knoxApiToken": []
-                    },
-                    {
-                        "cookieAuth": []
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/Preference"
-                                }
-                            }
-                        },
-                        "description": ""
-                    }
-                }
-            },
-            "delete": {
-                "operationId": "preferences_destroy",
-                "parameters": [
-                    {
-                        "in": "path",
-                        "name": "id",
-                        "schema": {
-                            "type": "integer"
-                        },
-                        "description": "A unique integer value identifying this preference.",
-                        "required": true
-                    }
-                ],
-                "tags": [
-                    "preferences"
-                ],
-                "security": [
-                    {
-                        "knoxApiToken": []
-                    },
-                    {
-                        "cookieAuth": []
-                    }
-                ],
-                "responses": {
-                    "204": {
-                        "description": "No response body"
-                    }
-                }
-            }
-        },
-        "/api/tasks/": {
-            "get": {
-                "operationId": "tasks_list",
-                "parameters": [
-                    {
-                        "in": "query",
-                        "name": "categories",
-                        "schema": {
-                            "type": "array",
-                            "items": {
-                                "type": "integer"
-                            }
-                        },
-                        "description": "Multiple values may be separated by commas.",
-                        "explode": false,
-                        "style": "form"
-                    },
-                    {
-                        "in": "query",
-                        "name": "completed",
-                        "schema": {
-                            "type": "boolean"
-                        }
-                    },
-                    {
-                        "in": "query",
-                        "name": "deadline__lte",
-                        "schema": {
-                            "type": "string",
-                            "format": "date-time"
-                        }
-                    },
-                    {
-                        "name": "ordering",
-                        "required": false,
-                        "in": "query",
-                        "description": "Which field to use when ordering the results.",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    {
-                        "in": "query",
-                        "name": "start_time__gte",
-                        "schema": {
-                            "type": "string",
-                            "format": "date-time"
-                        }
-                    }
-                ],
-                "tags": [
-                    "tasks"
-                ],
-                "security": [
-                    {
-                        "knoxApiToken": []
-                    },
-                    {
-                        "cookieAuth": []
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "type": "array",
-                                    "items": {
-                                        "$ref": "#/components/schemas/CalendarResponse"
-                                    }
-                                }
-                            }
-                        },
-                        "description": ""
-                    }
-                }
-            },
-            "post": {
-                "operationId": "tasks_create",
-                "tags": [
-                    "tasks"
-                ],
-                "requestBody": {
-                    "content": {
-                        "application/json": {
-                            "schema": {
-                                "$ref": "#/components/schemas/Calendar"
-                            }
-                        },
-                        "application/x-www-form-urlencoded": {
-                            "schema": {
-                                "$ref": "#/components/schemas/Calendar"
-                            }
-                        },
-                        "multipart/form-data": {
-                            "schema": {
-                                "$ref": "#/components/schemas/Calendar"
-                            }
-                        }
-                    },
-                    "required": true
-                },
-                "security": [
-                    {
-                        "knoxApiToken": []
-                    },
-                    {
-                        "cookieAuth": []
-                    }
-                ],
-                "responses": {
-                    "201": {
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/CalendarResponse"
-                                }
-                            }
-                        },
-                        "description": ""
-                    }
-                }
-            }
-        },
-        "/api/tasks/{id}/": {
-            "get": {
-                "operationId": "tasks_retrieve",
-                "parameters": [
-                    {
-                        "in": "path",
-                        "name": "id",
-                        "schema": {
-                            "type": "integer"
-                        },
-                        "required": true
-                    }
-                ],
-                "tags": [
-                    "tasks"
-                ],
-                "security": [
-                    {
-                        "knoxApiToken": []
-                    },
-                    {
-                        "cookieAuth": []
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/CalendarResponse"
-                                }
-                            }
-                        },
-                        "description": ""
-                    }
-                }
-            },
-            "put": {
-                "operationId": "tasks_update",
-                "parameters": [
-                    {
-                        "in": "path",
-                        "name": "id",
-                        "schema": {
-                            "type": "integer"
-                        },
-                        "required": true
-                    }
-                ],
-                "tags": [
-                    "tasks"
-                ],
-                "requestBody": {
-                    "content": {
-                        "application/json": {
-                            "schema": {
-                                "$ref": "#/components/schemas/Calendar"
-                            }
-                        },
-                        "application/x-www-form-urlencoded": {
-                            "schema": {
-                                "$ref": "#/components/schemas/Calendar"
-                            }
-                        },
-                        "multipart/form-data": {
-                            "schema": {
-                                "$ref": "#/components/schemas/Calendar"
-                            }
-                        }
-                    },
-                    "required": true
-                },
-                "security": [
-                    {
-                        "knoxApiToken": []
-                    },
-                    {
-                        "cookieAuth": []
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/CalendarResponse"
-                                }
-                            }
-                        },
-                        "description": ""
-                    }
-                }
-            },
-            "patch": {
-                "operationId": "tasks_partial_update",
-                "parameters": [
-                    {
-                        "in": "path",
-                        "name": "id",
-                        "schema": {
-                            "type": "integer"
-                        },
-                        "required": true
-                    }
-                ],
-                "tags": [
-                    "tasks"
-                ],
-                "requestBody": {
-                    "content": {
-                        "application/json": {
-                            "schema": {
-                                "$ref": "#/components/schemas/PatchedCalendar"
-                            }
-                        },
-                        "application/x-www-form-urlencoded": {
-                            "schema": {
-                                "$ref": "#/components/schemas/PatchedCalendar"
-                            }
-                        },
-                        "multipart/form-data": {
-                            "schema": {
-                                "$ref": "#/components/schemas/PatchedCalendar"
-                            }
-                        }
-                    }
-                },
-                "security": [
-                    {
-                        "knoxApiToken": []
-                    },
-                    {
-                        "cookieAuth": []
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/CalendarResponse"
-                                }
-                            }
-                        },
-                        "description": ""
-                    }
-                }
-            },
-            "delete": {
-                "operationId": "tasks_destroy",
-                "parameters": [
-                    {
-                        "in": "path",
-                        "name": "id",
-                        "schema": {
-                            "type": "integer"
-                        },
-                        "required": true
-                    }
-                ],
-                "tags": [
-                    "tasks"
-                ],
-                "security": [
-                    {
-                        "knoxApiToken": []
-                    },
-                    {
-                        "cookieAuth": []
-                    }
-                ],
-                "responses": {
-                    "204": {
-                        "description": "No response body"
-                    }
-                }
-            }
-        }
-    },
-    "components": {
-        "schemas": {
-            "BlankEnum": {
-                "enum": [
-                    ""
-                ]
-            },
-            "Calendar": {
-                "type": "object",
-                "properties": {
-                    "id": {
-                        "type": "integer",
-                        "readOnly": true
-                    },
-                    "title": {
-                        "type": "string",
-                        "maxLength": 500
-                    },
-                    "description": {
-                        "type": "string"
-                    },
-                    "categories": {
-                        "type": "array",
-                        "items": {
-                            "type": "integer"
-                        }
-                    },
-                    "estimated_minutes": {
-                        "type": "integer",
-                        "maximum": 9223372036854775807,
-                        "minimum": 1,
-                        "format": "int64"
-                    },
-                    "start_time": {
-                        "type": "string",
-                        "format": "date-time"
-                    },
-                    "deadline": {
-                        "type": "string",
-                        "format": "date-time"
-                    },
-                    "importance": {
-                        "allOf": [
-                            {
-                                "$ref": "#/components/schemas/ImportanceEnum"
-                            }
-                        ],
-                        "minimum": 1,
-                        "maximum": 10
-                    },
-                    "completed": {
-                        "type": "boolean"
-                    },
-                    "parent_task": {
-                        "type": "integer",
-                        "nullable": true
-                    }
-                },
-                "required": [
-                    "deadline",
-                    "estimated_minutes",
-                    "id",
-                    "importance",
-                    "start_time",
-                    "title"
-                ]
-            },
-            "CalendarResponse": {
-                "type": "object",
-                "properties": {
-                    "id": {
-                        "type": "integer",
-                        "readOnly": true
-                    },
-                    "title": {
-                        "type": "string",
-                        "maxLength": 500
-                    },
-                    "description": {
-                        "type": "string"
-                    },
-                    "categories": {
-                        "type": "array",
-                        "items": {
-                            "$ref": "#/components/schemas/Category"
-                        },
-                        "readOnly": true
-                    },
-                    "estimated_minutes": {
-                        "type": "integer",
-                        "maximum": 9223372036854775807,
-                        "minimum": 1,
-                        "format": "int64"
-                    },
-                    "start_time": {
-                        "type": "string",
-                        "format": "date-time"
-                    },
-                    "deadline": {
-                        "type": "string",
-                        "format": "date-time"
-                    },
-                    "importance": {
-                        "allOf": [
-                            {
-                                "$ref": "#/components/schemas/ImportanceEnum"
-                            }
-                        ],
-                        "minimum": 1,
-                        "maximum": 10
-                    },
-                    "completed": {
-                        "type": "boolean"
-                    },
-                    "parent_task": {
-                        "type": "integer",
-                        "nullable": true
-                    }
-                },
-                "required": [
-                    "categories",
-                    "deadline",
-                    "estimated_minutes",
-                    "id",
-                    "importance",
-                    "start_time",
-                    "title"
-                ]
-            },
-            "Category": {
-                "type": "object",
-                "properties": {
-                    "id": {
-                        "type": "integer",
-                        "readOnly": true
-                    },
-                    "text": {
-                        "type": "string",
-                        "maxLength": 20
-                    }
-                },
-                "required": [
-                    "id",
-                    "text"
-                ]
-            },
-            "Event": {
-                "type": "object",
-                "properties": {
-                    "id": {
-                        "type": "integer",
-                        "readOnly": true
-                    },
-                    "title": {
-                        "type": "string",
-                        "maxLength": 500
-                    },
-                    "description": {
-                        "type": "string"
-                    },
-                    "location": {
-                        "type": "string",
-                        "maxLength": 255
-                    },
-                    "categories": {
-                        "type": "array",
-                        "items": {
-                            "type": "integer"
-                        }
-                    },
-                    "start_time": {
-                        "type": "string",
-                        "format": "date-time"
-                    },
-                    "end_time": {
-                        "type": "string",
-                        "format": "date-time"
-                    },
-                    "recurrence_interval": {
-                        "nullable": true,
-                        "oneOf": [
-                            {
-                                "$ref": "#/components/schemas/RecurrenceIntervalEnum"
-                            },
-                            {
-                                "$ref": "#/components/schemas/BlankEnum"
-                            },
-                            {
-                                "$ref": "#/components/schemas/NullEnum"
-                            }
-                        ]
-                    },
-                    "recurrence_end": {
-                        "type": "string",
-                        "format": "date",
-                        "nullable": true
-                    },
-                    "reminders": {
-                        "type": "array",
-                        "items": {
-                            "$ref": "#/components/schemas/EventReminder"
-                        }
-                    }
-                },
-                "required": [
-                    "id"
-                ]
-            },
-            "EventReminder": {
-                "type": "object",
-                "properties": {
-                    "id": {
-                        "type": "integer",
-                        "readOnly": true
-                    },
-                    "type": {
-                        "$ref": "#/components/schemas/TypeEnum"
-                    },
-                    "minutes_before": {
-                        "type": "integer",
-                        "maximum": 9223372036854775807,
-                        "minimum": 0,
-                        "format": "int64"
-                    }
-                },
-                "required": [
-                    "id",
-                    "minutes_before"
-                ]
-            },
-            "EventResponse": {
-                "type": "object",
-                "properties": {
-                    "id": {
-                        "type": "integer",
-                        "readOnly": true
-                    },
-                    "title": {
-                        "type": "string",
-                        "maxLength": 500
-                    },
-                    "description": {
-                        "type": "string"
-                    },
-                    "location": {
-                        "type": "string",
-                        "maxLength": 255
-                    },
-                    "categories": {
-                        "type": "array",
-                        "items": {
-                            "$ref": "#/components/schemas/Category"
-                        },
-                        "readOnly": true
-                    },
-                    "start_time": {
-                        "type": "string",
-                        "format": "date-time"
-                    },
-                    "end_time": {
-                        "type": "string",
-                        "format": "date-time"
-                    },
-                    "recurrence_interval": {
-                        "nullable": true,
-                        "oneOf": [
-                            {
-                                "$ref": "#/components/schemas/RecurrenceIntervalEnum"
-                            },
-                            {
-                                "$ref": "#/components/schemas/BlankEnum"
-                            },
-                            {
-                                "$ref": "#/components/schemas/NullEnum"
-                            }
-                        ]
-                    },
-                    "recurrence_end": {
-                        "type": "string",
-                        "format": "date",
-                        "nullable": true
-                    },
-                    "reminders": {
-                        "type": "array",
-                        "items": {
-                            "$ref": "#/components/schemas/EventReminder"
-                        },
-                        "readOnly": true
-                    }
-                },
-                "required": [
-                    "categories",
-                    "id",
-                    "reminders"
-                ]
-            },
-            "Grade": {
-                "type": "object",
-                "properties": {
-                    "id": {
-                        "type": "integer",
-                        "readOnly": true
-                    },
-                    "user": {
-                        "type": "integer",
-                        "readOnly": true
-                    },
-                    "name": {
-                        "type": "string",
-                        "description": "Assessment name",
-                        "maxLength": 100
-                    },
-                    "category": {
-                        "type": "integer",
-                        "nullable": true
-                    },
-                    "category_name": {
-                        "type": "string",
-                        "nullable": true,
-                        "readOnly": true
-                    },
-                    "score": {
-                        "type": "number",
-                        "format": "double",
-                        "minimum": 0
-                    },
-                    "total_possible": {
-                        "type": "number",
-                        "format": "double",
-                        "minimum": 1
-                    },
-                    "percentage": {
-                        "type": "number",
-                        "format": "double",
-                        "readOnly": true
-                    },
-                    "date_achieved": {
-                        "type": "string",
-                        "format": "date"
-                    },
-                    "time_spent_minutes": {
-                        "type": "integer",
-                        "minimum": 0,
-                        "readOnly": true
-                    }
-                },
-                "required": [
-                    "category_name",
-                    "date_achieved",
-                    "id",
-                    "name",
-                    "percentage",
-                    "score",
-                    "time_spent_minutes",
-                    "total_possible",
-                    "user"
-                ]
-            },
-            "ImportanceEnum": {
-                "enum": [
-                    1,
-                    2,
-                    3,
-                    4,
-                    5,
-                    6,
-                    7,
-                    8,
-                    9,
-                    10
-                ],
-                "type": "integer",
-                "description": "* `1` - Very low\n* `2` - Low\n* `3` - Low-medium\n* `4` - Medium-low\n* `5` - Medium\n* `6` - Medium-high\n* `7` - High-medium\n* `8` - High\n* `9` - Very high\n* `10` - Critical"
-            },
-            "Login": {
-                "type": "object",
-                "properties": {
-                    "username": {
-                        "type": "string",
-                        "maxLength": 255
-                    },
-                    "password": {
-                        "type": "string"
-                    }
-                },
-                "required": [
-                    "password",
-                    "username"
-                ]
-            },
-            "NullEnum": {
-                "enum": [
-                    null
-                ]
-            },
-            "PatchedCalendar": {
-                "type": "object",
-                "properties": {
-                    "id": {
-                        "type": "integer",
-                        "readOnly": true
-                    },
-                    "title": {
-                        "type": "string",
-                        "maxLength": 500
-                    },
-                    "description": {
-                        "type": "string"
-                    },
-                    "categories": {
-                        "type": "array",
-                        "items": {
-                            "type": "integer"
-                        }
-                    },
-                    "estimated_minutes": {
-                        "type": "integer",
-                        "maximum": 9223372036854775807,
-                        "minimum": 1,
-                        "format": "int64"
-                    },
-                    "start_time": {
-                        "type": "string",
-                        "format": "date-time"
-                    },
-                    "deadline": {
-                        "type": "string",
-                        "format": "date-time"
-                    },
-                    "importance": {
-                        "allOf": [
-                            {
-                                "$ref": "#/components/schemas/ImportanceEnum"
-                            }
-                        ],
-                        "minimum": 1,
-                        "maximum": 10
-                    },
-                    "completed": {
-                        "type": "boolean"
-                    },
-                    "parent_task": {
-                        "type": "integer",
-                        "nullable": true
-                    }
-                }
-            },
-            "PatchedEvent": {
-                "type": "object",
-                "properties": {
-                    "id": {
-                        "type": "integer",
-                        "readOnly": true
-                    },
-                    "title": {
-                        "type": "string",
-                        "maxLength": 500
-                    },
-                    "description": {
-                        "type": "string"
-                    },
-                    "location": {
-                        "type": "string",
-                        "maxLength": 255
-                    },
-                    "categories": {
-                        "type": "array",
-                        "items": {
-                            "type": "integer"
-                        }
-                    },
-                    "start_time": {
-                        "type": "string",
-                        "format": "date-time"
-                    },
-                    "end_time": {
-                        "type": "string",
-                        "format": "date-time"
-                    },
-                    "recurrence_interval": {
-                        "nullable": true,
-                        "oneOf": [
-                            {
-                                "$ref": "#/components/schemas/RecurrenceIntervalEnum"
-                            },
-                            {
-                                "$ref": "#/components/schemas/BlankEnum"
-                            },
-                            {
-                                "$ref": "#/components/schemas/NullEnum"
-                            }
-                        ]
-                    },
-                    "recurrence_end": {
-                        "type": "string",
-                        "format": "date",
-                        "nullable": true
-                    },
-                    "reminders": {
-                        "type": "array",
-                        "items": {
-                            "$ref": "#/components/schemas/EventReminder"
-                        }
-                    }
-                }
-            },
-            "PatchedGrade": {
-                "type": "object",
-                "properties": {
-                    "id": {
-                        "type": "integer",
-                        "readOnly": true
-                    },
-                    "user": {
-                        "type": "integer",
-                        "readOnly": true
-                    },
-                    "name": {
-                        "type": "string",
-                        "description": "Assessment name",
-                        "maxLength": 100
-                    },
-                    "category": {
-                        "type": "integer",
-                        "nullable": true
-                    },
-                    "category_name": {
-                        "type": "string",
-                        "nullable": true,
-                        "readOnly": true
-                    },
-                    "score": {
-                        "type": "number",
-                        "format": "double",
-                        "minimum": 0
-                    },
-                    "total_possible": {
-                        "type": "number",
-                        "format": "double",
-                        "minimum": 1
-                    },
-                    "percentage": {
-                        "type": "number",
-                        "format": "double",
-                        "readOnly": true
-                    },
-                    "date_achieved": {
-                        "type": "string",
-                        "format": "date"
-                    },
-                    "time_spent_minutes": {
-                        "type": "integer",
-                        "minimum": 0,
-                        "readOnly": true
-                    }
-                }
-            },
-            "PatchedPreference": {
-                "type": "object",
-                "properties": {
-                    "id": {
-                        "type": "integer",
-                        "readOnly": true
-                    },
-                    "sleep_start": {
-                        "type": "string",
-                        "format": "time"
-                    },
-                    "sleep_end": {
-                        "type": "string",
-                        "format": "time"
-                    },
-                    "days_off": {
-                        "type": "array",
-                        "items": {
-                            "type": "integer"
-                        }
-                    }
-                }
-            },
-            "Preference": {
-                "type": "object",
-                "properties": {
-                    "id": {
-                        "type": "integer",
-                        "readOnly": true
-                    },
-                    "sleep_start": {
-                        "type": "string",
-                        "format": "time"
-                    },
-                    "sleep_end": {
-                        "type": "string",
-                        "format": "time"
-                    },
-                    "days_off": {
-                        "type": "array",
-                        "items": {
-                            "type": "integer"
-                        }
-                    }
-                },
-                "required": [
-                    "id",
-                    "sleep_end",
-                    "sleep_start"
-                ]
-            },
-            "RecurrenceIntervalEnum": {
-                "enum": [
-                    "daily",
-                    "weekly",
-                    "monthly",
-                    "yearly"
-                ],
-                "type": "string",
-                "description": "* `daily` - Daily\n* `weekly` - Weekly\n* `monthly` - Monthly\n* `yearly` - Yearly"
-            },
-            "Register": {
-                "type": "object",
-                "properties": {
-                    "id": {
-                        "type": "integer",
-                        "readOnly": true
-                    },
-                    "username": {
-                        "type": "string",
-                        "maxLength": 255
-                    },
-                    "email": {
-                        "type": "string",
-                        "format": "email",
-                        "maxLength": 255
-                    },
-                    "password": {
-                        "type": "string",
-                        "writeOnly": true,
-                        "maxLength": 128
-                    }
-                },
-                "required": [
-                    "email",
-                    "id",
-                    "password",
-                    "username"
-                ]
-            },
-            "TestPermissionResponse": {
-                "type": "object",
-                "properties": {
-                    "message": {
-                        "type": "string"
-                    }
-                },
-                "required": [
-                    "message"
-                ]
-            },
-            "TypeEnum": {
-                "enum": [
-                    "email",
-                    "popup"
-                ],
-                "type": "string",
-                "description": "* `email` - Email\n* `popup` - Popup"
-            }
-        },
-        "securitySchemes": {
-            "cookieAuth": {
-                "type": "apiKey",
-                "in": "cookie",
-                "name": "sessionid"
-            },
-            "knoxApiToken": {
-                "type": "apiKey",
-                "in": "header",
-                "name": "Authorization",
-                "description": "Token-based authentication with required prefix \"Token\""
-            }
-        }
-    }
-}
+openapi: 3.0.3
+info:
+  title: Timely API
+  version: 1.0.0
+  description: OpenAPI schema for Timely backend
+paths:
+  /api/admin/audience_counts/:
+    get:
+      operationId: admin_audience_counts_retrieve
+      tags:
+      - admin
+      security:
+      - knoxApiToken: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AdminUserList'
+          description: ''
+  /api/admin/broadcasts/:
+    get:
+      operationId: admin_broadcasts_retrieve
+      tags:
+      - admin
+      security:
+      - knoxApiToken: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AdminUserList'
+          description: ''
+  /api/admin/broadcasts/{broadcast_id}/:
+    get:
+      operationId: admin_broadcasts_retrieve_2
+      parameters:
+      - in: path
+        name: broadcast_id
+        schema:
+          type: string
+        required: true
+      tags:
+      - admin
+      security:
+      - knoxApiToken: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AdminUserList'
+          description: ''
+  /api/admin/broadcasts/{broadcast_id}/retry_failed/:
+    post:
+      operationId: admin_broadcasts_retry_failed_create
+      parameters:
+      - in: path
+        name: broadcast_id
+        schema:
+          type: string
+        required: true
+      tags:
+      - admin
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AdminUserList'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/AdminUserList'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/AdminUserList'
+        required: true
+      security:
+      - knoxApiToken: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AdminUserList'
+          description: ''
+  /api/admin/broadcasts/{broadcast_id}/status/:
+    get:
+      operationId: admin_broadcasts_status_retrieve
+      parameters:
+      - in: path
+        name: broadcast_id
+        schema:
+          type: string
+        required: true
+      tags:
+      - admin
+      security:
+      - knoxApiToken: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AdminUserList'
+          description: ''
+  /api/admin/send_notification/:
+    post:
+      operationId: admin_send_notification_create
+      tags:
+      - admin
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AdminUserList'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/AdminUserList'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/AdminUserList'
+        required: true
+      security:
+      - knoxApiToken: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AdminUserList'
+          description: ''
+  /api/admin/users/:
+    get:
+      operationId: admin_users_retrieve
+      tags:
+      - admin
+      security:
+      - knoxApiToken: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AdminUserList'
+          description: ''
+  /api/authentication/logout/:
+    post:
+      operationId: authentication_logout_create
+      tags:
+      - authentication
+      security:
+      - knoxApiToken: []
+      responses:
+        '204':
+          description: Successfully logged out.
+  /api/authentication/logoutall/:
+    post:
+      operationId: authentication_logoutall_create
+      description: |-
+        Log the user out of all sessions
+        I.E. deletes all auth tokens for the user
+      tags:
+      - authentication
+      security:
+      - knoxApiToken: []
+      responses:
+        '204':
+          description: Successfully logged out from all sessions.
+  /api/authentication/register/:
+    post:
+      operationId: authentication_register_create
+      tags:
+      - authentication
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Register'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Register'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Register'
+        required: true
+      security:
+      - knoxApiToken: []
+      - cookieAuth: []
+      - {}
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Register'
+          description: ''
+  /api/authentication/session/:
+    post:
+      operationId: authentication_session_create
+      tags:
+      - authentication
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Login'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Login'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Login'
+        required: true
+      security:
+      - knoxApiToken: []
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Login'
+          description: ''
+  /api/authentication/test/:
+    get:
+      operationId: authentication_test_retrieve
+      tags:
+      - authentication
+      security:
+      - knoxApiToken: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TestPermissionResponse'
+          description: ''
+  /api/categories/:
+    get:
+      operationId: categories_list
+      tags:
+      - categories
+      security:
+      - knoxApiToken: []
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Category'
+          description: ''
+  /api/categories/{id}/:
+    get:
+      operationId: categories_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this category.
+        required: true
+      tags:
+      - categories
+      security:
+      - knoxApiToken: []
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Category'
+          description: ''
+  /api/events/:
+    get:
+      operationId: events_list
+      parameters:
+      - in: query
+        name: end_date
+        schema:
+          type: string
+          format: date
+        description: End date for flattened event expansion (YYYY-MM-DD).
+      - in: query
+        name: start_date
+        schema:
+          type: string
+          format: date
+        description: Start date for flattened event expansion (YYYY-MM-DD).
+      tags:
+      - events
+      security:
+      - knoxApiToken: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ExpandedEventInstance'
+          description: ''
+    post:
+      operationId: events_create
+      tags:
+      - events
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Event'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Event'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Event'
+      security:
+      - knoxApiToken: []
+      - cookieAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EventResponse'
+          description: ''
+  /api/events/{id}/:
+    get:
+      operationId: events_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - events
+      security:
+      - knoxApiToken: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EventResponse'
+          description: ''
+    put:
+      operationId: events_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      - in: query
+        name: original_start_time
+        schema:
+          type: string
+          format: date-time
+        description: UTC ISO datetime anchor of interacted recurring instance.
+      - in: query
+        name: scope
+        schema:
+          type: string
+        description: 'Mutation scope: this, following, all.'
+      tags:
+      - events
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Event'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Event'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Event'
+      security:
+      - knoxApiToken: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EventResponse'
+          description: ''
+    patch:
+      operationId: events_partial_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      - in: query
+        name: original_start_time
+        schema:
+          type: string
+          format: date-time
+        description: UTC ISO datetime anchor of interacted recurring instance.
+      - in: query
+        name: scope
+        schema:
+          type: string
+        description: 'Mutation scope: this, following, all.'
+      tags:
+      - events
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedEvent'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedEvent'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedEvent'
+      security:
+      - knoxApiToken: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EventResponse'
+          description: ''
+    delete:
+      operationId: events_destroy
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      - in: query
+        name: original_start_time
+        schema:
+          type: string
+          format: date-time
+        description: UTC ISO datetime anchor of interacted recurring instance.
+      - in: query
+        name: scope
+        schema:
+          type: string
+        description: 'Mutation scope: this, following, all.'
+      tags:
+      - events
+      security:
+      - knoxApiToken: []
+      - cookieAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/events/{id}/revert-instance/:
+    post:
+      operationId: events_revert_instance_create
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      - in: query
+        name: original_start_time
+        schema:
+          type: string
+          format: date-time
+        description: UTC ISO datetime anchor of the overridden recurring instance.
+        required: true
+      tags:
+      - events
+      security:
+      - knoxApiToken: []
+      - cookieAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/events/server_time/:
+    get:
+      operationId: events_server_time_retrieve
+      tags:
+      - events
+      security:
+      - knoxApiToken: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServerTimeResponse'
+          description: ''
+  /api/grades/:
+    get:
+      operationId: grades_list
+      tags:
+      - grades
+      security:
+      - knoxApiToken: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Grade'
+          description: ''
+    post:
+      operationId: grades_create
+      tags:
+      - grades
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Grade'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Grade'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Grade'
+        required: true
+      security:
+      - knoxApiToken: []
+      - cookieAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Grade'
+          description: ''
+  /api/grades/{id}/:
+    get:
+      operationId: grades_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this grade.
+        required: true
+      tags:
+      - grades
+      security:
+      - knoxApiToken: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Grade'
+          description: ''
+    put:
+      operationId: grades_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this grade.
+        required: true
+      tags:
+      - grades
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Grade'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Grade'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Grade'
+        required: true
+      security:
+      - knoxApiToken: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Grade'
+          description: ''
+    patch:
+      operationId: grades_partial_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this grade.
+        required: true
+      tags:
+      - grades
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedGrade'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedGrade'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedGrade'
+      security:
+      - knoxApiToken: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Grade'
+          description: ''
+    delete:
+      operationId: grades_destroy
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this grade.
+        required: true
+      tags:
+      - grades
+      security:
+      - knoxApiToken: []
+      - cookieAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/notifications/:
+    get:
+      operationId: notifications_list
+      parameters:
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      tags:
+      - notifications
+      security:
+      - knoxApiToken: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedNotificationList'
+          description: ''
+    post:
+      operationId: notifications_create
+      tags:
+      - notifications
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Notification'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Notification'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Notification'
+        required: true
+      security:
+      - knoxApiToken: []
+      - cookieAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Notification'
+          description: ''
+  /api/notifications/{id}/:
+    get:
+      operationId: notifications_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        required: true
+      tags:
+      - notifications
+      security:
+      - knoxApiToken: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Notification'
+          description: ''
+    put:
+      operationId: notifications_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        required: true
+      tags:
+      - notifications
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Notification'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Notification'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Notification'
+        required: true
+      security:
+      - knoxApiToken: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Notification'
+          description: ''
+    patch:
+      operationId: notifications_partial_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        required: true
+      tags:
+      - notifications
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedNotification'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedNotification'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedNotification'
+      security:
+      - knoxApiToken: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Notification'
+          description: ''
+    delete:
+      operationId: notifications_destroy
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        required: true
+      tags:
+      - notifications
+      security:
+      - knoxApiToken: []
+      - cookieAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/notifications/{id}/mark_read/:
+    post:
+      operationId: notifications_mark_read_create
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        required: true
+      tags:
+      - notifications
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Notification'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Notification'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Notification'
+        required: true
+      security:
+      - knoxApiToken: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Notification'
+          description: ''
+  /api/notifications/{id}/mark_unread/:
+    post:
+      operationId: notifications_mark_unread_create
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        required: true
+      tags:
+      - notifications
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Notification'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Notification'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Notification'
+        required: true
+      security:
+      - knoxApiToken: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Notification'
+          description: ''
+  /api/notifications/delete_all/:
+    delete:
+      operationId: notifications_delete_all_destroy
+      tags:
+      - notifications
+      security:
+      - knoxApiToken: []
+      - cookieAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/notifications/mark_all_read/:
+    post:
+      operationId: notifications_mark_all_read_create
+      tags:
+      - notifications
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Notification'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Notification'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Notification'
+        required: true
+      security:
+      - knoxApiToken: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Notification'
+          description: ''
+  /api/notifications/unread_count/:
+    get:
+      operationId: notifications_unread_count_retrieve
+      tags:
+      - notifications
+      security:
+      - knoxApiToken: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Notification'
+          description: ''
+  /api/preferences/:
+    get:
+      operationId: preferences_list
+      tags:
+      - preferences
+      security:
+      - knoxApiToken: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Preference'
+          description: ''
+    post:
+      operationId: preferences_create
+      tags:
+      - preferences
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Preference'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Preference'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Preference'
+      security:
+      - knoxApiToken: []
+      - cookieAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Preference'
+          description: ''
+  /api/preferences/{id}/:
+    get:
+      operationId: preferences_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this preference.
+        required: true
+      tags:
+      - preferences
+      security:
+      - knoxApiToken: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Preference'
+          description: ''
+    put:
+      operationId: preferences_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this preference.
+        required: true
+      tags:
+      - preferences
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Preference'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Preference'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Preference'
+      security:
+      - knoxApiToken: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Preference'
+          description: ''
+    patch:
+      operationId: preferences_partial_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this preference.
+        required: true
+      tags:
+      - preferences
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedPreference'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedPreference'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedPreference'
+      security:
+      - knoxApiToken: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Preference'
+          description: ''
+    delete:
+      operationId: preferences_destroy
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this preference.
+        required: true
+      tags:
+      - preferences
+      security:
+      - knoxApiToken: []
+      - cookieAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/preferences/me/:
+    get:
+      operationId: preferences_me_retrieve
+      tags:
+      - preferences
+      security:
+      - knoxApiToken: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Preference'
+          description: ''
+    patch:
+      operationId: preferences_me_partial_update
+      tags:
+      - preferences
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedPreference'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedPreference'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedPreference'
+      security:
+      - knoxApiToken: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Preference'
+          description: ''
+  /api/profiles/:
+    get:
+      operationId: profiles_retrieve
+      tags:
+      - profiles
+      security:
+      - knoxApiToken: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Profile'
+          description: ''
+  /api/push/:
+    get:
+      operationId: push_list
+      tags:
+      - push
+      security:
+      - knoxApiToken: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/PushSubscription'
+          description: ''
+    post:
+      operationId: push_create
+      tags:
+      - push
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PushSubscription'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PushSubscription'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PushSubscription'
+        required: true
+      security:
+      - knoxApiToken: []
+      - cookieAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PushSubscription'
+          description: ''
+  /api/push/{id}/:
+    get:
+      operationId: push_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this push subscription.
+        required: true
+      tags:
+      - push
+      security:
+      - knoxApiToken: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PushSubscription'
+          description: ''
+    put:
+      operationId: push_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this push subscription.
+        required: true
+      tags:
+      - push
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PushSubscription'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PushSubscription'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PushSubscription'
+        required: true
+      security:
+      - knoxApiToken: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PushSubscription'
+          description: ''
+    patch:
+      operationId: push_partial_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this push subscription.
+        required: true
+      tags:
+      - push
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedPushSubscription'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedPushSubscription'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedPushSubscription'
+      security:
+      - knoxApiToken: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PushSubscription'
+          description: ''
+    delete:
+      operationId: push_destroy
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this push subscription.
+        required: true
+      tags:
+      - push
+      security:
+      - knoxApiToken: []
+      - cookieAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/push/subscribe/:
+    post:
+      operationId: push_subscribe_create
+      tags:
+      - push
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PushSubscription'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PushSubscription'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PushSubscription'
+        required: true
+      security:
+      - knoxApiToken: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PushSubscription'
+          description: ''
+  /api/push/unsubscribe/:
+    post:
+      operationId: push_unsubscribe_create
+      tags:
+      - push
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PushSubscription'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PushSubscription'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PushSubscription'
+        required: true
+      security:
+      - knoxApiToken: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PushSubscription'
+          description: ''
+  /api/push/vapid_public_key/:
+    get:
+      operationId: push_vapid_public_key_retrieve
+      tags:
+      - push
+      security:
+      - knoxApiToken: []
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PushSubscription'
+          description: ''
+  /api/schedule/:
+    post:
+      operationId: schedule_create
+      tags:
+      - schedule
+      security:
+      - knoxApiToken: []
+      - cookieAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/stats/weekly/:
+    get:
+      operationId: stats_weekly_retrieve
+      description: Retrieve weekly statistics for the authenticated user.
+      tags:
+      - stats
+      security:
+      - knoxApiToken: []
+      - cookieAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/tasks/:
+    get:
+      operationId: tasks_list
+      parameters:
+      - in: query
+        name: categories
+        schema:
+          type: array
+          items:
+            type: integer
+        description: Multiple values may be separated by commas.
+        explode: false
+        style: form
+      - in: query
+        name: completed
+        schema:
+          type: boolean
+      - in: query
+        name: deadline__lte
+        schema:
+          type: string
+          format: date-time
+      - name: ordering
+        required: false
+        in: query
+        description: Which field to use when ordering the results.
+        schema:
+          type: string
+      - in: query
+        name: start_time__gte
+        schema:
+          type: string
+          format: date-time
+      tags:
+      - tasks
+      security:
+      - knoxApiToken: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CalendarResponse'
+          description: ''
+    post:
+      operationId: tasks_create
+      tags:
+      - tasks
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Calendar'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Calendar'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Calendar'
+        required: true
+      security:
+      - knoxApiToken: []
+      - cookieAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CalendarResponse'
+          description: ''
+  /api/tasks/{id}/:
+    get:
+      operationId: tasks_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - tasks
+      security:
+      - knoxApiToken: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CalendarResponse'
+          description: ''
+    put:
+      operationId: tasks_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - tasks
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Calendar'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Calendar'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Calendar'
+        required: true
+      security:
+      - knoxApiToken: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CalendarResponse'
+          description: ''
+    patch:
+      operationId: tasks_partial_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - tasks
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedCalendar'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedCalendar'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedCalendar'
+      security:
+      - knoxApiToken: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CalendarResponse'
+          description: ''
+    delete:
+      operationId: tasks_destroy
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - tasks
+      security:
+      - knoxApiToken: []
+      - cookieAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/unschedule/:
+    post:
+      operationId: unschedule_create
+      tags:
+      - unschedule
+      security:
+      - knoxApiToken: []
+      - cookieAuth: []
+      responses:
+        '200':
+          description: No response body
+components:
+  schemas:
+    AdminUserList:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        username:
+          type: string
+          maxLength: 255
+        email:
+          type: string
+          format: email
+          maxLength: 255
+        is_staff:
+          type: boolean
+        is_superuser:
+          type: boolean
+        is_active:
+          type: boolean
+        date_joined:
+          type: string
+          format: date-time
+          readOnly: true
+        last_login:
+          type: string
+          format: date-time
+          nullable: true
+      required:
+      - date_joined
+      - email
+      - id
+      - username
+    BlankEnum:
+      enum:
+      - ''
+    Calendar:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        title:
+          type: string
+          maxLength: 500
+        description:
+          type: string
+        categories:
+          type: array
+          items:
+            type: integer
+        estimated_minutes:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: 1
+          format: int64
+        start_time:
+          type: string
+          format: date-time
+        deadline:
+          type: string
+          format: date-time
+        importance:
+          allOf:
+          - $ref: '#/components/schemas/ImportanceEnum'
+          minimum: 1
+          maximum: 10
+        completed:
+          type: boolean
+        parent_task:
+          type: integer
+          nullable: true
+        allocation:
+          nullable: true
+        total_task_allocations:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: 0
+          format: int64
+      required:
+      - deadline
+      - estimated_minutes
+      - id
+      - importance
+      - start_time
+      - title
+    CalendarResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        title:
+          type: string
+          maxLength: 500
+        description:
+          type: string
+        categories:
+          type: array
+          items:
+            $ref: '#/components/schemas/Category'
+          readOnly: true
+        estimated_minutes:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: 1
+          format: int64
+        start_time:
+          type: string
+          format: date-time
+        deadline:
+          type: string
+          format: date-time
+        importance:
+          allOf:
+          - $ref: '#/components/schemas/ImportanceEnum'
+          minimum: 1
+          maximum: 10
+        completed:
+          type: boolean
+        parent_task:
+          type: integer
+          nullable: true
+      required:
+      - categories
+      - deadline
+      - estimated_minutes
+      - id
+      - importance
+      - start_time
+      - title
+    Category:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        text:
+          type: string
+          maxLength: 20
+      required:
+      - id
+      - text
+    Event:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        title:
+          type: string
+          maxLength: 500
+        description:
+          type: string
+        location:
+          type: string
+          maxLength: 255
+        categories:
+          type: array
+          items:
+            type: integer
+        start_time:
+          type: string
+          format: date-time
+        end_time:
+          type: string
+          format: date-time
+        recurrence_interval:
+          nullable: true
+          oneOf:
+          - $ref: '#/components/schemas/RecurrenceIntervalEnum'
+          - $ref: '#/components/schemas/BlankEnum'
+          - $ref: '#/components/schemas/NullEnum'
+        recurrence_end:
+          type: string
+          format: date
+          nullable: true
+        split_from_event_id:
+          type: integer
+          readOnly: true
+        reminders:
+          type: array
+          items:
+            $ref: '#/components/schemas/EventReminder'
+      required:
+      - id
+      - split_from_event_id
+    EventReminder:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        send_push:
+          type: boolean
+        send_email:
+          type: boolean
+        minutes_before:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: 0
+          format: int64
+      required:
+      - id
+      - minutes_before
+    EventResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        title:
+          type: string
+          maxLength: 500
+        description:
+          type: string
+        location:
+          type: string
+          maxLength: 255
+        categories:
+          type: array
+          items:
+            $ref: '#/components/schemas/Category'
+          readOnly: true
+        start_time:
+          type: string
+          format: date-time
+        end_time:
+          type: string
+          format: date-time
+        recurrence_interval:
+          nullable: true
+          oneOf:
+          - $ref: '#/components/schemas/RecurrenceIntervalEnum'
+          - $ref: '#/components/schemas/BlankEnum'
+          - $ref: '#/components/schemas/NullEnum'
+        recurrence_end:
+          type: string
+          format: date
+          nullable: true
+        split_from_event_id:
+          type: integer
+          readOnly: true
+        reminders:
+          type: array
+          items:
+            $ref: '#/components/schemas/EventReminder'
+          readOnly: true
+      required:
+      - categories
+      - id
+      - reminders
+      - split_from_event_id
+    ExpandedEventInstance:
+      type: object
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+        description:
+          type: string
+        location:
+          type: string
+        categories:
+          type: array
+          items:
+            $ref: '#/components/schemas/Category'
+        start_time:
+          type: string
+          format: date-time
+        end_time:
+          type: string
+          format: date-time
+        recurrence_interval:
+          type: string
+          nullable: true
+        recurrence_end:
+          type: string
+          format: date
+          nullable: true
+        reminders:
+          type: array
+          items:
+            $ref: '#/components/schemas/ExpandedEventReminder'
+        is_override:
+          type: boolean
+        source_event_id:
+          type: integer
+        original_start_time:
+          type: string
+          format: date-time
+          nullable: true
+        instance_id:
+          type: string
+        is_split_series:
+          type: boolean
+        split_from_event_id:
+          type: integer
+          nullable: true
+      required:
+      - categories
+      - description
+      - end_time
+      - id
+      - instance_id
+      - is_override
+      - is_split_series
+      - location
+      - reminders
+      - source_event_id
+      - start_time
+      - title
+    ExpandedEventReminder:
+      type: object
+      properties:
+        id:
+          type: integer
+        send_push:
+          type: boolean
+          default: false
+        send_email:
+          type: boolean
+          default: false
+        minutes_before:
+          type: integer
+          minimum: 0
+      required:
+      - minutes_before
+    Grade:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        user:
+          type: integer
+          readOnly: true
+        name:
+          type: string
+          description: Assessment name
+          maxLength: 100
+        category:
+          type: integer
+          nullable: true
+        category_name:
+          type: string
+          nullable: true
+          readOnly: true
+        score:
+          type: number
+          format: double
+          minimum: 0
+        total_possible:
+          type: number
+          format: double
+          minimum: 1
+        percentage:
+          type: number
+          format: double
+          readOnly: true
+        date_achieved:
+          type: string
+          format: date
+        time_spent_minutes:
+          type: integer
+          minimum: 0
+          readOnly: true
+      required:
+      - category_name
+      - date_achieved
+      - id
+      - name
+      - percentage
+      - score
+      - time_spent_minutes
+      - total_possible
+      - user
+    ImportanceEnum:
+      enum:
+      - 1
+      - 2
+      - 3
+      - 4
+      - 5
+      - 6
+      - 7
+      - 8
+      - 9
+      - 10
+      type: integer
+      description: |-
+        * `1` - Very low
+        * `2` - Low
+        * `3` - Low-medium
+        * `4` - Medium-low
+        * `5` - Medium
+        * `6` - Medium-high
+        * `7` - High-medium
+        * `8` - High
+        * `9` - Very high
+        * `10` - Critical
+    Login:
+      type: object
+      properties:
+        username:
+          type: string
+          maxLength: 255
+        password:
+          type: string
+      required:
+      - password
+      - username
+    Notification:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        recipient:
+          type: integer
+          readOnly: true
+        sender:
+          type: integer
+          readOnly: true
+          nullable: true
+        sender_username:
+          type: string
+          readOnly: true
+        title:
+          type: string
+          maxLength: 255
+        message:
+          type: string
+        is_read:
+          type: boolean
+        timestamp:
+          type: string
+          format: date-time
+          readOnly: true
+        notification_type:
+          $ref: '#/components/schemas/NotificationTypeEnum'
+      required:
+      - id
+      - message
+      - recipient
+      - sender
+      - sender_username
+      - timestamp
+      - title
+    NotificationTypeEnum:
+      enum:
+      - SYSTEM
+      - TASK
+      - CALENDAR
+      type: string
+      description: |-
+        * `SYSTEM` - System
+        * `TASK` - Task
+        * `CALENDAR` - Calendar
+    NullEnum:
+      enum:
+      - null
+    PaginatedNotificationList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/Notification'
+    PatchedCalendar:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        title:
+          type: string
+          maxLength: 500
+        description:
+          type: string
+        categories:
+          type: array
+          items:
+            type: integer
+        estimated_minutes:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: 1
+          format: int64
+        start_time:
+          type: string
+          format: date-time
+        deadline:
+          type: string
+          format: date-time
+        importance:
+          allOf:
+          - $ref: '#/components/schemas/ImportanceEnum'
+          minimum: 1
+          maximum: 10
+        completed:
+          type: boolean
+        parent_task:
+          type: integer
+          nullable: true
+        allocation:
+          nullable: true
+        total_task_allocations:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: 0
+          format: int64
+    PatchedEvent:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        title:
+          type: string
+          maxLength: 500
+        description:
+          type: string
+        location:
+          type: string
+          maxLength: 255
+        categories:
+          type: array
+          items:
+            type: integer
+        start_time:
+          type: string
+          format: date-time
+        end_time:
+          type: string
+          format: date-time
+        recurrence_interval:
+          nullable: true
+          oneOf:
+          - $ref: '#/components/schemas/RecurrenceIntervalEnum'
+          - $ref: '#/components/schemas/BlankEnum'
+          - $ref: '#/components/schemas/NullEnum'
+        recurrence_end:
+          type: string
+          format: date
+          nullable: true
+        split_from_event_id:
+          type: integer
+          readOnly: true
+        reminders:
+          type: array
+          items:
+            $ref: '#/components/schemas/EventReminder'
+    PatchedGrade:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        user:
+          type: integer
+          readOnly: true
+        name:
+          type: string
+          description: Assessment name
+          maxLength: 100
+        category:
+          type: integer
+          nullable: true
+        category_name:
+          type: string
+          nullable: true
+          readOnly: true
+        score:
+          type: number
+          format: double
+          minimum: 0
+        total_possible:
+          type: number
+          format: double
+          minimum: 1
+        percentage:
+          type: number
+          format: double
+          readOnly: true
+        date_achieved:
+          type: string
+          format: date
+        time_spent_minutes:
+          type: integer
+          minimum: 0
+          readOnly: true
+    PatchedNotification:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        recipient:
+          type: integer
+          readOnly: true
+        sender:
+          type: integer
+          readOnly: true
+          nullable: true
+        sender_username:
+          type: string
+          readOnly: true
+        title:
+          type: string
+          maxLength: 255
+        message:
+          type: string
+        is_read:
+          type: boolean
+        timestamp:
+          type: string
+          format: date-time
+          readOnly: true
+        notification_type:
+          $ref: '#/components/schemas/NotificationTypeEnum'
+    PatchedPreference:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        day_start:
+          type: string
+          format: time
+        day_end:
+          type: string
+          format: time
+        max_hours_study_per_day:
+          type: integer
+          maximum: 24
+          minimum: 0
+        days_off:
+          type: array
+          items:
+            type: integer
+    PatchedPushSubscription:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        endpoint:
+          type: string
+          format: uri
+          maxLength: 500
+        p256dh:
+          type: string
+          maxLength: 255
+        auth:
+          type: string
+          maxLength: 255
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+    Preference:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        day_start:
+          type: string
+          format: time
+        day_end:
+          type: string
+          format: time
+        max_hours_study_per_day:
+          type: integer
+          maximum: 24
+          minimum: 0
+        days_off:
+          type: array
+          items:
+            type: integer
+      required:
+      - id
+    Profile:
+      type: object
+      properties:
+        name:
+          type: string
+          maxLength: 255
+        date_of_birth:
+          type: string
+          format: date
+          nullable: true
+        creation_date:
+          type: string
+          format: date-time
+          readOnly: true
+        slogan:
+          type: string
+          maxLength: 255
+        bio:
+          type: string
+      required:
+      - creation_date
+      - name
+    PushSubscription:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        endpoint:
+          type: string
+          format: uri
+          maxLength: 500
+        p256dh:
+          type: string
+          maxLength: 255
+        auth:
+          type: string
+          maxLength: 255
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - auth
+      - created_at
+      - endpoint
+      - id
+      - p256dh
+    RecurrenceIntervalEnum:
+      enum:
+      - daily
+      - weekly
+      - monthly
+      - yearly
+      type: string
+      description: |-
+        * `daily` - Daily
+        * `weekly` - Weekly
+        * `monthly` - Monthly
+        * `yearly` - Yearly
+    Register:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        username:
+          type: string
+          maxLength: 255
+        email:
+          type: string
+          format: email
+          maxLength: 255
+        password:
+          type: string
+          writeOnly: true
+          maxLength: 128
+      required:
+      - email
+      - id
+      - password
+      - username
+    ServerTimeResponse:
+      type: object
+      properties:
+        server_time:
+          type: string
+      required:
+      - server_time
+    TestPermissionResponse:
+      type: object
+      properties:
+        message:
+          type: string
+      required:
+      - message
+  securitySchemes:
+    cookieAuth:
+      type: apiKey
+      in: cookie
+      name: sessionid
+    knoxApiToken:
+      type: apiKey
+      in: header
+      name: Authorization
+      description: Token-based authentication with required prefix "Token"

@@ -15,6 +15,7 @@ from core.management.commands.seeders.preference_seeder import PreferenceSeeder
 from core.management.commands.seeders.profile_seeder import ProfileSeeder
 from core.management.commands.seeders.special_dates_seeder import SpecialDatesSeeder
 from core.management.commands.seeders.task_seeder import TaskSeeder
+from core.management.commands.seeders.friendship_seeder import FriendshipSeeder
 
 
 class Command(BaseCommand):
@@ -32,6 +33,7 @@ class Command(BaseCommand):
             ProfileSeeder,
             SpecialDatesSeeder,
             TaskSeeder,
+            FriendshipSeeder,
         ]
 
         for seeder in seeders:

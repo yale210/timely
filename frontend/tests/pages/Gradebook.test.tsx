@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { render, screen, waitFor, fireEvent } from "@testing-library/react";
 import type React from "react";
-import Gradebook from "@/pages/Gradebook";
+// Import Gradebook dynamically in tests so our vi.mock calls (below) are applied before module evaluation.
 import { BrowserRouter } from "react-router-dom";
 import useCategories from "@/hooks/useCategories";
 
@@ -24,7 +24,7 @@ interface MockCreateGradeModalProps {
   initialData?: { name?: string };
 }
 
-vi.mock("@/components/CreateGradeModal.tsx", () => ({
+vi.mock("@/components/modals/CreateGradeModal.tsx", () => ({
   default: ({ open, onClose, onCreated, onUpdated, initialData }: MockCreateGradeModalProps) => {
     if (!open) return null;
     return (
@@ -84,7 +84,13 @@ describe("Gradebook Page", () => {
           json: () => Promise.resolve(mockGrades),
         } as Response);
       }
-      return Promise.resolve({ ok: true } as Response);
+      if (url === "/api/categories/") {
+        return Promise.resolve({
+          ok: true,
+          json: () => Promise.resolve(mockCategories),
+        } as Response);
+      }
+      return Promise.resolve({ ok: true, json: () => Promise.resolve({}) } as Response);
     }));
   });
 
@@ -95,6 +101,7 @@ describe("Gradebook Page", () => {
   });
 
   it("renders the gradebook and fetches data", async () => {
+    const { default: Gradebook } = await import("@/pages/Gradebook");
     render(
       <BrowserRouter>
         <Gradebook />
@@ -113,6 +120,7 @@ describe("Gradebook Page", () => {
   });
 
   it("filters grades by category", async () => {
+    const { default: Gradebook } = await import("@/pages/Gradebook");
     render(
       <BrowserRouter>
         <Gradebook />
@@ -132,6 +140,7 @@ describe("Gradebook Page", () => {
 
   it("handles deletion of a grade", async () => {
     vi.spyOn(window, "confirm").mockReturnValue(true);
+    const { default: Gradebook } = await import("@/pages/Gradebook");
     render(
       <BrowserRouter>
         <Gradebook />
@@ -148,6 +157,7 @@ describe("Gradebook Page", () => {
   });
 
   it("opens modal for adding and updating", async () => {
+    const { default: Gradebook } = await import("@/pages/Gradebook");
     render(
       <BrowserRouter>
         <Gradebook />

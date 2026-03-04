@@ -44,7 +44,7 @@ describe("eventService", () => {
     const mockEvents = [mockEvent]
     const spy = vi.spyOn(axios, "get").mockResolvedValue({ data: mockEvents })
     const result = await eventService.getEvents()
-    expect(spy).toHaveBeenCalledWith("/api/events/")
+    expect(spy).toHaveBeenCalledWith("/api/events/", { params: undefined })
     expect(result).toEqual(mockEvents)
   })
 
@@ -65,14 +65,14 @@ describe("eventService", () => {
     const updatedEvent = { ...mockEvent, title: "Updated Event" }
     const spy = vi.spyOn(axios, "patch").mockResolvedValue({ data: updatedEvent })
     const result = await eventService.updateEvent(1, data)
-    expect(spy).toHaveBeenCalledWith("/api/events/1/", data)
+    expect(spy).toHaveBeenCalledWith("/api/events/1/", data, { params: undefined })
     expect(result).toEqual(updatedEvent)
   })
 
   it("deleteEvent should call axios.delete", async () => {
     const spy = vi.spyOn(axios, "delete").mockResolvedValue({})
     await eventService.deleteEvent(1)
-    expect(spy).toHaveBeenCalledWith("/api/events/1/")
+    expect(spy).toHaveBeenCalledWith("/api/events/1/", { params: undefined })
   })
 
   it("getServerTime should call axios.get and return server time", async () => {
@@ -81,5 +81,43 @@ describe("eventService", () => {
     const result = await eventService.getServerTime()
     expect(spy).toHaveBeenCalledWith("/api/events/server_time/")
     expect(result).toEqual(payload)
+  })
+
+  it("passes query params for range and mutation scope", async () => {
+    const listSpy = vi.spyOn(axios, "get").mockResolvedValue({ data: [mockEvent] })
+    const patchSpy = vi.spyOn(axios, "patch").mockResolvedValue({ data: mockEvent })
+    const deleteSpy = vi.spyOn(axios, "delete").mockResolvedValue({})
+
+    await eventService.getEvents({ start_date: "2026-02-01", end_date: "2026-02-28" })
+    await eventService.updateEvent(
+      1,
+      { title: "Scoped update" },
+      { scope: "this", original_start_time: "2026-02-20T10:00:00Z" },
+    )
+    await eventService.deleteEvent(1, { scope: "all" })
+
+    expect(listSpy).toHaveBeenCalledWith("/api/events/", {
+      params: { start_date: "2026-02-01", end_date: "2026-02-28" },
+    })
+    expect(patchSpy).toHaveBeenCalledWith(
+      "/api/events/1/",
+      { title: "Scoped update" },
+      { params: { scope: "this", original_start_time: "2026-02-20T10:00:00Z" } },
+    )
+    expect(deleteSpy).toHaveBeenCalledWith("/api/events/1/", {
+      params: { scope: "all" },
+    })
+  })
+
+  it("revertEventInstance should call axios.post with original_start_time", async () => {
+    const spy = vi.spyOn(axios, "post").mockResolvedValue({})
+
+    await eventService.revertEventInstance(1, "2026-02-20T10:00:00Z")
+
+    expect(spy).toHaveBeenCalledWith(
+      "/api/events/1/revert-instance/",
+      null,
+      { params: { original_start_time: "2026-02-20T10:00:00Z" } },
+    )
   })
 })

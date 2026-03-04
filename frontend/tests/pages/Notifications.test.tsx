@@ -1,22 +1,22 @@
 import { render, screen, fireEvent, cleanup, waitFor } from "@testing-library/react";
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { Notifications } from "../../src/pages/Notifications";
+import { Notifications } from "@/pages/Notification/Notifications";
 import { BrowserRouter } from "react-router-dom";
-import { NotificationType } from "../../src/types/notification";
+import { NotificationType } from "@/types/notification";
 
-vi.mock("../../src/context/NotificationContext", () => ({
+vi.mock("@/context/NotificationContext", () => ({
   useNotificationContext: vi.fn(),
 }));
 
-vi.mock("../../src/api/notifications", () => ({
+vi.mock("@/api/notifications", () => ({
   getNotifications: vi.fn(),
 }));
 
 import { useNotificationContext } from "../../src/context/NotificationContext";
 import { getNotifications } from "../../src/api/notifications";
-import { usePushSubscription } from "../../src/hooks/usePushSubscription";
+import { usePushSubscription } from "../../src/hooks/notifications/usePushSubscription";
 
-vi.mock("../../src/hooks/usePushSubscription", () => ({
+vi.mock("../../src/hooks/notifications/usePushSubscription", () => ({
   usePushSubscription: vi.fn(),
 }));
 
@@ -77,7 +77,7 @@ describe("Notifications Page", () => {
         <Notifications />
       </BrowserRouter>,
     );
-    expect(screen.getByText("Notifications")).toBeDefined();
+    expect(screen.getByRole("heading", { name: "Notifications" })).toBeDefined();
     expect(await screen.findByText("Test Notification 1")).toBeDefined();
   });
 
@@ -89,7 +89,7 @@ describe("Notifications Page", () => {
     vi.mocked(getNotifications).mockImplementation(
       () =>
         new Promise(() => {
-          // keep unresolved to preserve loading UI
+          return;
         }),
     );
 
