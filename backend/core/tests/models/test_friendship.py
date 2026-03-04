@@ -92,3 +92,48 @@ class FriendshipTests(TestCase):
 
         friendship.accept_friend_request()
         self.assertEqual(friendship.state, "ACCEPTED")
+
+    def test_send_request_cannot_friend_themselves(self):
+        with self.assertRaises(ValidationError):
+            Friendship.send_request(sender=self.sender, receiver=self.sender)
+
+    def test_send_request_creates_new_friendship(self):
+        friendship = Friendship.send_request(sender=self.sender, receiver=self.receiver)
+
+        self.assertEqual(friendship.sender, self.sender)
+        self.assertEqual(friendship.receiver, self.receiver)
+        self.assertEqual(friendship.state, "SENT")
+
+    def test_send_request_causes_error_if_request_already_sent(self):
+        Friendship.objects.create(
+            sender=self.sender,
+            receiver=self.receiver,
+            state="SENT",
+        )
+
+        # Send same request again
+        with self.assertRaises(ValidationError):
+            Friendship.send_request(sender=self.sender, receiver=self.receiver)
+
+    def test_send_request_causes_error_if_users_are_already_friends(self):
+        Friendship.objects.create(
+            sender=self.sender,
+            receiver=self.receiver,
+            state="ACCEPTED",
+        )
+
+        with self.assertRaises(ValidationError):
+            Friendship.send_request(sender=self.sender, receiver=self.receiver)
+
+    def test_send_request_resends_declined_request(self):
+        friendship = Friendship.objects.create(
+            sender=self.sender,
+            receiver=self.receiver,
+            state="DECLINED",
+        )
+
+        new_friendship = Friendship.send_request(
+            sender=self.sender, receiver=self.receiver
+        )
+        self.assertEqual(new_friendship.state, "SENT")
+        self.assertEqual(new_friendship.id, friendship.id)
