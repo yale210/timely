@@ -1,14 +1,19 @@
 import { describe, it, expect, vi, beforeEach } from "vitest"
 import { render, screen, waitFor } from "@testing-library/react"
 import { MemoryRouter, Routes, Route } from "react-router-dom"
-import Logout from "@/pages/Authentication/Logout"
-import { authService } from "@/services/authService"
+import type * as ComponentsModule from '@/components'
+// Mock components used in Logout (merge with real module to avoid dropping other exports)
+vi.mock("@/components", async (importOriginal) => {
+  const actual = await importOriginal<typeof ComponentsModule>()
+  return {
+    ...actual,
+    HomeNavbar: () => <div data-testid="navbar">Navbar</div>,
+    Footer: () => <div data-testid="footer">Footer</div>,
+    LogoutMessage: () => <div>Signing you out…</div>,
+  }
+})
 
-// Mock components used in Logout
-vi.mock("@/components", () => ({
-  HomeNavbar: () => <div data-testid="navbar">Navbar</div>,
-  Footer: () => <div data-testid="footer">Footer</div>,
-}))
+import { authService } from "@/services/authService"
 
 describe("Logout Component", () => {
   beforeEach(() => {
@@ -18,6 +23,8 @@ describe("Logout Component", () => {
   it("successfully calls authService.logout on mount", async () => {
     const logoutSpy = vi.spyOn(authService, "logout").mockResolvedValue()
     
+    const { default: Logout } = await import("@/pages/Authentication/Logout")
+
     render(
       <MemoryRouter initialEntries={["/logout"]}>
         <Routes>
@@ -39,9 +46,11 @@ describe("Logout Component", () => {
     })
   })
 
-  it("redirects to login even if logout fails", async () => {
+  it("displays error message if logout fails", async () => {
     vi.spyOn(authService, "logout").mockRejectedValue(new Error("Server down"))
     
+    const { default: Logout } = await import("@/pages/Authentication/Logout")
+
     render(
       <MemoryRouter initialEntries={["/logout"]}>
         <Routes>
@@ -60,6 +69,8 @@ describe("Logout Component", () => {
   it("handles non-Error objects in logout failure gracefully", async () => {
     vi.spyOn(authService, "logout").mockRejectedValue("Unexpected failure")
     
+    const { default: Logout } = await import("@/pages/Authentication/Logout")
+
     render(
       <MemoryRouter initialEntries={["/logout"]}>
         <Routes>

@@ -14,11 +14,12 @@ export const ConnectionStatusValues = {
 
 /**
  * A custom hook to manage a WebSocket connection with automatic reconnection.
- *
  * Rules applied:
  * - Preserve HEAD lifecycle semantics (safe disposal checks, explicit clears).
  * - Use nullable connectRef so reconnect timers call the latest connect safely.
  * - Normalize URL inputs (absolute, protocol-relative, path, relative).
+ * @param url - websocket URL (can be null to disable connection)
+ * @param onMessage - callback invoked with parsed message data
  */
 export const useWebSocket = (url: string | null, onMessage: (data: unknown) => void) => {
   const [status, setStatus] = useState<ConnectionStatus>(ConnectionStatusValues.CLOSED);

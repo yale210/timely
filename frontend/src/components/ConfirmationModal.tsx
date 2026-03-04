@@ -1,8 +1,13 @@
-// Minimal confirmation modal used by tests/pages. Keeps same API shape.
 /**
  * A tiny test shim for the confirmation modal. Tests sometimes assert on the
  * accessible button text, so we accept `confirmText`/`cancelText` and render
  * them (falling back to values used in tests).
+ * @param props.isOpen - whether the modal is visible
+ * @param props.onClose - called when the modal cancel/close action occurs
+ * @param props.onConfirm - called when the confirm action is triggered
+ * @param props.title - dialog title text
+ * @param props.confirmText - optional override for confirm button text
+ * @param props.cancelText - optional override for cancel button text
  */
 
 interface Props {
