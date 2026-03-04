@@ -74,7 +74,7 @@ export default function Dashboard() {
 
           <section className="col-span-3">
             <div className="w-full rounded-lg bg-white p-6 shadow-sm ring-1 ring-gray-900/5">
-              <CalendarPage showNavbar={false} />
+              <CalendarPage showNavbar={false} useLayout={false} />
             </div>
           </section>
         </section>
