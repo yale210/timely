@@ -33,7 +33,6 @@ class CommuteSeeder(BaseSeeder):
                 email=self.faker.email(),
                 password="thomas123",
             )
-
         commute_start = self._random_time()
         commute_end = self._random_time()
 
