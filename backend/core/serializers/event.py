@@ -15,12 +15,20 @@ class EventReminderSerializer(serializers.ModelSerializer):
         fields = ["id", "send_push", "send_email", "minutes_before"]
 
 
+class ExpandedEventReminderSerializer(serializers.Serializer):
+    id = serializers.IntegerField(required=False)
+    send_push = serializers.BooleanField(required=False, default=False)
+    send_email = serializers.BooleanField(required=False, default=False)
+    minutes_before = serializers.IntegerField(min_value=0)
+
+
 MAX_REMINDERS_PER_EVENT = 5
 
 
 class EventSerializer(serializers.ModelSerializer):
     user = serializers.HiddenField(default=serializers.CurrentUserDefault())
     reminders = EventReminderSerializer(many=True, required=False)
+    split_from_event_id = serializers.IntegerField(read_only=True)
     categories = serializers.PrimaryKeyRelatedField(
         many=True, queryset=Category.objects.all(), required=False
     )
@@ -38,6 +46,7 @@ class EventSerializer(serializers.ModelSerializer):
             "end_time",
             "recurrence_interval",
             "recurrence_end",
+            "split_from_event_id",
             "reminders",
         ]
         read_only_fields = ["id"]
@@ -70,9 +79,21 @@ class EventSerializer(serializers.ModelSerializer):
         reminders_data = attrs_copy.pop("reminders", None)
         attrs_copy.pop("categories", None)
 
-        event = self.instance or Event()
-        for attribute, value in attrs_copy.items():
-            setattr(event, attribute, value)
+        if self.instance is None:
+            event = Event()
+            for attribute, value in attrs_copy.items():
+                setattr(event, attribute, value)
+        else:
+            # Build a temporary model snapshot so validation never mutates the
+            # live instance state before scoped recurrence logic runs.
+            base_values: dict[str, object] = {
+                field.name: getattr(self.instance, field.name)
+                for field in Event._meta.fields
+                if not field.primary_key
+            }
+            base_values.update(attrs_copy)
+            event = Event(**base_values)
+            event.pk = self.instance.pk
 
         return self._clean_event(event)
 
@@ -135,6 +156,7 @@ class EventSerializer(serializers.ModelSerializer):
 class EventResponseSerializer(serializers.ModelSerializer):
     categories = CategorySerializer(many=True, read_only=True)
     reminders = EventReminderSerializer(many=True, read_only=True)
+    split_from_event_id = serializers.IntegerField(read_only=True)
 
     class Meta:
         model = Event
@@ -148,7 +170,29 @@ class EventResponseSerializer(serializers.ModelSerializer):
             "end_time",
             "recurrence_interval",
             "recurrence_end",
+            "split_from_event_id",
             "reminders",
         ]
 
 
+class ExpandedEventInstanceSerializer(serializers.Serializer):
+    id = serializers.IntegerField()
+    title = serializers.CharField()
+    description = serializers.CharField(allow_blank=True)
+    location = serializers.CharField(allow_blank=True)
+    categories = CategorySerializer(many=True)
+    start_time = serializers.DateTimeField()
+    end_time = serializers.DateTimeField()
+    recurrence_interval = serializers.CharField(
+        allow_blank=True,
+        allow_null=True,
+        required=False,
+    )
+    recurrence_end = serializers.DateField(allow_null=True, required=False)
+    reminders = ExpandedEventReminderSerializer(many=True)
+    is_override = serializers.BooleanField()
+    source_event_id = serializers.IntegerField()
+    original_start_time = serializers.DateTimeField(allow_null=True, required=False)
+    instance_id = serializers.CharField()
+    is_split_series = serializers.BooleanField()
+    split_from_event_id = serializers.IntegerField(allow_null=True, required=False)

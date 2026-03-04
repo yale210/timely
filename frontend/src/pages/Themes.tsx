@@ -1,4 +1,4 @@
-import {ThemeButton, FontButton, AppNavbar} from "../components/index.ts"
+import {ThemeButton, FontButton, AppNavbar} from "@/components/index.ts"
 
 function themeController(themeName : string) :void {
   document.documentElement.dataset.theme = themeName;

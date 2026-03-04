@@ -1,6 +1,6 @@
 import { PieChart, Pie, Cell, Legend, Tooltip } from "recharts";
 import type { WeeklyStats } from "@/types";
-import { PRIMARY_BLUE, LIGHT_GREY } from "./constants";
+import { PRIMARY_BLUE, LIGHT_GREY } from "@/components/charts/constants";
 
 /**
  * Maps weekly stats to chart data and filters out zero-value segments so a full

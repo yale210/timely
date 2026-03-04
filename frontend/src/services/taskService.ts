@@ -1,6 +1,6 @@
 import api from "./api";
 
-import { type Task, type Category, type TaskSubmission } from "../types";
+import { type Task, type Category, type TaskSubmission } from "@/types";
 
 /**
  * Retrieves a list of tasks from the server, optionally filtered by the provided criteria.
