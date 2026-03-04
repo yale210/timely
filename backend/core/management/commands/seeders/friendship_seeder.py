@@ -52,7 +52,7 @@ class FriendshipSeeder(BaseSeeder):
         User = get_user_model()
 
         # Shuffle users and get a random user.
-        temporary_sender,temporary_receiver = self._get_or_create_two_random_users()
+        temporary_sender, temporary_receiver = self._get_or_create_two_random_users()
         self._create_random_friendship(temporary_sender, temporary_receiver)
 
     def _create_random_friendship(self, temporary_sender, temporary_receiver):
@@ -72,8 +72,10 @@ class FriendshipSeeder(BaseSeeder):
                 email=self.faker.email(),
                 password="thomas123",
             )
-        temporary_receiver = User.objects.exclude(id=temporary_sender.id).order_by("?").first()
-        
+        temporary_receiver = (
+            User.objects.exclude(id=temporary_sender.id).order_by("?").first()
+        )
+
         if temporary_receiver is None:
             temporary_receiver = User.objects.create_user(
                 username=self.faker.user_name(),
