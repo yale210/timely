@@ -76,34 +76,7 @@ export default function Gradebook() {
   const [pendingDeleteId, setPendingDeleteId] = useState<number | null>(null)
   const { categories } = useCategories()
 
-  useEffect(() => {
-    const savedTheme = localStorage.getItem("theme");    
-    if (savedTheme) {
-      document.documentElement.dataset.theme = savedTheme;
-      console.log("loaded saved theme")
-    }
-
-    const savedFont = localStorage.getItem("font");
-    if (savedFont) {
-      document.documentElement.dataset.font = savedFont;
-    }
-  }, []);
-
-
-  useEffect(() => {
-    void fetchGrades()
-    
-  }, [])
-
- useEffect(() => {
-    const savedTheme = localStorage.getItem("theme");
-    if (savedTheme) {
-      document.documentElement.dataset.theme = savedTheme;
-    }
-  }, []);
-
   async function fetchGrades() {
-    setLoading(true)
     const res = await fetch("/api/grades/", { credentials: "include" })
     if (res.ok) {
       const data = await res.json() as Grade[]
@@ -114,9 +87,21 @@ export default function Gradebook() {
     setLoading(false)
   }
 
+  function refreshGrades() {
+    setLoading(true)
+    void fetchGrades()
+  }
+
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      void fetchGrades()
+    }, 0)
+    return () => clearTimeout(timeoutId)
+  }, [])
+
   function getCsrfToken(): string | null {
-    const match = document.cookie.match(/(?:^|; )csrftoken=([^;]+)/);
-    return match ? decodeURIComponent(match[1]) : null;
+    const match = /(?:^|; )csrftoken=([^;]+)/.exec(document.cookie)
+    return match ? decodeURIComponent(match[1]) : null
   }
 
   async function deleteGrade(id: number) {
@@ -126,7 +111,7 @@ export default function Gradebook() {
       credentials: "include",
       headers: csrfToken ? { "X-CSRFToken": csrfToken } : undefined,
     })
-    if (res.ok) void fetchGrades()
+    if (res.ok) refreshGrades()
   }
 
   const filteredGrades = grades
@@ -269,12 +254,12 @@ export default function Gradebook() {
         onCreated={() => {
           setModalOpen(false)
           setEditInitial(null)
-          void fetchGrades()
+          refreshGrades()
         }}
         onUpdated={() => {
           setModalOpen(false)
           setEditInitial(null)
-          void fetchGrades()
+          refreshGrades()
         }}
       />
       <ConfirmationModal
