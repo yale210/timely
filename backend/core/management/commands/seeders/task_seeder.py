@@ -44,29 +44,8 @@ class TaskSeeder(BaseSeeder):
             temporary_task.categories.set(categories)
 
     def _populate_random_task(self):
-        User = get_user_model()
-        # Shuffle users and get a random user.
-        temporary_user = User.objects.order_by("?").first()
-
-        if temporary_user is None:
-            temporary_user = User.objects.create_user(
-                username=self.faker.user_name(),
-                email=self.faker.email(),
-                password="thomas123",
-            )
-
-        temporary_category = (
-            Category.objects.filter(user=temporary_user).order_by("?").first()
-        )
-
-        if temporary_category is None:
-            temporary_category = Category.objects.create(
-                user=temporary_user,
-                text=self.faker.word(),
-                colour=self.faker.hex_color(),
-                max_daily_study_time=random.randint(1, 24),
-            )
-
+        temporary_user = self._get_or_create_random_user()
+        temporary_category = self._get_or_create_random_category(temporary_user)
         self._create_task(
             {
                 "fields": {
@@ -87,3 +66,28 @@ class TaskSeeder(BaseSeeder):
                 }
             }
         )
+
+    def _get_or_create_random_user(self):
+        User = get_user_model()
+        # Shuffle users and get a random user.
+        temporary_user = User.objects.order_by("?").first()
+
+        if temporary_user is None:
+            temporary_user = User.objects.create_user(
+                username=self.faker.user_name(),
+                email=self.faker.email(),
+                password="thomas123",
+            )
+        return temporary_user
+
+    def _get_or_create_random_category(self, user):
+        temporary_category = Category.objects.filter(user=user).order_by("?").first()
+
+        if temporary_category is None:
+            temporary_category = Category.objects.create(
+                user=user,
+                text=self.faker.word(),
+                colour=self.faker.hex_color(),
+                max_daily_study_time=random.randint(1, 24),
+            )
+        return temporary_category

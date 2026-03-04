@@ -76,3 +76,5 @@ class Command(BaseCommand):
 
         Friendship.objects.all().delete()
         print(f"Deleted {friendship_count} friendships.")
+
+    
