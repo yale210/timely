@@ -1,8 +1,8 @@
-﻿import { render, screen, fireEvent } from "@testing-library/react";
+import { fireEvent, render, screen} from "@testing-library/react";
 import { vi, describe, it, expect, beforeEach } from "vitest";
 import type React from "react";
-import EventSidebar from "../../src/components/EventSidebar";
-import type { Category, Event } from "../../src/types";
+import EventSidebar from "@/components/EventSidebar";
+import type { Category, Event } from "@/types";
 
 // Mock Headless UI to avoid Transition issues in JSDOM
 vi.mock("@headlessui/react", async () => {
@@ -233,5 +233,6 @@ describe("EventSidebar", () => {
     );
 
     expect(screen.queryByRole("button", { name: "delete" })).not.toBeInTheDocument();
+
   });
 });

@@ -8,7 +8,14 @@ import CalendarPage from "@/pages/Calendar";
 import * as taskService from "@/services/taskService";
 import * as eventService from "@/services/eventService";
 import * as schedulerService from "@/services/schedulerService";
-import type { Task, Event, Category, TaskSubmission, EventSubmission } from "@/types";
+import type {
+  Task,
+  Event,
+  Category,
+  TaskSubmission,
+  EventMutationContext,
+  EventSubmission,
+} from "@/types";
 
 // ----------------------
 // Mocks
@@ -71,8 +78,8 @@ interface MockUnifiedSidebarProps {
   isOpen: boolean;
   initialMode: "task" | "event";
   onSubmitTask: (data: TaskSubmission) => void;
-  onSubmitEvent: (data: EventSubmission) => void;
-  onDelete: () => void;
+  onSubmitEvent: (data: EventSubmission, context?: EventMutationContext) => void;
+  onDelete: (context?: EventMutationContext) => void;
   onClose: () => void;
   initialData?: Task | Event;
   categories: Category[];
@@ -182,6 +189,7 @@ const mockEvents: Event[] = [
 ];
 
 const mockCategories: Category[] = [{ id: 1, text: "Work" }];
+const eventEntryTestId = `mock-event-${mockEvents[0].instance_id ?? `event-${mockEvents[0].id}-${mockEvents[0].start_time}`}`;
 
 // Helper render
 const renderPage = () =>
@@ -334,9 +342,9 @@ describe("CalendarPage (lean tests)", () => {
     });
 
     it("opens sidebar in event mode when clicking an event entry", async () => {
-      await waitFor(() => expect(screen.getByTestId("mock-event-event-1")).toBeTruthy());
+      await waitFor(() => expect(screen.getByTestId(eventEntryTestId)).toBeTruthy());
 
-      fireEvent.click(screen.getByTestId("mock-event-event-1"));
+      fireEvent.click(screen.getByTestId(eventEntryTestId));
 
       await waitFor(() => expect(screen.getByTestId("mock-sidebar")).toBeTruthy());
       expect(screen.getByTestId("sidebar-mode").textContent).toBe("event");
@@ -364,8 +372,8 @@ describe("CalendarPage (lean tests)", () => {
     });
 
     it("updates an event when existing event selected then submit-event", async () => {
-      await waitFor(() => expect(screen.getByTestId("mock-event-event-1")).toBeTruthy());
-      fireEvent.click(screen.getByTestId("mock-event-event-1"));
+      await waitFor(() => expect(screen.getByTestId(eventEntryTestId)).toBeTruthy());
+      fireEvent.click(screen.getByTestId(eventEntryTestId));
       await waitFor(() => expect(screen.getByTestId("mock-sidebar")).toBeTruthy());
 
       fireEvent.click(screen.getByTestId("sidebar-submit-event"));
@@ -397,8 +405,8 @@ describe("CalendarPage (lean tests)", () => {
     });
 
     it("deletes event when event selected then delete", async () => {
-      await waitFor(() => expect(screen.getByTestId("mock-event-event-1")).toBeTruthy());
-      fireEvent.click(screen.getByTestId("mock-event-event-1"));
+      await waitFor(() => expect(screen.getByTestId(eventEntryTestId)).toBeTruthy());
+      fireEvent.click(screen.getByTestId(eventEntryTestId));
       await waitFor(() => expect(screen.getByTestId("mock-sidebar")).toBeTruthy());
 
       fireEvent.click(screen.getByTestId("sidebar-delete"));
@@ -437,12 +445,14 @@ describe("CalendarPage (lean tests)", () => {
     sidebarProps!.onSubmitEvent({ title: "New Event" } as EventSubmission);
     expect(eventService.createEvent).toHaveBeenCalled();
 
-    // Update Event: first click it to select it
-    const eventBtn = await screen.findByTestId("mock-event-event-10");
-    fireEvent.click(eventBtn);
-    
-    sidebarProps!.onSubmitEvent({ title: "Updated Event" } as EventSubmission);
-    expect(eventService.updateEvent).toHaveBeenCalledWith(10, { title: "Updated Event" });
+  // Update Event: first click it to select it
+  const existingEvent = { id: 10, title: "Existing Event", start_time: "2026-01-01", end_time: "2026-01-01" } as Event;
+  const existingEventTestId = `mock-event-${existingEvent.instance_id ?? `event-${existingEvent.id}-${existingEvent.start_time}`}`;
+  const eventBtn = await screen.findByTestId(existingEventTestId);
+  fireEvent.click(eventBtn);
+
+  sidebarProps!.onSubmitEvent({ title: "Updated Event" } as EventSubmission);
+  expect(eventService.updateEvent).toHaveBeenCalledWith(10, { title: "Updated Event" }, undefined);
   });
 
   it("handles scheduling and unscheduling tasks", async () => {
@@ -486,9 +496,11 @@ describe("CalendarPage (lean tests)", () => {
       </MemoryRouter>
     );
 
-    // Wait for event to render
-    const eventBtn = await screen.findByTestId("mock-event-event-10");
-    fireEvent.click(eventBtn);
+  // Wait for event to render
+  const evt = mockEvents[0];
+  const testId = `mock-event-${evt.instance_id ?? `event-${evt.id}-${evt.start_time}`}`;
+  const eventBtn = await screen.findByTestId(testId);
+  fireEvent.click(eventBtn);
 
     expect(sidebarProps?.isOpen).toBe(true);
     expect(sidebarProps?.initialData?.id).toBe(10);
