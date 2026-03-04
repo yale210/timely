@@ -479,9 +479,11 @@ describe("CalendarPage (lean tests)", () => {
     fireEvent.click(scheduleBtn);
     await waitFor(() => expect(vi.mocked(schedulerService.scheduleTasks)).toHaveBeenCalled());
 
-  const unscheduleBtn = screen.getByRole("button", { name: /event_busy\s*Unschedule Tasks/i });
-  await waitFor(() => expect(unscheduleBtn).not.toBeDisabled());
-  fireEvent.click(unscheduleBtn);
+  const unscheduleBtn = screen.getByRole("button", { name: /Unschedule Tasks/i });
+    // Wait for the scheduling to finish and the button to be enabled again
+    await waitFor(() => expect(unscheduleBtn).not.toBeDisabled());
+    
+    fireEvent.click(unscheduleBtn);
     await waitFor(() => expect(vi.mocked(schedulerService.unscheduleTasks)).toHaveBeenCalled());
   });
 
