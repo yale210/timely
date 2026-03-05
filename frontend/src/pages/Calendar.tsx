@@ -150,7 +150,7 @@ const CalendarPage = ({ showNavbar = true, useLayout = true }: CalendarPageProps
     return created;
   }, []);
 
-  const updateCategory = useCallback(async (id: number, patch: { colour?: string | null }) => {
+  const updateCategory = useCallback(async (id: number, patch: { colour?: string | null; colour_override?: boolean }) => {
     const updated = await categoryService.updateCategory(id, patch);
     setCategories((prev) => prev.map((category) => (
       category.id === id ? { ...category, ...updated } : category
@@ -187,7 +187,18 @@ const CalendarPage = ({ showNavbar = true, useLayout = true }: CalendarPageProps
     void fetchEvents(view, date);
   }, [fetchEvents, view, date]);
 
-  const handleSelectSlot = ({ start, end }: { start: Date; end: Date }) => {
+  const handleSelectSlot = ({
+    start,
+    end,
+    action,
+  }: {
+    start: Date;
+    end: Date;
+    action: "select" | "click" | "doubleClick";
+  }) => {
+    if (isSidebarOpen && action !== "select") {
+      return;
+    }
     setSidebarMode("event");
     setSelectedItem({
       id: 0,
