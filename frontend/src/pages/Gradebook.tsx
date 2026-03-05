@@ -1,86 +1,42 @@
-import { useEffect, useState } from "react"
 import ConfirmationModal from "@/components/modals/ConfirmationModal"
 import CreateGradeModal from "@/components/modals/CreateGradeModal.tsx"
 import useCategories from "@/hooks/tasks/useCategories"
+import useGrades from "@/hooks/gradebook/useGrades"
 import AppLayout from "@/layouts/AppLayout"
-import { GradebookFilterCategories, GradebookHeader, GradebookLayout, GradebookTable, GradebookStatus } from "@/components"
-import { type Grade } from "@/components/gradebook/GradebookTable"
-import { type EditInitial } from "@/types/gradebook"
+import {
+  GradebookFilterCategories,
+  GradebookHeader,
+  GradebookLayout,
+  GradebookStatus,
+  GradebookTable,
+} from "@/components"
 
 /**
  * Gradebook page showing a table of grades, filters and summary cards.
- *
- * Fetches grades from the API and provides create / edit / delete actions.
  */
 export default function Gradebook() {
-  const [grades, setGrades] = useState<Grade[] | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [modalOpen, setModalOpen] = useState(false)
-  const [editInitial, setEditInitial] = useState<EditInitial>(null)
-  const [selectedCategoryId, setSelectedCategoryId] = useState<number | null>(null)
-  const [pendingDeleteId, setPendingDeleteId] = useState<number | null>(null)
+  const {
+    grades,
+    loading,
+    modalOpen,
+    editInitial,
+    selectedCategoryId,
+    pendingDeleteId,
+    filteredGrades,
+    setModalOpen,
+    setSelectedCategoryId,
+    setPendingDeleteId,
+    refreshGrades,
+    handleEditGrade,
+    closeModal,
+    confirmDelete,
+  } = useGrades()
   const { categories } = useCategories()
-
-  async function fetchGrades() {
-    const res = await fetch("/api/grades/", { credentials: "include" })
-    if (res.ok) {
-      const data = await res.json() as Grade[]
-      setGrades(data)
-    } else {
-      setGrades([])
-    }
-    setLoading(false)
-  }
-
-  function refreshGrades() {
-    setLoading(true)
-    void fetchGrades()
-  }
-
-  useEffect(() => {
-    const timeoutId = setTimeout(() => {
-      void fetchGrades()
-    }, 0)
-    return () => clearTimeout(timeoutId)
-  }, [])
-
-  function getCsrfToken(): string | null {
-    const match = /(?:^|; )csrftoken=([^;]+)/.exec(document.cookie)
-    return match ? decodeURIComponent(match[1]) : null
-  }
-
-  async function deleteGrade(id: number) {
-    const csrfToken = getCsrfToken();
-    const res = await fetch(`/api/grades/${id}/`, {
-      method: "DELETE",
-      credentials: "include",
-      headers: csrfToken ? { "X-CSRFToken": csrfToken } : undefined,
-    })
-    if (res.ok) refreshGrades()
-  }
-
-  function handleEditGrade(grade: Grade) {
-    setEditInitial({
-      id: grade.id,
-      name: grade.name,
-      score: grade.score,
-      total: grade.total_possible,
-      date: grade.date_achieved,
-      categoryId: grade.category ?? null,
-    })
-    setModalOpen(true)
-  }
-
-  const filteredGrades = grades
-    ? selectedCategoryId == null
-      ? grades
-      : grades.filter((g) => g.category === selectedCategoryId)
-    : []
 
   return (
     <AppLayout>
       <GradebookLayout>
-        <GradebookHeader setModalOpen={setModalOpen}/>
+        <GradebookHeader setModalOpen={setModalOpen} />
 
         <GradebookFilterCategories
           loading={loading}
@@ -106,22 +62,18 @@ export default function Gradebook() {
 
         <CreateGradeModal
           open={modalOpen}
-          onClose={() => {
-            setModalOpen(false)
-            setEditInitial(null)
-          }}
+          onClose={closeModal}
           initialData={editInitial ?? undefined}
           onCreated={() => {
-            setModalOpen(false)
-            setEditInitial(null)
-            refreshGrades()
+            closeModal()
+            void refreshGrades()
           }}
           onUpdated={() => {
-            setModalOpen(false)
-            setEditInitial(null)
-            refreshGrades()
+            closeModal()
+            void refreshGrades()
           }}
         />
+
         <ConfirmationModal
           isOpen={pendingDeleteId !== null}
           title="Delete grade?"
@@ -130,9 +82,7 @@ export default function Gradebook() {
           cancelText="Cancel"
           onClose={() => setPendingDeleteId(null)}
           onConfirm={() => {
-            if (pendingDeleteId !== null) {
-              void deleteGrade(pendingDeleteId);
-            }
+            void confirmDelete()
           }}
         />
       </GradebookLayout>
