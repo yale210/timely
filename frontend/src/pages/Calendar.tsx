@@ -173,19 +173,19 @@ const CalendarPage = ({ showNavbar = true, useLayout = true }: CalendarPageProps
     void fetchEvents(view, date);
   }, [fetchEvents, view, date]);
 
-  const handleSelectSlot = ({ start }: { start: Date }) => {
-    // Create a template for a new task
-    setSidebarMode("task");
+  const handleSelectSlot = ({ start, end }: { start: Date; end: Date }) => {
+    setSidebarMode("event");
     setSelectedItem({
       id: 0,
       title: "",
       description: "",
+      location: "",
       start_time: start.toISOString(),
-      deadline: moment(start).add(1, "hour").toISOString(),
-      importance: 5,
-      completed: false,
+      end_time: end.toISOString(),
       categories: [],
-      estimated_minutes: 30,
+      reminders: [],
+      recurrence_interval: null,
+      recurrence_end: null,
     });
     setIsSidebarOpen(true);
   };
