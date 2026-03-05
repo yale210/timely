@@ -83,6 +83,7 @@ const CategoryMultiSelect = ({
   const [openMenuId, setOpenMenuId] = useState<number | null>(null);
   const [menuPosition, setMenuPosition] = useState<{ top: number; left: number } | null>(null);
   const menuRef = useRef<HTMLDivElement | null>(null);
+  const inputRef = useRef<HTMLInputElement | null>(null);
 
   const styles = VARIANT_STYLES[variant];
   const normalizedQuery = normalise(query);
@@ -131,6 +132,7 @@ const CategoryMultiSelect = ({
       onChange([...selectedIds, created.id]);
       setQuery("");
       setIsOpen(false);
+      inputRef.current?.blur();
     } catch (createError) {
       console.error(createError);
       setError("Unable to create category.");
@@ -150,6 +152,7 @@ const CategoryMultiSelect = ({
         toggleCategory(filtered[0].id);
         setQuery("");
         setIsOpen(false);
+        inputRef.current?.blur();
       }
     }
   };
@@ -196,21 +199,29 @@ const CategoryMultiSelect = ({
         {selectedCategories.length === 0 && (
           <span className="text-xs text-gray-400">No categories selected.</span>
         )}
-        {selectedCategories.map((category) => (
-          <button
-            key={category.id}
-            type="button"
-            onClick={() => toggleCategory(category.id)}
-            className={`inline-flex items-center gap-1 rounded-full border px-3 py-1 text-xs font-semibold transition-colors ${styles.chipBase} ${styles.chipSelected}`}
-          >
-            {category.text}
-            <span className="material-icons text-[14px]">close</span>
-          </button>
-        ))}
+        {selectedCategories.map((category) => {
+          const colourValue = category.colour ?? DEFAULT_SWATCH;
+          return (
+            <button
+              key={category.id}
+              type="button"
+              onClick={() => toggleCategory(category.id)}
+              className="inline-flex items-center gap-1 rounded-md border px-3 py-1 text-xs font-semibold text-black transition-colors"
+              style={{
+                borderColor: colourValue,
+                backgroundColor: hexToRgba(colourValue, 0.12),
+              }}
+            >
+              {category.text}
+              <span className="material-icons text-[14px]">close</span>
+            </button>
+          );
+        })}
       </div>
 
       <div className="relative mt-2">
         <input
+          ref={inputRef}
           type="text"
           value={query}
           placeholder="Type to search or add category..."
@@ -245,6 +256,7 @@ const CategoryMultiSelect = ({
                         toggleCategory(category.id);
                         setQuery("");
                         setIsOpen(false);
+                        inputRef.current?.blur();
                       }}
                       className={`flex flex-1 min-w-0 items-center gap-2 text-left text-sm ${styles.optionBase}`}
                     >
@@ -335,7 +347,7 @@ const CategoryMultiSelect = ({
         ? createPortal(
           <div
             ref={menuRef}
-            className="fixed z-[70] w-44 rounded-lg border border-gray-200 bg-white shadow-lg"
+            className="fixed z-70 w-44 rounded-lg border border-gray-200 bg-white shadow-lg"
             style={{ top: menuPosition.top, left: menuPosition.left }}
             onMouseDown={(event) => event.stopPropagation()}
           >
