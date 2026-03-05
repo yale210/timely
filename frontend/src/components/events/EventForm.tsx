@@ -117,6 +117,8 @@ interface EventFormProps {
   initialData?: Event;
   categories: Category[];
   onCreateCategory: (text: string) => Promise<Category>;
+  onUpdateCategory: (id: number, patch: { colour?: string | null }) => Promise<Category>;
+  onDeleteCategory: (id: number) => Promise<void>;
   onSubmit: (data: EventSubmission) => void;
   onCancel: () => void;
   onDataChange?: (data: Partial<Event>) => void;
@@ -136,6 +138,8 @@ const EventForm = ({
   initialData,
   categories,
   onCreateCategory,
+  onUpdateCategory,
+  onDeleteCategory,
   onSubmit,
   onCancel,
   onDataChange,
@@ -480,6 +484,8 @@ const EventForm = ({
             selectedIds={selectedCategories}
             onChange={setSelectedCategories}
             onCreateCategory={onCreateCategory}
+            onUpdateCategory={onUpdateCategory}
+            onDeleteCategory={onDeleteCategory}
             variant="event"
           />
         </div>

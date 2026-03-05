@@ -7,6 +7,7 @@
 export interface Category {
   id: number;
   text: string;
+  colour?: string | null;
 }
 
 /**

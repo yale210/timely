@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import moment from "moment";
 import * as taskService from "@/services/taskService";
+import * as categoryService from "@/services/categoryService";
 import { type Category, type Task, type TaskSubmission } from "@/types";
 import { useThemeFont } from "@/hooks/common/useThemeFont";
 
@@ -45,6 +46,8 @@ interface TaskListActions {
   submitTask: (data: TaskSubmission) => Promise<void>;
   deleteTask: (id: number) => Promise<void>;
   createCategory: (text: string) => Promise<Category>;
+  updateCategory: (id: number, patch: { colour?: string | null }) => Promise<Category>;
+  deleteCategory: (id: number) => Promise<void>;
   refresh: () => Promise<void>;
   formatDayLabel: (dateStr: string) => string;
 }
@@ -105,7 +108,7 @@ const fetchTasks = useCallback(async () => {
 
 const fetchCategories = useCallback(async () => {
   try {
-    const data = await taskService.getCategories();
+    const data = await categoryService.getCategories();
     setCategories(data);
   } catch (fetchCategoriesError) {
     console.error(fetchCategoriesError);
@@ -171,7 +174,7 @@ const createCategory = useCallback(async (text: string) => {
   if (!trimmed) {
     throw new Error("Category name cannot be empty.");
   }
-  const created = await taskService.createCategory(trimmed);
+  const created = await categoryService.createCategory(trimmed);
   setCategories((prev) => {
     const exists = prev.some((category) => category.id === created.id);
     const next = exists ? prev : [...prev, created];
@@ -179,6 +182,22 @@ const createCategory = useCallback(async (text: string) => {
   });
   return created;
 }, []);
+
+const updateCategory = useCallback(async (id: number, patch: { colour?: string | null }) => {
+  const updated = await categoryService.updateCategory(id, patch);
+  setCategories((prev) => prev.map((category) => (
+    category.id === id ? { ...category, ...updated } : category
+  )));
+  return updated;
+}, []);
+
+const deleteCategory = useCallback(async (id: number) => {
+  await categoryService.deleteCategory(id);
+  setCategories((prev) => prev.filter((category) => category.id !== id));
+  if (filterCategory === id) {
+    setFilterCategory(null);
+  }
+}, [filterCategory]);
 
 const openTask = useCallback((task: Task) => {
   setSelectedTask(task);
@@ -293,6 +312,8 @@ return {
     submitTask,
     deleteTask,
     createCategory,
+    updateCategory,
+    deleteCategory,
     refresh,
     formatDayLabel,
   },

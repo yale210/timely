@@ -12,6 +12,8 @@ interface EventSidebarProps {
   onClose: () => void;
   categories: Category[];
   onCreateCategory: (text: string) => Promise<Category>;
+  onUpdateCategory: (id: number, patch: { colour?: string | null }) => Promise<Category>;
+  onDeleteCategory: (id: number) => Promise<void>;
   onSubmit: (data: EventSubmission, context?: EventMutationContext) => void;
   onDelete?: (context?: EventMutationContext) => void;
   onRevertToSeries?: (context: EventMutationContext) => void;
@@ -35,6 +37,8 @@ const EventSidebar = ({
   onClose,
   categories,
   onCreateCategory,
+  onUpdateCategory,
+  onDeleteCategory,
   onSubmit,
   onDelete,
   onRevertToSeries,
@@ -152,6 +156,8 @@ const EventSidebar = ({
                           initialData={initialData}
                           categories={categories}
                           onCreateCategory={onCreateCategory}
+                          onUpdateCategory={onUpdateCategory}
+                          onDeleteCategory={onDeleteCategory}
                           onSubmit={(data) => {
                             if (isEditingRecurringEvent) {
                               openSaveScope(data);

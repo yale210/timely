@@ -35,6 +35,8 @@ interface TaskFormProps {
   initialData?: Task;
   categories: Category[];
   onCreateCategory: (text: string) => Promise<Category>;
+  onUpdateCategory: (id: number, patch: { colour?: string | null }) => Promise<Category>;
+  onDeleteCategory: (id: number) => Promise<void>;
   onSubmit: (data: TaskSubmission) => void;
   onCancel: () => void;
   onDataChange?: (data: Partial<Task>) => void;
@@ -54,6 +56,8 @@ const TaskForm = ({
   initialData,
   categories,
   onCreateCategory,
+  onUpdateCategory,
+  onDeleteCategory,
   onSubmit,
   onCancel,
   onDataChange,
@@ -280,6 +284,8 @@ const TaskForm = ({
             selectedIds={selectedCategories}
             onChange={setSelectedCategories}
             onCreateCategory={onCreateCategory}
+            onUpdateCategory={onUpdateCategory}
+            onDeleteCategory={onDeleteCategory}
             variant="task"
           />
         </div>

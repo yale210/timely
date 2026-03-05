@@ -71,6 +71,8 @@ const EventList = () => {
         onClose={actions.closeSidebar}
         categories={categories}
         onCreateCategory={actions.createCategory}
+        onUpdateCategory={actions.updateCategory}
+        onDeleteCategory={actions.deleteCategory}
         onSubmit={(data, context) => {
           void actions.submitEvent(data, context);
         }}

@@ -5,6 +5,7 @@ import { Calendar, momentLocalizer, type View, Views } from "react-big-calendar"
 import { UnifiedSidebar } from "@/components/index";
 import AppLayout from "@/layouts/AppLayout";
 import * as taskService from "@/services/taskService";
+import * as categoryService from "@/services/categoryService";
 import * as eventService from "@/services/eventService";
 import * as schedulerService from "@/services/schedulerService";
 import type { Task, Category, TaskSubmission, Event, EventSubmission, EventMutationContext} from "@/types";
@@ -127,7 +128,7 @@ const CalendarPage = ({ showNavbar = true, useLayout = true }: CalendarPageProps
 
   const fetchCategories = useCallback(async () => {
     try {
-      const data = await taskService.getCategories();
+      const data = await categoryService.getCategories();
       setCategories(data);
     } catch (err) {
       setCategories([])
@@ -140,13 +141,26 @@ const CalendarPage = ({ showNavbar = true, useLayout = true }: CalendarPageProps
     if (!trimmed) {
       throw new Error("Category name cannot be empty.");
     }
-    const created = await taskService.createCategory(trimmed);
+    const created = await categoryService.createCategory(trimmed);
     setCategories((prev) => {
       const exists = prev.some((category) => category.id === created.id);
       const next = exists ? prev : [...prev, created];
       return [...next].sort((a, b) => a.text.localeCompare(b.text));
     });
     return created;
+  }, []);
+
+  const updateCategory = useCallback(async (id: number, patch: { colour?: string | null }) => {
+    const updated = await categoryService.updateCategory(id, patch);
+    setCategories((prev) => prev.map((category) => (
+      category.id === id ? { ...category, ...updated } : category
+    )));
+    return updated;
+  }, []);
+
+  const deleteCategory = useCallback(async (id: number) => {
+    await categoryService.deleteCategory(id);
+    setCategories((prev) => prev.filter((category) => category.id !== id));
   }, []);
 
   const fetchEvents = useCallback(async (activeView: View, activeDate: Date) => {
@@ -493,6 +507,8 @@ const CalendarPage = ({ showNavbar = true, useLayout = true }: CalendarPageProps
         }}
         categories={categories}
         onCreateCategory={createCategory}
+        onUpdateCategory={updateCategory}
+        onDeleteCategory={deleteCategory}
         initialData={selectedItem}
         initialMode={sidebarMode}
         onSubmitTask={(data) => { void handleSubmitTask(data); }}

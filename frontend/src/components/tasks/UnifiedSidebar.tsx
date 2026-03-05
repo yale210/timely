@@ -20,6 +20,8 @@ interface UnifiedSidebarProps {
   initialMode?: "task" | "event";
   categories: Category[];
   onCreateCategory: (text: string) => Promise<Category>;
+  onUpdateCategory: (id: number, patch: { colour?: string | null }) => Promise<Category>;
+  onDeleteCategory: (id: number) => Promise<void>;
   initialData?: Task | Event;
   onSubmitTask: (data: TaskSubmission) => void;
   onSubmitEvent: (data: EventSubmission, context?: EventMutationContext) => void;
@@ -47,6 +49,8 @@ const UnifiedSidebar = ({
   initialMode = "task",
   categories,
   onCreateCategory,
+  onUpdateCategory,
+  onDeleteCategory,
   initialData,
   onSubmitTask,
   onSubmitEvent,
@@ -193,6 +197,8 @@ const UnifiedSidebar = ({
             initialData={mergedData as Task}
             categories={categories}
             onCreateCategory={onCreateCategory}
+            onUpdateCategory={onUpdateCategory}
+            onDeleteCategory={onDeleteCategory}
             onSubmit={(data) => {
               onSubmitTask(data);
               onClose();
@@ -206,6 +212,8 @@ const UnifiedSidebar = ({
             initialData={mergedData as Event}
             categories={categories}
             onCreateCategory={onCreateCategory}
+            onUpdateCategory={onUpdateCategory}
+            onDeleteCategory={onDeleteCategory}
             onSubmit={(data) => {
               if (isEditingRecurringEvent) {
                 openSaveScope(data);

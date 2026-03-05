@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react"
-import { getCategories } from "@/services/taskService"
+import { getCategories } from "@/services/categoryService"
 
 /**
  * Category represents a simple category record returned by the API.
