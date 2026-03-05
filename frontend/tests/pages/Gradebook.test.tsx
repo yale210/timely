@@ -139,7 +139,8 @@ describe("Gradebook Page", () => {
   });
 
   it("handles deletion of a grade", async () => {
-    vi.spyOn(window, "confirm").mockReturnValue(true);
+    // Use global stub for confirm to avoid spying on window directly in tests
+    vi.stubGlobal("confirm", vi.fn().mockReturnValue(true));
     const { default: Gradebook } = await import("@/pages/Gradebook");
     render(
       <BrowserRouter>
@@ -152,7 +153,8 @@ describe("Gradebook Page", () => {
 const deleteBtns = screen.getAllByRole("button", { name: /Delete/i });
     fireEvent.click(deleteBtns[0]);
 
-    expect(window.confirm).toHaveBeenCalled();
+    // assert the global confirm was called
+    expect(confirm).toHaveBeenCalled();
     expect(global.fetch).toHaveBeenCalledWith("/api/grades/1/", expect.objectContaining({ method: "DELETE" }));
   });
 

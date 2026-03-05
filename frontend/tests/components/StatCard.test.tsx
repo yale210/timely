@@ -1,6 +1,6 @@
 import { render, screen } from "@testing-library/react";
 import { describe, it, expect } from "vitest";
-import StatCard from "../../src/components/StatCard";
+import StatCard from "@/components/dashboard/StatCard";
 import { BrowserRouter } from "react-router-dom";
 
 describe("StatCard Component", () => {
