@@ -1,79 +1,108 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback } from "react";
 
 /**
  * Represents the possible states of a WebSocket connection.
  */
-export type ConnectionStatus = 'CONNECTING' | 'OPEN' | 'CLOSING' | 'CLOSED';
+export type ConnectionStatus = "CONNECTING" | "OPEN" | "CLOSING" | "CLOSED";
 
 export const ConnectionStatusValues = {
-  CONNECTING: 'CONNECTING' as ConnectionStatus,
-  OPEN: 'OPEN' as ConnectionStatus,
-  CLOSING: 'CLOSING' as ConnectionStatus,
-  CLOSED: 'CLOSED' as ConnectionStatus,
+  CONNECTING: "CONNECTING" as ConnectionStatus,
+  OPEN: "OPEN" as ConnectionStatus,
+  CLOSING: "CLOSING" as ConnectionStatus,
+  CLOSED: "CLOSED" as ConnectionStatus,
 } as const;
 
 /**
  * A custom hook to manage a WebSocket connection with automatic reconnection.
- *
- * This hook establishes a WebSocket connection, monitors its status,
- * and handles incoming messages. It also includes exponential backoff
- * for reconnection attempts when the connection is lost.
- * @param url - The WebSocket endpoint URL. If null, the connection is not attempted.
- * @param onMessage - A callback function to handle incoming WebSocket messages.
- * @returns An object containing the current connection status and the message history.
+ * Rules applied:
+ * - Preserve HEAD lifecycle semantics (safe disposal checks, explicit clears).
+ * - Use nullable connectRef so reconnect timers call the latest connect safely.
+ * - Normalize URL inputs (absolute, protocol-relative, path, relative).
+ * @param url - websocket URL (can be null to disable connection)
+ * @param onMessage - callback invoked with parsed message data
  */
 export const useWebSocket = (url: string | null, onMessage: (data: unknown) => void) => {
   const [status, setStatus] = useState<ConnectionStatus>(ConnectionStatusValues.CLOSED);
   const socketRef = useRef<WebSocket | null>(null);
   const reconnectTimeoutRef = useRef<number | null>(null);
   const reconnectAttemptsRef = useRef(0);
-  const connectRef = useRef<() => void>(undefined);
+  const connectRef = useRef<(() => void) | null>(null);
   const disposedRef = useRef(false);
+
   const connect = useCallback(() => {
     if (!url) return;
-
     if (disposedRef.current) return;
-    setStatus(ConnectionStatusValues.CONNECTING);
-    
-    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+
+    // Build a sensible full WebSocket URL
+    const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
     const host = window.location.host;
-    const fullUrl = url.startsWith('ws') ? url : `${protocol}//${host}${url}`;
+    let fullUrl: string;
+    if (/^[a-zA-Z][a-zA-Z0-9+.-]*:\/\//.test(url)) {
+      fullUrl = url;
+    } else if (url.startsWith("//")) {
+      fullUrl = `${protocol}${url}`;
+    } else if (url.startsWith("/")) {
+      fullUrl = `${protocol}//${host}${url}`;
+    } else {
+      fullUrl = `${protocol}//${host}/${url}`;
+    }
 
-    const socket = new WebSocket(fullUrl);
-    socketRef.current = socket;
+    try {
+      setStatus(ConnectionStatusValues.CONNECTING);
+      const socket = new WebSocket(fullUrl);
+      socketRef.current = socket;
 
-    socket.onopen = () => {
-      if (disposedRef.current) return;
-      setStatus(ConnectionStatusValues.OPEN);
-      reconnectAttemptsRef.current = 0;
-    };
+      socket.onopen = () => {
+        if (disposedRef.current) return;
+        setStatus(ConnectionStatusValues.OPEN);
+        reconnectAttemptsRef.current = 0;
+        if (reconnectTimeoutRef.current) {
+          clearTimeout(reconnectTimeoutRef.current);
+          reconnectTimeoutRef.current = null;
+        }
+      };
 
-    socket.onmessage = (event) => {
-      try {
-        const data = JSON.parse(event.data as string) as unknown;
-        onMessage(data);
-      } catch {
-        // silent: malformed messages are ignored
-      }
-    };
+      socket.onmessage = (event) => {
+        try {
+          const data = JSON.parse(event.data as string) as unknown;
+          onMessage(data);
+        } catch {
+          // ignore malformed messages
+        }
+      };
 
-    socket.onclose = (event) => {
-      if (disposedRef.current) return;
-      setStatus(ConnectionStatusValues.CLOSED);
-      socketRef.current = null;
+      socket.onclose = (event) => {
+        if (disposedRef.current) return;
+        setStatus(ConnectionStatusValues.CLOSED);
+        socketRef.current = null;
 
-      if (event.code !== 1000) {
-        const timeout = Math.min(1000 * Math.pow(2, reconnectAttemptsRef.current), 30000);
-        reconnectTimeoutRef.current = window.setTimeout(() => {
-          reconnectAttemptsRef.current += 1;
-          connectRef.current?.();
-        }, timeout);
-      }
-    };
+        // If the close wasn't a normal close, attempt reconnect with backoff
+        if (event.code !== 1000) {
+          const timeout = Math.min(1000 * Math.pow(2, reconnectAttemptsRef.current), 30000);
+          reconnectTimeoutRef.current = window.setTimeout(() => {
+            reconnectAttemptsRef.current += 1;
+            connectRef.current?.();
+          }, timeout) as unknown as number;
+        }
+      };
 
-    socket.onerror = () => {
-      socket.close();
-    };
+      socket.onerror = () => {
+        // Trigger close path which will schedule reconnect if needed
+        try {
+          socket.close();
+        } catch {
+          /* ignore */
+        }
+      };
+    } catch (error) {
+      // If constructing the socket throws, schedule a reconnect attempt
+      console.error("WebSocket error", error);
+      const timeout = Math.min(1000 * Math.pow(2, reconnectAttemptsRef.current), 30000);
+      reconnectTimeoutRef.current = window.setTimeout(() => {
+        reconnectAttemptsRef.current += 1;
+        connectRef.current?.();
+      }, timeout) as unknown as number;
+    }
   }, [url, onMessage]);
 
   useEffect(() => {
@@ -82,26 +111,36 @@ export const useWebSocket = (url: string | null, onMessage: (data: unknown) => v
 
   useEffect(() => {
     disposedRef.current = false;
-    // Calling connect asynchronously to avoid synchronous setState in effect
-    const timeoutId = setTimeout(() => {
+    // Call connect asynchronously to avoid React strict-mode double-call issues
+    const startTimeout = window.setTimeout(() => {
       connect();
     }, 0);
 
     return () => {
       disposedRef.current = true;
-      clearTimeout(timeoutId);
+      clearTimeout(startTimeout);
       if (socketRef.current) {
-        socketRef.current.close(1000, 'Component unmounting');
+        try {
+          socketRef.current.close(1000, "Component unmounting");
+        } catch {
+          /* ignore */
+        }
+        socketRef.current = null;
       }
       if (reconnectTimeoutRef.current) {
         clearTimeout(reconnectTimeoutRef.current);
+        reconnectTimeoutRef.current = null;
       }
     };
   }, [connect]);
 
   const sendMessage = useCallback((data: unknown) => {
     if (socketRef.current?.readyState === WebSocket.OPEN) {
-      socketRef.current.send(JSON.stringify(data));
+      try {
+        socketRef.current.send(JSON.stringify(data));
+      } catch {
+        // ignore send errors
+      }
     }
   }, []);
 

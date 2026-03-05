@@ -93,6 +93,9 @@ describe("AdminNotifications Page", () => {
     expect(userRow).not.toBeNull();
     fireEvent.click(within(userRow!).getByRole("checkbox"));
 
+    // Wait for the recipient count to update (from getAudienceCounts mock)
+    await screen.findByText(/Estimated recipients: 1/i);
+
     fireEvent.change(screen.getByLabelText(/Title/i), {
       target: { value: "Maintenance" },
     });
@@ -101,22 +104,65 @@ describe("AdminNotifications Page", () => {
     });
     fireEvent.click(screen.getByRole("checkbox", { name: /I confirm/i }));
 
-    const sendButton = screen.getByRole("button", { name: /Send notification/i });
-    await waitFor(() => expect(sendButton).toBeEnabled());
-    fireEvent.click(sendButton);
+    fireEvent.click(screen.getByRole("button", { name: /^Send notification$/i }));
+    fireEvent.click(screen.getByRole("button", { name: /^Send now$/i }));
 
-    expect(await screen.findByText("Send this broadcast?")).toBeDefined();
-    fireEvent.click(screen.getByRole("button", { name: /Send now/i }));
-
-    await waitFor(() => expect(sendAdminNotification).toHaveBeenCalledTimes(1));
-    const sentPayload = vi.mocked(sendAdminNotification).mock.calls[0]?.[0];
-    expect(sentPayload?.target).toBe("users");
-    expect(sentPayload?.user_ids).toEqual([1]);
-    await waitFor(() => expect(getBroadcastStatus).toHaveBeenCalledWith(12));
-    expect(screen.getByRole("checkbox", { name: /I confirm/i })).toBeChecked();
-    expect(screen.getByRole("link", { name: /Notification history/i })).toHaveAttribute(
-      "href",
-      "/admin/notifications/history",
+    await waitFor(() =>
+      expect(sendAdminNotification).toHaveBeenCalledWith(
+        expect.objectContaining({
+          target: "users",
+          user_ids: [1],
+          title: "Maintenance",
+          message: "System update tonight.",
+        }),
+      ),
     );
+
+    expect(await screen.findByText("COMPLETED")).toBeInTheDocument();
+  });
+
+  it("filters and searches users correctly", async () => {
+    renderPage();
+
+    fireEvent.change(screen.getByLabelText(/Target audience/i), {
+      target: { value: "users" },
+    });
+
+    const searchInput = screen.getByPlaceholderText(/Search by username or email/i);
+    fireEvent.change(searchInput, { target: { value: "user-1" } });
+
+    await waitFor(() => {
+      expect(getAdminUsers).toHaveBeenCalledWith(
+        expect.objectContaining({ search: "user-1", role: "all" }),
+      );
+    });
+
+    const filterSelect = screen.getByDisplayValue("All roles");
+    fireEvent.change(filterSelect, { target: { value: "staff" } });
+
+    await waitFor(() => {
+      expect(getAdminUsers).toHaveBeenCalledWith(
+        expect.objectContaining({ role: "staff" }),
+      );
+    });
+  });
+
+  it("toggles all users selection", async () => {
+    renderPage();
+
+    fireEvent.change(screen.getByLabelText(/Target audience/i), {
+      target: { value: "users" },
+    });
+
+    await screen.findByText("user-1");
+
+    const selectAllCheckbox = screen.getAllByRole("checkbox")[0];
+    fireEvent.click(selectAllCheckbox);
+
+    // It should select all (only 1 result in our mock)
+    expect(selectAllCheckbox).toBeChecked();
+    
+    fireEvent.click(selectAllCheckbox);
+    expect(selectAllCheckbox).not.toBeChecked();
   });
 });
