@@ -15,14 +15,21 @@ interface GradeBookFilterCategoriesProps {
   categories?: CategoryOption[]
 }
 
-export default function GradebookFilterCategories({
-  loading,
-  grades,
-  filteredGrades,
-  selectedCategoryId,
-  setSelectedCategoryId,
-  categories,
-}: GradeBookFilterCategoriesProps) {
+/**
+ * Render the average summary and category filter controls for the gradebook.
+ * @param props - Filter state and handlers.
+ * @returns The filter controls section, or null when nothing should be shown.
+ */
+export default function GradebookFilterCategories(props: GradeBookFilterCategoriesProps) {
+  const {
+    loading,
+    grades,
+    filteredGrades,
+    selectedCategoryId,
+    setSelectedCategoryId,
+    categories,
+  } = props
+
   function averageToneClass(p: number): string {
     if (p < 50) return "bg-red-100 text-red-900"
     if (p < 70) return "bg-orange-100 text-orange-900"

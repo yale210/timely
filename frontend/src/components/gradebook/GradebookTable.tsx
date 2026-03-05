@@ -40,13 +40,12 @@ function percentageClass(p: number | null | undefined): string {
 
 /**
  * Display a table view of grade rows and expose edit/delete actions.
+ * @param props - Table data and row action callbacks.
+ * @returns A grade table when data exists, otherwise null.
  */
-export default function GradebookTable({
-  loading,
-  filteredGrades,
-  onEdit,
-  onDelete,
-}: GradebookTableProps) {
+export default function GradebookTable(props: GradebookTableProps) {
+  const { loading, filteredGrades, onEdit, onDelete } = props
+
   if (loading || filteredGrades.length === 0) return null
 
   return (
