@@ -1,6 +1,7 @@
 import { render, screen } from '@testing-library/react';
 import { describe, it, expect } from 'vitest';
-import StatCard from '@/components/dashboard/StatCard';
+// Vitest/vite alias resolution can vary in some environments; use a relative path fallback.
+import StatCard from '../../../src/components/dashboard/StatCard';
 import { MemoryRouter } from 'react-router-dom';
 
 describe('StatCard', () => {

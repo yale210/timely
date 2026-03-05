@@ -149,7 +149,7 @@ describe("Gradebook Page", () => {
 
     await waitFor(() => screen.getByText("Midterm"));
 
-const deleteBtns = screen.getAllByRole("button", { name: /Delete grade/i });
+const deleteBtns = screen.getAllByRole("button", { name: /Delete/i });
     fireEvent.click(deleteBtns[0]);
 
     expect(window.confirm).toHaveBeenCalled();
