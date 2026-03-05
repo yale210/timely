@@ -91,6 +91,7 @@ const TaskList = () => {
         isOpen={isSidebarOpen}
         onClose={actions.closeSidebar}
         categories={categories}
+        onCreateCategory={actions.createCategory}
         onSubmit={(data) => {
           void actions.submitTask(data);
         }}

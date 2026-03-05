@@ -11,6 +11,7 @@ interface EventSidebarProps {
   isOpen: boolean;
   onClose: () => void;
   categories: Category[];
+  onCreateCategory: (text: string) => Promise<Category>;
   onSubmit: (data: EventSubmission, context?: EventMutationContext) => void;
   onDelete?: (context?: EventMutationContext) => void;
   onRevertToSeries?: (context: EventMutationContext) => void;
@@ -33,6 +34,7 @@ const EventSidebar = ({
   isOpen,
   onClose,
   categories,
+  onCreateCategory,
   onSubmit,
   onDelete,
   onRevertToSeries,
@@ -149,6 +151,7 @@ const EventSidebar = ({
                           key={eventFormKey}
                           initialData={initialData}
                           categories={categories}
+                          onCreateCategory={onCreateCategory}
                           onSubmit={(data) => {
                             if (isEditingRecurringEvent) {
                               openSaveScope(data);

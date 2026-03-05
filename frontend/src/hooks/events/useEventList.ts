@@ -50,6 +50,7 @@ interface EventListActions {
   submitEvent: (data: EventSubmission, context?: EventMutationContext) => Promise<void>;
   deleteEvent: (context?: EventMutationContext) => Promise<void>;
   revertEvent: (context: EventMutationContext) => Promise<void>;
+  createCategory: (text: string) => Promise<Category>;
   refresh: () => Promise<void>;
   formatDayLabel: (dateStr: string) => string;
   getInstanceKey: (event: Event, index: number) => string;
@@ -178,6 +179,20 @@ const revertEvent = useCallback(
   [fetchEvents, selectedEvent],
 );
 
+const createCategory = useCallback(async (text: string) => {
+  const trimmed = text.trim();
+  if (!trimmed) {
+    throw new Error("Category name cannot be empty.");
+  }
+  const created = await taskService.createCategory(trimmed);
+  setCategories((prev) => {
+    const exists = prev.some((category) => category.id === created.id);
+    const next = exists ? prev : [...prev, created];
+    return [...next].sort((a, b) => a.text.localeCompare(b.text));
+  });
+  return created;
+}, []);
+
 const filteredEvents = useMemo(() => {
   return events.filter((event) => {
     const matchesSearch = event.title.toLowerCase().includes(search.toLowerCase());
@@ -275,6 +290,7 @@ return {
     submitEvent,
     deleteEvent,
     revertEvent,
+    createCategory,
     refresh,
     formatDayLabel,
     getInstanceKey,

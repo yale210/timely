@@ -1,4 +1,5 @@
 import { useState, useEffect, type FormEvent } from "react";
+import { CategoryMultiSelect } from "@/components";
 import { type Category, type Event, type EventSubmission } from "@/types";
 import { usePushSubscription } from "@/hooks/notifications/usePushSubscription";
 import { getServerTime } from "@/services/eventService";
@@ -115,6 +116,7 @@ const fromMinutesBefore = (minutes: number): { value: number; unit: TimeUnit } =
 interface EventFormProps {
   initialData?: Event;
   categories: Category[];
+  onCreateCategory: (text: string) => Promise<Category>;
   onSubmit: (data: EventSubmission) => void;
   onCancel: () => void;
   onDataChange?: (data: Partial<Event>) => void;
@@ -133,6 +135,7 @@ interface EventFormProps {
 const EventForm = ({
   initialData,
   categories,
+  onCreateCategory,
   onSubmit,
   onCancel,
   onDataChange,
@@ -308,12 +311,6 @@ const EventForm = ({
     onSubmit(data);
   };
 
-  const toggleCategory = (id: number) => {
-    setSelectedCategories((prev) =>
-      prev.includes(id) ? prev.filter((c) => c !== id) : [...prev, id]
-    );
-  };
-
   const addReminder = () => {
     if (canAddReminder) {
       refreshValidationNow();
@@ -478,21 +475,13 @@ const EventForm = ({
           <label className="block text-sm font-medium text-gray-700 mb-3">
             Category
           </label>
-          <div className="flex flex-wrap gap-2">
-            {categories.map((category) => (
-              <label key={category.id} className="cursor-pointer group">
-                <input
-                  type="checkbox"
-                  className="hidden peer"
-                  checked={selectedCategories.includes(category.id)}
-                  onChange={() => toggleCategory(category.id)}
-                />
-                <div className="px-3 py-1.5 rounded-full text-xs font-semibold bg-gray-100 text-gray-600 border border-transparent peer-checked:border-orange-500 peer-checked:ring-1 peer-checked:ring-orange-500 peer-checked:text-orange-600 peer-checked:bg-orange-50 transition-all hover:bg-orange-100">
-                  {category.text}
-                </div>
-              </label>
-            ))}
-          </div>
+          <CategoryMultiSelect
+            categories={categories}
+            selectedIds={selectedCategories}
+            onChange={setSelectedCategories}
+            onCreateCategory={onCreateCategory}
+            variant="event"
+          />
         </div>
 
         <div className="border-t pt-4">

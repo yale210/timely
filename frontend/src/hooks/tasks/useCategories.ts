@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react"
+import { getCategories } from "@/services/taskService"
 
 /**
  * Category represents a simple category record returned by the API.
@@ -18,11 +19,8 @@ export default function useCategories() {
     let mounted = true
     async function load() {
       try {
-        const res = await fetch("/api/categories/", { credentials: "include" })
-        if (res.ok) {
-          const data = await res.json() as Category[]
-          if (mounted) setCategories(data)
-        }
+        const data = await getCategories()
+        if (mounted) setCategories(data)
       } finally {
         if (mounted) setLoading(false)
       }

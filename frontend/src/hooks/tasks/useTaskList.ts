@@ -44,6 +44,7 @@ interface TaskListActions {
   toggleComplete: (id: number) => Promise<void>;
   submitTask: (data: TaskSubmission) => Promise<void>;
   deleteTask: (id: number) => Promise<void>;
+  createCategory: (text: string) => Promise<Category>;
   refresh: () => Promise<void>;
   formatDayLabel: (dateStr: string) => string;
 }
@@ -165,6 +166,20 @@ const deleteTask = useCallback(
   [fetchTasks],
 );
 
+const createCategory = useCallback(async (text: string) => {
+  const trimmed = text.trim();
+  if (!trimmed) {
+    throw new Error("Category name cannot be empty.");
+  }
+  const created = await taskService.createCategory(trimmed);
+  setCategories((prev) => {
+    const exists = prev.some((category) => category.id === created.id);
+    const next = exists ? prev : [...prev, created];
+    return [...next].sort((a, b) => a.text.localeCompare(b.text));
+  });
+  return created;
+}, []);
+
 const openTask = useCallback((task: Task) => {
   setSelectedTask(task);
   setIsSidebarOpen(true);
@@ -277,6 +292,7 @@ return {
     toggleComplete,
     submitTask,
     deleteTask,
+    createCategory,
     refresh,
     formatDayLabel,
   },

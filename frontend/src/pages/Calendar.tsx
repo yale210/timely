@@ -135,6 +135,20 @@ const CalendarPage = ({ showNavbar = true, useLayout = true }: CalendarPageProps
     }
   }, []);
 
+  const createCategory = useCallback(async (text: string) => {
+    const trimmed = text.trim();
+    if (!trimmed) {
+      throw new Error("Category name cannot be empty.");
+    }
+    const created = await taskService.createCategory(trimmed);
+    setCategories((prev) => {
+      const exists = prev.some((category) => category.id === created.id);
+      const next = exists ? prev : [...prev, created];
+      return [...next].sort((a, b) => a.text.localeCompare(b.text));
+    });
+    return created;
+  }, []);
+
   const fetchEvents = useCallback(async (activeView: View, activeDate: Date) => {
     try {
       const data = await eventService.getEvents(getCalendarWindow(activeView, activeDate));
@@ -478,6 +492,7 @@ const CalendarPage = ({ showNavbar = true, useLayout = true }: CalendarPageProps
           setSelectedItem(undefined);
         }}
         categories={categories}
+        onCreateCategory={createCategory}
         initialData={selectedItem}
         initialMode={sidebarMode}
         onSubmitTask={(data) => { void handleSubmitTask(data); }}

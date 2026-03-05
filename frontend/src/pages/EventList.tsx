@@ -70,6 +70,7 @@ const EventList = () => {
         isOpen={isSidebarOpen}
         onClose={actions.closeSidebar}
         categories={categories}
+        onCreateCategory={actions.createCategory}
         onSubmit={(data, context) => {
           void actions.submitEvent(data, context);
         }}

@@ -8,6 +8,7 @@ interface TaskSidebarProps {
   isOpen: boolean;
   onClose: () => void;
   categories: Category[];
+  onCreateCategory: (text: string) => Promise<Category>;
   onSubmit: (data: TaskSubmission) => void;
   onDelete?: (id: number) => void;
   initialData?: Task;
@@ -28,6 +29,7 @@ const TaskSidebar = ({
   isOpen,
   onClose,
   categories,
+  onCreateCategory,
   onSubmit,
   onDelete,
   initialData,
@@ -94,6 +96,7 @@ const TaskSidebar = ({
                           key={taskFormKey}
                           initialData={initialData}
                           categories={categories}
+                          onCreateCategory={onCreateCategory}
                           onSubmit={(data) => {
                             onSubmit(data);
                             onClose();
