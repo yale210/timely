@@ -5,15 +5,7 @@ import useCategories from "@/hooks/tasks/useCategories"
 import AppLayout from "@/layouts/AppLayout"
 import { GradebookFilterCategories, GradebookHeader, GradebookLayout, GradebookTable, GradebookStatus } from "@/components"
 import { type Grade } from "@/components/gradebook/GradebookTable"
-
-type EditInitial = {
-  id?: number
-  name?: string
-  score?: number | ""
-  total?: number | ""
-  date?: string
-  categoryId?: number | null
-} | null
+import { type EditInitial } from "@/types/gradebook"
 
 /**
  * Gradebook page showing a table of grades, filters and summary cards.
