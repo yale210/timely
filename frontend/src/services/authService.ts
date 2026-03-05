@@ -2,10 +2,7 @@ export const AUTH_CHANGE_EVENT = "auth-change"
 
 const broadcastAuthChange = () => window.dispatchEvent(new Event(AUTH_CHANGE_EVENT))
 
-/**
- * Represents a user object in the authentication service.
- */
-export interface User {
+interface User {
   id?: number
   username: string
   email: string
