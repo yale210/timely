@@ -9,3 +9,4 @@ export * from "./notifications";
 export * from "./settings";
 export * from "./tasks";
 export * from "./admin";
+export * from "./gradebook";
