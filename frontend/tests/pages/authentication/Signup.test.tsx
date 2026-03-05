@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from "vitest"
 import { render, screen, fireEvent, waitFor, cleanup } from "@testing-library/react"
 import { MemoryRouter } from "react-router-dom"
 import Signup from "@/pages/Authentication/Signup"
+import type * as ComponentsIndexModule from "@/components/index"
 import { authService } from "@/services/authService"
 import "@testing-library/jest-dom/vitest"
 import type * as ReactRouterDom from "react-router-dom"
@@ -22,11 +23,15 @@ vi.mock("@/services/authService", () => ({
   },
 }))
 
-vi.mock("@/components/index", () => ({
-  HomeNavbar: () => <div data-testid="navbar" />,
-  BlurBackground: () => <div data-testid="blur-bg" />,
-  Footer: () => <div data-testid="footer" />,
-}))
+vi.mock("@/components/index", async (importOriginal) => {
+  const actual = await importOriginal<typeof ComponentsIndexModule>()
+  return {
+    ...actual,
+    HomeNavbar: () => <div data-testid="navbar" />,
+    BlurBackground: () => <div data-testid="blur-bg" />,
+    Footer: () => <div data-testid="footer" />,
+  }
+})
 
 describe("Signup page", () => {
   beforeEach(() => {

@@ -1,10 +1,11 @@
 from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.db import models
-from django.utils.timezone import now
 
 from .base_event import BaseEventModel
 from .category import Category
+from zoneinfo import ZoneInfo
+from django.utils import timezone
 
 
 class Event(BaseEventModel):
@@ -70,9 +71,20 @@ class Event(BaseEventModel):
         If event is recurring, return days between now and recurrence end date.
         If event is a one off, return days between start_time and now.
         """
-        current_date = now().date()
+
+        # If user doesn't  have a preference, we don't know their timezone so return 0
+        if not hasattr(self.user, "preference") or not self.user.preference.timezone:
+            return 0
+
+        user_timezone = ZoneInfo(self.user.preference.timezone)
+        today = timezone.now().astimezone(user_timezone).date()
+
         if self.recurrence_interval and self.recurrence_end:
-            return max((self.recurrence_end - current_date).days, 0)
+            return max((self.recurrence_end - today).days, 0)
+
+        # DB uses UTC, convert to correct timezone first.
         if self.start_time:
-            return max((self.start_time.date() - current_date).days, 0)
+            start_time = self.start_time.astimezone(user_timezone).date()
+            return max((start_time - today).days, 0)
+
         return 0

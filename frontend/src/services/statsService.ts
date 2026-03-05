@@ -1,5 +1,5 @@
 import api from "./api";
-import type { WeeklyStats } from "../types";
+import type { WeeklyStats } from "@/types";
 
 /**
  * Retrieves the weekly task summary for a given week.

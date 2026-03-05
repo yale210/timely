@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react"
-import { Link } from "react-router-dom"
-import CreateGradeModal from "../components/CreateGradeModal.tsx"
-import useCategories from "../hooks/useCategories"
-import AppLayout from "../layouts/AppLayout"
+import ConfirmationModal from "@/components/modals/ConfirmationModal";
+import CreateGradeModal from "@/components/modals/CreateGradeModal.tsx"
+import useCategories from "@/hooks/tasks/useCategories"
+import AppLayout from "@/layouts/AppLayout"
 
 interface Grade {
   id: number
@@ -56,6 +56,12 @@ function percentageClass(p: number | null | undefined): string {
   }
 }
 
+function averageToneClass(p: number): string {
+  if (p < 50) return "bg-red-100 text-red-900";
+  if (p < 70) return "bg-orange-100 text-orange-900";
+  return "bg-green-100 text-green-900";
+}
+
 /**
  * Gradebook page showing a table of grades, filters and summary cards.
  *
@@ -67,36 +73,10 @@ export default function Gradebook() {
   const [modalOpen, setModalOpen] = useState(false)
   const [editInitial, setEditInitial] = useState<EditInitial>(null)
   const [selectedCategoryId, setSelectedCategoryId] = useState<number | null>(null)
+  const [pendingDeleteId, setPendingDeleteId] = useState<number | null>(null)
   const { categories } = useCategories()
 
-  useEffect(() => {
-    const savedTheme = localStorage.getItem("theme");    
-    if (savedTheme) {
-      document.documentElement.dataset.theme = savedTheme;
-      console.log("loaded saved theme")
-    }
-
-    const savedFont = localStorage.getItem("font");
-    if (savedFont) {
-      document.documentElement.dataset.font = savedFont;
-    }
-  }, []);
-
-
-  useEffect(() => {
-    void fetchGrades()
-    
-  }, [])
-
- useEffect(() => {
-    const savedTheme = localStorage.getItem("theme");
-    if (savedTheme) {
-      document.documentElement.dataset.theme = savedTheme;
-    }
-  }, []);
-
   async function fetchGrades() {
-    setLoading(true)
     const res = await fetch("/api/grades/", { credentials: "include" })
     if (res.ok) {
       const data = await res.json() as Grade[]
@@ -107,10 +87,31 @@ export default function Gradebook() {
     setLoading(false)
   }
 
+  function refreshGrades() {
+    setLoading(true)
+    void fetchGrades()
+  }
+
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      void fetchGrades()
+    }, 0)
+    return () => clearTimeout(timeoutId)
+  }, [])
+
+  function getCsrfToken(): string | null {
+    const match = /(?:^|; )csrftoken=([^;]+)/.exec(document.cookie)
+    return match ? decodeURIComponent(match[1]) : null
+  }
+
   async function deleteGrade(id: number) {
-    if (!confirm("Delete this grade?")) return
-    const res = await fetch(`/api/grades/${id}/`, { method: "DELETE", credentials: "include" })
-    if (res.ok) void fetchGrades()
+    const csrfToken = getCsrfToken();
+    const res = await fetch(`/api/grades/${id}/`, {
+      method: "DELETE",
+      credentials: "include",
+      headers: csrfToken ? { "X-CSRFToken": csrfToken } : undefined,
+    })
+    if (res.ok) refreshGrades()
   }
 
   const filteredGrades = grades
@@ -127,63 +128,43 @@ export default function Gradebook() {
 
   const avgValue = average()
 
-  function moodEmoji(p: number): string {
-    switch (true) {
-      case p >= 70:
-        return "😊"
-      case p >= 50:
-        return "😐"
-      default:
-        return "😞"
-    }
-  }
-
   return (
   <AppLayout>
-    <div className="p-6 font-young-coconut">
-      <div className="flex justify-between items-center mb-6">
-        <div className="flex items-center gap-4">
-          <Link to="/" aria-label="Back to home" title="Back to home" className="p-2 rounded hover:bg-gray-100 transition">
-            <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5 text-gray-700" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7" />
-            </svg>
-          </Link>
-          <h1 className="text-2xl font-bold">Gradebook</h1>
-        </div>
-        <div className="flex gap-2">
+    <main className="w-full px-6 lg:px-10 pt-2 pb-10">
+      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between mb-6">
+        <h1 className="text-2xl font-bold">Gradebook</h1>
+        <div className="flex flex-wrap items-center gap-3">
           <button
             onClick={() => setModalOpen(true)}
-            className="rounded bg-indigo-600 hover:bg-indigo-700 active:scale-95 transition transform duration-150 px-4 py-2 text-white cursor-pointer"
+            className="rounded-lg bg-primary hover:bg-blue-300 active:scale-95 transition transform duration-150 px-4 py-2.5 text-white text-base font-medium shadow-sm"
           >
             Add grade
           </button>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6 items-center">
-  <div className="col-span-1 p-4 shadow rounded border border-black">
-          <div className="text-sm text-gray-500">Average Percentage</div>
-          <div className="text-xl font-semibold">
-            {avgValue}%
-            <span className="ml-3" role="img" aria-label={avgValue >= 70 ? "happy" : avgValue >= 50 ? "neutral" : "sad"}>
-              {moodEmoji(avgValue)}
-            </span>
+      {!loading && grades && filteredGrades.length > 0 && (
+        <div className="mb-6 grid grid-cols-1 gap-4 md:grid-cols-5">
+          <div className={`rounded-lg p-4 shadow-sm text-center flex flex-col items-center ${averageToneClass(avgValue)}`}>
+            <div className="text-sm">Average Percentage</div>
+            <div className="mt-2 text-2xl font-semibold">{avgValue}%</div>
+          </div>
+          <div className="hidden md:block md:col-span-3" />
+          <div className="rounded-lg bg-white p-4">
+            <label className="block text-sm text-gray-600 mb-2">Filter by Category</label>
+            <select
+              value={selectedCategoryId ?? ""}
+              onChange={(e) => setSelectedCategoryId(e.target.value === "" ? null : Number(e.target.value))}
+              className="w-full rounded-lg border border-gray-300 p-2 text-sm cursor-pointer bg-white"
+            >
+              <option value="">All Categories</option>
+              {categories?.map((c) => (
+                <option key={c.id} value={c.id}>{c.text}</option>
+              ))}
+            </select>
           </div>
         </div>
-        <div className="col-span-1 md:col-span-2 p-4">
-          <label className="block text-sm text-gray-600 mb-1">Filter by Category</label>
-          <select
-            value={selectedCategoryId ?? ""}
-            onChange={(e) => setSelectedCategoryId(e.target.value === "" ? null : Number(e.target.value))}
-            className="w-full max-w-xs border p-2 rounded cursor-pointer"
-          >
-            <option value="">All Categories</option>
-            {categories?.map((c) => (
-              <option key={c.id} value={c.id}>{c.text}</option>
-            ))}
-          </select>
-        </div>
-      </div>
+      )}
 
       {loading && <div>Loading...</div>}
 
@@ -196,17 +177,17 @@ export default function Gradebook() {
       )}
 
       {!loading && grades && filteredGrades.length > 0 && (
-        <div className="overflow-x-auto shadow rounded">
-          <table className="min-w-full divide-y divide-gray-200">
+        <div className="overflow-x-auto rounded-lg bg-white shadow-sm ring-1 ring-gray-200">
+          <table className="min-w-full divide-y divide-gray-200 text-sm">
             <thead className="bg-gray-50">
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500">Name</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500">Category</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500">Date</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500">Score</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500">Percentage</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500">Time spent</th>
-                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500">Actions</th>
+                <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">Name</th>
+                <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">Category</th>
+                <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">Date</th>
+                <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">Score</th>
+                <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">Percentage</th>
+                <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">Time spent</th>
+                <th className="px-6 py-3 text-right text-xs font-semibold uppercase tracking-wide text-gray-500">Actions</th>
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
@@ -245,7 +226,7 @@ export default function Gradebook() {
                           <path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                         </svg>
                       </button>
-                      <button onClick={() => { void deleteGrade(g.id); }} className="p-1 rounded hover:bg-gray-100" aria-label="Delete grade" title="Delete">
+                      <button onClick={() => setPendingDeleteId(g.id)} className="p-1 rounded hover:bg-gray-100" aria-label="Delete this grade" title="Delete">
                         <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 text-red-600" viewBox="0 0 24 24" fill="none" stroke="currentColor">
                           <polyline points="3 6 5 6 21 6" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                           <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
@@ -273,15 +254,28 @@ export default function Gradebook() {
         onCreated={() => {
           setModalOpen(false)
           setEditInitial(null)
-          void fetchGrades()
+          refreshGrades()
         }}
         onUpdated={() => {
           setModalOpen(false)
           setEditInitial(null)
-          void fetchGrades()
+          refreshGrades()
         }}
       />
-    </div>
+      <ConfirmationModal
+        isOpen={pendingDeleteId !== null}
+        title="Delete grade?"
+        message="This action cannot be undone."
+        confirmText="Delete"
+        cancelText="Cancel"
+        onClose={() => setPendingDeleteId(null)}
+        onConfirm={() => {
+          if (pendingDeleteId !== null) {
+            void deleteGrade(pendingDeleteId);
+          }
+        }}
+      />
+    </main>
   </AppLayout>
   )
 }

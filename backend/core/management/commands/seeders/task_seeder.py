@@ -6,6 +6,7 @@ from core.models import Task, Category
 from .fixtures.task_fixtures import tasks
 from django.contrib.auth import get_user_model
 from core.management.commands.seeders.base import BaseSeeder
+from django.utils import timezone
 
 
 class TaskSeeder(BaseSeeder):
@@ -13,7 +14,8 @@ class TaskSeeder(BaseSeeder):
 
     def seed(self):
         self._create_fixture_task()
-        self._populate_random_task()
+        for i in range(200):
+            self._populate_random_task()
 
     def _create_fixture_task(self):
         for task in tasks:
@@ -73,8 +75,8 @@ class TaskSeeder(BaseSeeder):
                     "description": self.faker.sentence(),
                     "categories": [temporary_category],
                     "estimated_minutes": random.randint(1, 60 * 24),
-                    "start_time": self.faker.date_time(),
-                    "deadline": self.faker.date_time(),
+                    "start_time": timezone.make_aware(self.faker.date_time()),
+                    "deadline": timezone.make_aware(self.faker.date_time()),
                     "completed": random.randint(0, 1) == 1,
                     "parent_task": Task.objects.order_by("?").first()
                     if Task.objects.exists() and random.randint(0, 3) == 1

@@ -13,7 +13,8 @@ class GradeSeeder(BaseSeeder):
 
     def seed(self):
         self._create_fixture_grade()
-        self._populate_random_grade()
+        for i in range(200):
+            self._populate_random_grade()
 
     def _create_fixture_grade(self):
         for grade in grades:

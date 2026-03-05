@@ -1,7 +1,7 @@
 import { render, screen } from "@testing-library/react";
 import { describe, it, expect } from "vitest";
 import type { WeeklyStats } from "@/types";
-import WeeklySummaryWidget from "@/components/WeeklySummaryWidget";
+import WeeklySummaryWidget from "@/components/dashboard/WeeklySummaryWidget";
 
 describe("WeeklySummaryWidget", () => {
   it("shows loading when stats is null", () => {
