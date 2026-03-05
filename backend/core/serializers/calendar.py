@@ -32,6 +32,14 @@ class CalendarSerializer(serializers.ModelSerializer):
         ).data
         return representation
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        request = self.context.get("request")
+        if request and request.user and request.user.is_authenticated:
+            self.fields["categories"].queryset = Category.objects.filter(user=request.user)
+        else:
+            self.fields["categories"].queryset = Category.objects.none()
+
 
 class CalendarResponseSerializer(serializers.ModelSerializer):
     categories = CategorySerializer(many=True, read_only=True)

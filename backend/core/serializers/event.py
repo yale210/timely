@@ -58,6 +58,14 @@ class EventSerializer(serializers.ModelSerializer):
         ).data
         return representation
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        request = self.context.get("request")
+        if request and request.user and request.user.is_authenticated:
+            self.fields["categories"].queryset = Category.objects.filter(user=request.user)
+        else:
+            self.fields["categories"].queryset = Category.objects.none()
+
     def validate(self, attributes):
         # Validate max reminders
         reminders_data = attributes.get("reminders", [])
