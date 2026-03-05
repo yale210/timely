@@ -75,3 +75,4 @@ class Event(models.Model):
         if self.start_time:
             return max((self.start_time.date() - current_date).days, 0)
         return 0
+    

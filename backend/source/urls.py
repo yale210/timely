@@ -27,6 +27,7 @@ from core.views import (
     
 )
 from core.views.export_view import ExportView
+from core.views.import_view import ImportView
 
 router = DefaultRouter()
 router.register(r"tasks", TaskViewSet, basename="task")
@@ -40,4 +41,5 @@ urlpatterns = [
     path("api/admin/", admin.site.urls),
     path("api/authentication/", include("authentication.urls")),
     path("api/export/", ExportView.as_view()),
+    path("api/import/", ImportView.as_view()),
 ]
