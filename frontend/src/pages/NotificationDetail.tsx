@@ -7,7 +7,7 @@ import { ArrowLeftIcon, EnvelopeIcon, EnvelopeOpenIcon, TrashIcon } from "@heroi
 import api from "../services/api";
 import { type Notification } from "../types/notification";
 import { useNotificationContext } from "../context/NotificationContext";
-import ConfirmationModal from "../components/ConfirmationModal";
+import ConfirmationModal from "../components/modals/ConfirmationModal";
 
 /**
  * Full-page view of a single notification with read toggle and delete actions.
