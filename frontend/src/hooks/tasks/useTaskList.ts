@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import moment from "moment";
 import * as taskService from "@/services/taskService";
+import * as categoryService from "@/services/categoryService";
 import { type Category, type Task, type TaskSubmission } from "@/types";
 import { useThemeFont } from "@/hooks/common/useThemeFont";
 
@@ -44,6 +45,10 @@ interface TaskListActions {
   toggleComplete: (id: number) => Promise<void>;
   submitTask: (data: TaskSubmission) => Promise<void>;
   deleteTask: (id: number) => Promise<void>;
+  createCategory: (text: string) => Promise<Category>;
+  updateCategory: (id: number, patch: { colour?: string | null; colour_override?: boolean }) => Promise<Category>;
+  deleteCategory: (id: number) => Promise<void>;
+  updateTaskCategories: (id: number, categories: number[]) => Promise<void>;
   refresh: () => Promise<void>;
   formatDayLabel: (dateStr: string) => string;
 }
@@ -104,7 +109,7 @@ const fetchTasks = useCallback(async () => {
 
 const fetchCategories = useCallback(async () => {
   try {
-    const data = await taskService.getCategories();
+    const data = await categoryService.getCategories();
     setCategories(data);
   } catch (fetchCategoriesError) {
     console.error(fetchCategoriesError);
@@ -164,6 +169,65 @@ const deleteTask = useCallback(
   },
   [fetchTasks],
 );
+
+const updateTaskCategories = useCallback(
+  async (id: number, nextCategoryIds: number[]) => {
+    const nextCategoryObjects = categories.filter((category) => nextCategoryIds.includes(category.id));
+    setTasks((prev) => prev.map((task) => (
+      task.id === id ? { ...task, categories: nextCategoryObjects } : task
+    )));
+    setSelectedTask((prev) => (
+      prev?.id === id ? { ...prev, categories: nextCategoryObjects } : prev
+    ));
+    try {
+      await taskService.updateTask(id, { categories: nextCategoryIds });
+    } catch (updateError) {
+      console.error(updateError);
+      await fetchTasks();
+    }
+  },
+  [categories, fetchTasks],
+);
+
+const createCategory = useCallback(async (text: string) => {
+  const trimmed = text.trim();
+  if (!trimmed) {
+    throw new Error("Category name cannot be empty.");
+  }
+  const created = await categoryService.createCategory(trimmed);
+  setCategories((prev) => {
+    const exists = prev.some((category) => category.id === created.id);
+    const next = exists ? prev : [...prev, created];
+    return [...next].sort((a, b) => a.text.localeCompare(b.text));
+  });
+  return created;
+}, []);
+
+const updateCategory = useCallback(async (id: number, patch: { colour?: string | null; colour_override?: boolean }) => {
+  const updated = await categoryService.updateCategory(id, patch);
+  setCategories((prev) => prev.map((category) => (
+    category.id === id ? { ...category, ...updated } : category
+  )));
+  setTasks((prev) => prev.map((task) => ({
+    ...task,
+    categories: task.categories.map((category) =>
+      category.id === id ? { ...category, ...updated } : category
+    ),
+  })));
+  return updated;
+}, []);
+
+const deleteCategory = useCallback(async (id: number) => {
+  await categoryService.deleteCategory(id);
+  setCategories((prev) => prev.filter((category) => category.id !== id));
+  setTasks((prev) => prev.map((task) => ({
+    ...task,
+    categories: task.categories.filter((category) => category.id !== id),
+  })));
+  if (filterCategory === id) {
+    setFilterCategory(null);
+  }
+}, [filterCategory]);
 
 const openTask = useCallback((task: Task) => {
   setSelectedTask(task);
@@ -277,6 +341,10 @@ return {
     toggleComplete,
     submitTask,
     deleteTask,
+    createCategory,
+    updateCategory,
+    deleteCategory,
+    updateTaskCategories,
     refresh,
     formatDayLabel,
   },

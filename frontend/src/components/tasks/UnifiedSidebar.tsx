@@ -19,6 +19,10 @@ interface UnifiedSidebarProps {
   onClose: () => void;
   initialMode?: "task" | "event";
   categories: Category[];
+  onCreateCategory: (text: string) => Promise<Category>;
+  onUpdateCategory: (id: number, patch: { colour?: string | null; colour_override?: boolean }) => Promise<Category>;
+  onDeleteCategory: (id: number) => Promise<void>;
+  onTaskCategoryChange?: (id: number, categories: number[]) => void;
   initialData?: Task | Event;
   onSubmitTask: (data: TaskSubmission) => void;
   onSubmitEvent: (data: EventSubmission, context?: EventMutationContext) => void;
@@ -33,6 +37,10 @@ interface UnifiedSidebarProps {
  * @param props.onClose - The callback function to close the sidebar.
  * @param props.initialMode - The initial mode of the sidebar (task or event).
  * @param props.categories - The list of available categories.
+ * @param props.onCreateCategory - Callback to create a new category.
+ * @param props.onUpdateCategory - Callback to update an existing category.
+ * @param props.onDeleteCategory - Callback to delete a category.
+ * @param props.onTaskCategoryChange - Optional callback fired on task category changes.
  * @param props.initialData - The initial data for the task or event being edited.
  * @param props.onSubmitTask - The callback function to handle task submission.
  * @param props.onSubmitEvent - The callback function to handle event submission.
@@ -45,6 +53,10 @@ const UnifiedSidebar = ({
   onClose,
   initialMode = "task",
   categories,
+  onCreateCategory,
+  onUpdateCategory,
+  onDeleteCategory,
+  onTaskCategoryChange,
   initialData,
   onSubmitTask,
   onSubmitEvent,
@@ -190,6 +202,14 @@ const UnifiedSidebar = ({
             key={`task-${initialData?.id ?? 'new'}`}
             initialData={mergedData as Task}
             categories={categories}
+            onCreateCategory={onCreateCategory}
+            onUpdateCategory={onUpdateCategory}
+            onDeleteCategory={onDeleteCategory}
+            onCategoryChange={(nextCategories) => {
+              if (initialData?.id && onTaskCategoryChange) {
+                onTaskCategoryChange(initialData.id, nextCategories);
+              }
+            }}
             onSubmit={(data) => {
               onSubmitTask(data);
               onClose();
@@ -202,6 +222,9 @@ const UnifiedSidebar = ({
             key={eventFormKey}
             initialData={mergedData as Event}
             categories={categories}
+            onCreateCategory={onCreateCategory}
+            onUpdateCategory={onUpdateCategory}
+            onDeleteCategory={onDeleteCategory}
             onSubmit={(data) => {
               if (isEditingRecurringEvent) {
                 openSaveScope(data);

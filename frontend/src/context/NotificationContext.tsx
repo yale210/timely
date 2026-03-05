@@ -25,10 +25,7 @@ interface WebSocketUnreadMessage {
 
 type WebSocketMessage = WebSocketNotificationMessage | WebSocketUnreadMessage;
 
-/**
- * Represents the available notification actions and state in the context.
- */
-export interface NotificationContextValue {
+interface NotificationContextValue {
   notifications: Notification[];
   unreadCount: number;
   loading: boolean;
