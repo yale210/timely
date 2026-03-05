@@ -138,7 +138,7 @@ const CalendarPage = ({ showNavbar = true, useLayout = true }: CalendarPageProps
 
   const fetchCategories = useCallback(async () => {
     try {
-      const data = await categoryService.getCategories();
+      const data = await taskService.getCategories();
       setCategories(data);
     } catch (err) {
       setCategories([])
@@ -248,18 +248,24 @@ const CalendarPage = ({ showNavbar = true, useLayout = true }: CalendarPageProps
     if (isSidebarOpen && action !== "select") {
       return;
     }
-    setSidebarMode("event");
+    if (!start) {
+      return;
+    }
+    const safeEnd = end ?? start;
+    setSidebarMode("task");
     setSelectedItem({
       id: 0,
       title: "",
       description: "",
-      location: "",
       start_time: start.toISOString(),
-      end_time: end.toISOString(),
+      deadline: safeEnd.toISOString(),
+      importance: 5,
+      completed: false,
       categories: [],
-      reminders: [],
-      recurrence_interval: null,
-      recurrence_end: null,
+      estimated_minutes: Math.max(
+        1,
+        Math.round((safeEnd.getTime() - start.getTime()) / 60000),
+      ),
     });
     setIsSidebarOpen(true);
   };

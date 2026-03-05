@@ -10,11 +10,17 @@ describe('TaskForm', () => {
         { id: 1, text: 'Work' },
         { id: 2, text: 'Personal' }
     ]
+    const createCategory = vi.fn().mockResolvedValue({ id: 3, text: "New" })
+    const updateCategory = vi.fn().mockResolvedValue({ id: 1, text: "Work" })
+    const deleteCategory = vi.fn().mockResolvedValue(undefined)
 
     it('should render form fields', () => {
         render(
             <TaskForm 
                 categories={categories} 
+                onCreateCategory={createCategory}
+                onUpdateCategory={updateCategory}
+                onDeleteCategory={deleteCategory}
                 onSubmit={vi.fn()} 
                 onCancel={vi.fn()} 
             />
@@ -22,6 +28,7 @@ describe('TaskForm', () => {
         
         expect(screen.getByLabelText(/Title/i)).toBeDefined()
         expect(screen.getByLabelText(/Description/i)).toBeDefined()
+        fireEvent.focus(screen.getByPlaceholderText(/Type to search or add category/i))
         expect(screen.getByText(/Work/i)).toBeDefined()
         expect(screen.getByText(/Personal/i)).toBeDefined()
     })
@@ -31,6 +38,9 @@ describe('TaskForm', () => {
         render(
             <TaskForm 
                 categories={categories} 
+                onCreateCategory={createCategory}
+                onUpdateCategory={updateCategory}
+                onDeleteCategory={deleteCategory}
                 onSubmit={onSubmit} 
                 onCancel={vi.fn()} 
             />
@@ -48,6 +58,9 @@ describe('TaskForm', () => {
         render(
             <TaskForm
                 categories={categories}
+                onCreateCategory={createCategory}
+                onUpdateCategory={updateCategory}
+                onDeleteCategory={deleteCategory}
                 onSubmit={vi.fn()}
                 onCancel={vi.fn()}
                 initialData={{

@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import moment from "moment";
 import * as eventService from "@/services/eventService";
 import * as categoryService from "@/services/categoryService";
+import * as taskService from "@/services/taskService";
 import {
   type Category,
   type Event,
@@ -99,7 +100,7 @@ const fetchEvents = useCallback(async () => {
 
 const fetchCategories = useCallback(async () => {
   try {
-    const data = await categoryService.getCategories();
+  const data = await taskService.getCategories();
     setCategories(data);
   } catch (fetchCategoriesError) {
     console.error(fetchCategoriesError);

@@ -109,7 +109,7 @@ const fetchTasks = useCallback(async () => {
 
 const fetchCategories = useCallback(async () => {
   try {
-    const data = await categoryService.getCategories();
+    const data = await taskService.getCategories();
     setCategories(data);
   } catch (fetchCategoriesError) {
     console.error(fetchCategoriesError);
