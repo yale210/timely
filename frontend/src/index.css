@@ -61,11 +61,18 @@ body {
   position:relative;
   border-radius: 10px;
   overflow: hidden;
+  background-color: rgba(59, 130, 246, 0.5);
+  color: #000000;
 }
 
 .event-slot > * {
   position: relative;
   z-index: 1;
+}
+
+.event-slot .rbc-event-content,
+.event-slot .rbc-event-label {
+  color: #000000;
 }
 .event-slot.is-repeat::before{
   content: "";
@@ -98,15 +105,15 @@ body {
 }
 
 .event-slot.is-event {
-  background-color: #d15f0e;
-  color: #ffffff;
+  background-color: rgba(209, 95, 14, 0.5);
+  color: #000000;
 }
 
 .event-slot.is-event.is-onego::after {
   background-image: repeating-linear-gradient(
     45deg,
-    rgba(249, 115, 22, 0.22),
-    rgba(249, 115, 22, 0.22) 6px,
+    rgba(249, 115, 22, 0.6),
+    rgba(249, 115, 22, 0.6) 6px,
     rgba(249, 115, 22, 0.00) 6px,
     rgba(249, 115, 22, 0.00) 12px
   );

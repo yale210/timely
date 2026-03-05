@@ -1,9 +1,9 @@
 import { useEffect, useMemo, useRef, useState, type KeyboardEvent } from "react";
-import { createPortal } from "react-dom";
-import { HexColorPicker } from "react-colorful";
 import type { Category } from "@/types";
-import { Tooltip } from "@/components";
-import { hexToRgba } from "@/utils/colorUtils";
+import { CategoryActionsMenu } from "@/components/categories/CategoryActionsMenu";
+import { CategoryColourPicker } from "@/components/categories/CategoryColourPicker";
+import { CategoryDropdown } from "@/components/categories/CategoryDropdown";
+import { SelectedCategoryChips } from "@/components/categories/SelectedCategoryChips";
 
 type CategoryVariant = "task" | "event";
 
@@ -78,8 +78,6 @@ const CategoryMultiSelect = ({
   const [menuPosition, setMenuPosition] = useState<{ top: number; left: number } | null>(null);
   const menuRef = useRef<HTMLDivElement | null>(null);
   const inputRef = useRef<HTMLInputElement | null>(null);
-  const dropdownRef = useRef<HTMLDivElement | null>(null);
-  const plusButtonRef = useRef<HTMLButtonElement | null>(null);
   const pickerRef = useRef<HTMLDivElement | null>(null);
   const [dropdownPosition, setDropdownPosition] = useState<{ top: number; left: number; width: number } | null>(null);
   const [dropdownMaxHeight, setDropdownMaxHeight] = useState<number>(224);
@@ -277,7 +275,6 @@ const CategoryMultiSelect = ({
     const handleOutsideClick = (event: MouseEvent) => {
       const target = event.target as Node;
       if (inputRef.current && inputRef.current.contains(target)) return;
-      if (dropdownRef.current && dropdownRef.current.contains(target)) return;
       if (menuRef.current && menuRef.current.contains(target)) return;
       setIsOpen(false);
     };
@@ -330,31 +327,64 @@ const CategoryMultiSelect = ({
     setColourError(null);
   }, [menuCategory?.colour, openMenuId]);
 
+  const handleMenuOpen = (id: number, target: HTMLButtonElement) => {
+    if (openMenuId === id) {
+      setOpenMenuId(null);
+      setMenuPosition(null);
+      return;
+    }
+    const rect = target.getBoundingClientRect();
+    const menuWidth = 176;
+    const estimatedHeight = 220;
+    const padding = 8;
+    const preferredLeft = rect.right - menuWidth;
+    const left = Math.min(
+      Math.max(preferredLeft, padding),
+      window.innerWidth - menuWidth - padding,
+    );
+    const preferredTop = rect.bottom + 6;
+    const top = Math.min(
+      Math.max(preferredTop, padding),
+      window.innerHeight - estimatedHeight - padding,
+    );
+    setMenuPosition({ top, left });
+    setOpenMenuId(id);
+  };
+
+  const handleTogglePicker = (rect: DOMRect) => {
+    setPickerPosition({
+      top: rect.top - 280,
+      left: rect.left - 280,
+    });
+    setShowPickerMenu((prev) => !prev);
+  };
+
+  const commitColourInput = () => {
+    const parsed = parseColourInput(colourInput);
+    if (!parsed) {
+      setColourError("Enter a valid hex or rgb colour.");
+      return;
+    }
+    setColourInput(parsed);
+  };
+
+  const confirmColour = () => {
+    const parsed = parseColourInput(colourInput);
+    if (!parsed || openMenuId === null) {
+      setColourError("Enter a valid hex or rgb colour.");
+      return;
+    }
+    void onUpdateCategory(openMenuId, { colour: parsed });
+    setShowPickerMenu(false);
+  };
+
   return (
     <div>
-      <div className="flex flex-wrap gap-2">
-        {selectedCategories.length === 0 && (
-          <span className="text-xs text-gray-400">No categories selected.</span>
-        )}
-        {selectedCategories.map((category) => {
-          const colourValue = category.colour ?? DEFAULT_SWATCH;
-          return (
-            <button
-              key={category.id}
-              type="button"
-              onClick={() => toggleCategory(category.id)}
-              className="inline-flex items-center gap-1 rounded-md border px-3 py-1 text-xs font-semibold text-black transition-colors"
-              style={{
-                borderColor: colourValue,
-                backgroundColor: hexToRgba(colourValue, 0.12),
-              }}
-            >
-              {category.text}
-              <span className="text-[12px] font-semibold leading-none">✖</span>
-            </button>
-          );
-        })}
-      </div>
+      <SelectedCategoryChips
+        selectedCategories={selectedCategories}
+        defaultSwatch={DEFAULT_SWATCH}
+        onToggle={toggleCategory}
+      />
 
       <div className="relative mt-2">
         <input
@@ -375,277 +405,66 @@ const CategoryMultiSelect = ({
           onKeyDown={handleKeyDown}
           className={`w-full rounded-lg border border-gray-300 bg-white text-black shadow-sm p-2.5 ${styles.inputFocus}`}
         />
-
-        {isOpen && dropdownPosition && typeof document !== "undefined"
-          ? createPortal(
-            <div
-              ref={dropdownRef}
-              className="fixed z-80 rounded-lg border border-gray-200 bg-white shadow-lg"
-              style={{
-                top: dropdownPosition.top,
-                left: dropdownPosition.left,
-                width: dropdownPosition.width,
-              }}
-              onMouseDown={(event) => event.stopPropagation()}
-            >
-              <div className="overflow-y-auto py-1" style={{ maxHeight: dropdownMaxHeight }}>
-              {filtered.length === 0 && !canCreate && (
-                <div className="px-3 py-2 text-sm text-gray-500">
-                  No categories match.
-                </div>
-              )}
-              {filtered.map((category) => {
-                const isSelected = selectedIds.includes(category.id);
-                const colourValue = category.colour ?? DEFAULT_SWATCH;
-                return (
-                  <div key={category.id} className="group flex items-center gap-2 px-3 py-2">
-                    <button
-                      type="button"
-                      onMouseDown={(event) => {
-                        event.preventDefault();
-                        toggleCategory(category.id);
-                        setQuery("");
-                        setIsOpen(false);
-                        inputRef.current?.blur();
-                      }}
-                      className={`flex flex-1 min-w-0 items-center gap-2 text-left text-sm ${styles.optionBase}`}
-                    >
-                      <span
-                        className="truncate font-medium rounded-md border px-2 py-0.5 text-black"
-                        style={{
-                          borderColor: colourValue,
-                          backgroundColor: hexToRgba(colourValue, 0.12),
-                        }}
-                      >
-                        {isSelected ? `${category.text} ✓` : category.text}
-                      </span>
-                    </button>
-                    <div className="flex items-center gap-2">
-                      <button
-                        type="button"
-                        aria-label={`Open actions for ${category.text}`}
-                        onMouseDown={(event) => {
-                          event.preventDefault();
-                          event.stopPropagation();
-                        }}
-                        onClick={(event) => {
-                          event.stopPropagation();
-                          if (openMenuId === category.id) {
-                            setOpenMenuId(null);
-                            setMenuPosition(null);
-                            return;
-                          }
-                          const target = event.currentTarget;
-                          const rect = target.getBoundingClientRect();
-                          const menuWidth = 176;
-                          const estimatedHeight = 220;
-                          const padding = 8;
-                          const preferredLeft = rect.right - menuWidth;
-                          const left = Math.min(
-                            Math.max(preferredLeft, padding),
-                            window.innerWidth - menuWidth - padding,
-                          );
-                          const preferredTop = rect.bottom + 6;
-                          const top = Math.min(
-                            Math.max(preferredTop, padding),
-                            window.innerHeight - estimatedHeight - padding,
-                          );
-                          setMenuPosition({ top, left });
-                          setOpenMenuId(category.id);
-                        }}
-                        className="opacity-0 group-hover:opacity-100 transition-opacity text-gray-400 hover:text-gray-600"
-                      >
-                        <span className="material-icons text-base">more_vert</span>
-                      </button>
-                    </div>
-                  </div>
-                );
-              })}
-              {canCreate && (
-                <button
-                  type="button"
-                  onMouseDown={(event) => {
-                    event.preventDefault();
-                    void handleCreate();
-                  }}
-                  className={`flex w-full items-center justify-between px-3 py-2 text-sm font-semibold ${styles.addBase}`}
-                >
-                  <span>Add new category "{query.trim()}"</span>
-                  <span className="material-icons text-base">add</span>
-                </button>
-              )}
-              {normalizedQuery.length > MAX_CATEGORY_LENGTH && (
-                <div className="px-3 py-2 text-xs text-red-600">
-                  Category names must be {MAX_CATEGORY_LENGTH} characters or fewer.
-                </div>
-              )}
-              {isCreating && (
-                <div className="px-3 py-2 text-xs text-gray-500">Creating category...</div>
-              )}
-              {error && (
-                <div className="px-3 py-2 text-xs text-red-600">{error}</div>
-              )}
-              </div>
-            </div>,
-            document.body,
-          )
-          : null}
       </div>
 
-      {openMenuId !== null && menuPosition && typeof document !== "undefined"
-        ? createPortal(
-          <div
-            ref={menuRef}
-            className="fixed z-[1000] w-44 rounded-lg border border-gray-200 bg-white shadow-lg"
-            style={{ top: menuPosition.top, left: menuPosition.left }}
-            onMouseDown={(event) => event.stopPropagation()}
-          >
-            <button
-              type="button"
-              onClick={() => {
-                void handleDelete(openMenuId);
-                setOpenMenuId(null);
-                setMenuPosition(null);
-              }}
-              className="flex w-full items-center gap-2 px-3 py-2 text-sm text-red-600 hover:bg-red-50"
-            >
-              <span className="material-icons text-base">delete</span>
-              Delete
-            </button>
-            <div className="my-1 border-t border-gray-200" />
-            <div className="px-3 py-2 text-xs font-semibold text-gray-500 uppercase">
-              Colours
-            </div>
-            <div className="grid grid-cols-6 gap-2 px-3 pb-3">
-              {PRESET_COLOURS.map((colour) => (
-                <button
-                  key={colour}
-                  type="button"
-                  aria-label={`Set colour ${colour}`}
-                  onClick={() => {
-                    if (openMenuId === null) return;
-                    void onUpdateCategory(openMenuId, { colour });
-                  }}
-                  className="h-5 w-5 rounded-full border border-gray-200"
-                  style={{ backgroundColor: colour }}
-                />
-              ))}
-              <button
-                ref={plusButtonRef}
-                type="button"
-                aria-label="Custom colour"
-                onClick={() => {
-                  if (!plusButtonRef.current) return;
-                  const rect = plusButtonRef.current.getBoundingClientRect();
-                  setPickerPosition({
-                    top: rect.top - 280,
-                    left: rect.left - 280,
-                  });
-                  setShowPickerMenu((prev) => !prev);
-                }}
-                className="h-5 w-5 rounded-full border border-gray-200 bg-white flex items-center justify-center"
-              >
-                <span className="text-[20px] leading-none text-gray-600">+</span>
-              </button>
-            </div>
-            <div className="my-1 border-t border-gray-200" />
-            <label className="flex items-center gap-2 px-3 pt-2 pb-3 text-xs text-gray-700">
-              <input
-                type="checkbox"
-                checked={Boolean(menuCategory?.colour_override)}
-                onChange={(event) => {
-                  if (openMenuId === null) return;
-                  void onUpdateCategory(openMenuId, { colour_override: event.target.checked });
-                }}
-                className="h-4 w-4 rounded border-gray-300 text-gray-700 focus:ring-2 focus:ring-gray-400"
-              />
-              <span className="flex items-center gap-1">
-                Colour override
-                <Tooltip content="When enabled, tasks/events using this category inherit its colour.">
-                  <span
-                    className="inline-flex h-5 w-5 items-center justify-center rounded-full border border-gray-300 text-[11px] font-semibold text-gray-600 ml-2 cursor-help"
-                  >
-                    ?
-                  </span>
-                </Tooltip>
-              </span>
-            </label>
-          </div>,
-          document.body,
-        )
-        : null}
+      <CategoryDropdown
+        isOpen={isOpen}
+        dropdownPosition={dropdownPosition}
+        dropdownMaxHeight={dropdownMaxHeight}
+        filtered={filtered}
+        selectedIds={selectedIds}
+        defaultSwatch={DEFAULT_SWATCH}
+        normalizedQuery={normalizedQuery}
+        query={query}
+        canCreate={canCreate}
+        maxCategoryLength={MAX_CATEGORY_LENGTH}
+        isCreating={isCreating}
+        error={error}
+        optionBaseClass={styles.optionBase}
+        addBaseClass={styles.addBase}
+        onSelectOption={(id) => {
+          toggleCategory(id);
+          setQuery("");
+          setIsOpen(false);
+          inputRef.current?.blur();
+        }}
+        onCreate={() => {
+          void handleCreate();
+        }}
+        onMenuOpen={handleMenuOpen}
+      />
 
-      {showPickerMenu && pickerPosition && typeof document !== "undefined"
-        ? createPortal(
-          <div
-            ref={pickerRef}
-            className="fixed z-[1000] w-64 rounded-lg border border-gray-200 bg-white shadow-lg"
-            style={{ top: pickerPosition.top, left: pickerPosition.left }}
-            onMouseDown={(event) => event.stopPropagation()}
-          >
-            <div className="px-3 py-2 text-xs font-semibold text-gray-500 uppercase">
-              Custom Colour
-            </div>
-            <div className="px-3 pb-3">
-              <div className="rounded-lg border border-gray-200 bg-white p-2 overflow-hidden">
-                <HexColorPicker
-                  color={colourInput || menuCategory?.colour || DEFAULT_SWATCH}
-                  onChange={(value) => {
-                    setColourInput(value);
-                    setColourError(null);
-                  }}
-                  style={{ width: "100%", height: "160px" }}
-                  className="rounded-md"
-                />
-              </div>
-            </div>
-            <div className="px-3 pb-3">
-              <input
-                type="text"
-                value={colourInput}
-                onChange={(event) => {
-                  setColourInput(event.target.value);
-                  setColourError(null);
-                }}
-                placeholder="Hex (#RRGGBB) or rgb(...)"
-                className="w-full rounded-md border border-gray-200 px-2 py-1 text-xs text-gray-700"
-                onKeyDown={(event) => {
-                  if (event.key !== "Enter") return;
-                  const parsed = parseColourInput(colourInput);
-                  if (!parsed) {
-                    setColourError("Enter a valid hex or rgb colour.");
-                    return;
-                  }
-                  setColourInput(parsed);
-                }}
-              />
-              {colourError && (
-                <div className="mt-1 text-[11px] text-red-600">{colourError}</div>
-              )}
-            </div>
-            <div className="px-3 pb-3 flex justify-end">
-              <button
-                type="button"
-                onClick={() => {
-                  const parsed = parseColourInput(colourInput);
-                  if (!parsed) {
-                    setColourError("Enter a valid hex or rgb colour.");
-                    return;
-                  }
-                  if (openMenuId === null) return;
-                  void onUpdateCategory(openMenuId, { colour: parsed });
-                  setShowPickerMenu(false);
-                }}
-                className="inline-flex items-center gap-1 rounded-md border border-gray-200 bg-white px-2 py-1.5 text-xs font-semibold text-gray-700 hover:bg-gray-50"
-              >
-                <span className="material-icons text-[14px]">check</span>
-                Select
-              </button>
-            </div>
-          </div>,
-          document.body,
-        )
-        : null}
+      <CategoryActionsMenu
+        openMenuId={openMenuId}
+        menuPosition={menuPosition}
+        menuRef={menuRef}
+        menuCategory={menuCategory}
+        presetColours={PRESET_COLOURS}
+        onDelete={(id) => {
+          void handleDelete(id);
+        }}
+        onUpdate={(id, patch) => {
+          void onUpdateCategory(id, patch);
+        }}
+        onClose={() => {
+          setOpenMenuId(null);
+          setMenuPosition(null);
+        }}
+        onTogglePicker={handleTogglePicker}
+      />
+
+      <CategoryColourPicker
+        isOpen={showPickerMenu}
+        position={pickerPosition}
+        pickerRef={pickerRef}
+        colourInput={colourInput}
+        colourError={colourError}
+        currentColour={colourInput || menuCategory?.colour || DEFAULT_SWATCH}
+        onColourInputChange={setColourInput}
+        onColourErrorChange={setColourError}
+        onCommitInput={commitColourInput}
+        onSelect={confirmColour}
+      />
     </div>
   );
 };
