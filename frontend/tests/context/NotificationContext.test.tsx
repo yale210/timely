@@ -1,4 +1,4 @@
-﻿/* eslint-disable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-explicit-any, @typescript-eslint/consistent-type-imports */
+﻿/* eslint-disable @typescript-eslint/consistent-type-imports */
 import { renderHook, waitFor, act } from "@testing-library/react";
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import type React from "react";
@@ -99,8 +99,7 @@ describe("NotificationContext Provider", () => {
       // NotificationProvider calls the mocked implementation during tests.
       // This helps detect cases where the provider uses a different module
       // instance than the one the test is mocking.
-      // eslint-disable-next-line no-console
-      console.log("[test] mocked getNotifications invoked");
+        console.log("[test] mocked getNotifications invoked");
       return Promise.resolve({
         results: mockNotifications,
         count: 2,

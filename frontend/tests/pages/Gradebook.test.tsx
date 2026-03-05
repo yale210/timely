@@ -17,8 +17,8 @@ vi.mock("@/components/modals/ConfirmationModal", () => ({
     // call window.confirm (stubbed in tests) to simulate user confirmation
     // then call the provided onConfirm handler to perform deletion
     // This runs synchronously during render which is fine for the tests
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (window as any).confirm && (window as any).confirm();
+    const win = window as unknown as { confirm: () => void };
+    if (win.confirm) win.confirm();
     onConfirm();
     return <div data-testid="confirmation-modal" />;
   },
@@ -165,7 +165,7 @@ describe("Gradebook Page", () => {
     fireEvent.click(deleteBtns[0]);
 
     // assert the global confirm was called
-    expect(window.confirm).toHaveBeenCalled();
+    expect(confirm).toHaveBeenCalled();
     expect(global.fetch).toHaveBeenCalledWith("/api/grades/1/", expect.objectContaining({ method: "DELETE" }));
   });
 
