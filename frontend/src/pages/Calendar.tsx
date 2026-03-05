@@ -650,8 +650,12 @@ const CalendarPage = ({ showNavbar = true, useLayout = true }: CalendarPageProps
               }}
               draggableAccessor={() => true}
               resizableAccessor={() => true}
-              onEventDrop={handleEventDrop}
-              onEventResize={handleEventResize}
+              onEventDrop={(args) => {
+                void handleEventDrop(args);
+              }}
+              onEventResize={(args) => {
+                void handleEventResize(args);
+              }}
               toolbar={false}
               className="h-full"
               eventPropGetter={(event: CalendarEntry) => {
