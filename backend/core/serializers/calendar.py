@@ -36,7 +36,9 @@ class CalendarSerializer(serializers.ModelSerializer):
         super().__init__(*args, **kwargs)
         request = self.context.get("request")
         if request and request.user and request.user.is_authenticated:
-            self.fields["categories"].queryset = Category.objects.filter(user=request.user)
+            self.fields["categories"].queryset = Category.objects.filter(
+                user=request.user
+            )
         else:
             self.fields["categories"].queryset = Category.objects.none()
 
