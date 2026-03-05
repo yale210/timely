@@ -62,7 +62,7 @@ export const authStore = {
   },
 }
 
-import api from "./api"
+import api from "@/services/api"
 
 export const authService = {
   async register(payload: { username: string; email: string; password: string; password2: string; }) {

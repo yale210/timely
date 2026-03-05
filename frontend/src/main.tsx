@@ -4,7 +4,7 @@ import { BrowserRouter } from "react-router-dom";
 
 import App from "@/App";
 import { NotificationProvider } from "@/context/NotificationContext";
-import "./index.css";
+import "@/index.css";
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>

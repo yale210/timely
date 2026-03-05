@@ -335,7 +335,7 @@ const CategoryMultiSelect = ({
         ? createPortal(
           <div
             ref={menuRef}
-            className="fixed z-[1000] w-44 rounded-lg border border-gray-200 bg-white shadow-lg"
+            className="fixed z-[70] w-44 rounded-lg border border-gray-200 bg-white shadow-lg"
             style={{ top: menuPosition.top, left: menuPosition.left }}
             onMouseDown={(event) => event.stopPropagation()}
           >
