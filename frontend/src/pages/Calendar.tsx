@@ -555,6 +555,10 @@ const CalendarPage = ({ showNavbar = true, useLayout = true }: CalendarPageProps
               if (overrideColour) {
                 style.backgroundColor = hexToRgba(overrideColour, 0.5);
                 style.borderLeft = `4px solid ${overrideColour}`;
+                (style as Record<string, string>)["--event-stripe-color"] = hexToRgba(
+                  overrideColour,
+                  0.6,
+                );
                 style.color = "#000000";
               }
 

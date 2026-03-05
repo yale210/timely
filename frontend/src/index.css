@@ -112,8 +112,8 @@ body {
 .event-slot.is-event.is-onego::after {
   background-image: repeating-linear-gradient(
     45deg,
-    rgba(249, 115, 22, 0.6),
-    rgba(249, 115, 22, 0.6) 6px,
+    var(--event-stripe-color, rgba(249, 115, 22, 0.6)),
+    var(--event-stripe-color, rgba(249, 115, 22, 0.6)) 6px,
     rgba(249, 115, 22, 0.00) 6px,
     rgba(249, 115, 22, 0.00) 12px
   );
