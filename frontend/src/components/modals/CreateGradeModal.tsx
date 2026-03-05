@@ -135,7 +135,10 @@ export default function CreateGradeModal(props: Props) {
               type="number"
               placeholder="Score"
               value={String(score)}
-              onChange={(e) => setScore(e.target.value === "" ? "" : (Number(e.target.value) > 100000 ? 100000 : Number(e.target.value)))}
+              onChange={(e) => {
+                setScore(e.target.value === "" ? "" : (
+                  Number(e.target.value) > 100000 ? 100000 : Number(e.target.value)
+                ))}}
               className="w-full border p-2 rounded"
               required
             />
@@ -143,7 +146,10 @@ export default function CreateGradeModal(props: Props) {
               type="number"
               placeholder="Total"
               value={String(total)}
-              onChange={(e) => setTotal(e.target.value === "" ? "" : (Number(e.target.value) > 100000 ? 100000 : Number(e.target.value)))}
+              onChange={(e) => {
+                setTotal(e.target.value === "" ? "" : (
+                  Number(e.target.value) > 100000 ? 100000 : Number(e.target.value)
+                ))}}
               className="w-full border p-2 rounded"
               required
             />
