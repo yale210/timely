@@ -11,9 +11,6 @@ export const hexToRgba = (hex: string, alpha: number): string => {
 
 export const getOverrideColour = (categories: Category[] | undefined): string | null => {
   if (!categories || categories.length === 0) return null;
-  const first = categories[0];
-  if (first?.colour_override && first?.colour) {
-    return first.colour;
-  }
-  return null;
+  const match = categories.find((category) => category.colour_override && category.colour);
+  return match?.colour ?? null;
 };

@@ -201,12 +201,22 @@ const updateCategory = useCallback(async (id: number, patch: { colour?: string |
   setCategories((prev) => prev.map((category) => (
     category.id === id ? { ...category, ...updated } : category
   )));
+  setEvents((prev) => prev.map((event) => ({
+    ...event,
+    categories: event.categories.map((category) =>
+      category.id === id ? { ...category, ...updated } : category
+    ),
+  })));
   return updated;
 }, []);
 
 const deleteCategory = useCallback(async (id: number) => {
   await categoryService.deleteCategory(id);
   setCategories((prev) => prev.filter((category) => category.id !== id));
+  setEvents((prev) => prev.map((event) => ({
+    ...event,
+    categories: event.categories.filter((category) => category.id !== id),
+  })));
   if (filterCategory === id) {
     setFilterCategory(null);
   }

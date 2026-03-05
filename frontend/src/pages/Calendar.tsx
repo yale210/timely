@@ -157,12 +157,51 @@ const CalendarPage = ({ showNavbar = true, useLayout = true }: CalendarPageProps
     setCategories((prev) => prev.map((category) => (
       category.id === id ? { ...category, ...updated } : category
     )));
+    setTasks((prev) => prev.map((task) => ({
+      ...task,
+      categories: task.categories.map((category) =>
+        category.id === id ? { ...category, ...updated } : category
+      ),
+    })));
+    setEvents((prev) => prev.map((event) => ({
+      ...event,
+      categories: event.categories.map((category) =>
+        category.id === id ? { ...category, ...updated } : category
+      ),
+    })));
     return updated;
   }, []);
+
+  const updateTaskCategories = useCallback(async (id: number, nextCategoryIds: number[]) => {
+    const nextCategoryObjects = categories.filter((category) => nextCategoryIds.includes(category.id));
+    setTasks((prev) => prev.map((task) => (
+      task.id === id ? { ...task, categories: nextCategoryObjects } : task
+    )));
+    setSelectedItem((prev) => {
+      if (!prev || !("deadline" in prev) || prev.id !== id) {
+        return prev;
+      }
+      return { ...prev, categories: nextCategoryObjects };
+    });
+    try {
+      await taskService.updateTask(id, { categories: nextCategoryIds });
+    } catch (updateError) {
+      console.error(updateError);
+      await fetchTasks();
+    }
+  }, [categories, fetchTasks]);
 
   const deleteCategory = useCallback(async (id: number) => {
     await categoryService.deleteCategory(id);
     setCategories((prev) => prev.filter((category) => category.id !== id));
+    setTasks((prev) => prev.map((task) => ({
+      ...task,
+      categories: task.categories.filter((category) => category.id !== id),
+    })));
+    setEvents((prev) => prev.map((event) => ({
+      ...event,
+      categories: event.categories.filter((category) => category.id !== id),
+    })));
   }, []);
 
   const fetchEvents = useCallback(async (activeView: View, activeDate: Date) => {
@@ -535,6 +574,9 @@ const CalendarPage = ({ showNavbar = true, useLayout = true }: CalendarPageProps
         onCreateCategory={createCategory}
         onUpdateCategory={updateCategory}
         onDeleteCategory={deleteCategory}
+        onTaskCategoryChange={(id, nextCategories) => {
+          void updateTaskCategories(id, nextCategories);
+        }}
         initialData={selectedItem}
         initialMode={sidebarMode}
         onSubmitTask={(data) => { void handleSubmitTask(data); }}

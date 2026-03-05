@@ -37,6 +37,7 @@ interface TaskFormProps {
   onCreateCategory: (text: string) => Promise<Category>;
   onUpdateCategory: (id: number, patch: { colour?: string | null; colour_override?: boolean }) => Promise<Category>;
   onDeleteCategory: (id: number) => Promise<void>;
+  onCategoryChange?: (categories: number[]) => void;
   onSubmit: (data: TaskSubmission) => void;
   onCancel: () => void;
   onDataChange?: (data: Partial<Task>) => void;
@@ -58,6 +59,7 @@ const TaskForm = ({
   onCreateCategory,
   onUpdateCategory,
   onDeleteCategory,
+  onCategoryChange,
   onSubmit,
   onCancel,
   onDataChange,
@@ -282,7 +284,12 @@ const TaskForm = ({
           <CategoryMultiSelect
             categories={categories}
             selectedIds={selectedCategories}
-            onChange={setSelectedCategories}
+            onChange={(nextCategories) => {
+              setSelectedCategories(nextCategories);
+              if (initialData?.id && onCategoryChange) {
+                onCategoryChange(nextCategories);
+              }
+            }}
             onCreateCategory={onCreateCategory}
             onUpdateCategory={onUpdateCategory}
             onDeleteCategory={onDeleteCategory}

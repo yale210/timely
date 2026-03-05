@@ -94,6 +94,9 @@ const TaskList = () => {
         onCreateCategory={actions.createCategory}
         onUpdateCategory={actions.updateCategory}
         onDeleteCategory={actions.deleteCategory}
+        onCategoryChange={(id, nextCategories) => {
+          void actions.updateTaskCategories(id, nextCategories);
+        }}
         onSubmit={(data) => {
           void actions.submitTask(data);
         }}

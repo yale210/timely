@@ -48,6 +48,7 @@ interface TaskListActions {
   createCategory: (text: string) => Promise<Category>;
   updateCategory: (id: number, patch: { colour?: string | null; colour_override?: boolean }) => Promise<Category>;
   deleteCategory: (id: number) => Promise<void>;
+  updateTaskCategories: (id: number, categories: number[]) => Promise<void>;
   refresh: () => Promise<void>;
   formatDayLabel: (dateStr: string) => string;
 }
@@ -169,6 +170,25 @@ const deleteTask = useCallback(
   [fetchTasks],
 );
 
+const updateTaskCategories = useCallback(
+  async (id: number, nextCategoryIds: number[]) => {
+    const nextCategoryObjects = categories.filter((category) => nextCategoryIds.includes(category.id));
+    setTasks((prev) => prev.map((task) => (
+      task.id === id ? { ...task, categories: nextCategoryObjects } : task
+    )));
+    setSelectedTask((prev) => (
+      prev && prev.id === id ? { ...prev, categories: nextCategoryObjects } : prev
+    ));
+    try {
+      await taskService.updateTask(id, { categories: nextCategoryIds });
+    } catch (updateError) {
+      console.error(updateError);
+      await fetchTasks();
+    }
+  },
+  [categories, fetchTasks],
+);
+
 const createCategory = useCallback(async (text: string) => {
   const trimmed = text.trim();
   if (!trimmed) {
@@ -188,12 +208,22 @@ const updateCategory = useCallback(async (id: number, patch: { colour?: string |
   setCategories((prev) => prev.map((category) => (
     category.id === id ? { ...category, ...updated } : category
   )));
+  setTasks((prev) => prev.map((task) => ({
+    ...task,
+    categories: task.categories.map((category) =>
+      category.id === id ? { ...category, ...updated } : category
+    ),
+  })));
   return updated;
 }, []);
 
 const deleteCategory = useCallback(async (id: number) => {
   await categoryService.deleteCategory(id);
   setCategories((prev) => prev.filter((category) => category.id !== id));
+  setTasks((prev) => prev.map((task) => ({
+    ...task,
+    categories: task.categories.filter((category) => category.id !== id),
+  })));
   if (filterCategory === id) {
     setFilterCategory(null);
   }
@@ -314,6 +344,7 @@ return {
     createCategory,
     updateCategory,
     deleteCategory,
+    updateTaskCategories,
     refresh,
     formatDayLabel,
   },

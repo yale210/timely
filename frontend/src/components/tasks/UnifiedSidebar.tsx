@@ -22,6 +22,7 @@ interface UnifiedSidebarProps {
   onCreateCategory: (text: string) => Promise<Category>;
   onUpdateCategory: (id: number, patch: { colour?: string | null; colour_override?: boolean }) => Promise<Category>;
   onDeleteCategory: (id: number) => Promise<void>;
+  onTaskCategoryChange?: (id: number, categories: number[]) => void;
   initialData?: Task | Event;
   onSubmitTask: (data: TaskSubmission) => void;
   onSubmitEvent: (data: EventSubmission, context?: EventMutationContext) => void;
@@ -51,6 +52,7 @@ const UnifiedSidebar = ({
   onCreateCategory,
   onUpdateCategory,
   onDeleteCategory,
+  onTaskCategoryChange,
   initialData,
   onSubmitTask,
   onSubmitEvent,
@@ -199,6 +201,11 @@ const UnifiedSidebar = ({
             onCreateCategory={onCreateCategory}
             onUpdateCategory={onUpdateCategory}
             onDeleteCategory={onDeleteCategory}
+            onCategoryChange={(nextCategories) => {
+              if (initialData?.id && onTaskCategoryChange) {
+                onTaskCategoryChange(initialData.id, nextCategories);
+              }
+            }}
             onSubmit={(data) => {
               onSubmitTask(data);
               onClose();

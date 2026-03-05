@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useRef, useState, type KeyboardEvent } from "react";
 import { createPortal } from "react-dom";
+import { HexColorPicker } from "react-colorful";
 import type { Category } from "@/types";
+import { Tooltip } from "@/components";
 import { hexToRgba } from "@/utils/colorUtils";
 
 type CategoryVariant = "task" | "event";
@@ -22,13 +24,12 @@ const PRESET_COLOURS = [
   "#f97316",
   "#f59e0b",
   "#22c55e",
-  "#10b981",
+  "#20c7a3",
   "#06b6d4",
   "#3b82f6",
-  "#6366f1",
   "#8b5cf6",
   "#ec4899",
-  "#f43f5e",
+  "#92400e",
   "#64748b",
 ];
 
@@ -77,6 +78,15 @@ const CategoryMultiSelect = ({
   const [menuPosition, setMenuPosition] = useState<{ top: number; left: number } | null>(null);
   const menuRef = useRef<HTMLDivElement | null>(null);
   const inputRef = useRef<HTMLInputElement | null>(null);
+  const dropdownRef = useRef<HTMLDivElement | null>(null);
+  const plusButtonRef = useRef<HTMLButtonElement | null>(null);
+  const pickerRef = useRef<HTMLDivElement | null>(null);
+  const [dropdownPosition, setDropdownPosition] = useState<{ top: number; left: number; width: number } | null>(null);
+  const [dropdownMaxHeight, setDropdownMaxHeight] = useState<number>(224);
+  const [colourInput, setColourInput] = useState("");
+  const [colourError, setColourError] = useState<string | null>(null);
+  const [showPickerMenu, setShowPickerMenu] = useState(false);
+  const [pickerPosition, setPickerPosition] = useState<{ top: number; left: number } | null>(null);
 
   const styles = VARIANT_STYLES[variant];
   const normalizedQuery = normalise(query);
@@ -150,12 +160,24 @@ const CategoryMultiSelect = ({
     }
   };
 
-  const handleBlur = () => {
-    window.setTimeout(() => {
-      if (openMenuId === null) {
-        setIsOpen(false);
-      }
-    }, 120);
+  const updateDropdownPosition = () => {
+    const input = inputRef.current;
+    if (!input) return;
+    const rect = input.getBoundingClientRect();
+    const padding = 8;
+    const width = rect.width;
+    const left = Math.min(
+      Math.max(rect.left, padding),
+      window.innerWidth - width - padding,
+    );
+    const preferredHeight = 224;
+    const spaceBelow = window.innerHeight - rect.bottom - padding;
+    const spaceAbove = rect.top - padding;
+    const useAbove = spaceBelow < preferredHeight && spaceAbove > spaceBelow;
+    const maxHeight = Math.max(160, Math.min(preferredHeight, useAbove ? spaceAbove : spaceBelow));
+    const top = useAbove ? rect.top - maxHeight - 6 : rect.bottom + 6;
+    setDropdownMaxHeight(maxHeight);
+    setDropdownPosition({ top, left, width });
   };
 
   const handleDelete = async (id: number) => {
@@ -186,9 +208,127 @@ const CategoryMultiSelect = ({
     return () => window.removeEventListener("mousedown", handleOutsideClick);
   }, [openMenuId]);
 
+  useEffect(() => {
+    if (!openMenuId || !menuRef.current || !menuPosition) {
+      return;
+    }
+    const raf = window.requestAnimationFrame(() => {
+      const rect = menuRef.current?.getBoundingClientRect();
+      if (!rect) return;
+      const padding = 8;
+      let nextLeft = menuPosition.left;
+      let nextTop = menuPosition.top;
+
+      if (rect.right > window.innerWidth - padding) {
+        nextLeft = Math.max(padding, window.innerWidth - rect.width - padding);
+      }
+      if (rect.left < padding) {
+        nextLeft = padding;
+      }
+      if (rect.bottom > window.innerHeight - padding) {
+        nextTop = Math.max(padding, window.innerHeight - rect.height - padding);
+      }
+      if (rect.top < padding) {
+        nextTop = padding;
+      }
+
+      if (nextLeft !== menuPosition.left || nextTop !== menuPosition.top) {
+        setMenuPosition({ left: nextLeft, top: nextTop });
+      }
+    });
+    return () => window.cancelAnimationFrame(raf);
+  }, [openMenuId, menuPosition]);
+
+  useEffect(() => {
+    if (!showPickerMenu || !pickerRef.current || !pickerPosition) {
+      return;
+    }
+    const raf = window.requestAnimationFrame(() => {
+      const rect = pickerRef.current?.getBoundingClientRect();
+      if (!rect) return;
+      const padding = 8;
+      let nextLeft = pickerPosition.left;
+      let nextTop = pickerPosition.top;
+
+      if (rect.right > window.innerWidth - padding) {
+        nextLeft = Math.max(padding, window.innerWidth - rect.width - padding);
+      }
+      if (rect.left < padding) {
+        nextLeft = padding;
+      }
+      if (rect.bottom > window.innerHeight - padding) {
+        nextTop = Math.max(padding, window.innerHeight - rect.height - padding);
+      }
+      if (rect.top < padding) {
+        nextTop = padding;
+      }
+
+      if (nextLeft !== pickerPosition.left || nextTop !== pickerPosition.top) {
+        setPickerPosition({ left: nextLeft, top: nextTop });
+      }
+    });
+    return () => window.cancelAnimationFrame(raf);
+  }, [showPickerMenu, pickerPosition]);
+
+  useEffect(() => {
+    if (!isOpen) {
+      return;
+    }
+    const handleOutsideClick = (event: MouseEvent) => {
+      const target = event.target as Node;
+      if (inputRef.current && inputRef.current.contains(target)) return;
+      if (dropdownRef.current && dropdownRef.current.contains(target)) return;
+      if (menuRef.current && menuRef.current.contains(target)) return;
+      setIsOpen(false);
+    };
+    const handleScrollOrResize = () => {
+      updateDropdownPosition();
+    };
+    window.addEventListener("mousedown", handleOutsideClick);
+    window.addEventListener("scroll", handleScrollOrResize, true);
+    window.addEventListener("resize", handleScrollOrResize);
+    updateDropdownPosition();
+    return () => {
+      window.removeEventListener("mousedown", handleOutsideClick);
+      window.removeEventListener("scroll", handleScrollOrResize, true);
+      window.removeEventListener("resize", handleScrollOrResize);
+    };
+  }, [isOpen]);
+
+  const normaliseHex = (value: string): string | null => {
+    const trimmed = value.trim().toLowerCase();
+    if (trimmed.startsWith("#") && trimmed.length === 7) {
+      return trimmed;
+    }
+    return null;
+  };
+
+  const rgbToHex = (value: string): string | null => {
+    const match = value
+      .trim()
+      .toLowerCase()
+      .match(/^rgb\\(\\s*(\\d{1,3})\\s*,\\s*(\\d{1,3})\\s*,\\s*(\\d{1,3})\\s*\\)$/);
+    if (!match) return null;
+    const [r, g, b] = match.slice(1).map((v) => Math.min(255, Math.max(0, Number(v))));
+    const toHex = (n: number) => n.toString(16).padStart(2, "0");
+    return `#${toHex(r)}${toHex(g)}${toHex(b)}`;
+  };
+
+  const parseColourInput = (value: string): string | null =>
+    normaliseHex(value) ?? rgbToHex(value);
+
   const menuCategory = openMenuId
     ? categories.find((category) => category.id === openMenuId)
     : undefined;
+  useEffect(() => {
+    if (menuCategory?.colour) {
+      setColourInput(menuCategory.colour);
+    } else {
+      setColourInput("");
+    }
+    setShowPickerMenu(false);
+    setColourError(null);
+  }, [menuCategory?.colour, openMenuId]);
 
   return (
     <div>
@@ -210,7 +350,7 @@ const CategoryMultiSelect = ({
               }}
             >
               {category.text}
-              <span className="material-icons text-[14px]">close</span>
+              <span className="text-[12px] font-semibold leading-none">✖</span>
             </button>
           );
         })}
@@ -222,20 +362,33 @@ const CategoryMultiSelect = ({
           type="text"
           value={query}
           placeholder="Type to search or add category..."
-          onFocus={() => setIsOpen(true)}
-          onBlur={handleBlur}
+          onFocus={() => {
+            setIsOpen(true);
+            updateDropdownPosition();
+          }}
           onChange={(event) => {
             setQuery(event.target.value);
             setIsOpen(true);
+            updateDropdownPosition();
             setError(null);
           }}
           onKeyDown={handleKeyDown}
           className={`w-full rounded-lg border border-gray-300 bg-white text-black shadow-sm p-2.5 ${styles.inputFocus}`}
         />
 
-        {isOpen && (
-          <div className="absolute z-20 mt-2 w-full rounded-lg border border-gray-200 bg-white shadow-lg">
-            <div className="max-h-56 overflow-y-auto py-1">
+        {isOpen && dropdownPosition && typeof document !== "undefined"
+          ? createPortal(
+            <div
+              ref={dropdownRef}
+              className="fixed z-80 rounded-lg border border-gray-200 bg-white shadow-lg"
+              style={{
+                top: dropdownPosition.top,
+                left: dropdownPosition.left,
+                width: dropdownPosition.width,
+              }}
+              onMouseDown={(event) => event.stopPropagation()}
+            >
+              <div className="overflow-y-auto py-1" style={{ maxHeight: dropdownMaxHeight }}>
               {filtered.length === 0 && !canCreate && (
                 <div className="px-3 py-2 text-sm text-gray-500">
                   No categories match.
@@ -264,13 +417,10 @@ const CategoryMultiSelect = ({
                           backgroundColor: hexToRgba(colourValue, 0.12),
                         }}
                       >
-                        {category.text}
+                        {isSelected ? `${category.text} ✓` : category.text}
                       </span>
                     </button>
                     <div className="flex items-center gap-2">
-                      {isSelected && (
-                        <span className="material-icons text-base text-gray-500">check</span>
-                      )}
                       <button
                         type="button"
                         aria-label={`Open actions for ${category.text}`}
@@ -335,16 +485,18 @@ const CategoryMultiSelect = ({
               {error && (
                 <div className="px-3 py-2 text-xs text-red-600">{error}</div>
               )}
-            </div>
-          </div>
-        )}
+              </div>
+            </div>,
+            document.body,
+          )
+          : null}
       </div>
 
       {openMenuId !== null && menuPosition && typeof document !== "undefined"
         ? createPortal(
           <div
             ref={menuRef}
-            className="fixed z-70 w-44 rounded-lg border border-gray-200 bg-white shadow-lg"
+            className="fixed z-[1000] w-44 rounded-lg border border-gray-200 bg-white shadow-lg"
             style={{ top: menuPosition.top, left: menuPosition.left }}
             onMouseDown={(event) => event.stopPropagation()}
           >
@@ -371,27 +523,125 @@ const CategoryMultiSelect = ({
                   type="button"
                   aria-label={`Set colour ${colour}`}
                   onClick={() => {
+                    if (openMenuId === null) return;
                     void onUpdateCategory(openMenuId, { colour });
-                    setOpenMenuId(null);
-                    setMenuPosition(null);
                   }}
                   className="h-5 w-5 rounded-full border border-gray-200"
                   style={{ backgroundColor: colour }}
                 />
               ))}
+              <button
+                ref={plusButtonRef}
+                type="button"
+                aria-label="Custom colour"
+                onClick={() => {
+                  if (!plusButtonRef.current) return;
+                  const rect = plusButtonRef.current.getBoundingClientRect();
+                  setPickerPosition({
+                    top: rect.top - 280,
+                    left: rect.left - 280,
+                  });
+                  setShowPickerMenu((prev) => !prev);
+                }}
+                className="h-5 w-5 rounded-full border border-gray-200 bg-white flex items-center justify-center"
+              >
+                <span className="text-[20px] leading-none text-gray-600">+</span>
+              </button>
             </div>
             <div className="my-1 border-t border-gray-200" />
-            <label className="flex items-center gap-2 px-3 py-2 text-xs text-gray-700">
+            <label className="flex items-center gap-2 px-3 pt-2 pb-3 text-xs text-gray-700">
               <input
                 type="checkbox"
                 checked={Boolean(menuCategory?.colour_override)}
                 onChange={(event) => {
+                  if (openMenuId === null) return;
                   void onUpdateCategory(openMenuId, { colour_override: event.target.checked });
                 }}
                 className="h-4 w-4 rounded border-gray-300 text-gray-700 focus:ring-2 focus:ring-gray-400"
               />
-              Colour override
+              <span className="flex items-center gap-1">
+                Colour override
+                <Tooltip content="When enabled, tasks/events using this category inherit its colour.">
+                  <span
+                    className="inline-flex h-5 w-5 items-center justify-center rounded-full border border-gray-300 text-[11px] font-semibold text-gray-600 ml-2 cursor-help"
+                  >
+                    ?
+                  </span>
+                </Tooltip>
+              </span>
             </label>
+          </div>,
+          document.body,
+        )
+        : null}
+
+      {showPickerMenu && pickerPosition && typeof document !== "undefined"
+        ? createPortal(
+          <div
+            ref={pickerRef}
+            className="fixed z-[1000] w-64 rounded-lg border border-gray-200 bg-white shadow-lg"
+            style={{ top: pickerPosition.top, left: pickerPosition.left }}
+            onMouseDown={(event) => event.stopPropagation()}
+          >
+            <div className="px-3 py-2 text-xs font-semibold text-gray-500 uppercase">
+              Custom Colour
+            </div>
+            <div className="px-3 pb-3">
+              <div className="rounded-lg border border-gray-200 bg-white p-2 overflow-hidden">
+                <HexColorPicker
+                  color={colourInput || menuCategory?.colour || DEFAULT_SWATCH}
+                  onChange={(value) => {
+                    setColourInput(value);
+                    setColourError(null);
+                  }}
+                  style={{ width: "100%", height: "160px" }}
+                  className="rounded-md"
+                />
+              </div>
+            </div>
+            <div className="px-3 pb-3">
+              <input
+                type="text"
+                value={colourInput}
+                onChange={(event) => {
+                  setColourInput(event.target.value);
+                  setColourError(null);
+                }}
+                placeholder="Hex (#RRGGBB) or rgb(...)"
+                className="w-full rounded-md border border-gray-200 px-2 py-1 text-xs text-gray-700"
+                onKeyDown={(event) => {
+                  if (event.key !== "Enter") return;
+                  const parsed = parseColourInput(colourInput);
+                  if (!parsed) {
+                    setColourError("Enter a valid hex or rgb colour.");
+                    return;
+                  }
+                  setColourInput(parsed);
+                }}
+              />
+              {colourError && (
+                <div className="mt-1 text-[11px] text-red-600">{colourError}</div>
+              )}
+            </div>
+            <div className="px-3 pb-3 flex justify-end">
+              <button
+                type="button"
+                onClick={() => {
+                  const parsed = parseColourInput(colourInput);
+                  if (!parsed) {
+                    setColourError("Enter a valid hex or rgb colour.");
+                    return;
+                  }
+                  if (openMenuId === null) return;
+                  void onUpdateCategory(openMenuId, { colour: parsed });
+                  setShowPickerMenu(false);
+                }}
+                className="inline-flex items-center gap-1 rounded-md border border-gray-200 bg-white px-2 py-1.5 text-xs font-semibold text-gray-700 hover:bg-gray-50"
+              >
+                <span className="material-icons text-[14px]">check</span>
+                Select
+              </button>
+            </div>
           </div>,
           document.body,
         )
