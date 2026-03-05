@@ -15,7 +15,7 @@ export default function useCategories() {
   const [categories, setCategories] = useState<Category[]>([])
   const [loading, setLoading] = useState(true)
 
-  useEffect(() => {
+   useEffect(() => {
     let mounted = true
     async function load() {
       try {

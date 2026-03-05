@@ -11,3 +11,4 @@ export * from "./tasks";
 export * from "./admin";
 export * from "./categories";
 export * from "./ui";
+export * from "./gradebook";
