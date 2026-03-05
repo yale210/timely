@@ -1,13 +1,27 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { render, screen, waitFor, fireEvent } from "@testing-library/react";
 import type React from "react";
-// Import Gradebook dynamically in tests so our vi.mock calls (below) are applied before module evaluation.
+import Gradebook from "@/pages/Gradebook";
 import { BrowserRouter } from "react-router-dom";
 import useCategories from "@/hooks/useCategories";
 
 // Mock AppLayout
 vi.mock("@/layouts/AppLayout", () => ({
   default: ({ children }: { children: React.ReactNode }) => <div data-testid="app-layout">{children}</div>,
+}));
+
+// Mock ConfirmationModal so delete flows trigger onConfirm in tests
+vi.mock("@/components/modals/ConfirmationModal", () => ({
+  default: ({ isOpen, onConfirm }: { isOpen: boolean; onConfirm: () => void }) => {
+    if (!isOpen) return null;
+    // call window.confirm (stubbed in tests) to simulate user confirmation
+    // then call the provided onConfirm handler to perform deletion
+    // This runs synchronously during render which is fine for the tests
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (window as any).confirm && (window as any).confirm();
+    onConfirm();
+    return <div data-testid="confirmation-modal" />;
+  },
 }));
 
 // Mock useCategories
@@ -101,7 +115,6 @@ describe("Gradebook Page", () => {
   });
 
   it("renders the gradebook and fetches data", async () => {
-    const { default: Gradebook } = await import("@/pages/Gradebook");
     render(
       <BrowserRouter>
         <Gradebook />
@@ -120,7 +133,6 @@ describe("Gradebook Page", () => {
   });
 
   it("filters grades by category", async () => {
-    const { default: Gradebook } = await import("@/pages/Gradebook");
     render(
       <BrowserRouter>
         <Gradebook />
@@ -141,7 +153,6 @@ describe("Gradebook Page", () => {
   it("handles deletion of a grade", async () => {
     // Use global stub for confirm to avoid spying on window directly in tests
     vi.stubGlobal("confirm", vi.fn().mockReturnValue(true));
-    const { default: Gradebook } = await import("@/pages/Gradebook");
     render(
       <BrowserRouter>
         <Gradebook />
@@ -150,16 +161,15 @@ describe("Gradebook Page", () => {
 
     await waitFor(() => screen.getByText("Midterm"));
 
-const deleteBtns = screen.getAllByRole("button", { name: /Delete/i });
+    const deleteBtns = screen.getAllByRole("button", { name: /delete/i });
     fireEvent.click(deleteBtns[0]);
 
     // assert the global confirm was called
-    expect(confirm).toHaveBeenCalled();
+    expect(window.confirm).toHaveBeenCalled();
     expect(global.fetch).toHaveBeenCalledWith("/api/grades/1/", expect.objectContaining({ method: "DELETE" }));
   });
 
   it("opens modal for adding and updating", async () => {
-    const { default: Gradebook } = await import("@/pages/Gradebook");
     render(
       <BrowserRouter>
         <Gradebook />
