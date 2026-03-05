@@ -1,20 +1,10 @@
 import { useEffect, useState } from "react"
-import ConfirmationModal from "@/components/modals/ConfirmationModal";
+import ConfirmationModal from "@/components/modals/ConfirmationModal"
 import CreateGradeModal from "@/components/modals/CreateGradeModal.tsx"
 import useCategories from "@/hooks/tasks/useCategories"
 import AppLayout from "@/layouts/AppLayout"
-
-interface Grade {
-  id: number
-  name: string
-  category?: number | null
-  category_name?: string | null
-  score: number
-  total_possible: number
-  percentage: number
-  date_achieved: string
-  time_spent_minutes: number
-}
+import { GradebookFilterCategories, GradebookHeader, GradebookLayout, GradebookTable, GradebookStatus } from "@/components"
+import { type Grade } from "@/components/gradebook/GradebookTable"
 
 type EditInitial = {
   id?: number
@@ -24,43 +14,6 @@ type EditInitial = {
   date?: string
   categoryId?: number | null
 } | null
-
-/**
- * Format a duration given in minutes into a short human readable string.
- * Examples: 0 -> "0m", 90 -> "1h 30m".
- * @param minutes Minutes to format.
- * @returns A compact duration string.
- */
-function format_duration(minutes: number): string {
-  if (!minutes) return "0m"
-  const h = Math.floor(minutes / 60)
-  const m = minutes % 60
-  return `${h}h ${m}m`
-}
-
-/**
- * Choose a CSS class for a percentage badge based on thresholds.
- * @param p Percentage value (may be null/undefined).
- * @returns A string of classes to style the percentage badge.
- */
-function percentageClass(p: number | null | undefined): string {
-  switch (true) {
-    case p == null:
-      return "text-gray-600"
-    case (p!) < 50:
-      return "inline-block text-sm font-semibold text-red-700 bg-red-100 px-2 py-0.5 rounded"
-    case (p!) < 70:
-      return "inline-block text-sm font-semibold text-orange-700 bg-orange-100 px-2 py-0.5 rounded"
-    default:
-      return "inline-block text-sm font-semibold text-green-700 bg-green-100 px-2 py-0.5 rounded"
-  }
-}
-
-function averageToneClass(p: number): string {
-  if (p < 50) return "bg-red-100 text-red-900";
-  if (p < 70) return "bg-orange-100 text-orange-900";
-  return "bg-green-100 text-green-900";
-}
 
 /**
  * Gradebook page showing a table of grades, filters and summary cards.
@@ -114,168 +67,83 @@ export default function Gradebook() {
     if (res.ok) refreshGrades()
   }
 
+  function handleEditGrade(grade: Grade) {
+    setEditInitial({
+      id: grade.id,
+      name: grade.name,
+      score: grade.score,
+      total: grade.total_possible,
+      date: grade.date_achieved,
+      categoryId: grade.category ?? null,
+    })
+    setModalOpen(true)
+  }
+
   const filteredGrades = grades
     ? selectedCategoryId == null
       ? grades
       : grades.filter((g) => g.category === selectedCategoryId)
     : []
 
-  const average = () => {
-    if (!filteredGrades || filteredGrades.length === 0) return 0
-    const s = filteredGrades.reduce((acc, g) => acc + (g.percentage || 0), 0)
-    return Math.round((s / filteredGrades.length) * 10) / 10
-  }
-
-  const avgValue = average()
-
   return (
-  <AppLayout>
-    <main className="w-full px-6 lg:px-10 pt-2 pb-10">
-      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between mb-6">
-        <h1 className="text-2xl font-bold">Gradebook</h1>
-        <div className="flex flex-wrap items-center gap-3">
-          <button
-            onClick={() => setModalOpen(true)}
-            className="rounded-lg bg-primary hover:bg-blue-300 active:scale-95 transition transform duration-150 px-4 py-2.5 text-white text-base font-medium shadow-sm"
-          >
-            Add grade
-          </button>
-        </div>
-      </div>
+    <AppLayout>
+      <GradebookLayout>
+        <GradebookHeader setModalOpen={setModalOpen}/>
 
-      {!loading && grades && filteredGrades.length > 0 && (
-        <div className="mb-6 grid grid-cols-1 gap-4 md:grid-cols-5">
-          <div className={`rounded-lg p-4 shadow-sm text-center flex flex-col items-center ${averageToneClass(avgValue)}`}>
-            <div className="text-sm">Average Percentage</div>
-            <div className="mt-2 text-2xl font-semibold">{avgValue}%</div>
-          </div>
-          <div className="hidden md:block md:col-span-3" />
-          <div className="rounded-lg bg-white p-4">
-            <label className="block text-sm text-gray-600 mb-2">Filter by Category</label>
-            <select
-              value={selectedCategoryId ?? ""}
-              onChange={(e) => setSelectedCategoryId(e.target.value === "" ? null : Number(e.target.value))}
-              className="w-full rounded-lg border border-gray-300 p-2 text-sm cursor-pointer bg-white"
-            >
-              <option value="">All Categories</option>
-              {categories?.map((c) => (
-                <option key={c.id} value={c.id}>{c.text}</option>
-              ))}
-            </select>
-          </div>
-        </div>
-      )}
+        <GradebookFilterCategories
+          loading={loading}
+          grades={grades}
+          filteredGrades={filteredGrades}
+          selectedCategoryId={selectedCategoryId}
+          setSelectedCategoryId={setSelectedCategoryId}
+          categories={categories}
+        />
 
-      {loading && <div>Loading...</div>}
+        <GradebookStatus
+          loading={loading}
+          gradesCount={grades?.length ?? 0}
+          filteredCount={filteredGrades.length}
+        />
 
-      {!loading && (!grades || grades.length === 0) && (
-        <div className="text-center text-gray-600">No grades yet. Add one above.</div>
-      )}
+        <GradebookTable
+          loading={loading}
+          filteredGrades={filteredGrades}
+          onEdit={handleEditGrade}
+          onDelete={setPendingDeleteId}
+        />
 
-      {!loading && grades && filteredGrades.length === 0 && grades.length > 0 && (
-        <div className="text-center text-gray-600">No grades found for this category.</div>
-      )}
-
-      {!loading && grades && filteredGrades.length > 0 && (
-        <div className="overflow-x-auto rounded-lg bg-white shadow-sm ring-1 ring-gray-200">
-          <table className="min-w-full divide-y divide-gray-200 text-sm">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">Name</th>
-                <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">Category</th>
-                <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">Date</th>
-                <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">Score</th>
-                <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">Percentage</th>
-                <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">Time spent</th>
-                <th className="px-6 py-3 text-right text-xs font-semibold uppercase tracking-wide text-gray-500">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {filteredGrades.map((g) => (
-                <tr key={g.id}>
-                  <td className="px-6 py-4 whitespace-nowrap">{g.name}</td>
-                  <td className="px-6 py-4 whitespace-nowrap">{g.category_name ?? "—"}</td>
-                  <td className="px-6 py-4 whitespace-nowrap">{g.date_achieved}</td>
-                  <td className="px-6 py-4 whitespace-nowrap">{g.score}/{g.total_possible}</td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <span className={percentageClass(g.percentage)}>
-                      {Math.round((g.percentage ?? 0) * 10) / 10}%
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">{format_duration(g.time_spent_minutes)}</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-right">
-                    <div className="flex items-center justify-end gap-3">
-                      <button
-                        onClick={() => {
-                          setEditInitial({
-                            id: g.id,
-                            name: g.name,
-                            score: g.score,
-                            total: g.total_possible,
-                            date: g.date_achieved,
-                            categoryId: g.category ?? null,
-                          })
-                          setModalOpen(true)
-                        }}
-                        className="p-1 rounded hover:bg-gray-100"
-                        aria-label="Edit grade"
-                        title="Edit"
-                      >
-                        <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 text-indigo-600" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                          <path d="M12 20h9" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                          <path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                        </svg>
-                      </button>
-                      <button onClick={() => setPendingDeleteId(g.id)} className="p-1 rounded hover:bg-gray-100" aria-label="Delete this grade" title="Delete">
-                        <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 text-red-600" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                          <polyline points="3 6 5 6 21 6" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                          <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                          <path d="M10 11v6" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                          <path d="M14 11v6" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                          <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                        </svg>
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
-
-      <CreateGradeModal
-        open={modalOpen}
-        onClose={() => {
-          setModalOpen(false)
-          setEditInitial(null)
-        }}
-        initialData={editInitial ?? undefined}
-        onCreated={() => {
-          setModalOpen(false)
-          setEditInitial(null)
-          refreshGrades()
-        }}
-        onUpdated={() => {
-          setModalOpen(false)
-          setEditInitial(null)
-          refreshGrades()
-        }}
-      />
-      <ConfirmationModal
-        isOpen={pendingDeleteId !== null}
-        title="Delete grade?"
-        message="This action cannot be undone."
-        confirmText="Delete"
-        cancelText="Cancel"
-        onClose={() => setPendingDeleteId(null)}
-        onConfirm={() => {
-          if (pendingDeleteId !== null) {
-            void deleteGrade(pendingDeleteId);
-          }
-        }}
-      />
-    </main>
-  </AppLayout>
+        <CreateGradeModal
+          open={modalOpen}
+          onClose={() => {
+            setModalOpen(false)
+            setEditInitial(null)
+          }}
+          initialData={editInitial ?? undefined}
+          onCreated={() => {
+            setModalOpen(false)
+            setEditInitial(null)
+            refreshGrades()
+          }}
+          onUpdated={() => {
+            setModalOpen(false)
+            setEditInitial(null)
+            refreshGrades()
+          }}
+        />
+        <ConfirmationModal
+          isOpen={pendingDeleteId !== null}
+          title="Delete grade?"
+          message="This action cannot be undone."
+          confirmText="Delete"
+          cancelText="Cancel"
+          onClose={() => setPendingDeleteId(null)}
+          onConfirm={() => {
+            if (pendingDeleteId !== null) {
+              void deleteGrade(pendingDeleteId);
+            }
+          }}
+        />
+      </GradebookLayout>
+    </AppLayout>
   )
 }
