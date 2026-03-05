@@ -88,3 +88,4 @@ class Event(BaseEventModel):
             return max((start_time - today).days, 0)
 
         return 0
+    

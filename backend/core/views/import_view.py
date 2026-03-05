@@ -1,28 +1,36 @@
-from rest_framework import permissions
+from rest_framework import viewsets, permissions
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from core.models import Event
+from django.http import HttpResponse
+from core.models import Event, Task
 from django.db import transaction
 
 from datetime import datetime
 
 
 class ImportView(APIView):
+    
     permission_classes = [permissions.IsAuthenticated]
 
     def post(self, request):
+
         # The file that the user uploaded
         uploaded_file = request.FILES.get("file")
 
         # No file uploaded, this is an error
         if not uploaded_file:
-            response = {"error": "No file uploaded"}
+            response = {
+                "error": "No file uploaded"
+            }
             return Response(response)
-
+        
         # The file uploaded is not a .txt file, this is an error
         elif uploaded_file.content_type != "text/plain":
-            response = {"error": "File type is not .txt"}
+            response = {
+                "error": "File type is not .txt"
+            }
             return Response(response)
+        
 
         # Reading the file
         content = uploaded_file.read().decode("utf-8")
@@ -47,15 +55,16 @@ class ImportView(APIView):
             # For example, an error here will cause no changes to be made to the DB
             # An example of an error is: invalid syntax
             with transaction.atomic():
+                
                 # Empty .txt file -> nothing to import
                 if len(lines) == 0:
                     raise ValueError("Empty file")
-
+                
                 # File must begin with "BEGIN:VCALENDAR" -> otherwise it is not the correct format
                 elif lines[0] != "BEGIN:VCALENDAR":
                     raise ValueError("File requires: BEGIN:VCALENDAR")
-
-                # File must end with "END:VCALENDAR" -> otherwise it is not the correct format
+                
+                # File must end with "END:VCALENDAR" -> otherwise it is not the correct format 
                 elif lines[-1] != "END:VCALENDAR":
                     raise ValueError("File requires: END:VCALENDAR")
 
@@ -70,34 +79,35 @@ class ImportView(APIView):
                     # This signifies that every line below it is information about the event
                     if line == "BEGIN:VEVENT":
                         # No event being worked on currently, so create a new one
-                        if current_event is None:
+                        if current_event == None:
                             # A dictionary is used here as this is what iCalendar uses
                             current_event = {}
                         # This error means that a new event was started before the previous one was ended
                         # This is an error with how the file is formatted
                         else:
                             raise ValueError(f"Event indentation error: line{count}")
+                    
                     # This signifies that all the information about the event has been provided
                     elif line == "END:VEVENT":
                         # No event being worked on currently, so ending an event is an error
                         # (It is impossible to end an event if no event has started -> nothing to end)
-                        if current_event is None:
+                        if current_event == None:
                             raise ValueError(f"No event to end: line{count}")
-
+                        
                         # If everything is correct so far, the event itself needs to be checked
                         else:
+                            
+
                             # Every event must have a name, start date/time and end date/time
                             # Everything else is optional e.g. "description", these will be checked and added seperatelty
-
+                            
                             # Summary is the name of the event, this is required
                             if "SUMMARY" in current_event:
                                 summary = current_event["SUMMARY"]
-
+    
                             else:
-                                raise ValueError(
-                                    "One or more events don't have a summary"
-                                )
-
+                                raise ValueError("One or more events don't have a summary")
+                            
                             # The start & end dates are unique as they have a timezone attached to them e.g. DTSTART;TZID=Europe/London
                             # As many timezones are supported by the application it means that the process for finding this in the
                             # file is slightly more complex, each key needs to be searched to see if it contains "DTSTART" or "DTEND",
@@ -111,7 +121,7 @@ class ImportView(APIView):
                                     # The actual date/time of the event
                                     dt_start = current_event[key]
                                     # The name of the timezone e.g. TZID=Europe/London
-                                    # dt_start_timezone = 1
+                                    dt_start_timezone = 1
                                     # Date/time has been found
                                     start_date_time_exists = True
 
@@ -119,9 +129,8 @@ class ImportView(APIView):
                             if start_date_time_exists:
                                 dt_start = dt_start
                             else:
-                                raise ValueError(
-                                    "One or more events don't have a DTSTART"
-                                )
+                                raise ValueError("One or more events don't have a DTSTART")
+                            
 
                             # Assume that the event is invalid
                             end_date_time_exists = False
@@ -131,7 +140,7 @@ class ImportView(APIView):
                                     # The actual date/time of the event
                                     dt_end = current_event[key]
                                     # The name of the timezone e.g. TZID=Europe/London
-                                    # dt_end_timezone = 1
+                                    dt_end_timezone = 1
                                     # Date/time has been found
                                     end_date_time_exists = True
 
@@ -139,45 +148,41 @@ class ImportView(APIView):
                             if end_date_time_exists:
                                 dt_end = dt_end
                             else:
-                                raise ValueError(
-                                    "One or more events don't have a DTEND"
-                                )
+                                raise ValueError("One or more events don't have a DTEND")
 
+                            
                             # UID will not be checked for because the DJango database will create an ID anyway for the event,
                             # it also serves no practical purpose for the user, essentially UID is only useful as a primary key
                             # for DB related queries etc, but the user will never see this value and it is purely used by DJango
-
+                            
                             # A description is optional, no error for it not existing
                             if "DESCRIPTION" in current_event:
                                 description = current_event["DESCRIPTION"]
                             else:
                                 description = None
+                            
                             # A location is optional, no error for it not existing
                             if "LOCATION" in current_event:
                                 location = current_event["LOCATION"]
                             else:
                                 location = None
+                            
                             # A DTSTAMP is optional, no error for it not existing,
                             # But, the applicaiton will manually create one this is because a DTSTAMP is the
                             # "last edited" date/time of an event, importing events that don't have this detail
                             # will be assumed to have been last edited at time of uploading -> datetime.now()
                             if "DTSTAMP" in current_event:
                                 dt_stamp = current_event["DTSTAMP"]
-                                print(dt_stamp)
                             else:
+                                
                                 # Current date/time
                                 current_date_time_unformatted = datetime.now()
 
                                 # This is the format that is required by iCalendar
-                                current_date_time = (
-                                    current_date_time_unformatted.strftime(
-                                        "%Y%m%dT%H%M%S"
-                                    )
-                                )
-                                print(current_date_time)
+                                current_date_time = current_date_time_unformatted.strftime("%Y%m%dT%H%M%S")
 
-                                # dt_stamp = current_date_time
-
+                                dt_stamp = current_date_time
+                            
                             # A location is optional, no error for it not existing
                             # This is because not all events repeat
                             # In the iCalendar format, if an event is a one time event, it will not have an RRule,
@@ -192,6 +197,7 @@ class ImportView(APIView):
                             # At this stage all the details about the event have been collected, and the required details,
                             # are definitely provided also
 
+                            
                             # In order to not have duplicate events (this may occur if the user continously imports the same file),
                             # it needs to be checked if this event already exists,
                             # as event IDS, (UID) are useless for this due to them being managed by DJango,
