@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useState, type FormEvent } from "react"
 
 import useCategories from "../hooks/useCategories"
 
@@ -85,7 +85,7 @@ export default function CreateGradeModal(props: Props) {
 
   /** Update an existing grade via the API. */
 
-  async function submit(e: React.FormEvent) {
+  async function submit(e: FormEvent) {
     e.preventDefault()
     setError(null)
     if (typeof score !== "number" || typeof total !== "number") {

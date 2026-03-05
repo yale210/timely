@@ -1,6 +1,5 @@
-export * from "./Notification/NotificationDetail";
-export { NotificationDetail as default } from "./Notification/NotificationDetail";
-import type React from "react";
+
+
 import { useEffect, useState } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { ArrowLeftIcon, EnvelopeIcon, EnvelopeOpenIcon, TrashIcon } from "@heroicons/react/24/outline";
@@ -12,7 +11,7 @@ import ConfirmationModal from "../components/modals/ConfirmationModal";
 /**
  * Full-page view of a single notification with read toggle and delete actions.
  */
-export const NotificationDetail: React.FC = () => {
+export default function NotificationDetail() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { markRead, markUnread, deleteNotification, fetchNotifications } = useNotificationContext();

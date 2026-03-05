@@ -37,16 +37,10 @@ vi.mock("../../src/components/EventForm", () => ({
 }));
 
 // Mock ConfirmationModal
-vi.mock("../../src/components/ConfirmationModal", () => ({
-  default: ({ isOpen, onClose, onConfirm, title }: { isOpen: boolean; onClose: () => void; onConfirm: () => void; title: string }) =>
-    isOpen ? (
-      <div data-testid="confirmation-modal">
-        <h2>{title}</h2>
-        <button onClick={onConfirm}>Confirm Delete</button>
-        <button onClick={onClose}>Cancel Delete</button>
-      </div>
-    ) : null,
-}));
+vi.mock("../../src/components/modals/ConfirmationModal", async () => {
+  const shim = await import("../utils/ConfirmationModalShim");
+  return { default: shim.default };
+});
 
 describe("EventSidebar", () => {
   const mockCategories: Category[] = [{ id: 1, text: "Work" }];

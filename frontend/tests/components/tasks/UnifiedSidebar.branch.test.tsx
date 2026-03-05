@@ -54,10 +54,10 @@ vi.mock("@/components/modals/ScopeActionModal", () => ({
   default: (props: any) => <div data-testid="scope-action-modal" {...props} />,
 }));
 
-vi.mock("@/components/modals/ConfirmationModal", () => ({
-  __esModule: true,
-  default: (props: any) => <div data-testid="confirmation-modal" {...props} />,
-}));
+vi.mock("@/components/modals/ConfirmationModal", async () => {
+  const shim = await import("../../../tests/utils/ConfirmationModalShim");
+  return { __esModule: true, default: shim.default };
+});
 
 describe("UnifiedSidebar branch coverage targets", () => {
   beforeEach(() => {

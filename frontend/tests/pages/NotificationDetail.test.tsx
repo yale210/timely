@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from "vitest"
 import { render, screen, waitFor, fireEvent } from "@testing-library/react"
 import { MemoryRouter, Routes, Route } from "react-router-dom"
-import { NotificationDetail } from "@/pages/NotificationDetail"
+import NotificationDetail from "@/pages/NotificationDetail"
 import api from "@/services/api"
 import { useNotificationContext } from "@/context/NotificationContext"
 import type { NotificationContextValue } from "@/context/NotificationContext"

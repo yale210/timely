@@ -28,7 +28,10 @@ vi.mock("@/components/events/EventForm", () => ({
 
 vi.mock("@/components/modals/RecurrenceScopeModal", () => ({ default: () => <div data-testid="recurrence-modal" /> }));
 vi.mock("@/components/modals/ScopeActionModal", () => ({ default: () => <div data-testid="scope-action-modal" /> }));
-vi.mock("@/components/modals/ConfirmationModal", () => ({ default: () => <div data-testid="confirmation-modal" /> }));
+vi.mock("@/components/modals/ConfirmationModal", async () => {
+  const shim = await import("../../../tests/utils/ConfirmationModalShim");
+  return { default: shim.default };
+});
 
 import UnifiedSidebar from "@/components/tasks/UnifiedSidebar";
 
