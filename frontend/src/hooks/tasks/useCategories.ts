@@ -15,12 +15,14 @@ export default function useCategories() {
   const [categories, setCategories] = useState<Category[]>([])
   const [loading, setLoading] = useState(true)
 
-  useEffect(() => {
+   useEffect(() => {
     let mounted = true
     async function load() {
       try {
         const data = await getCategories()
         if (mounted) setCategories(data)
+      } catch (error) {
+        console.error("Failed to load categories:", error)
       } finally {
         if (mounted) setLoading(false)
       }

@@ -7,6 +7,7 @@ import moment from "moment";
 import CalendarPage from "@/pages/Calendar";
 import * as taskService from "@/services/taskService";
 import * as eventService from "@/services/eventService";
+import * as schedulerService from "@/services/schedulerService";
 import type {
   Task,
   Event,
@@ -21,6 +22,7 @@ import type {
 // ----------------------
 vi.mock("@/services/taskService");
 vi.mock("@/services/eventService");
+vi.mock("@/services/schedulerService");
 
 // Mock react-big-calendar so we don't depend on rbc DOM internals.
 // We provide 2 buttons:
@@ -187,7 +189,7 @@ const mockEvents: Event[] = [
 ];
 
 const mockCategories: Category[] = [{ id: 1, text: "Work" }];
-const eventEntryTestId = `mock-event-event-${mockEvents[0].id}-${mockEvents[0].start_time}`;
+const eventEntryTestId = `mock-event-${mockEvents[0].instance_id ?? `event-${mockEvents[0].id}-${mockEvents[0].start_time}`}`;
 
 // Helper render
 const renderPage = () =>
@@ -423,5 +425,87 @@ describe("CalendarPage (lean tests)", () => {
         expect(screen.queryByTestId("mock-sidebar")).toBeNull();
       });
     });
+  });
+
+  it("handles event submission (create and update)", async () => {
+    vi.mocked(eventService.createEvent).mockResolvedValue({ id: 99, title: "New Event" } as Event);
+    vi.mocked(eventService.updateEvent).mockResolvedValue({ id: 10, title: "Updated Event" } as Event);
+    vi.mocked(eventService.getEvents).mockResolvedValue([{ id: 10, title: "Existing Event", start_time: "2026-01-01", end_time: "2026-01-01" } as Event]);
+
+    render(
+      <MemoryRouter>
+        <NotificationProvider>
+          <CalendarPage />
+        </NotificationProvider>
+      </MemoryRouter>
+    );
+
+    // Create Event
+    await waitFor(() => expect(sidebarProps).not.toBeNull());
+    sidebarProps!.onSubmitEvent({ title: "New Event" } as EventSubmission);
+    expect(eventService.createEvent).toHaveBeenCalled();
+
+  // Update Event: first click it to select it
+  const existingEvent = { id: 10, title: "Existing Event", start_time: "2026-01-01", end_time: "2026-01-01" } as Event;
+  const existingEventTestId = `mock-event-${existingEvent.instance_id ?? `event-${existingEvent.id}-${existingEvent.start_time}`}`;
+  const eventBtn = await screen.findByTestId(existingEventTestId);
+  fireEvent.click(eventBtn);
+
+  sidebarProps!.onSubmitEvent({ title: "Updated Event" } as EventSubmission);
+  expect(eventService.updateEvent).toHaveBeenCalledWith(10, { title: "Updated Event" }, undefined);
+  });
+
+  it("handles scheduling and unscheduling tasks", async () => {
+    vi.mocked(schedulerService.scheduleTasks).mockResolvedValue({
+      start_date: "2026-02-24",
+      scheduled_count: 1,
+      failed_count: 0,
+      results: [],
+    });
+    vi.mocked(schedulerService.unscheduleTasks).mockResolvedValue({
+      unscheduled_count: 1,
+    });
+    vi.mocked(eventService.getEvents).mockResolvedValue([] as Event[]);
+
+    render(
+      <MemoryRouter>
+        <NotificationProvider>
+          <CalendarPage />
+        </NotificationProvider>
+      </MemoryRouter>
+    );
+
+    const scheduleBtn = screen.getByRole("button", { name: /auto_awesome\s*Schedule Tasks/i });
+    fireEvent.click(scheduleBtn);
+    await waitFor(() => expect(vi.mocked(schedulerService.scheduleTasks)).toHaveBeenCalled());
+
+  const unscheduleBtn = screen.getByRole("button", { name: /Unschedule Tasks/i });
+    // Wait for the scheduling to finish and the button to be enabled again
+    await waitFor(() => expect(unscheduleBtn).not.toBeDisabled());
+    
+    fireEvent.click(unscheduleBtn);
+    await waitFor(() => expect(vi.mocked(schedulerService.unscheduleTasks)).toHaveBeenCalled());
+  });
+
+  it("handles selecting an event from the calendar (event kind)", async () => {
+    const mockEvents = [{ id: 10, title: "Meeting", start_time: new Date().toISOString(), end_time: new Date().toISOString() } as Event];
+    vi.mocked(eventService.getEvents).mockResolvedValue(mockEvents);
+
+    render(
+      <MemoryRouter>
+        <NotificationProvider>
+          <CalendarPage />
+        </NotificationProvider>
+      </MemoryRouter>
+    );
+
+  // Wait for event to render
+  const evt = mockEvents[0];
+  const testId = `mock-event-${evt.instance_id ?? `event-${evt.id}-${evt.start_time}`}`;
+  const eventBtn = await screen.findByTestId(testId);
+  fireEvent.click(eventBtn);
+
+    expect(sidebarProps?.isOpen).toBe(true);
+    expect(sidebarProps?.initialData?.id).toBe(10);
   });
 });
