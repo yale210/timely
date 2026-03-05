@@ -1,6 +1,6 @@
 import api from "@/services/api";
 
-import { type Task, type TaskSubmission } from "@/types";
+import { type Category, type Task, type TaskSubmission } from "@/types";
 
 /**
  * Retrieves a list of tasks from the server, optionally filtered by the provided criteria.
@@ -40,4 +40,13 @@ export const updateTask = async (id: number, data: TaskSubmission): Promise<Task
  */
 export const deleteTask = async (id: number): Promise<void> => {
   await api.delete(`/api/tasks/${id}/`);
+};
+
+/**
+ * Retrieves categories for the current user.
+ * Kept here for legacy callers that expect taskService to expose categories.
+ */
+export const getCategories = async (): Promise<Category[]> => {
+  const response = await api.get<Category[]>("/api/categories/");
+  return response.data;
 };
