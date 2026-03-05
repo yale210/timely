@@ -177,7 +177,7 @@ const updateTaskCategories = useCallback(
       task.id === id ? { ...task, categories: nextCategoryObjects } : task
     )));
     setSelectedTask((prev) => (
-      prev && prev.id === id ? { ...prev, categories: nextCategoryObjects } : prev
+      prev?.id === id ? { ...prev, categories: nextCategoryObjects } : prev
     ));
     try {
       await taskService.updateTask(id, { categories: nextCategoryIds });

@@ -37,6 +37,10 @@ interface UnifiedSidebarProps {
  * @param props.onClose - The callback function to close the sidebar.
  * @param props.initialMode - The initial mode of the sidebar (task or event).
  * @param props.categories - The list of available categories.
+ * @param props.onCreateCategory - Callback to create a new category.
+ * @param props.onUpdateCategory - Callback to update an existing category.
+ * @param props.onDeleteCategory - Callback to delete a category.
+ * @param props.onTaskCategoryChange - Optional callback fired on task category changes.
  * @param props.initialData - The initial data for the task or event being edited.
  * @param props.onSubmitTask - The callback function to handle task submission.
  * @param props.onSubmitEvent - The callback function to handle event submission.

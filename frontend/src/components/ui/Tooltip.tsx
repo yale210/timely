@@ -13,7 +13,6 @@ const Tooltip = ({ content, children }: TooltipProps) => {
 
   useEffect(() => {
     if (!isOpen) {
-      setPosition(null);
       return;
     }
     if (!triggerRef.current || !tooltipRef.current) {
@@ -42,9 +41,15 @@ const Tooltip = ({ content, children }: TooltipProps) => {
       ref={triggerRef}
       className="relative inline-flex"
       onMouseEnter={() => setIsOpen(true)}
-      onMouseLeave={() => setIsOpen(false)}
+      onMouseLeave={() => {
+        setIsOpen(false);
+        setPosition(null);
+      }}
       onFocus={() => setIsOpen(true)}
-      onBlur={() => setIsOpen(false)}
+      onBlur={() => {
+        setIsOpen(false);
+        setPosition(null);
+      }}
     >
       {children}
       {isOpen && (

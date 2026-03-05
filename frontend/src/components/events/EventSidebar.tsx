@@ -26,6 +26,9 @@ interface EventSidebarProps {
  * @param props.isOpen - Indicates whether the sidebar is open.
  * @param props.onClose - The callback function to close the sidebar.
  * @param props.categories - The list of available categories.
+ * @param props.onCreateCategory - Callback to create a new category.
+ * @param props.onUpdateCategory - Callback to update an existing category.
+ * @param props.onDeleteCategory - Callback to delete a category.
  * @param props.onSubmit - The callback function to handle event submission.
  * @param props.onDelete - An optional callback function to handle event deletion.
  * @param props.onRevertToSeries - Optional callback to revert an overridden instance.

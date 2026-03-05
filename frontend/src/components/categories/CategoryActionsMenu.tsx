@@ -3,6 +3,19 @@ import { createPortal } from "react-dom";
 import type { Category } from "@/types";
 import { Tooltip } from "@/components";
 
+/**
+ * Props for the category actions menu.
+ * @param root0 - Component props.
+ * @param root0.openMenuId - The active category id for the menu.
+ * @param root0.menuPosition - The screen position for the menu.
+ * @param root0.menuRef - Ref for the menu container.
+ * @param root0.menuCategory - The active category data.
+ * @param root0.presetColours - Available preset colours.
+ * @param root0.onDelete - Handler to delete a category.
+ * @param root0.onUpdate - Handler to update a category.
+ * @param root0.onClose - Handler to close the menu.
+ * @param root0.onTogglePicker - Handler to open/close the colour picker.
+ */
 interface CategoryActionsMenuProps {
   openMenuId: number | null;
   menuPosition: { top: number; left: number } | null;
@@ -15,6 +28,19 @@ interface CategoryActionsMenuProps {
   onTogglePicker: (rect: DOMRect) => void;
 }
 
+/**
+ * Renders the actions menu for a category row.
+ * @param root0 - Component props.
+ * @param root0.openMenuId - The active category id for the menu.
+ * @param root0.menuPosition - The screen position for the menu.
+ * @param root0.menuRef - Ref for the menu container.
+ * @param root0.menuCategory - The active category data.
+ * @param root0.presetColours - Available preset colours.
+ * @param root0.onDelete - Handler to delete a category.
+ * @param root0.onUpdate - Handler to update a category.
+ * @param root0.onClose - Handler to close the menu.
+ * @param root0.onTogglePicker - Handler to open/close the colour picker.
+ */
 export const CategoryActionsMenu = ({
   openMenuId,
   menuPosition,

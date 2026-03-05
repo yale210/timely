@@ -128,6 +128,16 @@ export default tseslint.config(
     },
   },
 
+  // 7. Relax unsafe rules in tests/mocks
+  {
+    files: ["**/*.test.{ts,tsx}", "**/tests/**/*.{ts,tsx}"],
+    rules: {
+      "@typescript-eslint/no-unsafe-call": "off",
+      "@typescript-eslint/no-unsafe-member-access": "off",
+      "@typescript-eslint/no-unsafe-assignment": "off",
+    },
+  },
+
   // 7. Disable type-checking for JS files
   {
     files: ["**/*.js", "**/*.mjs", "**/*.cjs"],

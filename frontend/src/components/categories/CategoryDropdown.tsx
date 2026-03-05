@@ -2,6 +2,27 @@ import { createPortal } from "react-dom";
 import type { Category } from "@/types";
 import { hexToRgba } from "@/utils/colorUtils";
 
+/**
+ * Props for the category dropdown list.
+ * @param root0 - Component props.
+ * @param root0.isOpen - Whether the dropdown is visible.
+ * @param root0.dropdownPosition - The screen position and width.
+ * @param root0.dropdownMaxHeight - Max height for the list.
+ * @param root0.filtered - Filtered categories to display.
+ * @param root0.selectedIds - Selected category ids.
+ * @param root0.defaultSwatch - Fallback colour swatch.
+ * @param root0.normalizedQuery - Lowercased search query.
+ * @param root0.query - Raw search input.
+ * @param root0.canCreate - Whether a new category can be created.
+ * @param root0.maxCategoryLength - Maximum allowed category length.
+ * @param root0.isCreating - Whether a create request is pending.
+ * @param root0.error - Current error message.
+ * @param root0.optionBaseClass - Base class for options.
+ * @param root0.addBaseClass - Base class for create option.
+ * @param root0.onSelectOption - Selects a category.
+ * @param root0.onCreate - Creates a new category.
+ * @param root0.onMenuOpen - Opens the actions menu.
+ */
 interface CategoryDropdownProps {
   isOpen: boolean;
   dropdownPosition: { top: number; left: number; width: number } | null;
@@ -22,6 +43,27 @@ interface CategoryDropdownProps {
   onMenuOpen: (id: number, target: HTMLButtonElement) => void;
 }
 
+/**
+ * Renders the dropdown list of categories with actions.
+ * @param root0 - Component props.
+ * @param root0.isOpen - Whether the dropdown is visible.
+ * @param root0.dropdownPosition - The screen position and width.
+ * @param root0.dropdownMaxHeight - Max height for the list.
+ * @param root0.filtered - Filtered categories to display.
+ * @param root0.selectedIds - Selected category ids.
+ * @param root0.defaultSwatch - Fallback colour swatch.
+ * @param root0.normalizedQuery - Lowercased search query.
+ * @param root0.query - Raw search input.
+ * @param root0.canCreate - Whether a new category can be created.
+ * @param root0.maxCategoryLength - Maximum allowed category length.
+ * @param root0.isCreating - Whether a create request is pending.
+ * @param root0.error - Current error message.
+ * @param root0.optionBaseClass - Base class for options.
+ * @param root0.addBaseClass - Base class for create option.
+ * @param root0.onSelectOption - Selects a category.
+ * @param root0.onCreate - Creates a new category.
+ * @param root0.onMenuOpen - Opens the actions menu.
+ */
 export const CategoryDropdown = ({
   isOpen,
   dropdownPosition,
@@ -113,7 +155,7 @@ export const CategoryDropdown = ({
             }}
             className={`flex w-full items-center justify-between px-3 py-2 text-sm font-semibold ${addBaseClass}`}
           >
-            <span>Add new category "{query.trim()}"</span>
+            <span>Add new category &quot;{query.trim()}&quot;</span>
             <span className="material-icons text-base">add</span>
           </button>
         )}

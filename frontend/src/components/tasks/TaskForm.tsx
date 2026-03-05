@@ -48,6 +48,10 @@ interface TaskFormProps {
  * @param props - The properties for the TaskForm component.
  * @param props.initialData - The initial data to populate the form with.
  * @param props.categories - The list of available categories.
+ * @param props.onCreateCategory - Callback to create a new category.
+ * @param props.onUpdateCategory - Callback to update an existing category.
+ * @param props.onDeleteCategory - Callback to delete a category.
+ * @param props.onCategoryChange - Optional callback fired on category changes.
  * @param props.onSubmit - The callback function to handle form submission.
  * @param props.onCancel - The callback function to handle form cancellation.
  * @param props.onDataChange - An optional callback function to handle data changes.

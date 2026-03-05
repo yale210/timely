@@ -23,6 +23,10 @@ interface TaskSidebarProps {
  * @param props.isOpen - Indicates whether the sidebar is open.
  * @param props.onClose - The callback function to close the sidebar.
  * @param props.categories - The list of available categories.
+ * @param props.onCreateCategory - Callback to create a new category.
+ * @param props.onUpdateCategory - Callback to update an existing category.
+ * @param props.onDeleteCategory - Callback to delete a category.
+ * @param props.onCategoryChange - Optional callback fired on category changes.
  * @param props.onSubmit - The callback function to handle task submission.
  * @param props.onDelete - An optional callback function to handle task deletion.
  * @param props.initialData - The initial data for the task being edited.

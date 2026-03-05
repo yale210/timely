@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import moment from "moment";
 import * as eventService from "@/services/eventService";
-import * as taskService from "@/services/taskService";
 import * as categoryService from "@/services/categoryService";
 import {
   type Category,

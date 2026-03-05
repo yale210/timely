@@ -1,12 +1,26 @@
 import type { Category } from "@/types";
 import { hexToRgba } from "@/utils/colorUtils";
 
+/**
+ * Props for the selected category chip list.
+ * @param root0 - Component props.
+ * @param root0.selectedCategories - Selected categories to render.
+ * @param root0.defaultSwatch - Fallback colour swatch.
+ * @param root0.onToggle - Handler to toggle a category.
+ */
 interface SelectedCategoryChipsProps {
   selectedCategories: Category[];
   defaultSwatch: string;
   onToggle: (id: number) => void;
 }
 
+/**
+ * Renders selected categories as removable chips.
+ * @param root0 - Component props.
+ * @param root0.selectedCategories - Selected categories to render.
+ * @param root0.defaultSwatch - Fallback colour swatch.
+ * @param root0.onToggle - Handler to toggle a category.
+ */
 export const SelectedCategoryChips = ({
   selectedCategories,
   defaultSwatch,

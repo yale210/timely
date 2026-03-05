@@ -2,6 +2,20 @@ import { createPortal } from "react-dom";
 import type { RefObject } from "react";
 import { HexColorPicker } from "react-colorful";
 
+/**
+ * Props for the category colour picker.
+ * @param root0 - Component props.
+ * @param root0.isOpen - Whether the picker is visible.
+ * @param root0.position - The screen position for the picker.
+ * @param root0.pickerRef - Ref for the picker container.
+ * @param root0.colourInput - The current colour input value.
+ * @param root0.colourError - Current validation error.
+ * @param root0.currentColour - The colour shown in the picker.
+ * @param root0.onColourInputChange - Updates the colour input.
+ * @param root0.onColourErrorChange - Updates the colour error.
+ * @param root0.onCommitInput - Validates and commits the input.
+ * @param root0.onSelect - Confirms the selected colour.
+ */
 interface CategoryColourPickerProps {
   isOpen: boolean;
   position: { top: number; left: number } | null;
@@ -15,6 +29,20 @@ interface CategoryColourPickerProps {
   onSelect: () => void;
 }
 
+/**
+ * Renders the custom colour picker popover.
+ * @param root0 - Component props.
+ * @param root0.isOpen - Whether the picker is visible.
+ * @param root0.position - The screen position for the picker.
+ * @param root0.pickerRef - Ref for the picker container.
+ * @param root0.colourInput - The current colour input value.
+ * @param root0.colourError - Current validation error.
+ * @param root0.currentColour - The colour shown in the picker.
+ * @param root0.onColourInputChange - Updates the colour input.
+ * @param root0.onColourErrorChange - Updates the colour error.
+ * @param root0.onCommitInput - Validates and commits the input.
+ * @param root0.onSelect - Confirms the selected colour.
+ */
 export const CategoryColourPicker = ({
   isOpen,
   position,
@@ -34,7 +62,7 @@ export const CategoryColourPicker = ({
   return createPortal(
     <div
       ref={pickerRef}
-      className="fixed z-[1000] w-64 rounded-lg border border-gray-200 bg-white shadow-lg"
+      className="fixed z-1000 w-64 rounded-lg border border-gray-200 bg-white shadow-lg"
       style={{ top: position.top, left: position.left }}
       onMouseDown={(event) => event.stopPropagation()}
     >

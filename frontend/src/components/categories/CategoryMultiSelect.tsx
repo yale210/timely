@@ -196,7 +196,7 @@ const CategoryMultiSelect = ({
       return;
     }
     const handleOutsideClick = (event: MouseEvent) => {
-      if (menuRef.current && menuRef.current.contains(event.target as Node)) {
+      if (menuRef.current?.contains(event.target as Node)) {
         return;
       }
       setOpenMenuId(null);
@@ -207,7 +207,7 @@ const CategoryMultiSelect = ({
   }, [openMenuId]);
 
   useEffect(() => {
-    if (!openMenuId || !menuRef.current || !menuPosition) {
+    if (openMenuId === null || !menuRef.current || !menuPosition) {
       return;
     }
     const raf = window.requestAnimationFrame(() => {
@@ -274,8 +274,8 @@ const CategoryMultiSelect = ({
     }
     const handleOutsideClick = (event: MouseEvent) => {
       const target = event.target as Node;
-      if (inputRef.current && inputRef.current.contains(target)) return;
-      if (menuRef.current && menuRef.current.contains(target)) return;
+      if (inputRef.current?.contains(target)) return;
+      if (menuRef.current?.contains(target)) return;
       setIsOpen(false);
     };
     const handleScrollOrResize = () => {
@@ -301,10 +301,8 @@ const CategoryMultiSelect = ({
   };
 
   const rgbToHex = (value: string): string | null => {
-    const match = value
-      .trim()
-      .toLowerCase()
-      .match(/^rgb\\(\\s*(\\d{1,3})\\s*,\\s*(\\d{1,3})\\s*,\\s*(\\d{1,3})\\s*\\)$/);
+    const match = /^rgb\\(\\s*(\\d{1,3})\\s*,\\s*(\\d{1,3})\\s*,\\s*(\\d{1,3})\\s*\\)$/
+      .exec(value.trim().toLowerCase());
     if (!match) return null;
     const [r, g, b] = match.slice(1).map((v) => Math.min(255, Math.max(0, Number(v))));
     const toHex = (n: number) => n.toString(16).padStart(2, "0");
@@ -459,7 +457,7 @@ const CategoryMultiSelect = ({
         pickerRef={pickerRef}
         colourInput={colourInput}
         colourError={colourError}
-        currentColour={colourInput || menuCategory?.colour || DEFAULT_SWATCH}
+        currentColour={colourInput.length > 0 ? colourInput : menuCategory?.colour ?? DEFAULT_SWATCH}
         onColourInputChange={setColourInput}
         onColourErrorChange={setColourError}
         onCommitInput={commitColourInput}
