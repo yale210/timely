@@ -1,6 +1,6 @@
 import "react-big-calendar/lib/css/react-big-calendar.css";
 import moment from "moment";
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, type CSSProperties } from "react";
 import { Calendar, momentLocalizer, type View, Views } from "react-big-calendar";
 import { UnifiedSidebar } from "@/components/index";
 import AppLayout from "@/layouts/AppLayout";
@@ -9,6 +9,7 @@ import * as categoryService from "@/services/categoryService";
 import * as eventService from "@/services/eventService";
 import * as schedulerService from "@/services/schedulerService";
 import type { Task, Category, TaskSubmission, Event, EventSubmission, EventMutationContext} from "@/types";
+import { getOverrideColour, hexToRgba } from "@/utils/colorUtils";
 
 const localizer = momentLocalizer(moment);
 /**
@@ -29,6 +30,7 @@ interface CalendarEntry {
   oneGo?: boolean;
   scheduleIndex?: number;
   eventData?: Event;
+  categories?: Category[];
 }
 
 const getCalendarWindow = (
@@ -354,6 +356,7 @@ const CalendarPage = ({ showNavbar = true, useLayout = true }: CalendarPageProps
         split: allocations.length > 1,
         oneGo: allocations.length === 1,
         scheduleIndex: scheduleOrder[task.id],
+        categories: task.categories,
       }));
     }),
     ...events.map((event) => ({
@@ -501,12 +504,24 @@ const CalendarPage = ({ showNavbar = true, useLayout = true }: CalendarPageProps
               ]
               .filter(Boolean)
               .join(" ");
-              const style = event.kind === "task" && typeof event.scheduleIndex === "number"
-                ? { animationDelay: `${event.scheduleIndex * 120}ms` }
-                : undefined;
+              const overrideColour =
+                event.kind === "task"
+                  ? getOverrideColour(event.categories)
+                  : getOverrideColour(event.eventData?.categories);
+
+              const style: CSSProperties = {};
+              if (event.kind === "task" && typeof event.scheduleIndex === "number") {
+                style.animationDelay = `${event.scheduleIndex * 120}ms`;
+              }
+              if (overrideColour) {
+                style.backgroundColor = hexToRgba(overrideColour, 0.5);
+                style.borderLeft = `4px solid ${overrideColour}`;
+                style.color = "#000000";
+              }
+
               return { className, style };
             }}
-          />
+  />
         </div>
       </main>
 

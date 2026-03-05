@@ -46,7 +46,7 @@ interface TaskListActions {
   submitTask: (data: TaskSubmission) => Promise<void>;
   deleteTask: (id: number) => Promise<void>;
   createCategory: (text: string) => Promise<Category>;
-  updateCategory: (id: number, patch: { colour?: string | null }) => Promise<Category>;
+  updateCategory: (id: number, patch: { colour?: string | null; colour_override?: boolean }) => Promise<Category>;
   deleteCategory: (id: number) => Promise<void>;
   refresh: () => Promise<void>;
   formatDayLabel: (dateStr: string) => string;
@@ -183,7 +183,7 @@ const createCategory = useCallback(async (text: string) => {
   return created;
 }, []);
 
-const updateCategory = useCallback(async (id: number, patch: { colour?: string | null }) => {
+const updateCategory = useCallback(async (id: number, patch: { colour?: string | null; colour_override?: boolean }) => {
   const updated = await categoryService.updateCategory(id, patch);
   setCategories((prev) => prev.map((category) => (
     category.id === id ? { ...category, ...updated } : category

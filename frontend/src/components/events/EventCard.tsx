@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { type Event } from "@/types";
 import moment from "moment";
+import { getOverrideColour, hexToRgba } from "@/utils/colorUtils";
 
 interface EventCardProps {
   event: Event;
@@ -27,6 +28,7 @@ const EventCard = ({ event, onClick }: EventCardProps) => {
       minute: "2-digit",
     });
   };
+  const overrideColour = getOverrideColour(event.categories);
 
   return (
     <div
@@ -42,7 +44,10 @@ const EventCard = ({ event, onClick }: EventCardProps) => {
     >
       <div className="flex items-center justify-between">
         <div className="flex items-center flex-1 min-w-0">
-          <div className="w-1 h-10 bg-orange-500 rounded-full mr-4" />
+          <div
+            className="w-1 h-10 rounded-full mr-4"
+            style={{ backgroundColor: overrideColour ?? "#f97316" }}
+          />
           <div className="flex flex-col flex-1 min-w-0">
             <div className="flex items-center justify-between">
               <span
@@ -80,7 +85,19 @@ const EventCard = ({ event, onClick }: EventCardProps) => {
                   {event.categories.map((cat) => (
                     <span
                       key={cat.id}
-                      className="px-2 py-0.5 rounded bg-orange-50 text-orange-600 font-medium border border-orange-100 whitespace-nowrap"
+                      className={`px-2 py-0.5 rounded font-medium border whitespace-nowrap ${
+                        overrideColour
+                          ? "text-black"
+                          : "bg-orange-50 text-orange-600 border-orange-100"
+                      }`}
+                      style={
+                        overrideColour
+                          ? {
+                              borderColor: overrideColour,
+                              backgroundColor: hexToRgba(overrideColour, 0.12),
+                            }
+                          : undefined
+                      }
                     >
                       {cat.text}
                     </span>

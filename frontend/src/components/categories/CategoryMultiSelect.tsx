@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState, type KeyboardEvent } from "react";
 import { createPortal } from "react-dom";
 import type { Category } from "@/types";
+import { hexToRgba } from "@/utils/colorUtils";
 
 type CategoryVariant = "task" | "event";
 
@@ -9,7 +10,7 @@ interface CategoryMultiSelectProps {
   selectedIds: number[];
   onChange: (ids: number[]) => void;
   onCreateCategory: (text: string) => Promise<Category>;
-  onUpdateCategory: (id: number, patch: { colour?: string | null }) => Promise<Category>;
+  onUpdateCategory: (id: number, patch: { colour?: string | null; colour_override?: boolean }) => Promise<Category>;
   onDeleteCategory: (id: number) => Promise<void>;
   variant: CategoryVariant;
 }
@@ -58,14 +59,6 @@ const VARIANT_STYLES: Record<CategoryVariant, {
 };
 
 const normalise = (value: string) => value.trim().toLowerCase();
-const hexToRgba = (hex: string, alpha: number): string => {
-  const normalized = hex.replace("#", "");
-  if (normalized.length !== 6) return `rgba(0,0,0,${alpha})`;
-  const r = parseInt(normalized.slice(0, 2), 16);
-  const g = parseInt(normalized.slice(2, 4), 16);
-  const b = parseInt(normalized.slice(4, 6), 16);
-  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
-};
 
 const CategoryMultiSelect = ({
   categories,
@@ -192,6 +185,10 @@ const CategoryMultiSelect = ({
     window.addEventListener("mousedown", handleOutsideClick);
     return () => window.removeEventListener("mousedown", handleOutsideClick);
   }, [openMenuId]);
+
+  const menuCategory = openMenuId
+    ? categories.find((category) => category.id === openMenuId)
+    : undefined;
 
   return (
     <div>
@@ -383,6 +380,18 @@ const CategoryMultiSelect = ({
                 />
               ))}
             </div>
+            <div className="my-1 border-t border-gray-200" />
+            <label className="flex items-center gap-2 px-3 py-2 text-xs text-gray-700">
+              <input
+                type="checkbox"
+                checked={Boolean(menuCategory?.colour_override)}
+                onChange={(event) => {
+                  void onUpdateCategory(openMenuId, { colour_override: event.target.checked });
+                }}
+                className="h-4 w-4 rounded border-gray-300 text-gray-700 focus:ring-2 focus:ring-gray-400"
+              />
+              Colour override
+            </label>
           </div>,
           document.body,
         )

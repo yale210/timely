@@ -22,7 +22,7 @@ export const createCategory = async (text: string): Promise<Category> => {
  */
 export const updateCategory = async (
   id: number,
-  patch: Partial<Pick<Category, "text" | "colour">>,
+  patch: Partial<Pick<Category, "text" | "colour" | "colour_override">>,
 ): Promise<Category> => {
   const response = await api.patch<Category>(`/api/categories/${id}/`, patch);
   return response.data;

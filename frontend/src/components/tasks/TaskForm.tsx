@@ -35,7 +35,7 @@ interface TaskFormProps {
   initialData?: Task;
   categories: Category[];
   onCreateCategory: (text: string) => Promise<Category>;
-  onUpdateCategory: (id: number, patch: { colour?: string | null }) => Promise<Category>;
+  onUpdateCategory: (id: number, patch: { colour?: string | null; colour_override?: boolean }) => Promise<Category>;
   onDeleteCategory: (id: number) => Promise<void>;
   onSubmit: (data: TaskSubmission) => void;
   onCancel: () => void;
