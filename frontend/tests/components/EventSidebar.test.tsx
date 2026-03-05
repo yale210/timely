@@ -1,107 +1,190 @@
-import { render, screen } from "@testing-library/react";
-import { vi, describe, it, expect, beforeEach } from "vitest";
-import type React from "react";
-import EventSidebar from "@/components/EventSidebar";
-import type { Category, Event } from "@/types";
+import { describe, it, expect, vi } from "vitest";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 
-// Mock Headless UI to avoid Transition issues in JSDOM
-vi.mock("@headlessui/react", async () => {
-  const actual = await vi.importActual("@headlessui/react");
-  return {
-    ...actual,
-    Transition: ({ children, show }: { children: React.ReactNode; show: boolean }) => (show ? children : null),
-    TransitionChild: ({ children }: { children: React.ReactNode }) => children,
-    Dialog: ({ children, onClose }: { children: React.ReactNode; onClose: () => void }) => (
-      <div data-testid="dialog">
-        {children}
-        {/* Simulation of clicking outside or technical close */}
-        <button data-testid="dialog-close-trigger" onClick={onClose}>
-          Trigger onClose
-        </button>
-      </div>
-    ),
-    DialogPanel: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
-    DialogTitle: ({ children }: { children: React.ReactNode }) => <h2>{children}</h2>,
-  };
-});
+import EventSidebar from "@/components/events/EventSidebar";
+import type { Event } from "@/types";
 
-// Mock EventForm
-vi.mock("../../src/components/EventForm", () => ({
-  default: ({ onSubmit, onCancel, initialData }: { onSubmit: (data: unknown) => void; onCancel: () => void; initialData?: Event }) => (
-    <div data-testid="event-form">
-      <span>{initialData ? "Edit Form" : "Add Form"}</span>
-      <button onClick={() => onSubmit({ title: "New Event" })}>Submit Form</button>
-      <button onClick={onCancel}>Cancel Form</button>
-    </div>
-  ),
-}));
+const recurringEvent: Event = {
+  id: 7,
+  title: "Recurring Lecture",
+  description: "Weekly recurring event",
+  location: "Room A",
+  start_time: "2026-02-20T10:00:00.000Z",
+  end_time: "2026-02-20T11:00:00.000Z",
+  recurrence_interval: "weekly",
+  recurrence_end: "2026-05-01",
+  categories: [],
+  reminders: [],
+  original_start_time: "2026-02-20T10:00:00.000Z",
+};
 
-// Mock ConfirmationModal
-vi.mock("../../src/components/modals/ConfirmationModal", async () => {
-  const shim = await import("../utils/ConfirmationModalShim");
-  return { default: shim.default };
-});
-
-describe("EventSidebar", () => {
-  const mockCategories: Category[] = [{ id: 1, text: "Work" }];
-
-  const mockOnClose = vi.fn();
-  const mockOnSubmit = vi.fn();
-  const mockOnDelete = vi.fn();
-
-  beforeEach(() => {
-    vi.clearAllMocks();
-  });
-
-  it("renders nothing when isOpen is false", () => {
+describe("EventSidebar recurrence scope", () => {
+  it("shows modified-instance badge for override events", () => {
     render(
-      <EventSidebar isOpen={false} onClose={mockOnClose} categories={mockCategories} onSubmit={mockOnSubmit} onDelete={mockOnDelete} />
+      <EventSidebar
+        isOpen={true}
+        onClose={vi.fn()}
+        categories={[]}
+        onSubmit={vi.fn()}
+        initialData={{ ...recurringEvent, is_override: true }}
+      />,
     );
 
-    expect(screen.queryByText(/Add New Event/i)).not.toBeInTheDocument();
+    expect(screen.getByText("Modified Instance")).toBeInTheDocument();
   });
 
-  it("renders 'Add New Event' when no initialData is provided", () => {
+  it("shows split-series badge for split recurring events", () => {
     render(
-      <EventSidebar isOpen={true} onClose={mockOnClose} categories={mockCategories} onSubmit={mockOnSubmit} onDelete={mockOnDelete} />
+      <EventSidebar
+        isOpen={true}
+        onClose={vi.fn()}
+        categories={[]}
+        onSubmit={vi.fn()}
+        initialData={{ ...recurringEvent, is_split_series: true }}
+      />,
     );
 
-    expect(screen.getByText(/Add New Event/i)).toBeInTheDocument();
+    expect(screen.getByText("Split Series")).toBeInTheDocument();
   });
 
-  it("renders 'Edit Event' and delete button when initialData is provided", () => {
-    const initialData: Event = {
-      id: 123,
-      title: "Existing Event",
-      start_time: "2023-01-01T10:00:00Z",
-      end_time: "2023-01-01T11:00:00Z",
-      categories: [],
-      reminders: [],
+  it("opens scope modal on recurring save and passes context", async () => {
+    const onSubmit = vi.fn();
+
+    render(
+      <EventSidebar
+        isOpen={true}
+        onClose={vi.fn()}
+        categories={[]}
+        onSubmit={onSubmit}
+        initialData={recurringEvent}
+      />,
+    );
+
+    fireEvent.change(screen.getByLabelText(/Title/i), {
+      target: { value: "Recurring Lecture Updated" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: /save event/i }));
+    expect(screen.getByText("Choose scope")).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "This event" }));
+
+    await waitFor(() => expect(onSubmit).toHaveBeenCalledTimes(1));
+    expect(onSubmit).toHaveBeenCalledWith(
+      expect.any(Object),
+      {
+        scope: "this",
+        original_start_time: recurringEvent.original_start_time,
+      },
+    );
+  });
+
+  it("opens scope modal on recurring delete and passes context", async () => {
+    const onDelete = vi.fn();
+
+    render(
+      <EventSidebar
+        isOpen={true}
+        onClose={vi.fn()}
+        categories={[]}
+        onSubmit={vi.fn()}
+        onDelete={onDelete}
+        initialData={recurringEvent}
+      />,
+    );
+
+    fireEvent.click(screen.getByTitle("Delete Event"));
+    expect(screen.getByText("Choose scope")).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "All events" }));
+    expect(screen.getByText("Delete all events in this series?")).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Delete All Events" }));
+
+    await waitFor(() => expect(onDelete).toHaveBeenCalledTimes(1));
+    expect(onDelete).toHaveBeenCalledWith({
+      scope: "all",
+      original_start_time: recurringEvent.original_start_time,
+    });
+  });
+
+  it("shows revert action for override instances and calls onRevertToSeries", async () => {
+    const onRevertToSeries = vi.fn();
+
+    render(
+      <EventSidebar
+        isOpen={true}
+        onClose={vi.fn()}
+        categories={[]}
+        onSubmit={vi.fn()}
+        onRevertToSeries={onRevertToSeries}
+        initialData={{ ...recurringEvent, is_override: true }}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "Revert To Series" }));
+    fireEvent.click(screen.getByRole("button", { name: "Revert" }));
+
+    await waitFor(() => expect(onRevertToSeries).toHaveBeenCalledTimes(1));
+    expect(onRevertToSeries).toHaveBeenCalledWith({
+      scope: "this",
+      original_start_time: recurringEvent.original_start_time,
+    });
+  });
+
+  it("updates the form when switching to another instance with the same base id", () => {
+    const { rerender } = render(
+      <EventSidebar
+        isOpen={true}
+        onClose={vi.fn()}
+        categories={[]}
+        onSubmit={vi.fn()}
+        initialData={recurringEvent}
+      />,
+    );
+
+    expect(screen.getByLabelText("Title")).toHaveValue("Recurring Lecture");
+
+    const anotherInstance: Event = {
+      ...recurringEvent,
+      title: "Recurring Lecture Override",
+      start_time: "2026-02-27T10:00:00.000Z",
+      end_time: "2026-02-27T11:00:00.000Z",
+      original_start_time: "2026-02-27T10:00:00.000Z",
+      instance_id: "7:2026-02-27T10:00:00+00:00:override",
     };
 
-    render(
-      <EventSidebar isOpen={true} onClose={mockOnClose} categories={mockCategories} onSubmit={mockOnSubmit} onDelete={mockOnDelete} initialData={initialData} />
+    rerender(
+      <EventSidebar
+        isOpen={true}
+        onClose={vi.fn()}
+        categories={[]}
+        onSubmit={vi.fn()}
+        initialData={anotherInstance}
+      />,
     );
 
-    expect(screen.getByText(/Edit Event/i)).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "delete" })).toBeInTheDocument();
+    expect(screen.getByLabelText("Title")).toHaveValue("Recurring Lecture Override");
   });
 
-  it("does not render delete button if onDelete is not provided", () => {
-    const initialData: Event = {
-      id: 123,
-      title: "Existing Event",
-      start_time: "2023-01-01T10:00:00Z",
-      end_time: "2023-01-01T11:00:00Z",
-      categories: [],
-      reminders: [],
-    };
-
+  it("disables this-event scope when recurrence pattern changes", () => {
     render(
-      <EventSidebar isOpen={true} onClose={mockOnClose} categories={mockCategories} onSubmit={mockOnSubmit} initialData={initialData} />
+      <EventSidebar
+        isOpen={true}
+        onClose={vi.fn()}
+        categories={[]}
+        onSubmit={vi.fn()}
+        initialData={recurringEvent}
+      />,
     );
 
-    expect(screen.queryByRole("button", { name: "delete" })).not.toBeInTheDocument();
+    fireEvent.change(screen.getByLabelText(/Interval/i), {
+      target: { value: "monthly" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: /save event/i }));
+
+    const thisEventButton = screen.getByRole("button", { name: "This event" });
+    expect(thisEventButton).toBeDisabled();
+    expect(
+      screen.getByText(/Pattern changes require This and following or All events/i),
+    ).toBeInTheDocument();
   });
 });
-
