@@ -1,6 +1,13 @@
 import { useState, useEffect, type FormEvent } from "react";
 import { type Category, type Task, type TaskSubmission } from "@/types";
 
+/**
+ * Safely convert a Date to ISO string, returning "" for invalid dates.
+ * @param d - The date object to convert.
+ */
+const safeToISOString = (d: Date): string =>
+  Number.isNaN(d.getTime()) ? "" : d.toISOString();
+
 interface NormalisedTaskSubmission {
   title: string;
   description: string;
@@ -71,8 +78,6 @@ const TaskForm = ({
         })
       : "10:00"
   );
-  const toIsoOrEmpty = (value: Date): string =>
-    Number.isNaN(value.getTime()) ? "" : value.toISOString();
 
   useEffect(() => {
     if (onDataChange) {
@@ -80,7 +85,7 @@ const TaskForm = ({
       onDataChange({
         title,
         description,
-        start_time: toIsoOrEmpty(startDateTime),
+        start_time: safeToISOString(startDateTime),
       });
     }
   }, [title, description, date, startTime, onDataChange]);
@@ -128,8 +133,8 @@ const TaskForm = ({
   const buildSubmission = (): TaskSubmission => ({
     title,
     description,
-    start_time: toIsoOrEmpty(startDateTime),
-    deadline: toIsoOrEmpty(endDateTime),
+    start_time: safeToISOString(startDateTime),
+    deadline: safeToISOString(endDateTime),
     categories: selectedCategories,
     importance,
     estimated_minutes: estimatedMinutes,
