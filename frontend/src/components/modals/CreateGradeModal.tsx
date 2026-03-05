@@ -122,7 +122,7 @@ export default function CreateGradeModal(props: Props) {
     <div className="fixed inset-0 bg-black/30 flex items-center justify-center p-4">
       <div className="bg-white rounded shadow p-4 w-full max-w-md">
         <h2 className="text-lg font-semibold mb-2">{initialData ? "Edit grade" : "Create grade"}</h2>
-        <form aria-label="grade-form" onSubmit={(e) => void submit(e)} className="space-y-2">
+        <form onSubmit={(e) => void submit(e)} className="space-y-2">
           <input
             placeholder="Assessment name"
             value={name}
@@ -149,9 +149,8 @@ export default function CreateGradeModal(props: Props) {
             />
           </div>
           <div>
-            <label htmlFor="grade-category-select" className="block text-sm text-gray-600 mb-1">Category</label>
+            <label className="block text-sm text-gray-600 mb-1">Category</label>
             <select
-              id="grade-category-select"
               value={categoryId ?? ""}
               onChange={(e) => setCategoryId(e.target.value === "" ? null : Number(e.target.value))}
               className="w-full border p-2 rounded mb-2 cursor-pointer"
