@@ -5,8 +5,6 @@ import { type Category, type Task, type TaskSubmission } from "@/types";
  * Safely convert a Date to ISO string, returning "" for invalid dates.
  * @param d - The date object to convert.
  */
-const safeToISOString = (d: Date): string =>
-  Number.isNaN(d.getTime()) ? "" : d.toISOString();
 
 interface NormalisedTaskSubmission {
   title: string;
