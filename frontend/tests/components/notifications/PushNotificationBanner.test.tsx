@@ -25,6 +25,7 @@ describe("PushNotificationBanner Component", () => {
       error: null,
       subscribe: vi.fn(),
       unsubscribe: vi.fn(),
+      refresh: vi.fn(),
     });
     const { container } = render(<PushNotificationBanner />);
     expect(container.firstChild).toBeNull();
@@ -39,6 +40,7 @@ describe("PushNotificationBanner Component", () => {
       error: null,
       subscribe: vi.fn(),
       unsubscribe: vi.fn(),
+      refresh: vi.fn(),
     });
     render(<PushNotificationBanner />);
     expect(screen.getByText("Push notifications blocked")).toBeDefined();
@@ -53,6 +55,7 @@ describe("PushNotificationBanner Component", () => {
       subscribe: vi.fn(),
       loading: false,
       error: null,
+      refresh: vi.fn(),
     });
     render(<PushNotificationBanner />);
     expect(screen.getByText("Push notifications enabled")).toBeDefined();
@@ -70,6 +73,7 @@ describe("PushNotificationBanner Component", () => {
       unsubscribe: vi.fn(),
       loading: false,
       error: null,
+      refresh: vi.fn(),
     });
     render(<PushNotificationBanner />);
     expect(screen.getByText("Enable push notifications")).toBeDefined();
@@ -87,6 +91,7 @@ describe("PushNotificationBanner Component", () => {
       error: null,
       subscribe: vi.fn(),
       unsubscribe: vi.fn(),
+      refresh: vi.fn(),
     });
     render(<PushNotificationBanner />);
     expect(screen.getByText("Enabling...")).toBeDefined();
@@ -99,6 +104,7 @@ describe("PushNotificationBanner Component", () => {
         error: null,
         subscribe: vi.fn(),
         unsubscribe: vi.fn(),
+        refresh: vi.fn(),
     });
     const { rerender } = render(<PushNotificationBanner />);
     rerender(<PushNotificationBanner />);
@@ -114,6 +120,7 @@ describe("PushNotificationBanner Component", () => {
       loading: false,
       subscribe: vi.fn(),
       unsubscribe: vi.fn(),
+      refresh: vi.fn(),
     });
     render(<PushNotificationBanner />);
     expect(screen.getByText("Something went wrong")).toBeDefined();

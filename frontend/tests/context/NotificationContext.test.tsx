@@ -188,6 +188,7 @@ describe("NotificationContext", () => {
     let wsCallback: (data: unknown) => void = () => { /* empty */ };
     vi.mocked(useWebSocket).mockImplementation((_url: string | null, callback: (data: unknown) => void) => {
         wsCallback = callback;
+        return { status: "OPEN", sendMessage: vi.fn() };
     });
 
     render(
@@ -217,6 +218,7 @@ describe("NotificationContext", () => {
     let wsCallback: (data: unknown) => void = () => { /* empty */ };
     vi.mocked(useWebSocket).mockImplementation((_url: string | null, callback: (data: unknown) => void) => {
         wsCallback = callback;
+        return { status: "OPEN", sendMessage: vi.fn() };
     });
 
     render(
@@ -321,6 +323,7 @@ describe("NotificationContext", () => {
     let wsCallback: (data: unknown) => void = () => { /* empty */ };
     vi.mocked(useWebSocket).mockImplementation((_url: string | null, callback: (data: unknown) => void) => {
         wsCallback = callback;
+        return { status: "OPEN", sendMessage: vi.fn() };
     });
 
     const { result } = renderHook(() => useNotificationContext(), {

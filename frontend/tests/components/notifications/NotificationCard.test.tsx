@@ -11,8 +11,9 @@ describe("NotificationCard Component", () => {
     notification_type: NotificationType.SYSTEM,
     is_read: false,
     timestamp: "2023-01-01T10:00:00Z",
-    created_at: "2023-01-01T10:00:00Z",
-    user: 1
+    recipient: 1,
+    sender: null,
+    sender_username: null,
   };
 
   const defaultProps = {

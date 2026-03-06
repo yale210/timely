@@ -5,9 +5,9 @@ import type { AdminUserSummary } from "@/types/notification";
 
 describe("AdminUserTable Component", () => {
   const mockUsers: AdminUserSummary[] = [
-    { id: 1, username: "user1", email: "user1@test.com", is_staff: false, is_superuser: false, is_active: true },
-    { id: 2, username: "staff1", email: "staff1@test.com", is_staff: true, is_superuser: false, is_active: true },
-    { id: 3, username: "admin1", email: "admin1@test.com", is_staff: true, is_superuser: true, is_active: false },
+    { id: 1, username: "user1", email: "user1@test.com", is_staff: false, is_superuser: false, is_active: true, date_joined: "2023-01-01", last_login: null },
+    { id: 2, username: "staff1", email: "staff1@test.com", is_staff: true, is_superuser: false, is_active: true, date_joined: "2023-01-01", last_login: null },
+    { id: 3, username: "admin1", email: "admin1@test.com", is_staff: true, is_superuser: true, is_active: false, date_joined: "2023-01-01", last_login: null },
   ];
 
   const defaultProps = {

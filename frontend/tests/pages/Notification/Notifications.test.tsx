@@ -195,8 +195,19 @@ describe("Notifications Page", () => {
   });
 
   it("handles single notification delete confirmation", () => {
+    const pendingDelete = {
+      id: 1,
+      title: "Title",
+      message: "Msg",
+      is_read: false,
+      timestamp: "2023-01-01",
+      recipient: 1,
+      sender: null,
+      sender_username: null,
+      notification_type: "SYSTEM" as const,
+    };
     vi.mocked(useNotificationsPage).mockReturnValue({
-        state: { ...mockState, notificationPendingDelete: { id: 1 } } as UseNotificationsPageReturn["state"],
+        state: { ...mockState, notificationPendingDelete: pendingDelete } as UseNotificationsPageReturn["state"],
         actions: {
           ...mockActions,
           setNotificationPendingDelete: mockSetNotificationPendingDelete,
@@ -211,7 +222,7 @@ describe("Notifications Page", () => {
     
     expect(screen.getByText("Delete notification?")).toBeDefined();
     fireEvent.click(screen.getByText("Confirm"));
-    expect(mockHandleDeleteNotification).toHaveBeenCalledWith({ id: 1 });
+    expect(mockHandleDeleteNotification).toHaveBeenCalledWith(pendingDelete);
 
     fireEvent.click(screen.getByText("Close"));
     expect(mockSetNotificationPendingDelete).toHaveBeenCalledWith(null);

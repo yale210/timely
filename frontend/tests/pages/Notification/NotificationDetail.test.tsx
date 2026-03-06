@@ -42,7 +42,11 @@ describe("NotificationDetail Page", () => {
     title: "Test Notification",
     message: "Test Message content",
     is_read: false,
-    created_at: "2023-01-01T10:00:00Z",
+    timestamp: "2023-01-01T10:00:00Z",
+    recipient: 1,
+    sender: null,
+    sender_username: null,
+    notification_type: "SYSTEM" as const,
   };
 
   beforeEach(() => {

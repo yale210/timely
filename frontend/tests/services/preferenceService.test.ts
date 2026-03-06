@@ -20,7 +20,7 @@ describe("preferenceService", () => {
   });
 
   it("getMyPreference calls api.get with correct URL", async () => {
-    const mockData = { theme: "dark", font: "sans" };
+    const mockData = { day_start: "08:00:00", max_hours_study_per_day: 4 };
     mockGet.mockResolvedValue({ data: mockData });
 
     const result = await preferenceService.getMyPreference();
@@ -30,8 +30,8 @@ describe("preferenceService", () => {
   });
 
   it("updateMyPreference calls api.patch with correct URL and patch data", async () => {
-    const patch = { theme: "light" };
-    const mockData = { theme: "light", font: "sans" };
+    const patch = { max_hours_study_per_day: 6 };
+    const mockData = { day_start: "08:00:00", max_hours_study_per_day: 6 };
     mockPatch.mockResolvedValue({ data: mockData });
 
     const result = await preferenceService.updateMyPreference(patch);

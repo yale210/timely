@@ -12,12 +12,24 @@ const mockedGetBroadcastHistory = vi.mocked(getBroadcastHistory);
 
 describe("useAdminHistory Hook", () => {
   const mockItems = [
-    { id: 1, title: "B1", status: "COMPLETED" },
+    {
+      id: 1,
+      title: "B1",
+      status: "COMPLETED" as const,
+      target: "all",
+      recipient_count: 10,
+      delivered_count: 10,
+      failed_count: 0,
+      sender: 1,
+      sender_username: "admin",
+      queued_at: "2023-01-01T10:00:00Z",
+      completed_at: "2023-01-01T10:05:00Z",
+    },
   ];
 
   beforeEach(() => {
     vi.clearAllMocks();
-    mockedGetBroadcastHistory.mockResolvedValue({ results: mockItems, count: 100 });
+    mockedGetBroadcastHistory.mockResolvedValue({ results: mockItems, count: 100, next: null, previous: null });
   });
 
   afterEach(() => {

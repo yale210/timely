@@ -80,7 +80,7 @@ describe("notifications API", () => {
   });
 
   it("subscribeToPush posts correctly", async () => {
-    const payload = { endpoint: "ep", keys: { p256dh: "k1", auth: "k2" } };
+    const payload = { endpoint: "ep", p256dh: "k1", auth: "k2" };
     const postSpy = vi.spyOn(api, 'post').mockResolvedValue({ data: {} });
     await subscribeToPush(payload);
     expect(postSpy).toHaveBeenCalledWith("/api/push/subscribe/", payload);
@@ -101,7 +101,7 @@ describe("notifications API", () => {
 
   it("sendAdminNotification posts correctly", async () => {
     const payload = { title: "T", message: "M", target: "all" as const };
-    const postSpy = vi.spyOn(api, 'post').mockResolvedValue({ data: { task_id: "1" } });
+    const postSpy = vi.spyOn(api, 'post').mockResolvedValue({ data: { task_id: "1", status: "QUEUED", broadcast_id: 1, recipient_count: 0 } });
     await sendAdminNotification(payload);
     expect(postSpy).toHaveBeenCalledWith("/api/admin/send_notification/", payload);
   });

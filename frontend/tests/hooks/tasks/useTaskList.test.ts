@@ -127,7 +127,7 @@ describe("useTaskList Hook", () => {
   });
 
   it("handles deleteTask", async () => {
-    vi.mocked(taskService.deleteTask).mockResolvedValue({} as void);
+    vi.mocked(taskService.deleteTask).mockResolvedValue(undefined);
     const { result } = renderHook(() => useTaskList());
     await waitFor(() => expect(result.current.loading).toBe(false));
 

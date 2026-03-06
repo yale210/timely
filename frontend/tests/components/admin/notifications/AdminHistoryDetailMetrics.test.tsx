@@ -7,28 +7,38 @@ describe("AdminHistoryDetailMetrics Component", () => {
   const mockDetail: BroadcastJobDetail = {
     id: 1,
     title: "Test Broadcast",
-    content: "Test Content",
+    message: "Test Content",
     target: "staff",
-    sender_id: 1,
+    sender: 1,
     sender_username: "admin",
     status: "COMPLETED",
+    task_id: "task-123",
     queued_at: "2023-01-01T10:00:00Z",
+    started_at: "2023-01-01T10:00:05Z",
+    completed_at: "2023-01-01T10:01:00Z",
     recipient_count: 10,
     delivered_count: 10,
     failed_count: 0,
+    audience_filters: {},
     audience_snapshot: {
-      target: "staff",
       recipient_count: 10,
-      recipients: [],
     },
+    provider_errors: [],
+    retry_of: null,
+    recipients: [],
   };
 
   const mockStatus: BroadcastJobStatusResponse = {
+    id: 1,
     task_id: "task-123",
     status: "COMPLETED",
     recipient_count: 10,
     delivered_count: 9,
     failed_count: 1,
+    queued_at: "2023-01-01T10:00:00Z",
+    started_at: "2023-01-01T10:00:05Z",
+    completed_at: "2023-01-01T10:01:00Z",
+    updated_at: "2023-01-01T10:01:00Z",
   };
 
   it("renders delivery metrics correctly", () => {

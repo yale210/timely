@@ -7,6 +7,7 @@ import {
   getBroadcastStatus,
   retryFailedBroadcast,
 } from "@/api/notifications";
+import type { BroadcastJobDetail, BroadcastJobStatusResponse, RetryBroadcastResponse } from "@/types/notification";
 
 // Mock react-router-dom
 vi.mock("react-router-dom", () => ({
@@ -27,17 +28,61 @@ const mockedRetryFailedBroadcast = vi.mocked(retryFailedBroadcast);
 
 describe("useAdminHistoryDetail Hook", () => {
   const mockId = "1";
-  const mockDetail = {
+  const mockDetail: BroadcastJobDetail = {
     id: 1,
     title: "B1",
+    message: "Msg",
+    target: "all",
+    status: "COMPLETED" as const,
+    task_id: "t1",
+    recipient_count: 2,
+    delivered_count: 1,
+    failed_count: 1,
+    sender: 1,
+    sender_username: "admin",
+    audience_filters: {},
+    audience_snapshot: {},
+    provider_errors: [],
+    queued_at: "2023-01-01T10:00:00Z",
+    started_at: "2023-01-01T10:00:05Z",
+    completed_at: "2023-01-01T10:10:00Z",
+    retry_of: null,
     recipients: [
-      { id: 1, status: "DELIVERED" },
-      { id: 2, status: "FAILED" },
+      { 
+        id: 1, 
+        recipient: 1,
+        username: "u1",
+        email: "u1@e.com",
+        status: "SENT" as const,
+        error_code: "",
+        error_message: "",
+        last_attempt_at: "2023-01-01T10:05:00Z",
+        notification: 1
+      },
+      { 
+        id: 2, 
+        recipient: 2,
+        username: "u2",
+        email: "u2@e.com",
+        status: "FAILED" as const,
+        error_code: "500",
+        error_message: "Error",
+        last_attempt_at: "2023-01-01T10:05:00Z",
+        notification: 2
+      },
     ],
   };
-  const mockStatus = {
-    status: "COMPLETED",
+  const mockStatus: BroadcastJobStatusResponse = {
+    id: 1,
+    status: "COMPLETED" as const,
+    recipient_count: 2,
+    delivered_count: 1,
+    failed_count: 1,
+    queued_at: "2023-01-01T10:00:00Z",
+    started_at: "2023-01-01T10:00:05Z",
+    completed_at: "2023-01-01T10:10:00Z",
     task_id: "t1",
+    updated_at: "2023-01-01T10:10:00Z",
   };
 
   beforeEach(() => {
@@ -92,7 +137,13 @@ describe("useAdminHistoryDetail Hook", () => {
     const { result } = renderHook(() => useAdminHistoryDetail());
     await waitFor(() => expect(result.current.loading).toBe(false));
 
-    mockedRetryFailedBroadcast.mockResolvedValue({ broadcast_id: 1 });
+    mockedRetryFailedBroadcast.mockResolvedValue({ 
+      broadcast_id: 1,
+      status: "QUEUED",
+      task_id: "t2",
+      queued_at: "2023-01-01T11:00:00Z",
+      recipient_count: 1
+    } as RetryBroadcastResponse);
     const newDetail = { ...mockDetail, title: "Retried" };
     mockedGetBroadcastDetail.mockResolvedValue(newDetail);
 
@@ -138,7 +189,7 @@ describe("useAdminHistoryDetail Hook", () => {
 
   it("polls for status when in non-terminal state", async () => {
     vi.useFakeTimers();
-    mockedGetBroadcastStatus.mockResolvedValue({ status: "QUEUED", task_id: "t1" });
+    mockedGetBroadcastStatus.mockResolvedValue({ ...mockStatus, status: "QUEUED" });
     
     const { result } = renderHook(() => useAdminHistoryDetail());
     // Use vi.waitFor instead of testing-library waitFor when using fake timers
@@ -146,7 +197,7 @@ describe("useAdminHistoryDetail Hook", () => {
     expect(result.current.state.status?.status).toBe("QUEUED");
 
     // Advance timer to trigger polling
-    mockedGetBroadcastStatus.mockResolvedValue({ status: "COMPLETED", task_id: "t1" });
+    mockedGetBroadcastStatus.mockResolvedValue({ ...mockStatus, status: "COMPLETED" });
     await vi.advanceTimersByTimeAsync(3000);
 
     await vi.waitFor(() => {
@@ -157,7 +208,7 @@ describe("useAdminHistoryDetail Hook", () => {
   it("handles polling error", async () => {
     vi.useFakeTimers();
     const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => { /* Silence */ });
-    mockedGetBroadcastStatus.mockResolvedValue({ status: "QUEUED", task_id: "t1" });
+    mockedGetBroadcastStatus.mockResolvedValue({ ...mockStatus, status: "QUEUED" });
     
     const { result } = renderHook(() => useAdminHistoryDetail());
     

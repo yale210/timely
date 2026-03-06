@@ -10,9 +10,6 @@ describe("TaskCard Component", () => {
     description: "Short description",
     importance: 5,
     completed: false,
-    created_at: "2023-01-01T10:00:00Z",
-    updated_at: "2023-01-01T10:00:00Z",
-    user: 1,
     deadline: "2099-01-01T10:00:00Z", // Future date
     start_time: "2023-01-01T10:00:00Z",
     categories: [{ id: 1, text: "Cat 1" }],

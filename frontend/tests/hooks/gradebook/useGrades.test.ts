@@ -4,8 +4,8 @@ import useGrades from "@/hooks/gradebook/useGrades";
 
 describe("useGrades Hook", () => {
   const mockGrades = [
-    { id: 1, name: "Test Grade 1", score: 80, total_possible: 100, date_achieved: "2023-01-01", category: 1 },
-    { id: 2, name: "Test Grade 2", score: 90, total_possible: 100, date_achieved: "2023-01-02", category: 2 },
+    { id: 1, name: "Test Grade 1", score: 80, total_possible: 100, date_achieved: "2023-01-01", category: 1, percentage: 80, time_spent_minutes: 60 },
+    { id: 2, name: "Test Grade 2", score: 90, total_possible: 100, date_achieved: "2023-01-02", category: 2, percentage: 90, time_spent_minutes: 45 },
   ];
 
   beforeEach(() => {

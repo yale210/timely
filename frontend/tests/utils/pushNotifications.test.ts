@@ -32,8 +32,8 @@ describe("pushNotifications Utilities", () => {
     
     // Default API mocks
     mockedGetVapidPublicKey.mockResolvedValue({ public_key: "mock-vapid-key" });
-    mockedSubscribeToPush.mockResolvedValue({ ok: true });
-    mockedUnsubscribeFromPush.mockResolvedValue({ ok: true });
+    mockedSubscribeToPush.mockResolvedValue(undefined);
+    mockedUnsubscribeFromPush.mockResolvedValue(undefined);
 
     // Mock service worker
     Object.defineProperty(navigator, 'serviceWorker', {
@@ -78,7 +78,7 @@ describe("pushNotifications Utilities", () => {
     });
 
     it("throws error if VAPID key is missing", async () => {
-      mockedGetVapidPublicKey.mockResolvedValue({ public_key: null });
+      mockedGetVapidPublicKey.mockResolvedValue({ public_key: "" });
       await expect(subscribeUserToPush()).rejects.toThrow("Server did not return a VAPID public key.");
     });
 

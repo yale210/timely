@@ -44,7 +44,11 @@ describe("RequireAdmin Component", () => {
 
   it("redirects to / if user is not staff", () => {
     mockedAuthStore.getToken.mockReturnValue("mock-token");
-    mockedAuthStore.getUser.mockReturnValue({ is_staff: false });
+    mockedAuthStore.getUser.mockReturnValue({
+      username: "testuser",
+      email: "test@example.com",
+      is_staff: false,
+    });
     
     render(
       <MemoryRouter initialEntries={["/admin"]}>
@@ -65,7 +69,11 @@ describe("RequireAdmin Component", () => {
 
   it("renders children if user is staff", () => {
     mockedAuthStore.getToken.mockReturnValue("mock-token");
-    mockedAuthStore.getUser.mockReturnValue({ is_staff: true });
+    mockedAuthStore.getUser.mockReturnValue({
+      username: "adminuser",
+      email: "admin@example.com",
+      is_staff: true,
+    });
     
     render(
       <MemoryRouter initialEntries={["/admin"]}>

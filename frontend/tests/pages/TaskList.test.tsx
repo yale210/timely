@@ -133,11 +133,22 @@ describe('TaskList Page', () => {
   })
 
   it('handles task section actions (Today, Overdue, Past, Upcoming)', () => {
+    const baseTask = {
+      importance: 5,
+      completed: false,
+      start_time: '2023-01-01',
+      deadline: '2023-01-01',
+      categories: [],
+      user: 1,
+      allocation: [],
+      description: '',
+      estimated_minutes: 30,
+    };
     const tasks = [
-      { id: 1, title: 'Today Task' },
-      { id: 2, title: 'Overdue Task' },
-      { id: 3, title: 'Past Task' },
-      { id: 4, title: 'Upcoming Task' },
+      { id: 1, title: 'Today Task', ...baseTask },
+      { id: 2, title: 'Overdue Task', ...baseTask },
+      { id: 3, title: 'Past Task', ...baseTask },
+      { id: 4, title: 'Upcoming Task', ...baseTask },
     ]
     
     vi.mocked(useTaskList).mockReturnValue({
@@ -184,11 +195,24 @@ describe('TaskList Page', () => {
   })
 
   it('handles sidebar actions', () => {
+    const editingTask = {
+      id: 5,
+      title: 'Editing',
+      importance: 5,
+      completed: false,
+      start_time: '2023-01-01',
+      deadline: '2023-01-01',
+      categories: [],
+      user: 1,
+      allocation: [],
+      description: '',
+      estimated_minutes: 30,
+    };
     vi.mocked(useTaskList).mockReturnValue({
       state: {
         ...mockState,
         isSidebarOpen: true,
-        selectedTask: { id: 5, title: 'Editing' } as UseTaskListReturn["state"]["selectedTask"]
+        selectedTask: editingTask
       } as UseTaskListReturn["state"],
       loading: false,
       error: null,

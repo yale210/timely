@@ -130,7 +130,7 @@ describe("TaskForm Component", () => {
       importance: 8,
       estimated_minutes: 45,
       completed: true,
-      categories: [1],
+      categories: [{ id: 1, text: "Category 1" }],
       user: 1,
       created_at: "2023-01-01T10:00:00Z",
       updated_at: "2023-01-01T10:00:00Z",

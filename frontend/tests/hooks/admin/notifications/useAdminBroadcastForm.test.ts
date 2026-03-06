@@ -3,6 +3,7 @@ import { vi, describe, it, expect, beforeEach, afterEach } from "vitest";
 import { useAdminBroadcastForm } from "@/hooks/admin/notifications/useAdminBroadcastForm";
 import * as notificationsApi from "@/api/notifications";
 import type { FormEvent } from "react";
+import type { AdminUserListResponse } from "@/types/notification";
 
 // Mock API
 vi.mock("@/api/notifications", () => ({
@@ -25,8 +26,29 @@ describe("useAdminBroadcastForm Hook", () => {
     selected_users: 0,
   };
 
-  const mockUsersResponse = {
-    results: [{ id: 1, username: "user1" }, { id: 2, username: "user2" }],
+  const mockUsersResponse: AdminUserListResponse = {
+    results: [
+      {
+        id: 1,
+        username: "user1",
+        email: "user1@example.com",
+        is_staff: false,
+        is_superuser: false,
+        is_active: true,
+        date_joined: "2023-01-01T10:00:00Z",
+        last_login: null,
+      },
+      {
+        id: 2,
+        username: "user2",
+        email: "user2@example.com",
+        is_staff: false,
+        is_superuser: false,
+        is_active: true,
+        date_joined: "2023-01-01T10:00:00Z",
+        last_login: null,
+      },
+    ],
     count: 2,
     next: null,
     previous: null,
@@ -112,6 +134,7 @@ describe("useAdminBroadcastForm Hook", () => {
   });
 
   it("validates form and handles handleSubmit", async () => {
+    mockedGetAudienceCounts.mockResolvedValue({ ...mockAudienceCounts, all: 100 });
     const { result } = renderHook(() => useAdminBroadcastForm());
     await waitFor(() => expect(result.current.state.audience.audienceCounts.all).toBe(100));
 
@@ -142,10 +165,22 @@ describe("useAdminBroadcastForm Hook", () => {
     mockedSendAdminNotification.mockResolvedValue({
       broadcast_id: mockBroadcastId,
       status: "QUEUED",
-      queued_at: "now",
+      queued_at: "2023-01-01T10:00:00Z",
       task_id: "t1",
+      recipient_count: 10,
     });
-    mockedGetBroadcastStatus.mockResolvedValue({ status: "IN_PROGRESS" });
+    mockedGetBroadcastStatus.mockResolvedValue({
+      id: mockBroadcastId,
+      status: "IN_PROGRESS",
+      recipient_count: 10,
+      delivered_count: 0,
+      failed_count: 0,
+      queued_at: "2023-01-01T10:00:00Z",
+      started_at: "2023-01-01T10:00:05Z",
+      completed_at: null,
+      task_id: "t1",
+      updated_at: "2023-01-01T10:00:05Z",
+    });
 
     act(() => {
         result.current.actions.setTitle("Title");

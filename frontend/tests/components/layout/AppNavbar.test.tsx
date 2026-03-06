@@ -83,13 +83,21 @@ describe("AppNavbar Component", () => {
     vi.mocked(useNotificationContext).mockReturnValue({
       notifications: [],
       unreadCount: 0,
+      loading: false,
+      error: null,
+      fetchNotifications: vi.fn(),
+      fetchUnreadCount: vi.fn(),
       markRead: mockMarkRead,
       markUnread: mockMarkUnread,
       markAllRead: mockMarkAllRead,
       deleteNotification: mockDeleteNotification,
       deleteAllNotifications: mockDeleteAllNotifications,
     });
-    mockedAuthStore.getUser.mockReturnValue({ is_staff: false });
+    mockedAuthStore.getUser.mockReturnValue({
+      username: "testuser",
+      email: "test@example.com",
+      is_staff: false,
+    });
   });
 
   afterEach(() => {
@@ -156,6 +164,10 @@ describe("AppNavbar Component", () => {
     vi.mocked(useNotificationContext).mockReturnValue({
       notifications: [],
       unreadCount: 5,
+      loading: false,
+      error: null,
+      fetchNotifications: vi.fn(),
+      fetchUnreadCount: vi.fn(),
       markRead: mockMarkRead,
       markUnread: mockMarkUnread,
       markAllRead: mockMarkAllRead,
@@ -183,7 +195,11 @@ describe("AppNavbar Component", () => {
     fireEvent.click(screen.getByLabelText("Open navigation"));
     expect(screen.queryByText("Admin Panel")).toBeNull();
 
-    mockedAuthStore.getUser.mockReturnValue({ is_staff: true });
+    mockedAuthStore.getUser.mockReturnValue({
+      username: "adminuser",
+      email: "admin@example.com",
+      is_staff: true,
+    });
     rerender(
       <MemoryRouter>
         <AppNavbar />
@@ -291,7 +307,11 @@ describe("AppNavbar Component", () => {
   });
 
   it("handles admin panel link click", () => {
-    mockedAuthStore.getUser.mockReturnValue({ is_staff: true });
+    mockedAuthStore.getUser.mockReturnValue({
+      username: "adminuser",
+      email: "admin@example.com",
+      is_staff: true,
+    });
     render(
       <MemoryRouter>
         <AppNavbar />
