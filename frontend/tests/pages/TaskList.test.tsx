@@ -1,8 +1,9 @@
 import type { ReactNode } from "react"
 import { it, describe, expect, vi, beforeEach } from 'vitest'
-import { render, screen, fireEvent, waitFor } from '@testing-library/react'
+import { render, screen, fireEvent } from '@testing-library/react'
 import TaskList from "@/pages/TaskList"
 import { MemoryRouter } from 'react-router-dom'
+import type { useTaskList as useTaskListOriginal } from "@/hooks/tasks/useTaskList"
 
 // Mock the hook
 vi.mock("@/hooks/tasks/useTaskList", () => ({
@@ -11,13 +12,15 @@ vi.mock("@/hooks/tasks/useTaskList", () => ({
 
 import { useTaskList } from "@/hooks/tasks/useTaskList"
 
+type UseTaskListReturn = ReturnType<typeof useTaskListOriginal>;
+
 // Mock child components correctly
 vi.mock("@/components/tasks/TaskListHeader", () => ({
-  default: ({ onNewTask }: any) => <button onClick={onNewTask}>New Task Header</button>
+  default: ({ onNewTask }: { onNewTask: () => void }) => <button onClick={onNewTask}>New Task Header</button>
 }))
 
 vi.mock("@/components/tasks/TaskListToolbar", () => ({
-  default: (props: any) => (
+  default: (props: { onSearchChange: (v: string) => void, onToggleHighImportance: () => void, onToggleQuickWins: () => void }) => (
     <div>
       <input data-testid="search-input" onChange={(e) => props.onSearchChange(e.target.value)} />
       <button onClick={() => props.onToggleHighImportance()}>Toggle High</button>
@@ -28,9 +31,9 @@ vi.mock("@/components/tasks/TaskListToolbar", () => ({
 
 // TaskList.tsx imports TaskListSection and TaskSidebar from "@/components"
 vi.mock("@/components", () => ({
-  TaskListSection: ({ onToggleComplete, onTaskClick, tasks, title }: any) => (
+  TaskListSection: ({ onToggleComplete, onTaskClick, tasks, title }: { onToggleComplete: (id: number) => void, onTaskClick: (t: { id: number, title: string }) => void, tasks: { id: number, title: string }[], title: string }) => (
     <div data-testid={`section-${title}`}>
-      {tasks.map((t: any) => (
+      {tasks.map((t) => (
         <div key={t.id}>
           <span onClick={() => onTaskClick(t)}>{t.title}</span>
           <button onClick={() => onToggleComplete(t.id)}>Complete {t.id}</button>
@@ -38,7 +41,7 @@ vi.mock("@/components", () => ({
       ))}
     </div>
   ),
-  TaskSidebar: ({ isOpen, onClose, onSubmit, onDelete, initialData }: any) => isOpen ? (
+  TaskSidebar: ({ isOpen, onClose, onSubmit, onDelete, initialData }: { isOpen: boolean, onClose: () => void, onSubmit: (data: { title: string }) => void, onDelete: (id: number) => void, initialData?: { id: number } }) => isOpen ? (
     <div data-testid="sidebar">
       <button onClick={onClose}>Close Sidebar</button>
       <button onClick={() => onSubmit({ title: 'New' })}>Submit Sidebar</button>
@@ -48,9 +51,9 @@ vi.mock("@/components", () => ({
 }))
 
 vi.mock("@/components/tasks/TaskUpcomingSection", () => ({
-  default: ({ onToggleComplete, onTaskClick, upcomingTasks }: any) => (
+  default: ({ onToggleComplete, onTaskClick, upcomingTasks }: { onToggleComplete: (id: number) => void, onTaskClick: (t: { id: number, title: string }) => void, upcomingTasks: { id: number, title: string }[] }) => (
     <div data-testid="upcoming-section">
-      {upcomingTasks.map((t: any) => (
+      {upcomingTasks.map((t) => (
         <div key={t.id}>
           <span onClick={() => onTaskClick(t)}>{t.title}</span>
           <button onClick={() => onToggleComplete(t.id)}>Complete {t.id}</button>
@@ -79,16 +82,17 @@ describe('TaskList Page', () => {
     closeSidebar: vi.fn(),
     submitTask: vi.fn(),
     deleteTask: vi.fn(),
+    refresh: vi.fn(),
   }
 
   const mockState = {
     tasks: [],
     categories: [],
     isSidebarOpen: false,
-    selectedTask: null,
+    selectedTask: undefined,
     search: '',
     sortBy: 'date',
-    filters: { category: null, completed: 'all', highImportance: false, quickWins: false },
+    filters: { category: null, completed: 'all' as const, highImportance: false, quickWins: false },
     sections: {
       pastTasks: [],
       overdueTasks: [],
@@ -102,11 +106,11 @@ describe('TaskList Page', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     vi.mocked(useTaskList).mockReturnValue({
-      state: mockState,
+      state: mockState as UseTaskListReturn["state"],
       loading: false,
       error: null,
-      actions: mockActions,
-    } as any)
+      actions: mockActions as unknown as UseTaskListReturn["actions"],
+    })
   })
 
   it('renders and handles header actions', () => {
@@ -128,7 +132,7 @@ describe('TaskList Page', () => {
     expect(mockActions.toggleFilterQuickWins).toHaveBeenCalled()
   })
 
-  it('handles task section actions (Today, Overdue, Past, Upcoming)', async () => {
+  it('handles task section actions (Today, Overdue, Past, Upcoming)', () => {
     const tasks = [
       { id: 1, title: 'Today Task' },
       { id: 2, title: 'Overdue Task' },
@@ -146,11 +150,11 @@ describe('TaskList Page', () => {
           pastTasks: [tasks[2]],
           upcomingTasks: [tasks[3]],
         }
-      },
+      } as UseTaskListReturn["state"],
       loading: false,
       error: null,
-      actions: mockActions,
-    } as any)
+      actions: mockActions as unknown as UseTaskListReturn["actions"],
+    })
 
     render(<MemoryRouter><TaskList /></MemoryRouter>)
 
@@ -184,12 +188,12 @@ describe('TaskList Page', () => {
       state: {
         ...mockState,
         isSidebarOpen: true,
-        selectedTask: { id: 5, title: 'Editing' }
-      },
+        selectedTask: { id: 5, title: 'Editing' } as UseTaskListReturn["state"]["selectedTask"]
+      } as UseTaskListReturn["state"],
       loading: false,
       error: null,
-      actions: mockActions,
-    } as any)
+      actions: mockActions as unknown as UseTaskListReturn["actions"],
+    })
 
     render(<MemoryRouter><TaskList /></MemoryRouter>)
 
@@ -205,11 +209,11 @@ describe('TaskList Page', () => {
 
   it('shows loading and error states', () => {
     vi.mocked(useTaskList).mockReturnValue({
-      state: mockState,
+      state: mockState as UseTaskListReturn["state"],
       loading: true,
       error: 'Failed to load',
-      actions: mockActions,
-    } as any)
+      actions: mockActions as unknown as UseTaskListReturn["actions"],
+    })
 
     render(<MemoryRouter><TaskList /></MemoryRouter>)
     expect(screen.getByText('Loading tasks...')).toBeDefined()
@@ -222,3 +226,4 @@ describe('TaskList Page', () => {
     expect(mockActions.openNewTask).toHaveBeenCalled()
   })
 })
+

@@ -2,6 +2,7 @@ import { renderHook, act, waitFor } from "@testing-library/react";
 import { vi, describe, it, expect, beforeEach, afterEach } from "vitest";
 import { useTaskList } from "@/hooks/tasks/useTaskList";
 import * as taskService from "@/services/taskService";
+import type { Task, TaskSubmission } from "@/types";
 import moment from "moment";
 
 // Mock services
@@ -29,14 +30,14 @@ describe("useTaskList Hook", () => {
     { id: 2, title: "Task 2", deadline: yesterday, importance: 9, estimated_minutes: 40, completed: false },
     { id: 3, title: "Task 3", deadline: tomorrow, importance: 2, estimated_minutes: 10, completed: false },
     { id: 4, title: "Task 4", deadline: twoDaysAgo, importance: 1, estimated_minutes: 15, completed: true },
-  ];
+  ] as Task[];
 
   const mockCategories = [{ id: 1, text: "Cat 1" }];
 
   beforeEach(() => {
     vi.clearAllMocks();
-    (taskService.getTasks as any).mockResolvedValue(mockTasks);
-    (taskService.getCategories as any).mockResolvedValue(mockCategories);
+    vi.mocked(taskService.getTasks).mockResolvedValue(mockTasks);
+    vi.mocked(taskService.getCategories).mockResolvedValue(mockCategories);
   });
 
   afterEach(() => {
@@ -84,7 +85,7 @@ describe("useTaskList Hook", () => {
   });
 
   it("handles toggleComplete", async () => {
-    (taskService.updateTask as any).mockResolvedValue({});
+    vi.mocked(taskService.updateTask).mockResolvedValue({} as Task);
     const { result } = renderHook(() => useTaskList());
     await waitFor(() => expect(result.current.loading).toBe(false));
 
@@ -96,37 +97,37 @@ describe("useTaskList Hook", () => {
   });
 
   it("handles submitTask (create)", async () => {
-    (taskService.createTask as any).mockResolvedValue({});
+    vi.mocked(taskService.createTask).mockResolvedValue({} as Task);
     const { result } = renderHook(() => useTaskList());
     await waitFor(() => expect(result.current.loading).toBe(false));
 
-    const newTask = { title: "New", deadline: today, importance: 5, estimated_minutes: 10 };
+    const newTask = { title: "New", deadline: today, importance: 5, estimated_minutes: 10 } as TaskSubmission;
     await act(async () => {
-      await result.current.actions.submitTask(newTask as any);
+      await result.current.actions.submitTask(newTask);
     });
 
     expect(taskService.createTask).toHaveBeenCalledWith(newTask);
   });
 
   it("handles submitTask (update)", async () => {
-    (taskService.updateTask as any).mockResolvedValue({});
+    vi.mocked(taskService.updateTask).mockResolvedValue({} as Task);
     const { result } = renderHook(() => useTaskList());
     await waitFor(() => expect(result.current.loading).toBe(false));
 
     act(() => {
-      result.current.actions.openTask(mockTasks[0] as any);
+      result.current.actions.openTask(mockTasks[0]);
     });
 
-    const updatedData = { title: "Updated" };
+    const updatedData = { title: "Updated" } as TaskSubmission;
     await act(async () => {
-      await result.current.actions.submitTask(updatedData as any);
+      await result.current.actions.submitTask(updatedData);
     });
 
     expect(taskService.updateTask).toHaveBeenCalledWith(mockTasks[0].id, updatedData);
   });
 
   it("handles deleteTask", async () => {
-    (taskService.deleteTask as any).mockResolvedValue({});
+    vi.mocked(taskService.deleteTask).mockResolvedValue({} as void);
     const { result } = renderHook(() => useTaskList());
     await waitFor(() => expect(result.current.loading).toBe(false));
 

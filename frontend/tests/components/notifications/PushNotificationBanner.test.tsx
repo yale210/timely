@@ -17,27 +17,42 @@ describe("PushNotificationBanner Component", () => {
   });
 
   it("renders null when not supported", () => {
-    (usePushSubscription as any).mockReturnValue({ isSupported: false });
+    vi.mocked(usePushSubscription).mockReturnValue({
+      isSupported: false,
+      isSubscribed: false,
+      permission: "default",
+      loading: false,
+      error: null,
+      subscribe: vi.fn(),
+      unsubscribe: vi.fn(),
+    });
     const { container } = render(<PushNotificationBanner />);
     expect(container.firstChild).toBeNull();
   });
 
   it("renders blocked message when permission is denied", () => {
-    (usePushSubscription as any).mockReturnValue({
+    vi.mocked(usePushSubscription).mockReturnValue({
       isSupported: true,
       permission: "denied",
+      isSubscribed: false,
+      loading: false,
+      error: null,
+      subscribe: vi.fn(),
+      unsubscribe: vi.fn(),
     });
     render(<PushNotificationBanner />);
     expect(screen.getByText("Push notifications blocked")).toBeDefined();
   });
 
   it("renders enabled message and disable button when subscribed", () => {
-    (usePushSubscription as any).mockReturnValue({
+    vi.mocked(usePushSubscription).mockReturnValue({
       isSupported: true,
       isSubscribed: true,
       permission: "granted",
       unsubscribe: mockUnsubscribe,
+      subscribe: vi.fn(),
       loading: false,
+      error: null,
     });
     render(<PushNotificationBanner />);
     expect(screen.getByText("Push notifications enabled")).toBeDefined();
@@ -47,11 +62,12 @@ describe("PushNotificationBanner Component", () => {
   });
 
   it("renders enable button and handles subscribe", () => {
-    (usePushSubscription as any).mockReturnValue({
+    vi.mocked(usePushSubscription).mockReturnValue({
       isSupported: true,
       isSubscribed: false,
       permission: "default",
       subscribe: mockSubscribe,
+      unsubscribe: vi.fn(),
       loading: false,
       error: null,
     });
@@ -63,20 +79,26 @@ describe("PushNotificationBanner Component", () => {
   });
 
   it("shows loading state on buttons", () => {
-    (usePushSubscription as any).mockReturnValue({
+    vi.mocked(usePushSubscription).mockReturnValue({
       isSupported: true,
       isSubscribed: false,
       permission: "default",
       loading: true,
+      error: null,
+      subscribe: vi.fn(),
+      unsubscribe: vi.fn(),
     });
     render(<PushNotificationBanner />);
     expect(screen.getByText("Enabling...")).toBeDefined();
 
-    (usePushSubscription as any).mockReturnValue({
+    vi.mocked(usePushSubscription).mockReturnValue({
         isSupported: true,
         isSubscribed: true,
         permission: "granted",
         loading: true,
+        error: null,
+        subscribe: vi.fn(),
+        unsubscribe: vi.fn(),
     });
     const { rerender } = render(<PushNotificationBanner />);
     rerender(<PushNotificationBanner />);
@@ -84,11 +106,14 @@ describe("PushNotificationBanner Component", () => {
   });
 
   it("shows error message when present", () => {
-    (usePushSubscription as any).mockReturnValue({
+    vi.mocked(usePushSubscription).mockReturnValue({
       isSupported: true,
       isSubscribed: false,
       permission: "default",
       error: "Something went wrong",
+      loading: false,
+      subscribe: vi.fn(),
+      unsubscribe: vi.fn(),
     });
     render(<PushNotificationBanner />);
     expect(screen.getByText("Something went wrong")).toBeDefined();

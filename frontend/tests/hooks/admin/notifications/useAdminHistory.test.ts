@@ -8,6 +8,8 @@ vi.mock("@/api/notifications", () => ({
   getBroadcastHistory: vi.fn(),
 }));
 
+const mockedGetBroadcastHistory = vi.mocked(getBroadcastHistory);
+
 describe("useAdminHistory Hook", () => {
   const mockItems = [
     { id: 1, title: "B1", status: "COMPLETED" },
@@ -15,7 +17,7 @@ describe("useAdminHistory Hook", () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    (getBroadcastHistory as any).mockResolvedValue({ results: mockItems, count: 100 });
+    mockedGetBroadcastHistory.mockResolvedValue({ results: mockItems, count: 100 });
   });
 
   afterEach(() => {
@@ -34,7 +36,7 @@ describe("useAdminHistory Hook", () => {
       expect(result.current.state.totalPages).toBe(2); // 100 / 50
     });
 
-    expect(getBroadcastHistory).toHaveBeenCalledWith({
+    expect(mockedGetBroadcastHistory).toHaveBeenCalledWith({
       page: 1,
       q: undefined,
       status: undefined,
@@ -43,8 +45,10 @@ describe("useAdminHistory Hook", () => {
   });
 
   it("sets error when fetch fails", async () => {
-    const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
-    (getBroadcastHistory as any).mockRejectedValue(new Error("Failed"));
+    const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {
+      /* Silence console error */
+    });
+    mockedGetBroadcastHistory.mockRejectedValue(new Error("Failed"));
 
     const { result } = renderHook(() => useAdminHistory());
 
@@ -61,14 +65,14 @@ describe("useAdminHistory Hook", () => {
     const { result } = renderHook(() => useAdminHistory());
     await waitFor(() => expect(result.current.loading).toBe(false));
 
-    await act(async () => {
+    act(() => {
       result.current.actions.setSearch("new query");
     });
 
     expect(result.current.state.search).toBe("new query");
     expect(result.current.state.page).toBe(1);
     
-    expect(getBroadcastHistory).toHaveBeenLastCalledWith(expect.objectContaining({
+    expect(mockedGetBroadcastHistory).toHaveBeenLastCalledWith(expect.objectContaining({
       q: "new query",
       page: 1,
     }));
@@ -78,14 +82,14 @@ describe("useAdminHistory Hook", () => {
     const { result } = renderHook(() => useAdminHistory());
     await waitFor(() => expect(result.current.loading).toBe(false));
 
-    await act(async () => {
+    act(() => {
       result.current.actions.setStatusFilter("FAILED");
     });
 
     expect(result.current.state.statusFilter).toBe("FAILED");
     expect(result.current.state.page).toBe(1);
     
-    expect(getBroadcastHistory).toHaveBeenLastCalledWith(expect.objectContaining({
+    expect(mockedGetBroadcastHistory).toHaveBeenLastCalledWith(expect.objectContaining({
       status: "FAILED",
       page: 1,
     }));
@@ -95,14 +99,14 @@ describe("useAdminHistory Hook", () => {
     const { result } = renderHook(() => useAdminHistory());
     await waitFor(() => expect(result.current.loading).toBe(false));
 
-    await act(async () => {
+    act(() => {
       result.current.actions.setTargetFilter("staff");
     });
 
     expect(result.current.state.targetFilter).toBe("staff");
     expect(result.current.state.page).toBe(1);
     
-    expect(getBroadcastHistory).toHaveBeenLastCalledWith(expect.objectContaining({
+    expect(mockedGetBroadcastHistory).toHaveBeenLastCalledWith(expect.objectContaining({
       target: "staff",
       page: 1,
     }));
@@ -112,13 +116,13 @@ describe("useAdminHistory Hook", () => {
     const { result } = renderHook(() => useAdminHistory());
     await waitFor(() => expect(result.current.loading).toBe(false));
 
-    await act(async () => {
+    act(() => {
       result.current.actions.setPage(3);
     });
 
     expect(result.current.state.page).toBe(3);
     
-    expect(getBroadcastHistory).toHaveBeenLastCalledWith(expect.objectContaining({
+    expect(mockedGetBroadcastHistory).toHaveBeenLastCalledWith(expect.objectContaining({
       page: 3,
     }));
   });

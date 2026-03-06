@@ -1,11 +1,14 @@
-import { vi, describe, it, expect, beforeEach, afterEach } from "vitest";
+import { vi, describe, it, expect, beforeEach } from "vitest";
 import { authStore, authService, AUTH_CHANGE_EVENT } from "@/services/authService";
-import api from "@/services/api";
 
 // Mock api
+const { mockPost } = vi.hoisted(() => ({
+  mockPost: vi.fn(),
+}));
+
 vi.mock("@/services/api", () => ({
   default: {
-    post: vi.fn(),
+    post: mockPost,
   },
 }));
 
@@ -76,11 +79,11 @@ describe("authService", () => {
   it("register calls correct URL and updates store", async () => {
     const payload = { username: "u", email: "e", password: "p", password2: "p" };
     const mockResponse = { data: { token: "t", user: { username: "u", email: "e" } } };
-    (api.post as any).mockResolvedValue(mockResponse);
+    mockPost.mockResolvedValue(mockResponse);
 
     await authService.register(payload);
 
-    expect(api.post).toHaveBeenCalledWith("/api/authentication/register/", payload);
+    expect(mockPost).toHaveBeenCalledWith("/api/authentication/register/", payload);
     expect(authStore.getToken()).toBe("t");
     expect(authStore.getUser()).toEqual(mockResponse.data.user);
   });
@@ -88,35 +91,37 @@ describe("authService", () => {
   it("login calls correct URL and updates store", async () => {
     const payload = { username: "u", password: "p" };
     const mockResponse = { data: { key: "k", user: { username: "u", email: "e" } } };
-    (api.post as any).mockResolvedValue(mockResponse);
+    mockPost.mockResolvedValue(mockResponse);
 
     await authService.login(payload);
 
-    expect(api.post).toHaveBeenCalledWith("/api/authentication/session/", payload);
+    expect(mockPost).toHaveBeenCalledWith("/api/authentication/session/", payload);
     expect(authStore.getToken()).toBe("k");
   });
 
   it("login throws if no token returned", async () => {
-    (api.post as any).mockResolvedValue({ data: {} });
+    mockPost.mockResolvedValue({ data: {} });
     await expect(authService.login({ username: "u", password: "p" })).rejects.toThrow("Login succeeded but no token was returned.");
   });
 
   it("logout calls api and clears store", async () => {
     localStorage.setItem("auth_token", "t");
-    (api.post as any).mockResolvedValue({});
+    mockPost.mockResolvedValue({});
 
     await authService.logout();
 
-    expect(api.post).toHaveBeenCalledWith("/api/authentication/logout/");
+    expect(mockPost).toHaveBeenCalledWith("/api/authentication/logout/");
     expect(authStore.getToken()).toBeNull();
   });
 
   it("logout clears store even if api fails", async () => {
     localStorage.setItem("auth_token", "t");
-    (api.post as any).mockRejectedValue(new Error("Fail"));
+    mockPost.mockRejectedValue(new Error("Fail"));
 
     await expect(authService.logout()).rejects.toThrow("Fail");
 
     expect(authStore.getToken()).toBeNull();
   });
 });
+
+

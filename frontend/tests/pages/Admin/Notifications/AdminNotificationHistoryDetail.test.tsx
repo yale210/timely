@@ -11,12 +11,12 @@ vi.mock("@/hooks/admin/notifications/useAdminHistoryDetail", () => ({
 
 // Mock AppLayout
 vi.mock("@/layouts/AppLayout", () => ({
-  default: ({ children }: any) => <div data-testid="app-layout">{children}</div>,
+  default: ({ children }: { children: React.ReactNode }) => <div data-testid="app-layout">{children}</div>,
 }));
 
 // Mock ConfirmationModal
 vi.mock("@/components/modals/ConfirmationModal", () => ({
-  default: ({ isOpen, onConfirm, onClose }: any) => isOpen ? (
+  default: ({ isOpen, onConfirm, onClose }: { isOpen: boolean; onConfirm: () => void; onClose: () => void }) => isOpen ? (
     <div data-testid="confirm-modal">
       <button onClick={onConfirm}>Confirm Retry</button>
       <button onClick={onClose}>Close</button>
@@ -53,11 +53,12 @@ describe("AdminNotificationHistoryDetail Page", () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    (useAdminHistoryDetail as any).mockReturnValue({
+    vi.mocked(useAdminHistoryDetail).mockReturnValue({
       state: mockState,
       loading: false,
       error: null,
       retryError: null,
+      broadcastId: 1,
       actions: {
         handleRetry: mockHandleRetry,
         setRetryConfirmOpen: mockSetRetryConfirmOpen,
@@ -66,8 +67,16 @@ describe("AdminNotificationHistoryDetail Page", () => {
   });
 
   it("renders loading state", () => {
-    (useAdminHistoryDetail as any).mockReturnValue({
+    vi.mocked(useAdminHistoryDetail).mockReturnValue({
       loading: true,
+      state: mockState,
+      error: null,
+      retryError: null,
+      broadcastId: 1,
+      actions: {
+        handleRetry: mockHandleRetry,
+        setRetryConfirmOpen: mockSetRetryConfirmOpen,
+      },
     });
     render(
       <MemoryRouter>
@@ -78,10 +87,16 @@ describe("AdminNotificationHistoryDetail Page", () => {
   });
 
   it("renders error state", () => {
-    (useAdminHistoryDetail as any).mockReturnValue({
+    vi.mocked(useAdminHistoryDetail).mockReturnValue({
       loading: false,
       error: "Detail load failed",
-      state: {},
+      state: mockState,
+      retryError: null,
+      broadcastId: 1,
+      actions: {
+        handleRetry: mockHandleRetry,
+        setRetryConfirmOpen: mockSetRetryConfirmOpen,
+      },
     });
     render(
       <MemoryRouter>
@@ -103,11 +118,12 @@ describe("AdminNotificationHistoryDetail Page", () => {
   });
 
   it("shows retry error when present", () => {
-    (useAdminHistoryDetail as any).mockReturnValue({
+    vi.mocked(useAdminHistoryDetail).mockReturnValue({
       state: mockState,
       loading: false,
       error: null,
       retryError: "Retry failed miserably",
+      broadcastId: 1,
       actions: {
         handleRetry: mockHandleRetry,
         setRetryConfirmOpen: mockSetRetryConfirmOpen,
@@ -132,9 +148,12 @@ describe("AdminNotificationHistoryDetail Page", () => {
     expect(mockSetRetryConfirmOpen).toHaveBeenCalledWith(true);
 
     // Simulate modal open
-    (useAdminHistoryDetail as any).mockReturnValue({
+    vi.mocked(useAdminHistoryDetail).mockReturnValue({
         state: { ...mockState, isRetryConfirmOpen: true },
         loading: false,
+        error: null,
+        retryError: null,
+        broadcastId: 1,
         actions: {
           handleRetry: mockHandleRetry,
           setRetryConfirmOpen: mockSetRetryConfirmOpen,
@@ -151,9 +170,12 @@ describe("AdminNotificationHistoryDetail Page", () => {
   });
 
   it("disables retry button when no failed recipients", () => {
-    (useAdminHistoryDetail as any).mockReturnValue({
+    vi.mocked(useAdminHistoryDetail).mockReturnValue({
         state: { ...mockState, failedRecipientsCount: 0 },
         loading: false,
+        error: null,
+        retryError: null,
+        broadcastId: 1,
         actions: {
           handleRetry: mockHandleRetry,
           setRetryConfirmOpen: mockSetRetryConfirmOpen,

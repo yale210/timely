@@ -8,6 +8,7 @@ import {
   markAllAsRead as apiMarkAllAsRead, 
   deleteNotification as apiDeleteNotification 
 } from "@/api/notifications";
+import type { Notification, NotificationListResponse } from "@/types/notification";
 
 // Mock API
 vi.mock("@/api/notifications", () => ({
@@ -22,12 +23,17 @@ describe("useNotifications Hook", () => {
   const mockNotifications = [
     { id: 1, title: "N1", is_read: false },
     { id: 2, title: "N2", is_read: true },
-  ];
+  ] as Notification[];
 
   beforeEach(() => {
     vi.clearAllMocks();
-    (getNotifications as any).mockResolvedValue({ results: mockNotifications, next: "page2" });
-    (getUnreadCount as any).mockResolvedValue({ count: 5 });
+    vi.mocked(getNotifications).mockResolvedValue({ 
+      results: mockNotifications, 
+      next: "page2",
+      count: 2,
+      previous: null
+    } as NotificationListResponse);
+    vi.mocked(getUnreadCount).mockResolvedValue({ count: 5 });
   });
 
   afterEach(() => {
@@ -51,8 +57,13 @@ describe("useNotifications Hook", () => {
     const { result } = renderHook(() => useNotifications());
     await waitFor(() => expect(result.current.notifications.length).toBe(2));
 
-    const nextNotifications = [{ id: 3, title: "N3", is_read: false }];
-    (getNotifications as any).mockResolvedValue({ results: nextNotifications, next: null });
+    const nextNotifications = [{ id: 3, title: "N3", is_read: false }] as Notification[];
+    vi.mocked(getNotifications).mockResolvedValue({ 
+      results: nextNotifications, 
+      next: null,
+      count: 1,
+      previous: null
+    } as NotificationListResponse);
 
     await act(async () => {
       await result.current.fetchNotifications(2);
@@ -65,8 +76,8 @@ describe("useNotifications Hook", () => {
   });
 
   it("sets error when fetchNotifications fails", async () => {
-    const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
-    (getNotifications as any).mockRejectedValue(new Error("Fetch failed"));
+    const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => { /* empty */ });
+    vi.mocked(getNotifications).mockRejectedValue(new Error("Fetch failed"));
 
     const { result } = renderHook(() => useNotifications());
 
@@ -79,8 +90,8 @@ describe("useNotifications Hook", () => {
   });
 
   it("handles errors in fetchUnreadCount", async () => {
-    const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
-    (getUnreadCount as any).mockRejectedValue(new Error("Count failed"));
+    const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => { /* empty */ });
+    vi.mocked(getUnreadCount).mockRejectedValue(new Error("Count failed"));
 
     renderHook(() => useNotifications());
 
@@ -142,10 +153,10 @@ describe("useNotifications Hook", () => {
   });
 
   it("handles errors in markRead, markAllRead, deleteNotification", async () => {
-    const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
-    (apiMarkAsRead as any).mockRejectedValue(new Error("Error"));
-    (apiMarkAllAsRead as any).mockRejectedValue(new Error("Error"));
-    (apiDeleteNotification as any).mockRejectedValue(new Error("Error"));
+    const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => { /* empty */ });
+    vi.mocked(apiMarkAsRead).mockRejectedValue(new Error("Error"));
+    vi.mocked(apiMarkAllAsRead).mockRejectedValue(new Error("Error"));
+    vi.mocked(apiDeleteNotification).mockRejectedValue(new Error("Error"));
 
     const { result } = renderHook(() => useNotifications());
     await waitFor(() => expect(result.current.loading).toBe(false));
@@ -160,3 +171,4 @@ describe("useNotifications Hook", () => {
     consoleSpy.mockRestore();
   });
 });
+

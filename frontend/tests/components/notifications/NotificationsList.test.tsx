@@ -1,10 +1,18 @@
 import { render, screen, fireEvent, cleanup } from "@testing-library/react";
 import { vi, describe, it, expect, afterEach } from "vitest";
 import { NotificationsList } from "@/components/notifications/NotificationsList";
+import type { Notification } from "@/types/notification";
+
+interface NotificationCardProps {
+  notification: Notification;
+  onClick: (notification: Notification) => void;
+  onToggleRead: (notification: Notification) => void;
+  onDelete: (notification: Notification) => void;
+}
 
 // Mock NotificationCard
 vi.mock("@/components/notifications/NotificationCard", () => ({
-  NotificationCard: ({ notification, onClick, onToggleRead, onDelete }: any) => (
+  NotificationCard: ({ notification, onClick, onToggleRead, onDelete }: NotificationCardProps) => (
     <div data-testid={`card-${notification.id}`}>
       <span onClick={() => onClick(notification)}>{notification.title}</span>
       <button onClick={() => onToggleRead(notification)}>Toggle</button>
@@ -23,13 +31,33 @@ describe("NotificationsList Component", () => {
   const mockOnDeleteRequest = vi.fn();
   const mockOnPageChange = vi.fn();
 
-  const mockNotifications = [
-    { id: 1, title: "N1" },
-    { id: 2, title: "N2" },
+  const mockNotifications: Notification[] = [
+    {
+      id: 1,
+      recipient: 1,
+      sender: null,
+      title: "N1",
+      message: "M1",
+      is_read: false,
+      timestamp: "2023-01-01",
+      notification_type: "SYSTEM",
+      sender_username: null,
+    },
+    {
+      id: 2,
+      recipient: 1,
+      sender: null,
+      title: "N2",
+      message: "M2",
+      is_read: false,
+      timestamp: "2023-01-02",
+      notification_type: "SYSTEM",
+      sender_username: null,
+    },
   ];
 
   const defaultProps = {
-    notifications: mockNotifications as any,
+    notifications: mockNotifications,
     page: 1,
     totalPages: 3,
     paginationWindow: [1, 2, 3],

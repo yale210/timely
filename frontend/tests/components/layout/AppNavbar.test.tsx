@@ -27,9 +27,18 @@ vi.mock("@/services/authService", () => ({
   },
 }));
 
+interface NotificationDropdownProps {
+  onMarkAllRead: () => void;
+  onDeleteAll: () => void;
+  onItemClick: (item: { id: number }) => void;
+  onToggleRead: (item: { id: number; is_read: boolean }) => void;
+  onDeleteItem: (item: { id: number }) => void;
+  unreadCount: number;
+}
+
 // Mock child components to simplify and focus on AppNavbar logic
 vi.mock("@/components/notifications/NotificationDropdown", () => ({
-  NotificationDropdown: ({ onMarkAllRead, onDeleteAll, onItemClick, onToggleRead, onDeleteItem, unreadCount }: any) => (
+  NotificationDropdown: ({ onMarkAllRead, onDeleteAll, onItemClick, onToggleRead, onDeleteItem, unreadCount }: NotificationDropdownProps) => (
     <div data-testid="notification-dropdown">
         <button onClick={() => onItemClick({ id: 1 })}>Item Click</button>
         <button onClick={() => onToggleRead({ id: 1, is_read: false })}>Toggle Read (to read)</button>
@@ -42,14 +51,21 @@ vi.mock("@/components/notifications/NotificationDropdown", () => ({
   ),
 }));
 
+interface AdminSidebarProps {
+  onClose: () => void;
+}
+
 vi.mock("@/components/layout/AdminSidebar", () => ({
-  default: ({ onClose }: any) => (
+  default: ({ onClose }: AdminSidebarProps) => (
     <div data-testid="admin-sidebar">
       <button onClick={onClose}>Close Admin Sidebar</button>
     </div>
   ),
 }));
 
+/**
+ * Tests for the AppNavbar component.
+ */
 describe("AppNavbar Component", () => {
   const mockNavigate = vi.fn();
   const mockMarkRead = vi.fn();
@@ -60,9 +76,9 @@ describe("AppNavbar Component", () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    (useNavigate as any).mockReturnValue(mockNavigate);
-    (useLocation as any).mockReturnValue({ pathname: "/dashboard" });
-    (useNotificationContext as any).mockReturnValue({
+    vi.mocked(useNavigate).mockReturnValue(mockNavigate);
+    vi.mocked(useLocation).mockReturnValue({ pathname: "/dashboard", search: "", hash: "", state: null, key: "default" });
+    vi.mocked(useNotificationContext).mockReturnValue({
       notifications: [],
       unreadCount: 0,
       markRead: mockMarkRead,
@@ -71,7 +87,7 @@ describe("AppNavbar Component", () => {
       deleteNotification: mockDeleteNotification,
       deleteAllNotifications: mockDeleteAllNotifications,
     });
-    (authStore.getUser as any).mockReturnValue({ is_staff: false });
+    vi.mocked(authStore.getUser.bind(authStore)).mockReturnValue({ is_staff: false });
   });
 
   afterEach(() => {
@@ -87,7 +103,7 @@ describe("AppNavbar Component", () => {
     expect(screen.getAllByText("Timely")).toBeDefined();
   });
 
-  it("opens and closes the navigation drawer", async () => {
+  it("opens and closes the navigation drawer", () => {
     render(
       <MemoryRouter>
         <AppNavbar />
@@ -109,7 +125,7 @@ describe("AppNavbar Component", () => {
   });
 
   it("renders AdminSidebar when on an admin route", () => {
-    (useLocation as any).mockReturnValue({ pathname: "/admin/notifications" });
+    vi.mocked(useLocation).mockReturnValue({ pathname: "/admin/notifications", search: "", hash: "", state: null, key: "default" });
     render(
       <MemoryRouter>
         <AppNavbar />
@@ -135,7 +151,7 @@ describe("AppNavbar Component", () => {
   });
 
   it("shows unread notifications count in the sidebar", () => {
-    (useNotificationContext as any).mockReturnValue({
+    vi.mocked(useNotificationContext).mockReturnValue({
       notifications: [],
       unreadCount: 5,
       markRead: mockMarkRead,
@@ -165,7 +181,7 @@ describe("AppNavbar Component", () => {
     fireEvent.click(screen.getByLabelText("Open navigation"));
     expect(screen.queryByText("Admin Panel")).toBeNull();
 
-    (authStore.getUser as any).mockReturnValue({ is_staff: true });
+    vi.mocked(authStore.getUser.bind(authStore)).mockReturnValue({ is_staff: true });
     rerender(
       <MemoryRouter>
         <AppNavbar />
@@ -175,7 +191,7 @@ describe("AppNavbar Component", () => {
     expect(screen.getByText("Admin Panel")).toBeDefined();
   });
 
-  it("handles notification dropdown actions", async () => {
+  it("handles notification dropdown actions", () => {
     render(
       <MemoryRouter>
         <AppNavbar />
@@ -273,7 +289,7 @@ describe("AppNavbar Component", () => {
   });
 
   it("handles admin panel link click", () => {
-    (authStore.getUser as any).mockReturnValue({ is_staff: true });
+    vi.mocked(authStore.getUser.bind(authStore)).mockReturnValue({ is_staff: true });
     render(
       <MemoryRouter>
         <AppNavbar />

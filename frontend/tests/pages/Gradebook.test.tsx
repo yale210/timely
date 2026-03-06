@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import { render, screen, fireEvent } from "@testing-library/react";
 import { vi, describe, it, expect, beforeEach } from "vitest";
 import Gradebook from "@/pages/Gradebook";
@@ -15,12 +16,12 @@ vi.mock("@/hooks/tasks/useCategories", () => ({
 
 // Mock AppLayout
 vi.mock("@/layouts/AppLayout", () => ({
-  default: ({ children }: any) => <div data-testid="app-layout">{children}</div>,
+  default: ({ children }: { children: ReactNode }) => <div data-testid="app-layout">{children}</div>,
 }));
 
 // Mock child components
 vi.mock("@/components/modals/CreateGradeModal.tsx", () => ({
-  default: ({ open, onClose, onCreated, onUpdated }: any) => open ? (
+  default: ({ open, onClose, onCreated, onUpdated }: { open: boolean, onClose: () => void, onCreated: () => void, onUpdated: () => void }) => open ? (
     <div data-testid="create-modal">
       <button onClick={onClose}>Close</button>
       <button onClick={onCreated}>Created</button>
@@ -30,7 +31,7 @@ vi.mock("@/components/modals/CreateGradeModal.tsx", () => ({
 }));
 
 vi.mock("@/components/modals/ConfirmationModal", () => ({
-  default: ({ isOpen, onConfirm, onClose }: any) => isOpen ? (
+  default: ({ isOpen, onConfirm, onClose }: { isOpen: boolean, onConfirm: () => void, onClose: () => void }) => isOpen ? (
     <div data-testid="confirm-modal">
       <button onClick={onConfirm}>Confirm Delete</button>
       <button onClick={onClose}>Close</button>
@@ -47,7 +48,7 @@ describe("Gradebook Page", () => {
   const mockCloseModal = vi.fn();
   const mockConfirmDelete = vi.fn();
 
-  const mockUseGrades = {
+  const mockUseGradesResult = {
     grades: [],
     loading: false,
     modalOpen: false,
@@ -66,8 +67,8 @@ describe("Gradebook Page", () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    (useGrades as any).mockReturnValue(mockUseGrades);
-    (useCategories as any).mockReturnValue({ categories: [], loading: false });
+    vi.mocked(useGrades).mockReturnValue(mockUseGradesResult);
+    vi.mocked(useCategories).mockReturnValue({ categories: [], loading: false });
   });
 
   it("renders main layout and components", () => {
@@ -77,11 +78,11 @@ describe("Gradebook Page", () => {
   });
 
   it("handles modal open and close logic", () => {
-    (useGrades as any).mockReturnValue({
-        ...mockUseGrades,
+    vi.mocked(useGrades).mockReturnValue({
+        ...mockUseGradesResult,
         modalOpen: true,
     });
-    const { rerender } = render(<Gradebook />);
+    render(<Gradebook />);
     
     expect(screen.getByTestId("create-modal")).toBeDefined();
     
@@ -98,8 +99,8 @@ describe("Gradebook Page", () => {
   });
 
   it("handles delete confirmation", () => {
-    (useGrades as any).mockReturnValue({
-        ...mockUseGrades,
+    vi.mocked(useGrades).mockReturnValue({
+        ...mockUseGradesResult,
         pendingDeleteId: 123,
     });
     render(<Gradebook />);

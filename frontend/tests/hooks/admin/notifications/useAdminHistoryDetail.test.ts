@@ -20,6 +20,11 @@ vi.mock("@/api/notifications", () => ({
   retryFailedBroadcast: vi.fn(),
 }));
 
+const mockedUseParams = vi.mocked(useParams);
+const mockedGetBroadcastDetail = vi.mocked(getBroadcastDetail);
+const mockedGetBroadcastStatus = vi.mocked(getBroadcastStatus);
+const mockedRetryFailedBroadcast = vi.mocked(retryFailedBroadcast);
+
 describe("useAdminHistoryDetail Hook", () => {
   const mockId = "1";
   const mockDetail = {
@@ -37,9 +42,9 @@ describe("useAdminHistoryDetail Hook", () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    (useParams as any).mockReturnValue({ id: mockId });
-    (getBroadcastDetail as any).mockResolvedValue(mockDetail);
-    (getBroadcastStatus as any).mockResolvedValue(mockStatus);
+    mockedUseParams.mockReturnValue({ id: mockId });
+    mockedGetBroadcastDetail.mockResolvedValue(mockDetail);
+    mockedGetBroadcastStatus.mockResolvedValue(mockStatus);
   });
 
   afterEach(() => {
@@ -47,7 +52,7 @@ describe("useAdminHistoryDetail Hook", () => {
   });
 
   it("handles invalid broadcast ID", async () => {
-    (useParams as any).mockReturnValue({ id: "invalid" });
+    mockedUseParams.mockReturnValue({ id: "invalid" });
     const { result } = renderHook(() => useAdminHistoryDetail());
 
     await waitFor(() => {
@@ -69,8 +74,10 @@ describe("useAdminHistoryDetail Hook", () => {
   });
 
   it("sets error when initial fetch fails", async () => {
-    const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
-    (getBroadcastDetail as any).mockRejectedValue(new Error("Fail"));
+    const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {
+      /* Silence console error */
+    });
+    mockedGetBroadcastDetail.mockRejectedValue(new Error("Fail"));
 
     const { result } = renderHook(() => useAdminHistoryDetail());
 
@@ -85,24 +92,26 @@ describe("useAdminHistoryDetail Hook", () => {
     const { result } = renderHook(() => useAdminHistoryDetail());
     await waitFor(() => expect(result.current.loading).toBe(false));
 
-    (retryFailedBroadcast as any).mockResolvedValue({ broadcast_id: 1 });
+    mockedRetryFailedBroadcast.mockResolvedValue({ broadcast_id: 1 });
     const newDetail = { ...mockDetail, title: "Retried" };
-    (getBroadcastDetail as any).mockResolvedValue(newDetail);
+    mockedGetBroadcastDetail.mockResolvedValue(newDetail);
 
     await act(async () => {
       await result.current.actions.handleRetry();
     });
 
-    expect(retryFailedBroadcast).toHaveBeenCalledWith(1);
+    expect(mockedRetryFailedBroadcast).toHaveBeenCalledWith(1);
     expect(result.current.state.detail).toEqual(newDetail);
   });
 
   it("sets retryError on retry failure", async () => {
-    const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {
+      /* Silence console error */
+    });
     const { result } = renderHook(() => useAdminHistoryDetail());
     await waitFor(() => expect(result.current.loading).toBe(false));
 
-    (retryFailedBroadcast as any).mockRejectedValue(new Error("Retry Fail"));
+    mockedRetryFailedBroadcast.mockRejectedValue(new Error("Retry Fail"));
 
     await act(async () => {
       await result.current.actions.handleRetry();

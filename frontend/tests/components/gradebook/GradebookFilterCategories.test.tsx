@@ -1,6 +1,7 @@
 import { render, screen, fireEvent } from "@testing-library/react";
 import { vi, describe, it, expect } from "vitest";
 import GradebookFilterCategories from "@/components/gradebook/GradebookFilterCategories";
+import type { Grade } from "@/components/gradebook/GradebookTable";
 
 describe("GradebookFilterCategories Component", () => {
   const mockSetSelectedCategoryId = vi.fn();
@@ -8,17 +9,33 @@ describe("GradebookFilterCategories Component", () => {
     { id: 1, text: "Math" },
     { id: 2, text: "Science" },
   ];
-  const mockGrades = [
-    { id: 1, name: "G1", percentage: 80 },
-    { id: 2, name: "G2", percentage: 40 },
+  const mockGrades: Grade[] = [
+    {
+      id: 1,
+      name: "G1",
+      percentage: 80,
+      score: 80,
+      total_possible: 100,
+      date_achieved: "2023-01-01",
+      time_spent_minutes: 0,
+    },
+    {
+      id: 2,
+      name: "G2",
+      percentage: 40,
+      score: 40,
+      total_possible: 100,
+      date_achieved: "2023-01-02",
+      time_spent_minutes: 0,
+    },
   ];
 
   it("renders null when loading", () => {
     const { container } = render(
       <GradebookFilterCategories
         loading={true}
-        grades={mockGrades as any}
-        filteredGrades={mockGrades as any}
+        grades={mockGrades}
+        filteredGrades={mockGrades}
         selectedCategoryId={null}
         setSelectedCategoryId={mockSetSelectedCategoryId}
       />
@@ -43,8 +60,8 @@ describe("GradebookFilterCategories Component", () => {
     render(
       <GradebookFilterCategories
         loading={false}
-        grades={mockGrades as any}
-        filteredGrades={mockGrades as any}
+        grades={mockGrades}
+        filteredGrades={mockGrades}
         selectedCategoryId={null}
         setSelectedCategoryId={mockSetSelectedCategoryId}
         categories={mockCategories}
@@ -63,8 +80,8 @@ describe("GradebookFilterCategories Component", () => {
     render(
       <GradebookFilterCategories
         loading={false}
-        grades={mockGrades as any}
-        filteredGrades={mockGrades as any}
+        grades={mockGrades}
+        filteredGrades={mockGrades}
         selectedCategoryId={null}
         setSelectedCategoryId={mockSetSelectedCategoryId}
         categories={mockCategories}
@@ -83,8 +100,8 @@ describe("GradebookFilterCategories Component", () => {
     const { rerender } = render(
       <GradebookFilterCategories
         loading={false}
-        grades={mockGrades as any}
-        filteredGrades={[{ percentage: 40 }] as any}
+        grades={mockGrades}
+        filteredGrades={[{ percentage: 40 } as Grade]}
         selectedCategoryId={null}
         setSelectedCategoryId={mockSetSelectedCategoryId}
       />
@@ -94,8 +111,8 @@ describe("GradebookFilterCategories Component", () => {
     rerender(
       <GradebookFilterCategories
         loading={false}
-        grades={mockGrades as any}
-        filteredGrades={[{ percentage: 60 }] as any}
+        grades={mockGrades}
+        filteredGrades={[{ percentage: 60 } as Grade]}
         selectedCategoryId={null}
         setSelectedCategoryId={mockSetSelectedCategoryId}
       />
@@ -105,8 +122,8 @@ describe("GradebookFilterCategories Component", () => {
     rerender(
       <GradebookFilterCategories
         loading={false}
-        grades={mockGrades as any}
-        filteredGrades={[{ percentage: 90 }] as any}
+        grades={mockGrades}
+        filteredGrades={[{ percentage: 90 } as Grade]}
         selectedCategoryId={null}
         setSelectedCategoryId={mockSetSelectedCategoryId}
       />

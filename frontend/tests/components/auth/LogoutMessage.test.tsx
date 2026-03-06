@@ -1,5 +1,5 @@
 import { render, screen, waitFor } from "@testing-library/react";
-import { vi, describe, it, expect, beforeEach, afterEach } from "vitest";
+import { vi, describe, it, expect, beforeEach, afterEach, type Mock } from "vitest";
 import { MemoryRouter, useNavigate } from "react-router-dom";
 import LogoutMessage from "@/components/auth/LogoutMessage";
 import { authService } from "@/services/authService";
@@ -20,12 +20,15 @@ vi.mock("@/services/authService", () => ({
   },
 }));
 
+const mockedUseNavigate = vi.mocked(useNavigate);
+const logoutMock = authService.logout.bind(authService) as Mock;
+
 describe("LogoutMessage Component", () => {
   const mockNavigate = vi.fn();
 
   beforeEach(() => {
     vi.clearAllMocks();
-    (useNavigate as any).mockReturnValue(mockNavigate);
+    mockedUseNavigate.mockReturnValue(mockNavigate);
   });
 
   afterEach(() => {
@@ -33,7 +36,9 @@ describe("LogoutMessage Component", () => {
   });
 
   it("displays the initial logout message", () => {
-    (authService.logout as any).mockReturnValue(new Promise(() => {})); // Never resolves
+    logoutMock.mockReturnValue(new Promise(() => {
+      /* Never resolves */
+    }));
     render(
       <MemoryRouter>
         <LogoutMessage />
@@ -43,17 +48,17 @@ describe("LogoutMessage Component", () => {
   });
 
   it("calls authService.logout on mount", () => {
-    (authService.logout as any).mockResolvedValue(undefined);
+    logoutMock.mockResolvedValue(undefined);
     render(
       <MemoryRouter>
         <LogoutMessage />
       </MemoryRouter>
     );
-    expect(authService.logout).toHaveBeenCalled();
+    expect(logoutMock).toHaveBeenCalled();
   });
 
   it("navigates to /login after logout succeeds", async () => {
-    (authService.logout as any).mockResolvedValue(undefined);
+    logoutMock.mockResolvedValue(undefined);
     render(
       <MemoryRouter>
         <LogoutMessage />
@@ -65,7 +70,7 @@ describe("LogoutMessage Component", () => {
   });
 
   it("displays error message and navigates to /login if logout fails", async () => {
-    (authService.logout as any).mockRejectedValue(new Error("Logout error"));
+    logoutMock.mockRejectedValue(new Error("Logout error"));
     render(
       <MemoryRouter>
         <LogoutMessage />
@@ -82,7 +87,7 @@ describe("LogoutMessage Component", () => {
   });
 
   it("displays default error message if logout fails with non-Error", async () => {
-    (authService.logout as any).mockRejectedValue("Some error");
+    logoutMock.mockRejectedValue("Some error");
     render(
       <MemoryRouter>
         <LogoutMessage />
@@ -95,11 +100,11 @@ describe("LogoutMessage Component", () => {
   });
 
   it("does not update state if unmounted before logout completes", async () => {
-    let resolveLogout: (value: any) => void;
-    const logoutPromise = new Promise((resolve) => {
+    let resolveLogout: (value: undefined) => void;
+    const logoutPromise = new Promise<undefined>((resolve) => {
       resolveLogout = resolve;
     });
-    (authService.logout as any).mockReturnValue(logoutPromise);
+    logoutMock.mockReturnValue(logoutPromise);
 
     const { unmount } = render(
       <MemoryRouter>

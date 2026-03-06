@@ -11,7 +11,7 @@ vi.mock("@/hooks/notifications/useNotificationDetail", () => ({
 
 // Mock child components
 vi.mock("@/components/notifications/NotificationDetailHeader", () => ({
-  NotificationDetailHeader: ({ onToggleRead, onDelete }: any) => (
+  NotificationDetailHeader: ({ onToggleRead, onDelete }: { onToggleRead: () => void, onDelete: () => void }) => (
     <div data-testid="detail-header">
       <button onClick={onToggleRead}>Toggle Read</button>
       <button onClick={onDelete}>Delete</button>
@@ -20,11 +20,11 @@ vi.mock("@/components/notifications/NotificationDetailHeader", () => ({
 }));
 
 vi.mock("@/components/notifications/NotificationDetailBody", () => ({
-  NotificationDetailBody: ({ message }: any) => <div data-testid="detail-body">{message}</div>,
+  NotificationDetailBody: ({ message }: { message: string }) => <div data-testid="detail-body">{message}</div>,
 }));
 
 vi.mock("@/components/modals/ConfirmationModal", () => ({
-  default: ({ isOpen, onConfirm, onClose }: any) => isOpen ? (
+  default: ({ isOpen, onConfirm, onClose }: { isOpen: boolean, onConfirm: () => void, onClose: () => void }) => isOpen ? (
     <div data-testid="confirm-modal">
       <button onClick={onConfirm}>Confirm Delete</button>
       <button onClick={onClose}>Close</button>
@@ -47,7 +47,7 @@ describe("NotificationDetail Page", () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    (useNotificationDetail as any).mockReturnValue({
+    vi.mocked(useNotificationDetail).mockReturnValue({
       state: {
         notification: mockNotification,
         isDeleteOpen: false,
@@ -63,7 +63,12 @@ describe("NotificationDetail Page", () => {
   });
 
   it("renders loading state", () => {
-    (useNotificationDetail as any).mockReturnValue({ loading: true });
+    vi.mocked(useNotificationDetail).mockReturnValue({
+      loading: true,
+      error: null,
+      state: { notification: null, isDeleteOpen: false },
+      actions: { handleToggleRead: vi.fn(), handleDelete: vi.fn(), setDeleteOpen: vi.fn() }
+    });
     render(
       <MemoryRouter>
         <NotificationDetail />
@@ -73,10 +78,11 @@ describe("NotificationDetail Page", () => {
   });
 
   it("renders error state", () => {
-    (useNotificationDetail as any).mockReturnValue({
+    vi.mocked(useNotificationDetail).mockReturnValue({
       loading: false,
       error: "Error message",
-      state: {},
+      state: { notification: null, isDeleteOpen: false },
+      actions: { handleToggleRead: vi.fn(), handleDelete: vi.fn(), setDeleteOpen: vi.fn() }
     });
     render(
       <MemoryRouter>
@@ -118,12 +124,13 @@ describe("NotificationDetail Page", () => {
     expect(mockSetDeleteOpen).toHaveBeenCalledWith(true);
 
     // Mock open state
-    (useNotificationDetail as any).mockReturnValue({
+    vi.mocked(useNotificationDetail).mockReturnValue({
         state: {
           notification: mockNotification,
           isDeleteOpen: true,
         },
         loading: false,
+        error: null,
         actions: {
           handleToggleRead: mockHandleToggleRead,
           handleDelete: mockHandleDelete,

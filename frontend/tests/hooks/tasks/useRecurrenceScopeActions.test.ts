@@ -1,6 +1,7 @@
 import { renderHook, act } from "@testing-library/react";
 import { vi, describe, it, expect, beforeEach } from "vitest";
 import { useRecurrenceScopeActions } from "@/hooks/tasks/useRecurrenceScopeActions";
+import type { Event, EventSubmission, RecurrenceScope } from "@/types";
 
 describe("useRecurrenceScopeActions Hook", () => {
   const mockOnSubmitEvent = vi.fn();
@@ -11,7 +12,7 @@ describe("useRecurrenceScopeActions Hook", () => {
   const mockEvent = {
     id: 1,
     title: "Recurring Event",
-    recurrence_interval: "daily",
+    recurrence_interval: "daily" as const,
     start_time: "2023-01-01T10:00:00Z",
   };
 
@@ -21,14 +22,14 @@ describe("useRecurrenceScopeActions Hook", () => {
 
   it("identifies recurring events correctly", () => {
     const { result } = renderHook(() => useRecurrenceScopeActions({
-      selectedEvent: mockEvent as any,
+      selectedEvent: mockEvent as unknown as Event,
       onSubmitEvent: mockOnSubmitEvent,
       onClose: mockOnClose,
     }));
     expect(result.current.isEditingRecurringEvent).toBe(true);
 
     const { result: nonRecurring } = renderHook(() => useRecurrenceScopeActions({
-        selectedEvent: { ...mockEvent, recurrence_interval: null } as any,
+        selectedEvent: { ...mockEvent, recurrence_interval: null } as unknown as Event,
         onSubmitEvent: mockOnSubmitEvent,
         onClose: mockOnClose,
     }));
@@ -37,30 +38,30 @@ describe("useRecurrenceScopeActions Hook", () => {
 
   it("detects recurrence pattern changes", () => {
     const { result } = renderHook(() => useRecurrenceScopeActions({
-      selectedEvent: mockEvent as any,
+      selectedEvent: mockEvent as unknown as Event,
       onSubmitEvent: mockOnSubmitEvent,
       onClose: mockOnClose,
     }));
 
     // No change
-    expect(result.current.hasRecurrencePatternChanged({ recurrence_interval: "daily" } as any)).toBe(false);
+    expect(result.current.hasRecurrencePatternChanged({ recurrence_interval: "daily" } as EventSubmission)).toBe(false);
     
     // Interval change
-    expect(result.current.hasRecurrencePatternChanged({ recurrence_interval: "weekly" } as any)).toBe(true);
+    expect(result.current.hasRecurrencePatternChanged({ recurrence_interval: "weekly" } as EventSubmission)).toBe(true);
     
     // End date change
-    expect(result.current.hasRecurrencePatternChanged({ recurrence_interval: "daily", recurrence_end: "2024-01-01" } as any)).toBe(true);
+    expect(result.current.hasRecurrencePatternChanged({ recurrence_interval: "daily", recurrence_end: "2024-01-01" } as EventSubmission)).toBe(true);
   });
 
   it("handles saving with 'this' scope", () => {
     const { result } = renderHook(() => useRecurrenceScopeActions({
-      selectedEvent: mockEvent as any,
+      selectedEvent: mockEvent as unknown as Event,
       onSubmitEvent: mockOnSubmitEvent,
       onClose: mockOnClose,
     }));
 
     act(() => {
-      result.current.openSaveScope({ title: "Updated" } as any);
+      result.current.openSaveScope({ title: "Updated" } as EventSubmission);
     });
 
     expect(result.current.isScopeModalOpen).toBe(true);
@@ -78,13 +79,13 @@ describe("useRecurrenceScopeActions Hook", () => {
 
   it("handles saving with 'following' scope via advanced modal", () => {
     const { result } = renderHook(() => useRecurrenceScopeActions({
-      selectedEvent: mockEvent as any,
+      selectedEvent: mockEvent as unknown as Event,
       onSubmitEvent: mockOnSubmitEvent,
       onClose: mockOnClose,
     }));
 
     act(() => {
-      result.current.openSaveScope({ title: "Updated" } as any);
+      result.current.openSaveScope({ title: "Updated" } as EventSubmission);
       result.current.handleScopeSelect("following");
     });
 
@@ -104,7 +105,7 @@ describe("useRecurrenceScopeActions Hook", () => {
 
   it("handles deletion with 'all' scope", () => {
     const { result } = renderHook(() => useRecurrenceScopeActions({
-      selectedEvent: mockEvent as any,
+      selectedEvent: mockEvent as unknown as Event,
       onSubmitEvent: mockOnSubmitEvent,
       onDelete: mockOnDelete,
       onClose: mockOnClose,
@@ -127,13 +128,13 @@ describe("useRecurrenceScopeActions Hook", () => {
     vi.stubGlobal("alert", mockAlert);
 
     const { result } = renderHook(() => useRecurrenceScopeActions({
-      selectedEvent: mockEvent as any,
+      selectedEvent: mockEvent as unknown as Event,
       onSubmitEvent: mockOnSubmitEvent,
       onClose: mockOnClose,
     }));
 
     act(() => {
-      result.current.openSaveScope({ recurrence_interval: "weekly" } as any);
+      result.current.openSaveScope({ recurrence_interval: "weekly" } as EventSubmission);
     });
 
     act(() => {
@@ -148,7 +149,7 @@ describe("useRecurrenceScopeActions Hook", () => {
 
   it("handles revert to series", () => {
     const { result } = renderHook(() => useRecurrenceScopeActions({
-      selectedEvent: mockEvent as any,
+      selectedEvent: mockEvent as unknown as Event,
       onSubmitEvent: mockOnSubmitEvent,
       onRevertToSeries: mockOnRevertToSeries,
       onClose: mockOnClose,
@@ -172,19 +173,19 @@ describe("useRecurrenceScopeActions Hook", () => {
 
   it("closes modals correctly", () => {
     const { result } = renderHook(() => useRecurrenceScopeActions({
-      selectedEvent: mockEvent as any,
+      selectedEvent: mockEvent as unknown as Event,
       onSubmitEvent: mockOnSubmitEvent,
       onClose: mockOnClose,
     }));
 
     act(() => {
-      result.current.openSaveScope({} as any);
+      result.current.openSaveScope({} as EventSubmission);
       result.current.closeScopeModal();
     });
     expect(result.current.isScopeModalOpen).toBe(false);
 
     act(() => {
-        result.current.openSaveScope({} as any);
+        result.current.openSaveScope({} as EventSubmission);
         result.current.handleScopeSelect("all");
         result.current.closeAdvancedScopeModal(true); // Reopen selection
     });
@@ -194,17 +195,17 @@ describe("useRecurrenceScopeActions Hook", () => {
 
   it("buildContext returns minimal context if event has no times", () => {
     const { result } = renderHook(() => useRecurrenceScopeActions({
-        selectedEvent: { id: 1 } as any,
+        selectedEvent: { id: 1 } as unknown as Event,
         onSubmitEvent: mockOnSubmitEvent,
         onClose: mockOnClose,
     }));
-    const ctx = result.current.buildContext("all");
+    const ctx = result.current.buildContext("all" as RecurrenceScope);
     expect(ctx).toEqual({ scope: "all" });
   });
 
   it("performRevert does nothing if onRevertToSeries is missing or event has no anchor", () => {
     const { result: noCallback } = renderHook(() => useRecurrenceScopeActions({
-        selectedEvent: mockEvent as any,
+        selectedEvent: mockEvent as unknown as Event,
         onSubmitEvent: mockOnSubmitEvent,
         onClose: mockOnClose,
     }));
@@ -214,7 +215,7 @@ describe("useRecurrenceScopeActions Hook", () => {
     expect(mockOnRevertToSeries).not.toHaveBeenCalled();
 
     const { result: noAnchor } = renderHook(() => useRecurrenceScopeActions({
-        selectedEvent: { id: 1 } as any,
+        selectedEvent: { id: 1 } as unknown as Event,
         onSubmitEvent: mockOnSubmitEvent,
         onRevertToSeries: mockOnRevertToSeries,
         onClose: mockOnClose,

@@ -1,9 +1,19 @@
-import { renderHook, act, waitFor } from "@testing-library/react";
+import { renderHook, act } from "@testing-library/react";
 import { vi, describe, it, expect, beforeEach, afterEach } from "vitest";
 import { useWebSocket, ConnectionStatusValues } from "@/hooks/common/useWebSocket";
 
+interface MockWebSocket {
+  send: ReturnType<typeof vi.fn>;
+  close: ReturnType<typeof vi.fn>;
+  readyState: number;
+  onopen: (() => void) | null;
+  onclose: ((ev: { code: number }) => void) | null;
+  onmessage: ((ev: { data: string }) => void) | null;
+  onerror: (() => void) | null;
+}
+
 describe("useWebSocket Hook", () => {
-  let mockWebSocket: any;
+  let mockWebSocket: MockWebSocket;
   const mockUrl = "/ws/test";
   const mockOnMessage = vi.fn();
 
@@ -21,9 +31,10 @@ describe("useWebSocket Hook", () => {
       onerror: null,
     };
 
-    global.WebSocket = vi.fn(() => mockWebSocket) as any;
-    (global.WebSocket as any).OPEN = 1;
-    (global.WebSocket as any).CLOSED = 3;
+    const MockWebSocketCtor = vi.fn(() => mockWebSocket) as unknown as typeof WebSocket & { OPEN: number; CLOSED: number };
+    MockWebSocketCtor.OPEN = 1;
+    MockWebSocketCtor.CLOSED = 3;
+    global.WebSocket = MockWebSocketCtor;
 
     // Mock window.location
     Object.defineProperty(window, 'location', {
@@ -51,7 +62,7 @@ describe("useWebSocket Hook", () => {
     expect(result.current.status).toBe(ConnectionStatusValues.CLOSED);
   });
 
-  it("establishes connection and sets status to CONNECTING", async () => {
+  it("establishes connection and sets status to CONNECTING", () => {
     const { result } = renderHook(() => useWebSocket(mockUrl, mockOnMessage));
     
     act(() => {
@@ -62,7 +73,7 @@ describe("useWebSocket Hook", () => {
     expect(result.current.status).toBe(ConnectionStatusValues.CONNECTING);
   });
 
-  it("sets status to OPEN when onopen is called", async () => {
+  it("sets status to OPEN when onopen is called", () => {
     const { result } = renderHook(() => useWebSocket(mockUrl, mockOnMessage));
     
     act(() => {
@@ -70,13 +81,13 @@ describe("useWebSocket Hook", () => {
     });
 
     act(() => {
-      mockWebSocket.onopen();
+      mockWebSocket.onopen?.();
     });
 
     expect(result.current.status).toBe(ConnectionStatusValues.OPEN);
   });
 
-  it("calls onMessage when valid JSON message is received", async () => {
+  it("calls onMessage when valid JSON message is received", () => {
     renderHook(() => useWebSocket(mockUrl, mockOnMessage));
     
     act(() => {
@@ -85,13 +96,13 @@ describe("useWebSocket Hook", () => {
 
     const testData = { foo: "bar" };
     act(() => {
-      mockWebSocket.onmessage({ data: JSON.stringify(testData) });
+      mockWebSocket.onmessage?.({ data: JSON.stringify(testData) });
     });
 
     expect(mockOnMessage).toHaveBeenCalledWith(testData);
   });
 
-  it("ignores malformed JSON message", async () => {
+  it("ignores malformed JSON message", () => {
     renderHook(() => useWebSocket(mockUrl, mockOnMessage));
     
     act(() => {
@@ -99,13 +110,13 @@ describe("useWebSocket Hook", () => {
     });
 
     act(() => {
-      mockWebSocket.onmessage({ data: "invalid json" });
+      mockWebSocket.onmessage?.({ data: "invalid json" });
     });
 
     expect(mockOnMessage).not.toHaveBeenCalled();
   });
 
-  it("sets status to CLOSED and attempts reconnection on unclean close", async () => {
+  it("sets status to CLOSED and attempts reconnection on unclean close", () => {
     const { result } = renderHook(() => useWebSocket(mockUrl, mockOnMessage));
     
     act(() => {
@@ -113,14 +124,14 @@ describe("useWebSocket Hook", () => {
     });
 
     act(() => {
-      mockWebSocket.onopen();
+      mockWebSocket.onopen?.();
     });
 
     expect(result.current.status).toBe(ConnectionStatusValues.OPEN);
 
     // Unclean close (code !== 1000)
     act(() => {
-      mockWebSocket.onclose({ code: 1006 });
+      mockWebSocket.onclose?.({ code: 1006 });
     });
 
     expect(result.current.status).toBe(ConnectionStatusValues.CLOSED);
@@ -135,7 +146,7 @@ describe("useWebSocket Hook", () => {
     expect(global.WebSocket).toHaveBeenCalledTimes(2);
   });
 
-  it("closes socket on error", async () => {
+  it("closes socket on error", () => {
     renderHook(() => useWebSocket(mockUrl, mockOnMessage));
     
     act(() => {
@@ -143,7 +154,7 @@ describe("useWebSocket Hook", () => {
     });
 
     act(() => {
-      mockWebSocket.onerror();
+      mockWebSocket.onerror?.();
     });
 
     expect(mockWebSocket.close).toHaveBeenCalled();
@@ -161,7 +172,7 @@ describe("useWebSocket Hook", () => {
     expect(mockWebSocket.close).toHaveBeenCalledWith(1000, 'Component unmounting');
   });
 
-  it("sends message if socket is open", async () => {
+  it("sends message if socket is open", () => {
     const { result } = renderHook(() => useWebSocket(mockUrl, mockOnMessage));
     
     act(() => {
@@ -178,7 +189,7 @@ describe("useWebSocket Hook", () => {
     expect(mockWebSocket.send).toHaveBeenCalledWith(JSON.stringify(testMsg));
   });
 
-  it("does not send message if socket is not open", async () => {
+  it("does not send message if socket is not open", () => {
     const { result } = renderHook(() => useWebSocket(mockUrl, mockOnMessage));
     
     act(() => {
@@ -194,7 +205,7 @@ describe("useWebSocket Hook", () => {
     expect(mockWebSocket.send).not.toHaveBeenCalled();
   });
 
-  it("uses wss: if protocol is https:", async () => {
+  it("uses wss: if protocol is https:", () => {
     Object.defineProperty(window, 'location', {
       value: {
         protocol: 'https:',
@@ -212,3 +223,4 @@ describe("useWebSocket Hook", () => {
     expect(global.WebSocket).toHaveBeenCalledWith("wss://example.com/ws/");
   });
 });
+

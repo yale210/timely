@@ -4,6 +4,7 @@ import { NotificationProvider, useNotificationContext } from "@/context/Notifica
 import * as notificationsApi from "@/api/notifications";
 import { useWebSocket } from "@/hooks/common/useWebSocket";
 import { authStore, AUTH_CHANGE_EVENT } from "@/services/authService";
+import type { Notification, NotificationListResponse } from "@/types/notification";
 
 // Mock API
 vi.mock("@/api/notifications", () => ({
@@ -33,19 +34,27 @@ describe("NotificationContext", () => {
   const mockNotifications = [
     { id: 1, title: "N1", is_read: false },
     { id: 2, title: "N2", is_read: true },
-  ];
+  ] as Notification[];
 
   beforeEach(() => {
     vi.clearAllMocks();
-    (authStore.getToken as any).mockReturnValue("mock-token");
-    (notificationsApi.getNotifications as any).mockResolvedValue({ results: mockNotifications });
-    (notificationsApi.getUnreadCount as any).mockResolvedValue({ count: 1 });
+    vi.mocked(authStore).getToken.mockReturnValue("mock-token");
+    vi.mocked(notificationsApi.getNotifications).mockResolvedValue({ 
+      results: mockNotifications,
+      count: 2,
+      next: null,
+      previous: null
+    } as NotificationListResponse);
+    vi.mocked(notificationsApi.getUnreadCount).mockResolvedValue({ count: 1 });
   });
 
   afterEach(() => {
     vi.restoreAllMocks();
   });
 
+  /**
+   * Test component that uses NotificationContext
+   */
   const TestComponent = () => {
     const { notifications, unreadCount, markRead, deleteNotification } = useNotificationContext();
     return (
@@ -55,8 +64,8 @@ describe("NotificationContext", () => {
           {notifications.map(n => (
             <li key={n.id}>
               {n.title}
-              <button onClick={() => markRead(n.id)}>Read {n.id}</button>
-              <button onClick={() => deleteNotification(n.id)}>Delete {n.id}</button>
+              <button onClick={() => { void markRead(n.id); }}>Read {n.id}</button>
+              <button onClick={() => { void deleteNotification(n.id); }}>Delete {n.id}</button>
             </li>
           ))}
         </ul>
@@ -65,7 +74,7 @@ describe("NotificationContext", () => {
   };
 
   it("throws error when used outside provider", () => {
-    const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => { /* empty */ });
     expect(() => render(<TestComponent />)).toThrow("useNotificationContext must be used within a NotificationProvider");
     consoleSpy.mockRestore();
   });
@@ -95,7 +104,7 @@ describe("NotificationContext", () => {
 
     await waitFor(() => expect(screen.getByText("N1")).toBeDefined());
 
-    (authStore.getToken as any).mockReturnValue(null);
+    vi.mocked(authStore).getToken.mockReturnValue(null);
     act(() => {
       window.dispatchEvent(new Event(AUTH_CHANGE_EVENT));
     });
@@ -115,7 +124,7 @@ describe("NotificationContext", () => {
 
     await waitFor(() => expect(screen.getByText("N1")).toBeDefined());
 
-    await act(async () => {
+    act(() => {
       fireEvent.click(screen.getByText("Read 1"));
     });
 
@@ -132,7 +141,7 @@ describe("NotificationContext", () => {
 
     await waitFor(() => expect(screen.getByText("N1")).toBeDefined());
 
-    await act(async () => {
+    act(() => {
       fireEvent.click(screen.getByText("Delete 1"));
     });
 
@@ -172,8 +181,8 @@ describe("NotificationContext", () => {
   });
 
   it("handles WebSocket 'new_notification' message", async () => {
-    let wsCallback: any;
-    (useWebSocket as any).mockImplementation((url: string, callback: any) => {
+    let wsCallback: (data: unknown) => void = () => { /* empty */ };
+    vi.mocked(useWebSocket).mockImplementation((_url: string | null, callback: (data: unknown) => void) => {
         wsCallback = callback;
     });
 
@@ -185,7 +194,7 @@ describe("NotificationContext", () => {
 
     await waitFor(() => expect(screen.getByText("N1")).toBeDefined());
 
-    const newNotif = { id: 3, title: "N3", is_read: false };
+    const newNotif = { id: 3, title: "N3", is_read: false } as Notification;
     act(() => {
         wsCallback({
             type: "new_notification",
@@ -201,8 +210,8 @@ describe("NotificationContext", () => {
   });
 
   it("handles WebSocket 'unread_count' message", async () => {
-    let wsCallback: any;
-    (useWebSocket as any).mockImplementation((url: string, callback: any) => {
+    let wsCallback: (data: unknown) => void = () => { /* empty */ };
+    vi.mocked(useWebSocket).mockImplementation((_url: string | null, callback: (data: unknown) => void) => {
         wsCallback = callback;
     });
 
@@ -227,8 +236,8 @@ describe("NotificationContext", () => {
   });
 
   it("handles fetch errors gracefully", async () => {
-    const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
-    (notificationsApi.getNotifications as any).mockRejectedValue(new Error("Fetch failed"));
+    const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => { /* empty */ });
+    vi.mocked(notificationsApi.getNotifications).mockRejectedValue(new Error("Fetch failed"));
     
     render(
         <NotificationProvider>
@@ -243,7 +252,7 @@ describe("NotificationContext", () => {
   });
 
   it("returns empty state if not authenticated when fetching", async () => {
-    (authStore.getToken as any).mockReturnValue(null);
+    vi.mocked(authStore).getToken.mockReturnValue(null);
     const { result } = renderHook(() => useNotificationContext(), {
         wrapper: NotificationProvider
     });
@@ -258,10 +267,10 @@ describe("NotificationContext", () => {
   });
 
   it("handles errors in fetchUnreadCount, markAllRead, deleteAllNotifications", async () => {
-    const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
-    (notificationsApi.getUnreadCount as any).mockRejectedValue(new Error("Err"));
-    (notificationsApi.markAllAsRead as any).mockRejectedValue(new Error("Err"));
-    (notificationsApi.deleteAllNotifications as any).mockRejectedValue(new Error("Err"));
+    const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => { /* empty */ });
+    vi.mocked(notificationsApi.getUnreadCount).mockRejectedValue(new Error("Err"));
+    vi.mocked(notificationsApi.markAllAsRead).mockRejectedValue(new Error("Err"));
+    vi.mocked(notificationsApi.deleteAllNotifications).mockRejectedValue(new Error("Err"));
 
     const { result } = renderHook(() => useNotificationContext(), {
         wrapper: NotificationProvider
@@ -305,8 +314,8 @@ describe("NotificationContext", () => {
   });
 
   it("ignores duplicate notifications from WebSocket", async () => {
-    let wsCallback: any;
-    (useWebSocket as any).mockImplementation((url: string, callback: any) => {
+    let wsCallback: (data: unknown) => void = () => { /* empty */ };
+    vi.mocked(useWebSocket).mockImplementation((_url: string | null, callback: (data: unknown) => void) => {
         wsCallback = callback;
     });
 
@@ -326,3 +335,4 @@ describe("NotificationContext", () => {
     expect(result.current.notifications.length).toBe(2);
   });
 });
+

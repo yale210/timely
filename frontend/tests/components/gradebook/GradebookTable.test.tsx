@@ -1,6 +1,7 @@
 import { render, screen, fireEvent } from "@testing-library/react";
 import { vi, describe, it, expect } from "vitest";
-import GradebookTable, { Grade } from "@/components/gradebook/GradebookTable";
+import GradebookTable from "@/components/gradebook/GradebookTable";
+import type { Grade } from "@/components/gradebook/GradebookTable";
 
 describe("GradebookTable Component", () => {
   const mockOnEdit = vi.fn();

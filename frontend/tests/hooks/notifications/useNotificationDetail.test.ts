@@ -23,12 +23,17 @@ vi.mock("@/context/NotificationContext", () => ({
   useNotificationContext: vi.fn(),
 }));
 
+const mockedUseParams = vi.mocked(useParams);
+const mockedUseNavigate = vi.mocked(useNavigate);
+const mockedUseNotificationContext = vi.mocked(useNotificationContext);
+const mockedApiGet = vi.mocked(api.get.bind(api));
+
 describe("useNotificationDetail Hook", () => {
   const mockId = "123";
   const mockNavigate = vi.fn();
-  const mockMarkRead = vi.fn();
-  const mockMarkUnread = vi.fn();
-  const mockDeleteNotification = vi.fn();
+  const mockMarkRead = vi.fn().mockResolvedValue(undefined);
+  const mockMarkUnread = vi.fn().mockResolvedValue(undefined);
+  const mockDeleteNotification = vi.fn().mockResolvedValue(undefined);
   const mockFetchNotifications = vi.fn();
 
   const mockNotification = {
@@ -41,13 +46,17 @@ describe("useNotificationDetail Hook", () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    (useParams as any).mockReturnValue({ id: mockId });
-    (useNavigate as any).mockReturnValue(mockNavigate);
-    (useNotificationContext as any).mockReturnValue({
+    mockedUseParams.mockReturnValue({ id: mockId });
+    mockedUseNavigate.mockReturnValue(mockNavigate);
+    mockedUseNotificationContext.mockReturnValue({
       markRead: mockMarkRead,
       markUnread: mockMarkUnread,
       deleteNotification: mockDeleteNotification,
       fetchNotifications: mockFetchNotifications,
+      notifications: [],
+      unreadCount: 0,
+      loading: false,
+      error: null,
     });
   });
 
@@ -57,7 +66,7 @@ describe("useNotificationDetail Hook", () => {
 
   it("fetches notification on mount and handles read status", async () => {
     const unreadNotification = { ...mockNotification, is_read: false };
-    (api.get as any).mockResolvedValue({ data: unreadNotification });
+    mockedApiGet.mockResolvedValue({ data: unreadNotification });
 
     const { result } = renderHook(() => useNotificationDetail());
 
@@ -68,12 +77,12 @@ describe("useNotificationDetail Hook", () => {
       expect(result.current.state.notification?.is_read).toBe(true);
     });
 
-    expect(api.get).toHaveBeenCalledWith(`/api/notifications/${mockId}/`);
+    expect(mockedApiGet).toHaveBeenCalledWith(`/api/notifications/${mockId}/`);
     expect(mockMarkRead).toHaveBeenCalledWith(123);
   });
 
   it("sets error when fetch fails", async () => {
-    (api.get as any).mockRejectedValue(new Error("Fetch failed"));
+    mockedApiGet.mockRejectedValue(new Error("Fetch failed"));
 
     const { result } = renderHook(() => useNotificationDetail());
 
@@ -84,7 +93,7 @@ describe("useNotificationDetail Hook", () => {
   });
 
   it("toggles read status from read to unread", async () => {
-    (api.get as any).mockResolvedValue({ data: mockNotification });
+    mockedApiGet.mockResolvedValue({ data: mockNotification });
     const { result } = renderHook(() => useNotificationDetail());
 
     await waitFor(() => expect(result.current.loading).toBe(false));
@@ -99,7 +108,7 @@ describe("useNotificationDetail Hook", () => {
   });
 
   it("toggles read status from unread to read", async () => {
-    (api.get as any).mockResolvedValue({ data: mockNotification });
+    mockedApiGet.mockResolvedValue({ data: mockNotification });
     const { result } = renderHook(() => useNotificationDetail());
     await waitFor(() => expect(result.current.loading).toBe(false));
 
@@ -118,7 +127,7 @@ describe("useNotificationDetail Hook", () => {
   });
 
   it("handles deletion", async () => {
-    (api.get as any).mockResolvedValue({ data: mockNotification });
+    mockedApiGet.mockResolvedValue({ data: mockNotification });
     const { result } = renderHook(() => useNotificationDetail());
 
     await waitFor(() => expect(result.current.loading).toBe(false));
@@ -133,7 +142,7 @@ describe("useNotificationDetail Hook", () => {
   });
 
   it("toggles delete modal open state", () => {
-    (api.get as any).mockResolvedValue({ data: mockNotification });
+    mockedApiGet.mockResolvedValue({ data: mockNotification });
     const { result } = renderHook(() => useNotificationDetail());
 
     act(() => {
@@ -149,7 +158,7 @@ describe("useNotificationDetail Hook", () => {
 
   it("does nothing in actions if notification is null", async () => {
     // Force notification to stay null by rejecting fetch
-    (api.get as any).mockRejectedValue(new Error("Failed"));
+    mockedApiGet.mockRejectedValue(new Error("Failed"));
     const { result } = renderHook(() => useNotificationDetail());
     await waitFor(() => expect(result.current.loading).toBe(false));
     
@@ -163,12 +172,13 @@ describe("useNotificationDetail Hook", () => {
   });
 
   it("handles errors in handleToggleRead", async () => {
-    (api.get as any).mockResolvedValue({ data: mockNotification });
+    mockedApiGet.mockResolvedValue({ data: mockNotification });
     const { result } = renderHook(() => useNotificationDetail());
     await waitFor(() => expect(result.current.loading).toBe(false));
 
-    mockMarkUnread.mockRejectedValue(new Error("Toggle failed"));
-    const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    const mockedMarkUnread = mockMarkUnread.bind(null);
+    mockedMarkUnread.mockRejectedValue(new Error("Toggle failed"));
+    const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => { /* No-op */ });
 
     await act(async () => {
       await result.current.actions.handleToggleRead();
@@ -179,12 +189,13 @@ describe("useNotificationDetail Hook", () => {
   });
 
   it("handles errors in handleDelete", async () => {
-    (api.get as any).mockResolvedValue({ data: mockNotification });
+    mockedApiGet.mockResolvedValue({ data: mockNotification });
     const { result } = renderHook(() => useNotificationDetail());
     await waitFor(() => expect(result.current.loading).toBe(false));
 
-    mockDeleteNotification.mockRejectedValue(new Error("Delete failed"));
-    const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    const mockedDeleteNotification = mockDeleteNotification.bind(null);
+    mockedDeleteNotification.mockRejectedValue(new Error("Delete failed"));
+    const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => { /* No-op */ });
 
     await act(async () => {
       await result.current.actions.handleDelete();

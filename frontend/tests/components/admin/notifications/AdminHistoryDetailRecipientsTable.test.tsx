@@ -1,7 +1,7 @@
 import { render, screen } from "@testing-library/react";
 import { describe, it, expect } from "vitest";
 import { AdminHistoryDetailRecipientsTable } from "@/components/admin/notifications/AdminHistoryDetailRecipientsTable";
-import { BroadcastRecipientDetail } from "@/types/notification";
+import type { BroadcastRecipientDetail } from "@/types/notification";
 
 describe("AdminHistoryDetailRecipientsTable Component", () => {
   const mockRecipients: BroadcastRecipientDetail[] = [

@@ -11,13 +11,16 @@ vi.mock("@/services/authService", () => ({
   },
 }));
 
+/**
+ * Tests for the RequireAuth component.
+ */
 describe("RequireAuth Component", () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
 
   it("redirects to /login if user has no token", () => {
-    (authStore.getToken as any).mockReturnValue(null);
+    vi.mocked(authStore.getToken.bind(authStore)).mockReturnValue(null);
     
     render(
       <MemoryRouter initialEntries={["/dashboard"]}>
@@ -37,7 +40,7 @@ describe("RequireAuth Component", () => {
   });
 
   it("renders children if user has a token", () => {
-    (authStore.getToken as any).mockReturnValue("mock-token");
+    vi.mocked(authStore.getToken.bind(authStore)).mockReturnValue("mock-token");
     
     render(
       <MemoryRouter initialEntries={["/dashboard"]}>

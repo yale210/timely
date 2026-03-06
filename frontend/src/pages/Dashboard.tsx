@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import moment from "moment";
 import AppLayout from "@/layouts/AppLayout";
 import * as taskService from "@/services/taskService";
@@ -12,21 +12,27 @@ import { CalendarPage } from "@/pages/index";
 export default function Dashboard() {
   const [tasks, setTasks] = useState<Task[]>([]);
 
-  const fetchTasks = useCallback(async () => {
-    try {
-      const data = await taskService.getTasks();
-      setTasks(data);
-    } catch (err) {
-      console.error(err);
-      setTasks([]);
-    }
-  }, []);
-
    
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    void fetchTasks();
-  }, [fetchTasks]);
+    let ignore = false;
+    const loadTasks = async () => {
+      try {
+        const data = await taskService.getTasks();
+        if (!ignore) {
+          setTasks(data);
+        }
+      } catch (err) {
+        console.error(err);
+        if (!ignore) {
+          setTasks([]);
+        }
+      }
+    };
+    void loadTasks();
+    return () => {
+      ignore = true;
+    };
+  }, []);
 
   const now = moment();
   const overdueTasks = tasks.filter((t) => !t.completed && moment(t.deadline).isBefore(now));

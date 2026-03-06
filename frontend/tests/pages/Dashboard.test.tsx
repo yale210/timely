@@ -4,6 +4,8 @@ import { MemoryRouter } from "react-router-dom";
 import moment from "moment";
 import Dashboard from "@/pages/Dashboard";
 import * as taskService from "@/services/taskService";
+import type { Task } from "@/types";
+import type { ReactNode } from "react";
 
 // Mock services
 vi.mock("@/services/taskService", () => ({
@@ -12,11 +14,11 @@ vi.mock("@/services/taskService", () => ({
 
 // Mock components to avoid context/dependency bloat
 vi.mock("@/layouts/AppLayout", () => ({
-  default: ({ children }: any) => <div data-testid="app-layout">{children}</div>,
+  default: ({ children }: { children: ReactNode }) => <div data-testid="app-layout">{children}</div>,
 }));
 
 vi.mock("@/components/index", () => ({
-  StatCard: ({ title, value }: any) => (
+  StatCard: ({ title, value }: { title: string; value: string[] }) => (
     <div data-testid="stat-card">
       <h3>{title}</h3>
       <ul>{value.map((v: string, i: number) => <li key={i}>{v}</li>)}</ul>
@@ -35,7 +37,7 @@ describe("Dashboard Page", () => {
     { id: 2, title: "Overdue Task", deadline: now.clone().subtract(1, "day").toISOString(), completed: false },
     { id: 3, title: "Pending Task", deadline: now.clone().add(2, "days").toISOString(), completed: false },
     { id: 4, title: "Completed Task", deadline: now.toISOString(), completed: true },
-  ];
+  ] as Task[];
 
   beforeEach(() => {
     vi.clearAllMocks();
@@ -46,7 +48,7 @@ describe("Dashboard Page", () => {
   });
 
   it("fetches and renders tasks in correct categories", async () => {
-    (taskService.getTasks as any).mockResolvedValue(mockTasks);
+    vi.mocked(taskService.getTasks).mockResolvedValue(mockTasks);
     
     render(
       <MemoryRouter>
@@ -78,8 +80,8 @@ describe("Dashboard Page", () => {
   });
 
   it("handles fetch error gracefully", async () => {
-    const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
-    (taskService.getTasks as any).mockRejectedValue(new Error("API Error"));
+    const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => { /* empty */ });
+    vi.mocked(taskService.getTasks).mockRejectedValue(new Error("API Error"));
 
     render(
       <MemoryRouter>
@@ -101,3 +103,4 @@ describe("Dashboard Page", () => {
     consoleSpy.mockRestore();
   });
 });
+

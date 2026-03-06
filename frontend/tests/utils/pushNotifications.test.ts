@@ -10,6 +10,10 @@ vi.mock("@/api/notifications", () => ({
 }));
 
 describe("pushNotifications Utilities", () => {
+  const mockedGetVapidPublicKey = vi.mocked(getVapidPublicKey);
+  const mockedSubscribeToPush = vi.mocked(subscribeToPush);
+  const mockedUnsubscribeFromPush = vi.mocked(unsubscribeFromPush);
+
   const mockRegistration = {
     pushManager: {
       subscribe: vi.fn(),
@@ -27,9 +31,9 @@ describe("pushNotifications Utilities", () => {
     vi.clearAllMocks();
     
     // Default API mocks
-    (getVapidPublicKey as any).mockResolvedValue({ public_key: "mock-vapid-key" });
-    (subscribeToPush as any).mockResolvedValue({ ok: true });
-    (unsubscribeFromPush as any).mockResolvedValue({ ok: true });
+    mockedGetVapidPublicKey.mockResolvedValue({ public_key: "mock-vapid-key" });
+    mockedSubscribeToPush.mockResolvedValue({ ok: true });
+    mockedUnsubscribeFromPush.mockResolvedValue({ ok: true });
 
     // Mock service worker
     Object.defineProperty(navigator, 'serviceWorker', {
@@ -40,10 +44,10 @@ describe("pushNotifications Utilities", () => {
     });
 
     // Mock PushManager on window
-    (global as any).PushManager = vi.fn();
+    (globalThis as unknown as Record<string, unknown>).PushManager = vi.fn();
     
     // Mock atob
-    (global as any).atob = vi.fn((s) => Buffer.from(s, 'base64').toString('binary'));
+    (globalThis as unknown as Record<string, unknown>).atob = vi.fn((s: string) => Buffer.from(s, 'base64').toString('binary'));
   });
 
   afterEach(() => {
@@ -56,25 +60,25 @@ describe("pushNotifications Utilities", () => {
     });
 
     it("returns false when serviceWorker is missing", () => {
-      // @ts-ignore
+      // @ts-expect-error - navigator.serviceWorker is read-only in types but we are deleting it for test
       delete navigator.serviceWorker;
       expect(isPushSupported()).toBe(false);
     });
 
     it("returns false when PushManager is missing", () => {
-        delete (global as any).PushManager;
+        delete (globalThis as unknown as Record<string, unknown>).PushManager;
         expect(isPushSupported()).toBe(false);
     });
   });
 
   describe("subscribeUserToPush", () => {
     it("throws error if push is not supported", async () => {
-        delete (global as any).PushManager;
+        delete (globalThis as unknown as Record<string, unknown>).PushManager;
         await expect(subscribeUserToPush()).rejects.toThrow("Push notifications are not supported in this browser.");
     });
 
     it("throws error if VAPID key is missing", async () => {
-      (getVapidPublicKey as any).mockResolvedValue({ public_key: null });
+      mockedGetVapidPublicKey.mockResolvedValue({ public_key: null });
       await expect(subscribeUserToPush()).rejects.toThrow("Server did not return a VAPID public key.");
     });
 
@@ -87,7 +91,7 @@ describe("pushNotifications Utilities", () => {
 
     it("subscribes the user and notifies the backend", async () => {
       const vapidKey = "BNc_yX7X3X-m-z-k_X7X3X-m-z-k_X7X3X-m-z-k_X7X3X-m-z-k_X7X3X-m-z-k_X7X3X-m-z-k_X7X3X-m-z-k=";
-      (getVapidPublicKey as any).mockResolvedValue({ public_key: vapidKey });
+      mockedGetVapidPublicKey.mockResolvedValue({ public_key: vapidKey });
       mockRegistration.pushManager.subscribe.mockResolvedValue(mockSubscription);
       mockSubscription.toJSON.mockReturnValue({
         endpoint: "https://push.example.com/123",
@@ -97,7 +101,7 @@ describe("pushNotifications Utilities", () => {
       await subscribeUserToPush();
 
       expect(mockRegistration.pushManager.subscribe).toHaveBeenCalled();
-      expect(subscribeToPush).toHaveBeenCalledWith({
+      expect(mockedSubscribeToPush).toHaveBeenCalledWith({
         endpoint: "https://push.example.com/123",
         p256dh: "p256",
         auth: "auth"
@@ -107,7 +111,7 @@ describe("pushNotifications Utilities", () => {
 
   describe("unsubscribeUserFromPush", () => {
     it("returns immediately if push is not supported", async () => {
-        delete (global as any).PushManager;
+        delete (globalThis as unknown as Record<string, unknown>).PushManager;
         await unsubscribeUserFromPush();
         expect(mockRegistration.pushManager.getSubscription).not.toHaveBeenCalled();
     });
@@ -115,7 +119,7 @@ describe("pushNotifications Utilities", () => {
     it("does nothing if there is no active subscription", async () => {
       mockRegistration.pushManager.getSubscription.mockResolvedValue(null);
       await unsubscribeUserFromPush();
-      expect(unsubscribeFromPush).not.toHaveBeenCalled();
+      expect(mockedUnsubscribeFromPush).not.toHaveBeenCalled();
     });
 
     it("unsubscribes through PushManager and notifies backend", async () => {
@@ -125,7 +129,7 @@ describe("pushNotifications Utilities", () => {
       await unsubscribeUserFromPush();
 
       expect(mockSubscription.unsubscribe).toHaveBeenCalled();
-      expect(unsubscribeFromPush).toHaveBeenCalledWith("https://push.example.com/123");
+      expect(mockedUnsubscribeFromPush).toHaveBeenCalledWith("https://push.example.com/123");
     });
   });
 });

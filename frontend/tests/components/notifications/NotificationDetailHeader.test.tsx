@@ -1,14 +1,19 @@
 import { render, screen, fireEvent } from "@testing-library/react";
 import { vi, describe, it, expect } from "vitest";
 import { NotificationDetailHeader } from "@/components/notifications/NotificationDetailHeader";
+import type { Notification } from "@/types/notification";
 
 describe("NotificationDetailHeader Component", () => {
-  const mockNotification = {
+  const mockNotification: Notification = {
     id: 1,
+    recipient: 1,
+    sender: null,
     title: "Test Title",
+    message: "Test Message",
     timestamp: "2023-01-01T10:00:00Z",
     sender_username: "admin",
     is_read: false,
+    notification_type: "SYSTEM",
   };
 
   const mockOnToggleRead = vi.fn();
@@ -17,7 +22,7 @@ describe("NotificationDetailHeader Component", () => {
   it("renders notification details correctly", () => {
     render(
       <NotificationDetailHeader
-        notification={mockNotification as any}
+        notification={mockNotification}
         onToggleRead={mockOnToggleRead}
         onDelete={mockOnDelete}
       />
@@ -32,7 +37,7 @@ describe("NotificationDetailHeader Component", () => {
   it("calls onToggleRead when toggle button is clicked", () => {
     render(
       <NotificationDetailHeader
-        notification={mockNotification as any}
+        notification={mockNotification}
         onToggleRead={mockOnToggleRead}
         onDelete={mockOnDelete}
       />
@@ -45,7 +50,7 @@ describe("NotificationDetailHeader Component", () => {
   it("calls onDelete when delete button is clicked", () => {
     render(
       <NotificationDetailHeader
-        notification={mockNotification as any}
+        notification={mockNotification}
         onToggleRead={mockOnToggleRead}
         onDelete={mockOnDelete}
       />
@@ -58,7 +63,7 @@ describe("NotificationDetailHeader Component", () => {
   it("renders 'Mark as unread' when notification is read", () => {
     render(
       <NotificationDetailHeader
-        notification={{ ...mockNotification, is_read: true } as any}
+        notification={{ ...mockNotification, is_read: true }}
         onToggleRead={mockOnToggleRead}
         onDelete={mockOnDelete}
       />

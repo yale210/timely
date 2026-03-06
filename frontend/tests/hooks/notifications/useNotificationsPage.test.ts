@@ -4,7 +4,7 @@ import { useNotificationsPage } from "@/hooks/notifications/useNotificationsPage
 import { useNotificationContext } from "@/context/NotificationContext";
 import { useNavigate } from "react-router-dom";
 import { getNotifications } from "@/api/notifications";
-import { NotificationType } from "@/types/notification";
+import { NotificationType, type Notification, type NotificationListResponse } from "@/types/notification";
 
 // Mock react-router-dom
 vi.mock("react-router-dom", () => ({
@@ -31,8 +31,9 @@ describe("useNotificationsPage Hook", () => {
   const mockFetchNotifications = vi.fn();
 
   const mockContext = {
-    notifications: [],
+    notifications: [] as Notification[],
     loading: false,
+    unreadCount: 0,
     error: null,
     markRead: mockMarkRead,
     markUnread: mockMarkUnread,
@@ -40,18 +41,21 @@ describe("useNotificationsPage Hook", () => {
     deleteNotification: mockDeleteNotification,
     deleteAllNotifications: mockDeleteAllNotifications,
     fetchNotifications: mockFetchNotifications,
+    fetchUnreadCount: vi.fn().mockResolvedValue(undefined),
   };
 
   const mockResponse = {
-    results: [{ id: 1, title: "N1", is_read: false }],
+    results: [{ id: 1, title: "N1", is_read: false }] as Notification[],
     count: 25, // Enough for 3 pages
-  };
+    next: null,
+    previous: null
+  } as NotificationListResponse;
 
   beforeEach(() => {
     vi.clearAllMocks();
-    (useNavigate as any).mockReturnValue(mockNavigate);
-    (useNotificationContext as any).mockReturnValue(mockContext);
-    (getNotifications as any).mockResolvedValue(mockResponse);
+    vi.mocked(useNavigate).mockReturnValue(mockNavigate);
+    vi.mocked(useNotificationContext).mockReturnValue(mockContext);
+    vi.mocked(getNotifications).mockResolvedValue(mockResponse);
   });
 
   afterEach(() => {
@@ -75,7 +79,7 @@ describe("useNotificationsPage Hook", () => {
     const { result } = renderHook(() => useNotificationsPage());
     await waitFor(() => expect(result.current.state.loading).toBe(false));
 
-    await act(async () => {
+    act(() => {
       result.current.actions.setTab("unread");
     });
 
@@ -83,17 +87,17 @@ describe("useNotificationsPage Hook", () => {
     expect(result.current.state.page).toBe(1);
     expect(getNotifications).toHaveBeenLastCalledWith(1, { isRead: false });
 
-    await act(async () => {
+    act(() => {
         result.current.actions.setTab("system");
     });
     expect(getNotifications).toHaveBeenLastCalledWith(1, { notificationType: NotificationType.SYSTEM });
 
-    await act(async () => {
+    act(() => {
         result.current.actions.setTab("tasks");
     });
     expect(getNotifications).toHaveBeenLastCalledWith(1, { notificationType: NotificationType.TASK });
 
-    await act(async () => {
+    act(() => {
         result.current.actions.setTab("calendar");
     });
     expect(getNotifications).toHaveBeenLastCalledWith(1, { notificationType: NotificationType.CALENDAR });
@@ -103,7 +107,7 @@ describe("useNotificationsPage Hook", () => {
     const { result } = renderHook(() => useNotificationsPage());
     await waitFor(() => expect(result.current.state.loading).toBe(false));
 
-    await act(async () => {
+    act(() => {
       result.current.actions.setPage(2);
     });
 
@@ -115,9 +119,9 @@ describe("useNotificationsPage Hook", () => {
     const { result } = renderHook(() => useNotificationsPage());
     await waitFor(() => expect(result.current.state.loading).toBe(false));
 
-    const notification = { id: 1, is_read: false };
+    const notification = { id: 1, is_read: false } as Notification;
     await act(async () => {
-      await result.current.actions.handleNotificationClick(notification as any);
+      await result.current.actions.handleNotificationClick(notification);
     });
 
     expect(mockMarkRead).toHaveBeenCalledWith(1);
@@ -129,15 +133,15 @@ describe("useNotificationsPage Hook", () => {
     const { result } = renderHook(() => useNotificationsPage());
     await waitFor(() => expect(result.current.state.loading).toBe(false));
 
-    const unread = { id: 1, is_read: false };
+    const unread = { id: 1, is_read: false } as Notification;
     await act(async () => {
-      await result.current.actions.handleToggleRead(unread as any);
+      await result.current.actions.handleToggleRead(unread);
     });
     expect(mockMarkRead).toHaveBeenCalledWith(1);
 
-    const read = { id: 2, is_read: true };
+    const read = { id: 2, is_read: true } as Notification;
     await act(async () => {
-      await result.current.actions.handleToggleRead(read as any);
+      await result.current.actions.handleToggleRead(read);
     });
     expect(mockMarkUnread).toHaveBeenCalledWith(2);
   });
@@ -147,7 +151,7 @@ describe("useNotificationsPage Hook", () => {
     await waitFor(() => expect(result.current.state.loading).toBe(false));
 
     // Case: last item on page > 1
-    await act(async () => {
+    act(() => {
         result.current.actions.setPage(2);
     });
     await waitFor(() => expect(result.current.state.page).toBe(2));
@@ -156,7 +160,7 @@ describe("useNotificationsPage Hook", () => {
     // It's already 1 from mockResponse.results
     
     await act(async () => {
-      await result.current.actions.handleDeleteNotification({ id: 1 } as any);
+      await result.current.actions.handleDeleteNotification({ id: 1 } as Notification);
     });
 
     expect(mockDeleteNotification).toHaveBeenCalledWith(1);
@@ -196,8 +200,8 @@ describe("useNotificationsPage Hook", () => {
   });
 
   it("sets error if fetchPage fails", async () => {
-    const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
-    (getNotifications as any).mockRejectedValue(new Error("Fail"));
+    const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => { /* empty */ });
+    vi.mocked(getNotifications).mockRejectedValue(new Error("Fail"));
     const { result } = renderHook(() => useNotificationsPage());
 
     await waitFor(() => {
@@ -207,11 +211,11 @@ describe("useNotificationsPage Hook", () => {
   });
 
   it("updates pagination window correctly", async () => {
-    (getNotifications as any).mockResolvedValue({ results: [], count: 100 }); // 10 pages
+    vi.mocked(getNotifications).mockResolvedValue({ results: [], count: 100, next: null, previous: null }); // 10 pages
     const { result } = renderHook(() => useNotificationsPage());
     await waitFor(() => expect(result.current.state.totalPages).toBe(10));
 
-    await act(async () => {
+    act(() => {
         result.current.actions.setPage(5);
     });
 
@@ -219,13 +223,13 @@ describe("useNotificationsPage Hook", () => {
   });
 
   it("syncs with context notification changes", async () => {
-    const { result, rerender } = renderHook(() => useNotificationsPage());
+    const { rerender } = renderHook(() => useNotificationsPage());
     await waitFor(() => expect(getNotifications).toHaveBeenCalledTimes(1));
 
     // Change context notifications
-    (useNotificationContext as any).mockReturnValue({
+    vi.mocked(useNotificationContext).mockReturnValue({
         ...mockContext,
-        notifications: [{ id: 99 }],
+        notifications: [{ id: 99 }] as Notification[],
     });
     
     rerender();
@@ -235,3 +239,4 @@ describe("useNotificationsPage Hook", () => {
     });
   });
 });
+

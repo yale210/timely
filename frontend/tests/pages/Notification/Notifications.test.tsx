@@ -2,7 +2,9 @@ import { render, screen, fireEvent } from "@testing-library/react";
 import { vi, describe, it, expect, beforeEach } from "vitest";
 import { MemoryRouter } from "react-router-dom";
 import { Notifications } from "@/pages/Notification/Notifications";
+import type { useNotificationsPage as useNotificationsPageOriginal } from "@/hooks/notifications/useNotificationsPage";
 import { useNotificationsPage } from "@/hooks/notifications/useNotificationsPage";
+import type { ReactNode } from "react";
 
 // Mock Hook
 vi.mock("@/hooks/notifications/useNotificationsPage", () => ({
@@ -11,12 +13,12 @@ vi.mock("@/hooks/notifications/useNotificationsPage", () => ({
 
 // Mock AppLayout
 vi.mock("@/layouts/AppLayout", () => ({
-  default: ({ children }: any) => <div data-testid="app-layout">{children}</div>,
+  default: ({ children }: { children: ReactNode }) => <div data-testid="app-layout">{children}</div>,
 }));
 
 // Mock child components
 vi.mock("@/components/notifications/NotificationsHeader", () => ({
-  NotificationsHeader: ({ onMarkAllRead, onDeleteAll, onTabChange }: any) => (
+  NotificationsHeader: ({ onMarkAllRead, onDeleteAll, onTabChange }: { onMarkAllRead: () => void, onDeleteAll: () => void, onTabChange: (tab: string) => void }) => (
     <div data-testid="notifications-header">
       <button onClick={() => onTabChange("all")}>Tab All</button>
       <button onClick={onMarkAllRead}>Mark All Read</button>
@@ -26,7 +28,7 @@ vi.mock("@/components/notifications/NotificationsHeader", () => ({
 }));
 
 vi.mock("@/components/notifications/NotificationsList", () => ({
-  NotificationsList: ({ onNotificationClick, onToggleRead, onDeleteRequest, onPageChange }: any) => (
+  NotificationsList: ({ onNotificationClick, onToggleRead, onDeleteRequest, onPageChange }: { onNotificationClick: (n: { id: number }) => void, onToggleRead: (n: { id: number }) => void, onDeleteRequest: (n: { id: number }) => void, onPageChange: (p: number) => void }) => (
     <div data-testid="notifications-list">
       <button onClick={() => onNotificationClick({ id: 1 })}>Click Notification</button>
       <button onClick={() => onToggleRead({ id: 1 })}>Toggle Read</button>
@@ -41,7 +43,7 @@ vi.mock("@/components/notifications/PushNotificationBanner", () => ({
 }));
 
 vi.mock("@/components/modals/ConfirmationModal", () => ({
-  default: ({ isOpen, onConfirm, onClose, title }: any) => isOpen ? (
+  default: ({ isOpen, onConfirm, onClose, title }: { isOpen: boolean, onConfirm: () => void, onClose: () => void, title: string }) => isOpen ? (
     <div data-testid="confirm-modal">
       <span>{title}</span>
       <button onClick={onConfirm}>Confirm</button>
@@ -49,6 +51,8 @@ vi.mock("@/components/modals/ConfirmationModal", () => ({
     </div>
   ) : null,
 }));
+
+type UseNotificationsPageReturn = ReturnType<typeof useNotificationsPageOriginal>;
 
 describe("Notifications Page", () => {
   const mockSetTab = vi.fn();
@@ -61,7 +65,7 @@ describe("Notifications Page", () => {
   const mockHandleDeleteNotification = vi.fn();
 
   const mockState = {
-    activeTab: "all",
+    activeTab: "all" as const,
     confirmAction: null,
     displayError: null,
     notifications: [],
@@ -71,22 +75,25 @@ describe("Notifications Page", () => {
     loading: false,
     contextLoading: false,
     notificationPendingDelete: null,
+    count: 0,
+  };
+
+  const mockActions = {
+    setTab: mockSetTab,
+    setConfirmAction: mockSetConfirmAction,
+    handleNotificationClick: mockHandleNotificationClick,
+    handleToggleRead: mockHandleToggleRead,
+    setNotificationPendingDelete: mockSetNotificationPendingDelete,
+    setPage: mockSetPage,
+    handleConfirmBulkAction: mockHandleConfirmBulkAction,
+    handleDeleteNotification: mockHandleDeleteNotification,
   };
 
   beforeEach(() => {
     vi.clearAllMocks();
-    (useNotificationsPage as any).mockReturnValue({
-      state: mockState,
-      actions: {
-        setTab: mockSetTab,
-        setConfirmAction: mockSetConfirmAction,
-        handleNotificationClick: mockHandleNotificationClick,
-        handleToggleRead: mockHandleToggleRead,
-        setNotificationPendingDelete: mockSetNotificationPendingDelete,
-        setPage: mockSetPage,
-        handleConfirmBulkAction: mockHandleConfirmBulkAction,
-        handleDeleteNotification: mockHandleDeleteNotification,
-      },
+    vi.mocked(useNotificationsPage).mockReturnValue({
+      state: mockState as UseNotificationsPageReturn["state"],
+      actions: mockActions as UseNotificationsPageReturn["actions"],
     });
   });
 
@@ -103,9 +110,9 @@ describe("Notifications Page", () => {
   });
 
   it("shows display error when present", () => {
-    (useNotificationsPage as any).mockReturnValue({
-      state: { ...mockState, displayError: "Something went wrong" },
-      actions: {},
+    vi.mocked(useNotificationsPage).mockReturnValue({
+      state: { ...mockState, displayError: "Something went wrong" } as UseNotificationsPageReturn["state"],
+      actions: mockActions as UseNotificationsPageReturn["actions"],
     });
     render(
       <MemoryRouter>
@@ -145,12 +152,13 @@ describe("Notifications Page", () => {
   });
 
   it("handles bulk action confirmation", () => {
-    (useNotificationsPage as any).mockReturnValue({
-        state: { ...mockState, confirmAction: "mark_all_read" },
+    vi.mocked(useNotificationsPage).mockReturnValue({
+        state: { ...mockState, confirmAction: "mark_all_read" } as UseNotificationsPageReturn["state"],
         actions: {
+          ...mockActions,
           setConfirmAction: mockSetConfirmAction,
           handleConfirmBulkAction: mockHandleConfirmBulkAction,
-        },
+        } as UseNotificationsPageReturn["actions"],
     });
     render(
       <MemoryRouter>
@@ -167,12 +175,13 @@ describe("Notifications Page", () => {
   });
 
   it("handles delete all confirmation", () => {
-    (useNotificationsPage as any).mockReturnValue({
-        state: { ...mockState, confirmAction: "delete_all" },
+    vi.mocked(useNotificationsPage).mockReturnValue({
+        state: { ...mockState, confirmAction: "delete_all" } as UseNotificationsPageReturn["state"],
         actions: {
+          ...mockActions,
           setConfirmAction: mockSetConfirmAction,
           handleConfirmBulkAction: mockHandleConfirmBulkAction,
-        },
+        } as UseNotificationsPageReturn["actions"],
     });
     render(
       <MemoryRouter>
@@ -186,12 +195,13 @@ describe("Notifications Page", () => {
   });
 
   it("handles single notification delete confirmation", () => {
-    (useNotificationsPage as any).mockReturnValue({
-        state: { ...mockState, notificationPendingDelete: { id: 1 } },
+    vi.mocked(useNotificationsPage).mockReturnValue({
+        state: { ...mockState, notificationPendingDelete: { id: 1 } } as UseNotificationsPageReturn["state"],
         actions: {
+          ...mockActions,
           setNotificationPendingDelete: mockSetNotificationPendingDelete,
           handleDeleteNotification: mockHandleDeleteNotification,
-        },
+        } as UseNotificationsPageReturn["actions"],
     });
     render(
       <MemoryRouter>

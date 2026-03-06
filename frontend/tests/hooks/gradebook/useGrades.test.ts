@@ -19,10 +19,10 @@ describe("useGrades Hook", () => {
   });
 
   it("should fetch grades on mount", async () => {
-    (global.fetch as any).mockResolvedValueOnce({
+    vi.mocked(global.fetch).mockResolvedValueOnce({
       ok: true,
-      json: async () => mockGrades,
-    });
+      json: () => Promise.resolve(mockGrades),
+    } as Response);
 
     const { result } = renderHook(() => useGrades());
 
@@ -37,9 +37,9 @@ describe("useGrades Hook", () => {
   });
 
   it("should handle fetch error", async () => {
-    (global.fetch as any).mockResolvedValueOnce({
+    vi.mocked(global.fetch).mockResolvedValueOnce({
       ok: false,
-    });
+    } as Response);
 
     const { result } = renderHook(() => useGrades());
 
@@ -51,7 +51,7 @@ describe("useGrades Hook", () => {
   });
 
   it("should handle fetch exception", async () => {
-    (global.fetch as any).mockRejectedValueOnce(new Error("Network error"));
+    vi.mocked(global.fetch).mockRejectedValueOnce(new Error("Network error"));
 
     const { result } = renderHook(() => useGrades());
 
@@ -63,10 +63,10 @@ describe("useGrades Hook", () => {
   });
 
   it("should filter grades by category", async () => {
-    (global.fetch as any).mockResolvedValueOnce({
+    vi.mocked(global.fetch).mockResolvedValueOnce({
       ok: true,
-      json: async () => mockGrades,
-    });
+      json: () => Promise.resolve(mockGrades),
+    } as Response);
 
     const { result } = renderHook(() => useGrades());
 
@@ -88,10 +88,10 @@ describe("useGrades Hook", () => {
   });
 
   it("should open modal for editing", async () => {
-    (global.fetch as any).mockResolvedValueOnce({
+    vi.mocked(global.fetch).mockResolvedValueOnce({
       ok: true,
-      json: async () => mockGrades,
-    });
+      json: () => Promise.resolve(mockGrades),
+    } as Response);
 
     const { result } = renderHook(() => useGrades());
 
@@ -118,10 +118,10 @@ describe("useGrades Hook", () => {
   });
 
   it("should close modal and reset editInitial", async () => {
-    (global.fetch as any).mockResolvedValueOnce({
+    vi.mocked(global.fetch).mockResolvedValueOnce({
       ok: true,
-      json: async () => mockGrades,
-    });
+      json: () => Promise.resolve(mockGrades),
+    } as Response);
 
     const { result } = renderHook(() => useGrades());
 
@@ -142,10 +142,10 @@ describe("useGrades Hook", () => {
   });
 
   it("should confirm delete and refresh grades", async () => {
-    (global.fetch as any)
-      .mockResolvedValueOnce({ ok: true, json: async () => mockGrades }) // Initial fetch
-      .mockResolvedValueOnce({ ok: true }) // DELETE request
-      .mockResolvedValueOnce({ ok: true, json: async () => [mockGrades[1]] }); // Refresh fetch
+    vi.mocked(global.fetch)
+      .mockResolvedValueOnce({ ok: true, json: () => Promise.resolve(mockGrades) } as Response) // Initial fetch
+      .mockResolvedValueOnce({ ok: true } as Response) // DELETE request
+      .mockResolvedValueOnce({ ok: true, json: () => Promise.resolve([mockGrades[1]]) } as Response); // Refresh fetch
 
     const { result } = renderHook(() => useGrades());
 
@@ -172,10 +172,10 @@ describe("useGrades Hook", () => {
 
   it("should handle delete without CSRF token", async () => {
     document.cookie = ""; // Clear cookies
-    (global.fetch as any)
-      .mockResolvedValueOnce({ ok: true, json: async () => mockGrades })
-      .mockResolvedValueOnce({ ok: true })
-      .mockResolvedValueOnce({ ok: true, json: async () => [] });
+    vi.mocked(global.fetch)
+      .mockResolvedValueOnce({ ok: true, json: () => Promise.resolve(mockGrades) } as Response)
+      .mockResolvedValueOnce({ ok: true } as Response)
+      .mockResolvedValueOnce({ ok: true, json: () => Promise.resolve([]) } as Response);
 
     const { result } = renderHook(() => useGrades());
 
@@ -196,7 +196,7 @@ describe("useGrades Hook", () => {
   });
 
   it("should do nothing if confirmDelete is called without pending ID", async () => {
-    (global.fetch as any).mockResolvedValueOnce({ ok: true, json: async () => mockGrades });
+    vi.mocked(global.fetch).mockResolvedValueOnce({ ok: true, json: () => Promise.resolve(mockGrades) } as Response);
 
     const { result } = renderHook(() => useGrades());
 

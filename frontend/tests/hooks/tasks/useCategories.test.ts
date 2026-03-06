@@ -13,7 +13,9 @@ describe("useCategories Hook", () => {
   });
 
   it("should return initial loading state", () => {
-    (global.fetch as any).mockReturnValue(new Promise(() => {})); // Never resolves
+    vi.mocked(global.fetch).mockReturnValue(new Promise(() => {
+      // Intentionally never resolves to test loading state
+    })); 
     const { result } = renderHook(() => useCategories());
     expect(result.current.loading).toBe(true);
     expect(result.current.categories).toEqual([]);
@@ -21,10 +23,10 @@ describe("useCategories Hook", () => {
 
   it("should fetch categories and update state", async () => {
     const mockCategories = [{ id: 1, text: "Category 1" }];
-    (global.fetch as any).mockResolvedValueOnce({
+    vi.mocked(global.fetch).mockResolvedValueOnce({
       ok: true,
-      json: async () => mockCategories,
-    });
+      json: () => Promise.resolve(mockCategories),
+    } as Response);
 
     const { result } = renderHook(() => useCategories());
 
@@ -37,9 +39,9 @@ describe("useCategories Hook", () => {
   });
 
   it("should handle fetch failure", async () => {
-    (global.fetch as any).mockResolvedValueOnce({
+    vi.mocked(global.fetch).mockResolvedValueOnce({
       ok: false,
-    });
+    } as Response);
 
     const { result } = renderHook(() => useCategories());
 
@@ -50,7 +52,7 @@ describe("useCategories Hook", () => {
   });
 
   it("should handle fetch error", async () => {
-    (global.fetch as any).mockRejectedValueOnce(new Error("Network Error"));
+    vi.mocked(global.fetch).mockRejectedValueOnce(new Error("Network Error"));
 
     const { result } = renderHook(() => useCategories());
 
@@ -61,11 +63,11 @@ describe("useCategories Hook", () => {
   });
 
   it("should not update state if unmounted", async () => {
-    let resolveFetch: (value: any) => void;
-    const fetchPromise = new Promise((resolve) => {
+    let resolveFetch: (value: Response) => void;
+    const fetchPromise = new Promise<Response>((resolve) => {
       resolveFetch = resolve;
     });
-    (global.fetch as any).mockReturnValue(fetchPromise);
+    vi.mocked(global.fetch).mockReturnValue(fetchPromise);
 
     const { result, unmount } = renderHook(() => useCategories());
 
@@ -73,8 +75,8 @@ describe("useCategories Hook", () => {
 
     resolveFetch!({
       ok: true,
-      json: async () => [{ id: 1, text: "Category 1" }],
-    });
+      json: () => Promise.resolve([{ id: 1, text: "Category 1" }]),
+    } as Response);
 
     // Wait a bit to ensure any async updates would have happened
     await new Promise((r) => setTimeout(r, 10));

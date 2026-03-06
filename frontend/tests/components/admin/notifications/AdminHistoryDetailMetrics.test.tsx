@@ -1,7 +1,7 @@
 import { render, screen } from "@testing-library/react";
 import { describe, it, expect } from "vitest";
 import { AdminHistoryDetailMetrics } from "@/components/admin/notifications/AdminHistoryDetailMetrics";
-import { BroadcastJobDetail, BroadcastJobStatusResponse } from "@/types/notification";
+import type { BroadcastJobDetail, BroadcastJobStatusResponse } from "@/types/notification";
 
 describe("AdminHistoryDetailMetrics Component", () => {
   const mockDetail: BroadcastJobDetail = {
@@ -56,7 +56,7 @@ describe("AdminHistoryDetailMetrics Component", () => {
       recipient_count: 15,
       audience_snapshot: {
         ...mockDetail.audience_snapshot,
-        recipient_count: null as any,
+        recipient_count: null as unknown as number,
       },
     };
     

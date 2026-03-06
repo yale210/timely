@@ -19,14 +19,14 @@ describe("CreateGradeModal Component", () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    (useCategories as any).mockReturnValue({
+    vi.mocked(useCategories).mockReturnValue({
       categories: mockCategories,
       loading: false
     });
     // Mock fetch
     global.fetch = vi.fn();
     // Mock document.cookie
-    Object.defineProperty(document, 'cookie', {
+    Object.defineProperty(document, "cookie", {
       writable: true,
       value: "csrftoken=mock-token"
     });
@@ -73,7 +73,7 @@ describe("CreateGradeModal Component", () => {
     expect(totalInput).toHaveValue(100);
   });
 
-  it("displays error when score is greater than total", async () => {
+  it("displays error when score is greater than total", () => {
     render(<CreateGradeModal open={true} onClose={mockOnClose} />);
     
     fireEvent.change(screen.getByPlaceholderText("Score"), { target: { value: "110" } });
@@ -86,7 +86,7 @@ describe("CreateGradeModal Component", () => {
   });
 
   it("calls fetch with POST when creating a new grade", async () => {
-    (global.fetch as any).mockResolvedValueOnce({ ok: true });
+    vi.mocked(global.fetch).mockResolvedValueOnce({ ok: true } as Response);
     render(<CreateGradeModal open={true} onClose={mockOnClose} onCreated={mockOnCreated} />);
     
     fireEvent.change(screen.getByPlaceholderText("Assessment name"), { target: { value: "New Grade" } });
@@ -116,7 +116,7 @@ describe("CreateGradeModal Component", () => {
 
   it("calls fetch with PUT when updating an existing grade", async () => {
     const initialData = { id: 123, name: "Old Grade", score: 70, total: 100, date: "2023-01-01" };
-    (global.fetch as any).mockResolvedValueOnce({ ok: true });
+    vi.mocked(global.fetch).mockResolvedValueOnce({ ok: true } as Response);
     render(<CreateGradeModal open={true} onClose={mockOnClose} onUpdated={mockOnUpdated} initialData={initialData} />);
     
     fireEvent.change(screen.getByPlaceholderText("Assessment name"), { target: { value: "Updated Grade" } });
@@ -138,7 +138,7 @@ describe("CreateGradeModal Component", () => {
   });
 
   it("displays error when fetch fails during creation", async () => {
-    (global.fetch as any).mockResolvedValueOnce({ ok: false });
+    vi.mocked(global.fetch).mockResolvedValueOnce({ ok: false } as Response);
     render(<CreateGradeModal open={true} onClose={mockOnClose} />);
     
     fireEvent.change(screen.getByPlaceholderText("Assessment name"), { target: { value: "New Grade" } });
@@ -153,7 +153,7 @@ describe("CreateGradeModal Component", () => {
 
   it("displays error when fetch fails during update", async () => {
     const initialData = { id: 123, name: "Old Grade", score: 70, total: 100, date: "2023-01-01" };
-    (global.fetch as any).mockResolvedValueOnce({ ok: false });
+    vi.mocked(global.fetch).mockResolvedValueOnce({ ok: false } as Response);
     render(<CreateGradeModal open={true} onClose={mockOnClose} initialData={initialData} />);
     
     fireEvent.submit(screen.getByRole("button", { name: "Update" }));
@@ -169,7 +169,7 @@ describe("CreateGradeModal Component", () => {
     expect(mockOnClose).toHaveBeenCalled();
   });
 
-  it("handles empty score and total values", async () => {
+  it("handles empty score and total values", () => {
     render(<CreateGradeModal open={true} onClose={mockOnClose} />);
     
     // Simulate clearing the number inputs

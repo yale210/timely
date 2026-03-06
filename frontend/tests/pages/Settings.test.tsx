@@ -203,7 +203,9 @@ describe("Settings page - Other sections", () => {
     });
 
     it("switches to Theme section and handles button clicks", () => {
-        const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+        const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {
+          // No-op
+        });
         render(
             <MemoryRouter>
               <Settings />
@@ -226,6 +228,7 @@ describe("Settings page - Other sections", () => {
     });
 
     it("handles logout", async () => {
+        const mockedLogout = authService.logout.bind(authService);
         render(
             <MemoryRouter>
               <Settings />
@@ -234,7 +237,7 @@ describe("Settings page - Other sections", () => {
         fireEvent.click(screen.getByRole("button", { name: /log out/i }));
         
         await waitFor(() => {
-            expect(authService.logout).toHaveBeenCalled();
+            expect(mockedLogout).toHaveBeenCalled();
         });
     });
 });

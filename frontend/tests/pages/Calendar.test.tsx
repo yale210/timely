@@ -432,7 +432,12 @@ describe("CalendarPage (lean tests)", () => {
         vi.mocked(taskService.getTasks).mockResolvedValue([]);
         vi.mocked(taskService.getCategories).mockResolvedValue([]);
         vi.mocked(eventService.getEvents).mockResolvedValue([]);
-        vi.mocked(schedulerService.scheduleTasks).mockResolvedValue({ results: [{ success: true, task_id: 1, scheduled_start: "2023-01-01", scheduled_end: "2023-01-01" }] } as any);
+        vi.mocked(schedulerService.scheduleTasks).mockResolvedValue({
+            start_date: "2023-01-01",
+            scheduled_count: 1,
+            failed_count: 0,
+            results: [{ success: true, task_id: 1, scheduled_start: "2023-01-01", scheduled_end: "2023-01-01" }]
+        });
         vi.mocked(schedulerService.unscheduleTasks).mockResolvedValue({ unscheduled_count: 1 });
         
         renderPage();
@@ -456,7 +461,7 @@ describe("CalendarPage (lean tests)", () => {
         });
     });
 
-    it("navigates calendar dates", async () => {
+    it("navigates calendar dates", () => {
         const todayBtn = screen.getByText("Today");
         const prevBtn = screen.getByText("chevron_left");
         const nextBtn = screen.getByText("chevron_right");
@@ -468,7 +473,7 @@ describe("CalendarPage (lean tests)", () => {
         expect(screen.getByRole("heading", { level: 2 }).textContent).toBeDefined();
     });
 
-    it("switches views", async () => {
+    it("switches views", () => {
         fireEvent.click(screen.getByText("Month"));
         fireEvent.click(screen.getByText("Day"));
         fireEvent.click(screen.getByText("Agenda"));

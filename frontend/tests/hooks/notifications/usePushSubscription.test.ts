@@ -10,6 +10,10 @@ vi.mock("@/utils/pushNotifications", () => ({
   unsubscribeUserFromPush: vi.fn(),
 }));
 
+const mockedIsPushSupported = vi.mocked(pushUtils.isPushSupported);
+const mockedSubscribeUserToPush = vi.mocked(pushUtils.subscribeUserToPush);
+const mockedUnsubscribeUserFromPush = vi.mocked(pushUtils.unsubscribeUserFromPush);
+
 describe("usePushSubscription Hook", () => {
   const mockRegistration = {
     pushManager: {
@@ -19,13 +23,24 @@ describe("usePushSubscription Hook", () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    (pushUtils.isPushSupported as any).mockReturnValue(true);
-    (global as any).navigator.serviceWorker = {
-        ready: Promise.resolve(mockRegistration)
-    };
-    (global as any).Notification = {
-        permission: "default"
-    };
+    mockedIsPushSupported.mockReturnValue(true);
+    
+    // Use Object.defineProperty to avoid 'any' and unsafe member access on global objects
+    Object.defineProperty(globalThis.navigator, "serviceWorker", {
+      value: {
+        ready: Promise.resolve(mockRegistration),
+      },
+      configurable: true,
+      writable: true,
+    });
+
+    Object.defineProperty(globalThis, "Notification", {
+      value: {
+        permission: "default",
+      },
+      configurable: true,
+      writable: true,
+    });
   });
 
   afterEach(() => {
@@ -44,8 +59,8 @@ describe("usePushSubscription Hook", () => {
     });
   });
 
-  it("handles unsupported browser", async () => {
-    (pushUtils.isPushSupported as any).mockReturnValue(false);
+  it("handles unsupported browser", () => {
+    mockedIsPushSupported.mockReturnValue(false);
     const { result } = renderHook(() => usePushSubscription());
 
     expect(result.current.isSupported).toBe(false);
@@ -64,7 +79,7 @@ describe("usePushSubscription Hook", () => {
 
   it("handles subscribe success", async () => {
     mockRegistration.pushManager.getSubscription.mockResolvedValueOnce(null).mockResolvedValueOnce({});
-    (pushUtils.subscribeUserToPush as any).mockResolvedValue(undefined);
+    mockedSubscribeUserToPush.mockResolvedValue(undefined);
     
     const { result } = renderHook(() => usePushSubscription());
     await waitFor(() => expect(result.current.isSubscribed).toBe(false));
@@ -73,13 +88,13 @@ describe("usePushSubscription Hook", () => {
       await result.current.subscribe();
     });
 
-    expect(pushUtils.subscribeUserToPush).toHaveBeenCalled();
+    expect(mockedSubscribeUserToPush).toHaveBeenCalled();
     expect(result.current.isSubscribed).toBe(true);
     expect(result.current.error).toBeNull();
   });
 
   it("handles subscribe failure", async () => {
-    (pushUtils.subscribeUserToPush as any).mockRejectedValue(new Error("Permission denied"));
+    mockedSubscribeUserToPush.mockRejectedValue(new Error("Permission denied"));
     const { result } = renderHook(() => usePushSubscription());
 
     await act(async () => {
@@ -99,13 +114,13 @@ describe("usePushSubscription Hook", () => {
       await result.current.unsubscribe();
     });
 
-    expect(pushUtils.unsubscribeUserFromPush).toHaveBeenCalled();
+    expect(mockedUnsubscribeUserFromPush).toHaveBeenCalled();
     expect(result.current.isSubscribed).toBe(false);
   });
 
   it("handles unsubscribe failure", async () => {
     mockRegistration.pushManager.getSubscription.mockResolvedValue({});
-    (pushUtils.unsubscribeUserFromPush as any).mockRejectedValue(new Error("Network Error"));
+    mockedUnsubscribeUserFromPush.mockRejectedValue(new Error("Network Error"));
     const { result } = renderHook(() => usePushSubscription());
     await waitFor(() => expect(result.current.isSubscribed).toBe(true));
 
@@ -117,25 +132,25 @@ describe("usePushSubscription Hook", () => {
   });
 
   it("subscribe does nothing if unsupported", async () => {
-    (pushUtils.isPushSupported as any).mockReturnValue(false);
+    mockedIsPushSupported.mockReturnValue(false);
     const { result } = renderHook(() => usePushSubscription());
 
     await act(async () => {
       await result.current.subscribe();
     });
 
-    expect(pushUtils.subscribeUserToPush).not.toHaveBeenCalled();
+    expect(mockedSubscribeUserToPush).not.toHaveBeenCalled();
   });
 
   it("unsubscribe does nothing if unsupported", async () => {
-    (pushUtils.isPushSupported as any).mockReturnValue(false);
+    mockedIsPushSupported.mockReturnValue(false);
     const { result } = renderHook(() => usePushSubscription());
 
     await act(async () => {
       await result.current.unsubscribe();
     });
 
-    expect(pushUtils.unsubscribeUserFromPush).not.toHaveBeenCalled();
+    expect(mockedUnsubscribeUserFromPush).not.toHaveBeenCalled();
   });
 
   it("handles error in checkSubscription", async () => {

@@ -3,6 +3,7 @@ import { vi, describe, it, expect, beforeEach } from "vitest";
 import { MemoryRouter, useNavigate } from "react-router-dom";
 import { AdminNotificationHistory } from "@/pages/Admin/Notifications/AdminNotificationHistory";
 import { useAdminHistory } from "@/hooks/admin/notifications/useAdminHistory";
+import type { ReactNode } from "react";
 
 // Mock useNavigate
 vi.mock("react-router-dom", async () => {
@@ -20,7 +21,7 @@ vi.mock("@/hooks/admin/notifications/useAdminHistory", () => ({
 
 // Mock AppLayout
 vi.mock("@/layouts/AppLayout", () => ({
-  default: ({ children }: any) => <div data-testid="app-layout">{children}</div>,
+  default: ({ children }: { children: ReactNode }) => <div data-testid="app-layout">{children}</div>,
 }));
 
 describe("AdminNotificationHistory Page", () => {
@@ -61,8 +62,8 @@ describe("AdminNotificationHistory Page", () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    (useNavigate as any).mockReturnValue(mockNavigate);
-    (useAdminHistory as any).mockReturnValue({
+    vi.mocked(useNavigate).mockReturnValue(mockNavigate);
+    vi.mocked(useAdminHistory).mockReturnValue({
       state: mockState,
       loading: false,
       error: null,
@@ -91,7 +92,7 @@ describe("AdminNotificationHistory Page", () => {
   });
 
   it("displays error message when error is present", () => {
-    (useAdminHistory as any).mockReturnValue({
+    vi.mocked(useAdminHistory).mockReturnValue({
       state: mockState,
       loading: false,
       error: "Some error occurred",
@@ -117,7 +118,7 @@ describe("AdminNotificationHistory Page", () => {
   });
 
   it("calls setPage on pagination", () => {
-    (useAdminHistory as any).mockReturnValue({
+    vi.mocked(useAdminHistory).mockReturnValue({
       state: { ...mockState, page: 2, totalPages: 3 },
       loading: false,
       error: null,
