@@ -90,10 +90,7 @@ def _get_daily_breakdown(week_q, start):
         day_end = day_start + timedelta(
             hours=23, minutes=59, seconds=59, microseconds=999999
         )
-        day_q = week_q.filter(
-            Q(start_time__range=(day_start, day_end))
-            | Q(start_time__isnull=True, deadline__range=(day_start, day_end))
-        )
+        day_q = _get_daily_query_set(week_q, day_start, day_end)
         completed = day_q.filter(completed=True).count()
         minutes = day_q.aggregate(total=Sum("estimated_minutes")).get("total") or 0
         days.append(
@@ -104,6 +101,14 @@ def _get_daily_breakdown(week_q, start):
             }
         )
     return days
+
+
+def _get_daily_query_set(week_q, day_start, day_end):
+    day_q = week_q.filter(
+        Q(start_time__range=(day_start, day_end))
+        | Q(start_time__isnull=True, deadline__range=(day_start, day_end))
+    )
+    return day_q
 
 
 def _get_importance_breakdown(week_q):

@@ -244,6 +244,16 @@ class EventViewSet(viewsets.ModelViewSet):
     def revert_instance(self, request, *args, **kwargs):
         event = self.get_object()
 
+        original_start_time = self._parse_original_start_time(request)
+
+        error = self._validate_revert(event, request, original_start_time)
+
+        if error:
+            return error
+
+        return self._perform_revert(event, original_start_time)
+
+    def _validate_revert(self, event, original_start_time):
         if not settings.ENABLE_RECURRENCE_OVERRIDES:
             return Response(
                 {"detail": "Recurring overrides are disabled by feature flag."},
@@ -256,13 +266,14 @@ class EventViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        original_start_time = self._parse_original_start_time(request)
         if original_start_time is None:
             return Response(
                 {"detail": "original_start_time is required."},
                 status=status.HTTP_400_BAD_REQUEST,
             )
+        return None
 
+    def _perform_revert(self, event, original_start_time):
         try:
             revert_override_instance(event, original_start_time)
         except ValueError as exc:

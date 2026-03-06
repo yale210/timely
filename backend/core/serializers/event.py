@@ -145,12 +145,11 @@ class EventSerializer(serializers.ModelSerializer):
                 }
             )
 
-    def _clean_event(self,event):
+    def _clean_event(self, event):
         try:
             event.clean()
         except DjangoValidationError as e:
             raise serializers.ValidationError(e.message_dict)
-        return attributes
 
 
 class EventResponseSerializer(serializers.ModelSerializer):

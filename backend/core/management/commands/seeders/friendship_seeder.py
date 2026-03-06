@@ -49,7 +49,7 @@ class FriendshipSeeder(BaseSeeder):
             )
 
     def _populate_random_friendship(self):
-        User = get_user_model()
+        # User = get_user_model()
 
         # Shuffle users and get a random user.
         temporary_sender, temporary_receiver = self._get_or_create_two_random_users()
