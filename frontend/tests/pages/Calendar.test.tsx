@@ -7,6 +7,7 @@ import moment from "moment";
 import CalendarPage from "@/pages/Calendar";
 import * as taskService from "@/services/taskService";
 import * as eventService from "@/services/eventService";
+import * as schedulerService from "@/services/schedulerService";
 import type {
   Task,
   Event,
@@ -21,6 +22,7 @@ import type {
 // ----------------------
 vi.mock("@/services/taskService");
 vi.mock("@/services/eventService");
+vi.mock("@/services/schedulerService");
 
 // Mock react-big-calendar so we don't depend on rbc DOM internals.
 // We provide 2 buttons:
@@ -422,6 +424,55 @@ describe("CalendarPage (lean tests)", () => {
       await waitFor(() => {
         expect(screen.queryByTestId("mock-sidebar")).toBeNull();
       });
+    });
+  });
+
+  describe("scheduling and navigation", () => {
+    beforeEach(() => {
+        vi.mocked(taskService.getTasks).mockResolvedValue([]);
+        vi.mocked(taskService.getCategories).mockResolvedValue([]);
+        vi.mocked(eventService.getEvents).mockResolvedValue([]);
+        vi.mocked(schedulerService.scheduleTasks).mockResolvedValue({ results: [{ success: true, task_id: 1, scheduled_start: "2023-01-01", scheduled_end: "2023-01-01" }] } as any);
+        vi.mocked(schedulerService.unscheduleTasks).mockResolvedValue({ unscheduled_count: 1 });
+        
+        renderPage();
+    });
+
+    it("handles scheduling tasks", async () => {
+        const btn = screen.getByText("Schedule Tasks");
+        fireEvent.click(btn);
+        
+        await waitFor(() => {
+            expect(schedulerService.scheduleTasks).toHaveBeenCalled();
+        });
+    });
+
+    it("handles unscheduling tasks", async () => {
+        const btn = screen.getByText("Unschedule Tasks");
+        fireEvent.click(btn);
+        
+        await waitFor(() => {
+            expect(schedulerService.unscheduleTasks).toHaveBeenCalled();
+        });
+    });
+
+    it("navigates calendar dates", async () => {
+        const todayBtn = screen.getByText("Today");
+        const prevBtn = screen.getByText("chevron_left");
+        const nextBtn = screen.getByText("chevron_right");
+
+        fireEvent.click(nextBtn);
+        fireEvent.click(prevBtn);
+        fireEvent.click(todayBtn);
+        
+        expect(screen.getByRole("heading", { level: 2 }).textContent).toBeDefined();
+    });
+
+    it("switches views", async () => {
+        fireEvent.click(screen.getByText("Month"));
+        fireEvent.click(screen.getByText("Day"));
+        fireEvent.click(screen.getByText("Agenda"));
+        fireEvent.click(screen.getByText("Week"));
     });
   });
 });

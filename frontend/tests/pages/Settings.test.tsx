@@ -6,6 +6,7 @@ import type { Preference, PreferenceUpdate } from "@/types"
 
 // IMPORTANT: adjust import path if yours differs
 import Settings from "@/pages/Settings"
+import { authService } from "@/services/authService"
 
 // Mock AppLayout to avoid layout complexity
 vi.mock("@/layouts/AppLayout", () => ({
@@ -154,4 +155,86 @@ describe("Settings page - Scheduling section", () => {
       await screen.findByText(/Must be 24 or less/i)
     ).toBeInTheDocument()
   })
-})
+
+  it("handles preference fetch error", async () => {
+    getMyPreference.mockRejectedValue({
+        response: {
+            status: 401,
+            data: { detail: "Unauthorized" }
+        }
+    });
+
+    render(
+        <MemoryRouter>
+          <Settings />
+        </MemoryRouter>
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: /scheduling/i }));
+
+    expect(await screen.findByText(/Unauthorized/i)).toBeInTheDocument();
+  });
+});
+
+describe("Settings page - Other sections", () => {
+    beforeEach(() => {
+        vi.resetAllMocks();
+    });
+
+    it("renders Profile section by default", () => {
+        render(
+            <MemoryRouter>
+              <Settings />
+            </MemoryRouter>
+        );
+        expect(screen.getByRole("heading", { name: "Profile", level: 2 })).toBeInTheDocument();
+        expect(screen.getByText("Profile settings will go here.")).toBeInTheDocument();
+    });
+
+    it("switches to Features section", () => {
+        render(
+            <MemoryRouter>
+              <Settings />
+            </MemoryRouter>
+        );
+        fireEvent.click(screen.getByRole("button", { name: /features/i }));
+        expect(screen.getByRole("heading", { name: "Features", level: 2 })).toBeInTheDocument();
+        expect(screen.getByText("Feature toggles will go here.")).toBeInTheDocument();
+    });
+
+    it("switches to Theme section and handles button clicks", () => {
+        const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+        render(
+            <MemoryRouter>
+              <Settings />
+            </MemoryRouter>
+        );
+        fireEvent.click(screen.getByRole("button", { name: "Theme" }));
+        expect(screen.getByRole("heading", { name: "Theme", level: 2 })).toBeInTheDocument();
+        
+        // Click theme button
+        fireEvent.click(screen.getByRole("button", { name: "dark" }));
+        expect(document.documentElement.dataset.theme).toBe("dark");
+        expect(consoleSpy).toHaveBeenCalledWith("changed theme");
+
+        // Click font button
+        fireEvent.click(screen.getByRole("button", { name: "poppins" }));
+        expect(document.documentElement.dataset.font).toBe("poppins");
+        expect(consoleSpy).toHaveBeenCalledWith("font changed");
+
+        consoleSpy.mockRestore();
+    });
+
+    it("handles logout", async () => {
+        render(
+            <MemoryRouter>
+              <Settings />
+            </MemoryRouter>
+        );
+        fireEvent.click(screen.getByRole("button", { name: /log out/i }));
+        
+        await waitFor(() => {
+            expect(authService.logout).toHaveBeenCalled();
+        });
+    });
+});
