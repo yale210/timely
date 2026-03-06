@@ -246,7 +246,7 @@ class EventViewSet(viewsets.ModelViewSet):
 
         original_start_time = self._parse_original_start_time(request)
 
-        error = self._validate_revert(event, request, original_start_time)
+        error = self._validate_revert(event, original_start_time)
 
         if error:
             return error

@@ -95,7 +95,8 @@ class EventSerializer(serializers.ModelSerializer):
             event = Event(**base_values)
             event.pk = self.instance.pk
 
-        return self._clean_event(event)
+        self._clean_event(event)
+        return attributes
 
     @transaction.atomic
     def create(self, validated_data):
@@ -150,6 +151,7 @@ class EventSerializer(serializers.ModelSerializer):
             event.clean()
         except DjangoValidationError as e:
             raise serializers.ValidationError(e.message_dict)
+        
 
 
 class EventResponseSerializer(serializers.ModelSerializer):
