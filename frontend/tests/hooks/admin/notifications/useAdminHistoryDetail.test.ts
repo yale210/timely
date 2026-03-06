@@ -136,6 +136,43 @@ describe("useAdminHistoryDetail Hook", () => {
     expect(result.current.state.isRetryConfirmOpen).toBe(false);
   });
 
-  // Skip polling for now as it's causing issues with JSDOM/Vitest environment
-  // We'll mark it as a separate concern.
+  it("polls for status when in non-terminal state", async () => {
+    vi.useFakeTimers();
+    mockedGetBroadcastStatus.mockResolvedValue({ status: "QUEUED", task_id: "t1" });
+    
+    const { result } = renderHook(() => useAdminHistoryDetail());
+    // Use vi.waitFor instead of testing-library waitFor when using fake timers
+    await vi.waitFor(() => expect(result.current.loading).toBe(false));
+    expect(result.current.state.status?.status).toBe("QUEUED");
+
+    // Advance timer to trigger polling
+    mockedGetBroadcastStatus.mockResolvedValue({ status: "COMPLETED", task_id: "t1" });
+    await vi.advanceTimersByTimeAsync(3000);
+
+    await vi.waitFor(() => {
+      expect(result.current.state.status?.status).toBe("COMPLETED");
+    });
+  });
+
+  it("handles polling error", async () => {
+    vi.useFakeTimers();
+    const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => { /* Silence */ });
+    mockedGetBroadcastStatus.mockResolvedValue({ status: "QUEUED", task_id: "t1" });
+    
+    const { result } = renderHook(() => useAdminHistoryDetail());
+    
+    // Wait for initial load to finish so status is set and loading is false
+    await vi.waitFor(() => expect(result.current.loading).toBe(false));
+    expect(result.current.state.status?.status).toBe("QUEUED");
+
+    mockedGetBroadcastStatus.mockRejectedValue(new Error("Polling failed"));
+    
+    // Advance enough time to trigger the interval
+    await vi.advanceTimersByTimeAsync(3000);
+
+    await vi.waitFor(() => {
+        expect(consoleSpy).toHaveBeenCalled();
+    });
+    consoleSpy.mockRestore();
+  });
 });

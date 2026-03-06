@@ -1,6 +1,7 @@
 import { renderHook, act, waitFor } from "@testing-library/react";
 import { vi, describe, it, expect, beforeEach, afterEach } from "vitest";
 import { useNotificationDetail } from "@/hooks/notifications/useNotificationDetail";
+
 import { useParams, useNavigate } from "react-router-dom";
 import api from "@/services/api";
 import { useNotificationContext } from "@/context/NotificationContext";
@@ -26,9 +27,9 @@ vi.mock("@/context/NotificationContext", () => ({
 const mockedUseParams = vi.mocked(useParams);
 const mockedUseNavigate = vi.mocked(useNavigate);
 const mockedUseNotificationContext = vi.mocked(useNotificationContext);
-const mockedApiGet = vi.mocked(api.get.bind(api));
 
 describe("useNotificationDetail Hook", () => {
+
   const mockId = "123";
   const mockNavigate = vi.fn();
   const mockMarkRead = vi.fn().mockResolvedValue(undefined);
@@ -66,7 +67,7 @@ describe("useNotificationDetail Hook", () => {
 
   it("fetches notification on mount and handles read status", async () => {
     const unreadNotification = { ...mockNotification, is_read: false };
-    mockedApiGet.mockResolvedValue({ data: unreadNotification });
+    const getSpy = vi.spyOn(api, 'get').mockResolvedValue({ data: unreadNotification });
 
     const { result } = renderHook(() => useNotificationDetail());
 
@@ -77,12 +78,12 @@ describe("useNotificationDetail Hook", () => {
       expect(result.current.state.notification?.is_read).toBe(true);
     });
 
-    expect(mockedApiGet).toHaveBeenCalledWith(`/api/notifications/${mockId}/`);
+    expect(getSpy).toHaveBeenCalledWith(`/api/notifications/${mockId}/`);
     expect(mockMarkRead).toHaveBeenCalledWith(123);
   });
 
   it("sets error when fetch fails", async () => {
-    mockedApiGet.mockRejectedValue(new Error("Fetch failed"));
+    vi.spyOn(api, 'get').mockRejectedValue(new Error("Fetch failed"));
 
     const { result } = renderHook(() => useNotificationDetail());
 
@@ -93,7 +94,7 @@ describe("useNotificationDetail Hook", () => {
   });
 
   it("toggles read status from read to unread", async () => {
-    mockedApiGet.mockResolvedValue({ data: mockNotification });
+    vi.spyOn(api, 'get').mockResolvedValue({ data: mockNotification });
     const { result } = renderHook(() => useNotificationDetail());
 
     await waitFor(() => expect(result.current.loading).toBe(false));
@@ -108,7 +109,7 @@ describe("useNotificationDetail Hook", () => {
   });
 
   it("toggles read status from unread to read", async () => {
-    mockedApiGet.mockResolvedValue({ data: mockNotification });
+    vi.spyOn(api, 'get').mockResolvedValue({ data: mockNotification });
     const { result } = renderHook(() => useNotificationDetail());
     await waitFor(() => expect(result.current.loading).toBe(false));
 
@@ -127,7 +128,7 @@ describe("useNotificationDetail Hook", () => {
   });
 
   it("handles deletion", async () => {
-    mockedApiGet.mockResolvedValue({ data: mockNotification });
+    vi.spyOn(api, 'get').mockResolvedValue({ data: mockNotification });
     const { result } = renderHook(() => useNotificationDetail());
 
     await waitFor(() => expect(result.current.loading).toBe(false));
@@ -142,7 +143,7 @@ describe("useNotificationDetail Hook", () => {
   });
 
   it("toggles delete modal open state", () => {
-    mockedApiGet.mockResolvedValue({ data: mockNotification });
+    vi.spyOn(api, 'get').mockResolvedValue({ data: mockNotification });
     const { result } = renderHook(() => useNotificationDetail());
 
     act(() => {
@@ -158,7 +159,7 @@ describe("useNotificationDetail Hook", () => {
 
   it("does nothing in actions if notification is null", async () => {
     // Force notification to stay null by rejecting fetch
-    mockedApiGet.mockRejectedValue(new Error("Failed"));
+    vi.spyOn(api, 'get').mockRejectedValue(new Error("Failed"));
     const { result } = renderHook(() => useNotificationDetail());
     await waitFor(() => expect(result.current.loading).toBe(false));
     
@@ -172,12 +173,11 @@ describe("useNotificationDetail Hook", () => {
   });
 
   it("handles errors in handleToggleRead", async () => {
-    mockedApiGet.mockResolvedValue({ data: mockNotification });
+    vi.spyOn(api, 'get').mockResolvedValue({ data: mockNotification });
     const { result } = renderHook(() => useNotificationDetail());
     await waitFor(() => expect(result.current.loading).toBe(false));
 
-    const mockedMarkUnread = mockMarkUnread.bind(null);
-    mockedMarkUnread.mockRejectedValue(new Error("Toggle failed"));
+    vi.mocked(mockMarkUnread).mockRejectedValue(new Error("Toggle failed"));
     const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => { /* No-op */ });
 
     await act(async () => {
@@ -189,12 +189,11 @@ describe("useNotificationDetail Hook", () => {
   });
 
   it("handles errors in handleDelete", async () => {
-    mockedApiGet.mockResolvedValue({ data: mockNotification });
+    vi.spyOn(api, 'get').mockResolvedValue({ data: mockNotification });
     const { result } = renderHook(() => useNotificationDetail());
     await waitFor(() => expect(result.current.loading).toBe(false));
 
-    const mockedDeleteNotification = mockDeleteNotification.bind(null);
-    mockedDeleteNotification.mockRejectedValue(new Error("Delete failed"));
+    vi.mocked(mockDeleteNotification).mockRejectedValue(new Error("Delete failed"));
     const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => { /* No-op */ });
 
     await act(async () => {

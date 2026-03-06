@@ -128,8 +128,10 @@ describe("NotificationContext", () => {
       fireEvent.click(screen.getByText("Read 1"));
     });
 
-    expect(notificationsApi.markAsRead).toHaveBeenCalledWith(1);
-    expect(screen.getByTestId("unread-count").textContent).toBe("0");
+    await waitFor(() => {
+      expect(notificationsApi.markAsRead).toHaveBeenCalledWith(1);
+      expect(screen.getByTestId("unread-count").textContent).toBe("0");
+    });
   });
 
   it("handles deleteNotification and updates local state", async () => {
@@ -145,9 +147,11 @@ describe("NotificationContext", () => {
       fireEvent.click(screen.getByText("Delete 1"));
     });
 
-    expect(notificationsApi.deleteNotification).toHaveBeenCalledWith(1);
-    expect(screen.queryByText("N1")).toBeNull();
-    expect(screen.getByTestId("unread-count").textContent).toBe("0");
+    await waitFor(() => {
+      expect(notificationsApi.deleteNotification).toHaveBeenCalledWith(1);
+      expect(screen.queryByText("N1")).toBeNull();
+      expect(screen.getByTestId("unread-count").textContent).toBe("0");
+    });
   });
 
   it("handles markAllRead", async () => {

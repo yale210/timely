@@ -63,6 +63,8 @@ vi.mock("@/components/layout/AdminSidebar", () => ({
   ),
 }));
 
+const mockedAuthStore = vi.mocked(authStore);
+
 /**
  * Tests for the AppNavbar component.
  */
@@ -87,7 +89,7 @@ describe("AppNavbar Component", () => {
       deleteNotification: mockDeleteNotification,
       deleteAllNotifications: mockDeleteAllNotifications,
     });
-    vi.mocked(authStore.getUser.bind(authStore)).mockReturnValue({ is_staff: false });
+    mockedAuthStore.getUser.mockReturnValue({ is_staff: false });
   });
 
   afterEach(() => {
@@ -181,7 +183,7 @@ describe("AppNavbar Component", () => {
     fireEvent.click(screen.getByLabelText("Open navigation"));
     expect(screen.queryByText("Admin Panel")).toBeNull();
 
-    vi.mocked(authStore.getUser.bind(authStore)).mockReturnValue({ is_staff: true });
+    mockedAuthStore.getUser.mockReturnValue({ is_staff: true });
     rerender(
       <MemoryRouter>
         <AppNavbar />
@@ -289,7 +291,7 @@ describe("AppNavbar Component", () => {
   });
 
   it("handles admin panel link click", () => {
-    vi.mocked(authStore.getUser.bind(authStore)).mockReturnValue({ is_staff: true });
+    mockedAuthStore.getUser.mockReturnValue({ is_staff: true });
     render(
       <MemoryRouter>
         <AppNavbar />

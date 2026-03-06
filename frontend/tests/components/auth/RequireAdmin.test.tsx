@@ -12,6 +12,8 @@ vi.mock("@/services/authService", () => ({
   },
 }));
 
+const mockedAuthStore = vi.mocked(authStore);
+
 /**
  * Tests for the RequireAdmin component.
  */
@@ -21,7 +23,7 @@ describe("RequireAdmin Component", () => {
   });
 
   it("redirects to /login if user has no token", () => {
-    vi.mocked(authStore.getToken.bind(authStore)).mockReturnValue(null);
+    mockedAuthStore.getToken.mockReturnValue(null);
     
     render(
       <MemoryRouter initialEntries={["/admin"]}>
@@ -41,8 +43,8 @@ describe("RequireAdmin Component", () => {
   });
 
   it("redirects to / if user is not staff", () => {
-    vi.mocked(authStore.getToken.bind(authStore)).mockReturnValue("mock-token");
-    vi.mocked(authStore.getUser.bind(authStore)).mockReturnValue({ is_staff: false });
+    mockedAuthStore.getToken.mockReturnValue("mock-token");
+    mockedAuthStore.getUser.mockReturnValue({ is_staff: false });
     
     render(
       <MemoryRouter initialEntries={["/admin"]}>
@@ -62,8 +64,8 @@ describe("RequireAdmin Component", () => {
   });
 
   it("renders children if user is staff", () => {
-    vi.mocked(authStore.getToken.bind(authStore)).mockReturnValue("mock-token");
-    vi.mocked(authStore.getUser.bind(authStore)).mockReturnValue({ is_staff: true });
+    mockedAuthStore.getToken.mockReturnValue("mock-token");
+    mockedAuthStore.getUser.mockReturnValue({ is_staff: true });
     
     render(
       <MemoryRouter initialEntries={["/admin"]}>

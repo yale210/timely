@@ -111,8 +111,9 @@ describe("useAdminBroadcastForm Hook", () => {
     // We can't easily check selectedUserIds here because users are fetched async
   });
 
-  it("validates form and handles handleSubmit", () => {
+  it("validates form and handles handleSubmit", async () => {
     const { result } = renderHook(() => useAdminBroadcastForm());
+    await waitFor(() => expect(result.current.state.audience.audienceCounts.all).toBe(100));
 
     const mockEvent = { preventDefault: vi.fn() } as unknown as FormEvent<HTMLFormElement>;
 

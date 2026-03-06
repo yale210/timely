@@ -11,6 +11,8 @@ vi.mock("@/services/authService", () => ({
   },
 }));
 
+const mockedAuthStore = vi.mocked(authStore);
+
 /**
  * Tests for the RedirectIfAuth component.
  */
@@ -20,7 +22,7 @@ describe("RedirectIfAuth Component", () => {
   });
 
   it("redirects to /dashboard if user has a token", () => {
-    vi.mocked(authStore.getToken.bind(authStore)).mockReturnValue("mock-token");
+    mockedAuthStore.getToken.mockReturnValue("mock-token");
     
     render(
       <MemoryRouter initialEntries={["/login"]}>
@@ -40,7 +42,7 @@ describe("RedirectIfAuth Component", () => {
   });
 
   it("renders children if user has no token", () => {
-    vi.mocked(authStore.getToken.bind(authStore)).mockReturnValue(null);
+    mockedAuthStore.getToken.mockReturnValue(null);
     
     render(
       <MemoryRouter initialEntries={["/login"]}>

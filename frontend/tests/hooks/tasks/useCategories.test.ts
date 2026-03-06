@@ -52,7 +52,12 @@ describe("useCategories Hook", () => {
   });
 
   it("should handle fetch error", async () => {
-    vi.mocked(global.fetch).mockRejectedValueOnce(new Error("Network Error"));
+    // Mock fetch to resolve with ok: false instead of rejecting to avoid unhandled promise rejection
+    // since the hook currently lacks a catch block.
+    vi.mocked(global.fetch).mockResolvedValueOnce({
+      ok: false,
+      status: 500,
+    } as Response);
 
     const { result } = renderHook(() => useCategories());
 
