@@ -1,92 +1,76 @@
-
-import { describe, it, expect, vi, beforeEach } from "vitest"
-import api from "@/services/api"
-import { authStore } from "@/services/authService"
-
-interface HeaderLike {
-  get?: (key: string) => string | undefined
-}
-type InterceptorFn = (config: { headers?: HeaderLike | Record<string, string> | undefined }) => {
-  headers?: HeaderLike | Record<string, string>
-}
-
-vi.mock("axios", () => {
-  class MockAxiosHeaders {
-    private map = new Map<string, string>()
-    constructor(init?: Record<string, string>) {
-      if (init) Object.entries(init).forEach(([k, v]) => this.set(k, v))
-    }
-    set(key: string, value: string) {
-      this.map.set(key.toLowerCase(), value)
-    }
-    get(key: string) {
-      return this.map.get(key.toLowerCase())
-    }
-  }
-
-  const handlers: InterceptorFn[] = []
-  const instance = {
-    interceptors: {
-      request: {
-        handlers,
-        use: (fn: InterceptorFn) => {
-          handlers.push(fn)
-          return handlers.length - 1
-        },
-      },
-    },
-    defaults: {},
-  }
-
-  const create = vi.fn(() => instance)
-
-  return { default: { create }, create, AxiosHeaders: MockAxiosHeaders }
-})
+import { describe, it, expect, vi, beforeEach } from "vitest";
+import api from "@/services/api";
+import { authStore } from "@/services/authService";
+import { AxiosHeaders, type InternalAxiosRequestConfig } from "axios";
 
 vi.mock("@/services/authService", () => ({
   authStore: {
     getToken: vi.fn(),
   },
-}))
+}));
 
-const getInterceptor = (): InterceptorFn =>
-  (api as unknown as { interceptors: { request: { handlers: InterceptorFn[] } } }).interceptors.request.handlers[0]
-
-describe("api service interceptor", () => {
+describe("api service", () => {
   beforeEach(() => {
-    vi.resetAllMocks()
-  })
+    vi.resetAllMocks();
+  });
 
-  it("adds Authorization header when token exists", () => {
-    const tokenSpy = vi.spyOn(authStore, "getToken").mockReturnValue("abc123")
-    const interceptor = getInterceptor()
+  it("adds Authorization header if token exists and headers is AxiosHeaders", async () => {
+    vi.spyOn(authStore, 'getToken').mockReturnValue("mock-token");
+    
+    const mockAdapter = vi.fn().mockResolvedValue({ data: {}, status: 200, statusText: "OK", headers: {}, config: {} });
+    api.defaults.adapter = mockAdapter;
 
-    const result = interceptor({ headers: undefined })
-    const headers = result.headers as HeaderLike
+    await api.get("/test", {
+        headers: new AxiosHeaders({ "X-Test": "test" })
+    });
 
-    expect(headers?.get?.("authorization")).toBe("Token abc123")
-    tokenSpy.mockRestore()
-  })
+    expect(mockAdapter).toHaveBeenCalled();
+    const call = mockAdapter.mock.calls[0][0] as InternalAxiosRequestConfig;
+    expect(call.headers.get("Authorization")).toBe("Token mock-token");
+  });
 
-  it("leaves headers untouched when no token", () => {
-    const tokenSpy = vi.spyOn(authStore, "getToken").mockReturnValue(null)
-    const interceptor = getInterceptor()
-    const orig = { foo: "bar" }
+  it("adds Authorization header and creates AxiosHeaders if plain object (manual check)", () => {
+    vi.spyOn(authStore, 'getToken').mockReturnValue("mock-token");
+    
+    // Find the interceptor
+    // @ts-expect-error - accessing internal interceptor handlers for testing
+    const interceptor = api.interceptors.request.handlers[0].fulfilled as (config: InternalAxiosRequestConfig) => InternalAxiosRequestConfig;
+    
+    const config = {
+        headers: { "X-Plain": "object" }
+    } as unknown as InternalAxiosRequestConfig;
+    
+    const result = interceptor(config);
+    
+    expect(result.headers).toBeInstanceOf(AxiosHeaders);
+    expect(result.headers.get("Authorization")).toBe("Token mock-token");
+  });
 
-    const result = interceptor({ headers: orig })
+  it("handles case where headers is already AxiosHeaders (manual check)", () => {
+    vi.spyOn(authStore, 'getToken').mockReturnValue("mock-token");
+    
+    // @ts-expect-error - accessing internal interceptor handlers for testing
+    const interceptor = api.interceptors.request.handlers[0].fulfilled as (config: InternalAxiosRequestConfig) => InternalAxiosRequestConfig;
+    
+    const headers = new AxiosHeaders();
+    const config = { headers } as unknown as InternalAxiosRequestConfig;
+    
+    const result = interceptor(config);
+    
+    expect(result.headers).toBe(headers);
+    expect(result.headers.get("Authorization")).toBe("Token mock-token");
+  });
 
-    expect(result.headers).toBe(orig)
-    tokenSpy.mockRestore()
-  })
+  it("does not add Authorization header if token does not exist", async () => {
+    vi.spyOn(authStore, 'getToken').mockReturnValue(null);
+    
+    const mockAdapter = vi.fn().mockResolvedValue({ data: {}, status: 200, statusText: "OK", headers: {}, config: {} });
+    api.defaults.adapter = mockAdapter;
 
-  it("preserves existing headers and appends Authorization", () => {
-    const tokenSpy = vi.spyOn(authStore, "getToken").mockReturnValue("token-1")
-    const interceptor = getInterceptor()
-    const result = interceptor({ headers: { "X-Test": "42" } })
+    await api.get("/test");
 
-    const headers = result.headers as HeaderLike
-    expect(headers?.get?.("x-test")).toBe("42")
-    expect(headers?.get?.("authorization")).toBe("Token token-1")
-    tokenSpy.mockRestore()
-  })
-})
+    expect(mockAdapter).toHaveBeenCalled();
+    const call = mockAdapter.mock.calls[0][0] as InternalAxiosRequestConfig;
+    expect(call.headers.get("Authorization")).toBeUndefined();
+  });
+});
