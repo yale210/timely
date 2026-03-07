@@ -187,13 +187,12 @@ def _build_expanded_instance(
     )
 
 
-def expand_event_instances(
+def _build_expanded_content(
     event: Event,
     range_start: datetime,
     range_end: datetime,
-    *,
-    overrides: list[EventOverride] | None = None,
-) -> list[ExpandedEventInstance]:
+    overrides: list[EventOverride] | None,
+):
     range_start = _make_aware(range_start)
     range_end = _make_aware(range_end)
 
@@ -211,6 +210,37 @@ def expand_event_instances(
     overrides_by_original = {
         override.original_start_time: override for override in loaded_overrides
     }
+
+    return (
+        range_start,
+        range_end,
+        category_cache,
+        reminder_cache,
+        duration,
+        exception_dates,
+        loaded_overrides,
+        overrides_by_original,
+    )
+
+
+def expand_event_instances(
+    event: Event,
+    range_start: datetime,
+    range_end: datetime,
+    *,
+    overrides: list[EventOverride] | None = None,
+) -> list[ExpandedEventInstance]:
+    (
+        range_start,
+        range_end,
+        category_cache,
+        reminder_cache,
+        duration,
+        exception_dates,
+        loaded_overrides,
+        overrides_by_original,
+    ) = _build_expanded_content(event, range_start, range_end, overrides)
+
     seen_override_ids: set[int] = set()
     instances: list[ExpandedEventInstance] = []
 
