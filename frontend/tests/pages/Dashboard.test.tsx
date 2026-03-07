@@ -31,7 +31,8 @@ vi.mock("@/pages/index", () => ({
 }));
 
 describe("Dashboard Page", () => {
-  const now = moment();
+  const fixedNow = "2026-03-01T12:00:00.000Z";
+  const now = moment(fixedNow);
   const mockTasks = [
     { id: 1, title: "Today Task", deadline: now.toISOString(), completed: false },
     { id: 2, title: "Overdue Task", deadline: now.clone().subtract(1, "day").toISOString(), completed: false },
@@ -41,9 +42,12 @@ describe("Dashboard Page", () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    vi.setSystemTime(new Date(fixedNow));
   });
 
   afterEach(() => {
+    vi.useRealTimers();
     vi.restoreAllMocks();
   });
 

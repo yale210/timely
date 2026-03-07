@@ -74,14 +74,10 @@ describe("useTaskList Hook", () => {
     await waitFor(() => expect(result.current.loading).toBe(false));
 
     const { sections } = result.current.state;
-    console.log("Sections count:", {
-        today: sections.todayTasks.length,
-        overdue: sections.overdueTasks.length,
-        upcoming: sections.upcomingTasks.length,
-        past: sections.pastTasks.length,
-        tasks: result.current.state.tasks.length,
-    });
-    expect(sections.todayTasks.length + sections.overdueTasks.length + sections.upcomingTasks.length + sections.pastTasks.length).toBeGreaterThan(0);
+    expect(sections.todayTasks.length).toBe(1);
+    expect(sections.overdueTasks.length).toBe(1);
+    expect(sections.upcomingTasks.length).toBe(1);
+    expect(sections.pastTasks.length).toBe(1);
   });
 
   it("handles toggleComplete", async () => {

@@ -79,7 +79,7 @@ describe("pushNotifications Utilities", () => {
 
     it("throws error if VAPID key is missing", async () => {
       mockedGetVapidPublicKey.mockResolvedValue({ public_key: "" });
-      await expect(subscribeUserToPush()).rejects.toThrow("Server did not return a VAPID public key.");
+      await expect(subscribeUserToPush()).rejects.toThrow(/Server did not return a VAPID public key/i);
     });
 
     it("throws error if browser returns an incomplete push subscription", async () => {

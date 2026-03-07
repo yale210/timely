@@ -9,9 +9,9 @@ export default defineConfig({
     setupFiles: ['src/setupTests.ts'],
     environment: 'jsdom',
     coverage: {
-      provider: 'v8', 
-      reporter: ['text', 'json-summary'], 
-      reportsDirectory: './coverage', 
+      provider: 'v8',
+      reporter: ['text', 'json-summary'],
+      reportsDirectory: './coverage'
     },
   },
 });

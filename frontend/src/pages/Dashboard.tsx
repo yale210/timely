@@ -12,7 +12,6 @@ import { CalendarPage } from "@/pages/index";
 export default function Dashboard() {
   const [tasks, setTasks] = useState<Task[]>([]);
 
-   
   useEffect(() => {
     let ignore = false;
     const loadTasks = async () => {
@@ -48,7 +47,7 @@ export default function Dashboard() {
       moment(t.deadline).isAfter(now) &&
       !moment(t.deadline).isSame(now, "day")
   );
-  
+
   return (
     <AppLayout>
       <main className="w-full px-6 lg:px-10 pt-2 pb-10 min-h-screen bg-">
