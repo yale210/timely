@@ -23,11 +23,26 @@ interface RechartsProps {
 
 vi.mock("recharts", async () => {
   const original = await vi.importActual("recharts");
-  const ResponsiveContainer: React.FC<RechartsProps> = ({ children }) => {
-    const maybeChild = React.Children.toArray(children)[0];
-    const style = { width: 800, height: 600 };
-    if (!React.isValidElement(maybeChild)) return React.createElement("div", { style });
-    return React.cloneElement(maybeChild, { ...(maybeChild.props ?? {}), ...style });
+  const ResponsiveContainer: React.FC<RechartsProps> = ({ children }) =>
+    React.createElement("div", { className: "recharts-responsive-container" }, children);
+  const SvgChart: React.FC<{ children?: React.ReactNode }> = ({ children }) =>
+    React.createElement("svg", null, children);
+  const Group: React.FC<{ children?: React.ReactNode }> = ({ children }) =>
+    React.createElement("g", null, children);
+  const NullComp: React.FC = () => null;
+  const Bar: React.FC = () => React.createElement("rect");
+  return {
+    ...(original as object),
+    ResponsiveContainer,
+    PieChart: SvgChart,
+    BarChart: SvgChart,
+    Pie: Group,
+    Cell: NullComp,
+    XAxis: NullComp,
+    YAxis: NullComp,
+    Tooltip: NullComp,
+    Legend: NullComp,
+    CartesianGrid: NullComp,
+    Bar,
   };
-  return { ...(original as object), ResponsiveContainer };
 });

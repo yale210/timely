@@ -1,8 +1,13 @@
-import { describe, it, expect, vi } from "vitest";
+import { describe, it, expect, vi, beforeEach } from "vitest";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 
 import EventSidebar from "@/components/events/EventSidebar";
 import type { Event } from "@/types";
+import { getServerTime } from "@/services/eventService";
+
+vi.mock("@/services/eventService", () => ({
+  getServerTime: vi.fn(),
+}));
 
 const recurringEvent: Event = {
   id: 7,
@@ -19,12 +24,24 @@ const recurringEvent: Event = {
 };
 
 describe("EventSidebar recurrence scope", () => {
+  const onCreateCategory = vi.fn().mockResolvedValue({ id: 1, text: "Work" });
+  const onUpdateCategory = vi.fn().mockResolvedValue({ id: 1, text: "Work" });
+  const onDeleteCategory = vi.fn().mockResolvedValue(undefined);
+
+  beforeEach(() => {
+    vi.resetAllMocks();
+    vi.mocked(getServerTime).mockResolvedValue({ server_time: new Date().toISOString() });
+  });
+
   it("shows modified-instance badge for override events", () => {
     render(
       <EventSidebar
         isOpen={true}
         onClose={vi.fn()}
         categories={[]}
+        onCreateCategory={onCreateCategory}
+        onUpdateCategory={onUpdateCategory}
+        onDeleteCategory={onDeleteCategory}
         onSubmit={vi.fn()}
         initialData={{ ...recurringEvent, is_override: true }}
       />,
@@ -39,6 +56,9 @@ describe("EventSidebar recurrence scope", () => {
         isOpen={true}
         onClose={vi.fn()}
         categories={[]}
+        onCreateCategory={onCreateCategory}
+        onUpdateCategory={onUpdateCategory}
+        onDeleteCategory={onDeleteCategory}
         onSubmit={vi.fn()}
         initialData={{ ...recurringEvent, is_split_series: true }}
       />,
@@ -55,6 +75,9 @@ describe("EventSidebar recurrence scope", () => {
         isOpen={true}
         onClose={vi.fn()}
         categories={[]}
+        onCreateCategory={onCreateCategory}
+        onUpdateCategory={onUpdateCategory}
+        onDeleteCategory={onDeleteCategory}
         onSubmit={onSubmit}
         initialData={recurringEvent}
       />,
@@ -86,6 +109,9 @@ describe("EventSidebar recurrence scope", () => {
         isOpen={true}
         onClose={vi.fn()}
         categories={[]}
+        onCreateCategory={onCreateCategory}
+        onUpdateCategory={onUpdateCategory}
+        onDeleteCategory={onDeleteCategory}
         onSubmit={vi.fn()}
         onDelete={onDelete}
         initialData={recurringEvent}
@@ -114,6 +140,9 @@ describe("EventSidebar recurrence scope", () => {
         isOpen={true}
         onClose={vi.fn()}
         categories={[]}
+        onCreateCategory={onCreateCategory}
+        onUpdateCategory={onUpdateCategory}
+        onDeleteCategory={onDeleteCategory}
         onSubmit={vi.fn()}
         onRevertToSeries={onRevertToSeries}
         initialData={{ ...recurringEvent, is_override: true }}
@@ -136,6 +165,9 @@ describe("EventSidebar recurrence scope", () => {
         isOpen={true}
         onClose={vi.fn()}
         categories={[]}
+        onCreateCategory={onCreateCategory}
+        onUpdateCategory={onUpdateCategory}
+        onDeleteCategory={onDeleteCategory}
         onSubmit={vi.fn()}
         initialData={recurringEvent}
       />,
@@ -157,6 +189,9 @@ describe("EventSidebar recurrence scope", () => {
         isOpen={true}
         onClose={vi.fn()}
         categories={[]}
+        onCreateCategory={onCreateCategory}
+        onUpdateCategory={onUpdateCategory}
+        onDeleteCategory={onDeleteCategory}
         onSubmit={vi.fn()}
         initialData={anotherInstance}
       />,
@@ -171,6 +206,9 @@ describe("EventSidebar recurrence scope", () => {
         isOpen={true}
         onClose={vi.fn()}
         categories={[]}
+        onCreateCategory={onCreateCategory}
+        onUpdateCategory={onUpdateCategory}
+        onDeleteCategory={onDeleteCategory}
         onSubmit={vi.fn()}
         initialData={recurringEvent}
       />,
