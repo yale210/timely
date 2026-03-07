@@ -14,7 +14,7 @@ describe('TaskForm', () => {
     const updateCategory = vi.fn().mockResolvedValue({ id: 1, text: "Work" })
     const deleteCategory = vi.fn().mockResolvedValue(undefined)
 
-    it('should render form fields', () => {
+    it('should render form fields', async () => {
         render(
             <TaskForm 
                 categories={categories} 
@@ -29,8 +29,8 @@ describe('TaskForm', () => {
         expect(screen.getByLabelText(/Title/i)).toBeDefined()
         expect(screen.getByLabelText(/Description/i)).toBeDefined()
         fireEvent.focus(screen.getByPlaceholderText(/Type to search or add category/i))
-        expect(screen.getByText(/Work/i)).toBeDefined()
-        expect(screen.getByText(/Personal/i)).toBeDefined()
+        expect(await screen.findByText(/Work/i)).toBeDefined()
+        expect(await screen.findByText(/Personal/i)).toBeDefined()
     })
 
     it('should call onSubmit with form data', () => {

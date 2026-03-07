@@ -1,10 +1,6 @@
 import { useEffect, useState } from "react"
-import { getCategories } from "@/services/categoryService"
-
-/**
- * Category represents a simple category record returned by the API.
- */
-export interface Category { id: number; text: string }
+import { getCategories } from "@/services/taskService"
+import type { Category } from "@/types"
 
 /**
  * Hook to load categories from the API.

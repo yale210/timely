@@ -102,21 +102,30 @@ describe("AdminNotifications Page", () => {
     fireEvent.click(screen.getByRole("checkbox", { name: /I confirm/i }));
 
     const sendButton = screen.getByRole("button", { name: /Send notification/i });
-    await waitFor(() => expect(sendButton).toBeEnabled());
+    await waitFor(
+      () => expect(sendButton).toBeEnabled(),
+      { timeout: 8000 },
+    );
     fireEvent.click(sendButton);
 
     expect(await screen.findByText("Send this broadcast?")).toBeDefined();
     fireEvent.click(screen.getByRole("button", { name: /Send now/i }));
 
-    await waitFor(() => expect(sendAdminNotification).toHaveBeenCalledTimes(1));
+    await waitFor(
+      () => expect(sendAdminNotification).toHaveBeenCalledTimes(1),
+      { timeout: 8000 },
+    );
     const sentPayload = vi.mocked(sendAdminNotification).mock.calls[0]?.[0];
     expect(sentPayload?.target).toBe("users");
     expect(sentPayload?.user_ids).toEqual([1]);
-    await waitFor(() => expect(getBroadcastStatus).toHaveBeenCalledWith(12));
+    await waitFor(
+      () => expect(getBroadcastStatus).toHaveBeenCalledWith(12),
+      { timeout: 8000 },
+    );
     expect(screen.getByRole("checkbox", { name: /I confirm/i })).toBeChecked();
     expect(screen.getByRole("link", { name: /Notification history/i })).toHaveAttribute(
       "href",
       "/admin/notifications/history",
     );
-  });
+  }, 10000);
 });

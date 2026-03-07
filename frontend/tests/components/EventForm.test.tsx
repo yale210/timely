@@ -252,7 +252,7 @@ describe('EventForm', () => {
     expect(onDataChange).toHaveBeenCalled()
   })
 
-  it('handles category selection via checkboxes', () => {
+  it('handles category selection via checkboxes', async () => {
     render(
       <EventForm
         categories={mockCategories}
@@ -265,11 +265,11 @@ describe('EventForm', () => {
     )
 
     fireEvent.focus(screen.getByPlaceholderText(/Type to search or add category/i))
-    const workOption = screen.getByText(/Work/i)
+    const workOption = await screen.findByText(/Work/i)
     fireEvent.click(workOption)
 
     fireEvent.focus(screen.getByPlaceholderText(/Type to search or add category/i))
-    fireEvent.click(screen.getByText(/Work/i))
+    fireEvent.click(await screen.findByText(/Work/i))
   })
 
   it('limits reminders to 5', () => {
