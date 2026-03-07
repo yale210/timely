@@ -18,6 +18,79 @@ const recurringEvent: Event = {
   original_start_time: "2026-02-20T10:00:00.000Z",
 };
 
+describe("EventSidebar Component", () => {
+  it("renders Add New Event when no initialData id", () => {
+    render(
+      <EventSidebar
+        isOpen={true}
+        onClose={vi.fn()}
+        categories={[]}
+        onSubmit={vi.fn()}
+      />
+    );
+    expect(screen.getByText("Add New Event")).toBeDefined();
+  });
+
+  it("handles non-recurring submission", () => {
+    const onSubmit = vi.fn();
+    const onClose = vi.fn();
+    render(
+      <EventSidebar
+        isOpen={true}
+        onClose={onClose}
+        categories={[]}
+        onSubmit={onSubmit}
+      />
+    );
+
+    fireEvent.change(screen.getByLabelText(/Title/i), { target: { value: "New Event" } });
+    fireEvent.click(screen.getByRole("button", { name: /save event/i }));
+
+    expect(onSubmit).toHaveBeenCalled();
+    expect(onClose).toHaveBeenCalled();
+  });
+
+  it("handles non-recurring deletion", () => {
+    const onDelete = vi.fn();
+    const onClose = vi.fn();
+    const nonRecurringEvent = { ...recurringEvent, recurrence_interval: undefined };
+    
+    render(
+      <EventSidebar
+        isOpen={true}
+        onClose={onClose}
+        categories={[]}
+        onSubmit={vi.fn()}
+        onDelete={onDelete}
+        initialData={nonRecurringEvent}
+      />
+    );
+
+    fireEvent.click(screen.getByTitle("Delete Event"));
+    expect(screen.getByText(/Are you sure you want to delete this event/i)).toBeDefined();
+    
+    fireEvent.click(screen.getByRole("button", { name: "Delete" }));
+    
+    expect(onDelete).toHaveBeenCalled();
+    expect(onClose).toHaveBeenCalled();
+  });
+
+  it("calls onClose when close button is clicked", () => {
+    const onClose = vi.fn();
+    render(
+      <EventSidebar
+        isOpen={true}
+        onClose={onClose}
+        categories={[]}
+        onSubmit={vi.fn()}
+      />
+    );
+
+    fireEvent.click(screen.getByText("close"));
+    expect(onClose).toHaveBeenCalled();
+  });
+});
+
 describe("EventSidebar recurrence scope", () => {
   it("shows modified-instance badge for override events", () => {
     render(

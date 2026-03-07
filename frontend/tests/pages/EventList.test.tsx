@@ -269,14 +269,14 @@ describe('EventList Sorting', () => {
       </NotificationProvider></MemoryRouter>
     )
 
-    await waitFor(() => expect(screen.getByText('Today Event')).toBeDefined())
+    await screen.findByText('Today Event')
 
     const sortButton = screen.getByRole('button', { name: /Sort/i })
     fireEvent.click(sortButton)
 
     fireEvent.click(screen.getByText('Date'))
 
-    await waitFor(() => expect(screen.getByText('Today Event')).toBeDefined())
+    expect(await screen.findByText('Today Event')).toBeInTheDocument()
   })
 
   it('sorts by title', async () => {
@@ -286,14 +286,14 @@ describe('EventList Sorting', () => {
       </NotificationProvider></MemoryRouter>
     )
 
-    await waitFor(() => expect(screen.getByText('Today Event')).toBeDefined())
+    await screen.findByText('Today Event')
 
     const sortButton = screen.getByRole('button', { name: /Sort/i })
     fireEvent.click(sortButton)
 
     fireEvent.click(screen.getByText('Title (A-Z)'))
 
-    await waitFor(() => expect(screen.getByText('Today Event')).toBeDefined())
+    expect(await screen.findByText('Today Event')).toBeInTheDocument()
   })
 })
 
@@ -329,7 +329,7 @@ describe('EventList Filtering Additional', () => {
       </NotificationProvider></MemoryRouter>
     )
 
-    await waitFor(() => expect(screen.getByText('Work Event')).toBeDefined())
+    await screen.findByText('Work Event')
 
     const filterButton = screen.getByRole('button', { name: /Filter/i })
     fireEvent.click(filterButton)
@@ -337,7 +337,7 @@ describe('EventList Filtering Additional', () => {
     const categoryOptions = screen.getAllByText('Work')
     fireEvent.click(categoryOptions[categoryOptions.length - 1])
 
-    await waitFor(() => expect(screen.getByText('Work Event')).toBeDefined())
+    expect(await screen.findByText('Work Event')).toBeInTheDocument()
   })
 
   it('searches events', async () => {
@@ -349,13 +349,13 @@ describe('EventList Filtering Additional', () => {
       </NotificationProvider></MemoryRouter>
     )
 
-    await waitFor(() => expect(screen.getByText('Today Event')).toBeDefined())
+    await screen.findByText('Today Event')
 
     const searchInput = screen.getByPlaceholderText('Search events...')
     fireEvent.change(searchInput, { target: { value: 'Today' } })
 
+    expect(await screen.findByText('Today Event')).toBeInTheDocument()
     await waitFor(() => {
-      expect(screen.getByText('Today Event')).toBeDefined()
       expect(screen.queryByText('Upcoming Event')).toBeNull()
     })
   })
@@ -397,7 +397,7 @@ describe('EventList Filtering Additional', () => {
     const filterButton = screen.getByRole('button', { name: /Filter/i })
     fireEvent.click(filterButton)
 
-    await waitFor(() => expect(screen.getByText('Recurring Only')).toBeDefined())
+    await screen.findByText('Recurring Only')
     fireEvent.click(screen.getByText('Recurring Only'))
 
     await waitFor(() => {

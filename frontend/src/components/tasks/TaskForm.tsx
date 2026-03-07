@@ -1,6 +1,13 @@
 import { useState, useEffect, type FormEvent } from "react";
 import { type Category, type Task, type TaskSubmission } from "@/types";
 
+/**
+ * Safely convert a Date to ISO string, returning "" for invalid dates.
+ * @param d - The date object to convert.
+ */
+const safeToISOString = (d: Date): string =>
+  Number.isNaN(d.getTime()) ? "" : d.toISOString();
+
 interface NormalisedTaskSubmission {
   title: string;
   description: string;
@@ -78,7 +85,7 @@ const TaskForm = ({
       onDataChange({
         title,
         description,
-        start_time: startDateTime.toISOString(),
+        start_time: safeToISOString(startDateTime),
       });
     }
   }, [title, description, date, startTime, onDataChange]);
@@ -107,7 +114,9 @@ const TaskForm = ({
   // Derived Validation
   const startDateTime = new Date(`${date}T${startTime}`);
   const endDateTime = new Date(`${deadline}T${deadlineTime}`);
-  const isTimeInvalid = startDateTime >= endDateTime;
+  const isStartInvalid = Number.isNaN(startDateTime.getTime());
+  const isEndInvalid = Number.isNaN(endDateTime.getTime());
+  const isTimeInvalid = isStartInvalid || isEndInvalid || startDateTime >= endDateTime;
   const isImportanceInvalid = importance < 1 || importance > 10 || isNaN(importance);
   
   const errors: Record<string, boolean> = {};
@@ -124,8 +133,8 @@ const TaskForm = ({
   const buildSubmission = (): TaskSubmission => ({
     title,
     description,
-    start_time: startDateTime.toISOString(),
-    deadline: endDateTime.toISOString(),
+    start_time: safeToISOString(startDateTime),
+    deadline: safeToISOString(endDateTime),
     categories: selectedCategories,
     importance,
     estimated_minutes: estimatedMinutes,
