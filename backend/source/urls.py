@@ -29,8 +29,6 @@ from core.views import (
     FriendshipViewSet,
 )
 
-from core.views.export_view import ExportView
-from core.views.import_view import ImportView
 from scheduler.views import ScheduleTasksAPIView, UnscheduleTasksAPIView
 
 
@@ -52,7 +50,5 @@ urlpatterns = [
     path("api/stats/weekly/", WeeklySummaryView.as_view(), name="weekly-summary"),
     path("api/django-admin/", admin.site.urls),
     path("api/authentication/", include("authentication.urls")),
-    path("api/export/", ExportView.as_view()),
-    path("api/import/", ImportView.as_view()),
     path("api/profiles/", include("profiles.urls")),
 ]
