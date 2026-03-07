@@ -161,7 +161,7 @@ const UnifiedSidebar = ({
         </div>
         <button
           onClick={onClose}
-          className="p-2 hover:bg-gray-200 rounded-full transition-colors"
+          className="h-8 w-8 flex items-center justify-center rounded-full hover:bg-gray-200 transition-colors"
         >
           <span className="material-icons text-gray-500">close</span>
         </button>

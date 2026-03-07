@@ -147,7 +147,7 @@ const EventSidebar = ({
                         </div>
                         <button
                           onClick={onClose}
-                          className="text-gray-400 hover:text-red-500 transition-colors rounded-full p-1 hover:bg-gray-100"
+                          className="h-8 w-8 flex items-center justify-center rounded-full text-gray-400 hover:text-red-500 transition-colors hover:bg-gray-100"
                         >
                           <span className="material-icons">close</span>
                         </button>
