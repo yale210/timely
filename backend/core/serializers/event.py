@@ -59,8 +59,17 @@ class EventSerializer(serializers.ModelSerializer):
         return representation
 
     def validate(self, attributes):
-        # Validate max reminders
         reminders_data = attributes.get("reminders", [])
+
+        self._validate_reminders(reminders_data, attributes)
+
+        event = self._build_event_for_validation(attributes)
+
+        self._clean_event(event)
+        return attributes
+
+    def _validate_reminders(self, reminders_data, attributes):
+        # Validate max reminders
         self._validate_max_reminders(reminders_data)
 
         # Validate that no reminder would trigger in the past
@@ -74,8 +83,8 @@ class EventSerializer(serializers.ModelSerializer):
                 trigger_at = start_time - timedelta(minutes=minutes_before)
                 self._validate_trigger_time(trigger_at, minutes_before)
 
+    def _build_event_for_validation(self, attributes):
         attrs_copy = attributes.copy()
-        # Pop M2M and custom fields
         reminders_data = attrs_copy.pop("reminders", None)
         attrs_copy.pop("categories", None)
 
@@ -94,9 +103,7 @@ class EventSerializer(serializers.ModelSerializer):
             base_values.update(attrs_copy)
             event = Event(**base_values)
             event.pk = self.instance.pk
-
-        self._clean_event(event)
-        return attributes
+        return event
 
     @transaction.atomic
     def create(self, validated_data):
