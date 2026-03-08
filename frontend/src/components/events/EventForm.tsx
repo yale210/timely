@@ -3,6 +3,12 @@ import { CategoryMultiSelect } from "@/components";
 import { type Category, type Event, type EventSubmission } from "@/types";
 import { usePushSubscription } from "@/hooks/notifications/usePushSubscription";
 import { getServerTime } from "@/services/eventService";
+/**
+ * Safely convert a Date to ISO string, returning "" for invalid dates.
+ * @param d - The date object to convert.
+ */
+const safeToISOString = (d: Date): string =>
+  Number.isNaN(d.getTime()) ? "" : d.toISOString();
 
 type TimeUnit = "minutes" | "hours" | "days" | "weeks" | "months" | "years";
 
@@ -180,7 +186,7 @@ const EventForm = ({
       onDataChange({
         title,
         description,
-        start_time: startDateTime.toISOString(),
+        start_time: safeToISOString(startDateTime),
       });
     }
   }, [title, description, startDate, startTime, onDataChange]);
@@ -256,7 +262,9 @@ const EventForm = ({
   // Derived Validation
   const startDateTime = new Date(`${startDate}T${startTime}`);
   const endDateTime = new Date(`${endDate}T${endTime}`);
-  const isTimeInvalid = startDateTime >= endDateTime;
+  const isStartInvalid = Number.isNaN(startDateTime.getTime());
+  const isEndInvalid = Number.isNaN(endDateTime.getTime());
+  const isTimeInvalid = isStartInvalid || isEndInvalid || startDateTime >= endDateTime;
   // Recurrence end date is optional now ("never" is valid)
   
   const MAX_REMINDERS = 5;
@@ -289,8 +297,8 @@ const EventForm = ({
     title,
     description,
     location,
-    start_time: startDateTime.toISOString(),
-    end_time: endDateTime.toISOString(),
+    start_time: safeToISOString(startDateTime),
+    end_time: safeToISOString(endDateTime),
     categories: selectedCategories,
     recurrence_interval: (recurrenceInterval as Event["recurrence_interval"]) ?? null,
     recurrence_end: recurrenceEnd || null,
