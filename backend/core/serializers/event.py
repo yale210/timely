@@ -85,7 +85,7 @@ class EventSerializer(serializers.ModelSerializer):
 
     def _build_event_for_validation(self, attributes):
         attrs_copy = attributes.copy()
-        reminders_data = attrs_copy.pop("reminders", None)
+        attrs_copy.pop("reminders", None)
         attrs_copy.pop("categories", None)
 
         if self.instance is None:
