@@ -6,7 +6,7 @@ import CompletionPieChart from "@/components/charts/CompletionPieChart";
 import ImportanceBarChart from "@/components/charts/ImportanceBarChart";
 import DailyTasksBarChart from "@/components/charts/DailyTasksBarChart";
 import DailyTimeBarChart from "@/components/charts/DailyTimeBarChart";
-import { GraphsPanel } from "@/pages/WeeklySummaries";
+import { GraphsPanel } from "@/components/analytics";
 
 const emptyStats = { total_tasks: 0, completed_tasks: 0, completion_percentage: 0, total_minutes_planned: 0, daily_stats: [], importance_stats: [] } as WeeklyStats;
 const sampleStats = {
