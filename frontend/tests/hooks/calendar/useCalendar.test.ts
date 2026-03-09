@@ -2,12 +2,23 @@ import { act, renderHook, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { useCalendar } from "@/hooks/calendar/useCalendar";
 import * as eventService from "@/services/eventService";
+import * as categoryService from "@/services/categoryService";
 import * as schedulerService from "@/services/schedulerService";
 import * as taskService from "@/services/taskService";
 import type { Category, Event, Task } from "@/types";
 
 vi.mock("react-big-calendar", () => ({
   Views: { MONTH: "month", WEEK: "week", DAY: "day", AGENDA: "agenda" },
+}));
+
+vi.mock("@/services/categoryService", () => ({
+  createCategory: vi.fn(),
+  updateCategory: vi.fn(),
+  deleteCategory: vi.fn(),
+}));
+vi.mock("react-big-calendar/lib/addons/dragAndDrop", () => ({
+  __esModule: true,
+  default: vi.fn(),
 }));
 
 vi.mock("@/services/taskService", () => ({
@@ -136,5 +147,38 @@ describe("useCalendar", () => {
 
     expect(schedulerService.unscheduleTasks).toHaveBeenCalled();
     expect(result.current.state.scheduleOrder).toEqual({});
+  });
+
+  it("creates a category and adds it to state", async () => {
+    const created: Category = { id: 10, text: "New Category" };
+    vi.mocked(categoryService.createCategory).mockResolvedValue(created);
+
+    const { result } = renderHook(() => useCalendar());
+    await waitFor(() => expect(result.current.loading.initializing).toBe(false));
+
+    let returned: Category | undefined;
+    await act(async () => {
+      returned = await result.current.actions.createCategory("New Category");
+    });
+
+    expect(categoryService.createCategory).toHaveBeenCalledWith("New Category");
+    expect(returned).toEqual(created);
+    expect(result.current.state.categories.some((c) => c.id === 10)).toBe(true);
+  });
+
+  it("deletes a category and removes it from state", async () => {
+    vi.mocked(categoryService.deleteCategory).mockResolvedValue();
+
+    const { result } = renderHook(() => useCalendar());
+    await waitFor(() => expect(result.current.loading.initializing).toBe(false));
+
+    expect(result.current.state.categories).toHaveLength(1);
+
+    await act(async () => {
+      await result.current.actions.deleteCategory(7);
+    });
+
+    expect(categoryService.deleteCategory).toHaveBeenCalledWith(7);
+    expect(result.current.state.categories).toHaveLength(0);
   });
 });
