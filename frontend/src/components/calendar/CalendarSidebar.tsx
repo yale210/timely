@@ -1,0 +1,47 @@
+import { UnifiedSidebar } from "@/components";
+import type { UseCalendarReturn } from "@/hooks/calendar/useCalendar";
+
+interface CalendarSidebarProps {
+  state: Pick<
+    UseCalendarReturn["state"],
+    "isSidebarOpen" | "categories" | "selectedItem" | "sidebarMode"
+  >;
+  actions: Pick<
+    UseCalendarReturn["actions"],
+    "closeSidebar" | "submitTask" | "submitEvent" | "deleteSelected" | "revertSelectedEvent"
+  >;
+}
+
+/**
+ * Renders the calendar task and event sidebar.
+ * @param props - Calendar sidebar props.
+ * @param props.state - Sidebar state values.
+ * @param props.actions - Sidebar action callbacks.
+ * @returns The sidebar wrapper around the unified task/event form.
+ */
+const CalendarSidebar = ({
+  state,
+  actions,
+}: CalendarSidebarProps) => (
+  <UnifiedSidebar
+    isOpen={state.isSidebarOpen}
+    onClose={actions.closeSidebar}
+    categories={state.categories}
+    initialData={state.selectedItem}
+    initialMode={state.sidebarMode}
+    onSubmitTask={(data) => {
+      void actions.submitTask(data);
+    }}
+    onSubmitEvent={(data, context) => {
+      void actions.submitEvent(data, context);
+    }}
+    onDelete={(context) => {
+      void actions.deleteSelected(context);
+    }}
+    onRevertToSeries={(context) => {
+      void actions.revertSelectedEvent(context);
+    }}
+  />
+);
+
+export default CalendarSidebar;
