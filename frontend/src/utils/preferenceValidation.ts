@@ -1,5 +1,10 @@
 import type { Preference } from "@/types";
 
+/**
+ * Validates a user preference object and returns field-level errors.
+ * @param preference - The preference values to validate.
+ * @returns A record mapping field names to their validation error messages.
+ */
 export const validatePreference = (preference: Preference): Record<string, string[]> => {
   const errors: Record<string, string[]> = {};
   const max = preference.max_hours_study_per_day;
