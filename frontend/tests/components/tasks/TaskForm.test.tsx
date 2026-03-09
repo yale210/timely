@@ -30,7 +30,8 @@ describe("TaskForm Component", () => {
     await user.type(screen.getByLabelText(/description/i), "Task description");
     
     // Toggle a category
-    await user.click(screen.getByText("Category 1"));
+    await user.click(screen.getByPlaceholderText(/type to search or add category/i));
+    await user.click(await screen.findByText("Category 1"));
     
     const saveButton = screen.getByRole("button", { name: /save task/i });
     expect(saveButton).not.toBeDisabled();
@@ -107,7 +108,8 @@ describe("TaskForm Component", () => {
     const user = userEvent.setup();
     render(<TaskForm {...defaultProps} />);
     
-    const cat1 = screen.getByText("Category 1");
+    await user.click(screen.getByPlaceholderText(/type to search or add category/i));
+    const cat1 = await screen.findByText("Category 1");
     await user.click(cat1); // Select
     await user.click(cat1); // Unselect
     await user.click(cat1); // Select again
