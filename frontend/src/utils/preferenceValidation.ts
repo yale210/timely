@@ -1,6 +1,13 @@
 import type { Preference } from "@/types";
 
-export const validatePreference = (preference: Preference): Record<string, string[]> => {
+/**
+ *
+ */
+export const /**
+              *
+              * @param preference
+              */
+validatePreference = (preference: Preference): Record<string, string[]> => {
   const errors: Record<string, string[]> = {};
   const max = preference.max_hours_study_per_day;
 

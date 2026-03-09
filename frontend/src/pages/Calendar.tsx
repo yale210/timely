@@ -1,7 +1,7 @@
 import "react-big-calendar/lib/css/react-big-calendar.css";
 import "react-big-calendar/lib/addons/dragAndDrop/styles.css";
 import moment from "moment";
-import { useState, useEffect, useCallback, type CSSProperties } from "react";
+import { useState, useEffect, useCallback, useMemo, useRef, useLayoutEffect, type CSSProperties } from "react";
 import { Calendar, momentLocalizer, type View, Views } from "react-big-calendar";
 import withDragAndDrop, {
   type EventInteractionArgs,
@@ -14,7 +14,8 @@ import * as taskService from "@/services/taskService";
 import * as categoryService from "@/services/categoryService";
 import * as eventService from "@/services/eventService";
 import * as schedulerService from "@/services/schedulerService";
-import type { Task, Category, TaskSubmission, Event, EventSubmission, EventMutationContext} from "@/types";
+import { preferenceService } from "@/services/preferenceService";
+import type { Task, Category, TaskSubmission, Event, EventSubmission, EventMutationContext, Preference } from "@/types";
 import { getOverrideColour, hexToRgba } from "@/utils/colorUtils";
 
 const localizer = momentLocalizer(moment);
@@ -69,6 +70,38 @@ const getCalendarWindow = (
   };
 };
 
+const parseClockMinutes = (value: string): number => {
+  const [hourRaw, minuteRaw] = value.split(":");
+  const hour = Number.parseInt(hourRaw ?? "0", 10);
+  const minute = Number.parseInt(minuteRaw ?? "0", 10);
+
+  if (Number.isNaN(hour) || Number.isNaN(minute)) {
+    return 0;
+  }
+
+  return (hour * 60) + minute;
+};
+
+const isOutsidePreferredDayWindow = (slotDate: Date, preference: Preference | null): boolean => {
+  if (!preference) {
+    return false;
+  }
+
+  const startMinutes = parseClockMinutes(preference.day_start);
+  const endMinutes = parseClockMinutes(preference.day_end);
+  const slotMinutes = (slotDate.getHours() * 60) + slotDate.getMinutes();
+
+  if (startMinutes === endMinutes) {
+    return false;
+  }
+
+  if (startMinutes < endMinutes) {
+    return slotMinutes < startMinutes || slotMinutes >= endMinutes;
+  }
+
+  return slotMinutes >= endMinutes && slotMinutes < startMinutes;
+};
+
 interface CalendarPageProps {
   showNavbar?: boolean;
   useLayout?: boolean;
@@ -86,7 +119,25 @@ const CalendarPage = ({ showNavbar = true, useLayout = true }: CalendarPageProps
   const [isScheduling, setIsScheduling] = useState(false);
   const [isUnscheduling, setIsUnscheduling] = useState(false);
   const [scheduleOrder, setScheduleOrder] = useState<Record<number, number>>({});
+  const [preference, setPreference] = useState<Preference | null>(null);
+  const [headerHeight, setHeaderHeight] = useState(0);
+  const [timeGutterWidth, setTimeGutterWidth] = useState(56);
+  const headerRef = useRef<HTMLElement | null>(null);
+  const calendarShellRef = useRef<HTMLDivElement | null>(null);
   const DragAndDropCalendar = withDragAndDrop<CalendarEntry>(Calendar);
+  const calendarHeaderTopClass = showNavbar && useLayout ? "top-10" : "top-0";
+  const dateStripDays = useMemo(() => {
+    if (view === Views.WEEK) {
+      const startOfWeek = moment(date).startOf("week");
+      return Array.from({ length: 7 }, (_, index) => startOfWeek.clone().add(index, "day"));
+    }
+
+    if (view === Views.DAY) {
+      return [moment(date)];
+    }
+
+    return [];
+  }, [date, view]);
 
   const fetchTasks = useCallback(async () => {
     try {
@@ -222,19 +273,144 @@ const CalendarPage = ({ showNavbar = true, useLayout = true }: CalendarPageProps
     }
   }, [])
 
+  const fetchPreference = useCallback(async () => {
+    try {
+      const data = await preferenceService.getMyPreference();
+      setPreference(data);
+    } catch (err) {
+      console.error(err);
+      setPreference(null);
+    }
+  }, []);
+
   useEffect(() => {
     const init = async () => {
       await fetchTasks();
       await fetchCategories();
+      await fetchPreference();
     };
     init().catch((err: unknown) => {
       console.error("Failed to initialise Calendar:", err);
     });
-  }, [fetchTasks, fetchCategories]);
+  }, [fetchTasks, fetchCategories, fetchPreference]);
 
   useEffect(() => {
     void fetchEvents(view, date);
   }, [fetchEvents, view, date]);
+
+  useEffect(() => {
+    const element = headerRef.current;
+    if (!element) {
+      return;
+    }
+
+    const updateHeaderHeight = () => {
+      setHeaderHeight(element.getBoundingClientRect().height);
+    };
+
+    updateHeaderHeight();
+    window.addEventListener("resize", updateHeaderHeight);
+
+    if (typeof ResizeObserver !== "undefined") {
+      const observer = new ResizeObserver(() => {
+        updateHeaderHeight();
+      });
+      observer.observe(element);
+      return () => {
+        observer.disconnect();
+        window.removeEventListener("resize", updateHeaderHeight);
+      };
+    }
+
+    return () => {
+      window.removeEventListener("resize", updateHeaderHeight);
+    };
+  }, []);
+
+  useLayoutEffect(() => {
+    if (view !== Views.WEEK && view !== Views.DAY) {
+      return;
+    }
+
+    const measureGutter = () => {
+      const shell = calendarShellRef.current;
+      if (!shell) {
+        return;
+      }
+      const gutter = shell.querySelector(".rbc-time-gutter");
+      if (!(gutter instanceof HTMLElement)) {
+        return;
+      }
+      const nextWidth = Math.ceil(gutter.getBoundingClientRect().width);
+      if (nextWidth > 0) {
+        setTimeGutterWidth(nextWidth);
+      }
+    };
+
+    const frame = window.requestAnimationFrame(measureGutter);
+    window.addEventListener("resize", measureGutter);
+    return () => {
+      window.cancelAnimationFrame(frame);
+      window.removeEventListener("resize", measureGutter);
+    };
+  }, [view, date, tasks.length, events.length]);
+
+
+  useEffect(() => {
+    if (view !== Views.WEEK && view !== Views.DAY) {
+      return;
+    }
+
+    const shell = calendarShellRef.current;
+    if (!shell) {
+      return;
+    }
+
+    const getScrollableAncestor = (element: HTMLElement): HTMLElement | null => {
+      let current: HTMLElement | null = element;
+      while (current) {
+        const style = window.getComputedStyle(current);
+        const canScroll = current.scrollHeight > current.clientHeight + 1;
+        const overflowScrollable = style.overflowY === "auto" || style.overflowY === "scroll";
+        if (canScroll && overflowScrollable) {
+          return current;
+        }
+        current = current.parentElement;
+      }
+
+      return (document.scrollingElement instanceof HTMLElement) ? document.scrollingElement : null;
+    };
+
+    const scrollToCurrentHour = () => {
+      const slotGroups = shell.querySelectorAll(".rbc-time-gutter .rbc-timeslot-group");
+      if (slotGroups.length === 0) {
+        return;
+      }
+
+      const currentHour = new Date().getHours();
+      const targetIndex = Math.min(Math.max(currentHour, 0), slotGroups.length - 1);
+      const targetSlot = slotGroups[targetIndex];
+      if (!(targetSlot instanceof HTMLElement)) {
+        return;
+      }
+
+      const scroller = getScrollableAncestor(targetSlot);
+      if (!scroller) {
+        return;
+      }
+
+      const slotRect = targetSlot.getBoundingClientRect();
+      const scrollerRect = scroller.getBoundingClientRect();
+      scroller.scrollTop += Math.round(slotRect.top - scrollerRect.top);
+    };
+
+    const frame = window.requestAnimationFrame(scrollToCurrentHour);
+    const timer = window.setTimeout(scrollToCurrentHour, 120);
+    return () => {
+      window.cancelAnimationFrame(frame);
+      window.clearTimeout(timer);
+    };
+  }, [view, date, tasks.length, events.length]);
 
   const handleSelectSlot = ({
     start,
@@ -551,9 +727,12 @@ const CalendarPage = ({ showNavbar = true, useLayout = true }: CalendarPageProps
         style={{ height: "100%" }}
       />
     </div>*/
-    <div className="flex h-full flex-col overflow-hidden bg-white text-black">
-      <header className="flex-none p-6 border-b border-gray-200 bg-white shadow-sm z-10">
-        <div className="flex flex-col md:flex-row justify-between items-center gap-4">
+    <div className="flex h-full min-h-0 flex-col bg-white text-black">
+      <header
+        ref={headerRef}
+        className={`fixed left-0 right-0 z-20 flex-none border-b border-gray-200 bg-white pt-2 pb-0 shadow-sm ${calendarHeaderTopClass}`}
+      >
+        <div className="flex flex-col md:flex-row justify-between items-center gap-2 px-4">
           <div className="flex items-center gap-6">
             <h1 className="text-2xl font-bold tracking-tight text-black">
               Calendar
@@ -619,7 +798,7 @@ const CalendarPage = ({ showNavbar = true, useLayout = true }: CalendarPageProps
               </button>
               <button
                 onClick={() => setDate(new Date())}
-                className="px-4 py-2 font-medium text-black hover:bg-blue-100 transition-colors"
+                className="px-4 py-2 hidden sm:block font-medium text-black hover:bg-blue-100 transition-colors"
               >
                 Today
               </button>
@@ -637,10 +816,47 @@ const CalendarPage = ({ showNavbar = true, useLayout = true }: CalendarPageProps
             </h2>
           </div>
         </div>
+        {dateStripDays.length > 0 && (
+          <div
+            className="mt-2 grid border-t border-gray-200 bg-white"
+            style={{
+              gridTemplateColumns: `${timeGutterWidth}px repeat(${dateStripDays.length}, minmax(0, 1fr))`,
+            }}
+          >
+            <div className="border-r border-gray-200 bg-gray-50" />
+            {dateStripDays.map((dayMoment) => {
+              const isToday = dayMoment.isSame(moment(), "day");
+              const isActiveDay = view === Views.DAY && dayMoment.isSame(moment(date), "day");
+              return (
+                <div
+                  key={dayMoment.format("YYYY-MM-DD")}
+                  className={`border-l border-gray-200 px-3 py-2 text-center ${
+                    isToday || isActiveDay
+                      ? "bg-blue-50 text-black"
+                      : "bg-white text-gray-700"
+                  }`}
+                >
+                  <p className="text-xs font-medium uppercase tracking-wide text-gray-500">
+                    {dayMoment.format("ddd")}
+                  </p>
+                  <p className="text-sm font-semibold">
+                    {dayMoment.format("D MMM")}
+                  </p>
+                </div>
+              );
+            })}
+          </div>
+        )}
       </header>
 
-      <main className="grow flex overflow-hidden relative p-4 bg-white">
-        <div className="grow min-h-[110vh] bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+      <main
+        className="relative flex min-h-0 grow overflow-hidden bg-white"
+        style={{ paddingTop: `${headerHeight}px` }}
+      >
+        <div
+          ref={calendarShellRef}
+          className="calendar-grid-shell grow min-h-0 overflow-hidden bg-white"
+        >
           <DndProvider backend={HTML5Backend}>
             <DragAndDropCalendar
               localizer={localizer}
@@ -649,6 +865,17 @@ const CalendarPage = ({ showNavbar = true, useLayout = true }: CalendarPageProps
               onView={setView}
               date={date}
               onNavigate={setDate}
+              step={60}
+              timeslots={1}
+              slotPropGetter={(slotDate: Date) => {
+                if ((view !== Views.WEEK && view !== Views.DAY) || !isOutsidePreferredDayWindow(slotDate, preference)) {
+                  return {};
+                }
+
+                return {
+                  className: "calendar-off-hours-slot",
+                };
+              }}
               selectable
               onSelectSlot={handleSelectSlot}
               onSelectEvent={(e) => {
@@ -729,7 +956,7 @@ const CalendarPage = ({ showNavbar = true, useLayout = true }: CalendarPageProps
   }
 
   return (
-    <AppLayout showNavbar={showNavbar}>
+    <AppLayout showNavbar={showNavbar} disableMainScroll>
       {content}
     </AppLayout>
   );

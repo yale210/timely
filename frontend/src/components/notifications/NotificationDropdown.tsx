@@ -55,10 +55,10 @@ export const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
 
   return (
     <>
-      <Popover className="relative">
+      <Popover className="relative flex h-6 items-center">
         {() => (
           <>
-            <Popover.Button as="div" className="focus:outline-none cursor-pointer">
+            <Popover.Button as="div" className="flex h-6 items-center focus:outline-none cursor-pointer">
               <NotificationBell unreadCount={unreadCount} />
             </Popover.Button>
 

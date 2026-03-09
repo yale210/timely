@@ -10,7 +10,14 @@ interface ApiError {
 const isApiError = (error: unknown): error is ApiError =>
   typeof error === "object" && error !== null && "response" in error;
 
-export const formatDjangoFormError = (
+/**
+ *
+ */
+export const /**
+              *
+              * @param error
+              */
+formatDjangoFormError = (
   error: unknown,
 ): { message: string; fieldErrors: Record<string, string[]> } => {
   const fallback = {

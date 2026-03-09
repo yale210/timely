@@ -59,18 +59,18 @@ export default function AppNavbar() {
   }, [open, drawerWidth])
 
   return (
-    <header className="sticky top-0 z-30 bg-white shadow-sm ring-1 ring-gray-200">
-      <div className="grid w-full grid-cols-3 items-center gap-3 px-4 py-2 min-h-12">
+    <header className="fixed left-0 right-0 top-0 z-30 m-0 bg-white shadow-sm ring-1 ring-gray-200">
+      <div className="grid w-full grid-cols-3 items-center gap-2 px-3 py-0 min-h-10">
         <div className="flex justify-start">
           <button
             type="button"
             aria-label="Open navigation"
             aria-expanded={open}
             onClick={() => setOpen(true)}
-            className="inline-flex h-9 w-9 items-center justify-center rounded-md text-gray-800 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:ring-offset-1"
+            className="inline-flex h-8 w-8 items-center justify-center rounded-md text-gray-800 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:ring-offset-1"
           >
             <span className="sr-only">Open menu</span>
-            <svg className="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <line x1="4" x2="20" y1="7" y2="7" />
               <line x1="4" x2="20" y1="12" y2="12" />
               <line x1="4" x2="20" y1="17" y2="17" />
@@ -78,13 +78,9 @@ export default function AppNavbar() {
           </button>
         </div>
 
-        <div className="flex justify-center">
-          <Link to="/dashboard" className="text-xl font-semibold text-gray-900 tracking-tight">
-            Timely
-          </Link>
-        </div>
+        <div className="flex justify-center" />
 
-        <div className="flex items-center justify-end gap-3">
+        <div className="flex h-10 items-center justify-end gap-1.5">
           <NotificationDropdown
             notifications={notifications}
             unreadCount={unreadCount}
@@ -99,9 +95,9 @@ export default function AppNavbar() {
             onDeleteItem={(notification) => deleteNotification(notification.id)}
           />
 
-          <Menu as="div" className="relative">
-            <MenuButton className="inline-flex items-center justify-center rounded-full px-2.5 py-1 text-sm font-semibold text-gray-900 hover:bg-gray-100">
-              <span className="material-icons text-base mr-1">account_circle</span>
+          <Menu as="div" className="relative flex h-6 items-center">
+            <MenuButton className="inline-flex h-6 items-center justify-center rounded-full px-1.5 py-0 text-[11px] font-semibold leading-none text-gray-900 hover:bg-gray-100">
+              <span className="material-icons mr-1 leading-none" style={{ fontSize: "20px" }}>account_circle</span>
               Account
             </MenuButton>
             <MenuItems className="absolute right-0 mt-2 w-44 origin-top-right rounded-lg border border-gray-200 bg-white shadow-lg focus:outline-none">
