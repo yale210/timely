@@ -139,6 +139,11 @@ body {
     transform: scale(1);
   }
 }
+
+/* Calendar hour slot height */
+.rbc-time-view .rbc-time-slot {
+  min-height: 72px;
+}
 /* Use Google-hosted decorative font 'Pacifico' for headings. */
 .font-young-coconut {
   font-family: "Poppins", system-ui, sans-serif;

@@ -640,7 +640,7 @@ const CalendarPage = ({ showNavbar = true, useLayout = true }: CalendarPageProps
       </header>
 
       <main className="grow flex overflow-hidden relative p-4 bg-white">
-        <div className="grow bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+        <div className="grow min-h-[110vh] bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
           <DndProvider backend={HTML5Backend}>
             <DragAndDropCalendar
               localizer={localizer}
