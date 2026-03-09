@@ -9,10 +9,17 @@ describe("TaskForm Component", () => {
     { id: 2, text: "Category 2" },
   ];
 
+  const onCreateCategory = vi.fn().mockResolvedValue({ id: 3, text: "Category 3" });
+  const onUpdateCategory = vi.fn().mockResolvedValue({ id: 1, text: "Category 1" });
+  const onDeleteCategory = vi.fn().mockResolvedValue(undefined);
+
   const defaultProps = {
     categories: mockCategories,
     onSubmit: vi.fn(),
     onCancel: vi.fn(),
+    onCreateCategory,
+    onUpdateCategory,
+    onDeleteCategory,
   };
 
   it("renders with default values", () => {

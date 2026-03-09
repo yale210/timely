@@ -24,12 +24,19 @@ const recurringEvent: Event = {
 };
 
 describe("EventSidebar Component", () => {
+  const onCreateCategory = vi.fn().mockResolvedValue({ id: 1, text: "Work" });
+  const onUpdateCategory = vi.fn().mockResolvedValue({ id: 1, text: "Work" });
+  const onDeleteCategory = vi.fn().mockResolvedValue(undefined);
+
   it("renders Add New Event when no initialData id", () => {
     render(
       <EventSidebar
         isOpen={true}
         onClose={vi.fn()}
         categories={[]}
+        onCreateCategory={onCreateCategory}
+        onUpdateCategory={onUpdateCategory}
+        onDeleteCategory={onDeleteCategory}
         onSubmit={vi.fn()}
       />
     );
@@ -44,6 +51,9 @@ describe("EventSidebar Component", () => {
         isOpen={true}
         onClose={onClose}
         categories={[]}
+        onCreateCategory={onCreateCategory}
+        onUpdateCategory={onUpdateCategory}
+        onDeleteCategory={onDeleteCategory}
         onSubmit={onSubmit}
       />
     );
@@ -65,6 +75,9 @@ describe("EventSidebar Component", () => {
         isOpen={true}
         onClose={onClose}
         categories={[]}
+        onCreateCategory={onCreateCategory}
+        onUpdateCategory={onUpdateCategory}
+        onDeleteCategory={onDeleteCategory}
         onSubmit={vi.fn()}
         onDelete={onDelete}
         initialData={nonRecurringEvent}
@@ -87,6 +100,9 @@ describe("EventSidebar Component", () => {
         isOpen={true}
         onClose={onClose}
         categories={[]}
+        onCreateCategory={onCreateCategory}
+        onUpdateCategory={onUpdateCategory}
+        onDeleteCategory={onDeleteCategory}
         onSubmit={vi.fn()}
       />
     );

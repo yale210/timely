@@ -402,7 +402,7 @@ const CalendarPage = ({ showNavbar = true, useLayout = true }: CalendarPageProps
         return;
       }
 
-      const payload: EventSubmission = {
+      const payload: Pick<Event, "start_time" | "end_time"> = {
         start_time: start.toISOString(),
         end_time: end.toISOString(),
       };
