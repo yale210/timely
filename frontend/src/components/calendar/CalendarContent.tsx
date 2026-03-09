@@ -46,6 +46,8 @@ const CalendarContent = ({
         setDate: actions.setDate,
         selectSlot: actions.selectSlot,
         selectEntry: actions.selectEntry,
+        handleEventDrop: actions.handleEventDrop,
+        handleEventResize: actions.handleEventResize,
       }}
     />
     <CalendarSidebar
@@ -61,6 +63,10 @@ const CalendarContent = ({
         submitEvent: actions.submitEvent,
         deleteSelected: actions.deleteSelected,
         revertSelectedEvent: actions.revertSelectedEvent,
+        createCategory: actions.createCategory,
+        updateCategory: actions.updateCategory,
+        deleteCategory: actions.deleteCategory,
+        updateTaskCategories: actions.updateTaskCategories,
       }}
     />
   </div>

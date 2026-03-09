@@ -1,8 +1,10 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import moment from "moment";
 import { type View, Views } from "react-big-calendar";
+import type { EventInteractionArgs } from "react-big-calendar/lib/addons/dragAndDrop";
 import * as eventService from "@/services/eventService";
 import * as schedulerService from "@/services/schedulerService";
+import * as categoryService from "@/services/categoryService";
 import * as taskService from "@/services/taskService";
 import type {
   Category,
@@ -51,7 +53,7 @@ interface CalendarActions {
   goToToday: () => void;
   goToPrevious: () => void;
   goToNext: () => void;
-  selectSlot: (slot: { start: Date }) => void;
+  selectSlot: (slot: { start: Date; end?: Date; action?: "select" | "click" | "doubleClick" }) => void;
   selectEntry: (entry: CalendarEntry) => void;
   closeSidebar: () => void;
   submitTask: (data: TaskSubmission) => Promise<void>;
@@ -60,6 +62,12 @@ interface CalendarActions {
   revertSelectedEvent: (context: EventMutationContext) => Promise<void>;
   scheduleTasks: () => Promise<void>;
   unscheduleTasks: () => Promise<void>;
+  createCategory: (text: string) => Promise<Category>;
+  updateCategory: (id: number, patch: { colour?: string | null; colour_override?: boolean }) => Promise<Category>;
+  deleteCategory: (id: number) => Promise<void>;
+  updateTaskCategories: (id: number, nextCategoryIds: number[]) => Promise<void>;
+  handleEventDrop: (args: EventInteractionArgs<CalendarEntry>) => Promise<void>;
+  handleEventResize: (args: EventInteractionArgs<CalendarEntry>) => Promise<void>;
 }
 
 /**
@@ -202,6 +210,7 @@ export const useCalendar = (): UseCalendarReturn => {
     return () => {
       isMounted = false;
     };
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- intentionally runs once on mount
   }, [fetchCategories, fetchEvents, fetchTasks]);
 
   useEffect(() => {
@@ -224,21 +233,31 @@ export const useCalendar = (): UseCalendarReturn => {
     setSelectedItem(undefined);
   }, []);
 
-  const selectSlot = useCallback((slot: { start: Date }) => {
-    setSidebarMode("task");
-    setSelectedItem({
-      id: 0,
-      title: "",
-      description: "",
-      start_time: slot.start.toISOString(),
-      deadline: moment(slot.start).add(1, "hour").toISOString(),
-      importance: 5,
-      completed: false,
-      categories: [],
-      estimated_minutes: 30,
-    });
-    setIsSidebarOpen(true);
-  }, []);
+  const selectSlot = useCallback(
+    (slot: { start: Date; end?: Date; action?: "select" | "click" | "doubleClick" }) => {
+      if (isSidebarOpen && slot.action !== "select") {
+        return;
+      }
+      const safeEnd = slot.end ?? slot.start;
+      setSidebarMode("task");
+      setSelectedItem({
+        id: 0,
+        title: "",
+        description: "",
+        start_time: slot.start.toISOString(),
+        deadline: safeEnd.toISOString(),
+        importance: 5,
+        completed: false,
+        categories: [],
+        estimated_minutes: Math.max(
+          1,
+          Math.round((safeEnd.getTime() - slot.start.getTime()) / 60000),
+        ),
+      });
+      setIsSidebarOpen(true);
+    },
+    [isSidebarOpen],
+  );
 
   const selectEntry = useCallback(
     (entry: CalendarEntry) => {
@@ -388,6 +407,198 @@ export const useCalendar = (): UseCalendarReturn => {
     setDate((currentDate) => moment(currentDate).add(1, getNavigationUnit(view)).toDate());
   }, [view]);
 
+  const createCategory = useCallback(async (text: string): Promise<Category> => {
+    const trimmed = text.trim();
+    if (!trimmed) {
+      throw new Error("Category name cannot be empty.");
+    }
+    const created = await categoryService.createCategory(trimmed);
+    setCategories((prev) => {
+      const exists = prev.some((category) => category.id === created.id);
+      const next = exists ? prev : [...prev, created];
+      return [...next].sort((a, b) => a.text.localeCompare(b.text));
+    });
+    return created;
+  }, []);
+
+  const updateCategory = useCallback(
+    async (id: number, patch: { colour?: string | null; colour_override?: boolean }): Promise<Category> => {
+      const updated = await categoryService.updateCategory(id, patch);
+      setCategories((prev) =>
+        prev.map((category) => (category.id === id ? { ...category, ...updated } : category)),
+      );
+      setTasks((prev) =>
+        prev.map((task) => ({
+          ...task,
+          categories: task.categories.map((category) =>
+            category.id === id ? { ...category, ...updated } : category,
+          ),
+        })),
+      );
+      setEvents((prev) =>
+        prev.map((event) => ({
+          ...event,
+          categories: event.categories.map((category) =>
+            category.id === id ? { ...category, ...updated } : category,
+          ),
+        })),
+      );
+      return updated;
+    },
+    [],
+  );
+
+  const deleteCategory = useCallback(async (id: number): Promise<void> => {
+    await categoryService.deleteCategory(id);
+    setCategories((prev) => prev.filter((category) => category.id !== id));
+    setTasks((prev) =>
+      prev.map((task) => ({
+        ...task,
+        categories: task.categories.filter((category) => category.id !== id),
+      })),
+    );
+    setEvents((prev) =>
+      prev.map((event) => ({
+        ...event,
+        categories: event.categories.filter((category) => category.id !== id),
+      })),
+    );
+  }, []);
+
+  const updateTaskCategories = useCallback(
+    async (id: number, nextCategoryIds: number[]): Promise<void> => {
+      const nextCategoryObjects = categories.filter((category) =>
+        nextCategoryIds.includes(category.id),
+      );
+      setTasks((prev) =>
+        prev.map((task) =>
+          task.id === id ? { ...task, categories: nextCategoryObjects } : task,
+        ),
+      );
+      setSelectedItem((prev) => {
+        if (!prev || !("deadline" in prev) || prev.id !== id) {
+          return prev;
+        }
+        return { ...prev, categories: nextCategoryObjects };
+      });
+      try {
+        await taskService.updateTask(id, { categories: nextCategoryIds });
+      } catch (updateError) {
+        console.error(updateError);
+        await fetchTasks();
+      }
+    },
+    [categories, fetchTasks],
+  );
+
+  const updateTaskAllocation = useCallback(
+    async (entry: CalendarEntry, start: Date, end: Date) => {
+      if (typeof entry.allocationIndex !== "number") {
+        return;
+      }
+      const task = tasks.find((item) => item.id === entry.sourceId);
+      if (!task) {
+        return;
+      }
+      const nextAllocations = [...(task.allocation ?? [])];
+      nextAllocations[entry.allocationIndex] = {
+        start: start.toISOString(),
+        end: end.toISOString(),
+      };
+
+      setTasks((prev) =>
+        prev.map((item) =>
+          item.id === task.id ? { ...item, allocation: nextAllocations } : item,
+        ),
+      );
+
+      try {
+        await taskService.updateTask(task.id, { allocation: nextAllocations });
+      } catch (updateError) {
+        console.error(updateError);
+        await fetchTasks();
+      }
+    },
+    [fetchTasks, tasks],
+  );
+
+  const updateCalendarEvent = useCallback(
+    async (entry: CalendarEntry, start: Date, end: Date) => {
+      const eventData =
+        entry.eventData ??
+        events.find(
+          (item) =>
+            item.id === entry.sourceId &&
+            item.start_time === entry.start.toISOString(),
+        );
+
+      if (!eventData) {
+        return;
+      }
+
+      const payload: Pick<Event, "start_time" | "end_time"> = {
+        start_time: start.toISOString(),
+        end_time: end.toISOString(),
+      };
+
+      const context: EventMutationContext | undefined = eventData.recurrence_interval
+        ? {
+            scope: "this",
+            original_start_time:
+              eventData.original_start_time ?? eventData.start_time,
+          }
+        : undefined;
+
+      setEvents((prev) =>
+        prev.map((item) => {
+          const isRecurringInstance =
+            Boolean(eventData.instance_id) &&
+            item.instance_id === eventData.instance_id &&
+            item.original_start_time === eventData.original_start_time;
+          const isSingleEvent =
+            !eventData.instance_id &&
+            item.id === eventData.id &&
+            item.start_time === eventData.start_time;
+
+          return isRecurringInstance || isSingleEvent
+            ? { ...item, ...payload }
+            : item;
+        }),
+      );
+
+      try {
+        await eventService.updateEvent(eventData.id, payload, context);
+        await fetchEvents(view, date);
+      } catch (updateError) {
+        console.error(updateError);
+        await fetchEvents(view, date);
+      }
+    },
+    [date, events, fetchEvents, view],
+  );
+
+  const handleEventDrop = useCallback(
+    async ({ event, start, end }: EventInteractionArgs<CalendarEntry>) => {
+      if (event.kind === "task") {
+        await updateTaskAllocation(event, new Date(start), new Date(end));
+        return;
+      }
+      await updateCalendarEvent(event, new Date(start), new Date(end));
+    },
+    [updateCalendarEvent, updateTaskAllocation],
+  );
+
+  const handleEventResize = useCallback(
+    async ({ event, start, end }: EventInteractionArgs<CalendarEntry>) => {
+      if (event.kind === "task") {
+        await updateTaskAllocation(event, new Date(start), new Date(end));
+        return;
+      }
+      await updateCalendarEvent(event, new Date(start), new Date(end));
+    },
+    [updateCalendarEvent, updateTaskAllocation],
+  );
+
   return {
     state: {
       tasks,
@@ -432,6 +643,12 @@ export const useCalendar = (): UseCalendarReturn => {
       revertSelectedEvent,
       scheduleTasks,
       unscheduleTasks,
+      createCategory,
+      updateCategory,
+      deleteCategory,
+      updateTaskCategories,
+      handleEventDrop,
+      handleEventResize,
     },
   };
 };

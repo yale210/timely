@@ -1,5 +1,5 @@
 import moment from "moment";
-import type { Event, Task } from "@/types";
+import type { Category, Event, Task } from "@/types";
 
 /**
  * Represents a calendar event rendered by react-big-calendar.
@@ -17,6 +17,8 @@ export interface CalendarEntry {
   oneGo?: boolean;
   scheduleIndex?: number;
   eventData?: Event;
+  categories?: Category[];
+  allocationIndex?: number;
 }
 
 interface BuildCalendarEntriesOptions {
@@ -55,6 +57,8 @@ export const buildCalendarEntries = ({
       split: allocations.length > 1,
       oneGo: allocations.length === 1,
       scheduleIndex: scheduleOrder[task.id],
+      categories: task.categories,
+      allocationIndex: index,
     }));
   }),
   ...events.map((event) => ({

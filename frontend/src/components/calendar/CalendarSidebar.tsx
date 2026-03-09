@@ -8,7 +8,7 @@ interface CalendarSidebarProps {
   >;
   actions: Pick<
     UseCalendarReturn["actions"],
-    "closeSidebar" | "submitTask" | "submitEvent" | "deleteSelected" | "revertSelectedEvent"
+    "closeSidebar" | "submitTask" | "submitEvent" | "deleteSelected" | "revertSelectedEvent" | "createCategory" | "updateCategory" | "deleteCategory" | "updateTaskCategories"
   >;
 }
 
@@ -27,6 +27,12 @@ const CalendarSidebar = ({
     isOpen={state.isSidebarOpen}
     onClose={actions.closeSidebar}
     categories={state.categories}
+    onCreateCategory={actions.createCategory}
+    onUpdateCategory={actions.updateCategory}
+    onDeleteCategory={actions.deleteCategory}
+    onTaskCategoryChange={(id, nextCategories) => {
+      void actions.updateTaskCategories(id, nextCategories);
+    }}
     initialData={state.selectedItem}
     initialMode={state.sidebarMode}
     onSubmitTask={(data) => {
