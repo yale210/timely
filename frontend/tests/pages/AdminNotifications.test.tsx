@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import { NotificationProvider } from "@/context/NotificationContext";
 
@@ -77,7 +77,7 @@ describe("AdminNotifications Page", () => {
   });
 
   it("sends notification to selected users after confirmation", async () => {
-    renderPage();
+    const { unmount } = renderPage();
 
     fireEvent.change(screen.getByLabelText(/Target audience/i), {
       target: { value: "users" },
@@ -89,9 +89,8 @@ describe("AdminNotifications Page", () => {
       ),
     );
 
-    const userRow = (await screen.findByText("user-1")).closest("tr");
-    expect(userRow).not.toBeNull();
-    fireEvent.click(within(userRow!).getByRole("checkbox"));
+    const userIdsInput = await screen.findByLabelText(/Or paste user IDs/i);
+    fireEvent.change(userIdsInput, { target: { value: "1" } });
 
     fireEvent.change(screen.getByLabelText(/Title/i), {
       target: { value: "Maintenance" },
@@ -102,6 +101,7 @@ describe("AdminNotifications Page", () => {
     fireEvent.click(screen.getByRole("checkbox", { name: /I confirm/i }));
 
     const sendButton = screen.getByRole("button", { name: /Send notification/i });
+    await waitFor(() => expect(getAudienceCounts).toHaveBeenCalledWith([1]));
     await waitFor(
       () => expect(sendButton).toBeEnabled(),
       { timeout: 8000 },
@@ -127,5 +127,7 @@ describe("AdminNotifications Page", () => {
       "href",
       "/admin/notifications/history",
     );
+
+    unmount();
   }, 10000);
 });
