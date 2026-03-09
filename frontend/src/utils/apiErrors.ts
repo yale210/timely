@@ -10,6 +10,11 @@ interface ApiError {
 const isApiError = (error: unknown): error is ApiError =>
   typeof error === "object" && error !== null && "response" in error;
 
+/**
+ * Parses a Django REST Framework error response into a user-friendly message and field-level errors.
+ * @param error - The caught error, typically from an Axios request.
+ * @returns An object containing a summary message and per-field error arrays.
+ */
 export const formatDjangoFormError = (
   error: unknown,
 ): { message: string; fieldErrors: Record<string, string[]> } => {
