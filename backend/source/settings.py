@@ -231,7 +231,7 @@ SPECTACULAR_SETTINGS = {
 
 REST_KNOX = {
     "USER_SERIALIZER": "authentication.serializer.UserSerializer",
-    "TOKEN_TTL": timedelta(hours=10),
+    "TOKEN_TTL": timedelta(hours=24),
 }
 
 # Internationalization

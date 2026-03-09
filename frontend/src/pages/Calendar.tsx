@@ -1,13 +1,21 @@
 import "react-big-calendar/lib/css/react-big-calendar.css";
+import "react-big-calendar/lib/addons/dragAndDrop/styles.css";
 import moment from "moment";
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, type CSSProperties } from "react";
 import { Calendar, momentLocalizer, type View, Views } from "react-big-calendar";
+import withDragAndDrop, {
+  type EventInteractionArgs,
+} from "react-big-calendar/lib/addons/dragAndDrop";
+import { DndProvider } from "react-dnd";
+import { HTML5Backend } from "react-dnd-html5-backend";
 import { UnifiedSidebar } from "@/components/index";
 import AppLayout from "@/layouts/AppLayout";
 import * as taskService from "@/services/taskService";
+import * as categoryService from "@/services/categoryService";
 import * as eventService from "@/services/eventService";
 import * as schedulerService from "@/services/schedulerService";
 import type { Task, Category, TaskSubmission, Event, EventSubmission, EventMutationContext} from "@/types";
+import { getOverrideColour, hexToRgba } from "@/utils/colorUtils";
 
 const localizer = momentLocalizer(moment);
 /**
@@ -28,6 +36,8 @@ interface CalendarEntry {
   oneGo?: boolean;
   scheduleIndex?: number;
   eventData?: Event;
+  categories?: Category[];
+  allocationIndex?: number;
 }
 
 const getCalendarWindow = (
@@ -76,6 +86,7 @@ const CalendarPage = ({ showNavbar = true, useLayout = true }: CalendarPageProps
   const [isScheduling, setIsScheduling] = useState(false);
   const [isUnscheduling, setIsUnscheduling] = useState(false);
   const [scheduleOrder, setScheduleOrder] = useState<Record<number, number>>({});
+  const DragAndDropCalendar = withDragAndDrop<CalendarEntry>(Calendar);
 
   const fetchTasks = useCallback(async () => {
     try {
@@ -135,6 +146,72 @@ const CalendarPage = ({ showNavbar = true, useLayout = true }: CalendarPageProps
     }
   }, []);
 
+  const createCategory = useCallback(async (text: string) => {
+    const trimmed = text.trim();
+    if (!trimmed) {
+      throw new Error("Category name cannot be empty.");
+    }
+    const created = await categoryService.createCategory(trimmed);
+    setCategories((prev) => {
+      const exists = prev.some((category) => category.id === created.id);
+      const next = exists ? prev : [...prev, created];
+      return [...next].sort((a, b) => a.text.localeCompare(b.text));
+    });
+    return created;
+  }, []);
+
+  const updateCategory = useCallback(async (id: number, patch: { colour?: string | null; colour_override?: boolean }) => {
+    const updated = await categoryService.updateCategory(id, patch);
+    setCategories((prev) => prev.map((category) => (
+      category.id === id ? { ...category, ...updated } : category
+    )));
+    setTasks((prev) => prev.map((task) => ({
+      ...task,
+      categories: task.categories.map((category) =>
+        category.id === id ? { ...category, ...updated } : category
+      ),
+    })));
+    setEvents((prev) => prev.map((event) => ({
+      ...event,
+      categories: event.categories.map((category) =>
+        category.id === id ? { ...category, ...updated } : category
+      ),
+    })));
+    return updated;
+  }, []);
+
+  const updateTaskCategories = useCallback(async (id: number, nextCategoryIds: number[]) => {
+    const nextCategoryObjects = categories.filter((category) => nextCategoryIds.includes(category.id));
+    setTasks((prev) => prev.map((task) => (
+      task.id === id ? { ...task, categories: nextCategoryObjects } : task
+    )));
+    setSelectedItem((prev) => {
+      if (!prev || !("deadline" in prev) || prev.id !== id) {
+        return prev;
+      }
+      return { ...prev, categories: nextCategoryObjects };
+    });
+    try {
+      await taskService.updateTask(id, { categories: nextCategoryIds });
+    } catch (updateError) {
+      console.error(updateError);
+      await fetchTasks();
+    }
+  }, [categories, fetchTasks]);
+
+  const deleteCategory = useCallback(async (id: number) => {
+    await categoryService.deleteCategory(id);
+    setCategories((prev) => prev.filter((category) => category.id !== id));
+    setTasks((prev) => prev.map((task) => ({
+      ...task,
+      categories: task.categories.filter((category) => category.id !== id),
+    })));
+    setEvents((prev) => prev.map((event) => ({
+      ...event,
+      categories: event.categories.filter((category) => category.id !== id),
+    })));
+  }, []);
+
   const fetchEvents = useCallback(async (activeView: View, activeDate: Date) => {
     try {
       const data = await eventService.getEvents(getCalendarWindow(activeView, activeDate));
@@ -159,19 +236,36 @@ const CalendarPage = ({ showNavbar = true, useLayout = true }: CalendarPageProps
     void fetchEvents(view, date);
   }, [fetchEvents, view, date]);
 
-  const handleSelectSlot = ({ start }: { start: Date }) => {
-    // Create a template for a new task
+  const handleSelectSlot = ({
+    start,
+    end,
+    action,
+  }: {
+    start: Date;
+    end: Date;
+    action: "select" | "click" | "doubleClick";
+  }) => {
+    if (isSidebarOpen && action !== "select") {
+      return;
+    }
+    if (!start) {
+      return;
+    }
+    const safeEnd = end ?? start;
     setSidebarMode("task");
     setSelectedItem({
       id: 0,
       title: "",
       description: "",
       start_time: start.toISOString(),
-      deadline: moment(start).add(1, "hour").toISOString(),
+      deadline: safeEnd.toISOString(),
       importance: 5,
       completed: false,
       categories: [],
-      estimated_minutes: 30,
+      estimated_minutes: Math.max(
+        1,
+        Math.round((safeEnd.getTime() - start.getTime()) / 60000),
+      ),
     });
     setIsSidebarOpen(true);
   };
@@ -263,6 +357,114 @@ const CalendarPage = ({ showNavbar = true, useLayout = true }: CalendarPageProps
     }
   };
 
+  const updateTaskAllocation = useCallback(
+    async (entry: CalendarEntry, start: Date, end: Date) => {
+      if (typeof entry.allocationIndex !== "number") {
+        return;
+      }
+      const task = tasks.find((item) => item.id === entry.sourceId);
+      if (!task) {
+        return;
+      }
+      const nextAllocations = [...(task.allocation ?? [])];
+      nextAllocations[entry.allocationIndex] = {
+        start: start.toISOString(),
+        end: end.toISOString(),
+      };
+
+      setTasks((prev) =>
+        prev.map((item) =>
+          item.id === task.id ? { ...item, allocation: nextAllocations } : item
+        )
+      );
+
+      try {
+        await taskService.updateTask(task.id, { allocation: nextAllocations });
+      } catch (updateError) {
+        console.error(updateError);
+        await fetchTasks();
+      }
+    },
+    [fetchTasks, tasks],
+  );
+
+  const updateCalendarEvent = useCallback(
+    async (entry: CalendarEntry, start: Date, end: Date) => {
+      const eventData =
+        entry.eventData ??
+        events.find(
+          (item) =>
+            item.id === entry.sourceId &&
+            item.start_time === entry.start.toISOString(),
+        );
+
+      if (!eventData) {
+        return;
+      }
+
+      const payload: Pick<Event, "start_time" | "end_time"> = {
+        start_time: start.toISOString(),
+        end_time: end.toISOString(),
+      };
+
+      const context: EventMutationContext | undefined = eventData.recurrence_interval
+        ? {
+            scope: "this",
+            original_start_time:
+              eventData.original_start_time ?? eventData.start_time,
+          }
+        : undefined;
+
+      setEvents((prev) =>
+        prev.map((item) => {
+          const isRecurringInstance =
+            Boolean(eventData.instance_id) &&
+            item.instance_id === eventData.instance_id &&
+            item.original_start_time === eventData.original_start_time;
+          const isSingleEvent =
+            !eventData.instance_id &&
+            item.id === eventData.id &&
+            item.start_time === eventData.start_time;
+
+          return isRecurringInstance || isSingleEvent
+            ? { ...item, ...payload }
+            : item;
+        })
+      );
+
+      try {
+        await eventService.updateEvent(eventData.id, payload, context);
+        await fetchEvents(view, date);
+      } catch (updateError) {
+        console.error(updateError);
+        await fetchEvents(view, date);
+      }
+    },
+    [date, events, fetchEvents, view],
+  );
+
+  const handleEventDrop = useCallback(
+    async ({ event, start, end }: EventInteractionArgs<CalendarEntry>) => {
+      if (event.kind === "task") {
+        await updateTaskAllocation(event, new Date(start), new Date(end));
+        return;
+      }
+      await updateCalendarEvent(event, new Date(start), new Date(end));
+    },
+    [updateCalendarEvent, updateTaskAllocation],
+  );
+
+  const handleEventResize = useCallback(
+    async ({ event, start, end }: EventInteractionArgs<CalendarEntry>) => {
+      if (event.kind === "task") {
+        await updateTaskAllocation(event, new Date(start), new Date(end));
+        return;
+      }
+      await updateCalendarEvent(event, new Date(start), new Date(end));
+    },
+    [updateCalendarEvent, updateTaskAllocation],
+  );
+
   const handleScheduleTasks = async () => {
     setIsScheduling(true);
     try {
@@ -315,6 +517,8 @@ const CalendarPage = ({ showNavbar = true, useLayout = true }: CalendarPageProps
         split: allocations.length > 1,
         oneGo: allocations.length === 1,
         scheduleIndex: scheduleOrder[task.id],
+        categories: task.categories,
+        allocationIndex: index,
       }));
     }),
     ...events.map((event) => ({
@@ -437,37 +641,63 @@ const CalendarPage = ({ showNavbar = true, useLayout = true }: CalendarPageProps
 
       <main className="grow flex overflow-hidden relative p-4 bg-white">
         <div className="grow bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-          <Calendar<CalendarEntry>
-            localizer={localizer}
-            events={calendarEntries}
-            view={view}
-            onView={setView}
-            date={date}
-            onNavigate={setDate}
-            selectable
-            onSelectSlot={handleSelectSlot}
-            onSelectEvent={(e) => {
-              handleSelectEvent(e)
-            }}
-            toolbar={false}
-            className="h-full"
-            eventPropGetter={(event: CalendarEntry) => {
-              const className=[
-                "event-slot",
-                event.repeat ? "is-repeat": "",
-                event.split ? "is-split" : "",
-                event.oneGo ? "is-onego" : "",
-                event.kind === "event" ? "is-event" : "",
-                event.kind === "task" && typeof event.scheduleIndex === "number" ? "is-just-scheduled" : "",
-              ]
-              .filter(Boolean)
-              .join(" ");
-              const style = event.kind === "task" && typeof event.scheduleIndex === "number"
-                ? { animationDelay: `${event.scheduleIndex * 120}ms` }
-                : undefined;
-              return { className, style };
-            }}
-          />
+          <DndProvider backend={HTML5Backend}>
+            <DragAndDropCalendar
+              localizer={localizer}
+              events={calendarEntries}
+              view={view}
+              onView={setView}
+              date={date}
+              onNavigate={setDate}
+              selectable
+              onSelectSlot={handleSelectSlot}
+              onSelectEvent={(e) => {
+                handleSelectEvent(e)
+              }}
+              draggableAccessor={() => true}
+              resizableAccessor={() => true}
+              onEventDrop={(args) => {
+                void handleEventDrop(args);
+              }}
+              onEventResize={(args) => {
+                void handleEventResize(args);
+              }}
+              toolbar={false}
+              className="h-full"
+              eventPropGetter={(event: CalendarEntry) => {
+                const className=[
+                  "event-slot",
+                  event.repeat ? "is-repeat": "",
+                  event.split ? "is-split" : "",
+                  event.oneGo ? "is-onego" : "",
+                  event.kind === "event" ? "is-event" : "",
+                  event.kind === "task" && typeof event.scheduleIndex === "number" ? "is-just-scheduled" : "",
+                ]
+                .filter(Boolean)
+                .join(" ");
+                const overrideColour =
+                  event.kind === "task"
+                    ? getOverrideColour(event.categories)
+                    : getOverrideColour(event.eventData?.categories);
+
+                const style: CSSProperties = {};
+                if (event.kind === "task" && typeof event.scheduleIndex === "number") {
+                  style.animationDelay = `${event.scheduleIndex * 120}ms`;
+                }
+                if (overrideColour) {
+                  style.backgroundColor = hexToRgba(overrideColour, 0.5);
+                  style.borderLeft = `4px solid ${overrideColour}`;
+                  (style as Record<string, string>)["--event-stripe-color"] = hexToRgba(
+                    overrideColour,
+                    0.6,
+                  );
+                  style.color = "#000000";
+                }
+
+                return { className, style };
+              }}
+            />
+          </DndProvider>
         </div>
       </main>
 
@@ -478,6 +708,12 @@ const CalendarPage = ({ showNavbar = true, useLayout = true }: CalendarPageProps
           setSelectedItem(undefined);
         }}
         categories={categories}
+        onCreateCategory={createCategory}
+        onUpdateCategory={updateCategory}
+        onDeleteCategory={deleteCategory}
+        onTaskCategoryChange={(id, nextCategories) => {
+          void updateTaskCategories(id, nextCategories);
+        }}
         initialData={selectedItem}
         initialMode={sidebarMode}
         onSubmitTask={(data) => { void handleSubmitTask(data); }}

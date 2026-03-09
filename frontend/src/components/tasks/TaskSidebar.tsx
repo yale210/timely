@@ -8,6 +8,10 @@ interface TaskSidebarProps {
   isOpen: boolean;
   onClose: () => void;
   categories: Category[];
+  onCreateCategory: (text: string) => Promise<Category>;
+  onUpdateCategory: (id: number, patch: { colour?: string | null; colour_override?: boolean }) => Promise<Category>;
+  onDeleteCategory: (id: number) => Promise<void>;
+  onCategoryChange?: (id: number, categories: number[]) => void;
   onSubmit: (data: TaskSubmission) => void;
   onDelete?: (id: number) => void;
   initialData?: Task;
@@ -19,6 +23,10 @@ interface TaskSidebarProps {
  * @param props.isOpen - Indicates whether the sidebar is open.
  * @param props.onClose - The callback function to close the sidebar.
  * @param props.categories - The list of available categories.
+ * @param props.onCreateCategory - Callback to create a new category.
+ * @param props.onUpdateCategory - Callback to update an existing category.
+ * @param props.onDeleteCategory - Callback to delete a category.
+ * @param props.onCategoryChange - Optional callback fired on category changes.
  * @param props.onSubmit - The callback function to handle task submission.
  * @param props.onDelete - An optional callback function to handle task deletion.
  * @param props.initialData - The initial data for the task being edited.
@@ -28,6 +36,10 @@ const TaskSidebar = ({
   isOpen,
   onClose,
   categories,
+  onCreateCategory,
+  onUpdateCategory,
+  onDeleteCategory,
+  onCategoryChange,
   onSubmit,
   onDelete,
   initialData,
@@ -83,7 +95,7 @@ const TaskSidebar = ({
                         </div>
                         <button
                           onClick={onClose}
-                          className="text-gray-400 hover:text-red-500 transition-colors rounded-full p-1 hover:bg-gray-100"
+                          className="h-8 w-8 flex items-center justify-center rounded-full text-gray-400 hover:text-red-500 transition-colors hover:bg-gray-100"
                         >
                           <span className="material-icons">close</span>
                         </button>
@@ -94,6 +106,14 @@ const TaskSidebar = ({
                           key={taskFormKey}
                           initialData={initialData}
                           categories={categories}
+                          onCreateCategory={onCreateCategory}
+                          onUpdateCategory={onUpdateCategory}
+                          onDeleteCategory={onDeleteCategory}
+                          onCategoryChange={(nextCategories) => {
+                            if (initialData?.id && onCategoryChange) {
+                              onCategoryChange(initialData.id, nextCategories);
+                            }
+                          }}
                           onSubmit={(data) => {
                             onSubmit(data);
                             onClose();
