@@ -37,6 +37,9 @@ describe("Settings page", () => {
 
   beforeEach(() => {
     vi.resetAllMocks()
+    localStorage.clear()
+    delete document.documentElement.dataset.theme
+    delete document.documentElement.dataset.font
   })
 
   it("loads and renders preferences", async () => {
@@ -215,7 +218,6 @@ describe("Settings page", () => {
 
   it("renders all sections and sidebar buttons", () => {
     vi.spyOn(preferenceService, 'getMyPreference').mockResolvedValue(mockPref);
-    const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => { /* noop */ });
     render(
         <MemoryRouter>
           <Settings />
@@ -236,15 +238,15 @@ describe("Settings page", () => {
     // Trigger themeController and fontController
     fireEvent.click(screen.getByRole("button", { name: "dark" }));
     fireEvent.click(screen.getByRole("button", { name: "poppins" }));
-    
-    expect(consoleSpy).toHaveBeenCalledWith("changed theme");
-    expect(consoleSpy).toHaveBeenCalledWith("font changed");
+    expect(document.documentElement.dataset.theme).toBe("dark");
+    expect(document.documentElement.dataset.font).toBe("poppins");
+    expect(localStorage.getItem("theme")).toBe("dark");
+    expect(localStorage.getItem("font")).toBe("poppins");
 
     // Click Scheduling
     fireEvent.click(screen.getByRole("button", { name: "Scheduling" }));
     expect(screen.getByText("Loading...")).toBeDefined();
 
-    consoleSpy.mockRestore();
   });
 
   it("handles logout", async () => {
