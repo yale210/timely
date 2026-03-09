@@ -20,14 +20,15 @@ from django.urls import include, path
 from rest_framework.routers import DefaultRouter
 
 from core.views import (
-    CategoryViewSet,
     EventViewSet,
     GradeViewSet,
+    CategoryViewSet,
     PreferenceViewSet,
     TaskViewSet,
     WeeklySummaryView,
     FriendshipViewSet,
 )
+
 from scheduler.views import ScheduleTasksAPIView, UnscheduleTasksAPIView
 
 

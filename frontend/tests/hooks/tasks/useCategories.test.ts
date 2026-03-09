@@ -1,11 +1,15 @@
 import { renderHook, waitFor } from "@testing-library/react";
 import { vi, describe, it, expect, beforeEach, afterEach } from "vitest";
 import useCategories from "@/hooks/tasks/useCategories";
+import { getCategories } from "@/services/taskService";
+
+vi.mock("@/services/taskService", () => ({
+  getCategories: vi.fn(),
+}));
 
 describe("useCategories Hook", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    global.fetch = vi.fn();
   });
 
   afterEach(() => {
@@ -13,9 +17,9 @@ describe("useCategories Hook", () => {
   });
 
   it("should return initial loading state", () => {
-    vi.mocked(global.fetch).mockReturnValue(new Promise(() => {
+    vi.mocked(getCategories).mockReturnValue(new Promise(() => {
       // Intentionally never resolves to test loading state
-    })); 
+    }));
     const { result } = renderHook(() => useCategories());
     expect(result.current.loading).toBe(true);
     expect(result.current.categories).toEqual([]);
@@ -23,10 +27,7 @@ describe("useCategories Hook", () => {
 
   it("should fetch categories and update state", async () => {
     const mockCategories = [{ id: 1, text: "Category 1" }];
-    vi.mocked(global.fetch).mockResolvedValueOnce({
-      ok: true,
-      json: () => Promise.resolve(mockCategories),
-    } as Response);
+    vi.mocked(getCategories).mockResolvedValueOnce(mockCategories);
 
     const { result } = renderHook(() => useCategories());
 
@@ -35,13 +36,11 @@ describe("useCategories Hook", () => {
       expect(result.current.categories).toEqual(mockCategories);
     });
 
-    expect(global.fetch).toHaveBeenCalledWith("/api/categories/", { credentials: "include" });
+    expect(getCategories).toHaveBeenCalledTimes(1);
   });
 
   it("should handle fetch failure", async () => {
-    vi.mocked(global.fetch).mockResolvedValueOnce({
-      ok: false,
-    } as Response);
+    vi.mocked(getCategories).mockRejectedValueOnce(new Error("Request failed"));
 
     const { result } = renderHook(() => useCategories());
 
@@ -52,12 +51,7 @@ describe("useCategories Hook", () => {
   });
 
   it("should handle fetch error", async () => {
-    // Mock fetch to resolve with ok: false instead of rejecting to avoid unhandled promise rejection
-    // since the hook currently lacks a catch block.
-    vi.mocked(global.fetch).mockResolvedValueOnce({
-      ok: false,
-      status: 500,
-    } as Response);
+    vi.mocked(getCategories).mockRejectedValueOnce(new Error("Server error"));
 
     const { result } = renderHook(() => useCategories());
 
@@ -68,20 +62,17 @@ describe("useCategories Hook", () => {
   });
 
   it("should not update state if unmounted", async () => {
-    let resolveFetch: (value: Response) => void;
-    const fetchPromise = new Promise<Response>((resolve) => {
+    let resolveFetch: (value: { id: number; text: string }[]) => void;
+    const fetchPromise = new Promise<{ id: number; text: string }[]>((resolve) => {
       resolveFetch = resolve;
     });
-    vi.mocked(global.fetch).mockReturnValue(fetchPromise);
+    vi.mocked(getCategories).mockReturnValue(fetchPromise);
 
     const { result, unmount } = renderHook(() => useCategories());
 
     unmount();
 
-    resolveFetch!({
-      ok: true,
-      json: () => Promise.resolve([{ id: 1, text: "Category 1" }]),
-    } as Response);
+    resolveFetch!([{ id: 1, text: "Category 1" }]);
 
     // Wait a bit to ensure any async updates would have happened
     await new Promise((r) => setTimeout(r, 10));

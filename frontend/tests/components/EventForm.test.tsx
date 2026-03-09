@@ -46,6 +46,9 @@ describe('EventForm', () => {
   const onSubmit = vi.fn()
   const onCancel = vi.fn()
   const onDataChange = vi.fn()
+  const onCreateCategory = vi.fn().mockResolvedValue({ id: 3, text: "New" })
+  const onUpdateCategory = vi.fn().mockResolvedValue({ id: 1, text: "Work" })
+  const onDeleteCategory = vi.fn().mockResolvedValue(undefined)
 
   beforeEach(() => {
     vi.resetAllMocks()
@@ -61,6 +64,9 @@ describe('EventForm', () => {
       <EventForm
         initialData={mockInitialData}
         categories={mockCategories}
+        onCreateCategory={onCreateCategory}
+        onUpdateCategory={onUpdateCategory}
+        onDeleteCategory={onDeleteCategory}
         onSubmit={onSubmit}
         onCancel={onCancel}
       />
@@ -86,6 +92,9 @@ describe('EventForm', () => {
           reminders: [],
         } as unknown as Event}
         categories={mockCategories}
+        onCreateCategory={onCreateCategory}
+        onUpdateCategory={onUpdateCategory}
+        onDeleteCategory={onDeleteCategory}
         onSubmit={onSubmit}
         onCancel={onCancel}
       />
@@ -102,6 +111,9 @@ describe('EventForm', () => {
     render(
       <EventForm
         categories={mockCategories}
+        onCreateCategory={onCreateCategory}
+        onUpdateCategory={onUpdateCategory}
+        onDeleteCategory={onDeleteCategory}
         onSubmit={onSubmit}
         onCancel={onCancel}
       />
@@ -115,6 +127,9 @@ describe('EventForm', () => {
     render(
       <EventForm
         categories={mockCategories}
+        onCreateCategory={onCreateCategory}
+        onUpdateCategory={onUpdateCategory}
+        onDeleteCategory={onDeleteCategory}
         onSubmit={onSubmit}
         onCancel={onCancel}
       />
@@ -141,6 +156,9 @@ describe('EventForm', () => {
       <EventForm
         initialData={editableInitialData}
         categories={mockCategories}
+        onCreateCategory={onCreateCategory}
+        onUpdateCategory={onUpdateCategory}
+        onDeleteCategory={onDeleteCategory}
         onSubmit={onSubmit}
         onCancel={onCancel}
       />
@@ -157,6 +175,9 @@ describe('EventForm', () => {
     render(
       <EventForm
         categories={mockCategories}
+        onCreateCategory={onCreateCategory}
+        onUpdateCategory={onUpdateCategory}
+        onDeleteCategory={onDeleteCategory}
         onSubmit={onSubmit}
         onCancel={onCancel}
       />
@@ -173,6 +194,9 @@ describe('EventForm', () => {
     render(
       <EventForm
         categories={mockCategories}
+        onCreateCategory={onCreateCategory}
+        onUpdateCategory={onUpdateCategory}
+        onDeleteCategory={onDeleteCategory}
         onSubmit={onSubmit}
         onCancel={onCancel}
       />
@@ -190,6 +214,9 @@ describe('EventForm', () => {
     render(
       <EventForm
         categories={mockCategories}
+        onCreateCategory={onCreateCategory}
+        onUpdateCategory={onUpdateCategory}
+        onDeleteCategory={onDeleteCategory}
         onSubmit={onSubmit}
         onCancel={onCancel}
       />
@@ -212,6 +239,9 @@ describe('EventForm', () => {
     render(
       <EventForm
         categories={mockCategories}
+        onCreateCategory={onCreateCategory}
+        onUpdateCategory={onUpdateCategory}
+        onDeleteCategory={onDeleteCategory}
         onSubmit={onSubmit}
         onCancel={onCancel}
         onDataChange={onDataChange}
@@ -222,29 +252,33 @@ describe('EventForm', () => {
     expect(onDataChange).toHaveBeenCalled()
   })
 
-  it('handles category selection via checkboxes', () => {
+  it('handles category selection via checkboxes', async () => {
     render(
       <EventForm
         categories={mockCategories}
+        onCreateCategory={onCreateCategory}
+        onUpdateCategory={onUpdateCategory}
+        onDeleteCategory={onDeleteCategory}
         onSubmit={onSubmit}
         onCancel={onCancel}
       />
     )
 
-    // Categories are now checkboxes, not a select
-    const workCheckbox = screen.getByLabelText(/Work/i)
-    fireEvent.click(workCheckbox)
-    expect(workCheckbox).toBeChecked()
-    
-    // Toggle it off
-    fireEvent.click(workCheckbox)
-    expect(workCheckbox).not.toBeChecked()
+    fireEvent.focus(screen.getByPlaceholderText(/Type to search or add category/i))
+    const workOption = await screen.findByText(/Work/i)
+    fireEvent.click(workOption)
+
+    fireEvent.focus(screen.getByPlaceholderText(/Type to search or add category/i))
+    fireEvent.click(await screen.findByText(/Work/i))
   })
 
   it('limits reminders to 5', () => {
     render(
       <EventForm
         categories={mockCategories}
+        onCreateCategory={onCreateCategory}
+        onUpdateCategory={onUpdateCategory}
+        onDeleteCategory={onDeleteCategory}
         onSubmit={onSubmit}
         onCancel={onCancel}
       />
@@ -267,6 +301,9 @@ describe('EventForm', () => {
     render(
       <EventForm
         categories={mockCategories}
+        onCreateCategory={onCreateCategory}
+        onUpdateCategory={onUpdateCategory}
+        onDeleteCategory={onDeleteCategory}
         onSubmit={onSubmit}
         onCancel={onCancel}
       />
@@ -289,6 +326,9 @@ describe('EventForm', () => {
     render(
       <EventForm
         categories={mockCategories}
+        onCreateCategory={onCreateCategory}
+        onUpdateCategory={onUpdateCategory}
+        onDeleteCategory={onDeleteCategory}
         onSubmit={onSubmit}
         onCancel={onCancel}
       />
@@ -310,6 +350,9 @@ describe('EventForm', () => {
     render(
       <EventForm
         categories={mockCategories}
+        onCreateCategory={onCreateCategory}
+        onUpdateCategory={onUpdateCategory}
+        onDeleteCategory={onDeleteCategory}
         onSubmit={onSubmit}
         onCancel={onCancel}
       />
@@ -332,6 +375,9 @@ describe('EventForm', () => {
     render(
       <EventForm
         categories={mockCategories}
+        onCreateCategory={onCreateCategory}
+        onUpdateCategory={onUpdateCategory}
+        onDeleteCategory={onDeleteCategory}
         onSubmit={onSubmit}
         onCancel={onCancel}
       />

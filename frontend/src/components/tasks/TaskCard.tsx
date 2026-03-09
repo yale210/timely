@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { type Task } from "@/types";
+import { getOverrideColour, hexToRgba } from "@/utils/colorUtils";
 
 interface TaskCardProps {
   task: Task;
@@ -49,6 +50,7 @@ const TaskCard = ({ task, onToggleComplete, onClick }: TaskCardProps) => {
   };
 
   const importanceInfo = getImportanceInfo(task.importance);
+  const overrideColour = getOverrideColour(task.categories);
 
   const formatTime = (isoString: string) => {
     return new Date(isoString).toLocaleTimeString([], {
@@ -119,7 +121,19 @@ const TaskCard = ({ task, onToggleComplete, onClick }: TaskCardProps) => {
                 {task.categories.map((cat) => (
                   <span
                     key={cat.id}
-                    className="px-2 py-0.5 rounded bg-blue-50 text-blue-600 font-medium border border-blue-100 whitespace-nowrap"
+                    className={`px-2 py-0.5 rounded font-medium border whitespace-nowrap ${
+                      overrideColour
+                        ? "text-black"
+                        : "bg-blue-50 text-blue-600 border-blue-100"
+                    }`}
+                    style={
+                      overrideColour
+                        ? {
+                            borderColor: overrideColour,
+                            backgroundColor: hexToRgba(overrideColour, 0.12),
+                          }
+                        : undefined
+                    }
                   >
                     {cat.text}
                   </span>

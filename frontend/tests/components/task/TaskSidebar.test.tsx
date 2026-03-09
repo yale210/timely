@@ -9,6 +9,9 @@ describe('TaskSidebar', () => {
         { id: 1, text: 'Work' },
         { id: 2, text: 'Personal' }
     ]
+    const onCreateCategory = vi.fn().mockResolvedValue({ id: 3, text: "New" })
+    const onUpdateCategory = vi.fn().mockResolvedValue({ id: 1, text: "Work" })
+    const onDeleteCategory = vi.fn().mockResolvedValue(undefined)
 
     const mockTask = {
         id: 1,
@@ -29,6 +32,9 @@ describe('TaskSidebar', () => {
                 onClose={vi.fn()} 
                 categories={[]} 
                 onSubmit={vi.fn()} 
+                onCreateCategory={onCreateCategory}
+                onUpdateCategory={onUpdateCategory}
+                onDeleteCategory={onDeleteCategory}
             />
         )
         expect(screen.queryByText(/Add New Task/i)).toBeNull()
@@ -41,6 +47,9 @@ describe('TaskSidebar', () => {
                 onClose={vi.fn()} 
                 categories={[]} 
                 onSubmit={vi.fn()} 
+                onCreateCategory={onCreateCategory}
+                onUpdateCategory={onUpdateCategory}
+                onDeleteCategory={onDeleteCategory}
             />
         )
         expect(screen.getByText(/Add New Task/i)).toBeDefined()
@@ -65,6 +74,9 @@ describe('TaskSidebar', () => {
                 categories={[]} 
                 onSubmit={vi.fn()} 
                 onDelete={vi.fn()}
+                onCreateCategory={onCreateCategory}
+                onUpdateCategory={onUpdateCategory}
+                onDeleteCategory={onDeleteCategory}
                 initialData={initialData}
             />
         )
@@ -80,6 +92,9 @@ describe('TaskSidebar', () => {
                 categories={mockCategories} 
                 onSubmit={vi.fn()} 
                 onDelete={vi.fn()}
+                onCreateCategory={onCreateCategory}
+                onUpdateCategory={onUpdateCategory}
+                onDeleteCategory={onDeleteCategory}
                 initialData={mockTask}
             />
         )
@@ -94,6 +109,9 @@ describe('TaskSidebar', () => {
                 categories={mockCategories} 
                 onSubmit={vi.fn()} 
                 onDelete={vi.fn()}
+                onCreateCategory={onCreateCategory}
+                onUpdateCategory={onUpdateCategory}
+                onDeleteCategory={onDeleteCategory}
                 initialData={mockTask}
             />
         )
@@ -108,6 +126,9 @@ describe('TaskSidebar', () => {
                 onClose={onClose} 
                 categories={[]} 
                 onSubmit={vi.fn()} 
+                onCreateCategory={onCreateCategory}
+                onUpdateCategory={onUpdateCategory}
+                onDeleteCategory={onDeleteCategory}
             />
         )
         const closeButton = screen.getByText('close')
@@ -123,6 +144,9 @@ describe('TaskSidebar', () => {
                 categories={mockCategories} 
                 onSubmit={vi.fn()} 
                 onDelete={vi.fn()}
+                onCreateCategory={onCreateCategory}
+                onUpdateCategory={onUpdateCategory}
+                onDeleteCategory={onDeleteCategory}
                 initialData={mockTask}
             />
         )
@@ -145,6 +169,9 @@ describe('TaskSidebar', () => {
                 categories={mockCategories} 
                 onSubmit={vi.fn()} 
                 onDelete={onDelete}
+                onCreateCategory={onCreateCategory}
+                onUpdateCategory={onUpdateCategory}
+                onDeleteCategory={onDeleteCategory}
                 initialData={mockTask}
             />
         )
@@ -170,6 +197,9 @@ describe('TaskSidebar', () => {
                 categories={mockCategories} 
                 onSubmit={vi.fn()} 
                 onDelete={vi.fn()}
+                onCreateCategory={onCreateCategory}
+                onUpdateCategory={onUpdateCategory}
+                onDeleteCategory={onDeleteCategory}
                 initialData={mockTask}
             />
         )

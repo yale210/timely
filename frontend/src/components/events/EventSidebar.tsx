@@ -11,6 +11,9 @@ interface EventSidebarProps {
   isOpen: boolean;
   onClose: () => void;
   categories: Category[];
+  onCreateCategory: (text: string) => Promise<Category>;
+  onUpdateCategory: (id: number, patch: { colour?: string | null; colour_override?: boolean }) => Promise<Category>;
+  onDeleteCategory: (id: number) => Promise<void>;
   onSubmit: (data: EventSubmission, context?: EventMutationContext) => void;
   onDelete?: (context?: EventMutationContext) => void;
   onRevertToSeries?: (context: EventMutationContext) => void;
@@ -23,6 +26,9 @@ interface EventSidebarProps {
  * @param props.isOpen - Indicates whether the sidebar is open.
  * @param props.onClose - The callback function to close the sidebar.
  * @param props.categories - The list of available categories.
+ * @param props.onCreateCategory - Callback to create a new category.
+ * @param props.onUpdateCategory - Callback to update an existing category.
+ * @param props.onDeleteCategory - Callback to delete a category.
  * @param props.onSubmit - The callback function to handle event submission.
  * @param props.onDelete - An optional callback function to handle event deletion.
  * @param props.onRevertToSeries - Optional callback to revert an overridden instance.
@@ -33,6 +39,9 @@ const EventSidebar = ({
   isOpen,
   onClose,
   categories,
+  onCreateCategory,
+  onUpdateCategory,
+  onDeleteCategory,
   onSubmit,
   onDelete,
   onRevertToSeries,
@@ -138,7 +147,7 @@ const EventSidebar = ({
                         </div>
                         <button
                           onClick={onClose}
-                          className="text-gray-400 hover:text-red-500 transition-colors rounded-full p-1 hover:bg-gray-100"
+                          className="h-8 w-8 flex items-center justify-center rounded-full text-gray-400 hover:text-red-500 transition-colors hover:bg-gray-100"
                         >
                           <span className="material-icons">close</span>
                         </button>
@@ -149,6 +158,9 @@ const EventSidebar = ({
                           key={eventFormKey}
                           initialData={initialData}
                           categories={categories}
+                          onCreateCategory={onCreateCategory}
+                          onUpdateCategory={onUpdateCategory}
+                          onDeleteCategory={onDeleteCategory}
                           onSubmit={(data) => {
                             if (isEditingRecurringEvent) {
                               openSaveScope(data);

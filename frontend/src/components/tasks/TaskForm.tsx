@@ -1,4 +1,5 @@
 import { useState, useEffect, type FormEvent } from "react";
+import { CategoryMultiSelect } from "@/components";
 import { type Category, type Task, type TaskSubmission } from "@/types";
 
 /**
@@ -38,6 +39,10 @@ const isTaskSubmissionEqual = (
 interface TaskFormProps {
   initialData?: Task;
   categories: Category[];
+  onCreateCategory: (text: string) => Promise<Category>;
+  onUpdateCategory: (id: number, patch: { colour?: string | null; colour_override?: boolean }) => Promise<Category>;
+  onDeleteCategory: (id: number) => Promise<void>;
+  onCategoryChange?: (categories: number[]) => void;
   onSubmit: (data: TaskSubmission) => void;
   onCancel: () => void;
   onDataChange?: (data: Partial<Task>) => void;
@@ -48,6 +53,10 @@ interface TaskFormProps {
  * @param props - The properties for the TaskForm component.
  * @param props.initialData - The initial data to populate the form with.
  * @param props.categories - The list of available categories.
+ * @param props.onCreateCategory - Callback to create a new category.
+ * @param props.onUpdateCategory - Callback to update an existing category.
+ * @param props.onDeleteCategory - Callback to delete a category.
+ * @param props.onCategoryChange - Optional callback fired on category changes.
  * @param props.onSubmit - The callback function to handle form submission.
  * @param props.onCancel - The callback function to handle form cancellation.
  * @param props.onDataChange - An optional callback function to handle data changes.
@@ -56,6 +65,10 @@ interface TaskFormProps {
 const TaskForm = ({
   initialData,
   categories,
+  onCreateCategory,
+  onUpdateCategory,
+  onDeleteCategory,
+  onCategoryChange,
   onSubmit,
   onCancel,
   onDataChange,
@@ -156,12 +169,6 @@ const TaskForm = ({
 
     const data = buildSubmission();
     onSubmit(data);
-  };
-
-  const toggleCategory = (id: number) => {
-    setSelectedCategories((prev) =>
-      prev.includes(id) ? prev.filter((c) => c !== id) : [...prev, id]
-    );
   };
 
   const errorClass = "ring-2 ring-red-500 border-red-500 focus:ring-red-500 focus:border-red-500";
@@ -287,21 +294,20 @@ const TaskForm = ({
           <label className="block text-sm font-medium text-gray-700 mb-3">
             Category
           </label>
-          <div className="flex flex-wrap gap-2">
-            {categories.map((category) => (
-              <label key={category.id} className="cursor-pointer group">
-                <input
-                  type="checkbox"
-                  className="hidden peer"
-                  checked={selectedCategories.includes(category.id)}
-                  onChange={() => toggleCategory(category.id)}
-                />
-                <div className="px-3 py-1.5 rounded-full text-xs font-semibold bg-gray-100 text-gray-600 border border-transparent peer-checked:border-primary peer-checked:ring-1 peer-checked:ring-primary peer-checked:text-primary peer-checked:bg-blue-50 transition-all hover:bg-blue-100">
-                  {category.text}
-                </div>
-              </label>
-            ))}
-          </div>
+          <CategoryMultiSelect
+            categories={categories}
+            selectedIds={selectedCategories}
+            onChange={(nextCategories) => {
+              setSelectedCategories(nextCategories);
+              if (initialData?.id && onCategoryChange) {
+                onCategoryChange(nextCategories);
+              }
+            }}
+            onCreateCategory={onCreateCategory}
+            onUpdateCategory={onUpdateCategory}
+            onDeleteCategory={onDeleteCategory}
+            variant="task"
+          />
         </div>
 
         <div className="grid grid-cols-2 gap-4">
