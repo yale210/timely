@@ -46,6 +46,7 @@ class Preference(models.Model):
     max_hours_study_per_day = models.PositiveSmallIntegerField(
         default=4, validators=[MinValueValidator(0), MaxValueValidator(24)]
     )
+    limit_max_hours = models.BooleanField(default=True)
 
     # Store as IANA timezone. Enables us to use timezone aware features (like adjusting for the clocks going forward or back).
     timezone = models.CharField(max_length=100, default="Europe/London")
@@ -95,7 +96,7 @@ class Preference(models.Model):
                 end_dt += timedelta(days=1)
 
             minutes_available = int((end_dt - start_dt).total_seconds() // 60)
-            if max_minutes > minutes_available:
+            if self.limit_max_hours and max_minutes > minutes_available:
                 raise ValidationError(
                     {
                         "max_hours_study_per_day": "Max task time exceeds your available day length."

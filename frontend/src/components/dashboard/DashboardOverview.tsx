@@ -342,17 +342,17 @@ const DashboardOverview = ({
   }, [filteredTasks, periodRange, selectedPeriod, tasks]);
 
   const overdueToneClass = useMemo(() => {
-    if (overdueCount === 0) return "bg-emerald-50";
-    if (overdueCount === 1) return "bg-yellow-50";
-    if (overdueCount === 2) return "bg-orange-50";
-    return "bg-red-50";
+    if (overdueCount === 0) return "tone-ok";
+    if (overdueCount === 1) return "tone-warn";
+    if (overdueCount === 2) return "tone-alert";
+    return "tone-danger";
   }, [overdueCount]);
 
   const streakToneClass = useMemo(() => {
-    if (streakCount >= 3) return "bg-emerald-50";
-    if (streakCount === 2) return "bg-orange-50";
-    if (streakCount === 1) return "bg-yellow-50";
-    return "bg-gray-50";
+    if (streakCount >= 3) return "tone-ok";
+    if (streakCount === 2) return "tone-alert";
+    if (streakCount === 1) return "tone-warn";
+    return "tone-neutral";
   }, [streakCount]);
 
   const handleToggleTask = (task: Task, nextChecked: boolean) => {

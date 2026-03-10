@@ -202,7 +202,7 @@ class Scheduler:
                 )
         if self.preference:
             max_minutes = int(self.preference.max_hours_study_per_day) * 60  # type: ignore[attr-defined]
-            if max_minutes >= 0:
+            if max_minutes >= 0 and getattr(self.preference, "limit_max_hours", True):
                 scheduled_minutes = 0
                 for task in self.scheduled_tasks:
                     for slot in task.allocation or []:

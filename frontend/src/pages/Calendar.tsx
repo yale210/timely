@@ -565,7 +565,7 @@ const CalendarPage = ({ showNavbar = true, useLayout = true }: CalendarPageProps
 
   const updateTaskAllocation = useCallback(
     async (entry: CalendarEntry, start: Date, end: Date) => {
-      if (entry.taskData?.completed || entry.taskData?.locked) {
+      if (entry.taskData?.locked) {
         return;
       }
       if (typeof entry.allocationIndex !== "number") {
@@ -917,7 +917,7 @@ const CalendarPage = ({ showNavbar = true, useLayout = true }: CalendarPageProps
                   key={dayMoment.format("YYYY-MM-DD")}
                   className={`border-l border-gray-200 px-3 py-2 text-center ${
                     isToday || isActiveDay
-                      ? "bg-blue-50 text-black"
+                      ? "calendar-day-header-highlight text-black"
                       : "bg-white text-gray-700"
                   }`}
                 >
@@ -968,11 +968,11 @@ const CalendarPage = ({ showNavbar = true, useLayout = true }: CalendarPageProps
               }}
               draggableAccessor={(entry) =>
                 entry.kind === "event" ||
-                (entry.kind === "task" && !entry.taskData?.completed && !entry.taskData?.locked)
+                (entry.kind === "task" && !entry.taskData?.locked)
               }
               resizableAccessor={(entry) =>
                 entry.kind === "event" ||
-                (entry.kind === "task" && !entry.taskData?.completed && !entry.taskData?.locked)
+                (entry.kind === "task" && !entry.taskData?.locked)
               }
               onEventDrop={(args) => {
                 void handleEventDrop(args);

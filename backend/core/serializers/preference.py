@@ -15,6 +15,7 @@ class PreferenceSerializer(serializers.ModelSerializer):
             "day_end",
             "day_schedule",
             "max_hours_study_per_day",
+            "limit_max_hours",
             "days_off",
             "timezone",
         ]

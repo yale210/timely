@@ -7,12 +7,13 @@ import type { Preference } from "@/types";
 export const validatePreference = (preference: Preference): Record<string, string[]> => {
   const errors: Record<string, string[]> = {};
   const max = preference.max_hours_study_per_day;
+  const limitMax = preference.limit_max_hours ?? true;
 
-  if (Number.isNaN(max)) {
+  if (limitMax && Number.isNaN(max)) {
     errors.max_hours_study_per_day = ["Must be a number."];
-  } else if (max < 0) {
+  } else if (limitMax && max < 0) {
     errors.max_hours_study_per_day = ["Must be at least 0."];
-  } else if (max > 24) {
+  } else if (limitMax && max > 24) {
     errors.max_hours_study_per_day = ["Must be 24 or less."];
   }
 
@@ -43,7 +44,7 @@ export const validatePreference = (preference: Preference): Record<string, strin
       }
       const diff = (endMinutes - startMinutes + (24 * 60)) % (24 * 60);
       const minutesAvailable = diff === 0 ? 24 * 60 : diff;
-      if (max * 60 > minutesAvailable) {
+      if (limitMax && max * 60 > minutesAvailable) {
         errors.max_hours_study_per_day = [
           "Max task time exceeds your available day length.",
         ];
