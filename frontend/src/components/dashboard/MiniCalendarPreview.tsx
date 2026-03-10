@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react"
 import { Calendar, Views, momentLocalizer } from "react-big-calendar";
 import type { Event, Task } from "@/types";
 import { preferenceService } from "@/services/preferenceService";
+import { getOverrideColour, hexToRgba } from "@/utils/colorUtils";
 
 const localizer = momentLocalizer(moment);
 
@@ -13,6 +14,8 @@ interface MiniCalendarEntry {
   start: Date;
   end: Date;
   allDay: boolean;
+  kind: "task" | "event";
+  categories?: Task["categories"] | Event["categories"];
 }
 
 interface MiniCalendarPreviewProps {
@@ -76,6 +79,8 @@ const MiniCalendarPreview = ({ tasks, events }: MiniCalendarPreviewProps) => {
         start: new Date(slot.start),
         end: new Date(slot.end),
         allDay: false,
+        kind: "task",
+        categories: task.categories,
       }));
     }),
     ...events.map((event) => ({
@@ -84,6 +89,8 @@ const MiniCalendarPreview = ({ tasks, events }: MiniCalendarPreviewProps) => {
       start: new Date(event.start_time),
       end: new Date(event.end_time),
       allDay: false,
+      kind: "event",
+      categories: event.categories,
     })),
   ];
 
@@ -144,6 +151,20 @@ const MiniCalendarPreview = ({ tasks, events }: MiniCalendarPreviewProps) => {
         step={60}
         timeslots={1}
         showAllDay={false}
+        eventPropGetter={(entry) => {
+          const overrideColour =
+            entry.kind === "task"
+              ? getOverrideColour(entry.categories as Task["categories"])
+              : getOverrideColour(entry.categories as Event["categories"]);
+          if (!overrideColour) return {};
+          return {
+            style: {
+              backgroundColor: hexToRgba(overrideColour, 0.5),
+              borderLeft: `3px solid ${overrideColour}`,
+              color: "#000000",
+            },
+          };
+        }}
         style={{ height: "100%" }}
       />
     </div>

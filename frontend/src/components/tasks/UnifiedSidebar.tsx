@@ -1,4 +1,4 @@
-import { Fragment, useCallback, useEffect, useState } from "react";
+import { Fragment, useState } from "react";
 import { Dialog, DialogPanel, DialogTitle, Transition, TransitionChild } from "@headlessui/react";
 import {
   type Category,
@@ -38,6 +38,7 @@ interface UnifiedSidebarProps {
  * @param props.isOpen - Indicates whether the sidebar is open.
  * @param props.onClose - The callback function to close the sidebar.
  * @param props.initialMode - The initial mode of the sidebar (task or event).
+ * @param props.showModeToggle - Whether the task/event toggle is shown when creating new items.
  * @param props.categories - The list of available categories.
  * @param props.onCreateCategory - Callback to create a new category.
  * @param props.onUpdateCategory - Callback to update an existing category.
@@ -67,53 +68,28 @@ const UnifiedSidebar = ({
   onRevertToSeries,
 }: UnifiedSidebarProps) => {
   const [mode, setMode] = useState<"task" | "event">(initialMode);
-  const [sharedData, setSharedData] = useState<Partial<Task & Event>>({});
-  const [sharedDataKey, setSharedDataKey] = useState<string>("");
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
-
   const initialKey = initialData
     ? `${"deadline" in initialData ? "task" : "event"}-${initialData.id}-${initialData.start_time ?? ""}`
     : "new";
-
-  useEffect(() => {
-    if (!isOpen) return;
-
-    if (initialData) {
-      setSharedData({
-        title: initialData.title,
-        description: initialData.description,
-        start_time: initialData.start_time,
-      });
-      setSharedDataKey(initialKey);
-      if ("deadline" in initialData) {
-        setMode("task");
-      } else if ("end_time" in initialData) {
-        setMode("event");
-      }
-      return;
-    }
-
-    setSharedData({});
-    setSharedDataKey("new");
-    setMode(initialMode);
-  }, [initialData, initialMode, isOpen, initialKey]);
 
   const handleModeChange = (newMode: "task" | "event") => {
     if (!showModeToggle) return;
     setMode(newMode);
   };
 
-  const handleDataChange = useCallback((data: Partial<Task | Event>) => {
-    setSharedData((prev) => ({ ...prev, ...data }));
-    setSharedDataKey(initialKey);
-  }, [initialKey]);
-
   // Merge sharedData into initialData for the forms
-  const mergedData = sharedDataKey === initialKey
-    ? { ...initialData, ...sharedData }
-    : initialData;
+  const mergedData = initialData;
   const isTaskData = Boolean(initialData && "deadline" in initialData);
   const isEventData = Boolean(initialData && "end_time" in initialData);
+  const isExistingItem = Boolean(initialData?.id && initialData.id !== 0);
+  const effectiveMode = isExistingItem
+    ? isTaskData
+      ? "task"
+      : isEventData
+        ? "event"
+        : mode
+    : mode;
   const selectedEvent = isEventData ? (initialData as Event) : undefined;
   const {
     isEditingRecurringEvent,
@@ -142,10 +118,10 @@ const UnifiedSidebar = ({
   if (!isOpen) return null;
 
   const titleLabel = initialData?.id
-    ? mode === "task"
+    ? effectiveMode === "task"
       ? "Edit Task"
       : "Edit Event"
-    : mode === "task"
+    : effectiveMode === "task"
       ? "Add New Task"
       : "Add New Event";
 
@@ -153,7 +129,7 @@ const UnifiedSidebar = ({
     onDelete &&
       initialData?.id &&
       initialData.id !== 0 &&
-      ((mode === "task" && isTaskData) || (mode === "event" && isEventData))
+      ((effectiveMode === "task" && isTaskData) || (effectiveMode === "event" && isEventData))
   );
 
   return (
@@ -213,14 +189,14 @@ const UnifiedSidebar = ({
                           {canDelete && (
                             <button
                               onClick={() => {
-                                if (mode === "event" && isEditingRecurringEvent) {
+                                if (effectiveMode === "event" && isEditingRecurringEvent) {
                                   openDeleteScope();
                                   return;
                                 }
                                 setIsDeleteModalOpen(true);
                               }}
                               className="h-8 w-8 flex items-center justify-center rounded-full text-red-500 hover:text-red-700 transition-colors hover:bg-red-50"
-                              title={`Delete ${mode === "task" ? "Task" : "Event"}`}
+                              title={`Delete ${effectiveMode === "task" ? "Task" : "Event"}`}
                             >
                               <span className="material-icons text-xl">delete</span>
                             </button>
@@ -264,9 +240,9 @@ const UnifiedSidebar = ({
                       )}
 
                       <div className="relative flex-1 overflow-y-auto bg-white">
-                        {mode === "task" ? (
+                        {effectiveMode === "task" ? (
                           <TaskForm
-                            key={`task-${initialData?.id ?? "new"}`}
+                            key={`task-${initialData?.id ?? "new"}-${initialKey}`}
                             initialData={mergedData as Task}
                             categories={categories}
                             onCreateCategory={onCreateCategory}
@@ -282,11 +258,10 @@ const UnifiedSidebar = ({
                               onClose();
                             }}
                             onCancel={onClose}
-                            onDataChange={handleDataChange}
                           />
                         ) : (
                           <EventForm
-                            key={eventFormKey}
+                            key={`${eventFormKey}-${initialKey}`}
                             initialData={mergedData as Event}
                             categories={categories}
                             onCreateCategory={onCreateCategory}
@@ -301,7 +276,6 @@ const UnifiedSidebar = ({
                               onClose();
                             }}
                             onCancel={onClose}
-                            onDataChange={handleDataChange}
                           />
                         )}
                       </div>
@@ -321,8 +295,8 @@ const UnifiedSidebar = ({
           onDelete?.();
           onClose();
         }}
-        title={`Delete ${mode === "task" ? "Task" : "Event"}`}
-        message={`Are you sure you want to delete this ${mode === "task" ? "task" : "event"}? This action cannot be undone.`}
+        title={`Delete ${effectiveMode === "task" ? "Task" : "Event"}`}
+        message={`Are you sure you want to delete this ${effectiveMode === "task" ? "task" : "event"}? This action cannot be undone.`}
         confirmText="Delete"
       />
 

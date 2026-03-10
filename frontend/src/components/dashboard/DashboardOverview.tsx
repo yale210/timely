@@ -1,10 +1,11 @@
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import moment from "moment";
 import { Link } from "react-router-dom";
 import MiniCalendarPreview from "@/components/dashboard/MiniCalendarPreview";
 import * as taskService from "@/services/taskService";
 import type { Event, Task, WeeklyStats } from "@/types";
 import { getOverrideColour, hexToRgba } from "@/utils/colorUtils";
+import completeSoundUrl from "@/assets/sounds/task-complete.mp3";
 
 interface DashboardOverviewProps {
   tasks: Task[];
@@ -155,6 +156,9 @@ const DashboardOverview = ({
   events,
   weeklyStats,
 }: DashboardOverviewProps) => {
+  const completeSoundRef = useRef<HTMLAudioElement | null>(
+    typeof Audio === "undefined" ? null : new Audio(completeSoundUrl),
+  );
   const [checkedOverrides, setCheckedOverrides] = useState<Record<number, boolean | undefined>>({});
   const [selectedPeriod, setSelectedPeriod] = useState<OverviewPeriod>("weekly");
 
@@ -353,6 +357,10 @@ const DashboardOverview = ({
 
   const handleToggleTask = (task: Task, nextChecked: boolean) => {
     setCheckedOverrides((prev) => ({ ...prev, [task.id]: nextChecked }));
+    if (nextChecked && !task.completed && completeSoundRef.current) {
+      completeSoundRef.current.currentTime = 0;
+      void completeSoundRef.current.play().catch(() => undefined);
+    }
     void (async () => {
       try {
         await taskService.updateTask(task.id, { completed: nextChecked });

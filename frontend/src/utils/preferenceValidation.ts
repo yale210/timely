@@ -1,13 +1,10 @@
 import type { Preference } from "@/types";
 
 /**
- *
+ * Validate preference fields and return keyed error messages.
+ * @param preference - Preference payload to validate.
  */
-export const /**
-              *
-              * @param preference
-              */
-validatePreference = (preference: Preference): Record<string, string[]> => {
+export const validatePreference = (preference: Preference): Record<string, string[]> => {
   const errors: Record<string, string[]> = {};
   const max = preference.max_hours_study_per_day;
 

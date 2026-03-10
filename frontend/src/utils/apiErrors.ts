@@ -11,13 +11,10 @@ const isApiError = (error: unknown): error is ApiError =>
   typeof error === "object" && error !== null && "response" in error;
 
 /**
- *
+ * Normalize Django/DRF error responses into a message + field error map.
+ * @param error - Unknown error value from a request.
  */
-export const /**
-              *
-              * @param error
-              */
-formatDjangoFormError = (
+export const formatDjangoFormError = (
   error: unknown,
 ): { message: string; fieldErrors: Record<string, string[]> } => {
   const fallback = {

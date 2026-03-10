@@ -144,7 +144,6 @@ const TaskForm = ({
     errors.importance = true;
   }
   
-  const hasErrors = Object.keys(errors).length > 0;
   const hasBlockingErrors = isTimeInvalid || isImportanceInvalid;
 
   const buildSubmission = (): TaskSubmission => ({
@@ -154,7 +153,7 @@ const TaskForm = ({
     deadline: toIsoOrEmpty(endDateTime),
     categories: selectedCategories,
     importance,
-    estimated_minutes: estimatedMinutes,
+    estimated_minutes: Number(estimatedMinutes || 0),
     completed: initialData?.completed ?? false,
   });
 

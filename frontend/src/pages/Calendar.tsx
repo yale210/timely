@@ -2,7 +2,7 @@ import "react-big-calendar/lib/css/react-big-calendar.css";
 import "react-big-calendar/lib/addons/dragAndDrop/styles.css";
 import moment from "moment";
 import { useState, useEffect, useCallback, useMemo, useRef, useLayoutEffect, type CSSProperties } from "react";
-import { Calendar, momentLocalizer, type View, Views } from "react-big-calendar";
+import { Calendar, momentLocalizer, type Components, type View, Views } from "react-big-calendar";
 import withDragAndDrop, {
   type EventInteractionArgs,
 } from "react-big-calendar/lib/addons/dragAndDrop";
@@ -17,6 +17,7 @@ import * as schedulerService from "@/services/schedulerService";
 import { preferenceService } from "@/services/preferenceService";
 import type { Task, Category, TaskSubmission, Event, EventSubmission, EventMutationContext, Preference } from "@/types";
 import { getOverrideColour, hexToRgba } from "@/utils/colorUtils";
+import completeSoundUrl from "@/assets/sounds/task-complete.mp3";
 
 const localizer = momentLocalizer(moment);
 /**
@@ -39,6 +40,7 @@ interface CalendarEntry {
   eventData?: Event;
   categories?: Category[];
   allocationIndex?: number;
+  taskData?: Task;
 }
 
 const getCalendarWindow = (
@@ -108,13 +110,16 @@ interface CalendarPageProps {
 }
 
 const CalendarPage = ({ showNavbar = true, useLayout = true }: CalendarPageProps) => {
+  const completeSoundRef = useRef<HTMLAudioElement | null>(
+    typeof Audio === "undefined" ? null : new Audio(completeSoundUrl),
+  );
   const [tasks, setTasks] = useState<Task[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState<Task | Event| undefined>(undefined);
   const [view, setView] = useState<View>(Views.WEEK);
   const [date, setDate] = useState(new Date());
-  const [sidebarMode, setSidebarMode] = useState<"task" | "event">("task");
+  const [sidebarMode, setSidebarMode] = useState<"task" | "event">("event");
   const [events, setEvents] = useState<Event[]>([]);
   const [isScheduling, setIsScheduling] = useState(false);
   const [isUnscheduling, setIsUnscheduling] = useState(false);
@@ -460,7 +465,7 @@ const CalendarPage = ({ showNavbar = true, useLayout = true }: CalendarPageProps
 
   const handleSelectEvent = (entry: CalendarEntry) => {
     if (entry.kind==="task") {
-      const task = tasks.find((t) =>t.id===entry.sourceId);
+      const task = entry.taskData ?? tasks.find((t) => t.id === entry.sourceId);
       if (task) {
         setSidebarMode("task");
         setSelectedItem(task);
@@ -631,6 +636,80 @@ const CalendarPage = ({ showNavbar = true, useLayout = true }: CalendarPageProps
     [date, events, fetchEvents, view],
   );
 
+  const handleToggleTaskComplete = useCallback(
+    async (taskId: number) => {
+      const task = tasks.find((entry) => entry.id === taskId);
+      if (!task) return;
+      try {
+        if (!task.completed && completeSoundRef.current) {
+          completeSoundRef.current.currentTime = 0;
+          void completeSoundRef.current.play().catch(() => undefined);
+        }
+        await taskService.updateTask(taskId, { completed: !task.completed });
+        await fetchTasks();
+      } catch (err) {
+        console.error(err);
+      }
+    },
+    [fetchTasks, tasks, completeSoundRef],
+  );
+
+  const formatEventTime = (dateValue: Date) => {
+    const hours24 = dateValue.getHours();
+    const minutes = dateValue.getMinutes();
+    const isPm = hours24 >= 12;
+    const hours12 = hours24 % 12 === 0 ? 12 : hours24 % 12;
+    const suffix = isPm ? "pm" : "am";
+    if (minutes === 0) {
+      return `${hours12}${suffix}`;
+    }
+    const padded = String(minutes).padStart(2, "0");
+    return `${hours12}:${padded}${suffix}`;
+  };
+
+  const components = useMemo<Components<CalendarEntry>>(
+    () => ({
+      event: ({ event }: { event: CalendarEntry }) => {
+        const timeLabel = `${formatEventTime(event.start)} - ${formatEventTime(event.end)}`;
+        if (event.kind !== "task") {
+          return (
+            <div className="flex h-full w-full items-start gap-2">
+              <div className="flex min-w-0 flex-col">
+                <span className="truncate text-[20px] font-medium">{event.title}</span>
+                <span className="truncate text-[15px] text-gray-700">{timeLabel}</span>
+                {event.eventData?.location && (
+                  <span className="truncate text-[13px] text-gray-600">
+                    {event.eventData.location}
+                  </span>
+                )}
+              </div>
+            </div>
+          );
+        }
+        return (
+          <div className="flex h-full w-full items-start gap-2">
+            <input
+              type="checkbox"
+              checked={Boolean(event.taskData?.completed)}
+              onChange={(e) => {
+                e.stopPropagation();
+                void handleToggleTaskComplete(event.sourceId);
+              }}
+              onClick={(e) => e.stopPropagation()}
+              className="mt-1 task-event-checkbox"
+              aria-label="Mark task complete"
+            />
+            <div className="flex min-w-0 flex-col">
+              <span className="truncate text-[20px] font-medium">{event.title}</span>
+              <span className="truncate text-[15px] text-gray-600">{timeLabel}</span>
+            </div>
+          </div>
+        );
+      },
+    }),
+    [handleToggleTaskComplete],
+  );
+
   const handleEventDrop = useCallback(
     async ({ event, start, end }: EventInteractionArgs<CalendarEntry>) => {
       if (event.kind === "task") {
@@ -702,6 +781,7 @@ const CalendarPage = ({ showNavbar = true, useLayout = true }: CalendarPageProps
         allDay: moment(slot.end).diff(moment(slot.start), "hours") >= 24,
         kind: "task" as const,
         sourceId: task.id,
+        taskData: task,
         split: allocations.length > 1,
         oneGo: allocations.length === 1,
         scheduleIndex: scheduleOrder[task.id],
@@ -888,7 +968,7 @@ const CalendarPage = ({ showNavbar = true, useLayout = true }: CalendarPageProps
                   className: "calendar-off-hours-slot",
                 };
               }}
-              selectable
+              selectable="ignoreEvents"
               onSelectSlot={handleSelectSlot}
               onSelectEvent={(e) => {
                 handleSelectEvent(e)
@@ -903,9 +983,11 @@ const CalendarPage = ({ showNavbar = true, useLayout = true }: CalendarPageProps
               }}
               toolbar={false}
               className="h-full"
+              components={components}
               eventPropGetter={(event: CalendarEntry) => {
                 const className=[
                   "event-slot",
+                  event.kind === "task" ? "task-event" : "",
                   event.repeat ? "is-repeat": "",
                   event.split ? "is-split" : "",
                   event.oneGo ? "is-onego" : "",
@@ -931,6 +1013,10 @@ const CalendarPage = ({ showNavbar = true, useLayout = true }: CalendarPageProps
                     0.6,
                   );
                   style.color = "#000000";
+                } else if (event.kind === "task") {
+                  style.borderLeft = "4px solid #3b82f6";
+                } else {
+                  style.borderLeft = "4px solid #f97316";
                 }
 
                 return { className, style };
@@ -945,6 +1031,7 @@ const CalendarPage = ({ showNavbar = true, useLayout = true }: CalendarPageProps
         onClose={() => {
           setIsSidebarOpen(false);
           setSelectedItem(undefined);
+          setSidebarMode("event");
         }}
         categories={categories}
         onCreateCategory={createCategory}

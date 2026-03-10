@@ -30,11 +30,6 @@ const readFeatureFlag = (key: keyof typeof FEATURE_FLAGS) => {
 }
 
 
-const accountItems = [
-  { label: "Settings", to: "/settings" },
-  { label: "Log out", to: "/logout" },
-]
-
 /**
  * AppNavbar renders the main navigation bar with a sliding drawer menu for Timely.
  */
@@ -199,7 +194,7 @@ export default function AppNavbar() {
 
         <div className="flex flex-1 flex-col overflow-y-auto">
           {isAdminRoute ? (
-            <AdminSidebar onClose={() => {}} />
+            <AdminSidebar onClose={() => setOpen(false)} />
           ) : (
             /* ── Main sidebar ── */
             <>
@@ -225,7 +220,7 @@ export default function AppNavbar() {
                 <>
                   <div className="mx-4 border-t-2 border-gray-200" />
                   <div className="px-4 pt-4 text-xs font-semibold uppercase tracking-wide text-gray-500">
-                    Add-ons
+                    Extras
                   </div>
                   <ul className="space-y-2 px-4 py-4 text-base">
                     {visibleFeatureItems.map((item) => (

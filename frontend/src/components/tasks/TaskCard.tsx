@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { type Task } from "@/types";
 import { getOverrideColour, hexToRgba } from "@/utils/colorUtils";
 import completeSoundUrl from "@/assets/sounds/task-complete.mp3";
@@ -21,15 +21,14 @@ const TaskCard = ({ task, onToggleComplete, onClick }: TaskCardProps) => {
   const [isHovered, setIsHovered] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
   const isOverdue = new Date(task.deadline) < new Date() && !task.completed;
-  const completeSound = useState(() => {
-    if (typeof Audio === "undefined") return null;
-    return new Audio(completeSoundUrl);
-  })[0];
+  const completeSoundRef = useRef<HTMLAudioElement | null>(
+    typeof Audio === "undefined" ? null : new Audio(completeSoundUrl),
+  );
 
   const playCompleteSound = () => {
-    if (!completeSound) return;
-    completeSound.currentTime = 0;
-    void completeSound.play().catch(() => {});
+    if (!completeSoundRef.current) return;
+    completeSoundRef.current.currentTime = 0;
+    void completeSoundRef.current.play().catch(() => undefined);
   };
 
   // Map importance to priority colour and label using ImportanceChoices levels
@@ -88,73 +87,71 @@ const TaskCard = ({ task, onToggleComplete, onClick }: TaskCardProps) => {
         task.completed ? "opacity-75" : ""
       }`}
     >
-      <div className="flex items-center justify-between">
-        <div className="flex items-center flex-1 min-w-0">
-          <input
-            type="checkbox"
-            checked={task.completed}
-            onClick={(e) => e.stopPropagation()}
-            onChange={() => {
-              if (!task.completed) {
-                playCompleteSound();
-              }
-              onToggleComplete(task.id);
-            }}
-            className="h-5 w-5 text-primary border-gray-300 rounded focus:ring-primary"
-          />
-          <div className="ml-4 flex flex-col flex-1 min-w-0">
-            <div className="flex items-center justify-between">
-              <span
-                className={`text-sm font-medium truncate ${
-                  task.completed
-                    ? "text-gray-500 line-through"
-                    : "text-black"
-                }`}
-              >
-                {task.title}
-              </span>
-            </div>
-            <div className="flex flex-wrap items-center mt-1 gap-2 text-xs text-gray-500">
-              <span
-                className={`flex items-center ${
-                  isOverdue ? "text-red-500" : ""
-                }`}
-              >
-                <span className="material-icons text-sm mr-1">event</span>
-                {isOverdue ? "Overdue" : formatDue(task.deadline)}
-              </span>
-              {task.estimated_minutes > 0 && (
-                <span className="flex items-center text-xs text-gray-500">
-                  <span className="material-icons mr-1" style={{ fontSize: "22px" }}>schedule</span>
-                  {task.estimated_minutes}m
-                </span>
-              )}
+      <div className="flex items-start justify-between gap-3">
+        <div className="flex flex-col flex-1 min-w-0">
+          <div className="flex items-center gap-3">
+            <input
+              type="checkbox"
+              checked={task.completed}
+              onClick={(e) => e.stopPropagation()}
+              onChange={() => {
+                if (!task.completed) {
+                  playCompleteSound();
+                }
+                onToggleComplete(task.id);
+              }}
+              className="h-5 w-5 rounded-full border-gray-300 bg-transparent text-primary focus:ring-primary"
+            />
+            <span
+              className={`text-sm font-medium truncate ${
+                task.completed
+                  ? "text-gray-500 line-through"
+                  : "text-black"
+              }`}
+            >
+              {task.title}
+            </span>
+          </div>
+          <div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-gray-500">
+            <span
+              className={`flex items-center ${
+                isOverdue ? "text-red-500" : ""
+              }`}
+            >
+              <span className="material-icons text-sm mr-1">event</span>
+              {isOverdue ? "Overdue" : formatDue(task.deadline)}
+            </span>
+            {task.estimated_minutes > 0 && (
               <span className="flex items-center text-xs text-gray-500">
-                <span className="material-icons mr-1" style={{ fontSize: "22px" }}>priority_high</span>
-                {isHovered ? task.importance : importanceInfo.label}
+                <span className="material-icons mr-1" style={{ fontSize: "22px" }}>schedule</span>
+                {task.estimated_minutes}m
               </span>
-              <div className="flex gap-1 overflow-hidden">
-                {task.categories.map((cat) => (
-                  <span
-                    key={cat.id}
-                    className={`px-2 py-0.5 rounded font-medium border whitespace-nowrap ${
-                      overrideColour
-                        ? "text-black"
-                        : "bg-blue-50 text-blue-600 border-blue-100"
-                    }`}
-                    style={
-                      overrideColour
-                        ? {
-                            borderColor: overrideColour,
-                            backgroundColor: hexToRgba(overrideColour, 0.12),
-                          }
-                        : undefined
-                    }
-                  >
-                    {cat.text}
-                  </span>
-                ))}
-              </div>
+            )}
+            <span className="flex items-center text-xs text-gray-500">
+              <span className="material-icons mr-1" style={{ fontSize: "22px" }}>priority_high</span>
+              {isHovered ? task.importance : importanceInfo.label}
+            </span>
+            <div className="flex gap-1 overflow-hidden">
+              {task.categories.map((cat) => (
+                <span
+                  key={cat.id}
+                  className={`px-2 py-0.5 rounded font-medium border whitespace-nowrap ${
+                    overrideColour
+                      ? "text-black"
+                      : "bg-blue-50 text-blue-600 border-blue-100"
+                  }`}
+                  style={
+                    overrideColour
+                      ? {
+                          borderColor: overrideColour,
+                          backgroundColor: hexToRgba(overrideColour, 0.12),
+                        }
+                      : undefined
+                  }
+                >
+                  {cat.text}
+                </span>
+              ))}
             </div>
           </div>
         </div>

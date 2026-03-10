@@ -75,7 +75,9 @@ const EventList = () => {
         onCreateCategory={actions.createCategory}
         onUpdateCategory={actions.updateCategory}
         onDeleteCategory={actions.deleteCategory}
-        onSubmitTask={() => {}}
+        onSubmitTask={(data) => {
+          void data;
+        }}
         onSubmitEvent={(data, context) => {
           void actions.submitEvent(data, context);
         }}
