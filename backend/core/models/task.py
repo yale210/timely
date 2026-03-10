@@ -34,6 +34,8 @@ class Task(models.Model):
     start_time = models.DateTimeField()
     deadline = models.DateTimeField()
     completed = models.BooleanField(default=False)
+    locked = models.BooleanField(default=False)
+    allow_split = models.BooleanField(default=False)
 
     # Query db for models with specific parent tasks when necessary.
     parent_task = models.ForeignKey(

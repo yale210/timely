@@ -258,8 +258,22 @@ export default function AppNavbar() {
                   </ul>
                 </>
               )}
+
             </>
           )}
+        </div>
+        <div className="mt-auto border-t border-gray-200 px-4 py-3">
+          <NavLink
+            to="/settings"
+            className={({ isActive }) =>
+              [
+                "flex items-center rounded-md px-3 py-2 text-base font-semibold transition-colors",
+                isActive ? "bg-cyan-50 text-cyan-700 ring-1 ring-cyan-100" : "text-gray-800 hover:bg-gray-100",
+              ].join(" ")
+            }
+          >
+            Settings
+          </NavLink>
         </div>
       </nav>
     </header>

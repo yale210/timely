@@ -18,6 +18,7 @@ interface NormalisedTaskSubmission {
   importance: number;
   estimated_minutes: number;
   completed: boolean;
+  allow_split: boolean;
 }
 
 const normaliseTaskSubmission = (
@@ -32,6 +33,7 @@ const normaliseTaskSubmission = (
   importance: Number(submission.importance ?? 5),
   estimated_minutes: Number(submission.estimated_minutes ?? 60),
   completed: Boolean(submission.completed),
+  allow_split: Boolean(submission.allow_split),
 });
 
 const isTaskSubmissionEqual = (
@@ -125,6 +127,10 @@ const TaskForm = ({
     initialData?.categories?.map((c) => (typeof c === "object" ? c.id : c)) ?? []
   );
   const [importance, setImportance] = useState(initialData?.importance ?? 5);
+  const [allowSplit, setAllowSplit] = useState(initialData?.allow_split ?? false);
+  const [autoSchedule, setAutoSchedule] = useState(
+    initialData?.locked ? false : true,
+  );
   const defaultColour = "#3b82f6";
   const [colour, setColour] = useState(initialData?.colour ?? defaultColour);
   const [showPickerMenu, setShowPickerMenu] = useState(false);
@@ -183,6 +189,8 @@ const TaskForm = ({
     importance,
     estimated_minutes: Number(estimatedMinutes || 0),
     colour,
+    locked: !autoSchedule,
+    allow_split: allowSplit,
     completed: initialData?.completed ?? false,
   });
 
@@ -408,6 +416,50 @@ const TaskForm = ({
               }}
               required
             />
+          </div>
+        </div>
+
+        <div className="flex flex-col gap-4">
+          <div className="flex items-center justify-between gap-4">
+            <label htmlFor="task-auto-schedule" className="text-sm font-medium text-gray-700">
+              Auto-schedule
+            </label>
+            <button
+              id="task-auto-schedule"
+              type="button"
+              onClick={() => setAutoSchedule((prev) => !prev)}
+              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                autoSchedule ? "bg-primary" : "bg-gray-300"
+              }`}
+              aria-pressed={autoSchedule}
+            >
+              <span
+                className={`inline-block h-5 w-5 transform rounded-full bg-white shadow-sm transition-transform ${
+                  autoSchedule ? "translate-x-5" : "translate-x-1"
+                }`}
+              />
+            </button>
+          </div>
+
+          <div className="flex items-center justify-between gap-4">
+            <label htmlFor="task-allow-split" className="text-sm font-medium text-gray-700">
+              Splittable
+            </label>
+            <button
+              id="task-allow-split"
+              type="button"
+              onClick={() => setAllowSplit((prev) => !prev)}
+              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                allowSplit ? "bg-primary" : "bg-gray-300"
+              }`}
+              aria-pressed={allowSplit}
+            >
+              <span
+                className={`inline-block h-5 w-5 transform rounded-full bg-white shadow-sm transition-transform ${
+                  allowSplit ? "translate-x-5" : "translate-x-1"
+                }`}
+              />
+            </button>
           </div>
         </div>
 

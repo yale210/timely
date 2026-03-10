@@ -121,8 +121,7 @@ const CalendarPage = ({ showNavbar = true, useLayout = true }: CalendarPageProps
   const [date, setDate] = useState(new Date());
   const [sidebarMode, setSidebarMode] = useState<"task" | "event">("event");
   const [events, setEvents] = useState<Event[]>([]);
-  const [isScheduling, setIsScheduling] = useState(false);
-  const [isUnscheduling, setIsUnscheduling] = useState(false);
+  const [isRescheduling, setIsRescheduling] = useState(false);
   const [scheduleOrder, setScheduleOrder] = useState<Record<number, number>>({});
   const [preference, setPreference] = useState<Preference | null>(null);
   const [headerHeight, setHeaderHeight] = useState(0);
@@ -552,6 +551,9 @@ const CalendarPage = ({ showNavbar = true, useLayout = true }: CalendarPageProps
 
   const updateTaskAllocation = useCallback(
     async (entry: CalendarEntry, start: Date, end: Date) => {
+      if (entry.taskData?.completed || entry.taskData?.locked) {
+        return;
+      }
       if (typeof entry.allocationIndex !== "number") {
         return;
       }
@@ -732,11 +734,13 @@ const CalendarPage = ({ showNavbar = true, useLayout = true }: CalendarPageProps
     [updateCalendarEvent, updateTaskAllocation],
   );
 
-  const handleScheduleTasks = async () => {
-    setIsScheduling(true);
+  const handleRescheduleTasks = async () => {
+    setIsRescheduling(true);
     try {
+      await schedulerService.unscheduleTasks();
       const response = await schedulerService.scheduleTasks({
         start_date: moment(date).format("YYYY-MM-DD"),
+        allow_split: true,
       });
       const nextOrder: Record<number, number> = {};
       response.results
@@ -750,20 +754,7 @@ const CalendarPage = ({ showNavbar = true, useLayout = true }: CalendarPageProps
     } catch (err) {
       console.error(err);
     } finally {
-      setIsScheduling(false);
-    }
-  };
-
-  const handleUnscheduleTasks = async () => {
-    setIsUnscheduling(true);
-    try {
-      await schedulerService.unscheduleTasks();
-      await fetchTasks();
-      setScheduleOrder({});
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setIsUnscheduling(false);
+      setIsRescheduling(false);
     }
   };
 
@@ -829,6 +820,46 @@ const CalendarPage = ({ showNavbar = true, useLayout = true }: CalendarPageProps
             <h1 className="text-2xl font-bold tracking-tight text-black">
               Calendar
             </h1>
+            <div className="flex items-center bg-white border border-gray-200 rounded-lg overflow-hidden shadow-sm">
+              <button
+                onClick={() =>
+                  setDate(moment(date).subtract(1, view as "month" | "week" | "day").toDate())
+                }
+                className="flex h-8 w-8 items-center justify-center hover:bg-blue-100 text-gray-500 transition-colors border-r border-gray-200"
+              >
+                <span className="material-icons text-xl">chevron_left</span>
+              </button>
+              <button
+                onClick={() => setDate(new Date())}
+                className="hidden h-8 items-center justify-center px-4 text-sm font-medium text-black hover:bg-blue-100 transition-colors sm:flex"
+              >
+                Today
+              </button>
+              <button
+                onClick={() =>
+                  setDate(moment(date).add(1, view as "month" | "week" | "day").toDate())
+                }
+                className="flex h-8 w-8 items-center justify-center hover:bg-blue-100 text-gray-500 transition-colors border-l border-gray-200"
+              >
+                <span className="material-icons text-xl">chevron_right</span>
+              </button>
+            </div>
+          </div>
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => { void handleRescheduleTasks(); }}
+                disabled={isRescheduling}
+                className={`px-4 py-2 rounded-lg text-sm font-medium flex items-center shadow-sm transition-colors ${
+                  isRescheduling
+                    ? "bg-gray-200 text-gray-500 cursor-not-allowed"
+                    : "bg-primary text-white hover:bg-blue-300"
+                }`}
+              >
+                <span className="material-icons text-lg mr-1.5">update</span>
+                {isRescheduling ? "Rescheduling..." : "Reschedule"}
+              </button>
+            </div>
             <div className="hidden md:flex bg-gray-100 p-1 rounded-lg">
               {(
                 [
@@ -850,58 +881,6 @@ const CalendarPage = ({ showNavbar = true, useLayout = true }: CalendarPageProps
                   {v.label}
                 </button>
               ))}
-            </div>
-          </div>
-          <div className="flex items-center gap-4">
-            <div className="flex items-center gap-2">
-              <button
-                onClick={() => { void handleScheduleTasks(); }}
-                disabled={isScheduling || isUnscheduling}
-                className={`px-4 py-2 rounded-lg text-sm font-medium flex items-center shadow-sm transition-colors ${
-                  isScheduling || isUnscheduling
-                    ? "bg-gray-200 text-gray-500 cursor-not-allowed"
-                    : "bg-primary text-white hover:bg-blue-300"
-                }`}
-              >
-                <span className="material-icons text-lg mr-1.5">auto_awesome</span>
-                {isScheduling ? "Scheduling..." : "Schedule Tasks"}
-              </button>
-              <button
-                onClick={() => { void handleUnscheduleTasks(); }}
-                disabled={isScheduling || isUnscheduling}
-                className={`px-4 py-2 rounded-lg text-sm font-medium flex items-center shadow-sm transition-colors ${
-                  isScheduling || isUnscheduling
-                    ? "bg-gray-200 text-gray-500 cursor-not-allowed"
-                    : "bg-white text-gray-700 border border-gray-300 hover:bg-gray-50"
-                }`}
-              >
-                <span className="material-icons text-lg mr-1.5">event_busy</span>
-                {isUnscheduling ? "Unscheduling..." : "Unschedule Tasks"}
-              </button>
-            </div>
-            <div className="flex items-center bg-white border border-gray-200 rounded-lg overflow-hidden shadow-sm">
-              <button
-                onClick={() =>
-                  setDate(moment(date).subtract(1, view as "month" | "week" | "day").toDate())
-                }
-                className="p-2 hover:bg-blue-100 text-gray-500 transition-colors border-r border-gray-200"
-              >
-                <span className="material-icons text-xl">chevron_left</span>
-              </button>
-              <button
-                onClick={() => setDate(new Date())}
-                className="px-4 py-2 hidden sm:block font-medium text-black hover:bg-blue-100 transition-colors"
-              >
-                Today
-              </button>
-              <button
-                onClick={() =>
-                  setDate(moment(date).add(1, view as "month" | "week" | "day").toDate())
-                }
-                className="p-2 hover:bg-blue-100 text-gray-500 transition-colors border-l border-gray-200"
-              >
-                <span className="material-icons text-xl">chevron_right</span>
-              </button>
             </div>
             <h2 className="text-xl font-semibold w-48 text-center uppercase tracking-wide text-black">
               {moment(date).format("MMMM YYYY")}
@@ -973,8 +952,14 @@ const CalendarPage = ({ showNavbar = true, useLayout = true }: CalendarPageProps
               onSelectEvent={(e) => {
                 handleSelectEvent(e)
               }}
-              draggableAccessor={() => true}
-              resizableAccessor={() => true}
+              draggableAccessor={(entry) =>
+                entry.kind === "event" ||
+                (entry.kind === "task" && !entry.taskData?.completed && !entry.taskData?.locked)
+              }
+              resizableAccessor={(entry) =>
+                entry.kind === "event" ||
+                (entry.kind === "task" && !entry.taskData?.completed && !entry.taskData?.locked)
+              }
               onEventDrop={(args) => {
                 void handleEventDrop(args);
               }}

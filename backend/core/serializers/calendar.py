@@ -21,6 +21,8 @@ class CalendarSerializer(serializers.ModelSerializer):
             "deadline",
             "importance",
             "completed",
+            "locked",
+            "allow_split",
             "parent_task",
             "allocation",
             "total_task_allocations",
@@ -60,5 +62,7 @@ class CalendarResponseSerializer(serializers.ModelSerializer):
             "deadline",
             "importance",
             "completed",
+            "locked",
+            "allow_split",
             "parent_task",
         ]

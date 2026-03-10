@@ -34,6 +34,8 @@ export interface Task {
   colour?: string | null;
   importance: number;
   completed: boolean;
+  locked?: boolean;
+  allow_split?: boolean;
   categories: Category[];
   estimated_minutes: number;
   parent_task?: number | null;

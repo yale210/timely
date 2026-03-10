@@ -108,7 +108,7 @@ const PreferencesSection = ({
 
             <div>
               <label htmlFor="pref-max-hours" className="block text-sm font-medium text-gray-900">
-                Max study hours per day
+                Max task time per day
               </label>
               <input
                 id="pref-max-hours"

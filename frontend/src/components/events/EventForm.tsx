@@ -636,13 +636,15 @@ const EventForm = ({
         </div>
 
         <div>
-          <label className="inline-flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
-            Recurring
-            <input
-              type="checkbox"
-              checked={recurrenceEnabled}
-              onChange={(e) => {
-                const nextValue = e.target.checked;
+          <div className="flex items-center justify-between gap-4">
+            <label htmlFor="event-recurring" className="text-sm font-medium text-gray-700">
+              Recurring
+            </label>
+            <button
+              id="event-recurring"
+              type="button"
+              onClick={() => {
+                const nextValue = !recurrenceEnabled;
                 setRecurrenceEnabled(nextValue);
                 if (!nextValue) {
                   setRecurrenceInterval(null);
@@ -651,9 +653,18 @@ const EventForm = ({
                   setRecurrenceInterval("weekly");
                 }
               }}
-              className="h-4 w-4 rounded border-gray-300 text-orange-500 focus:ring-orange-500"
-            />
-          </label>
+              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                recurrenceEnabled ? "bg-primary" : "bg-gray-300"
+              }`}
+              aria-pressed={recurrenceEnabled}
+            >
+              <span
+                className={`inline-block h-5 w-5 transform rounded-full bg-white shadow-sm transition-transform ${
+                  recurrenceEnabled ? "translate-x-5" : "translate-x-1"
+                }`}
+              />
+            </button>
+          </div>
 
           {recurrenceEnabled && (
             <div className="mt-4 grid grid-cols-2 gap-4">

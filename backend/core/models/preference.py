@@ -59,7 +59,7 @@ class Preference(models.Model):
         if self.max_hours_study_per_day * 60 > minutesAvailable:
             raise ValidationError(
                 {
-                    "max_hours_study_per_day": "Max study hours exceeds your available day length."
+                    "max_hours_study_per_day": "Max task time exceeds your available day length."
                 }
             )
 
