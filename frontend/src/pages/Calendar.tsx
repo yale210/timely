@@ -1010,11 +1010,11 @@ const CalendarPage = ({ showNavbar = true, useLayout = true }: CalendarPageProps
                   style.animationDelay = `${event.scheduleIndex * 120}ms`;
                 }
                 if (appliedColour) {
-                  style.backgroundColor = hexToRgba(appliedColour, 0.5);
+                  style.backgroundColor = hexToRgba(appliedColour, 0.65);
                   style.borderLeft = `4px solid ${appliedColour}`;
                   (style as Record<string, string>)["--event-stripe-color"] = hexToRgba(
                     appliedColour,
-                    0.6,
+                    0.5,
                   );
                   style.color = "#000000";
                 }

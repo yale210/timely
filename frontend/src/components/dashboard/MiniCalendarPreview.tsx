@@ -190,7 +190,7 @@ const MiniCalendarPreview = ({ tasks, events }: MiniCalendarPreviewProps) => {
           if (!appliedColour) return {};
           return {
             style: {
-              backgroundColor: hexToRgba(appliedColour, 0.5),
+              backgroundColor: hexToRgba(appliedColour, 0.85),
               borderLeft: `3px solid ${appliedColour}`,
               color: "#000000",
             },
