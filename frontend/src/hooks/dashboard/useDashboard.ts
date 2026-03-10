@@ -67,8 +67,8 @@ export const useDashboard = (): UseDashboardReturn => {
     setIsSummaryLoading(true);
 
     try {
-      const startOfWeek = moment().startOf("week").format("YYYY-MM-DD");
-      const endOfWeek = moment().endOf("week").format("YYYY-MM-DD");
+      const startOfWeek = moment().startOf("isoWeek").format("YYYY-MM-DD");
+      const endOfWeek = moment().endOf("isoWeek").format("YYYY-MM-DD");
       const [nextTasks, nextEvents, nextStats] = await Promise.all([
         taskService.getTasks(),
         eventService.getEvents({ start_date: startOfWeek, end_date: endOfWeek }),

@@ -183,36 +183,15 @@ body {
   margin-bottom: 0;
 }
 
-.mini-calendar-preview .rbc-time-content {
-  overflow-y: hidden;
-}
-
 .mini-calendar-preview {
-  position: relative;
-  overflow: hidden;
-  isolation: isolate;
-  background: inherit;
   height: 100%;
   width: 100%;
   --mini-header-height: 32px;
   --mini-hour-height: 24px;
 }
 
-.mini-calendar-preview .rbc-timeslot-group {
-  flex: 0 0 var(--mini-hour-height);
-  min-height: var(--mini-hour-height);
-}
-
-.mini-calendar-preview .rbc-time-view .rbc-time-slot {
-  min-height: 12px;
-}
-
-.mini-calendar-preview .rbc-time-gutter,
-.mini-calendar-preview .rbc-time-header-gutter {
-  flex: 0 0 64px;
-  width: 64px;
-  max-width: 64px;
-  box-sizing: border-box;
+.mini-calendar-preview .rbc-calendar {
+  height: 100%;
 }
 
 .mini-calendar-preview .rbc-label,
@@ -220,87 +199,13 @@ body {
   font-size: 0.7rem;
 }
 
-.mini-calendar-preview .rbc-time-header,
-.mini-calendar-preview .rbc-time-header.rbc-overflowing {
-  margin-right: 0 !important;
-  height: var(--mini-header-height);
-}
-
-.mini-calendar-preview .rbc-time-header-content {
-  flex: 1 1 auto;
-  min-width: 0;
-  height: var(--mini-header-height);
-}
-
-.mini-calendar-preview .rbc-time-content {
-  display: flex;
-}
-
-.mini-calendar-preview .rbc-time-header-content .rbc-row {
-  margin-right: 0 !important;
-}
-
-.mini-calendar-preview .rbc-time-header-content .rbc-header,
-.mini-calendar-preview .rbc-time-content > .rbc-day-slot {
-  box-sizing: border-box;
-}
-
-.mini-calendar-preview .rbc-header {
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: clip;
-  text-align: center;
-  padding-inline: 4px;
-}
-
 .mini-calendar-preview .rbc-time-gutter .rbc-label {
-  display: block;
-  transform: translateY(0);
-  padding-right: 10px;
-  text-align: right;
-  position: relative;
-  z-index: 0;
-  background: transparent;
-}
-
-.mini-calendar-preview .rbc-time-gutter {
-  position: relative;
-  z-index: 0;
-  background: transparent;
-}
-
-.mini-calendar-preview .rbc-time-gutter .rbc-timeslot-group {
-  border-top: 0;
-  background: inherit;
-}
-
-.mini-calendar-preview .rbc-time-gutter .rbc-time-slot {
-  border-top: 0;
-  background: inherit;
-}
-
-.mini-calendar-preview:hover .rbc-time-gutter,
-.mini-calendar-preview:hover .rbc-time-gutter .rbc-label {
-  background: inherit;
-}
-
-
-.mini-calendar-preview .rbc-time-header {
-  position: relative;
-  z-index: 2;
-}
-
-.mini-calendar-preview .rbc-time-view {
-  overflow: hidden;
-}
-
-/* Mini preview never renders all-day events; remove empty strip to avoid 1px column drift. */
-.mini-calendar-preview .rbc-allday-cell {
-  display: none;
-}
-
-.mini-calendar-preview .rbc-allday-row {
-  display: none;
+  text-align: center;
+  top: 0;
+  line-height: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
 }
 
 .mini-calendar-preview .rbc-event-content,
@@ -309,8 +214,57 @@ body {
   line-height: 1.1;
 }
 
-.mini-calendar-preview.hide-now-indicator .rbc-current-time-indicator {
+.mini-calendar-preview .rbc-allday-cell,
+.mini-calendar-preview .rbc-allday-row {
   display: none;
+}
+
+.mini-calendar-preview .rbc-time-content {
+  overflow: hidden;
+  height: 100%;
+  align-items: stretch;
+  min-height: 0;
+}
+
+.mini-calendar-preview .rbc-time-view {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+}
+
+.mini-calendar-preview .rbc-time-header {
+  flex: 0 0 auto;
+  margin-right: 0 !important;
+  padding-right: 0 !important;
+  height: var(--mini-header-height);
+}
+
+.mini-calendar-preview .rbc-time-header-content,
+.mini-calendar-preview .rbc-time-header-content .rbc-row {
+  margin-right: 0 !important;
+  height: var(--mini-header-height);
+}
+
+.mini-calendar-preview .rbc-time-content {
+  flex: 1 1 0;
+}
+
+.mini-calendar-preview .rbc-day-slot {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+}
+
+.mini-calendar-preview .rbc-timeslot-group {
+  flex: 0 0 var(--mini-hour-height);
+  min-height: var(--mini-hour-height);
+}
+
+.mini-calendar-preview .rbc-time-content > .rbc-day-slot {
+  height: 100%;
+  min-height: 0;
 }
 
 /* Use Google-hosted decorative font 'Pacifico' for headings. */

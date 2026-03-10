@@ -71,7 +71,7 @@ export const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
               leaveFrom="opacity-100 translate-y-0"
               leaveTo="opacity-0 translate-y-1"
             >
-              <Popover.Panel className="absolute right-0 z-10 mt-3 w-96 transform px-4 sm:px-0">
+              <Popover.Panel className="absolute right-0 top-full z-10 mt-2 w-96 px-4 sm:px-0">
                 <div className="overflow-hidden rounded-2xl shadow-xl ring-1 ring-black/5 bg-white">
                   <div className="border-b px-4 py-3 flex items-center justify-between">
                     <h3 className="text-base font-semibold text-gray-900">

@@ -1,10 +1,8 @@
 import "react-big-calendar/lib/css/react-big-calendar.css";
 import moment from "moment";
-import { useEffect, useMemo, useState } from "react";
-import { Calendar, Views, momentLocalizer, type EventPropGetter } from "react-big-calendar";
-import type { CSSProperties } from "react";
-import type { Event, Task, Category } from "@/types";
-import { getOverrideColour, hexToRgba } from "@/utils/colorUtils";
+import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
+import { Calendar, Views, momentLocalizer } from "react-big-calendar";
+import type { Event, Task } from "@/types";
 import { preferenceService } from "@/services/preferenceService";
 
 const localizer = momentLocalizer(moment);
@@ -15,15 +13,11 @@ interface MiniCalendarEntry {
   start: Date;
   end: Date;
   allDay: boolean;
-  kind: "task" | "event";
-  categories?: Category[];
-  eventData?: Event;
 }
 
 interface MiniCalendarPreviewProps {
   tasks: Task[];
   events: Event[];
-  useFullHeight?: boolean;
 }
 
 const parseClockMinutes = (value: string): number => {
@@ -41,9 +35,11 @@ const parseClockMinutes = (value: string): number => {
   return (hour * 60) + minute;
 };
 
-const MiniCalendarPreview = ({ tasks, events, useFullHeight = false }: MiniCalendarPreviewProps) => {
+const MiniCalendarPreview = ({ tasks, events }: MiniCalendarPreviewProps) => {
   const [dayStart, setDayStart] = useState("08:00");
   const [dayEnd, setDayEnd] = useState("22:00");
+  const [containerHeight, setContainerHeight] = useState(0);
+  const containerRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     const loadPreference = async () => {
@@ -60,6 +56,17 @@ const MiniCalendarPreview = ({ tasks, events, useFullHeight = false }: MiniCalen
     void loadPreference();
   }, []);
 
+  useEffect(() => {
+    if (!containerRef.current || typeof ResizeObserver === "undefined") return;
+    const observer = new ResizeObserver((entries) => {
+      const entry = entries[0];
+      if (!entry) return;
+      setContainerHeight(Math.round(entry.contentRect.height));
+    });
+    observer.observe(containerRef.current);
+    return () => observer.disconnect();
+  }, []);
+
   const calendarEntries: MiniCalendarEntry[] = [
     ...tasks.flatMap((task) => {
       const allocations = task.allocation ?? [];
@@ -69,8 +76,6 @@ const MiniCalendarPreview = ({ tasks, events, useFullHeight = false }: MiniCalen
         start: new Date(slot.start),
         end: new Date(slot.end),
         allDay: false,
-        kind: "task" as const,
-        categories: task.categories,
       }));
     }),
     ...events.map((event) => ({
@@ -79,20 +84,16 @@ const MiniCalendarPreview = ({ tasks, events, useFullHeight = false }: MiniCalen
       start: new Date(event.start_time),
       end: new Date(event.end_time),
       allDay: false,
-      kind: "event" as const,
-      eventData: event,
     })),
   ];
 
-  const { minTime, maxTime, previewHeight, isNowVisible, visibleHours, fullHeight } = useMemo(() => {
+  const { minTime, maxTime, visibleHours } = useMemo(() => {
     const startMinutes = parseClockMinutes(dayStart);
     const endMinutes = parseClockMinutes(dayEnd);
     const rawDiff = (endMinutes - startMinutes + (24 * 60)) % (24 * 60);
     const diffMinutes = rawDiff === 0 ? 24 * 60 : rawDiff;
     const safeEndMinutes = startMinutes + diffMinutes;
     const visibleHours = Math.max(1, Math.ceil(diffMinutes / 60));
-    const rangeStart = startMinutes;
-    const rangeEnd = safeEndMinutes;
 
     const today = new Date();
     const minDate = new Date(today);
@@ -101,61 +102,33 @@ const MiniCalendarPreview = ({ tasks, events, useFullHeight = false }: MiniCalen
     const maxDate = new Date(today);
     maxDate.setHours(Math.floor(safeEndMinutes / 60), safeEndMinutes % 60, 0, 0);
 
-    // Match preview height to rendered grid rows to avoid trailing blank space.
-    const slotGroupHeight = 24;
-    const headerHeight = 32;
-    const nextHeight = Math.max(
-      220,
-      (visibleHours * slotGroupHeight) + headerHeight,
-    );
-    const nextFullHeight = (visibleHours * slotGroupHeight) + headerHeight;
-
-    const now = new Date();
-    let nowMinutes = (now.getHours() * 60) + now.getMinutes();
-    if (rangeEnd > (24 * 60) && nowMinutes < rangeStart) {
-      nowMinutes += 24 * 60;
-    }
-    const nextIsNowVisible = nowMinutes >= rangeStart && nowMinutes < rangeEnd;
-
     return {
       minTime: minDate,
       maxTime: maxDate,
-      previewHeight: nextHeight,
-      isNowVisible: nextIsNowVisible,
       visibleHours,
-      fullHeight: nextFullHeight,
     };
   }, [dayEnd, dayStart]);
 
-  const eventPropGetter: EventPropGetter<MiniCalendarEntry> = (entry) => {
-    const className = [
-      "event-slot",
-      entry.kind === "event" ? "is-event" : "",
-      "is-onego",
-    ]
-      .filter(Boolean)
-      .join(" ");
-
-    const overrideColour =
-      entry.kind === "task"
-        ? getOverrideColour(entry.categories)
-        : getOverrideColour(entry.eventData?.categories);
-
-    const style: CSSProperties = {};
-    if (overrideColour) {
-      style.backgroundColor = hexToRgba(overrideColour, 0.5);
-      style.borderLeft = `4px solid ${overrideColour}`;
-      (style as Record<string, string>)["--event-stripe-color"] = hexToRgba(overrideColour, 0.6);
-      style.color = "#000000";
+  const sizingVars = useMemo(() => {
+    const headerHeight = 32;
+    if (!containerHeight) {
+      return {
+        "--mini-header-height": `${headerHeight}px`,
+      } as CSSProperties;
     }
-
-    return { className, style };
-  };
+    const rawHourHeight = (containerHeight - headerHeight) / visibleHours;
+    const hourHeight = Math.max(12, rawHourHeight);
+    return {
+      "--mini-header-height": `${headerHeight}px`,
+      "--mini-hour-height": `${hourHeight.toFixed(3)}px`,
+    } as CSSProperties;
+  }, [containerHeight, visibleHours]);
 
   return (
     <div
-      className={`mini-calendar-preview pointer-events-none ${isNowVisible ? "" : "hide-now-indicator"}`}
-      style={{ "--mini-visible-hours": String(visibleHours) } as CSSProperties}
+      className="mini-calendar-preview h-full w-full overflow-hidden"
+      style={sizingVars}
+      ref={containerRef}
     >
       <Calendar
         localizer={localizer}
@@ -170,8 +143,8 @@ const MiniCalendarPreview = ({ tasks, events, useFullHeight = false }: MiniCalen
         max={maxTime}
         step={60}
         timeslots={1}
-        eventPropGetter={eventPropGetter}
-        style={{ height: useFullHeight ? `${fullHeight}px` : previewHeight }}
+        showAllDay={false}
+        style={{ height: "100%" }}
       />
     </div>
   );

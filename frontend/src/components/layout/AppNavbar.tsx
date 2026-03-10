@@ -8,7 +8,7 @@ import { type Notification } from '@/types/notification'
 import AdminSidebar from "@/components/layout/AdminSidebar"
 
 const navItems = [
-  { label: "Dashboard", to: "/dashboard" },
+  { label: "Overview", to: "/dashboard" },
   { label: "Calendar", to: "/calendar" },
   { label: "Tasks", to: "/tasks" },
   { label: "Events", to: "/events" },
@@ -100,7 +100,7 @@ export default function AppNavbar() {
               <span className="material-icons mr-1 leading-none" style={{ fontSize: "20px" }}>account_circle</span>
               Account
             </MenuButton>
-            <MenuItems className="absolute right-0 mt-2 w-44 origin-top-right rounded-lg border border-gray-200 bg-white shadow-lg focus:outline-none">
+            <MenuItems className="absolute right-0 top-full mt-2 w-44 origin-top-right rounded-lg border border-gray-200 bg-white shadow-lg focus:outline-none z-50">
               <div className="py-1">
                 <MenuItem>
                   {({ focus }) => (

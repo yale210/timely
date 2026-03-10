@@ -12,7 +12,7 @@ const AppLayout = ({ children, showNavbar = true, disableMainScroll = false }: A
     <div className="bg-white text-black transition-colors duration-200 h-screen flex flex-col">
       {showNavbar && <AppNavbar />}
       <div className="app-shell flex-1 flex flex-col min-w-0">
-        <main className={`flex-1 flex flex-col min-w-0 bg-white ${disableMainScroll ? "overflow-hidden" : "overflow-auto"} ${showNavbar ? "pt-10" : ""}`}>
+        <main className={`flex-1 flex flex-col min-w-0 bg-white overflow-x-hidden ${disableMainScroll ? "overflow-hidden" : "overflow-auto"} ${showNavbar ? "pt-10" : ""}`}>
           {children}
         </main>
       </div>
