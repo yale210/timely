@@ -56,6 +56,9 @@ class Preference(models.Model):
         if self.timezone not in available_timezones():
             raise ValidationError({"timezone": "Timezone is not valid"})
 
+        if self.day_start == self.day_end:
+            raise ValidationError({"day_end": "Day start and end must be different."})
+
         user_timezone = ZoneInfo(self.timezone)
         today = timezone.now().astimezone(user_timezone).date()
 
