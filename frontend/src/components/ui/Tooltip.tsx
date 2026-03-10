@@ -25,8 +25,8 @@ const Tooltip = ({ content, children }: TooltipProps) => {
       const tooltipRect = tooltipRef.current.getBoundingClientRect();
       const padding = 8;
       let left = rect.left + rect.width / 2 - tooltipRect.width / 2;
-      const gap = 2;
-      let top = rect.bottom - tooltipRect.height - gap;
+      const gap = 6;
+      let top = rect.top - tooltipRect.height - gap;
 
       left = Math.max(padding, Math.min(left, window.innerWidth - tooltipRect.width - padding));
       top = Math.max(padding, Math.min(top, window.innerHeight - tooltipRect.height - padding));

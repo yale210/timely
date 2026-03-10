@@ -36,13 +36,13 @@ const SettingsContent = ({
     {
       key: "gradebook",
       label: "Gradebook",
-      description: "Show Gradebook in the navigation and dashboard.",
+      description: "Track and review your grades over time.",
       value: featureFlags.gradebook,
     },
     {
       key: "weeklySummaries",
       label: "Weekly Summaries",
-      description: "Show Weekly Summaries in the navigation.",
+      description: "View weekly statistics about your tasks and productivity.",
       value: featureFlags.weeklySummaries,
     },
   ]), [featureFlags]);

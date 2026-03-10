@@ -1,7 +1,8 @@
-import { TaskListSection, TaskSidebar } from "@/components";
+import { TaskListSection, UnifiedSidebar } from "@/components";
 import TaskListToolbar from "@/components/tasks/TaskListToolbar";
 import { useTaskList } from "@/hooks/tasks/useTaskList";
 import AppLayout from "@/layouts/AppLayout";
+import * as eventService from "@/services/eventService";
 
 const TaskList = () => {
   const { state, loading, error, actions } = useTaskList();
@@ -94,9 +95,11 @@ const TaskList = () => {
 
       </div>
 
-      <TaskSidebar
+      <UnifiedSidebar
         isOpen={isSidebarOpen}
         onClose={actions.closeSidebar}
+        initialMode="task"
+        showModeToggle={true}
         categories={categories}
         onCreateCategory={actions.createCategory}
         onUpdateCategory={actions.updateCategory}
@@ -104,11 +107,16 @@ const TaskList = () => {
         onCategoryChange={(id, nextCategories) => {
           void actions.updateTaskCategories(id, nextCategories);
         }}
-        onSubmit={(data) => {
+        onSubmitTask={(data) => {
           void actions.submitTask(data);
         }}
-        onDelete={(id) => {
-          void actions.deleteTask(id);
+        onSubmitEvent={(data) => {
+          void eventService.createEvent(data);
+        }}
+        onDelete={() => {
+          if (selectedTask?.id) {
+            void actions.deleteTask(selectedTask.id);
+          }
         }}
         initialData={selectedTask}
       />

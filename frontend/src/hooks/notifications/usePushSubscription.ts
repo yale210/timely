@@ -72,6 +72,19 @@ export const usePushSubscription = (): UsePushSubscriptionReturn => {
     setLoading(true);
     setError(null);
     try {
+      if (Notification.permission === "default") {
+        const permissionResult = await Notification.requestPermission();
+        setPermission(permissionResult);
+        if (permissionResult !== "granted") {
+          setIsSubscribed(false);
+          return;
+        }
+      }
+      if (Notification.permission === "denied") {
+        setPermission("denied");
+        setIsSubscribed(false);
+        return;
+      }
       await subscribeUserToPush();
       setPermission(getPermission());
       const subscribed = await checkSubscription();

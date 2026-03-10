@@ -105,7 +105,7 @@ const TaskForm = ({
   const [deadline, setDeadline] = useState(
     initialData?.deadline
       ? new Date(initialData.deadline).toISOString().split("T")[0]
-      : new Date().toISOString().split("T")[0]
+      : ""
   );
   const [deadlineTime, setDeadlineTime] = useState(
     initialData?.deadline
@@ -114,14 +114,16 @@ const TaskForm = ({
           minute: "2-digit",
           hour12: false,
         })
-      : "11:00"
+      : ""
   );
+  const [hasSubmitted, setHasSubmitted] = useState(false);
+  const [hasTouchedTime, setHasTouchedTime] = useState(false);
   const [selectedCategories, setSelectedCategories] = useState<number[]>(
     initialData?.categories?.map((c) => (typeof c === "object" ? c.id : c)) ?? []
   );
   const [importance, setImportance] = useState(initialData?.importance ?? 5);
-  const [estimatedMinutes, setEstimatedMinutes] = useState(
-    initialData?.estimated_minutes ?? 60
+  const [estimatedMinutes, setEstimatedMinutes] = useState<number | "">(
+    initialData?.estimated_minutes ?? ""
   );
 
   // Derived Validation
@@ -131,9 +133,10 @@ const TaskForm = ({
   const isEndInvalid = Number.isNaN(endDateTime.getTime());
   const isTimeInvalid = isStartInvalid || isEndInvalid || startDateTime >= endDateTime;
   const isImportanceInvalid = importance < 1 || importance > 10 || isNaN(importance);
+  const shouldValidateTime = hasSubmitted || hasTouchedTime;
   
   const errors: Record<string, boolean> = {};
-  if (isTimeInvalid) {
+  if (shouldValidateTime && isTimeInvalid) {
     errors.start = true;
     errors.deadline = true;
   }
@@ -142,6 +145,7 @@ const TaskForm = ({
   }
   
   const hasErrors = Object.keys(errors).length > 0;
+  const hasBlockingErrors = isTimeInvalid || isImportanceInvalid;
 
   const buildSubmission = (): TaskSubmission => ({
     title,
@@ -165,7 +169,8 @@ const TaskForm = ({
 
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
-    if (hasErrors || !hasChanges) return;
+    setHasSubmitted(true);
+    if (hasBlockingErrors || !hasChanges) return;
 
     const data = buildSubmission();
     onSubmit(data);
@@ -184,7 +189,7 @@ const TaskForm = ({
           <input
             id="task-title"
             className={baseInputClass}
-            placeholder="e.g., Marketing Sync"
+            placeholder="Task title"
             type="text"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
@@ -197,37 +202,33 @@ const TaskForm = ({
             <label htmlFor="task-start-date" className="block text-sm font-medium text-gray-700 mb-2">
               Start Date
             </label>
-            <div className="relative">
-              <span className="material-icons absolute left-3 top-2.5 text-gray-400 text-lg">
-                calendar_today
-              </span>
-              <input
-                id="task-start-date"
-                className={`${baseInputClass} pl-10 ${errors.start ? errorClass : ""}`}
-                type="date"
-                value={date}
-                onChange={(e) => setDate(e.target.value)}
-                required
-              />
-            </div>
+            <input
+              id="task-start-date"
+              className={`${baseInputClass} text-[17px] ${errors.start ? errorClass : ""}`}
+              type="date"
+              value={date}
+              onChange={(e) => {
+                setHasTouchedTime(true);
+                setDate(e.target.value);
+              }}
+              required
+            />
           </div>
           <div>
             <label htmlFor="task-start-time" className="block text-sm font-medium text-gray-700 mb-2">
               Start Time
             </label>
-            <div className="relative">
-              <span className="material-icons absolute left-3 top-2.5 text-gray-400 text-lg">
-                schedule
-              </span>
-              <input
-                id="task-start-time"
-                className={`${baseInputClass} pl-10 ${errors.start ? errorClass : ""}`}
-                type="time"
-                value={startTime}
-                onChange={(e) => setStartTime(e.target.value)}
-                required
-              />
-            </div>
+            <input
+              id="task-start-time"
+              className={`${baseInputClass} text-[17px] ${errors.start ? errorClass : ""}`}
+              type="time"
+              value={startTime}
+              onChange={(e) => {
+                setHasTouchedTime(true);
+                setStartTime(e.target.value);
+              }}
+              required
+            />
           </div>
         </div>
 
@@ -236,79 +237,39 @@ const TaskForm = ({
             <label htmlFor="task-deadline-date" className="block text-sm font-medium text-gray-700 mb-2">
               Deadline Date
             </label>
-            <div className="relative">
-              <span className="material-icons absolute left-3 top-2.5 text-gray-400 text-lg">
-                event
-              </span>
-              <input
-                id="task-deadline-date"
-                className={`${baseInputClass} pl-10 ${errors.deadline ? errorClass : ""}`}
-                type="date"
-                value={deadline}
-                onChange={(e) => setDeadline(e.target.value)}
-                required
-              />
-            </div>
+            <input
+              id="task-deadline-date"
+              className={`${baseInputClass} text-[17px] ${errors.deadline ? errorClass : ""}`}
+              type="date"
+              value={deadline}
+              onChange={(e) => {
+                setHasTouchedTime(true);
+                setDeadline(e.target.value);
+              }}
+            />
           </div>
           <div>
             <label htmlFor="task-deadline-time" className="block text-sm font-medium text-gray-700 mb-2">
               Deadline Time
             </label>
-            <div className="relative">
-              <span className="material-icons absolute left-3 top-2.5 text-gray-400 text-lg">
-                timer
-              </span>
-              <input
-                id="task-deadline-time"
-                className={`${baseInputClass} pl-10 ${errors.deadline ? errorClass : ""}`}
-                type="time"
-                value={deadlineTime}
-                onChange={(e) => setDeadlineTime(e.target.value)}
-                required
-              />
-            </div>
+            <input
+              id="task-deadline-time"
+              className={`${baseInputClass} text-[17px] ${errors.deadline ? errorClass : ""}`}
+              type="time"
+              value={deadlineTime}
+              onChange={(e) => {
+                setHasTouchedTime(true);
+                setDeadlineTime(e.target.value);
+              }}
+            />
           </div>
         </div>
 
         {errors.deadline && (
           <p className="text-xs text-red-500 -mt-4">
-            Start time must be before the deadline.
+            {deadline ? "Start time must be before the deadline." : "Please set a deadline."}
           </p>
         )}
-
-        <div>
-          <label htmlFor="task-description" className="block text-sm font-medium text-gray-700 mb-2">
-            Description
-          </label>
-          <textarea
-            id="task-description"
-            className={`${baseInputClass} resize-none`}
-            placeholder="Add details..."
-            rows={4}
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-          />
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-3">
-            Category
-          </label>
-          <CategoryMultiSelect
-            categories={categories}
-            selectedIds={selectedCategories}
-            onChange={(nextCategories) => {
-              setSelectedCategories(nextCategories);
-              if (initialData?.id && onCategoryChange) {
-                onCategoryChange(nextCategories);
-              }
-            }}
-            onCreateCategory={onCreateCategory}
-            onUpdateCategory={onUpdateCategory}
-            onDeleteCategory={onDeleteCategory}
-            variant="task"
-          />
-        </div>
 
         <div className="grid grid-cols-2 gap-4">
           <div>
@@ -335,10 +296,49 @@ const TaskForm = ({
               type="number"
               min="1"
               value={estimatedMinutes}
-              onChange={(e) => setEstimatedMinutes(parseInt(e.target.value))}
+              onChange={(e) => {
+                const nextValue = e.target.value;
+                setEstimatedMinutes(nextValue ? parseInt(nextValue) : "");
+              }}
+              required
             />
           </div>
         </div>
+
+        <div>
+          <label htmlFor="task-description" className="block text-sm font-medium text-gray-700 mb-2">
+            Description <span className="text-gray-400">(optional)</span>
+          </label>
+          <textarea
+            id="task-description"
+            className={`${baseInputClass} resize-none`}
+            placeholder=""
+            rows={4}
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-3">
+            Category <span className="text-gray-400">(optional)</span>
+          </label>
+          <CategoryMultiSelect
+            categories={categories}
+            selectedIds={selectedCategories}
+            onChange={(nextCategories) => {
+              setSelectedCategories(nextCategories);
+              if (initialData?.id && onCategoryChange) {
+                onCategoryChange(nextCategories);
+              }
+            }}
+            onCreateCategory={onCreateCategory}
+            onUpdateCategory={onUpdateCategory}
+            onDeleteCategory={onDeleteCategory}
+            variant="task"
+          />
+        </div>
+
       </div>
 
       <div className="p-6 border-t border-gray-200 flex gap-3 bg-gray-50">
@@ -351,9 +351,9 @@ const TaskForm = ({
         </button>
         <button
           type="submit"
-          disabled={hasErrors || !hasChanges}
+          disabled={!hasChanges}
           className={`flex-1 px-4 py-2 text-white font-medium rounded-lg shadow-md transition-all flex items-center justify-center gap-2 ${
-            hasErrors || !hasChanges
+            !hasChanges
               ? "bg-gray-400 cursor-not-allowed"
               : "bg-primary hover:bg-blue-300 hover:shadow-lg"
           }`}

@@ -415,10 +415,12 @@ const CalendarPage = ({ showNavbar = true, useLayout = true }: CalendarPageProps
   const handleSelectSlot = ({
     start,
     end,
+    slots,
     action,
   }: {
     start: Date;
     end: Date;
+    slots?: Date[];
     action: "select" | "click" | "doubleClick";
   }) => {
     if (isSidebarOpen && action !== "select") {
@@ -427,14 +429,21 @@ const CalendarPage = ({ showNavbar = true, useLayout = true }: CalendarPageProps
     if (!start) {
       return;
     }
-    const safeEnd = end ?? start;
+    const slotStart = slots && slots.length > 0 ? slots[0] : start;
+    let slotEnd = end ?? slotStart;
+    if (slots && slots.length > 0) {
+      slotEnd = slots[slots.length - 1];
+    }
+    if (slotEnd <= slotStart) {
+      slotEnd = new Date(slotStart.getTime() + 60 * 60 * 1000);
+    }
     setSidebarMode("event");
     setSelectedItem({
       id: 0,
       title: "",
       description: "",
-      start_time: start.toISOString(),
-      end_time: safeEnd.toISOString(),
+      start_time: slotStart.toISOString(),
+      end_time: slotEnd.toISOString(),
       location: "",
       recurrence_interval: null,
       recurrence_end: null,

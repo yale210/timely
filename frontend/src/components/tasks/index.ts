@@ -1,5 +1,4 @@
 export { default as TaskForm } from "./TaskForm";
-export { default as TaskSidebar } from "./TaskSidebar";
 export { default as TaskCard } from "./TaskCard";
 export { default as TaskListSection } from "./TaskListSection";
 export { default as UnifiedSidebar } from "./UnifiedSidebar";
