@@ -31,6 +31,7 @@ export interface Task {
   description?: string;
   start_time: string;
   deadline: string;
+  colour?: string | null;
   importance: number;
   completed: boolean;
   categories: Category[];
@@ -71,6 +72,7 @@ export interface Event {
   location?: string;
   start_time: string;
   end_time: string;
+  colour?: string | null;
   categories: Category[];
   recurrence_interval?: "daily" | "weekly" | "monthly" | "yearly" | null;
   recurrence_end?: string | null;

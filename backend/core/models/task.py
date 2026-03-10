@@ -28,6 +28,7 @@ class Task(models.Model):
         blank=True,
         related_name="tasks",
     )
+    colour = models.CharField(max_length=7, blank=True, null=True)
 
     estimated_minutes = models.PositiveIntegerField(validators=[MinValueValidator(1)])
     start_time = models.DateTimeField()

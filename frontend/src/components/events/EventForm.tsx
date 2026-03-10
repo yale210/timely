@@ -1,5 +1,6 @@
-import { useState, useEffect, type FormEvent } from "react";
-import { CategoryMultiSelect, Tooltip } from "@/components";
+import { useState, useEffect, useRef, type FormEvent } from "react";
+import { CategoryColourPicker, CategoryMultiSelect, Tooltip } from "@/components";
+import { getOverrideColour } from "@/utils/colorUtils";
 import { type Category, type Event, type EventSubmission } from "@/types";
 import { usePushSubscription } from "@/hooks/notifications/usePushSubscription";
 import { getServerTime } from "@/services/eventService";
@@ -31,6 +32,7 @@ interface NormalisedEventSubmission {
   location: string;
   start_time: string;
   end_time: string;
+  colour: string;
   categories: number[];
   recurrence_interval: Event["recurrence_interval"];
   recurrence_end: string | null;
@@ -83,6 +85,7 @@ const normaliseEventSubmission = (
   location: submission.location ?? "",
   start_time: submission.start_time ?? "",
   end_time: submission.end_time ?? "",
+  colour: submission.colour ?? "",
   categories: [...(submission.categories ?? [])].sort((a, b) => a - b),
   recurrence_interval: submission.recurrence_interval ?? null,
   recurrence_end: submission.recurrence_end ?? null,
@@ -207,6 +210,31 @@ const EventForm = ({
   const [selectedCategories, setSelectedCategories] = useState<number[]>(
     initialData?.categories?.map((c) => (typeof c === "object" ? c.id : c)) ?? []
   );
+  const defaultColour = "#f97316";
+  const [colour, setColour] = useState(initialData?.colour ?? defaultColour);
+  const [showPickerMenu, setShowPickerMenu] = useState(false);
+  const [pickerPosition, setPickerPosition] = useState<{ top: number; left: number } | null>(null);
+  const pickerRef = useRef<HTMLDivElement | null>(null);
+  const [colourInput, setColourInput] = useState(colour);
+  const [colourError, setColourError] = useState<string | null>(null);
+  const selectedCategoryObjects = categories.filter((category) =>
+    selectedCategories.includes(category.id),
+  );
+  const overrideColour = getOverrideColour(selectedCategoryObjects);
+  const isColourLocked = Boolean(overrideColour);
+  const displayColour = overrideColour ?? colour;
+  const parseColourInput = (value: string): string | null => {
+    const trimmed = value.trim().toLowerCase();
+    if (trimmed.startsWith("#") && trimmed.length === 7) {
+      return trimmed;
+    }
+    const match = /^rgb\(\s*(\d{1,3})\s*,\s*(\d{1,3})\s*,\s*(\d{1,3})\s*\)$/
+      .exec(trimmed);
+    if (!match) return null;
+    const [r, g, b] = match.slice(1).map((v) => Math.min(255, Math.max(0, Number(v))));
+    const toHex = (n: number) => n.toString(16).padStart(2, "0");
+    return `#${toHex(r)}${toHex(g)}${toHex(b)}`;
+  };
   
   const [recurrenceEnabled, setRecurrenceEnabled] = useState(
     Boolean(initialData?.recurrence_interval)
@@ -305,6 +333,7 @@ const EventForm = ({
     location,
     start_time: safeToISOString(startDateTime),
     end_time: safeToISOString(endDateTime),
+    colour,
     categories: selectedCategories,
     recurrence_interval: (recurrenceInterval as Event["recurrence_interval"]) ?? null,
     recurrence_end: recurrenceEnd || null,
@@ -314,6 +343,49 @@ const EventForm = ({
       minutes_before: toMinutesBefore(r.value, r.unit),
     })),
   });
+
+  useEffect(() => {
+    if (!showPickerMenu) return;
+    setColourInput(displayColour);
+    setColourError(null);
+  }, [displayColour, showPickerMenu]);
+
+  useEffect(() => {
+    if (!showPickerMenu) return;
+    const handleOutsideClick = (event: MouseEvent) => {
+      if (pickerRef.current?.contains(event.target as Node)) return;
+      setShowPickerMenu(false);
+    };
+    const raf = window.requestAnimationFrame(() => {
+      if (!pickerRef.current || !pickerPosition) return;
+      const rect = pickerRef.current.getBoundingClientRect();
+      const padding = 8;
+      let nextLeft = pickerPosition.left;
+      let nextTop = pickerPosition.top;
+
+      if (rect.right > window.innerWidth - padding) {
+        nextLeft = Math.max(padding, window.innerWidth - rect.width - padding);
+      }
+      if (rect.left < padding) {
+        nextLeft = padding;
+      }
+      if (rect.bottom > window.innerHeight - padding) {
+        nextTop = Math.max(padding, window.innerHeight - rect.height - padding);
+      }
+      if (rect.top < padding) {
+        nextTop = padding;
+      }
+
+      if (nextLeft !== pickerPosition.left || nextTop !== pickerPosition.top) {
+        setPickerPosition({ left: nextLeft, top: nextTop });
+      }
+    });
+    window.addEventListener("mousedown", handleOutsideClick);
+    return () => {
+      window.cancelAnimationFrame(raf);
+      window.removeEventListener("mousedown", handleOutsideClick);
+    };
+  }, [pickerPosition, showPickerMenu]);
 
   const normalisedCurrentSubmission = normaliseEventSubmission(buildSubmission());
   const [initialSubmission] = useState<NormalisedEventSubmission>(
@@ -401,9 +473,44 @@ const EventForm = ({
         )}
 
         <div>
-          <label htmlFor="event-title" className="block text-sm font-medium text-gray-700 mb-2">
-            Title
-          </label>
+          <div className="flex items-center justify-between gap-4 mb-2">
+            <label htmlFor="event-title" className="block text-sm font-medium text-gray-700">
+              Title
+            </label>
+            <div className="flex items-center">
+              {isColourLocked ? (
+                <Tooltip content="Category colour override set. To set a custom colour, uncheck category colour override.">
+                  <button
+                  type="button"
+                  disabled={isColourLocked}
+                onClick={(event) => {
+                  if (isColourLocked) return;
+                  const rect = (event.currentTarget as HTMLButtonElement).getBoundingClientRect();
+                  setPickerPosition({ top: rect.bottom + 8, left: rect.right - 272 });
+                  setShowPickerMenu((prev) => !prev);
+                }}
+                className="h-7 w-7 rounded-md border border-gray-300 p-0.5 disabled:cursor-not-allowed"
+                style={{ backgroundColor: isColourLocked ? "#e2e8f0" : displayColour }}
+                aria-label="Event colour"
+                  />
+                </Tooltip>
+              ) : (
+                <button
+                  type="button"
+                  disabled={isColourLocked}
+                  onClick={(event) => {
+                    if (isColourLocked) return;
+                    const rect = (event.currentTarget as HTMLButtonElement).getBoundingClientRect();
+                    setPickerPosition({ top: rect.bottom + 8, left: rect.right - 272 });
+                    setShowPickerMenu((prev) => !prev);
+                  }}
+                  className="h-7 w-7 rounded-md border border-gray-300 p-0.5 disabled:cursor-not-allowed"
+                  style={{ backgroundColor: isColourLocked ? "#e2e8f0" : displayColour }}
+                  aria-label="Event colour"
+                />
+              )}
+            </div>
+          </div>
           <input
             id="event-title"
             className={baseInputClass}
@@ -716,6 +823,34 @@ const EventForm = ({
           Save Event
         </button>
       </div>
+
+      <CategoryColourPicker
+        isOpen={showPickerMenu}
+        position={pickerPosition}
+        pickerRef={pickerRef}
+        colourInput={colourInput}
+        colourError={colourError}
+        currentColour={displayColour}
+        onColourInputChange={setColourInput}
+        onColourErrorChange={setColourError}
+        onCommitInput={() => {
+          const parsed = parseColourInput(colourInput);
+          if (!parsed) {
+            setColourError("Enter a valid hex or rgb colour.");
+            return;
+          }
+          setColourInput(parsed);
+        }}
+        onSelect={() => {
+          const parsed = parseColourInput(colourInput);
+          if (!parsed) {
+            setColourError("Enter a valid hex or rgb colour.");
+            return;
+          }
+          setColour(parsed);
+          setShowPickerMenu(false);
+        }}
+      />
     </form>
   );
 };

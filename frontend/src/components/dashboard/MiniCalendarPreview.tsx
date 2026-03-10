@@ -16,6 +16,7 @@ interface MiniCalendarEntry {
   allDay: boolean;
   kind: "task" | "event";
   categories?: Task["categories"] | Event["categories"];
+  colour?: string | null;
 }
 
 interface MiniCalendarPreviewProps {
@@ -81,6 +82,7 @@ const MiniCalendarPreview = ({ tasks, events }: MiniCalendarPreviewProps) => {
         allDay: false,
         kind: "task",
         categories: task.categories,
+        colour: task.colour ?? null,
       }));
     }),
     ...events.map((event) => ({
@@ -91,6 +93,7 @@ const MiniCalendarPreview = ({ tasks, events }: MiniCalendarPreviewProps) => {
       allDay: false,
       kind: "event",
       categories: event.categories,
+      colour: event.colour ?? null,
     })),
   ];
 
@@ -156,11 +159,13 @@ const MiniCalendarPreview = ({ tasks, events }: MiniCalendarPreviewProps) => {
             entry.kind === "task"
               ? getOverrideColour(entry.categories as Task["categories"])
               : getOverrideColour(entry.categories as Event["categories"]);
-          if (!overrideColour) return {};
+          const fallbackColour = entry.colour ?? (entry.kind === "task" ? "#3b82f6" : "#f97316");
+          const appliedColour = overrideColour ?? fallbackColour;
+          if (!appliedColour) return {};
           return {
             style: {
-              backgroundColor: hexToRgba(overrideColour, 0.5),
-              borderLeft: `3px solid ${overrideColour}`,
+              backgroundColor: hexToRgba(appliedColour, 0.5),
+              borderLeft: `3px solid ${appliedColour}`,
               color: "#000000",
             },
           };

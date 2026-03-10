@@ -117,7 +117,7 @@ export const CategoryActionsMenu = ({
         />
         <span className="flex items-center gap-1">
           Colour override
-          <Tooltip content="When enabled, tasks/events using this category inherit its colour.">
+          <Tooltip content="When enabled, this category overrides the current task/event colour.">
             <span
               className="inline-flex h-5 w-5 items-center justify-center rounded-full border border-gray-300 text-[11px] font-semibold text-gray-600 ml-2 cursor-help"
             >

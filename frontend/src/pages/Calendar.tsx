@@ -1000,23 +1000,24 @@ const CalendarPage = ({ showNavbar = true, useLayout = true }: CalendarPageProps
                   event.kind === "task"
                     ? getOverrideColour(event.categories)
                     : getOverrideColour(event.eventData?.categories);
+                const fallbackColour =
+                  event.kind === "task"
+                    ? event.taskData?.colour ?? "#3b82f6"
+                    : event.eventData?.colour ?? "#f97316";
+                const appliedColour = overrideColour ?? fallbackColour;
 
                 const style: CSSProperties = {};
                 if (event.kind === "task" && typeof event.scheduleIndex === "number") {
                   style.animationDelay = `${event.scheduleIndex * 120}ms`;
                 }
-                if (overrideColour) {
-                  style.backgroundColor = hexToRgba(overrideColour, 0.5);
-                  style.borderLeft = `4px solid ${overrideColour}`;
+                if (appliedColour) {
+                  style.backgroundColor = hexToRgba(appliedColour, 0.5);
+                  style.borderLeft = `4px solid ${appliedColour}`;
                   (style as Record<string, string>)["--event-stripe-color"] = hexToRgba(
-                    overrideColour,
+                    appliedColour,
                     0.6,
                   );
                   style.color = "#000000";
-                } else if (event.kind === "task") {
-                  style.borderLeft = "4px solid #3b82f6";
-                } else {
-                  style.borderLeft = "4px solid #f97316";
                 }
 
                 return { className, style };
