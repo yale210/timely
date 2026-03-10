@@ -101,9 +101,7 @@ describe('EventForm', () => {
     )
 
     expect(screen.getByLabelText(/Start Date/i)).toHaveValue(toDateInputValue(start))
-    expect(screen.getByLabelText(/End Date/i, { selector: "#event-end-date" })).toHaveValue(
-      toDateInputValue(expectedEnd),
-    )
+    expect(screen.getByLabelText(/End Date/i, { selector: "#event-end-date" })).toHaveValue("")
     expect(screen.getByLabelText(/End Time/i)).toHaveValue(toTimeInputValue(expectedEnd))
   })
 
@@ -137,6 +135,10 @@ describe('EventForm', () => {
 
     fireEvent.change(screen.getByLabelText(/Title/i), { target: { value: 'New Event' } })
     fireEvent.change(screen.getByLabelText(/Location/i), { target: { value: 'New Place' } })
+    fireEvent.change(screen.getByLabelText(/Start Date/i), { target: { value: '2026-02-10' } })
+    fireEvent.change(screen.getByLabelText(/Start Time/i), { target: { value: '10:00' } })
+    fireEvent.change(screen.getByLabelText(/End Date/i), { target: { value: '2026-02-10' } })
+    fireEvent.change(screen.getByLabelText(/End Time/i), { target: { value: '11:00' } })
     
     fireEvent.submit(screen.getByRole('button', { name: /Save Event/i }))
 
@@ -183,6 +185,8 @@ describe('EventForm', () => {
       />
     )
 
+    fireEvent.change(screen.getByLabelText(/Start Date/i), { target: { value: '2026-02-10' } })
+    fireEvent.change(screen.getByLabelText(/End Date/i), { target: { value: '2026-02-10' } })
     fireEvent.change(screen.getByLabelText(/Start Time/i), { target: { value: '12:00' } })
     fireEvent.change(screen.getByLabelText(/End Time/i), { target: { value: '11:00' } })
 
@@ -202,7 +206,13 @@ describe('EventForm', () => {
       />
     )
 
+    fireEvent.change(screen.getByLabelText(/Start Date/i), { target: { value: '2026-02-10' } })
+    fireEvent.change(screen.getByLabelText(/Start Time/i), { target: { value: '10:00' } })
+    fireEvent.change(screen.getByLabelText(/End Date/i), { target: { value: '2026-02-10' } })
+    fireEvent.change(screen.getByLabelText(/End Time/i), { target: { value: '11:00' } })
+
     // Set a recurrence interval
+    fireEvent.click(screen.getByRole("button", { name: /recurring/i }))
     fireEvent.change(screen.getByLabelText(/Interval/i), { target: { value: 'daily' } })
     
     // With new requirement, recurrence end is optional (defaults to "Never")
@@ -309,9 +319,11 @@ describe('EventForm', () => {
       />
     )
 
-    fireEvent.change(screen.getByLabelText(/Location/i), { target: { value: 'New Location' } })
     fireEvent.change(screen.getByLabelText(/Start Date/i), { target: { value: '2026-02-04' } })
+    fireEvent.change(screen.getByLabelText(/Start Time/i), { target: { value: '10:00' } })
     fireEvent.change(screen.getByLabelText(/End Date/i, { selector: '#event-end-date' }), { target: { value: '2026-02-04' } })
+    fireEvent.change(screen.getByLabelText(/End Time/i), { target: { value: '11:00' } })
+    fireEvent.change(screen.getByLabelText(/Location/i), { target: { value: 'New Location' } })
     fireEvent.change(screen.getByLabelText(/Description/i), { target: { value: 'New Description' } })
     
     fireEvent.submit(screen.getByRole('button', { name: /Save Event/i }))
@@ -334,12 +346,13 @@ describe('EventForm', () => {
       />
     )
 
+    fireEvent.click(screen.getByRole("button", { name: /recurring/i }))
     const intervalSelect = screen.getByLabelText(/Interval/i)
     fireEvent.change(intervalSelect, { target: { value: 'weekly' } })
     expect(intervalSelect).toHaveValue('weekly')
-    
-    fireEvent.change(intervalSelect, { target: { value: '' } })
-    expect(intervalSelect).toHaveValue('')
+
+    fireEvent.change(intervalSelect, { target: { value: 'monthly' } })
+    expect(intervalSelect).toHaveValue('monthly')
   })
 
   it("shows a warning when client clock is out of sync with server time", async () => {

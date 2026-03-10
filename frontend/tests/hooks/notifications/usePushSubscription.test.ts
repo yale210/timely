@@ -37,6 +37,7 @@ describe("usePushSubscription Hook", () => {
     Object.defineProperty(globalThis, "Notification", {
       value: {
         permission: "default",
+        requestPermission: vi.fn().mockResolvedValue("granted"),
       },
       configurable: true,
       writable: true,
@@ -94,6 +95,14 @@ describe("usePushSubscription Hook", () => {
   });
 
   it("handles subscribe failure", async () => {
+    Object.defineProperty(globalThis, "Notification", {
+      value: {
+        permission: "granted",
+        requestPermission: vi.fn().mockResolvedValue("granted"),
+      },
+      configurable: true,
+      writable: true,
+    });
     mockedSubscribeUserToPush.mockRejectedValue(new Error("Permission denied"));
     const { result } = renderHook(() => usePushSubscription());
 

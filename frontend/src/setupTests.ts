@@ -21,6 +21,13 @@ interface RechartsProps {
   children?: React.ReactNode;
 }
 
+const playMock = vi.fn().mockResolvedValue(undefined);
+Object.defineProperty(globalThis.HTMLMediaElement.prototype, "play", {
+  configurable: true,
+  writable: true,
+  value: playMock,
+});
+
 vi.mock("recharts", async () => {
   const original = await vi.importActual("recharts");
   const ResponsiveContainer: React.FC<RechartsProps> = ({ children }) =>

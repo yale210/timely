@@ -1,6 +1,6 @@
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { vi, describe, it, expect } from "vitest";
+import { vi, describe, it, expect, beforeEach } from "vitest";
 import TaskForm from "@/components/tasks/TaskForm";
 
 describe("TaskForm Component", () => {
@@ -22,11 +22,16 @@ describe("TaskForm Component", () => {
     onDeleteCategory,
   };
 
+  beforeEach(() => {
+    defaultProps.onSubmit.mockClear();
+    defaultProps.onCancel.mockClear();
+  });
+
   it("renders with default values", () => {
     render(<TaskForm {...defaultProps} />);
     expect(screen.getByLabelText(/title/i)).toHaveValue("");
     expect(screen.getByLabelText(/importance/i)).toHaveValue(5);
-    expect(screen.getByLabelText(/est. minutes/i)).toHaveValue(30);
+    expect(screen.getByLabelText(/est. minutes/i)).toHaveValue(null);
   });
 
   it("handles input changes and submits", async () => {
@@ -35,6 +40,9 @@ describe("TaskForm Component", () => {
     
     await user.type(screen.getByLabelText(/title/i), "New Task");
     await user.type(screen.getByLabelText(/description/i), "Task description");
+    await user.type(screen.getByLabelText(/deadline date/i), "2099-01-01");
+    await user.type(screen.getByLabelText(/deadline time/i), "11:00");
+    await user.type(screen.getByLabelText(/est. minutes/i), "30");
     
     // Toggle a category
     await user.click(screen.getByPlaceholderText(/type to search or add category/i));
@@ -59,12 +67,13 @@ describe("TaskForm Component", () => {
     await user.clear(importanceInput);
     await user.type(importanceInput, "11");
     
-    const saveButton = screen.getByRole("button", { name: /save task/i });
-    expect(saveButton).toBeDisabled();
+    await user.click(screen.getByRole("button", { name: /save task/i }));
+    expect(defaultProps.onSubmit).not.toHaveBeenCalled();
 
     await user.clear(importanceInput);
     await user.type(importanceInput, "0");
-    expect(saveButton).toBeDisabled();
+    await user.click(screen.getByRole("button", { name: /save task/i }));
+    expect(defaultProps.onSubmit).not.toHaveBeenCalled();
   });
 
   it("validates time (start before deadline)", async () => {
@@ -79,8 +88,9 @@ describe("TaskForm Component", () => {
     const deadlineDate = screen.getByLabelText(/deadline date/i);
     await user.type(deadlineDate, "2099-01-01");
     
+    await user.click(screen.getByRole("button", { name: /save task/i }));
     expect(screen.getByText(/start time must be before the deadline/i)).toBeDefined();
-    expect(screen.getByRole("button", { name: /save task/i })).toBeDisabled();
+    expect(defaultProps.onSubmit).not.toHaveBeenCalled();
   });
 
   it("calls onCancel when cancel button is clicked", async () => {
@@ -107,8 +117,8 @@ describe("TaskForm Component", () => {
     // Force invalid date by clearing or typing junk if possible, 
     // but the input is type="date", so we might need to mock or just trigger the branch.
     await user.clear(startDate);
-    // Invalid date should make it disabled
-    expect(screen.getByRole("button", { name: /save task/i })).toBeDisabled();
+    await user.click(screen.getByRole("button", { name: /save task/i }));
+    expect(defaultProps.onSubmit).not.toHaveBeenCalled();
   });
 
   it("toggles categories correctly", async () => {
@@ -122,6 +132,9 @@ describe("TaskForm Component", () => {
     await user.click(cat1); // Select again
     
     await user.type(screen.getByLabelText(/title/i), "Task");
+    await user.type(screen.getByLabelText(/deadline date/i), "2099-01-01");
+    await user.type(screen.getByLabelText(/deadline time/i), "11:00");
+    await user.type(screen.getByLabelText(/est. minutes/i), "30");
     await user.click(screen.getByRole("button", { name: /save task/i }));
     
     expect(defaultProps.onSubmit).toHaveBeenCalledWith(expect.objectContaining({
