@@ -11,7 +11,6 @@ const navItems = [
   { label: "Overview", to: "/dashboard" },
   { label: "Calendar", to: "/calendar" },
   { label: "Tasks", to: "/tasks" },
-  { label: "Events", to: "/events" },
 ]
 
 const featureItems = [
