@@ -27,7 +27,7 @@ const normaliseTaskSubmission = (
   deadline: submission.deadline ?? "",
   categories: [...(submission.categories ?? [])].sort((a, b) => a - b),
   importance: Number(submission.importance ?? 5),
-  estimated_minutes: Number(submission.estimated_minutes ?? 30),
+  estimated_minutes: Number(submission.estimated_minutes ?? 60),
   completed: Boolean(submission.completed),
 });
 
@@ -121,7 +121,7 @@ const TaskForm = ({
   );
   const [importance, setImportance] = useState(initialData?.importance ?? 5);
   const [estimatedMinutes, setEstimatedMinutes] = useState(
-    initialData?.estimated_minutes ?? 30
+    initialData?.estimated_minutes ?? 60
   );
 
   // Derived Validation

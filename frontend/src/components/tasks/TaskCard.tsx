@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { type Task } from "@/types";
 import { getOverrideColour, hexToRgba } from "@/utils/colorUtils";
+import completeSoundUrl from "@/assets/sounds/task-complete.mp3";
 
 interface TaskCardProps {
   task: Task;
@@ -20,6 +21,16 @@ const TaskCard = ({ task, onToggleComplete, onClick }: TaskCardProps) => {
   const [isHovered, setIsHovered] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
   const isOverdue = new Date(task.deadline) < new Date() && !task.completed;
+  const completeSound = useState(() => {
+    if (typeof Audio === "undefined") return null;
+    return new Audio(completeSoundUrl);
+  })[0];
+
+  const playCompleteSound = () => {
+    if (!completeSound) return;
+    completeSound.currentTime = 0;
+    void completeSound.play().catch(() => {});
+  };
 
   // Map importance to priority colour and label using ImportanceChoices levels
   const getImportanceInfo = (importance: number) => {
@@ -52,11 +63,17 @@ const TaskCard = ({ task, onToggleComplete, onClick }: TaskCardProps) => {
   const importanceInfo = getImportanceInfo(task.importance);
   const overrideColour = getOverrideColour(task.categories);
 
-  const formatTime = (isoString: string) => {
-    return new Date(isoString).toLocaleTimeString([], {
+  const formatDue = (isoString: string) => {
+    const date = new Date(isoString);
+    const dateText = date.toLocaleDateString([], {
+      month: "short",
+      day: "numeric",
+    });
+    const timeText = date.toLocaleTimeString([], {
       hour: "2-digit",
       minute: "2-digit",
     });
+    return `${dateText} ${timeText}`;
   };
 
   return (
@@ -78,6 +95,9 @@ const TaskCard = ({ task, onToggleComplete, onClick }: TaskCardProps) => {
             checked={task.completed}
             onClick={(e) => e.stopPropagation()}
             onChange={() => {
+              if (!task.completed) {
+                playCompleteSound();
+              }
               onToggleComplete(task.id);
             }}
             className="h-5 w-5 text-primary border-gray-300 rounded focus:ring-primary"
@@ -93,29 +113,26 @@ const TaskCard = ({ task, onToggleComplete, onClick }: TaskCardProps) => {
               >
                 {task.title}
               </span>
-              
-              <div className="flex items-center space-x-2 ml-2">
-                {task.estimated_minutes > 0 && (
-                  <span className="flex items-center px-2 py-0.5 rounded-full bg-gray-50 text-gray-600 text-[10px] font-semibold border border-gray-100">
-                    <span className="material-icons text-[12px] mr-1">schedule</span>
-                    {task.estimated_minutes}m
-                  </span>
-                )}
-                <span 
-                  className={`px-2 py-0.5 rounded-full text-[10px] font-semibold border transition-all duration-200 ${importanceInfo.colour}`}
-                >
-                  {isHovered ? task.importance : importanceInfo.label}
-                </span>
-              </div>
             </div>
-            <div className="flex items-center mt-1 space-x-3 text-xs text-gray-500">
+            <div className="flex flex-wrap items-center mt-1 gap-2 text-xs text-gray-500">
               <span
                 className={`flex items-center ${
                   isOverdue ? "text-red-500" : ""
                 }`}
               >
                 <span className="material-icons text-sm mr-1">event</span>
-                {isOverdue ? "Overdue" : formatTime(task.deadline)}
+                {isOverdue ? "Overdue" : formatDue(task.deadline)}
+              </span>
+              {task.estimated_minutes > 0 && (
+                <span className="flex items-center px-2 py-0.5 rounded-full bg-gray-50 text-gray-600 text-[10px] font-semibold border border-gray-100">
+                  <span className="material-icons text-[12px] mr-1">schedule</span>
+                  {task.estimated_minutes}m
+                </span>
+              )}
+              <span
+                className={`px-2 py-0.5 rounded-full text-[10px] font-semibold border transition-all duration-200 ${importanceInfo.colour}`}
+              >
+                {isHovered ? task.importance : importanceInfo.label}
               </span>
               <div className="flex gap-1 overflow-hidden">
                 {task.categories.map((cat) => (

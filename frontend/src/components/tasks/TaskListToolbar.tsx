@@ -17,6 +17,8 @@ interface TaskListToolbarProps {
   onCompletedChange: (value: TaskCompletionFilter) => void;
   onToggleHighImportance: () => void;
   onToggleQuickWins: () => void;
+  showSearch?: boolean;
+  containerClassName?: string;
 }
 
 const TaskListToolbar = ({
@@ -33,21 +35,25 @@ const TaskListToolbar = ({
   onCompletedChange,
   onToggleHighImportance,
   onToggleQuickWins,
+  showSearch = true,
+  containerClassName,
 }: TaskListToolbarProps) => {
   return (
-    <div className="px-6 pb-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-      <div className="relative w-full sm:w-96">
-        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-          <span className="material-icons text-gray-400">search</span>
+    <div className={containerClassName ?? "px-6 pb-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4"}>
+      {showSearch ? (
+        <div className="relative w-full sm:w-96">
+          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+            <span className="material-icons text-gray-400">search</span>
+          </div>
+          <input
+            type="text"
+            value={search}
+            onChange={(event) => onSearchChange(event.target.value)}
+            className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg leading-5 bg-white text-black placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary sm:text-sm transition-colors"
+            placeholder="Search tasks..."
+          />
         </div>
-        <input
-          type="text"
-          value={search}
-          onChange={(event) => onSearchChange(event.target.value)}
-          className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg leading-5 bg-white text-black placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary sm:text-sm transition-colors"
-          placeholder="Search tasks..."
-        />
-      </div>
+      ) : null}
       <div className="flex items-center space-x-2">
         <Menu as="div" className="relative">
           <MenuButton className="flex items-center px-3 py-1.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">

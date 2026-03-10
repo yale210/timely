@@ -12,6 +12,7 @@ interface TaskListSections {
   overdueTasks: Task[];
   todayTasks: Task[];
   upcomingTasks: Task[];
+  completedTasks: Task[];
   groupedUpcomingTasks: Record<string, Task[]>;
   sortedUpcomingDates: string[];
 }
@@ -273,8 +274,15 @@ const sections = useMemo<TaskListSections>(() => {
   );
 
   const upcomingTasks = filteredTasks.filter(
-    (task) => moment(task.deadline).isAfter(now) && !moment(task.deadline).isSame(now, "day"),
+    (task) =>
+      !task.completed
+      && moment(task.deadline).isAfter(now)
+      && !moment(task.deadline).isSame(now, "day"),
   );
+
+  const completedTasks = filteredTasks
+    .filter((task) => task.completed)
+    .sort((a, b) => moment(b.deadline).valueOf() - moment(a.deadline).valueOf());
 
   const groupedUpcomingTasks = upcomingTasks.reduce<Record<string, Task[]>>((groups, task) => {
     const date = moment(task.deadline).startOf("day").format("YYYY-MM-DD");
@@ -292,6 +300,7 @@ const sections = useMemo<TaskListSections>(() => {
     overdueTasks,
     todayTasks,
     upcomingTasks,
+    completedTasks,
     groupedUpcomingTasks,
     sortedUpcomingDates,
   };
