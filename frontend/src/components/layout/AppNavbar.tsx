@@ -12,9 +12,23 @@ const navItems = [
   { label: "Calendar", to: "/calendar" },
   { label: "Tasks", to: "/tasks" },
   { label: "Events", to: "/events" },
-  { label: "Gradebook", to: "/gradebook" },
-  { label: "Weekly Summaries", to: "/weekly-summaries" },
 ]
+
+const featureItems = [
+  { key: "gradebook", label: "Gradebook", to: "/gradebook" },
+  { key: "weekly_summaries", label: "Weekly Summaries", to: "/weekly-summaries" },
+]
+
+const FEATURE_FLAGS = {
+  gradebook: "feature_gradebook_enabled",
+  weekly_summaries: "feature_weekly_summaries_enabled",
+}
+
+const readFeatureFlag = (key: keyof typeof FEATURE_FLAGS) => {
+  const raw = localStorage.getItem(FEATURE_FLAGS[key])
+  if (raw === null) return true
+  return raw === "true"
+}
 
 
 const accountItems = [
@@ -26,11 +40,18 @@ const accountItems = [
  * AppNavbar renders the main navigation bar with a sliding drawer menu for Timely.
  */
 export default function AppNavbar() {
-  const [open, setOpen] = useState(false)
-  const drawerWidth = 280
+  const [open, setOpen] = useState(() => {
+    const raw = localStorage.getItem("nav_drawer_open")
+    return raw === "true"
+  })
+  const drawerWidth = 224
   const navigate = useNavigate()
   const location = useLocation()
   const isAdminRoute = location.pathname.startsWith("/admin")
+  const [featureFlags, setFeatureFlags] = useState(() => ({
+    gradebook: readFeatureFlag("gradebook"),
+    weekly_summaries: readFeatureFlag("weekly_summaries"),
+  }))
   const {
     notifications,
     unreadCount,
@@ -52,11 +73,33 @@ export default function AppNavbar() {
   useEffect(() => {
     document.body.classList.toggle("menu-open", open)
     document.body.style.setProperty("--drawer-width", `${drawerWidth}px`)
+    localStorage.setItem("nav_drawer_open", String(open))
     return () => {
       document.body.classList.remove("menu-open")
       document.body.style.removeProperty("--drawer-width")
     }
   }, [open, drawerWidth])
+
+  useEffect(() => {
+    const refreshFlags = () => {
+      setFeatureFlags({
+        gradebook: readFeatureFlag("gradebook"),
+        weekly_summaries: readFeatureFlag("weekly_summaries"),
+      })
+    }
+    window.addEventListener("feature-flags-changed", refreshFlags)
+    window.addEventListener("storage", refreshFlags)
+    return () => {
+      window.removeEventListener("feature-flags-changed", refreshFlags)
+      window.removeEventListener("storage", refreshFlags)
+    }
+  }, [])
+
+  const visibleFeatureItems = featureItems.filter((item) => {
+    if (item.key === "gradebook") return featureFlags.gradebook
+    if (item.key === "weekly_summaries") return featureFlags.weekly_summaries
+    return false
+  })
 
   return (
     <header className="fixed left-0 right-0 top-0 z-30 m-0 bg-white shadow-sm ring-1 ring-gray-200">
@@ -134,13 +177,13 @@ export default function AppNavbar() {
 
       {/* Sliding drawer */}
       <nav
-        className={`fixed inset-y-0 left-0 z-50 flex w-70 max-w-full flex-col transform bg-white shadow-xl ring-1 ring-gray-200 transition-transform duration-300 ease-out ${
+        className={`fixed inset-y-0 left-0 z-50 flex w-56 max-w-full flex-col transform bg-white shadow-xl ring-1 ring-gray-200 transition-transform duration-300 ease-out ${
           open ? "translate-x-0" : "-translate-x-full"
         }`}
         aria-label="Main"
       >
-        <div className="flex items-center justify-between px-4 py-2 border-b border-gray-200 min-h-10 flex-none">
-          <Link to="/dashboard" className="flex items-center" onClick={() => setOpen(false)}>
+        <div className="flex h-10 items-center justify-between px-4 border-b border-gray-200 flex-none">
+          <Link to="/dashboard" className="flex items-center">
             <img src="/t.png" alt="Timely" className="h-6 w-6" />
           </Link>
           <button
@@ -157,7 +200,7 @@ export default function AppNavbar() {
 
         <div className="flex flex-1 flex-col overflow-y-auto">
           {isAdminRoute ? (
-            <AdminSidebar onClose={() => setOpen(false)} />
+            <AdminSidebar onClose={() => {}} />
           ) : (
             /* ── Main sidebar ── */
             <>
@@ -166,7 +209,6 @@ export default function AppNavbar() {
                   <li key={item.to}>
                     <NavLink
                       to={item.to}
-                      onClick={() => setOpen(false)}
                       className={({ isActive }) =>
                         [
                           "flex items-center rounded-md px-3 py-2.5 text-base font-semibold transition-colors",
@@ -180,29 +222,31 @@ export default function AppNavbar() {
                 ))}
               </ul>
 
-              <div className="mx-4 border-t-2 border-gray-200" />
-
-              <ul className="space-y-2 px-4 py-4 text-base">
-                <li>
-                  <NavLink
-                    to="/notifications"
-                    onClick={() => setOpen(false)}
-                    className={({ isActive }) =>
-                      [
-                        "flex items-center justify-between rounded-md px-3 py-2.5 text-base font-semibold transition-colors",
-                        isActive ? "bg-cyan-50 text-cyan-700 ring-1 ring-cyan-100" : "text-gray-800 hover:bg-gray-100",
-                      ].join(" ")
-                    }
-                  >
-                    Notifications
-                    {unreadCount > 0 && (
-                      <span className="ml-2 inline-flex items-center justify-center rounded-full bg-red-500 px-2 py-0.5 text-xs font-bold text-white">
-                        {unreadCount}
-                      </span>
-                    )}
-                  </NavLink>
-                </li>
-              </ul>
+              {visibleFeatureItems.length > 0 && (
+                <>
+                  <div className="mx-4 border-t-2 border-gray-200" />
+                  <div className="px-4 pt-4 text-xs font-semibold uppercase tracking-wide text-gray-500">
+                    Add-ons
+                  </div>
+                  <ul className="space-y-2 px-4 py-4 text-base">
+                    {visibleFeatureItems.map((item) => (
+                      <li key={item.to}>
+                        <NavLink
+                          to={item.to}
+                          className={({ isActive }) =>
+                            [
+                              "flex items-center rounded-md px-3 py-2.5 text-base font-semibold transition-colors",
+                              isActive ? "bg-cyan-50 text-cyan-700 ring-1 ring-cyan-100" : "text-gray-800 hover:bg-gray-100",
+                            ].join(" ")
+                          }
+                        >
+                          {item.label}
+                        </NavLink>
+                      </li>
+                    ))}
+                  </ul>
+                </>
+              )}
 
               {isStaff && (
                 <>
@@ -211,7 +255,6 @@ export default function AppNavbar() {
                     <li>
                       <Link
                         to="/admin/notifications"
-                        onClick={() => setOpen(false)}
                         className="flex items-center rounded-md px-3 py-2.5 text-base font-semibold text-indigo-600 hover:bg-indigo-50 transition-colors"
                       >
                         <span className="material-icons text-lg mr-2">admin_panel_settings</span>
@@ -221,25 +264,6 @@ export default function AppNavbar() {
                   </ul>
                 </>
               )}
-
-              <div className="mx-4 border-t-2 border-gray-200" />
-              <ul className="space-y-2 px-4 py-4 text-base">
-                {accountItems.map(item => (
-                  <li key={item.to}>
-                    <Link
-                      to={item.to}
-                      onClick={() => setOpen(false)}
-                      className={`flex items-center rounded-md px-3 py-2.5 text-base font-semibold ${
-                        item.to === "/logout"
-                          ? "text-red-500 hover:bg-red-50"
-                          : "text-gray-800 hover:bg-gray-100"
-                      }`}
-                    >
-                      {item.label}
-                    </Link>
-                  </li>
-                ))}
-              </ul>
             </>
           )}
         </div>
