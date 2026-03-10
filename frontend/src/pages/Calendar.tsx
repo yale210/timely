@@ -428,20 +428,23 @@ const CalendarPage = ({ showNavbar = true, useLayout = true }: CalendarPageProps
       return;
     }
     const safeEnd = end ?? start;
-    setSidebarMode("task");
+    setSidebarMode("event");
     setSelectedItem({
       id: 0,
       title: "",
       description: "",
       start_time: start.toISOString(),
-      deadline: safeEnd.toISOString(),
-      importance: 5,
-      completed: false,
+      end_time: safeEnd.toISOString(),
+      location: "",
+      recurrence_interval: null,
+      recurrence_end: null,
+      reminders: [],
+      is_override: false,
+      is_split_series: false,
+      source_event_id: undefined,
+      split_from_event_id: null,
+      original_start_time: null,
       categories: [],
-      estimated_minutes: Math.max(
-        1,
-        Math.round((safeEnd.getTime() - start.getTime()) / 60000),
-      ),
     });
     setIsSidebarOpen(true);
   };
@@ -730,7 +733,7 @@ const CalendarPage = ({ showNavbar = true, useLayout = true }: CalendarPageProps
     <div className="flex h-full min-h-0 flex-col bg-white text-black">
       <header
         ref={headerRef}
-        className={`fixed left-0 right-0 z-20 flex-none border-b border-gray-200 bg-white pt-2 pb-0 shadow-sm ${calendarHeaderTopClass}`}
+        className={`calendar-header fixed left-0 right-0 z-20 flex-none border-b border-gray-200 bg-white pt-2 pb-0 shadow-sm ${calendarHeaderTopClass}`}
       >
         <div className="flex flex-col md:flex-row justify-between items-center gap-2 px-4">
           <div className="flex items-center gap-6">

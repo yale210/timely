@@ -124,14 +124,13 @@ const TaskCard = ({ task, onToggleComplete, onClick }: TaskCardProps) => {
                 {isOverdue ? "Overdue" : formatDue(task.deadline)}
               </span>
               {task.estimated_minutes > 0 && (
-                <span className="flex items-center px-2 py-0.5 rounded-full bg-gray-50 text-gray-600 text-[10px] font-semibold border border-gray-100">
-                  <span className="material-icons text-[12px] mr-1">schedule</span>
+                <span className="flex items-center text-xs text-gray-500">
+                  <span className="material-icons mr-1" style={{ fontSize: "22px" }}>schedule</span>
                   {task.estimated_minutes}m
                 </span>
               )}
-              <span
-                className={`px-2 py-0.5 rounded-full text-[10px] font-semibold border transition-all duration-200 ${importanceInfo.colour}`}
-              >
+              <span className="flex items-center text-xs text-gray-500">
+                <span className="material-icons mr-1" style={{ fontSize: "22px" }}>priority_high</span>
                 {isHovered ? task.importance : importanceInfo.label}
               </span>
               <div className="flex gap-1 overflow-hidden">

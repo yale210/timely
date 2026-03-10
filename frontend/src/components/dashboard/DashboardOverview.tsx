@@ -35,6 +35,26 @@ const WeeklyStatCard = ({
 const MAX_UPCOMING_TASKS = 8;
 const UPCOMING_TASK_ROW_HEIGHT = 52;
 const UPCOMING_TASK_ROW_GAP = 12;
+const getImportanceLabel = (importance: number) => {
+  if (importance >= 9) return "Critical";
+  if (importance >= 7) return "High";
+  if (importance >= 5) return "Medium";
+  if (importance >= 3) return "Low";
+  return "Very low";
+};
+
+const formatDueDate = (isoString: string) => {
+  const date = new Date(isoString);
+  const dateText = date.toLocaleDateString([], {
+    month: "short",
+    day: "numeric",
+  });
+  const timeText = date.toLocaleTimeString([], {
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+  return `${dateText} ${timeText}`;
+};
 
 const UpcomingTasksCard = ({
   tasks,
@@ -91,8 +111,24 @@ const UpcomingTasksCard = ({
                   void onToggle(task, event.target.checked);
                 }}
               />
-              <span className={`text-base font-medium leading-6 ${isChecked ? "text-gray-400 line-through" : "text-gray-900"}`}>
-                {task.title}
+              <span className="flex min-w-0 flex-col">
+                <span className={`text-base font-medium leading-6 truncate ${isChecked ? "text-gray-400 line-through" : "text-gray-900"}`}>
+                  {task.title}
+                </span>
+                <span className="mt-0 flex flex-wrap items-center gap-2 text-xs text-gray-500">
+                  <span className="flex items-center">
+                    <span className="material-icons mr-1" style={{ fontSize: "22px" }}>event</span>
+                    {formatDueDate(task.deadline)}
+                  </span>
+                  <span className="flex items-center text-xs text-gray-500">
+                    <span className="material-icons mr-1" style={{ fontSize: "22px" }}>schedule</span>
+                    {task.estimated_minutes}m
+                  </span>
+                  <span className="flex items-center text-xs text-gray-500">
+                    <span className="material-icons mr-1" style={{ fontSize: "22px" }}>priority_high</span>
+                    {getImportanceLabel(task.importance)}
+                  </span>
+                </span>
               </span>
             </label>
           </li>

@@ -45,12 +45,17 @@ body {
   }
 
   body.menu-open .app-shell {
-    transform: translateX(var(--drawer-width, 288px));
+    margin-left: var(--drawer-width, 288px);
     width: calc(100% - var(--drawer-width, 288px));
   }
 
   .app-shell {
-    transition: transform 200ms ease-out;
+    transition: margin-left 200ms ease-out;
+  }
+
+  body.menu-open .calendar-header {
+    left: var(--drawer-width, 288px) !important;
+    right: 0 !important;
   }
 
   input, textarea, select {
