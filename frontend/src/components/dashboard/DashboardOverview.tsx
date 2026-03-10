@@ -12,6 +12,8 @@ interface DashboardOverviewProps {
   weeklyStats: WeeklyStats | null;
 }
 
+type OverviewPeriod = "daily" | "weekly" | "monthly" | "yearly" | "all_time";
+
 const WeeklyStatCard = ({
   title,
   value,
@@ -38,10 +40,12 @@ const UpcomingTasksCard = ({
   tasks,
   checkedOverrides,
   onToggle,
+  periodLabel,
 }: {
   tasks: Task[];
   checkedOverrides: Record<number, boolean | undefined>;
   onToggle: (task: Task, nextChecked: boolean) => void;
+  periodLabel: string;
 }) => (
   <div className="flex h-full flex-col rounded-lg bg-white p-6 shadow-sm ring-1 ring-gray-900/5">
     <div className="flex items-center justify-between">
@@ -95,7 +99,7 @@ const UpcomingTasksCard = ({
         );
       }) : (
         <li className="flex h-full items-center justify-center text-lg text-gray-400">
-          No Upcoming Tasks This Week
+          No Upcoming Tasks {periodLabel}
         </li>
       )}
     </ul>
@@ -116,9 +120,71 @@ const DashboardOverview = ({
   weeklyStats,
 }: DashboardOverviewProps) => {
   const [checkedOverrides, setCheckedOverrides] = useState<Record<number, boolean | undefined>>({});
+  const [selectedPeriod, setSelectedPeriod] = useState<OverviewPeriod>("weekly");
+
+  const periodLabel = useMemo(() => {
+    switch (selectedPeriod) {
+      case "daily":
+        return "Daily";
+      case "monthly":
+        return "Monthly";
+      case "yearly":
+        return "Yearly";
+      case "all_time":
+        return "All-Time";
+      case "weekly":
+      default:
+        return "Weekly";
+    }
+  }, [selectedPeriod]);
+
+  const periodEmptyLabel = useMemo(() => {
+    switch (selectedPeriod) {
+      case "daily":
+        return "Today";
+      case "monthly":
+        return "This Month";
+      case "yearly":
+        return "This Year";
+      case "all_time":
+        return "All Time";
+      case "weekly":
+      default:
+        return "This Week";
+    }
+  }, [selectedPeriod]);
+
+  const periodRange = useMemo(() => {
+    const now = moment();
+    if (selectedPeriod === "all_time") {
+      return { start: null, end: null };
+    }
+    if (selectedPeriod === "daily") {
+      return { start: now.clone().startOf("day"), end: now.clone().endOf("day") };
+    }
+    if (selectedPeriod === "monthly") {
+      return { start: now.clone().startOf("month"), end: now.clone().endOf("month") };
+    }
+    if (selectedPeriod === "yearly") {
+      return { start: now.clone().startOf("year"), end: now.clone().endOf("year") };
+    }
+    return { start: now.clone().startOf("isoWeek"), end: now.clone().endOf("isoWeek") };
+  }, [selectedPeriod]);
+
+  const filteredTasks = useMemo(() => {
+    if (!periodRange.start || !periodRange.end) return tasks;
+    return tasks.filter((task) => {
+      const startTime = moment(task.start_time);
+      const deadline = moment(task.deadline);
+      return (
+        startTime.isBetween(periodRange.start, periodRange.end, undefined, "[]")
+        || deadline.isBetween(periodRange.start, periodRange.end, undefined, "[]")
+      );
+    });
+  }, [tasks, periodRange]);
 
   const recentTasks = useMemo(() => {
-    const filtered = tasks.filter((task) => {
+    const filtered = filteredTasks.filter((task) => {
       const effectiveCompleted = checkedOverrides[task.id] ?? task.completed;
       return !effectiveCompleted;
     });
@@ -128,52 +194,112 @@ const DashboardOverview = ({
       return aTime - bTime;
     });
     return sorted.slice(0, MAX_UPCOMING_TASKS);
-  }, [tasks, checkedOverrides]);
+  }, [filteredTasks, checkedOverrides]);
+
+  const derivedStats = useMemo(() => {
+    if (selectedPeriod === "weekly" && weeklyStats) return weeklyStats;
+    if (filteredTasks.length === 0) {
+      return {
+        total_tasks: 0,
+        completed_tasks: 0,
+        completion_percentage: 0,
+        total_minutes_planned: 0,
+        daily_stats: [],
+        importance_stats: [],
+      } as WeeklyStats;
+    }
+
+    const totalTasks = filteredTasks.length;
+    const completedTasks = filteredTasks.filter((task) => task.completed).length;
+    const totalMinutes = filteredTasks.reduce(
+      (sum, task) => sum + (task.estimated_minutes || 0),
+      0,
+    );
+    const completionPercentage = totalTasks === 0
+      ? 0
+      : Math.round((completedTasks / totalTasks) * 10000) / 100;
+
+    return {
+      total_tasks: totalTasks,
+      completed_tasks: completedTasks,
+      completion_percentage: completionPercentage,
+      total_minutes_planned: totalMinutes,
+      daily_stats: [],
+      importance_stats: [],
+    } as WeeklyStats;
+  }, [filteredTasks, selectedPeriod, weeklyStats]);
 
   const overdueCount = useMemo(() => {
     const now = moment();
-    return tasks.filter(
+    return filteredTasks.filter(
       (task) => !task.completed && moment(task.deadline).isBefore(now),
     ).length;
-  }, [tasks]);
+  }, [filteredTasks]);
 
   const minutesPlannedText = useMemo(() => {
-    if (!weeklyStats) return "Loading...";
-    const totalMinutes = weeklyStats.total_minutes_planned;
+    if (!derivedStats) return "Loading...";
+    const totalMinutes = derivedStats.total_minutes_planned;
     const hours = Math.floor(totalMinutes / 60);
     const minutes = totalMinutes % 60;
     return `${hours}h ${minutes}m`;
-  }, [weeklyStats]);
+  }, [derivedStats]);
 
   const averageCompletedPerDayText = useMemo(() => {
-    if (!weeklyStats) return "Loading...";
-    const avg = weeklyStats.completed_tasks / 7;
+    if (!derivedStats) return "Loading...";
+    if (selectedPeriod === "all_time") {
+      const completed = tasks.filter((task) => task.completed);
+      if (completed.length === 0) return "N/A";
+      const firstCompleted = moment.min(completed.map((task) =>
+        moment(task.start_time || task.deadline)
+      ));
+      const days = Math.max(1, moment().diff(firstCompleted, "days") + 1);
+      const avg = completed.length / days;
+      return `${avg.toFixed(1)} tasks/day`;
+    }
+    if (!periodRange.start || !periodRange.end) return "N/A";
+    const days = Math.max(1, periodRange.end.diff(periodRange.start, "days") + 1);
+    const avg = derivedStats.completed_tasks / days;
     return `${avg.toFixed(1)} tasks/day`;
-  }, [weeklyStats]);
+  }, [derivedStats, periodRange, selectedPeriod, tasks]);
 
   const averageTaskDurationText = useMemo(() => {
-    if (!weeklyStats) return "Loading...";
-    if (weeklyStats.total_tasks === 0) return "0m average";
-    const avgMinutes = Math.round(weeklyStats.total_minutes_planned / weeklyStats.total_tasks);
+    if (!derivedStats) return "Loading...";
+    if (derivedStats.total_tasks === 0) return "0m avg";
+    const avgMinutes = Math.round(derivedStats.total_minutes_planned / derivedStats.total_tasks);
     const hours = Math.floor(avgMinutes / 60);
     const minutes = avgMinutes % 60;
-    return hours > 0 ? `${hours}h ${minutes}m average` : `${minutes}m average duration`;
-  }, [weeklyStats]);
+    return hours > 0 ? `${hours}h ${minutes}m avg duration` : `${minutes}m avg duration`;
+  }, [derivedStats]);
 
   const streakCount = useMemo(() => {
-    if (!weeklyStats) return 0;
-    const todayIndex = moment().isoWeekday() - 1;
-    let count = 0;
-    for (let i = todayIndex; i >= 0; i -= 1) {
-      const completedCount = weeklyStats.daily_stats[i]?.completed_count ?? 0;
-      if (completedCount > 0) {
-        count += 1;
+    const end = moment();
+    const completedSource = selectedPeriod === "all_time" ? tasks : filteredTasks;
+    if (completedSource.length === 0) return 0;
+    const dayCount = selectedPeriod === "all_time"
+      ? Math.max(1, end.diff(moment.min(completedSource.map((task) =>
+        moment(task.start_time || task.deadline)
+      )), "days") + 1)
+      : (periodRange.start && periodRange.end
+        ? Math.max(1, moment.min(end, periodRange.end).diff(periodRange.start, "days") + 1)
+        : 0);
+    if (dayCount === 0) return 0;
+    const completedByDay = new Map<string, number>();
+    completedSource.forEach((task) => {
+      if (!task.completed) return;
+      const dayKey = moment(task.start_time || task.deadline).format("YYYY-MM-DD");
+      completedByDay.set(dayKey, (completedByDay.get(dayKey) ?? 0) + 1);
+    });
+    let streak = 0;
+    for (let i = 0; i < dayCount; i += 1) {
+      const dayKey = end.clone().subtract(i, "days").format("YYYY-MM-DD");
+      if ((completedByDay.get(dayKey) ?? 0) > 0) {
+        streak += 1;
       } else {
         break;
       }
     }
-    return count;
-  }, [weeklyStats]);
+    return streak;
+  }, [filteredTasks, periodRange, selectedPeriod, tasks]);
 
   const overdueToneClass = useMemo(() => {
     if (overdueCount === 0) return "bg-emerald-50";
@@ -186,7 +312,7 @@ const DashboardOverview = ({
     if (streakCount >= 3) return "bg-emerald-50";
     if (streakCount === 2) return "bg-orange-50";
     if (streakCount === 1) return "bg-yellow-50";
-    return "bg-red-50";
+    return "bg-gray-50";
   }, [streakCount]);
 
   const handleToggleTask = (task: Task, nextChecked: boolean) => {
@@ -203,28 +329,45 @@ const DashboardOverview = ({
 
   return (
   <main className="h-full min-h-0 w-full px-6 pt-4 pb-0 lg:px-10">
-    <header className="mb-4 text-center">
+    <header className="mb-4 flex items-center justify-between">
       <h1 className="text-3xl font-semibold tracking-tight text-gray-900">
-        Weekly Overview
+        {periodLabel} Overview
       </h1>
+      <div className="flex items-center gap-2">
+        <label className="text-sm text-gray-500" htmlFor="overview-period">
+          Period
+        </label>
+        <select
+          id="overview-period"
+          value={selectedPeriod}
+          onChange={(event) => setSelectedPeriod(event.target.value as OverviewPeriod)}
+          className="rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm focus:border-primary focus:ring-primary"
+        >
+          <option value="daily">Daily</option>
+          <option value="weekly">Weekly</option>
+          <option value="monthly">Monthly</option>
+          <option value="yearly">Yearly</option>
+          <option value="all_time">All-Time</option>
+        </select>
+      </div>
     </header>
 
     <section className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-5">
       <div className="rounded-lg bg-white p-6 shadow-sm ring-1 ring-gray-900/5">
-        <p className="text-sm text-gray-500">Weekly Progress</p>
+        <p className="text-sm text-gray-500">{periodLabel} Progress</p>
         <div className="mt-3 text-2xl font-semibold text-gray-900">
-          {weeklyStats ? `${weeklyStats.completion_percentage}%` : "Loading..."}
+          {derivedStats ? `${derivedStats.completion_percentage}%` : "Loading..."}
         </div>
         <p className="mt-1 text-xs text-gray-500">
-          {weeklyStats
-            ? `${weeklyStats.completed_tasks}/${weeklyStats.total_tasks} tasks completed`
+          {derivedStats
+            ? `${derivedStats.completed_tasks}/${derivedStats.total_tasks} tasks completed`
             : "Loading..."}
         </p>
         <div className="mt-4 h-4 w-full rounded-full bg-gray-100">
           <div
             className="h-4 rounded-full bg-cyan-500 transition-all"
             style={{
-              width: weeklyStats ? `${Math.min(100, weeklyStats.completion_percentage)}%` : "0%",
+              width: derivedStats ? `${Math.min(100, derivedStats.completion_percentage)}%` : "0%",
             }}
           />
         </div>
@@ -232,10 +375,10 @@ const DashboardOverview = ({
       <WeeklyStatCard
         title="Time Planned"
         value={minutesPlannedText}
-        subtitle={weeklyStats ? "Planned this week" : undefined}
+        subtitle={derivedStats ? "Planned this period" : undefined}
       />
       <WeeklyStatCard
-        title="Daily Average"
+        title="Daily Averages"
         value={averageCompletedPerDayText}
         subtitle={averageTaskDurationText}
       />
@@ -247,8 +390,8 @@ const DashboardOverview = ({
       />
       <WeeklyStatCard
         title="Streak"
-        value={weeklyStats ? `${streakCount} day${streakCount === 1 ? "" : "s"}` : "Loading..."}
-        subtitle={weeklyStats ? "Consecutive days completed (this week)" : undefined}
+        value={`${streakCount} day${streakCount === 1 ? "" : "s"}`}
+        subtitle="Consecutive days completed"
         className={streakToneClass}
       />
     </section>
@@ -282,6 +425,7 @@ const DashboardOverview = ({
           tasks={recentTasks}
           checkedOverrides={checkedOverrides}
           onToggle={handleToggleTask}
+          periodLabel={periodEmptyLabel}
         />
       </section>
     </section>
