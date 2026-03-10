@@ -14,7 +14,7 @@ class SpecialDates(models.Model):
     )
 
     date = models.DateField()
-    text = models.CharField(max_length=250)
+    text = models.CharField(max_length=250, blank=True)
 
     # Retrieve the descriptive text for the special date.
     def __str__(self):

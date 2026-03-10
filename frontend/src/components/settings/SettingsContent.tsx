@@ -79,7 +79,7 @@ const SettingsContent = ({
               },
             }}
           />
-          <section className="flex-1 rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
+          <section className="w-full md:w-1/2 rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
             {state.activeSection === "preferences" ? (
               <PreferencesSection
                 pref={state.preference}
@@ -93,7 +93,7 @@ const SettingsContent = ({
                 }}
               />
             ) : null}
-            {state.activeSection === "theme" ? (
+            {state.activeSection === "appearance" ? (
               <ThemeSection
                 onThemeChange={actions.applyTheme}
                 onFontChange={actions.applyFont}

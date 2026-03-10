@@ -1,4 +1,4 @@
 /**
  *
  */
-export type SettingsSection = "profile" | "preferences" | "theme" | "features";
+export type SettingsSection = "profile" | "preferences" | "appearance" | "features";

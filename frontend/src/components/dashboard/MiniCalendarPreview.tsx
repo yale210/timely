@@ -24,6 +24,12 @@ interface MiniCalendarPreviewProps {
   events: Event[];
 }
 
+interface DayScheduleEntry {
+  day: number;
+  start: string;
+  end: string;
+}
+
 const parseClockMinutes = (value: string): number => {
   const source = value.includes("T") ? (value.split("T")[1] ?? value) : value;
   const match = /(\d{1,2}):(\d{2})/.exec(source);
@@ -42,6 +48,7 @@ const parseClockMinutes = (value: string): number => {
 const MiniCalendarPreview = ({ tasks, events }: MiniCalendarPreviewProps) => {
   const [dayStart, setDayStart] = useState("08:00");
   const [dayEnd, setDayEnd] = useState("22:00");
+  const [daySchedule, setDaySchedule] = useState<DayScheduleEntry[]>([]);
   const [containerHeight, setContainerHeight] = useState(0);
   const containerRef = useRef<HTMLDivElement | null>(null);
 
@@ -51,9 +58,11 @@ const MiniCalendarPreview = ({ tasks, events }: MiniCalendarPreviewProps) => {
         const preference = await preferenceService.getMyPreference();
         setDayStart(preference.day_start.slice(0, 5));
         setDayEnd(preference.day_end.slice(0, 5));
+        setDaySchedule(preference.day_schedule ?? []);
       } catch {
         setDayStart("08:00");
         setDayEnd("22:00");
+        setDaySchedule([]);
       }
     };
 
@@ -98,26 +107,43 @@ const MiniCalendarPreview = ({ tasks, events }: MiniCalendarPreviewProps) => {
   ];
 
   const { minTime, maxTime, visibleHours } = useMemo(() => {
-    const startMinutes = parseClockMinutes(dayStart);
-    const endMinutes = parseClockMinutes(dayEnd);
-    const rawDiff = (endMinutes - startMinutes + (24 * 60)) % (24 * 60);
-    const diffMinutes = rawDiff === 0 ? 24 * 60 : rawDiff;
-    const safeEndMinutes = startMinutes + diffMinutes;
+    const schedule = daySchedule.length > 0
+      ? daySchedule
+      : [{ day: 1, start: dayStart, end: dayEnd }];
+
+    let minStartMinutes: number | null = null;
+    let maxEndMinutes: number | null = null;
+
+    schedule.forEach((entry) => {
+      const startMinutes = parseClockMinutes(entry.start);
+      const endMinutes = parseClockMinutes(entry.end);
+      const normalizedEnd = endMinutes <= startMinutes ? endMinutes + (24 * 60) : endMinutes;
+      if (minStartMinutes === null || startMinutes < minStartMinutes) {
+        minStartMinutes = startMinutes;
+      }
+      if (maxEndMinutes === null || normalizedEnd > maxEndMinutes) {
+        maxEndMinutes = normalizedEnd;
+      }
+    });
+
+    const safeStartMinutes = minStartMinutes ?? parseClockMinutes(dayStart);
+    const safeEndMinutes = maxEndMinutes ?? parseClockMinutes(dayEnd);
+    const diffMinutes = Math.max(1, safeEndMinutes - safeStartMinutes);
     const visibleHours = Math.max(1, Math.ceil(diffMinutes / 60));
 
     const today = new Date();
     const minDate = new Date(today);
-    minDate.setHours(Math.floor(startMinutes / 60), startMinutes % 60, 0, 0);
+    minDate.setHours(Math.floor(safeStartMinutes / 60), safeStartMinutes % 60, 0, 0);
 
     const maxDate = new Date(today);
-    maxDate.setHours(Math.floor(safeEndMinutes / 60), safeEndMinutes % 60, 0, 0);
+    maxDate.setHours(Math.floor((safeStartMinutes + diffMinutes) / 60), (safeStartMinutes + diffMinutes) % 60, 0, 0);
 
     return {
       minTime: minDate,
       maxTime: maxDate,
       visibleHours,
     };
-  }, [dayEnd, dayStart]);
+  }, [dayEnd, daySchedule, dayStart]);
 
   const sizingVars = useMemo(() => {
     const headerHeight = 32;

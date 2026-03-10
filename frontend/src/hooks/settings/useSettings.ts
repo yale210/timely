@@ -121,6 +121,7 @@ export const useSettings = (): UseSettingsReturn => {
       const updatedPreference = await preferenceService.updateMyPreference({
         day_start: preference.day_start.slice(0, 5),
         day_end: preference.day_end.slice(0, 5),
+        day_schedule: preference.day_schedule,
         max_hours_study_per_day: preference.max_hours_study_per_day,
         days_off: preference.days_off,
       });

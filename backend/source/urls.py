@@ -27,6 +27,7 @@ from core.views import (
     TaskViewSet,
     WeeklySummaryView,
     FriendshipViewSet,
+    SpecialDatesViewSet,
 )
 
 from scheduler.views import ScheduleTasksAPIView, UnscheduleTasksAPIView
@@ -39,6 +40,7 @@ router.register(r"categories", CategoryViewSet, basename="category")
 router.register(r"events", EventViewSet, basename="event")
 router.register(r"preferences", PreferenceViewSet, basename="preference")
 router.register(r"friendships", FriendshipViewSet, basename="friendship")
+router.register(r"special-dates", SpecialDatesViewSet, basename="special-dates")
 
 
 urlpatterns = [

@@ -53,6 +53,16 @@ export interface TaskSubmission extends Omit<Partial<Task>, "categories"> {
 }
 
 /**
+ * Represents a special date override that blocks scheduling.
+ * @interface SpecialDate
+ */
+export interface SpecialDate {
+  id: number;
+  date: string;
+  text: string;
+}
+
+/**
  * Represents a reminder for an event.
  * @interface EventReminder
  */
@@ -151,6 +161,7 @@ export interface Preference {
     id: number
     day_start: string
     day_end: string
+    day_schedule?: { day: number; start: string; end: string }[]
     max_hours_study_per_day: number
     days_off: number[]
 }
@@ -159,5 +170,5 @@ export interface Preference {
  * @interface PreferenceUpdate
  */
 export type PreferenceUpdate = Partial<Pick<
-    Preference, "day_start"|"day_end"|"max_hours_study_per_day"|"days_off"
+    Preference, "day_start"|"day_end"|"day_schedule"|"max_hours_study_per_day"|"days_off"
 >>

@@ -84,13 +84,27 @@ const parseClockMinutes = (value: string): number => {
   return (hour * 60) + minute;
 };
 
+const getDayScheduleWindow = (preference: Preference, slotDate: Date): { start: string; end: string } => {
+  const dayKey = slotDate.getDay() === 0 ? 7 : slotDate.getDay();
+  const schedule = preference.day_schedule ?? [];
+  const entry = schedule.find((item) => item.day === dayKey);
+  if (entry?.start && entry?.end) {
+    return { start: entry.start, end: entry.end };
+  }
+  return {
+    start: preference.day_start,
+    end: preference.day_end,
+  };
+};
+
 const isOutsidePreferredDayWindow = (slotDate: Date, preference: Preference | null): boolean => {
   if (!preference) {
     return false;
   }
 
-  const startMinutes = parseClockMinutes(preference.day_start);
-  const endMinutes = parseClockMinutes(preference.day_end);
+  const { start, end } = getDayScheduleWindow(preference, slotDate);
+  const startMinutes = parseClockMinutes(start);
+  const endMinutes = parseClockMinutes(end);
   const slotMinutes = (slotDate.getHours() * 60) + slotDate.getMinutes();
 
   if (startMinutes === endMinutes) {

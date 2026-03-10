@@ -175,12 +175,9 @@ class Scheduler:
 
     def _working_window(self, target_date: date) -> Tuple[datetime, datetime]:
         if self.preference:
-            day_start = self._aware(
-                datetime.combine(target_date, self.preference.day_start)  # type: ignore[attr-defined]
-            )
-            day_end = self._aware(
-                datetime.combine(target_date, self.preference.day_end)  # type: ignore[attr-defined]
-            )
+            start_time, end_time = self.preference.get_day_window(target_date)  # type: ignore[attr-defined]
+            day_start = self._aware(datetime.combine(target_date, start_time))
+            day_end = self._aware(datetime.combine(target_date, end_time))
             if day_end <= day_start:  # crosses midnight
                 day_end += timedelta(days=1)
             return day_start, day_end

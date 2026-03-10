@@ -132,12 +132,15 @@ export default function AppNavbar() {
             onDeleteItem={(notification) => deleteNotification(notification.id)}
           />
 
-          <Menu as="div" className="relative flex h-6 items-center">
-            <MenuButton className="inline-flex h-6 items-center justify-center rounded-full px-1.5 py-0 text-[11px] font-semibold leading-none text-gray-900 hover:bg-gray-100">
-              <span className="material-icons mr-1 leading-none" style={{ fontSize: "20px" }}>account_circle</span>
-              Account
+          <Menu as="div" className="relative flex h-8 items-center">
+            <MenuButton className="inline-flex h-8 items-center justify-center rounded-full px-3 py-0 text-sm font-semibold leading-none text-gray-900 hover:bg-gray-100">
+              <span className="material-icons mr-2 leading-none" style={{ fontSize: "24px" }}>account_circle</span>
+              {user?.username ?? "Account"}
             </MenuButton>
-            <MenuItems className="absolute right-0 top-full mt-2 w-44 origin-top-right rounded-lg border border-gray-200 bg-white shadow-lg focus:outline-none z-50">
+            <MenuItems
+              modal={false}
+              className="absolute right-0 top-full mt-2 w-36 origin-top-right rounded-lg border border-gray-200 bg-white shadow-lg focus:outline-none z-50"
+            >
               <div className="py-1">
                 <MenuItem>
                   {({ focus }) => (
