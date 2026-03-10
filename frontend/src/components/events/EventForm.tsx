@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, type FormEvent } from "react";
+import { useState, useEffect, useRef, type FormEvent, type MouseEvent } from "react";
 import { CategoryColourPicker, CategoryMultiSelect, Tooltip } from "@/components";
 import { getOverrideColour } from "@/utils/colorUtils";
 import { type Category, type Event, type EventSubmission } from "@/types";
@@ -223,6 +223,14 @@ const EventForm = ({
   const overrideColour = getOverrideColour(selectedCategoryObjects);
   const isColourLocked = Boolean(overrideColour);
   const displayColour = overrideColour ?? colour;
+  const handleColourPickerToggle = (event: MouseEvent<HTMLButtonElement>) => {
+    if (isColourLocked) return;
+    const rect = event.currentTarget.getBoundingClientRect();
+    setPickerPosition({ top: rect.bottom + 8, left: rect.right - 272 });
+    setColourInput(displayColour);
+    setColourError(null);
+    setShowPickerMenu((prev) => !prev);
+  };
   const parseColourInput = (value: string): string | null => {
     const trimmed = value.trim().toLowerCase();
     if (trimmed.startsWith("#") && trimmed.length === 7) {
@@ -343,12 +351,6 @@ const EventForm = ({
       minutes_before: toMinutesBefore(r.value, r.unit),
     })),
   });
-
-  useEffect(() => {
-    if (!showPickerMenu) return;
-    setColourInput(displayColour);
-    setColourError(null);
-  }, [displayColour, showPickerMenu]);
 
   useEffect(() => {
     if (!showPickerMenu) return;
@@ -483,12 +485,7 @@ const EventForm = ({
                   <button
                   type="button"
                   disabled={isColourLocked}
-                onClick={(event) => {
-                  if (isColourLocked) return;
-                  const rect = (event.currentTarget as HTMLButtonElement).getBoundingClientRect();
-                  setPickerPosition({ top: rect.bottom + 8, left: rect.right - 272 });
-                  setShowPickerMenu((prev) => !prev);
-                }}
+                onClick={handleColourPickerToggle}
                 className="h-7 w-7 rounded-md border border-gray-300 p-0.5 disabled:cursor-not-allowed"
                 style={{ backgroundColor: isColourLocked ? "#e2e8f0" : displayColour }}
                 aria-label="Event colour"
@@ -498,12 +495,7 @@ const EventForm = ({
                 <button
                   type="button"
                   disabled={isColourLocked}
-                  onClick={(event) => {
-                    if (isColourLocked) return;
-                    const rect = (event.currentTarget as HTMLButtonElement).getBoundingClientRect();
-                    setPickerPosition({ top: rect.bottom + 8, left: rect.right - 272 });
-                    setShowPickerMenu((prev) => !prev);
-                  }}
+                  onClick={handleColourPickerToggle}
                   className="h-7 w-7 rounded-md border border-gray-300 p-0.5 disabled:cursor-not-allowed"
                   style={{ backgroundColor: isColourLocked ? "#e2e8f0" : displayColour }}
                   aria-label="Event colour"

@@ -1,6 +1,6 @@
 import { useRef, useState } from "react";
 import { type Task } from "@/types";
-import { getOverrideColour, hexToRgba } from "@/utils/colorUtils";
+import { hexToRgba } from "@/utils/colorUtils";
 import completeSoundUrl from "@/assets/sounds/task-complete.mp3";
 
 interface TaskCardProps {

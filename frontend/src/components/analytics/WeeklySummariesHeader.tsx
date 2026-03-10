@@ -12,6 +12,12 @@ interface WeeklySummariesHeaderProps {
   onSelectedWeekChange: (nextWeek: string) => void;
 }
 
+const formatMinutes = (minutes: number): string => {
+  const hours = Math.floor(minutes / 60);
+  const remainingMinutes = minutes % 60;
+  return `${hours}h ${remainingMinutes}m`;
+};
+
 /**
  * Renders the week selector and summary widget.
  * @param props - Header props.
@@ -21,12 +27,6 @@ interface WeeklySummariesHeaderProps {
  * @param props.onSelectedWeekChange - Callback to change the selected week.
  * @returns The analytics header section.
  */
-const formatMinutes = (minutes: number): string => {
-  const hours = Math.floor(minutes / 60);
-  const remainingMinutes = minutes % 60;
-  return `${hours}h ${remainingMinutes}m`;
-};
-
 const WeeklySummariesHeader = ({
   selectedWeek,
   weekOptions,

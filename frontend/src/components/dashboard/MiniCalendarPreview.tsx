@@ -2,7 +2,7 @@ import "react-big-calendar/lib/css/react-big-calendar.css";
 import moment from "moment";
 import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import { Calendar, Views, momentLocalizer } from "react-big-calendar";
-import type { Event, Task } from "@/types";
+import type { Category, Event, Task } from "@/types";
 import { preferenceService } from "@/services/preferenceService";
 import { getOverrideColour, hexToRgba } from "@/utils/colorUtils";
 
@@ -15,7 +15,7 @@ interface MiniCalendarEntry {
   end: Date;
   allDay: boolean;
   kind: "task" | "event";
-  categories?: Task["categories"] | Event["categories"];
+  categories?: Category[];
   colour?: string | null;
 }
 
@@ -183,8 +183,8 @@ const MiniCalendarPreview = ({ tasks, events }: MiniCalendarPreviewProps) => {
         eventPropGetter={(entry) => {
           const overrideColour =
             entry.kind === "task"
-              ? getOverrideColour(entry.categories as Task["categories"])
-              : getOverrideColour(entry.categories as Event["categories"]);
+              ? getOverrideColour(entry.categories)
+              : getOverrideColour(entry.categories);
           const fallbackColour = entry.colour ?? (entry.kind === "task" ? "#3b82f6" : "#f97316");
           const appliedColour = overrideColour ?? fallbackColour;
           if (!appliedColour) return {};
