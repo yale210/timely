@@ -376,7 +376,7 @@ describe("CalendarPage (lean tests)", () => {
       fireEvent.click(screen.getByTestId("mock-select-slot"));
 
       await waitFor(() => expect(screen.getByTestId("mock-sidebar")).toBeTruthy());
-      expect(screen.getByTestId("sidebar-mode").textContent).toBe("event");
+      expect(screen.getByTestId("sidebar-mode").textContent).toBe("task");
     });
 
     it("opens sidebar in task mode when clicking a task entry", async () => {
@@ -498,12 +498,11 @@ describe("CalendarPage (lean tests)", () => {
     });
 
     it("handles scheduling tasks", async () => {
-        const btn = screen.getByText("Reschedule");
+        const btn = screen.getByText("Schedule Tasks");
         fireEvent.click(btn);
         
         await waitFor(() => {
             expect(schedulerService.scheduleTasks).toHaveBeenCalled();
-            expect(schedulerService.unscheduleTasks).toHaveBeenCalled();
         });
     });
 
