@@ -31,6 +31,7 @@ const SettingsSidebar = ({
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const navItems: { label: string; value: SettingsSection; icon: string }[] = [
     { label: "Profile", value: "profile", icon: "person" },
+    { label: "General", value: "general", icon: "tune" },
     { label: "Features", value: "features", icon: "extension" },
     { label: "Scheduling", value: "preferences", icon: "schedule" },
     { label: "Appearance", value: "appearance", icon: "palette" },

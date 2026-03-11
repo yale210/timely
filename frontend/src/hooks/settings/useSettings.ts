@@ -84,6 +84,10 @@ export const useSettings = (): UseSettingsReturn => {
     try {
       const nextPreference = await preferenceService.getMyPreference();
       setPreference(nextPreference);
+      localStorage.setItem(
+        "disable_sound_effects",
+        String(nextPreference.disable_sound_effects ?? false),
+      );
     } catch (error) {
       const parsed = formatDjangoFormError(error);
       setPreferenceError(parsed.message);
@@ -94,7 +98,7 @@ export const useSettings = (): UseSettingsReturn => {
   }, []);
 
   useEffect(() => {
-    if (activeSection !== "preferences") {
+    if (activeSection !== "preferences" && activeSection !== "general") {
       return;
     }
 
@@ -124,9 +128,14 @@ export const useSettings = (): UseSettingsReturn => {
         day_schedule: preference.day_schedule,
         max_hours_study_per_day: preference.max_hours_study_per_day,
         limit_max_hours: preference.limit_max_hours,
+        disable_sound_effects: preference.disable_sound_effects,
         days_off: preference.days_off,
       });
       setPreference(updatedPreference);
+      localStorage.setItem(
+        "disable_sound_effects",
+        String(updatedPreference.disable_sound_effects ?? false),
+      );
     } catch (error) {
       const parsed = formatDjangoFormError(error);
       setPreferenceError(parsed.message);

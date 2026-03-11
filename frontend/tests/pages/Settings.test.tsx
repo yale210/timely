@@ -223,6 +223,9 @@ describe("Settings page", () => {
     fireEvent.click(screen.getByRole("button", { name: /profile/i }));
     expect(screen.getByText("Profile settings will go here.")).toBeDefined();
 
+    fireEvent.click(screen.getByRole("button", { name: /general/i }));
+    expect(screen.getByText("General")).toBeDefined();
+
     fireEvent.click(screen.getByRole("button", { name: /features/i }));
     expect(screen.getByText("Toggle optional sections of the app.")).toBeDefined();
 
