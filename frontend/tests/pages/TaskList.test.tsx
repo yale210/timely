@@ -100,9 +100,13 @@ describe("TaskList Page", () => {
     sortBy: "date",
     filters: { category: null, completed: "all" as const, highImportance: false, quickWins: false },
     sections: {
+      pastTasks: [],
       overdueTasks: [],
+      todayTasks: [],
       upcomingTasks: [],
       completedTasks: [],
+      groupedUpcomingTasks: {},
+      sortedUpcomingDates: [],
     },
   };
 
@@ -166,9 +170,13 @@ describe("TaskList Page", () => {
         ...mockState,
         sections: {
           ...mockState.sections,
+          pastTasks: [],
           overdueTasks: [tasks[0]],
+          todayTasks: [],
           upcomingTasks: [tasks[1]],
           completedTasks: [tasks[2]],
+          groupedUpcomingTasks: {},
+          sortedUpcomingDates: [],
         },
       } as UseTaskListReturn["state"],
       loading: false,

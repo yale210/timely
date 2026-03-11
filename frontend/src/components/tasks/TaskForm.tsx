@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, type FormEvent, type MouseEvent } from "react";
+import { useState, useEffect, useRef, type FormEvent, type MouseEvent as ReactMouseEvent } from "react";
 import { CategoryColourPicker, CategoryMultiSelect, Tooltip } from "@/components";
 import { getOverrideColour } from "@/utils/colorUtils";
 import { type Category, type Task, type TaskSubmission } from "@/types";
@@ -147,7 +147,7 @@ const TaskForm = ({
   const overrideColour = getOverrideColour(selectedCategoryObjects);
   const isColourLocked = Boolean(overrideColour);
   const displayColour = overrideColour ?? colour;
-  const handleColourPickerToggle = (event: MouseEvent<HTMLButtonElement>) => {
+  const handleColourPickerToggle = (event: ReactMouseEvent<HTMLButtonElement>) => {
     if (isColourLocked) return;
     const rect = event.currentTarget.getBoundingClientRect();
     setPickerPosition({ top: rect.bottom + 8, left: rect.right - 272 });

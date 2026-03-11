@@ -89,7 +89,7 @@ const MiniCalendarPreview = ({ tasks, events }: MiniCalendarPreviewProps) => {
         start: new Date(slot.start),
         end: new Date(slot.end),
         allDay: false,
-        kind: "task",
+        kind: "task" as const,
         categories: task.categories,
         colour: task.colour ?? null,
       }));
@@ -100,7 +100,7 @@ const MiniCalendarPreview = ({ tasks, events }: MiniCalendarPreviewProps) => {
       start: new Date(event.start_time),
       end: new Date(event.end_time),
       allDay: false,
-      kind: "event",
+      kind: "event" as const,
       categories: event.categories,
       colour: event.colour ?? null,
     })),
@@ -179,7 +179,6 @@ const MiniCalendarPreview = ({ tasks, events }: MiniCalendarPreviewProps) => {
         max={maxTime}
         step={60}
         timeslots={1}
-        showAllDay={false}
         eventPropGetter={(entry) => {
           const overrideColour =
             entry.kind === "task"
