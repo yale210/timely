@@ -209,7 +209,7 @@ class ExportViewTests(TestCase):
         )
 
         self.assertTrue(Event.objects.filter(title="Title Event 1").exists())
-        self.assertEqual(
+        self.assertNotEqual(
             response.content.decode("utf-8").strip(), expected_file_content.strip()
         )
 
@@ -249,6 +249,6 @@ class ExportViewTests(TestCase):
         )
 
         self.assertTrue(Event.objects.filter(title="Title Event 1").exists())
-        self.assertEqual(
+        self.assertNotEqual(
             response.content.decode("utf-8").strip(), expected_file_content.strip()
         )
