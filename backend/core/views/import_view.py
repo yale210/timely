@@ -5,6 +5,7 @@ from core.models import Event
 from django.db import transaction
 from datetime import datetime
 
+#Test
 
 class ImportView(APIView):
     permission_classes = [permissions.IsAuthenticated]
