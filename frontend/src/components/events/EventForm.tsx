@@ -599,20 +599,6 @@ const EventForm = ({
         </div>
 
         <div>
-          <label htmlFor="event-description" className="block text-sm font-medium text-gray-700 mb-2">
-            Description <span className="text-gray-400">(optional)</span>
-          </label>
-          <textarea
-            id="event-description"
-            className={`${baseInputClass} resize-none`}
-            placeholder=""
-            rows={3}
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-          />
-        </div>
-
-        <div>
           <label className="block text-sm font-medium text-gray-700 mb-3">
             Category <span className="text-gray-400">(optional)</span>
           </label>
@@ -624,6 +610,20 @@ const EventForm = ({
             onUpdateCategory={onUpdateCategory}
             onDeleteCategory={onDeleteCategory}
             variant="event"
+          />
+        </div>
+
+        <div>
+          <label htmlFor="event-description" className="block text-sm font-medium text-gray-700 mb-2">
+            Description <span className="text-gray-400">(optional)</span>
+          </label>
+          <textarea
+            id="event-description"
+            className={`${baseInputClass} resize-none`}
+            placeholder=""
+            rows={3}
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
           />
         </div>
 

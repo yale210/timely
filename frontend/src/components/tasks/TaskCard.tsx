@@ -110,6 +110,27 @@ const TaskCard = ({ task, onToggleComplete, onClick }: TaskCardProps) => {
             >
               {task.title}
             </span>
+            {task.categories.length > 0 && (
+              <div className="flex flex-wrap justify-end gap-1 overflow-hidden">
+                {task.categories.map((cat) => {
+                  const chipColour = cat.colour ?? "#94a3b8";
+                  return (
+                    <span
+                      key={cat.id}
+                      className="px-2 py-0.5 rounded font-medium border whitespace-nowrap text-xs text-black"
+                      style={
+                        {
+                          borderColor: chipColour,
+                          backgroundColor: hexToRgba(chipColour, 0.12),
+                        }
+                      }
+                    >
+                      {cat.text}
+                    </span>
+                  );
+                })}
+              </div>
+            )}
           </div>
           <div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-gray-500">
             <span
@@ -130,31 +151,6 @@ const TaskCard = ({ task, onToggleComplete, onClick }: TaskCardProps) => {
               <span className="material-icons mr-1" style={{ fontSize: "22px" }}>priority_high</span>
               {isHovered ? task.importance : importanceInfo.label}
             </span>
-              <div className="flex gap-1 overflow-hidden">
-                {task.categories.map((cat) => {
-                  const chipColour = cat.colour ?? null;
-                  return (
-                    <span
-                      key={cat.id}
-                      className={`px-2 py-0.5 rounded font-medium border whitespace-nowrap ${
-                        chipColour
-                          ? "text-black"
-                          : "bg-blue-50 text-blue-600 border-blue-100"
-                      }`}
-                      style={
-                        chipColour
-                          ? {
-                              borderColor: chipColour,
-                              backgroundColor: hexToRgba(chipColour, 0.12),
-                            }
-                          : undefined
-                      }
-                    >
-                      {cat.text}
-                    </span>
-                  );
-                })}
-              </div>
           </div>
         </div>
         <div className="flex items-center ml-4 opacity-0 group-hover:opacity-100 transition-opacity">
