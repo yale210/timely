@@ -12,7 +12,6 @@ class ImportView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def post(self, request):
-
         # The file that the user uploaded
         uploaded_file = request.FILES.get("file")
 

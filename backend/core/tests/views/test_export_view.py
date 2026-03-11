@@ -78,7 +78,6 @@ class ExportViewTests(TestCase):
         )
 
     def test_export_two_events(self):
-
         self.client.login(username="testuser", password="password")
 
         Event.objects.create(
@@ -175,7 +174,6 @@ class ExportViewTests(TestCase):
         )
 
     def test_export_r_rule_2(self):
-
         self.client.login(username="testuser", password="password")
 
         Event.objects.create(
@@ -216,7 +214,6 @@ class ExportViewTests(TestCase):
         )
 
     def test_export_r_rule_3(self):
-
         self.client.login(username="testuser", password="password")
 
         Event.objects.create(
