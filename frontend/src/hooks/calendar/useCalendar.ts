@@ -586,6 +586,14 @@ export const useCalendar = (): UseCalendarReturn => {
       if (!task) {
         return;
       }
+      setScheduleOrder((prev) => {
+        if (!Object.prototype.hasOwnProperty.call(prev, task.id)) {
+          return prev;
+        }
+        const next = { ...prev };
+        delete next[task.id];
+        return next;
+      });
       const nextAllocations = [...(task.allocation ?? [])];
       nextAllocations[entry.allocationIndex] = {
         start: start.toISOString(),
@@ -665,32 +673,41 @@ export const useCalendar = (): UseCalendarReturn => {
 
   const handleEventDrop = useCallback(
     async ({ event, start, end }: EventInteractionArgs<CalendarEntry>) => {
+      if (Object.keys(scheduleOrder).length > 0) {
+        setScheduleOrder({});
+      }
       if (event.kind === "task") {
         await updateTaskAllocation(event, new Date(start), new Date(end));
         return;
       }
       await updateCalendarEvent(event, new Date(start), new Date(end));
     },
-    [updateCalendarEvent, updateTaskAllocation],
+    [scheduleOrder, updateCalendarEvent, updateTaskAllocation],
   );
 
   const handleEventResize = useCallback(
     async ({ event, start, end }: EventInteractionArgs<CalendarEntry>) => {
+      if (Object.keys(scheduleOrder).length > 0) {
+        setScheduleOrder({});
+      }
       if (event.kind === "task") {
         await updateTaskAllocation(event, new Date(start), new Date(end));
         return;
       }
       await updateCalendarEvent(event, new Date(start), new Date(end));
     },
-    [updateCalendarEvent, updateTaskAllocation],
+    [scheduleOrder, updateCalendarEvent, updateTaskAllocation],
   );
 
   const handleToggleTaskComplete = useCallback(
     async (taskId: number) => {
       const task = tasks.find((entry) => entry.id === taskId);
       if (!task) return;
+      const isSoundDisabled =
+        preference?.disable_sound_effects ??
+        (typeof window !== "undefined" && localStorage.getItem("disable_sound_effects") === "true");
       try {
-        if (!task.completed && completeSoundRef.current) {
+        if (!task.completed && completeSoundRef.current && !isSoundDisabled) {
           completeSoundRef.current.currentTime = 0;
           void completeSoundRef.current.play().catch(() => undefined);
         }
@@ -700,7 +717,7 @@ export const useCalendar = (): UseCalendarReturn => {
         console.error(error);
       }
     },
-    [fetchTasks, tasks],
+    [fetchTasks, preference?.disable_sound_effects, tasks],
   );
 
   return {

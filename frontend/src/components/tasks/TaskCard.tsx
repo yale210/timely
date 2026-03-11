@@ -27,6 +27,9 @@ const TaskCard = ({ task, onToggleComplete, onClick }: TaskCardProps) => {
 
   const playCompleteSound = () => {
     if (!completeSoundRef.current) return;
+    if (typeof window !== "undefined" && localStorage.getItem("disable_sound_effects") === "true") {
+      return;
+    }
     completeSoundRef.current.currentTime = 0;
     void completeSoundRef.current.play().catch(() => undefined);
   };

@@ -75,6 +75,16 @@
   transform-origin: center;
 }
 
+.rbc-addons-dnd-dragging .event-slot.is-just-scheduled {
+  animation: none !important;
+  opacity: 1;
+}
+
+:root[data-calendar-dragging="true"] .event-slot.is-just-scheduled {
+  animation: none !important;
+  opacity: 1;
+}
+
 @keyframes schedule-pop {
   0% {
     opacity: 0;

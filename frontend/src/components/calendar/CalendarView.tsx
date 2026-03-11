@@ -136,6 +136,46 @@ const CalendarView = ({
     };
   }, [state.date, state.calendarEntries.length, state.view]);
 
+  useEffect(() => {
+    const shell = calendarShellRef.current;
+    if (!shell) {
+      return;
+    }
+
+    const setDraggingFlag = () => {
+      document.documentElement.dataset.calendarDragging = "true";
+    };
+    const clearDraggingFlag = () => {
+      delete document.documentElement.dataset.calendarDragging;
+    };
+
+    const handlePointerDown = (event: MouseEvent | TouchEvent) => {
+      const target = event.target as HTMLElement | null;
+      if (target?.closest(".rbc-event")) {
+        setDraggingFlag();
+      }
+    };
+
+    shell.addEventListener("mousedown", handlePointerDown);
+    shell.addEventListener("touchstart", handlePointerDown, { passive: true });
+    window.addEventListener("mouseup", clearDraggingFlag);
+    window.addEventListener("touchend", clearDraggingFlag, { passive: true });
+    window.addEventListener("touchcancel", clearDraggingFlag, { passive: true });
+    window.addEventListener("dragend", clearDraggingFlag);
+    window.addEventListener("blur", clearDraggingFlag);
+
+    return () => {
+      shell.removeEventListener("mousedown", handlePointerDown);
+      shell.removeEventListener("touchstart", handlePointerDown);
+      window.removeEventListener("mouseup", clearDraggingFlag);
+      window.removeEventListener("touchend", clearDraggingFlag);
+      window.removeEventListener("touchcancel", clearDraggingFlag);
+      window.removeEventListener("dragend", clearDraggingFlag);
+      window.removeEventListener("blur", clearDraggingFlag);
+      clearDraggingFlag();
+    };
+  }, []);
+
   const components = useMemo<Components<CalendarEntry>>(
     () => ({
       event: ({ event }: { event: CalendarEntry }) => {
