@@ -33,6 +33,7 @@ class Category(models.Model):
         null=True,
         blank=True,
     )
+    colour_override = models.BooleanField(default=False)
 
     # Return the category.
     def __str__(self):

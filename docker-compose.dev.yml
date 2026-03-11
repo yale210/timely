@@ -1,15 +1,55 @@
 services:
   backend:
     build: backend
-    command: ["gunicorn", "--bind", "0.0.0.0:8000", "source.wsgi:application"]
+    command: ["daphne", "-b", "0.0.0.0", "-p", "8000", "source.asgi:application"]
     restart: always
     volumes:
       - ./data:/data
+      - ./backend:/app
     environment:
       - DEBUG=True
       - POSTGRES=False
       - DB_PATH=/data/db.sqlite3
+      - REDIS_URL=redis://redis:6379/0
+    depends_on:
+      - redis
+
+  celery-worker:
+    build: backend
+    command: ["celery", "-A", "source", "worker", "--loglevel=info"]
+    restart: always
+    volumes:
+      - ./data:/data
+      - ./backend:/app
+    environment:
+      - DEBUG=True
+      - POSTGRES=False
+      - DB_PATH=/data/db.sqlite3
+      - REDIS_URL=redis://redis:6379/0
+    depends_on:
+      - redis
+
+  celery-beat:
+    build: backend
+    command: ["celery", "-A", "source", "beat", "--loglevel=info", "--schedule=/data/celerybeat-schedule"]
+    restart: always
+    volumes:
+      - ./data:/data
+      - ./backend:/app
+    environment:
+      - DEBUG=True
+      - POSTGRES=False
+      - DB_PATH=/data/db.sqlite3
+      - REDIS_URL=redis://redis:6379/0
+    depends_on:
+      - redis
+
+  redis:
+    image: redis:7-alpine
+    restart: always
+
   frontend:
+
     build: frontend
     command: ["nginx", "-g", "daemon off;"]
     restart: always

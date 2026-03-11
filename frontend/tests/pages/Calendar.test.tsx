@@ -1,18 +1,28 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { render, screen, fireEvent, waitFor, cleanup } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
+import { NotificationProvider } from '@/context/NotificationContext'
 import moment from "moment";
 
 import CalendarPage from "@/pages/Calendar";
 import * as taskService from "@/services/taskService";
 import * as eventService from "@/services/eventService";
-import type { Task, Event, Category, TaskSubmission, EventSubmission } from "@/types";
+import * as schedulerService from "@/services/schedulerService";
+import type {
+  Task,
+  Event,
+  Category,
+  TaskSubmission,
+  EventMutationContext,
+  EventSubmission,
+} from "@/types";
 
 // ----------------------
 // Mocks
 // ----------------------
 vi.mock("@/services/taskService");
 vi.mock("@/services/eventService");
+vi.mock("@/services/schedulerService");
 
 // Mock react-big-calendar so we don't depend on rbc DOM internals.
 // We provide 2 buttons:
@@ -21,7 +31,7 @@ vi.mock("@/services/eventService");
 interface SlotInfo { start: Date };
 
 interface MockCalendarEventLike {
-  id: number;
+  id: string;
   title: string;
 }
 
@@ -68,8 +78,8 @@ interface MockUnifiedSidebarProps {
   isOpen: boolean;
   initialMode: "task" | "event";
   onSubmitTask: (data: TaskSubmission) => void;
-  onSubmitEvent: (data: EventSubmission) => void;
-  onDelete: () => void;
+  onSubmitEvent: (data: EventSubmission, context?: EventMutationContext) => void;
+  onDelete: (context?: EventMutationContext) => void;
   onClose: () => void;
   initialData?: Task | Event;
   categories: Category[];
@@ -155,6 +165,13 @@ const mockTasks: Task[] = [
     estimated_minutes: 60,
     completed: false,
     categories: [],
+    allocation: [
+      {
+        start: new Date("2026-02-12T09:00:00.000Z").toISOString(),
+        end: new Date("2026-02-12T10:00:00.000Z").toISOString(),
+      },
+    ],
+    total_task_allocations: 1,
   },
 ];
 
@@ -172,12 +189,15 @@ const mockEvents: Event[] = [
 ];
 
 const mockCategories: Category[] = [{ id: 1, text: "Work" }];
+const eventEntryTestId = `mock-event-event-${mockEvents[0].id}-${mockEvents[0].start_time}`;
 
 // Helper render
 const renderPage = () =>
   render(
     <MemoryRouter>
-      <CalendarPage />
+      <NotificationProvider>
+        <CalendarPage />
+      </NotificationProvider>
     </MemoryRouter>
   );
 
@@ -201,7 +221,9 @@ describe("CalendarPage (lean tests)", () => {
     });
 
     it("renders header + view buttons + current month", async () => {
-      await waitFor(() => expect(screen.getByText("Calendar")).toBeTruthy());
+      await waitFor(() =>
+        expect(screen.getByRole("heading", { name: "Calendar" })).toBeTruthy()
+      );
 
       expect(screen.getByText("Today")).toBeTruthy();
       expect(screen.getByText("Month")).toBeTruthy();
@@ -240,7 +262,9 @@ describe("CalendarPage (lean tests)", () => {
 
       renderPage();
 
-      await waitFor(() => expect(screen.getByText("Calendar")).toBeTruthy());
+      await waitFor(() =>
+        expect(screen.getByRole("heading", { name: "Calendar" })).toBeTruthy()
+      );
       await waitFor(() => expect(consoleSpy).toHaveBeenCalled());
 
       consoleSpy.mockRestore();
@@ -255,7 +279,9 @@ describe("CalendarPage (lean tests)", () => {
 
       renderPage();
 
-      await waitFor(() => expect(screen.getByText("Calendar")).toBeTruthy());
+      await waitFor(() =>
+        expect(screen.getByRole("heading", { name: "Calendar" })).toBeTruthy()
+      );
       await waitFor(() => expect(consoleSpy).toHaveBeenCalled());
 
       consoleSpy.mockRestore();
@@ -270,7 +296,9 @@ describe("CalendarPage (lean tests)", () => {
 
       renderPage();
 
-      await waitFor(() => expect(screen.getByText("Calendar")).toBeTruthy());
+      await waitFor(() =>
+        expect(screen.getByRole("heading", { name: "Calendar" })).toBeTruthy()
+      );
       await waitFor(() => expect(consoleSpy).toHaveBeenCalled());
 
       consoleSpy.mockRestore();
@@ -295,7 +323,9 @@ describe("CalendarPage (lean tests)", () => {
     });
 
     it("opens sidebar on slot select (defaults to task mode)", async () => {
-      await waitFor(() => expect(screen.getByText("Calendar")).toBeTruthy());
+      await waitFor(() =>
+        expect(screen.getByRole("heading", { name: "Calendar" })).toBeTruthy()
+      );
 
       fireEvent.click(screen.getByTestId("mock-select-slot"));
 
@@ -304,17 +334,17 @@ describe("CalendarPage (lean tests)", () => {
     });
 
     it("opens sidebar in task mode when clicking a task entry", async () => {
-      await waitFor(() => expect(screen.getByTestId("mock-event-1")).toBeTruthy());
-      fireEvent.click(screen.getByTestId("mock-event-1"));
+      await waitFor(() => expect(screen.getByTestId("mock-event-task-1-0")).toBeTruthy());
+      fireEvent.click(screen.getByTestId("mock-event-task-1-0"));
 
       await waitFor(() => expect(screen.getByTestId("mock-sidebar")).toBeTruthy());
       expect(screen.getByTestId("sidebar-mode").textContent).toBe("task");
     });
 
     it("opens sidebar in event mode when clicking an event entry", async () => {
-      await waitFor(() => expect(screen.getByTestId("mock-event-1000001")).toBeTruthy());
+      await waitFor(() => expect(screen.getByTestId(eventEntryTestId)).toBeTruthy());
 
-      fireEvent.click(screen.getByTestId("mock-event-1000001"));
+      fireEvent.click(screen.getByTestId(eventEntryTestId));
 
       await waitFor(() => expect(screen.getByTestId("mock-sidebar")).toBeTruthy());
       expect(screen.getByTestId("sidebar-mode").textContent).toBe("event");
@@ -331,8 +361,8 @@ describe("CalendarPage (lean tests)", () => {
     });
 
     it("updates a task when existing task selected then submit-task", async () => {
-      await waitFor(() => expect (screen.getByTestId("mock-event-1")).toBeTruthy());
-      fireEvent.click(screen.getByTestId("mock-event-1"));
+      await waitFor(() => expect(screen.getByTestId("mock-event-task-1-0")).toBeTruthy());
+      fireEvent.click(screen.getByTestId("mock-event-task-1-0"));
       await waitFor(() => expect(screen.getByTestId("mock-sidebar")).toBeTruthy());
 
       fireEvent.click(screen.getByTestId("sidebar-submit-task"));
@@ -342,8 +372,8 @@ describe("CalendarPage (lean tests)", () => {
     });
 
     it("updates an event when existing event selected then submit-event", async () => {
-      await waitFor(() => expect(screen.getByTestId("mock-event-1000001")).toBeTruthy());
-      fireEvent.click(screen.getByTestId("mock-event-1000001"));
+      await waitFor(() => expect(screen.getByTestId(eventEntryTestId)).toBeTruthy());
+      fireEvent.click(screen.getByTestId(eventEntryTestId));
       await waitFor(() => expect(screen.getByTestId("mock-sidebar")).toBeTruthy());
 
       fireEvent.click(screen.getByTestId("sidebar-submit-event"));
@@ -364,8 +394,8 @@ describe("CalendarPage (lean tests)", () => {
 
 
     it("deletes task when task selected then delete", async () => {
-      await waitFor(() => expect(screen.getByTestId("mock-event-1")).toBeTruthy());
-      fireEvent.click(screen.getByTestId("mock-event-1"));
+      await waitFor(() => expect(screen.getByTestId("mock-event-task-1-0")).toBeTruthy());
+      fireEvent.click(screen.getByTestId("mock-event-task-1-0"));
       await waitFor(() => expect(screen.getByTestId("mock-sidebar")).toBeTruthy());
 
       fireEvent.click(screen.getByTestId("sidebar-delete"));
@@ -375,8 +405,8 @@ describe("CalendarPage (lean tests)", () => {
     });
 
     it("deletes event when event selected then delete", async () => {
-      await waitFor(() => expect(screen.getByTestId("mock-event-1000001")).toBeTruthy());
-      fireEvent.click(screen.getByTestId("mock-event-1000001"));
+      await waitFor(() => expect(screen.getByTestId(eventEntryTestId)).toBeTruthy());
+      fireEvent.click(screen.getByTestId(eventEntryTestId));
       await waitFor(() => expect(screen.getByTestId("mock-sidebar")).toBeTruthy());
 
       fireEvent.click(screen.getByTestId("sidebar-delete"));
@@ -394,6 +424,60 @@ describe("CalendarPage (lean tests)", () => {
       await waitFor(() => {
         expect(screen.queryByTestId("mock-sidebar")).toBeNull();
       });
+    });
+  });
+
+  describe("scheduling and navigation", () => {
+    beforeEach(() => {
+        vi.mocked(taskService.getTasks).mockResolvedValue([]);
+        vi.mocked(taskService.getCategories).mockResolvedValue([]);
+        vi.mocked(eventService.getEvents).mockResolvedValue([]);
+        vi.mocked(schedulerService.scheduleTasks).mockResolvedValue({
+            start_date: "2023-01-01",
+            scheduled_count: 1,
+            failed_count: 0,
+            results: [{ success: true, task_id: 1, scheduled_start: "2023-01-01", scheduled_end: "2023-01-01" }]
+        });
+        vi.mocked(schedulerService.unscheduleTasks).mockResolvedValue({ unscheduled_count: 1 });
+        
+        renderPage();
+    });
+
+    it("handles scheduling tasks", async () => {
+        const btn = screen.getByText("Schedule Tasks");
+        fireEvent.click(btn);
+        
+        await waitFor(() => {
+            expect(schedulerService.scheduleTasks).toHaveBeenCalled();
+        });
+    });
+
+    it("handles unscheduling tasks", async () => {
+        const btn = screen.getByText("Unschedule Tasks");
+        fireEvent.click(btn);
+        
+        await waitFor(() => {
+            expect(schedulerService.unscheduleTasks).toHaveBeenCalled();
+        });
+    });
+
+    it("navigates calendar dates", () => {
+        const todayBtn = screen.getByText("Today");
+        const prevBtn = screen.getByText("chevron_left");
+        const nextBtn = screen.getByText("chevron_right");
+
+        fireEvent.click(nextBtn);
+        fireEvent.click(prevBtn);
+        fireEvent.click(todayBtn);
+        
+        expect(screen.getByRole("heading", { level: 2 }).textContent).toBeDefined();
+    });
+
+    it("switches views", () => {
+        fireEvent.click(screen.getByText("Month"));
+        fireEvent.click(screen.getByText("Day"));
+        fireEvent.click(screen.getByText("Agenda"));
+        fireEvent.click(screen.getByText("Week"));
     });
   });
 });

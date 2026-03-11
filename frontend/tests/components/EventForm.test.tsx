@@ -1,8 +1,26 @@
 import { it, describe, expect, vi, beforeEach, afterEach } from 'vitest'
-import { render, screen, fireEvent, cleanup } from '@testing-library/react'
+import { render, screen, fireEvent, cleanup, waitFor } from '@testing-library/react'
 import '@testing-library/jest-dom'
-import EventForm from "@/components/EventForm"
+import EventForm from "@/components/events/EventForm"
 import { type Category, type Event } from "@/types"
+import { getServerTime } from "@/services/eventService"
+
+vi.mock("@/services/eventService", () => ({
+  getServerTime: vi.fn(),
+}))
+
+const toDateInputValue = (value: Date): string => {
+  const year = value.getFullYear()
+  const month = `${value.getMonth() + 1}`.padStart(2, "0")
+  const day = `${value.getDate()}`.padStart(2, "0")
+  return `${year}-${month}-${day}`
+}
+
+const toTimeInputValue = (value: Date): string => {
+  const hours = `${value.getHours()}`.padStart(2, "0")
+  const minutes = `${value.getMinutes()}`.padStart(2, "0")
+  return `${hours}:${minutes}`
+}
 
 const mockCategories: Category[] = [
   { id: 1, text: 'Work' },
@@ -20,7 +38,7 @@ const mockInitialData: Event = {
   recurrence_interval: 'weekly',
   recurrence_end: '2026-12-31',
   reminders: [
-    { id: 1, type: 'popup', minutes_before: 30 }
+    { id: 1, send_email: false, send_push: true, minutes_before: 30 }
   ]
 }
 
@@ -28,9 +46,13 @@ describe('EventForm', () => {
   const onSubmit = vi.fn()
   const onCancel = vi.fn()
   const onDataChange = vi.fn()
+  const onCreateCategory = vi.fn().mockResolvedValue({ id: 3, text: "New" })
+  const onUpdateCategory = vi.fn().mockResolvedValue({ id: 1, text: "Work" })
+  const onDeleteCategory = vi.fn().mockResolvedValue(undefined)
 
   beforeEach(() => {
     vi.resetAllMocks()
+    vi.mocked(getServerTime).mockResolvedValue({ server_time: new Date().toISOString() })
   })
 
   afterEach(() => {
@@ -42,6 +64,9 @@ describe('EventForm', () => {
       <EventForm
         initialData={mockInitialData}
         categories={mockCategories}
+        onCreateCategory={onCreateCategory}
+        onUpdateCategory={onUpdateCategory}
+        onDeleteCategory={onDeleteCategory}
         onSubmit={onSubmit}
         onCancel={onCancel}
       />
@@ -53,10 +78,42 @@ describe('EventForm', () => {
     expect(screen.getByLabelText(/Interval/i)).toHaveValue('weekly')
   })
 
+  it("defaults end date/time to start + 1 hour when start_time exists without end_time", () => {
+    const start = new Date("2026-02-15T09:30:00.000Z")
+    const expectedEnd = new Date(start.getTime() + (60 * 60 * 1000))
+
+    render(
+      <EventForm
+        initialData={{
+          id: 0,
+          title: "",
+          start_time: start.toISOString(),
+          categories: [],
+          reminders: [],
+        } as unknown as Event}
+        categories={mockCategories}
+        onCreateCategory={onCreateCategory}
+        onUpdateCategory={onUpdateCategory}
+        onDeleteCategory={onDeleteCategory}
+        onSubmit={onSubmit}
+        onCancel={onCancel}
+      />
+    )
+
+    expect(screen.getByLabelText(/Start Date/i)).toHaveValue(toDateInputValue(start))
+    expect(screen.getByLabelText(/End Date/i, { selector: "#event-end-date" })).toHaveValue(
+      toDateInputValue(expectedEnd),
+    )
+    expect(screen.getByLabelText(/End Time/i)).toHaveValue(toTimeInputValue(expectedEnd))
+  })
+
   it('calls onCancel when cancel button is clicked', () => {
     render(
       <EventForm
         categories={mockCategories}
+        onCreateCategory={onCreateCategory}
+        onUpdateCategory={onUpdateCategory}
+        onDeleteCategory={onDeleteCategory}
         onSubmit={onSubmit}
         onCancel={onCancel}
       />
@@ -70,6 +127,9 @@ describe('EventForm', () => {
     render(
       <EventForm
         categories={mockCategories}
+        onCreateCategory={onCreateCategory}
+        onUpdateCategory={onUpdateCategory}
+        onDeleteCategory={onDeleteCategory}
         onSubmit={onSubmit}
         onCancel={onCancel}
       />
@@ -86,10 +146,38 @@ describe('EventForm', () => {
     }))
   })
 
+  it("disables Save Event until at least one field changes", () => {
+    const editableInitialData: Event = {
+      ...mockInitialData,
+      reminders: [],
+    }
+
+    render(
+      <EventForm
+        initialData={editableInitialData}
+        categories={mockCategories}
+        onCreateCategory={onCreateCategory}
+        onUpdateCategory={onUpdateCategory}
+        onDeleteCategory={onDeleteCategory}
+        onSubmit={onSubmit}
+        onCancel={onCancel}
+      />
+    )
+
+    const saveButton = screen.getByRole("button", { name: /Save Event/i })
+    expect(saveButton).toBeDisabled()
+
+    fireEvent.change(screen.getByLabelText(/Title/i), { target: { value: "Existing Event Updated" } })
+    expect(saveButton).not.toBeDisabled()
+  })
+
   it('validates time (start before end)', () => {
     render(
       <EventForm
         categories={mockCategories}
+        onCreateCategory={onCreateCategory}
+        onUpdateCategory={onUpdateCategory}
+        onDeleteCategory={onDeleteCategory}
         onSubmit={onSubmit}
         onCancel={onCancel}
       />
@@ -106,6 +194,9 @@ describe('EventForm', () => {
     render(
       <EventForm
         categories={mockCategories}
+        onCreateCategory={onCreateCategory}
+        onUpdateCategory={onUpdateCategory}
+        onDeleteCategory={onDeleteCategory}
         onSubmit={onSubmit}
         onCancel={onCancel}
       />
@@ -123,30 +214,34 @@ describe('EventForm', () => {
     render(
       <EventForm
         categories={mockCategories}
+        onCreateCategory={onCreateCategory}
+        onUpdateCategory={onUpdateCategory}
+        onDeleteCategory={onDeleteCategory}
         onSubmit={onSubmit}
         onCancel={onCancel}
       />
     )
 
     fireEvent.click(screen.getByText(/Add Reminder/i))
-    expect(screen.getByText(/mins before/i)).toBeInTheDocument()
+    expect(screen.getByText(/minutes/i)).toBeInTheDocument()
 
-    // Get all comboboxes and select the reminder type one (last one added)
-    const comboboxes = screen.getAllByRole('combobox')
-    const typeSelect = comboboxes[comboboxes.length - 1]  // Get the last combobox (reminder type)
-    fireEvent.change(typeSelect, { target: { value: 'email' } })
-    
-    const minutesInput = screen.getAllByRole('spinbutton')[0]
-    fireEvent.change(minutesInput, { target: { value: '45' } })
+    const emailCheckbox = screen.getAllByLabelText(/Email/i)[0]
+    fireEvent.click(emailCheckbox)
+
+    const minutesInput = screen.getAllByDisplayValue('15')
+    fireEvent.change(minutesInput[0], { target: { value: '45' } })
 
     fireEvent.click(screen.getByText(/delete/i))
-    expect(screen.queryByText(/mins before/i)).not.toBeInTheDocument()
+    expect(screen.queryByText(/minutes/i)).not.toBeInTheDocument()
   })
 
   it('calls onDataChange when fields change', () => {
     render(
       <EventForm
         categories={mockCategories}
+        onCreateCategory={onCreateCategory}
+        onUpdateCategory={onUpdateCategory}
+        onDeleteCategory={onDeleteCategory}
         onSubmit={onSubmit}
         onCancel={onCancel}
         onDataChange={onDataChange}
@@ -157,29 +252,33 @@ describe('EventForm', () => {
     expect(onDataChange).toHaveBeenCalled()
   })
 
-  it('handles category selection via checkboxes', () => {
+  it('handles category selection via checkboxes', async () => {
     render(
       <EventForm
         categories={mockCategories}
+        onCreateCategory={onCreateCategory}
+        onUpdateCategory={onUpdateCategory}
+        onDeleteCategory={onDeleteCategory}
         onSubmit={onSubmit}
         onCancel={onCancel}
       />
     )
 
-    // Categories are now checkboxes, not a select
-    const workCheckbox = screen.getByLabelText(/Work/i)
-    fireEvent.click(workCheckbox)
-    expect(workCheckbox).toBeChecked()
-    
-    // Toggle it off
-    fireEvent.click(workCheckbox)
-    expect(workCheckbox).not.toBeChecked()
+    fireEvent.focus(screen.getByPlaceholderText(/Type to search or add category/i))
+    const workOption = await screen.findByText(/Work/i)
+    fireEvent.click(workOption)
+
+    fireEvent.focus(screen.getByPlaceholderText(/Type to search or add category/i))
+    fireEvent.click(await screen.findByText(/Work/i))
   })
 
   it('limits reminders to 5', () => {
     render(
       <EventForm
         categories={mockCategories}
+        onCreateCategory={onCreateCategory}
+        onUpdateCategory={onUpdateCategory}
+        onDeleteCategory={onDeleteCategory}
         onSubmit={onSubmit}
         onCancel={onCancel}
       />
@@ -202,6 +301,9 @@ describe('EventForm', () => {
     render(
       <EventForm
         categories={mockCategories}
+        onCreateCategory={onCreateCategory}
+        onUpdateCategory={onUpdateCategory}
+        onDeleteCategory={onDeleteCategory}
         onSubmit={onSubmit}
         onCancel={onCancel}
       />
@@ -224,6 +326,9 @@ describe('EventForm', () => {
     render(
       <EventForm
         categories={mockCategories}
+        onCreateCategory={onCreateCategory}
+        onUpdateCategory={onUpdateCategory}
+        onDeleteCategory={onDeleteCategory}
         onSubmit={onSubmit}
         onCancel={onCancel}
       />
@@ -236,5 +341,61 @@ describe('EventForm', () => {
     fireEvent.change(intervalSelect, { target: { value: '' } })
     expect(intervalSelect).toHaveValue('')
   })
-})
 
+  it("shows a warning when client clock is out of sync with server time", async () => {
+    vi.mocked(getServerTime).mockResolvedValue({
+      server_time: new Date(Date.now() + (6 * 60 * 1000)).toISOString()
+    })
+
+    render(
+      <EventForm
+        categories={mockCategories}
+        onCreateCategory={onCreateCategory}
+        onUpdateCategory={onUpdateCategory}
+        onDeleteCategory={onDeleteCategory}
+        onSubmit={onSubmit}
+        onCancel={onCancel}
+      />
+    )
+
+    expect(
+      await screen.findByText(/device clock appears out of sync with the server/i)
+    ).toBeInTheDocument()
+  })
+
+  it("uses server-adjusted time for past reminder validation", async () => {
+    vi.mocked(getServerTime).mockResolvedValue({
+      server_time: new Date(Date.now() + (10 * 60 * 1000)).toISOString()
+    })
+
+    const now = new Date()
+    const startDate = new Date(now.getTime() + (4 * 60 * 1000))
+    const endDate = new Date(startDate.getTime() + (60 * 60 * 1000))
+
+    render(
+      <EventForm
+        categories={mockCategories}
+        onCreateCategory={onCreateCategory}
+        onUpdateCategory={onUpdateCategory}
+        onDeleteCategory={onDeleteCategory}
+        onSubmit={onSubmit}
+        onCancel={onCancel}
+      />
+    )
+
+    fireEvent.change(screen.getByLabelText(/Start Date/i), { target: { value: toDateInputValue(startDate) } })
+    fireEvent.change(screen.getByLabelText(/Start Time/i), { target: { value: toTimeInputValue(startDate) } })
+    fireEvent.change(screen.getByLabelText(/End Date/i, { selector: "#event-end-date" }), {
+      target: { value: toDateInputValue(endDate) },
+    })
+    fireEvent.change(screen.getByLabelText(/End Time/i), { target: { value: toTimeInputValue(endDate) } })
+
+    fireEvent.click(screen.getByText(/Add Reminder/i))
+    fireEvent.change(screen.getByDisplayValue("15"), { target: { value: "1" } })
+
+    await waitFor(() => {
+      expect(screen.getByText(/This reminder would trigger in the past/i)).toBeInTheDocument()
+    })
+    expect(screen.getByRole("button", { name: /Save Event/i })).toBeDisabled()
+  })
+})

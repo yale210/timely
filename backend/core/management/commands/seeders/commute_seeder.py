@@ -13,7 +13,8 @@ class CommuteSeeder(BaseSeeder):
 
     def seed(self):
         self._create_fixture_commute()
-        self._populate_random_commute()
+        for i in range(200):
+            self._populate_random_commute()
 
     def _create_fixture_commute(self):
         for commute in commutes:

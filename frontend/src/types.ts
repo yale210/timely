@@ -7,6 +7,8 @@
 export interface Category {
   id: number;
   text: string;
+  colour?: string | null;
+  colour_override?: boolean;
 }
 
 /**
@@ -34,6 +36,8 @@ export interface Task {
   categories: Category[];
   estimated_minutes: number;
   parent_task?: number | null;
+  allocation?: { start: string; end: string }[];
+  total_task_allocations?: number;
 }
 
 /**
@@ -51,7 +55,8 @@ export interface TaskSubmission extends Omit<Partial<Task>, "categories"> {
  */
 export interface EventReminder {
   id?: number;
-  type: "email" | "popup";
+  send_email: boolean;
+  send_push: boolean;
   minutes_before: number;
 }
 
@@ -70,6 +75,12 @@ export interface Event {
   recurrence_interval?: "daily" | "weekly" | "monthly" | "yearly" | null;
   recurrence_end?: string | null;
   reminders: EventReminder[];
+  is_override?: boolean;
+  is_split_series?: boolean;
+  source_event_id?: number;
+  split_from_event_id?: number | null;
+  original_start_time?: string | null;
+  instance_id?: string;
 }
 
 /**
@@ -80,3 +91,69 @@ export interface EventSubmission extends Omit<Partial<Event>, "reminders" | "cat
   reminders?: Omit<EventReminder, "id">[];
   categories?: number[];
 }
+
+/**
+ * Mutation scope for recurring event updates/deletes.
+ */
+export type RecurrenceScope = "this" | "following" | "all";
+
+/**
+ * Optional query context for scoped recurring mutations.
+ */
+export interface EventMutationContext {
+  scope?: RecurrenceScope;
+  original_start_time?: string;
+}
+
+/**
+ * Represents a single result of a task scheduling operation.
+ */
+export interface ScheduleResult {
+  task_id: number;
+  success: boolean;
+  scheduled_start: string | null;
+  scheduled_end: string | null;
+  reason?: string | null;
+}
+
+/**
+ * Represents the response from the task scheduling API.
+ */
+export interface ScheduleResponse {
+  start_date: string;
+  scheduled_count: number;
+  failed_count: number;
+  results: ScheduleResult[];
+}
+
+/**
+ * Represents weekly task statistics.
+ * @interface WeeklyStats
+ */
+export interface WeeklyStats {
+  total_tasks: number;
+  completed_tasks: number;
+  completion_percentage: number;
+  total_minutes_planned: number;
+  daily_stats: { day: string; completed_count: number; total_minutes: number }[];
+  importance_stats: { level: number; completed_count: number }[];
+}
+
+/**
+ * Represents user preferences.
+ * @interface Preference
+ */
+export interface Preference {
+    id: number
+    day_start: string
+    day_end: string
+    max_hours_study_per_day: number
+    days_off: number[]
+}
+/**
+ * Represents the data structure used to update a Preference
+ * @interface PreferenceUpdate
+ */
+export type PreferenceUpdate = Partial<Pick<
+    Preference, "day_start"|"day_end"|"max_hours_study_per_day"|"days_off"
+>>

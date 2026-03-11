@@ -1,6 +1,6 @@
-import api from "./api";
+import api from "@/services/api";
 
-import { type Task, type Category, type TaskSubmission } from "../types";
+import { type Category, type Task, type TaskSubmission } from "@/types";
 
 /**
  * Retrieves a list of tasks from the server, optionally filtered by the provided criteria.
@@ -43,8 +43,8 @@ export const deleteTask = async (id: number): Promise<void> => {
 };
 
 /**
- * Retrieves a list of task categories from the server.
- * @returns A promise that resolves to an array of category objects.
+ * Retrieves categories for the current user.
+ * Kept here for legacy callers that expect taskService to expose categories.
  */
 export const getCategories = async (): Promise<Category[]> => {
   const response = await api.get<Category[]>("/api/categories/");

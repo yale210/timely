@@ -11,15 +11,22 @@ https://docs.djangoproject.com/en/6.0/ref/settings/
 """
 
 import os
+import sys
 from datetime import timedelta
+from celery.schedules import crontab
 from django.core.exceptions import ImproperlyConfigured
 from pathlib import Path
+from dotenv import load_dotenv
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+load_dotenv(BASE_DIR / ".env")
+
 # only turn debug on when it is in debug mode
+
 DEBUG = os.getenv("DEBUG", "True") == "True"
+ENABLE_RECURRENCE_OVERRIDES = os.getenv("ENABLE_RECURRENCE_OVERRIDES", "True") == "True"
 
 # only turn SQLite on when using SQLite instead of PostgreSQL databasa
 POSTGRES = os.getenv("POSTGRES", "False") == "True"
@@ -59,12 +66,26 @@ else:
         raise ImproperlyConfigured("SECRET_KEY not set!")
 
 ALLOWED_HOSTS = []
-CORS_ALLOWED_ORIGINS = ["http://localhost:5173", "http://localhost:3000"]
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost",
+    "http://127.0.0.1",
+    "http://localhost:80",
+    "http://127.0.0.1:80",
+    "http://localhost:5173",
+    "http://127.0.0.1:5173",
+    "http://localhost:3000",
+    "http://127.0.0.1:3000",
+]
 
 CSRF_TRUSTED_ORIGINS = [
+    "http://localhost",
+    "http://127.0.0.1",
+    "http://localhost:80",
+    "http://127.0.0.1:80",
     "http://localhost:5173",
-    "http://localhost:3000",
     "http://127.0.0.1:5173",
+    "http://localhost:3000",
+    "http://127.0.0.1:3000",
 ]
 
 
@@ -82,6 +103,7 @@ else:
 # Application definition
 
 INSTALLED_APPS = [
+    "daphne",
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
@@ -89,6 +111,8 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "core.apps.CoreConfig",
+    "notifications.apps.NotificationsConfig",
+    "admin_panel.apps.AdminPanelConfig",
     # Extra apps
     "rest_framework",
     "drf_spectacular",
@@ -96,7 +120,11 @@ INSTALLED_APPS = [
     "corsheaders",
     "knox",
     "authentication",
+    "channels",
+    "scheduler",
+    "profiles.apps.ProfilesConfig",
 ]
+
 
 MIDDLEWARE = [
     # Added middleware
@@ -180,6 +208,7 @@ AUTHENTICATION_BACKENDS = (
 AUTH_USER_MODEL = "authentication.User"
 
 REST_FRAMEWORK = {
+    "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
     "DEFAULT_AUTHENTICATION_CLASSES": (
         "knox.auth.TokenAuthentication",
         "rest_framework.authentication.SessionAuthentication",
@@ -202,7 +231,7 @@ SPECTACULAR_SETTINGS = {
 
 REST_KNOX = {
     "USER_SERIALIZER": "authentication.serializer.UserSerializer",
-    "TOKEN_TTL": timedelta(hours=10),
+    "TOKEN_TTL": timedelta(hours=24),
 }
 
 # Internationalization
@@ -222,3 +251,47 @@ USE_TZ = True
 
 STATIC_URL = "/api/static/"
 STATIC_ROOT = BASE_DIR / "staticfiles"
+
+ASGI_APPLICATION = "source.asgi.application"
+
+REDIS_URL = os.getenv("REDIS_URL", "redis://localhost:6379/0")
+CELERY_BROKER_URL = REDIS_URL
+CELERY_RESULT_BACKEND = REDIS_URL
+CELERY_TIMEZONE = "UTC"
+CELERY_BEAT_SCHEDULE = {
+    "check_reminders": {
+        "task": "notifications.tasks.check_reminders",
+        "schedule": 60.0,
+    },
+    "cleanup_old_notifications": {
+        "task": "notifications.tasks.cleanup_old_notifications",
+        "schedule": crontab(hour=3, minute=0),
+    },
+}
+
+# Test detection
+TESTING = "test" in sys.argv or os.getenv("TESTING") == "True"
+
+if TESTING:
+    CELERY_TASK_ALWAYS_EAGER = True
+    CELERY_TASK_EAGER_PROPAGATES = True
+
+if TESTING:
+    CHANNEL_LAYERS = {
+        "default": {
+            "BACKEND": "channels.layers.InMemoryChannelLayer",
+        },
+    }
+else:
+    CHANNEL_LAYERS = {
+        "default": {
+            "BACKEND": "channels_redis.core.RedisChannelLayer",
+            "CONFIG": {
+                "hosts": [REDIS_URL],
+            },
+        },
+    }
+
+VAPID_PUBLIC_KEY = os.getenv("VAPID_PUBLIC_KEY")
+VAPID_PRIVATE_KEY = os.getenv("VAPID_PRIVATE_KEY")
+VAPID_ADMIN_EMAIL = os.getenv("VAPID_ADMIN_EMAIL")

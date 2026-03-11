@@ -1,9 +1,21 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest"
-import { render, screen, fireEvent, waitFor } from "@testing-library/react"
+import { render, screen, fireEvent, waitFor, cleanup } from "@testing-library/react"
 import { MemoryRouter } from "react-router-dom"
 import Signup from "@/pages/Authentication/Signup"
+import type * as ComponentsIndexModule from "@/components/index"
 import { authService } from "@/services/authService"
 import "@testing-library/jest-dom/vitest"
+import type * as ReactRouterDom from "react-router-dom"
+
+const navigateMock = vi.fn()
+
+vi.mock("react-router-dom", async () => {
+  const actual: typeof ReactRouterDom = await vi.importActual("react-router-dom")
+  return {
+    ...actual,
+    useNavigate: () => navigateMock,
+  }
+})
 
 vi.mock("@/services/authService", () => ({
   authService: {
@@ -11,22 +23,46 @@ vi.mock("@/services/authService", () => ({
   },
 }))
 
-vi.mock("@/components/index", () => ({
-  Navbar: () => <div data-testid="navbar" />,
-  Footer: () => <div data-testid="footer" />,
-}))
+vi.mock("@/components/index", async (importOriginal) => {
+  const actual = await importOriginal<typeof ComponentsIndexModule>()
+  return {
+    ...actual,
+    HomeNavbar: () => <div data-testid="navbar" />,
+    BlurBackground: () => <div data-testid="blur-bg" />,
+    Footer: () => <div data-testid="footer" />,
+  }
+})
 
 describe("Signup page", () => {
   beforeEach(() => {
     vi.resetAllMocks()
+    navigateMock.mockReset()
   })
 
   afterEach(() => {
+    cleanup()
     vi.restoreAllMocks()
   })
 
+  function fillForm() {
+    fireEvent.change(screen.getByLabelText(/username/i), {
+      target: { value: "alice"},
+    })
+    fireEvent.change(screen.getByLabelText(/email address/i), {
+      target: { value: "alice@example.com"},
+    })
+    fireEvent.change(screen.getByLabelText(/^password$/i), {
+      target: { value: "Secret123" },
+    })
+    fireEvent.change(screen.getByLabelText(/confirm password/i), {
+      target: { value: "Secret123" },
+    })
+  }
+
   it("submits details and navigates to login on success", async () => {
-    const registerSpy = vi.spyOn(authService, "register").mockResolvedValue({} as never)
+    const registerSpy = vi
+    .spyOn(authService, "register")
+    .mockResolvedValue({} as never)
 
     const { container } = render(
       <MemoryRouter>
@@ -34,23 +70,32 @@ describe("Signup page", () => {
       </MemoryRouter>
     )
 
+    //Replaced with one function to save space and alow it to be changed later.
     fireEvent.change(screen.getByLabelText(/username/i), { target: { value: "alice" } })
     fireEvent.change(screen.getByLabelText(/email address/i), { target: { value: "alice@example.com" } })
-    fireEvent.change(screen.getByLabelText(/password/i), { target: { value: "secret" } })
+    fireEvent.change(screen.getByLabelText(/^password$/i), { target: { value: "Secret123" } })
+    fireEvent.change(screen.getByLabelText(/confirm password/i), { target: { value: "Secret123" } })
+    fillForm()
     fireEvent.click(screen.getByRole("button", { name: /sign up/i }))
 
     await waitFor(() =>
       expect(registerSpy).toHaveBeenCalledWith({
         username: "alice",
         email: "alice@example.com",
-        password: "secret",
+        password: "Secret123",
+        password2: "Secret123",
       })
     )
+    await waitFor(() => {
+      expect(navigateMock).toHaveBeenCalledWith("/login")
+    })
     expect(container.querySelector(".bg-red-50")).toBeNull()
   })
 
   it("shows error when signup fails", async () => {
-    const registerSpy = vi.spyOn(authService, "register").mockRejectedValue(new Error("Signup failed"))
+    const registerSpy = vi.spyOn(authService, "register").mockRejectedValue(
+      new Error("Signup failed")
+    )
 
     render(
       <MemoryRouter>
@@ -60,7 +105,8 @@ describe("Signup page", () => {
 
     fireEvent.change(screen.getByLabelText(/username/i), { target: { value: "bob" } })
     fireEvent.change(screen.getByLabelText(/email address/i), { target: { value: "bob@example.com" } })
-    fireEvent.change(screen.getByLabelText(/password/i), { target: { value: "pass" } })
+    fireEvent.change(screen.getByLabelText(/^password$/i), { target: { value: "pass" } })
+    fireEvent.change(screen.getByLabelText(/confirm password/i), { target: { value: "pass" } })
     fireEvent.click(screen.getByRole("button", { name: /sign up/i }))
 
     expect(await screen.findByText("Signup failed")).toBeInTheDocument()
@@ -72,7 +118,9 @@ describe("Signup page", () => {
     const deferred = new Promise((resolve) => {
       resolveFn = () => resolve({} as never)
     })
-    const registerSpy = vi.spyOn(authService, "register").mockReturnValue(deferred as never)
+    const registerSpy = vi
+    .spyOn(authService, "register")
+    .mockReturnValue(deferred as never)
 
     render(
       <MemoryRouter>
@@ -82,7 +130,8 @@ describe("Signup page", () => {
 
     fireEvent.change(screen.getByLabelText(/username/i), { target: { value: "carol" } })
     fireEvent.change(screen.getByLabelText(/email address/i), { target: { value: "carol@example.com" } })
-    fireEvent.change(screen.getByLabelText(/password/i), { target: { value: "pw" } })
+    fireEvent.change(screen.getByLabelText(/^password$/i), { target: { value: "pw" } })
+    fireEvent.change(screen.getByLabelText(/confirm password/i), { target: { value: "pw" } })
 
     const button = screen.getByRole("button", { name: /sign up/i })
     fireEvent.click(button)

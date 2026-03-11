@@ -1,7 +1,7 @@
 services:
   backend:
     image: registry.digitalocean.com/segmajor/backend:latest 
-    command: ["gunicorn", "--bind", "0.0.0.0:8000", "source.wsgi:application"]
+    command: ["daphne", "-b", "0.0.0.0", "-p", "8000", "source.asgi:application"]
     restart: always
     volumes:
       - ./data:/data
@@ -9,12 +9,57 @@ services:
       - DEBUG=False
       - POSTGRES=True
       - POSTGRES_HOST=postgres
+      - REDIS_URL=redis://redis:6379/0
     env_file:
       - .env
     depends_on:
       postgres:
         condition: service_started
+      redis:
+        condition: service_started
+
+  celery-worker:
+    image: registry.digitalocean.com/segmajor/backend:latest
+    command: ["celery", "-A", "source", "worker", "--loglevel=info"]
+    restart: always
+    environment:
+      - DEBUG=False
+      - POSTGRES=True
+      - POSTGRES_HOST=postgres
+      - REDIS_URL=redis://redis:6379/0
+    env_file:
+      - .env
+    depends_on:
+      postgres:
+        condition: service_started
+      redis:
+        condition: service_started
+
+  celery-beat:
+    image: registry.digitalocean.com/segmajor/backend:latest
+    command: ["celery", "-A", "source", "beat", "--loglevel=info", "--schedule=/data/celerybeat-schedule"]
+    restart: always
+    volumes:
+      - ./data:/data
+    environment:
+      - DEBUG=False
+      - POSTGRES=True
+      - POSTGRES_HOST=postgres
+      - REDIS_URL=redis://redis:6379/0
+    env_file:
+      - .env
+    depends_on:
+      postgres:
+        condition: service_started
+      redis:
+        condition: service_started
+
+  redis:
+    image: redis:7-alpine
+    restart: always
+
   frontend:
+
     image: registry.digitalocean.com/segmajor/frontend:latest
     command: ["nginx", "-g", "daemon off;"]
     restart: always

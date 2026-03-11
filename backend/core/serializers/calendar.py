@@ -21,6 +21,8 @@ class CalendarSerializer(serializers.ModelSerializer):
             "importance",
             "completed",
             "parent_task",
+            "allocation",
+            "total_task_allocations",
         ]
 
     def to_representation(self, instance):
@@ -29,6 +31,16 @@ class CalendarSerializer(serializers.ModelSerializer):
             instance.categories.all(), many=True
         ).data
         return representation
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        request = self.context.get("request")
+        if request and request.user and request.user.is_authenticated:
+            self.fields["categories"].queryset = Category.objects.filter(
+                user=request.user
+            )
+        else:
+            self.fields["categories"].queryset = Category.objects.none()
 
 
 class CalendarResponseSerializer(serializers.ModelSerializer):

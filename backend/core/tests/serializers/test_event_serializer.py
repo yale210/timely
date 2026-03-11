@@ -130,3 +130,59 @@ class EventSerializerTests(TestCase):
         event = serializer.save()
         self.assertEqual(event.categories.count(), 1)
         self.assertEqual(event.categories.first(), category)
+
+    def test_serializer_partial_update_reminders_validates_against_existing_start_time(
+        self,
+    ):
+        now = timezone.now()
+        event = Event.objects.create(
+            user=self.user,
+            title="Existing Event",
+            start_time=now + datetime.timedelta(minutes=5),
+            end_time=now + datetime.timedelta(hours=1),
+        )
+        data = {
+            "reminders": [
+                {"send_push": True, "send_email": False, "minutes_before": 10},
+            ]
+        }
+        serializer = EventSerializer(
+            instance=event,
+            data=data,
+            partial=True,
+            context={"request": type("obj", (object,), {"user": self.user})},
+        )
+
+        with self.assertRaises(ValidationError) as context:
+            serializer.is_valid(raise_exception=True)
+
+        self.assertIn("reminders", context.exception.detail)
+
+    def test_partial_validate_does_not_mutate_instance_fields(self):
+        now = timezone.now().replace(minute=0, second=0, microsecond=0)
+        event = Event.objects.create(
+            user=self.user,
+            title="Recurring Event",
+            start_time=now,
+            end_time=now + datetime.timedelta(hours=1),
+            recurrence_interval=Event.RecurrenceInterval.DAILY,
+            recurrence_end=(now + datetime.timedelta(days=10)).date(),
+        )
+
+        occurrence_start = now + datetime.timedelta(days=3)
+        serializer = EventSerializer(
+            instance=event,
+            data={
+                "title": "Updated Title",
+                "start_time": occurrence_start,
+                "end_time": occurrence_start + datetime.timedelta(hours=1),
+                "recurrence_interval": Event.RecurrenceInterval.DAILY,
+                "recurrence_end": event.recurrence_end,
+            },
+            partial=True,
+            context={"request": type("obj", (object,), {"user": self.user})},
+        )
+
+        self.assertTrue(serializer.is_valid(), serializer.errors)
+        event.refresh_from_db()
+        self.assertEqual(event.start_time, now)

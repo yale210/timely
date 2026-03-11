@@ -1,5 +1,5 @@
 import axios, { AxiosHeaders, type AxiosRequestHeaders, type InternalAxiosRequestConfig } from "axios";
-import { authStore } from "./authService";
+import { authStore } from "@/services/authService";
 
 // Shared axios instance that automatically sends the auth token
 const api = axios.create({

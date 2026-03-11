@@ -54,6 +54,8 @@ class CalendarSerializerTests(TestCase):
                 "completed",
                 "estimated_minutes",  # I should check if this was in fields before, it wasn't but model has it.
                 "parent_task",
+                "allocation",
+                "total_task_allocations",
             },
         )
 

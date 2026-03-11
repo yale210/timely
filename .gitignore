@@ -1,6 +1,11 @@
 # Created by https://www.toptal.com/developers/gitignore/api/django,react,windows,pycharm+all,visualstudiocode,visualstudio
 # Edit at https://www.toptal.com/developers/gitignore?templates=django,react,windows,pycharm+all,visualstudiocode,visualstudio
 
+.nvmrc
+
+### nix
+.nix-state/
+
 frontend/coverage/*
 
 ### Django ###
@@ -712,6 +717,7 @@ FodyWeavers.xsd
 # Additional files built by Visual Studio
 
 # End of https://www.toptal.com/developers/gitignore/api/django,react,windows,pycharm+all,visualstudiocode,visualstudio
+backend/celerybeat-schedule.*
 frontend/public/planner.jpg
 frontend/src/components/Book.tsx
 .gitignore

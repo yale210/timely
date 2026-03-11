@@ -1,0 +1,9 @@
+[data-theme="bento"] {
+  --primary: #f08a5d;       /* warm orange */
+  --primary-hover: #b83b5e; /* deep berry accent */
+  --background: #fff5e1;    /* soft cream */
+  --text-color: #333333;          /* dark grey for readability */
+  --border: #f08a5d;        /* soft accent border */
+}
+
+

@@ -3,6 +3,7 @@ import { render, screen, waitFor, cleanup } from '@testing-library/react'
 import TaskList from "@/pages/TaskList"
 import * as taskService from "@/services/taskService"
 import { MemoryRouter } from 'react-router-dom'
+import { NotificationProvider } from '@/context/NotificationContext'
 import moment from 'moment'
 
 vi.mock("@/services/taskService")
@@ -55,7 +56,9 @@ describe('TaskList Grouping', () => {
     it('should group upcoming tasks by day', async () => {
         render(
             <MemoryRouter>
-                <TaskList />
+                <NotificationProvider>
+                    <TaskList />
+                </NotificationProvider>
             </MemoryRouter>
         )
 

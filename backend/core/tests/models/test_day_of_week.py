@@ -8,7 +8,7 @@ from django.contrib.auth import get_user_model
 
 class DayOfWeekTests(TestCase):
     def setUp(self):
-        self.monday = DayOfWeek.objects.create(day=DayOfWeek.Day.MONDAY)
+        self.monday = DayOfWeek.objects.get_or_create(day=DayOfWeek.Day.MONDAY)[0]
 
     def test_str_method_returns_day_name(self):
         self.assertEqual(str(self.monday), "Monday")
@@ -25,8 +25,8 @@ class DayOfWeekTests(TestCase):
         )
         preference = Preference.objects.create(
             user=user,
-            sleep_start="22:00",
-            sleep_end="07:00",
+            day_start="07:00",
+            day_end="22:00",
         )
         preference.days_off.add(self.monday)
         self.assertIn(self.monday, preference.days_off.all())

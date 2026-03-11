@@ -6,6 +6,8 @@ interface User {
   id?: number
   username: string
   email: string
+  is_staff?: boolean
+  is_superuser?: boolean
   [key: string]: unknown
 }
 
@@ -60,10 +62,10 @@ export const authStore = {
   },
 }
 
-import api from "./api"
+import api from "@/services/api"
 
 export const authService = {
-  async register(payload: { username: string; email: string; password: string }) {
+  async register(payload: { username: string; email: string; password: string; password2: string; }) {
     const { data } = await api.post<AuthResponse>("/api/authentication/register/", payload)
 
     const token = getTokenFromResponse(data)
