@@ -87,7 +87,7 @@ describe("useCalendar", () => {
     vi.mocked(taskService.getTasks).mockResolvedValue(mockTasks);
     vi.mocked(taskService.getCategories).mockResolvedValue(mockCategories);
     vi.mocked(eventService.getEvents).mockResolvedValue(mockEvents);
-    vi.mocked(preferenceService.getMyPreference).mockResolvedValue({
+    vi.mocked(preferenceService).getMyPreference.mockResolvedValue({
       id: 1,
       day_start: "08:00:00",
       day_end: "22:00:00",

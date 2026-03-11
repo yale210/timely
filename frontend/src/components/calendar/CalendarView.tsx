@@ -4,7 +4,6 @@ import { useEffect, useLayoutEffect, useMemo, useRef, type CSSProperties } from 
 import moment from "moment";
 import { Calendar, momentLocalizer, type Components, Views } from "react-big-calendar";
 import withDragAndDrop from "react-big-calendar/lib/addons/dragAndDrop";
-import type { EventInteractionArgs } from "react-big-calendar/lib/addons/dragAndDrop";
 import { DndProvider } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
 import type { UseCalendarReturn } from "@/hooks/calendar/useCalendar";
@@ -250,21 +249,21 @@ const CalendarView = ({
             selectable="ignoreEvents"
             onSelectSlot={actions.selectSlot}
             onSelectEvent={(entry) => {
-              actions.selectEntry(entry as CalendarEntry);
+              actions.selectEntry(entry);
             }}
             draggableAccessor={(entry) =>
-              (entry as CalendarEntry).kind === "event" ||
-              ((entry as CalendarEntry).kind === "task" && !(entry as CalendarEntry).taskData?.locked)
+              entry.kind === "event" ||
+              (entry.kind === "task" && !entry.taskData?.locked)
             }
             resizableAccessor={(entry) =>
-              (entry as CalendarEntry).kind === "event" ||
-              ((entry as CalendarEntry).kind === "task" && !(entry as CalendarEntry).taskData?.locked)
+              entry.kind === "event" ||
+              (entry.kind === "task" && !entry.taskData?.locked)
             }
             onEventDrop={(args) => {
-              void actions.handleEventDrop(args as EventInteractionArgs<CalendarEntry>);
+              void actions.handleEventDrop(args);
             }}
             onEventResize={(args) => {
-              void actions.handleEventResize(args as EventInteractionArgs<CalendarEntry>);
+              void actions.handleEventResize(args);
             }}
             toolbar={false}
             className="h-full"

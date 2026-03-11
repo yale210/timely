@@ -88,6 +88,12 @@ export interface UseCalendarReturn {
   actions: CalendarActions;
 }
 
+/**
+ * Computes the inclusive date window to load for the current calendar view.
+ * @param currentView - Active calendar view.
+ * @param currentDate - Anchor date for the view.
+ * @returns Date window formatted for API queries.
+ */
 export const getCalendarWindow = (
   currentView: View,
   currentDate: Date,
@@ -152,6 +158,11 @@ const getDayScheduleWindow = (preference: Preference, slotDate: Date): { start: 
   };
 };
 
+/**
+ * Returns true when a slot falls outside the preferred schedule window.
+ * @param slotDate - Slot time to evaluate.
+ * @param preference - User preference schedule, if available.
+ */
 export const isOutsidePreferredDayWindow = (slotDate: Date, preference: Preference | null): boolean => {
   if (!preference) {
     return false;
