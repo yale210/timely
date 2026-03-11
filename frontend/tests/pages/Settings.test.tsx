@@ -139,7 +139,7 @@ describe("Settings page", () => {
     const monLabel = screen.getByText("Mon");
     const monRow = monLabel.parentElement;
     expect(monRow).toBeTruthy();
-    const toggleButton = within(monRow as HTMLElement).getByRole("button");
+    const toggleButton = within(monRow!).getByRole("button");
     fireEvent.click(toggleButton);
     expect(toggleButton.getAttribute("aria-pressed")).toBe("true");
 

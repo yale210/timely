@@ -222,7 +222,7 @@ describe("CalendarPage (lean tests)", () => {
       vi.mocked(taskService.getTasks).mockResolvedValue(mockTasks);
       vi.mocked(taskService.getCategories).mockResolvedValue(mockCategories);
       vi.mocked(eventService.getEvents).mockResolvedValue(mockEvents);
-      vi.mocked(preferenceService.getMyPreference).mockResolvedValue({
+      vi.mocked(preferenceService).getMyPreference.mockResolvedValue({
         id: 1,
         day_start: "08:00:00",
         day_end: "22:00:00",
@@ -273,7 +273,7 @@ describe("CalendarPage (lean tests)", () => {
       vi.mocked(taskService.getTasks).mockRejectedValue(new Error("tasks fail"));
       vi.mocked(taskService.getCategories).mockResolvedValue([]);
       vi.mocked(eventService.getEvents).mockResolvedValue([]);
-      vi.mocked(preferenceService.getMyPreference).mockResolvedValue({
+      vi.mocked(preferenceService).getMyPreference.mockResolvedValue({
         id: 1,
         day_start: "08:00:00",
         day_end: "22:00:00",
@@ -298,7 +298,7 @@ describe("CalendarPage (lean tests)", () => {
       vi.mocked(taskService.getTasks).mockResolvedValue([]);
       vi.mocked(taskService.getCategories).mockResolvedValue([]);
       vi.mocked(eventService.getEvents).mockRejectedValue(new Error("events fail"));
-      vi.mocked(preferenceService.getMyPreference).mockResolvedValue({
+      vi.mocked(preferenceService).getMyPreference.mockResolvedValue({
         id: 1,
         day_start: "08:00:00",
         day_end: "22:00:00",
@@ -323,7 +323,7 @@ describe("CalendarPage (lean tests)", () => {
       vi.mocked(taskService.getTasks).mockResolvedValue([]);
       vi.mocked(taskService.getCategories).mockRejectedValue(new Error("cats fail"));
       vi.mocked(eventService.getEvents).mockResolvedValue([]);
-      vi.mocked(preferenceService.getMyPreference).mockResolvedValue({
+      vi.mocked(preferenceService).getMyPreference.mockResolvedValue({
         id: 1,
         day_start: "08:00:00",
         day_end: "22:00:00",
@@ -348,7 +348,7 @@ describe("CalendarPage (lean tests)", () => {
       vi.mocked(taskService.getTasks).mockResolvedValue(mockTasks);
       vi.mocked(taskService.getCategories).mockResolvedValue(mockCategories);
       vi.mocked(eventService.getEvents).mockResolvedValue(mockEvents);
-      vi.mocked(preferenceService.getMyPreference).mockResolvedValue({
+      vi.mocked(preferenceService).getMyPreference.mockResolvedValue({
         id: 1,
         day_start: "08:00:00",
         day_end: "22:00:00",
@@ -478,7 +478,7 @@ describe("CalendarPage (lean tests)", () => {
         vi.mocked(taskService.getTasks).mockResolvedValue([]);
         vi.mocked(taskService.getCategories).mockResolvedValue([]);
         vi.mocked(eventService.getEvents).mockResolvedValue([]);
-        vi.mocked(preferenceService.getMyPreference).mockResolvedValue({
+        vi.mocked(preferenceService).getMyPreference.mockResolvedValue({
           id: 1,
           day_start: "08:00:00",
           day_end: "22:00:00",

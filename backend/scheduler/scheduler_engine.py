@@ -214,13 +214,17 @@ class Scheduler:
                         overlap_start = max(start, window_start)
                         overlap_end = min(end, window_end)
                         if overlap_end > overlap_start:
-                            scheduled_minutes += int((overlap_end - overlap_start).total_seconds() // 60)
+                            scheduled_minutes += int(
+                                (overlap_end - overlap_start).total_seconds() // 60
+                            )
 
                 for start, end in self._scheduled_blocks:
                     overlap_start = max(start, window_start)
                     overlap_end = min(end, window_end)
                     if overlap_end > overlap_start:
-                        scheduled_minutes += int((overlap_end - overlap_start).total_seconds() // 60)
+                        scheduled_minutes += int(
+                            (overlap_end - overlap_start).total_seconds() // 60
+                        )
 
                 remaining_minutes = max(0, max_minutes - scheduled_minutes)
                 if remaining_minutes == 0:
@@ -236,7 +240,9 @@ class Scheduler:
                         trimmed_slots.append((start, end))
                         minutes_left -= slot_minutes
                     else:
-                        trimmed_slots.append((start, start + timedelta(minutes=minutes_left)))
+                        trimmed_slots.append(
+                            (start, start + timedelta(minutes=minutes_left))
+                        )
                         minutes_left = 0
                         break
                 free_slots = trimmed_slots

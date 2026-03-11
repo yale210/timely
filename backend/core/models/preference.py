@@ -66,14 +66,18 @@ class Preference(models.Model):
         if not isinstance(schedule, list):
             raise ValidationError({"day_schedule": "Day schedule must be a list."})
         if len(schedule) != 7:
-            raise ValidationError({"day_schedule": "Provide a schedule for all 7 days."})
+            raise ValidationError(
+                {"day_schedule": "Provide a schedule for all 7 days."}
+            )
 
         seen_days = set()
         max_minutes = self.max_hours_study_per_day * 60
 
         for entry in schedule:
             if not isinstance(entry, dict):
-                raise ValidationError({"day_schedule": "Each day entry must be an object."})
+                raise ValidationError(
+                    {"day_schedule": "Each day entry must be an object."}
+                )
 
             day = entry.get("day")
             if not isinstance(day, int) or day < 1 or day > 7:
@@ -88,10 +92,14 @@ class Preference(models.Model):
                 start_time = datetime.strptime(start_raw, "%H:%M").time()
                 end_time = datetime.strptime(end_raw, "%H:%M").time()
             except (TypeError, ValueError):
-                raise ValidationError({"day_schedule": "Start and end must be in HH:MM format."})
+                raise ValidationError(
+                    {"day_schedule": "Start and end must be in HH:MM format."}
+                )
 
             if start_time == end_time:
-                raise ValidationError({"day_schedule": "Start and end must be different."})
+                raise ValidationError(
+                    {"day_schedule": "Start and end must be different."}
+                )
 
             start_dt = datetime.combine(today, start_time, tzinfo=user_timezone)
             end_dt = datetime.combine(today, end_time, tzinfo=user_timezone)
