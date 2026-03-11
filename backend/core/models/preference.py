@@ -112,7 +112,13 @@ class Preference(models.Model):
 
     def get_day_window(self, target_date):
         day_key = target_date.weekday() + 1
-        schedule = {entry.get("day"): entry for entry in (self.day_schedule or [])}
+        schedule = {}
+        for entry in self.day_schedule or []:
+            if not isinstance(entry, dict):
+                continue
+            day_value = entry.get("day")
+            if isinstance(day_value, int):
+                schedule[day_value] = entry
         entry = schedule.get(day_key)
         if entry and entry.get("start") and entry.get("end"):
             try:

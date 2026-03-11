@@ -389,8 +389,11 @@ class Scheduler:
                 and result.scheduled_start is not None
                 and result.scheduled_end is not None
             ):
-                self._scheduled_blocks.append(
-                    (result.scheduled_start, result.scheduled_end)
-                )
+                if result.segments:
+                    self._scheduled_blocks.extend(result.segments)
+                else:
+                    self._scheduled_blocks.append(
+                        (result.scheduled_start, result.scheduled_end)
+                    )
 
         return results
