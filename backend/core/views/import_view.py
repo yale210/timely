@@ -67,6 +67,7 @@ class ImportView(APIView):
                 # Each lines is read one-by-one
                 for line in lines:
                     # Line count is tracked
+                    #
                     count = count + 1
 
                     # This signifies that every line below it is information about the event

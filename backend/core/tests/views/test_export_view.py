@@ -3,7 +3,7 @@ from django.contrib.auth import get_user_model
 from rest_framework.test import APIClient
 from core.models import Event
 
-# tEST1
+# tEST12
 
 
 class ExportViewTests(TestCase):
@@ -15,6 +15,7 @@ class ExportViewTests(TestCase):
 
     def test_fail_if_not_logged_in(self):
         response = self.client.get("/api/export/")
+        #
         self.assertEqual(response.status_code, 401)
 
     def test_success_if_logged_in(self):
