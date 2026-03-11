@@ -88,6 +88,10 @@ class Scheduler:
     def _merge_intervals(
         self, intervals: Iterable[Tuple[datetime, datetime]]
     ) -> List[Tuple[datetime, datetime]]:
+        """
+        Merge overlapping intervals into a set of non-overlapping intervals.
+        """
+
         merged: List[Tuple[datetime, datetime]] = []
         for start, end in sorted(intervals, key=lambda x: x[0]):
             if not merged or start > merged[-1][1]:
@@ -102,6 +106,10 @@ class Scheduler:
         window: Tuple[datetime, datetime],
         occupied: List[Tuple[datetime, datetime]],
     ) -> List[Tuple[datetime, datetime]]:
+        """
+        Calculate free time intervals within a given window
+        by subtracting occupied intervals.
+        """
         start, end = window
         free: List[Tuple[datetime, datetime]] = []
         cursor = start
@@ -131,6 +139,10 @@ class Scheduler:
         return True
 
     def _get_occupied_slots(self, target_date: date) -> List[Tuple[datetime, datetime]]:
+        """
+        Get all occupied time slots for the target date from events,
+        commutes, and scheduled tasks.
+        """
         occupied: List[Tuple[datetime, datetime]] = []
         day_start = self._aware(datetime.combine(target_date, time.min))
         day_end = self._aware(datetime.combine(target_date, time.max))
@@ -173,6 +185,10 @@ class Scheduler:
         return occupied
 
     def _working_window(self, target_date: date) -> Tuple[datetime, datetime]:
+        """
+        Determine the working window for a given date based on a user's preferences.
+
+        """
         if self.preference:
             day_start = self._aware(
                 datetime.combine(target_date, self.preference.day_start)  # type: ignore[attr-defined]
@@ -191,6 +207,10 @@ class Scheduler:
     def get_available_slots(
         self, target_date: date, min_minutes: int
     ) -> List[Tuple[datetime, datetime]]:
+        """
+        Get free time slots on the target date that are at minimum min_minutes long.
+        Checks the user's working window and subtracts occupied slots.
+        """
         window_start, window_end = self._working_window(target_date)
         occupied = self._get_occupied_slots(target_date)
         free_slots = self._subtract_intervals((window_start, window_end), occupied)
