@@ -11,8 +11,9 @@ const isApiError = (error: unknown): error is ApiError =>
   typeof error === "object" && error !== null && "response" in error;
 
 /**
- * Normalize Django/DRF error responses into a message + field error map.
- * @param error - Unknown error value from a request.
+ * Parses a Django REST Framework error response into a user-friendly message and field-level errors.
+ * @param error - The caught error, typically from an Axios request.
+ * @returns An object containing a summary message and per-field error arrays.
  */
 export const formatDjangoFormError = (
   error: unknown,

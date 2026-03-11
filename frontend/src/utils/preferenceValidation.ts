@@ -1,8 +1,9 @@
 import type { Preference } from "@/types";
 
 /**
- * Validate preference fields and return keyed error messages.
- * @param preference - Preference payload to validate.
+ * Validates a user preference object and returns field-level errors.
+ * @param preference - The preference values to validate.
+ * @returns A record mapping field names to their validation error messages.
  */
 export const validatePreference = (preference: Preference): Record<string, string[]> => {
   const errors: Record<string, string[]> = {};

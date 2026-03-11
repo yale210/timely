@@ -1,6 +1,6 @@
 /**
- * Persist and apply the selected theme name on the document.
- * @param themeName - Theme identifier.
+ * Applies a colour theme to the document and persists the choice.
+ * @param themeName - The theme identifier to activate.
  */
 export const applyTheme = (themeName: string) => {
   document.documentElement.dataset.theme = themeName;
@@ -8,8 +8,8 @@ export const applyTheme = (themeName: string) => {
 };
 
 /**
- * Persist and apply the selected font name on the document.
- * @param fontName - Font identifier.
+ * Applies a font family to the document and persists the choice.
+ * @param fontName - The font identifier to activate.
  */
 export const applyFont = (fontName: string) => {
   document.documentElement.dataset.font = fontName;
