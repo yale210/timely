@@ -140,50 +140,55 @@ const SettingsContent = ({
                 </div>
                 {loading.preference ? (
                   <p className="text-sm text-gray-500">Loading...</p>
-                ) : state.preference ? (
-                  <div className="space-y-4">
-                    <div className="flex items-center justify-between rounded-lg border border-gray-200 bg-white px-4 py-3 shadow-sm">
-                      <p className="text-sm font-semibold text-gray-900">Disable sound effects</p>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          actions.setPreference({
-                            ...state.preference!,
-                            disable_sound_effects: !state.preference.disable_sound_effects,
-                          });
-                        }}
-                        className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${
-                          state.preference.disable_sound_effects ? "bg-gray-300" : "bg-primary"
-                        }`}
-                        aria-pressed={!state.preference.disable_sound_effects}
-                      >
-                        <span
-                          className={`inline-block h-4 w-4 transform rounded-full bg-white shadow-sm transition-transform ${
-                            state.preference.disable_sound_effects ? "translate-x-1" : "translate-x-4"
+                ) : (() => {
+                  const preference = state.preference;
+                  if (!preference) {
+                    return <p className="text-sm text-red-600">Unable to load preferences.</p>;
+                  }
+
+                  return (
+                    <div className="space-y-4">
+                      <div className="flex items-center justify-between rounded-lg border border-gray-200 bg-white px-4 py-3 shadow-sm">
+                        <p className="text-sm font-semibold text-gray-900">Disable sound effects</p>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            actions.setPreference({
+                              ...preference,
+                              disable_sound_effects: !preference.disable_sound_effects,
+                            });
+                          }}
+                          className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${
+                            preference.disable_sound_effects ? "bg-gray-300" : "bg-primary"
                           }`}
-                        />
-                      </button>
+                          aria-pressed={!preference.disable_sound_effects}
+                        >
+                          <span
+                            className={`inline-block h-4 w-4 transform rounded-full bg-white shadow-sm transition-transform ${
+                              preference.disable_sound_effects ? "translate-x-1" : "translate-x-4"
+                            }`}
+                          />
+                        </button>
+                      </div>
+                      <div className="flex justify-end">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            void actions.savePreferences();
+                          }}
+                          disabled={loading.saving}
+                          className={`rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
+                            loading.saving
+                              ? "bg-gray-200 text-gray-500 cursor-not-allowed"
+                              : "bg-primary text-white hover:bg-blue-300"
+                          }`}
+                        >
+                          {loading.saving ? "Saving..." : "Save changes"}
+                        </button>
+                      </div>
                     </div>
-                    <div className="flex justify-end">
-                      <button
-                        type="button"
-                        onClick={() => {
-                          void actions.savePreferences();
-                        }}
-                        disabled={loading.saving}
-                        className={`rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
-                          loading.saving
-                            ? "bg-gray-200 text-gray-500 cursor-not-allowed"
-                            : "bg-primary text-white hover:bg-blue-300"
-                        }`}
-                      >
-                        {loading.saving ? "Saving..." : "Save changes"}
-                      </button>
-                    </div>
-                  </div>
-                ) : (
-                  <p className="text-sm text-red-600">Unable to load preferences.</p>
-                )}
+                  );
+                })()}
               </div>
             ) : null}
             {state.activeSection === "profile" ? (
