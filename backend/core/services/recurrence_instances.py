@@ -13,6 +13,11 @@ from core.models import Event, EventOverride
 
 @dataclass(frozen=True)
 class ExpandedEventInstance:
+    """
+    Represents a single occurrence of an event after recurrence rules
+    and overrides have been applied.
+    """
+
     id: int
     title: str
     description: str
@@ -230,6 +235,11 @@ def expand_event_instances(
     *,
     overrides: list[EventOverride] | None = None,
 ) -> list[ExpandedEventInstance]:
+    """
+    Expand a single Event into concrete event instances within the given time
+    range, applying any relevant overrides or exceptions required.
+    """
+
     (
         range_start,
         range_end,
@@ -323,6 +333,11 @@ def expand_user_events(
     range_start: datetime,
     range_end: datetime,
 ) -> list[ExpandedEventInstance]:
+    """
+    Expand all events for a given user into concrete instances
+    within the specified time range.
+    """
+
     range_start = _make_aware(range_start)
     range_end = _make_aware(range_end)
 
