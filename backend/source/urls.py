@@ -24,7 +24,6 @@ from core.views import (
     PreferenceViewSet,
     GradeViewSet,
     CategoryViewSet,
-    
 )
 from core.views.export_view import ExportView
 from core.views.import_view import ImportView
