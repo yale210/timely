@@ -3,7 +3,7 @@ from django.contrib.auth import get_user_model
 from rest_framework.test import APIClient
 from core.models import Event
 
-# tEST
+# tEST1
 
 
 class ExportViewTests(TestCase):

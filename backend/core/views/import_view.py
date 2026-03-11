@@ -5,7 +5,7 @@ from core.models import Event
 from django.db import transaction
 from datetime import datetime
 
-# Test
+# Test1
 
 
 class ImportView(APIView):
