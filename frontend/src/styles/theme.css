@@ -1,0 +1,93 @@
+@theme {
+  --color-primary: var(--primary);
+  --color-primary-hover: var(--primary-hover);
+  --color-border: var(--border);
+  --color-background: var(--background);
+  --color-text: var(--text-color);
+  --color-white: var(--background);
+  --color-black: var(--text-color);
+  --color-gray-900: var(--text-color);
+  --color-gray-800: color-mix(in srgb, var(--text-color) 92%, var(--background));
+  --color-gray-700: color-mix(in srgb, var(--text-color) 80%, var(--background));
+  --color-gray-600: color-mix(in srgb, var(--text-color) 68%, var(--background));
+  --color-gray-500: color-mix(in srgb, var(--text-color) 56%, var(--background));
+  --color-gray-400: color-mix(in srgb, var(--text-color) 32%, var(--background));
+  --color-gray-300: color-mix(in srgb, var(--text-color) 20%, var(--background));
+  --color-gray-200: color-mix(in srgb, var(--text-color) 12%, var(--background));
+  --color-gray-100: color-mix(in srgb, var(--text-color) 8%, var(--background));
+  --color-gray-50: color-mix(in srgb, var(--text-color) 4%, var(--background));
+
+  --color-blue-900: color-mix(in srgb, var(--primary) 92%, var(--background));
+  --color-blue-800: color-mix(in srgb, var(--primary) 80%, var(--background));
+  --color-blue-700: color-mix(in srgb, var(--primary) 68%, var(--background));
+  --color-blue-600: color-mix(in srgb, var(--primary) 56%, var(--background));
+  --color-blue-500: var(--primary);
+  --color-blue-400: color-mix(in srgb, var(--primary) 32%, var(--background));
+  --color-blue-300: color-mix(in srgb, var(--primary) 20%, var(--background));
+  --color-blue-200: color-mix(in srgb, var(--primary) 12%, var(--background));
+  --color-blue-100: color-mix(in srgb, var(--primary) 8%, var(--background));
+  --color-blue-50: color-mix(in srgb, var(--primary) 4%, var(--background));
+
+  --color-cyan-900: color-mix(in srgb, var(--primary) 92%, var(--background));
+  --color-cyan-800: color-mix(in srgb, var(--primary) 80%, var(--background));
+  --color-cyan-700: color-mix(in srgb, var(--primary) 68%, var(--background));
+  --color-cyan-600: color-mix(in srgb, var(--primary) 56%, var(--background));
+  --color-cyan-500: var(--primary);
+  --color-cyan-400: color-mix(in srgb, var(--primary) 32%, var(--background));
+  --color-cyan-300: color-mix(in srgb, var(--primary) 20%, var(--background));
+  --color-cyan-200: color-mix(in srgb, var(--primary) 12%, var(--background));
+  --color-cyan-100: color-mix(in srgb, var(--primary) 8%, var(--background));
+  --color-cyan-50: color-mix(in srgb, var(--primary) 4%, var(--background));
+
+  --color-indigo-900: color-mix(in srgb, var(--primary) 92%, var(--background));
+  --color-indigo-800: color-mix(in srgb, var(--primary) 80%, var(--background));
+  --color-indigo-700: color-mix(in srgb, var(--primary) 68%, var(--background));
+  --color-indigo-600: color-mix(in srgb, var(--primary) 56%, var(--background));
+  --color-indigo-500: var(--primary);
+  --color-indigo-400: color-mix(in srgb, var(--primary) 32%, var(--background));
+  --color-indigo-300: color-mix(in srgb, var(--primary) 20%, var(--background));
+  --color-indigo-200: color-mix(in srgb, var(--primary) 12%, var(--background));
+  --color-indigo-100: color-mix(in srgb, var(--primary) 8%, var(--background));
+  --color-indigo-50: color-mix(in srgb, var(--primary) 4%, var(--background));
+}
+
+@layer base {
+  :root {
+    --primary: #3b82f6;
+    --primary-hover: #93c5fd;
+    --background: #ffffff;
+    --text-color: #000000;
+    --border: #e2e8f0;
+    --primary-font: "Poppins";
+    --slant: oblique 0deg;
+  }
+
+  body {
+    margin: 0;
+    background-color: var(--background);
+    color: var(--text-color);
+    font-family: var(--primary-font);
+    font-style: var(--slant);
+    font-size: 18px;
+  }
+
+  body.menu-open .app-shell {
+    margin-left: var(--drawer-width, 288px);
+    width: calc(100% - var(--drawer-width, 288px));
+  }
+
+  .app-shell {
+    transition: margin-left 200ms ease-out;
+  }
+
+  body.menu-open .calendar-header {
+    left: var(--drawer-width, 288px) !important;
+    right: 0 !important;
+  }
+
+  input,
+  textarea,
+  select {
+    @apply bg-white text-black border-gray-300 focus:border-primary focus:ring-primary;
+  }
+}
