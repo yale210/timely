@@ -174,3 +174,15 @@ export interface Preference {
 export type PreferenceUpdate = Partial<Pick<
     Preference, "day_start"|"day_end"|"day_schedule"|"max_hours_study_per_day"|"limit_max_hours"|"disable_sound_effects"|"days_off"
 >>
+
+/**
+ * Represents a friendship between two users.
+ * @interface Friendship
+ */
+export interface Friendship {
+  id: number;
+  sender: number;
+  receiver: number;
+  state: "SENT" | "ACCEPTED" | "DECLINED";
+  updated_at?: string | null;
+}

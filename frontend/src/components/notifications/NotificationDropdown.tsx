@@ -7,6 +7,8 @@ import { NotificationBell } from "@/components/notifications/NotificationBell";
 import { Link } from "react-router-dom";
 import { CheckCircleIcon, TrashIcon } from "@heroicons/react/24/outline";
 import ConfirmationModal from "@/components/modals/ConfirmationModal";
+import { useFriendships } from "@/hooks/friends/useFriendships";
+import { authStore } from "@/services/authService";
 
 interface NotificationDropdownProps {
   notifications: Notification[];
@@ -43,6 +45,12 @@ export const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
   const [confirmationAction, setConfirmationAction] =
     useState<DropdownConfirmationAction>(null);
   const displayNotifications = notifications.slice(0, 5);
+  const user = authStore.getUser();
+  const currentUserId = user?.id ?? null;
+  const { friendships, acceptRequest, declineRequest, actingIds } = useFriendships();
+  const incomingRequests = friendships.filter(
+    (friendship) => friendship.state === "SENT" && friendship.receiver === currentUserId,
+  ).slice(0, 3);
 
   const handleConfirm = () => {
     if (confirmationAction === "mark_all_read") {
@@ -100,6 +108,38 @@ export const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
                   </div>
 
                   <div className="max-h-105 overflow-y-auto">
+                    {incomingRequests.length > 0 && (
+                      <div className="border-b border-gray-100 px-4 py-3">
+                        <p className="text-xs font-semibold uppercase tracking-wide text-gray-400">
+                          Friend requests
+                        </p>
+                        <ul className="mt-2 space-y-2">
+                          {incomingRequests.map((friendship) => (
+                            <li key={friendship.id} className="flex items-center justify-between gap-2 rounded-lg border border-gray-200 px-3 py-2">
+                              <span className="text-xs font-semibold text-gray-700">User #{friendship.sender}</span>
+                              <div className="flex items-center gap-1">
+                                <button
+                                  type="button"
+                                  onClick={() => void acceptRequest(friendship.id)}
+                                  disabled={actingIds.has(friendship.id)}
+                                  className="rounded-md bg-emerald-500 px-2 py-1 text-[10px] font-semibold text-white hover:bg-emerald-400 disabled:cursor-not-allowed disabled:bg-gray-300"
+                                >
+                                  Accept
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => void declineRequest(friendship.id)}
+                                  disabled={actingIds.has(friendship.id)}
+                                  className="rounded-md bg-gray-200 px-2 py-1 text-[10px] font-semibold text-gray-700 hover:bg-gray-300 disabled:cursor-not-allowed disabled:bg-gray-200"
+                                >
+                                  Decline
+                                </button>
+                              </div>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
                     {displayNotifications.length > 0 ? (
                       displayNotifications.map((notification) => (
                         <NotificationCard

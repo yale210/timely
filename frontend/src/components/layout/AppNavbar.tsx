@@ -140,6 +140,18 @@ export default function AppNavbar() {
                 <MenuItem>
                   {({ focus }) => (
                     <Link
+                      to="/friends"
+                      className={`block px-4 py-2 text-sm ${
+                        focus ? "bg-gray-50 text-gray-900" : "text-gray-700"
+                      }`}
+                    >
+                      Friends
+                    </Link>
+                  )}
+                </MenuItem>
+                <MenuItem>
+                  {({ focus }) => (
+                    <Link
                       to="/settings"
                       className={`block px-4 py-2 text-sm ${
                         focus ? "bg-gray-50 text-gray-900" : "text-gray-700"
