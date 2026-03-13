@@ -1,3 +1,5 @@
+import api from "@/services/api"
+
 export const AUTH_CHANGE_EVENT = "auth-change"
 
 const broadcastAuthChange = () => window.dispatchEvent(new Event(AUTH_CHANGE_EVENT))
@@ -61,8 +63,6 @@ export const authStore = {
     }
   },
 }
-
-import api from "@/services/api"
 
 export const authService = {
   async register(payload: { username: string; email: string; password: string; password2: string; }) {

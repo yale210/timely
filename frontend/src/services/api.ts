@@ -21,4 +21,16 @@ api.interceptors.request.use((config: InternalAxiosRequestConfig) => {
   return config;
 });
 
+api.interceptors.response.use(
+  (response) => response,
+  (error: unknown) => {
+    if (axios.isAxiosError(error) && error.response?.status === 401) {
+      authStore.clear();
+      window.location.replace("/login");
+    }
+
+    throw error instanceof Error ? error : new Error("Request failed");
+  }
+);
+
 export default api;
