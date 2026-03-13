@@ -1,11 +1,13 @@
 from rest_framework import viewsets
 from rest_framework.permissions import IsAuthenticated
 from django.db.models import Q
+from django.core.exceptions import ValidationError as DjangoValidationError
 from core.models import Friendship
 from core.serializers import FriendshipSerializer
 from rest_framework.response import Response
 from rest_framework.decorators import action
 from rest_framework import status
+from rest_framework.exceptions import ValidationError as DRFValidationError
 
 
 class FriendshipViewSet(viewsets.ModelViewSet):
@@ -19,9 +21,12 @@ class FriendshipViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         receiver = serializer.validated_data["receiver"]
 
-        friendship = Friendship.send_request(
-            sender=self.request.user, receiver=receiver
-        )
+        try:
+            friendship = Friendship.send_request(
+                sender=self.request.user, receiver=receiver
+            )
+        except DjangoValidationError as exc:
+            raise DRFValidationError(exc.message) from exc
 
         serializer.instance = friendship
 
