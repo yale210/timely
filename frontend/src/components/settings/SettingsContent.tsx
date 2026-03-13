@@ -149,7 +149,7 @@ const SettingsContent = ({
                   return (
                     <div className="space-y-4">
                       <div className="flex items-center justify-between rounded-lg border border-gray-200 bg-white px-4 py-3 shadow-sm">
-                        <p className="text-sm font-semibold text-gray-900">Disable sound effects</p>
+                        <p className="text-sm font-semibold text-gray-900">Sound effects</p>
                         <button
                           type="button"
                           onClick={() => {
