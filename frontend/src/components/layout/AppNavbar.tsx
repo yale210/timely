@@ -8,14 +8,14 @@ import { type Notification } from '@/types/notification'
 import AdminSidebar from "@/components/layout/AdminSidebar"
 
 const navItems = [
-  { label: "Overview", to: "/dashboard" },
-  { label: "Calendar", to: "/calendar" },
-  { label: "Tasks", to: "/tasks" },
+  { label: "Overview", to: "/dashboard", icon: "space_dashboard" },
+  { label: "Calendar", to: "/calendar", icon: "calendar_month" },
+  { label: "Tasks", to: "/tasks", icon: "checklist" },
 ]
 
 const featureItems = [
-  { key: "gradebook", label: "Gradebook", to: "/gradebook" },
-  { key: "weekly_summaries", label: "Weekly Summaries", to: "/weekly-summaries" },
+  { key: "gradebook", label: "Gradebook", to: "/gradebook", icon: "school" },
+  { key: "weekly_summaries", label: "Weekly Summaries", to: "/weekly-summaries", icon: "insights" },
 ]
 
 const FEATURE_FLAGS = {
@@ -201,19 +201,20 @@ export default function AppNavbar() {
           ) : (
             /* ── Main sidebar ── */
             <>
-              <ul className="space-y-2 px-4 py-4 text-base">
+              <ul className="space-y-2 px-4 py-4">
                 {navItems.map(item => (
                   <li key={item.to}>
                     <NavLink
                       to={item.to}
                       className={({ isActive }) =>
                         [
-                          "flex items-center rounded-md px-3 py-2.5 text-base font-semibold transition-colors",
+                          "flex items-center gap-3 rounded-md px-3 py-2.5 text-sm font-semibold transition-colors",
                           isActive ? "bg-cyan-50 text-cyan-700 ring-1 ring-cyan-100" : "text-gray-800 hover:bg-gray-100",
                         ].join(" ")
                       }
                     >
-                      {item.label}
+                      <span aria-hidden="true" className="material-icons text-lg leading-none">{item.icon}</span>
+                      <span>{item.label}</span>
                     </NavLink>
                   </li>
                 ))}
@@ -225,19 +226,20 @@ export default function AppNavbar() {
                   <div className="px-4 pt-4 text-xs font-semibold uppercase tracking-wide text-gray-500">
                     Extras
                   </div>
-                  <ul className="space-y-2 px-4 py-4 text-base">
+                  <ul className="space-y-2 px-4 py-4">
                     {visibleFeatureItems.map((item) => (
                       <li key={item.to}>
                         <NavLink
                           to={item.to}
                           className={({ isActive }) =>
                             [
-                              "flex items-center rounded-md px-3 py-2.5 text-base font-semibold transition-colors",
+                              "flex items-center gap-3 rounded-md px-3 py-2.5 text-sm font-semibold transition-colors",
                               isActive ? "bg-cyan-50 text-cyan-700 ring-1 ring-cyan-100" : "text-gray-800 hover:bg-gray-100",
                             ].join(" ")
                           }
                         >
-                          {item.label}
+                          <span aria-hidden="true" className="material-icons text-lg leading-none">{item.icon}</span>
+                          <span>{item.label}</span>
                         </NavLink>
                       </li>
                     ))}
@@ -248,14 +250,14 @@ export default function AppNavbar() {
               {isStaff && (
                 <>
                   <div className="mx-4 border-t-2 border-gray-200" />
-                  <ul className="space-y-2 px-4 py-4 text-base">
+                  <ul className="space-y-2 px-4 py-4">
                     <li>
                       <Link
                         to="/admin/notifications"
-                        className="flex items-center rounded-md px-3 py-2.5 text-base font-semibold text-indigo-600 hover:bg-indigo-50 transition-colors"
+                        className="flex items-center gap-3 rounded-md px-3 py-2.5 text-sm font-semibold text-indigo-600 hover:bg-indigo-50 transition-colors"
                       >
-                        <span className="material-icons text-lg mr-2">admin_panel_settings</span>
-                        Admin Panel
+                        <span aria-hidden="true" className="material-icons text-lg leading-none">admin_panel_settings</span>
+                        <span>Admin Panel</span>
                       </Link>
                     </li>
                   </ul>
@@ -270,12 +272,13 @@ export default function AppNavbar() {
             to="/settings"
             className={({ isActive }) =>
               [
-                "flex items-center rounded-md px-3 py-2 text-base font-semibold transition-colors",
+                "flex items-center gap-3 rounded-md px-3 py-2 text-sm font-semibold transition-colors",
                 isActive ? "bg-cyan-50 text-cyan-700 ring-1 ring-cyan-100" : "text-gray-800 hover:bg-gray-100",
               ].join(" ")
             }
           >
-            Settings
+            <span aria-hidden="true" className="material-icons text-lg leading-none">settings</span>
+            <span>Settings</span>
           </NavLink>
         </div>
       </nav>
