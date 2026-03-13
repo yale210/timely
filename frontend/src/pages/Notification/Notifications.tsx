@@ -63,9 +63,28 @@ return (
             <ul className="mt-4 space-y-3">
               {incomingRequests.map((friendship) => (
                 <li key={friendship.id} className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-gray-200 px-4 py-3">
-                  <div>
-                    <p className="text-sm font-semibold">User #{friendship.sender}</p>
-                    <p className="text-xs text-gray-500">Request pending</p>
+                  <div className="flex items-center gap-3">
+                    <div className="h-10 w-10 overflow-hidden rounded-full border border-gray-200 bg-white">
+                      {friendship.sender_avatar ? (
+                        <img
+                          src={friendship.sender_avatar}
+                          alt={friendship.sender_username ?? `User #${friendship.sender}`}
+                          className="h-full w-full object-cover"
+                        />
+                      ) : (
+                        <div className="flex h-full w-full items-center justify-center bg-gray-100 text-sm font-semibold text-gray-500">
+                          {(friendship.sender_username ?? "U").slice(0, 1).toUpperCase()}
+                        </div>
+                      )}
+                    </div>
+                    <div>
+                      <p className="text-sm font-semibold">
+                        {friendship.sender_username ?? `User #${friendship.sender}`}
+                      </p>
+                      <p className="text-xs text-gray-500">
+                        {friendship.sender_name ?? "Request pending"}
+                      </p>
+                    </div>
                   </div>
                   <div className="flex items-center gap-2">
                     <button

@@ -5,7 +5,6 @@ import { type Notification } from "@/types/notification";
 import { NotificationCard } from "@/components/notifications/NotificationCard";
 import { NotificationBell } from "@/components/notifications/NotificationBell";
 import { Link } from "react-router-dom";
-import { UserGroupIcon } from "@heroicons/react/24/outline";
 import { useFriendships } from "@/hooks/friends/useFriendships";
 import { authStore } from "@/services/authService";
 
@@ -76,12 +75,27 @@ export const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
                         key={`friend-${friendship.id}`}
                         className="flex items-start gap-3 rounded-xl border border-gray-200 bg-white px-3 py-3"
                       >
-                        <div className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-white border border-gray-100">
-                          <UserGroupIcon className="h-5 w-5 text-rose-500" />
+                        <div className="mt-0.5 h-9 w-9 shrink-0 overflow-hidden rounded-full border border-gray-200 bg-white">
+                          {friendship.sender_avatar ? (
+                            <img
+                              src={friendship.sender_avatar}
+                              alt={friendship.sender_username ?? `User #${friendship.sender}`}
+                              className="h-full w-full object-cover"
+                            />
+                          ) : (
+                            <div className="flex h-full w-full items-center justify-center bg-gray-100 text-sm font-semibold text-gray-500">
+                              {(friendship.sender_username ?? "U").slice(0, 1).toUpperCase()}
+                            </div>
+                          )}
                         </div>
                         <div className="min-w-0 flex-1">
                           <p className="text-sm font-semibold text-gray-900">Friend request</p>
-                          <p className="mt-0.5 text-xs text-gray-500">User #{friendship.sender}</p>
+                          <p className="mt-0.5 text-xs text-gray-500">
+                            {friendship.sender_username ?? `User #${friendship.sender}`}
+                          </p>
+                          {friendship.sender_name && (
+                            <p className="text-[11px] text-gray-400">{friendship.sender_name}</p>
+                          )}
                         </div>
                         <div className="flex items-center gap-1">
                           <button

@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import type { Friendship } from "@/types";
 import * as friendshipService from "@/services/friendshipService";
+import { formatDjangoFormError } from "@/utils/apiErrors";
 
 const FRIENDSHIP_EVENT = "friendships-changed";
 
@@ -41,10 +42,10 @@ export const useFriendships = () => {
     }
   }, []);
 
-  const sendRequest = useCallback(async (receiver: number) => {
+  const sendRequest = useCallback(async (receiverUsername: string) => {
     setState((prev) => ({ ...prev, sending: true }));
     try {
-      const friendship = await friendshipService.sendFriendRequest(receiver);
+      const friendship = await friendshipService.sendFriendRequest(receiverUsername);
       setState((prev) => {
         const exists = prev.friendships.some((item) => item.id === friendship.id);
         const friendships = exists
@@ -54,8 +55,13 @@ export const useFriendships = () => {
       });
       emitFriendshipEvent({ kind: "upsert", friendship });
     } catch (err) {
+      const parsed = formatDjangoFormError(err);
       console.error("Failed to send friend request", err);
-      setState((prev) => ({ ...prev, sending: false, error: "Failed to send friend request" }));
+      setState((prev) => ({
+        ...prev,
+        sending: false,
+        error: parsed.message || "Failed to send friend request",
+      }));
     }
   }, []);
 

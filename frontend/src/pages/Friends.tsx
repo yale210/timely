@@ -3,16 +3,32 @@ import { authStore } from "@/services/authService";
 import { useFriendships } from "@/hooks/friends/useFriendships";
 import AppLayout from "@/layouts/AppLayout";
 import ConfirmationModal from "@/components/modals/ConfirmationModal";
+import type { Friendship } from "@/types";
 
-const renderUserLabel = (userId?: number | null) => {
-  if (!userId) return "Unknown user";
-  return `User #${userId}`;
+const getFriendInfo = (friendship: Friendship, currentUserId: number | null) => {
+  const isSender = friendship.sender === currentUserId;
+  return {
+    id: isSender ? friendship.receiver : friendship.sender,
+    username: isSender ? friendship.receiver_username_display : friendship.sender_username,
+    name: isSender ? friendship.receiver_name : friendship.sender_name,
+    avatar: isSender ? friendship.receiver_avatar : friendship.sender_avatar,
+  };
+};
+
+const renderName = (name?: string | null) => {
+  if (!name) return null;
+  return name;
+};
+
+const getAvatarFallback = (username?: string | null) => {
+  if (!username) return "?";
+  return username.slice(0, 1).toUpperCase();
 };
 
 export default function Friends() {
   const user = authStore.getUser();
   const currentUserId = user?.id ?? null;
-  const [receiverId, setReceiverId] = useState("");
+  const [receiverUsername, setReceiverUsername] = useState("");
   const [activeTab, setActiveTab] = useState<"friends" | "requests">("friends");
   const [friendPendingRemoval, setFriendPendingRemoval] = useState<{
     id: number;
@@ -45,12 +61,12 @@ export default function Friends() {
   }, [friendships, currentUserId]);
 
   const handleSend = () => {
-    const numericId = Number(receiverId);
-    if (!Number.isInteger(numericId) || numericId <= 0) {
+    const trimmed = receiverUsername.trim();
+    if (!trimmed) {
       return;
     }
-    void sendRequest(numericId);
-    setReceiverId("");
+    void sendRequest(trimmed);
+    setReceiverUsername("");
   };
 
   const confirmRemove = () => {
@@ -74,20 +90,18 @@ export default function Friends() {
               <h2 className="text-lg font-semibold">Send a friend request</h2>
               <div className="mt-4 flex flex-wrap items-center gap-3">
                 <input
-                  type="number"
-                  min={1}
-                  inputMode="numeric"
-                  placeholder="User ID"
-                  value={receiverId}
-                  onChange={(event) => setReceiverId(event.target.value)}
+                  type="text"
+                  placeholder="Username"
+                  value={receiverUsername}
+                  onChange={(event) => setReceiverUsername(event.target.value)}
                   className="h-10 w-40 rounded-md border border-gray-300 px-3 text-sm focus:border-cyan-400 focus:outline-none"
                 />
                 <button
                   type="button"
                   onClick={handleSend}
-                  disabled={sending || !receiverId}
+                  disabled={sending || !receiverUsername.trim()}
                   className={`h-10 rounded-md px-4 text-sm font-semibold text-white transition-colors ${
-                    sending || !receiverId
+                    sending || !receiverUsername.trim()
                       ? "cursor-not-allowed bg-gray-300"
                       : "bg-cyan-600 hover:bg-cyan-500"
                   }`}
@@ -95,7 +109,7 @@ export default function Friends() {
                   {sending ? "Sending..." : "Send request"}
                 </button>
                 {currentUserId ? (
-                  <span className="text-xs text-gray-500">Signed in as {renderUserLabel(currentUserId)}.</span>
+                  <span className="text-xs text-gray-500">Signed in as {user?.username ?? "Unknown"}.</span>
                 ) : (
                   <span className="text-xs text-red-500">Unable to determine your user id.</span>
                 )}
@@ -137,21 +151,31 @@ export default function Friends() {
                 ) : (
                   <ul className="mt-4 space-y-3">
                     {accepted.map((friendship) => {
-                      const friendId = friendship.sender === currentUserId
-                        ? friendship.receiver
-                        : friendship.sender;
+                      const friendInfo = getFriendInfo(friendship, currentUserId);
+                      const label = renderName(friendInfo.name) ?? friendInfo.username ?? `User #${friendInfo.id}`;
                       return (
                         <li key={friendship.id} className="flex items-center justify-between rounded-lg border border-gray-200 px-4 py-3">
-                          <div>
-                            <p className="text-sm font-semibold">{renderUserLabel(friendId)}</p>
-                            <p className="text-xs text-gray-500">Friends</p>
+                          <div className="flex items-center gap-3">
+                            <div className="h-10 w-10 overflow-hidden rounded-full border border-gray-200 bg-white">
+                              {friendInfo.avatar ? (
+                                <img src={friendInfo.avatar} alt={label} className="h-full w-full object-cover" />
+                              ) : (
+                                <div className="flex h-full w-full items-center justify-center bg-gray-100 text-sm font-semibold text-gray-500">
+                                  {getAvatarFallback(friendInfo.username)}
+                                </div>
+                              )}
+                            </div>
+                            <div>
+                              <p className="text-sm font-semibold">{friendInfo.username ?? `User #${friendInfo.id}`}</p>
+                              <p className="text-xs text-gray-500">{label}</p>
+                            </div>
                           </div>
                           <button
                             type="button"
                             onClick={() => {
                               setFriendPendingRemoval({
                                 id: friendship.id,
-                                label: renderUserLabel(friendId),
+                                label,
                               });
                             }}
                             disabled={actingIds.has(friendship.id)}
@@ -177,9 +201,20 @@ export default function Friends() {
                     <ul className="mt-4 space-y-3">
                       {incoming.map((friendship) => (
                         <li key={friendship.id} className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-gray-200 px-4 py-3">
-                          <div>
-                            <p className="text-sm font-semibold">{renderUserLabel(friendship.sender)}</p>
-                            <p className="text-xs text-gray-500">Request pending</p>
+                          <div className="flex items-center gap-3">
+                            <div className="h-10 w-10 overflow-hidden rounded-full border border-gray-200 bg-white">
+                              {friendship.sender_avatar ? (
+                                <img src={friendship.sender_avatar} alt={friendship.sender_username ?? `User #${friendship.sender}`} className="h-full w-full object-cover" />
+                              ) : (
+                                <div className="flex h-full w-full items-center justify-center bg-gray-100 text-sm font-semibold text-gray-500">
+                                  {getAvatarFallback(friendship.sender_username)}
+                                </div>
+                              )}
+                            </div>
+                            <div>
+                              <p className="text-sm font-semibold">{friendship.sender_username ?? `User #${friendship.sender}`}</p>
+                              <p className="text-xs text-gray-500">{friendship.sender_name ?? "Request pending"}</p>
+                            </div>
                           </div>
                           <div className="flex items-center gap-2">
                             <button
@@ -215,9 +250,20 @@ export default function Friends() {
                     <ul className="mt-4 space-y-3">
                       {outgoing.map((friendship) => (
                         <li key={friendship.id} className="flex items-center justify-between rounded-lg border border-gray-200 px-4 py-3">
-                          <div>
-                            <p className="text-sm font-semibold">{renderUserLabel(friendship.receiver)}</p>
-                            <p className="text-xs text-gray-500">Waiting for response</p>
+                          <div className="flex items-center gap-3">
+                            <div className="h-10 w-10 overflow-hidden rounded-full border border-gray-200 bg-white">
+                              {friendship.receiver_avatar ? (
+                                <img src={friendship.receiver_avatar} alt={friendship.receiver_username_display ?? `User #${friendship.receiver}`} className="h-full w-full object-cover" />
+                              ) : (
+                                <div className="flex h-full w-full items-center justify-center bg-gray-100 text-sm font-semibold text-gray-500">
+                                  {getAvatarFallback(friendship.receiver_username_display)}
+                                </div>
+                              )}
+                            </div>
+                            <div>
+                              <p className="text-sm font-semibold">{friendship.receiver_username_display ?? `User #${friendship.receiver}`}</p>
+                              <p className="text-xs text-gray-500">{friendship.receiver_name ?? "Waiting for response"}</p>
+                            </div>
                           </div>
                           <span className="text-xs font-semibold text-gray-400">Sent</span>
                         </li>
@@ -231,14 +277,24 @@ export default function Friends() {
                     <h2 className="text-lg font-semibold">Declined</h2>
                     <ul className="mt-4 space-y-3">
                       {declined.map((friendship) => {
-                        const otherId = friendship.sender === currentUserId
-                          ? friendship.receiver
-                          : friendship.sender;
+                        const friendInfo = getFriendInfo(friendship, currentUserId);
+                        const label = renderName(friendInfo.name) ?? friendInfo.username ?? `User #${friendInfo.id}`;
                         return (
                           <li key={friendship.id} className="flex items-center justify-between rounded-lg border border-gray-200 px-4 py-3">
-                            <div>
-                              <p className="text-sm font-semibold">{renderUserLabel(otherId)}</p>
-                              <p className="text-xs text-gray-500">Declined</p>
+                            <div className="flex items-center gap-3">
+                              <div className="h-10 w-10 overflow-hidden rounded-full border border-gray-200 bg-white">
+                                {friendInfo.avatar ? (
+                                  <img src={friendInfo.avatar} alt={label} className="h-full w-full object-cover" />
+                                ) : (
+                                  <div className="flex h-full w-full items-center justify-center bg-gray-100 text-sm font-semibold text-gray-500">
+                                    {getAvatarFallback(friendInfo.username)}
+                                  </div>
+                                )}
+                              </div>
+                              <div>
+                                <p className="text-sm font-semibold">{friendInfo.username ?? `User #${friendInfo.id}`}</p>
+                                <p className="text-xs text-gray-500">{label}</p>
+                              </div>
                             </div>
                           </li>
                         );

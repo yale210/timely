@@ -12,8 +12,8 @@ export const getFriendships = async (): Promise<Friendship[]> => {
 /**
  * Sends a friend request to the specified user id.
  */
-export const sendFriendRequest = async (receiver: number): Promise<Friendship> => {
-  const response = await api.post<Friendship>("/api/friendships/", { receiver });
+export const sendFriendRequest = async (receiverUsername: string): Promise<Friendship> => {
+  const response = await api.post<Friendship>("/api/friendships/", { receiver_username: receiverUsername });
   return response.data;
 };
 
