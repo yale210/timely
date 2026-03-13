@@ -17,6 +17,7 @@ class ExpandedEventInstance:
     title: str
     description: str
     location: str
+    colour: str | None
     categories: list[Any]
     start_time: datetime
     end_time: datetime
@@ -161,12 +162,14 @@ def _build_expanded_instance(
     title: str,
     description: str,
     location: str,
+    colour: str | None,
 ) -> ExpandedEventInstance:
     return ExpandedEventInstance(
         id=source_event.id,
         title=title,
         description=description,
         location=location,
+        colour=colour,
         categories=categories,
         start_time=start_time,
         end_time=end_time,
@@ -233,6 +236,7 @@ def expand_event_instances(
                         title=override.title,
                         description=override.description,
                         location=override.location,
+                        colour=override.colour or event.colour,
                     )
                 )
             continue
@@ -260,6 +264,7 @@ def expand_event_instances(
                     title=event.title,
                     description=event.description,
                     location=event.location,
+                    colour=event.colour,
                 )
             )
 
@@ -282,6 +287,7 @@ def expand_event_instances(
                 title=override.title,
                 description=override.description,
                 location=override.location,
+                colour=override.colour or event.colour,
             )
         )
 
