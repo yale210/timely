@@ -1,5 +1,5 @@
 import { useEffect } from "react"
-import { Routes, Route } from "react-router-dom"
+import { Routes, Route, useLocation } from "react-router-dom"
 import RequireAuth from "@/components/auth/RequireAuth"
 import RedirectAuth from "@/components/auth/RedirectAuth"
 import RequireAdmin from "@/components/auth/RequireAdmin"
@@ -15,17 +15,27 @@ import { AdminNotificationHistoryDetail } from "@/pages/Admin/Notifications/Admi
  * @returns The rendered application routes.
  */
 export default function App() {
-  useEffect(() => {
-    const savedTheme = localStorage.getItem("theme")
-    if (savedTheme) {
-      document.documentElement.dataset.theme = savedTheme
-    }
+  const urls = ["/login", "/signup", "/"]
+  const location = useLocation()
+  console.log(!urls.includes(String(location.pathname)))
 
-    const savedFont = localStorage.getItem("font")
-    if (savedFont) {
-      document.documentElement.dataset.font = savedFont
+  useEffect(() => {
+    if (!urls.includes(String(location.pathname))) {
+      const savedTheme = localStorage.getItem("theme")
+      if (savedTheme) {
+        document.documentElement.dataset.theme = savedTheme
+      }
+
+      const savedFont = localStorage.getItem("font")
+      if (savedFont) {
+        document.documentElement.dataset.font = savedFont
+      }
     }
-  }, [])
+    else {
+      document.documentElement.dataset.theme = "light"
+      document.documentElement.dataset.font = "poppins"
+    }
+  }, [location])
 
   return (
     <Routes>
