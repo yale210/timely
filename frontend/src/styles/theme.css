@@ -77,12 +77,16 @@
   }
 
   .app-shell {
-    transition: margin-left 200ms ease-out;
+    transition: margin-left 200ms ease-out, width 200ms ease-out;
   }
 
   body.menu-open .calendar-header {
     left: var(--drawer-width, 288px) !important;
     right: 0 !important;
+  }
+
+  .calendar-header {
+    transition: left 200ms ease-out, right 200ms ease-out;
   }
 
   input,
