@@ -9,4 +9,3 @@ export { default as Gradebook } from "./Gradebook"
 export { default as EventList } from "./EventList";
 export { default as WeeklySummaries } from "./WeeklySummaries";
 export { default as Settings } from "./Settings";
-export { default as Themes } from "./Themes"
