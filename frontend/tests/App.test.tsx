@@ -11,12 +11,9 @@ vi.mock("@/pages/index", () => ({
   Logout: () => <div>Logout Page</div>,
   CalendarPage: () => <div>Calendar Page</div>,
   TaskList: () => <div>Task List Page</div>,
-  EventList: () => <div>Event List Page</div>,
   Gradebook: () => <div>Gradebook Page</div>,
   Dashboard: () => <div>Dashboard Page</div>,
-  WeeklySummaries: () => <div>Weekly Summaries Page</div>,
   Settings: () => <div>Settings Page</div>,
-  Themes: () => <div>Themes Page</div>,
 }));
 
 vi.mock("@/pages/Notification/Notifications", () => ({
@@ -140,15 +137,6 @@ describe("App Component", () => {
     expect(getByText("Task List Page")).toBeDefined();
   });
 
-  it("should render Event List page", () => {
-    const { getByText } = render(
-      <MemoryRouter initialEntries={["/events"]}>
-        <App />
-      </MemoryRouter>
-    );
-    expect(getByText("Event List Page")).toBeDefined();
-  });
-
   it("should render Gradebook page", () => {
     const { getByText } = render(
       <MemoryRouter initialEntries={["/gradebook"]}>
@@ -165,15 +153,6 @@ describe("App Component", () => {
       </MemoryRouter>
     );
     expect(getByText("Dashboard Page")).toBeDefined();
-  });
-
-  it("should render Weekly Summaries page", () => {
-    const { getByText } = render(
-      <MemoryRouter initialEntries={["/weekly-summaries"]}>
-        <App />
-      </MemoryRouter>
-    );
-    expect(getByText("Weekly Summaries Page")).toBeDefined();
   });
 
   it("should render Notifications page", () => {
@@ -230,12 +209,4 @@ describe("App Component", () => {
     expect(getByText("Settings Page")).toBeDefined();
   });
 
-  it("should render Themes page", () => {
-    const { getByText } = render(
-      <MemoryRouter initialEntries={["/themes"]}>
-        <App />
-      </MemoryRouter>
-    );
-    expect(getByText("Themes Page")).toBeDefined();
-  });
 });

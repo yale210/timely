@@ -14,13 +14,11 @@ const navItems = [
 ]
 
 const featureItems = [
-  { key: "gradebook", label: "Gradebook", to: "/gradebook", icon: "school" },
-  { key: "weekly_summaries", label: "Weekly Summaries", to: "/weekly-summaries", icon: "insights" },
+  { key: "gradebook", label: "Gradebook", to: "/gradebook", icon: "school" }
 ]
 
 const FEATURE_FLAGS = {
   gradebook: "feature_gradebook_enabled",
-  weekly_summaries: "feature_weekly_summaries_enabled",
 }
 
 const readFeatureFlag = (key: keyof typeof FEATURE_FLAGS) => {
@@ -44,7 +42,6 @@ export default function AppNavbar() {
   const isAdminRoute = location.pathname.startsWith("/admin")
   const [featureFlags, setFeatureFlags] = useState(() => ({
     gradebook: readFeatureFlag("gradebook"),
-    weekly_summaries: readFeatureFlag("weekly_summaries"),
   }))
   const {
     notifications,
@@ -78,7 +75,6 @@ export default function AppNavbar() {
     const refreshFlags = () => {
       setFeatureFlags({
         gradebook: readFeatureFlag("gradebook"),
-        weekly_summaries: readFeatureFlag("weekly_summaries"),
       })
     }
     window.addEventListener("feature-flags-changed", refreshFlags)
@@ -91,7 +87,6 @@ export default function AppNavbar() {
 
   const visibleFeatureItems = featureItems.filter((item) => {
     if (item.key === "gradebook") return featureFlags.gradebook
-    if (item.key === "weekly_summaries") return featureFlags.weekly_summaries
     return false
   })
 
