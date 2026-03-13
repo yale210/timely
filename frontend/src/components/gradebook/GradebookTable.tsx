@@ -6,6 +6,7 @@ export interface Grade {
   name: string
   category?: number | null
   category_name?: string | null
+  category_colour?: string | null
   score: number
   total_possible: number
   percentage: number
@@ -66,7 +67,18 @@ export default function GradebookTable(props: GradebookTableProps) {
           {filteredGrades.map((grade) => (
             <tr key={grade.id}>
               <td className="whitespace-nowrap px-6 py-4">{grade.name}</td>
-              <td className="whitespace-nowrap px-6 py-4">{grade.category_name ?? "-"}</td>
+              <td className="whitespace-nowrap px-6 py-4">
+                {grade.category_name ? (
+                  <span className="inline-flex items-center gap-2">
+                    <span
+                      className="h-2.5 w-2.5 rounded-full"
+                      style={{ backgroundColor: grade.category_colour ?? "#94a3b8" }}
+                      aria-hidden="true"
+                    />
+                    <span>{grade.category_name}</span>
+                  </span>
+                ) : "-"}
+              </td>
               <td className="whitespace-nowrap px-6 py-4">{grade.date_achieved}</td>
               <td className="whitespace-nowrap px-6 py-4">
                 {grade.score}/{grade.total_possible}

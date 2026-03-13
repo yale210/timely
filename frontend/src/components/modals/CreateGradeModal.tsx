@@ -130,29 +130,32 @@ export default function CreateGradeModal(props: Props) {
             className="w-full border p-2 rounded"
             required
           />
-          <div className="grid grid-cols-2 gap-2">
-            <input
-              type="number"
-              placeholder="Score"
-              value={String(score)}
-              onChange={(e) => {
-                setScore(e.target.value === "" ? "" : (
-                  Number(e.target.value) > 100000 ? 100000 : Number(e.target.value)
-                ))}}
-              className="w-full border p-2 rounded"
-              required
-            />
-            <input
-              type="number"
-              placeholder="Total"
-              value={String(total)}
-              onChange={(e) => {
-                setTotal(e.target.value === "" ? "" : (
-                  Number(e.target.value) > 100000 ? 100000 : Number(e.target.value)
-                ))}}
-              className="w-full border p-2 rounded"
-              required
-            />
+          <div>
+            <label className="block text-sm text-gray-600 mb-1">Score</label>
+            <div className="grid grid-cols-2 gap-2">
+              <input
+                type="number"
+                placeholder="Score"
+                value={String(score)}
+                onChange={(e) => {
+                  setScore(e.target.value === "" ? "" : (
+                    Number(e.target.value) > 100000 ? 100000 : Number(e.target.value)
+                  ))}}
+                className="w-full border p-2 rounded"
+                required
+              />
+              <input
+                type="number"
+                placeholder="Total"
+                value={String(total)}
+                onChange={(e) => {
+                  setTotal(e.target.value === "" ? "" : (
+                    Number(e.target.value) > 100000 ? 100000 : Number(e.target.value)
+                  ))}}
+                className="w-full border p-2 rounded"
+                required
+              />
+            </div>
           </div>
           <div>
             <label className="block text-sm text-gray-600 mb-1">Category</label>
@@ -170,6 +173,7 @@ export default function CreateGradeModal(props: Props) {
             </select>
           </div>
           <div>
+            <label className="block text-sm text-gray-600 mb-1" htmlFor="grade-date-input">Date</label>
             <input
               id="grade-date-input"
               type="date"

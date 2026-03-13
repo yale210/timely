@@ -1,6 +1,5 @@
-import { AppNavbar, Footer } from "@/components";
+import AppLayout from "@/layouts/AppLayout";
 import type { UseWeeklySummariesReturn } from "@/hooks/analytics/useWeeklySummaries";
-import AnalyticsBackground from "@/components/analytics/AnalyticsBackground";
 import GraphsPanel from "@/components/analytics/GraphsPanel";
 import WeeklySummariesHeader from "@/components/analytics/WeeklySummariesHeader";
 
@@ -20,10 +19,8 @@ const WeeklySummariesContent = ({
   state,
   actions,
 }: WeeklySummariesContentProps) => (
-  <div className="relative isolate flex min-h-screen flex-col bg-white font-sans text-black">
-    <AppNavbar />
-    <AnalyticsBackground />
-    <main className="flex grow flex-col items-center gap-12 px-4 pt-24 pb-12">
+  <AppLayout>
+    <div className="flex flex-1 flex-col items-center gap-8 px-6 pt-6 pb-12">
       <WeeklySummariesHeader
         selectedWeek={state.selectedWeek}
         weekOptions={state.weekOptions}
@@ -35,9 +32,8 @@ const WeeklySummariesContent = ({
         chartMode={state.chartMode}
         onChartModeChange={actions.setChartMode}
       />
-    </main>
-    <Footer />
-  </div>
+    </div>
+  </AppLayout>
 );
 
 export default WeeklySummariesContent;

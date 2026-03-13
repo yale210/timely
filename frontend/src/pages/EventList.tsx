@@ -1,5 +1,5 @@
 import AppLayout from "@/layouts/AppLayout";
-import { EventSidebar } from "@/components";
+import { UnifiedSidebar } from "@/components";
 import EventListHeader from "@/components/events/EventListHeader";
 import EventListToolbar from "@/components/events/EventListToolbar";
 import EventPastSection from "@/components/events/EventPastSection";
@@ -66,14 +66,19 @@ const EventList = () => {
         </button>
       </div>
 
-      <EventSidebar
+      <UnifiedSidebar
         isOpen={isSidebarOpen}
         onClose={actions.closeSidebar}
+        initialMode="event"
+        showModeToggle={false}
         categories={categories}
         onCreateCategory={actions.createCategory}
         onUpdateCategory={actions.updateCategory}
         onDeleteCategory={actions.deleteCategory}
-        onSubmit={(data, context) => {
+        onSubmitTask={(data) => {
+          void data;
+        }}
+        onSubmitEvent={(data, context) => {
           void actions.submitEvent(data, context);
         }}
         onDelete={(context) => {

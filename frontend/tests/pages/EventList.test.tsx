@@ -19,27 +19,33 @@ class ResizeObserver {
 }
 window.ResizeObserver = ResizeObserver;
 
-interface MockSidebarProps {
-  isOpen: boolean;
-  onClose: () => void;
-  onSubmit: (data: EventSubmission, context?: EventMutationContext) => void;
-  onDelete?: (context?: EventMutationContext) => void;
-  initialData?: Event;
-}
-
 vi.mock("@/components", async () => {
   const actual = await vi.importActual("@/components");
   return {
     ...actual,
-    EventSidebar: vi.fn(({ isOpen, onClose, onSubmit, onDelete, initialData }: MockSidebarProps) => (
-      isOpen ? (
-        <div data-testid="mock-sidebar">
-          <button onClick={onClose}>Close</button>
-          <button onClick={() => onSubmit({ title: 'New Event' })}>Submit</button>
-          {initialData && onDelete && <button onClick={() => onDelete()}>Delete</button>}
-        </div>
-      ) : null
-    ))
+    UnifiedSidebar: vi.fn(
+      ({
+        isOpen,
+        onClose,
+        onSubmitEvent,
+        onDelete,
+        initialData,
+      }: {
+        isOpen: boolean;
+        onClose: () => void;
+        onSubmitEvent: (data: EventSubmission, context?: EventMutationContext) => void;
+        onDelete?: (context?: EventMutationContext) => void;
+        initialData?: Event;
+      }) => (
+        isOpen ? (
+          <div data-testid="mock-sidebar">
+            <button onClick={onClose}>Close</button>
+            <button onClick={() => onSubmitEvent({ title: "New Event" })}>Submit</button>
+            {initialData && onDelete && <button onClick={() => onDelete()}>Delete</button>}
+          </div>
+        ) : null
+      ),
+    ),
   }
 })
 

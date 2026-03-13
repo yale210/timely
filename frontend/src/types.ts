@@ -31,8 +31,11 @@ export interface Task {
   description?: string;
   start_time: string;
   deadline: string;
+  colour?: string | null;
   importance: number;
   completed: boolean;
+  locked?: boolean;
+  allow_split?: boolean;
   categories: Category[];
   estimated_minutes: number;
   parent_task?: number | null;
@@ -47,6 +50,16 @@ export interface Task {
  */
 export interface TaskSubmission extends Omit<Partial<Task>, "categories"> {
   categories?: number[];
+}
+
+/**
+ * Represents a special date override that blocks scheduling.
+ * @interface SpecialDate
+ */
+export interface SpecialDate {
+  id: number;
+  date: string;
+  text: string;
 }
 
 /**
@@ -71,6 +84,7 @@ export interface Event {
   location?: string;
   start_time: string;
   end_time: string;
+  colour?: string | null;
   categories: Category[];
   recurrence_interval?: "daily" | "weekly" | "monthly" | "yearly" | null;
   recurrence_end?: string | null;
@@ -147,7 +161,10 @@ export interface Preference {
     id: number
     day_start: string
     day_end: string
+    day_schedule?: { day: number; start: string; end: string }[]
     max_hours_study_per_day: number
+    limit_max_hours?: boolean
+    disable_sound_effects?: boolean
     days_off: number[]
 }
 /**
@@ -155,5 +172,5 @@ export interface Preference {
  * @interface PreferenceUpdate
  */
 export type PreferenceUpdate = Partial<Pick<
-    Preference, "day_start"|"day_end"|"max_hours_study_per_day"|"days_off"
+    Preference, "day_start"|"day_end"|"day_schedule"|"max_hours_study_per_day"|"limit_max_hours"|"disable_sound_effects"|"days_off"
 >>

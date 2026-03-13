@@ -5,6 +5,7 @@ from .event_view import EventViewSet as EventViewSet
 from .preference_view import PreferenceViewSet as PreferenceViewSet
 from .analytics_view import WeeklySummaryView as WeeklySummaryView
 from .friendship_view import FriendshipViewSet as FriendshipViewSet
+from .special_dates_view import SpecialDatesViewSet as SpecialDatesViewSet
 
 __all__ = [
     "TaskViewSet",
@@ -14,4 +15,5 @@ __all__ = [
     "PreferenceViewSet",
     "WeeklySummaryView",
     "FriendshipViewSet",
+    "SpecialDatesViewSet",
 ]

@@ -13,7 +13,7 @@ describe("AdminSidebar Component", () => {
       </MemoryRouter>
     );
 
-    expect(screen.getByText("Back to Dashboard")).toBeDefined();
+    expect(screen.getByText("Back to Overview")).toBeDefined();
     expect(screen.getByText("Notifications")).toBeDefined();
     expect(screen.getByText("Notification History")).toBeDefined();
     expect(screen.getByText("Settings")).toBeDefined();

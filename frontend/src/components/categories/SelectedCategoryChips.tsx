@@ -27,9 +27,6 @@ export const SelectedCategoryChips = ({
   onToggle,
 }: SelectedCategoryChipsProps) => (
   <div className="flex flex-wrap gap-2">
-    {selectedCategories.length === 0 && (
-      <span className="text-xs text-gray-400">No categories selected.</span>
-    )}
     {selectedCategories.map((category) => {
       const colourValue = category.colour ?? defaultSwatch;
       return (

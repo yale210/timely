@@ -1,5 +1,6 @@
-import { useState, useEffect, type FormEvent } from "react";
-import { CategoryMultiSelect } from "@/components";
+import { useState, useEffect, useRef, type FormEvent, type MouseEvent as ReactMouseEvent } from "react";
+import { CategoryColourPicker, CategoryMultiSelect, Tooltip } from "@/components";
+import { getOverrideColour } from "@/utils/colorUtils";
 import { type Category, type Event, type EventSubmission } from "@/types";
 import { usePushSubscription } from "@/hooks/notifications/usePushSubscription";
 import { getServerTime } from "@/services/eventService";
@@ -31,6 +32,7 @@ interface NormalisedEventSubmission {
   location: string;
   start_time: string;
   end_time: string;
+  colour: string;
   categories: number[];
   recurrence_interval: Event["recurrence_interval"];
   recurrence_end: string | null;
@@ -83,6 +85,7 @@ const normaliseEventSubmission = (
   location: submission.location ?? "",
   start_time: submission.start_time ?? "",
   end_time: submission.end_time ?? "",
+  colour: submission.colour ?? "",
   categories: [...(submission.categories ?? [])].sort((a, b) => a - b),
   recurrence_interval: submission.recurrence_interval ?? null,
   recurrence_end: submission.recurrence_end ?? null,
@@ -164,13 +167,15 @@ const EventForm = ({
     : initialData?.start_time
       ? new Date(initialStartDateTime.getTime() + ONE_HOUR_MS)
       : withTime(initialStartDateTime, 11, 0);
+  const hasInitialStart = Boolean(initialData?.start_time);
+  const hasInitialEnd = Boolean(initialData?.end_time);
 
   const [title, setTitle] = useState(initialData?.title ?? "");
   const [description, setDescription] = useState(initialData?.description ?? "");
   const [location, setLocation] = useState(initialData?.location ?? "");
   
   const [startDate, setStartDate] = useState(
-    toLocalDateInputValue(initialStartDateTime)
+    hasInitialStart ? toLocalDateInputValue(initialStartDateTime) : ""
   );
   const [startTime, setStartTime] = useState(
     initialStartDateTime.toLocaleTimeString([], {
@@ -192,7 +197,7 @@ const EventForm = ({
   }, [title, description, startDate, startTime, onDataChange]);
   
   const [endDate, setEndDate] = useState(
-    toLocalDateInputValue(initialEndDateTime)
+    hasInitialEnd ? toLocalDateInputValue(initialEndDateTime) : ""
   );
   const [endTime, setEndTime] = useState(
     initialEndDateTime.toLocaleTimeString([], {
@@ -205,7 +210,43 @@ const EventForm = ({
   const [selectedCategories, setSelectedCategories] = useState<number[]>(
     initialData?.categories?.map((c) => (typeof c === "object" ? c.id : c)) ?? []
   );
+  const defaultColour = "#f97316";
+  const [colour, setColour] = useState(initialData?.colour ?? defaultColour);
+  const [showPickerMenu, setShowPickerMenu] = useState(false);
+  const [pickerPosition, setPickerPosition] = useState<{ top: number; left: number } | null>(null);
+  const pickerRef = useRef<HTMLDivElement | null>(null);
+  const [colourInput, setColourInput] = useState(colour);
+  const [colourError, setColourError] = useState<string | null>(null);
+  const selectedCategoryObjects = categories.filter((category) =>
+    selectedCategories.includes(category.id),
+  );
+  const overrideColour = getOverrideColour(selectedCategoryObjects);
+  const isColourLocked = Boolean(overrideColour);
+  const displayColour = overrideColour ?? colour;
+  const handleColourPickerToggle = (event: ReactMouseEvent<HTMLButtonElement>) => {
+    if (isColourLocked) return;
+    const rect = event.currentTarget.getBoundingClientRect();
+    setPickerPosition({ top: rect.bottom + 8, left: rect.right - 272 });
+    setColourInput(displayColour);
+    setColourError(null);
+    setShowPickerMenu((prev) => !prev);
+  };
+  const parseColourInput = (value: string): string | null => {
+    const trimmed = value.trim().toLowerCase();
+    if (trimmed.startsWith("#") && trimmed.length === 7) {
+      return trimmed;
+    }
+    const match = /^rgb\(\s*(\d{1,3})\s*,\s*(\d{1,3})\s*,\s*(\d{1,3})\s*\)$/
+      .exec(trimmed);
+    if (!match) return null;
+    const [r, g, b] = match.slice(1).map((v) => Math.min(255, Math.max(0, Number(v))));
+    const toHex = (n: number) => n.toString(16).padStart(2, "0");
+    return `#${toHex(r)}${toHex(g)}${toHex(b)}`;
+  };
   
+  const [recurrenceEnabled, setRecurrenceEnabled] = useState(
+    Boolean(initialData?.recurrence_interval)
+  );
   const [recurrenceInterval, setRecurrenceInterval] = useState<string | null>(
     initialData?.recurrence_interval ?? null
   );
@@ -219,6 +260,7 @@ const EventForm = ({
       return { send_email, send_push, value, unit };
     }) ?? []
   );
+  const [pushDeniedNotice, setPushDeniedNotice] = useState<Record<number, boolean>>({});
   const [validationNowMs, setValidationNowMs] = useState<number>(
     INITIAL_VALIDATION_NOW_MS,
   );
@@ -299,6 +341,7 @@ const EventForm = ({
     location,
     start_time: safeToISOString(startDateTime),
     end_time: safeToISOString(endDateTime),
+    colour,
     categories: selectedCategories,
     recurrence_interval: (recurrenceInterval as Event["recurrence_interval"]) ?? null,
     recurrence_end: recurrenceEnd || null,
@@ -308,6 +351,43 @@ const EventForm = ({
       minutes_before: toMinutesBefore(r.value, r.unit),
     })),
   });
+
+  useEffect(() => {
+    if (!showPickerMenu) return;
+    const handleOutsideClick = (event: MouseEvent) => {
+      if (pickerRef.current?.contains(event.target as Node)) return;
+      setShowPickerMenu(false);
+    };
+    const raf = window.requestAnimationFrame(() => {
+      if (!pickerRef.current || !pickerPosition) return;
+      const rect = pickerRef.current.getBoundingClientRect();
+      const padding = 8;
+      let nextLeft = pickerPosition.left;
+      let nextTop = pickerPosition.top;
+
+      if (rect.right > window.innerWidth - padding) {
+        nextLeft = Math.max(padding, window.innerWidth - rect.width - padding);
+      }
+      if (rect.left < padding) {
+        nextLeft = padding;
+      }
+      if (rect.bottom > window.innerHeight - padding) {
+        nextTop = Math.max(padding, window.innerHeight - rect.height - padding);
+      }
+      if (rect.top < padding) {
+        nextTop = padding;
+      }
+
+      if (nextLeft !== pickerPosition.left || nextTop !== pickerPosition.top) {
+        setPickerPosition({ left: nextLeft, top: nextTop });
+      }
+    });
+    window.addEventListener("mousedown", handleOutsideClick);
+    return () => {
+      window.cancelAnimationFrame(raf);
+      window.removeEventListener("mousedown", handleOutsideClick);
+    };
+  }, [pickerPosition, showPickerMenu]);
 
   const normalisedCurrentSubmission = normaliseEventSubmission(buildSubmission());
   const [initialSubmission] = useState<NormalisedEventSubmission>(
@@ -329,7 +409,7 @@ const EventForm = ({
   const addReminder = () => {
     if (canAddReminder) {
       refreshValidationNow();
-      setReminders([...reminders, { send_email: false, send_push: true, value: 15, unit: "minutes" }]);
+      setReminders([...reminders, { send_email: false, send_push: false, value: 15, unit: "minutes" }]);
     }
   };
 
@@ -360,6 +440,27 @@ const EventForm = ({
     refreshValidationNow();
     setReminders(newReminders);
   };
+  const handleTogglePush = async (index: number, nextValue: boolean) => {
+    setPushDeniedNotice((prev) => ({ ...prev, [index]: false }));
+    if (!nextValue) {
+      toggleReminderChannel(index, "send_push", false);
+      return;
+    }
+    if (permission === "denied") {
+      setPushDeniedNotice((prev) => ({ ...prev, [index]: true }));
+      toggleReminderChannel(index, "send_push", false);
+      return;
+    }
+    if (!isSubscribed) {
+      await subscribe();
+      if (Notification.permission !== "granted") {
+        setPushDeniedNotice((prev) => ({ ...prev, [index]: true }));
+        toggleReminderChannel(index, "send_push", false);
+        return;
+      }
+    }
+    toggleReminderChannel(index, "send_push", true);
+  };
 
   const baseInputClass = "w-full rounded-lg border border-gray-300 bg-white text-black focus:ring-orange-500 focus:border-orange-500 shadow-sm p-2.5";
   const errorClass = "ring-2 ring-red-500 border-red-500";
@@ -374,31 +475,42 @@ const EventForm = ({
         )}
 
         <div>
-          <label htmlFor="event-title" className="block text-sm font-medium text-gray-700 mb-2">
-            Title
-          </label>
+          <div className="flex items-center justify-between gap-4 mb-2">
+            <label htmlFor="event-title" className="block text-sm font-medium text-gray-700">
+              Title
+            </label>
+            <div className="flex items-center">
+              {isColourLocked ? (
+                <Tooltip content="Category colour override set. To set a custom colour, uncheck category colour override.">
+                  <button
+                  type="button"
+                  disabled={isColourLocked}
+                onClick={handleColourPickerToggle}
+                className="h-7 w-7 rounded-md border border-gray-300 p-0.5 disabled:cursor-not-allowed"
+                style={{ backgroundColor: isColourLocked ? "#e2e8f0" : displayColour }}
+                aria-label="Event colour"
+                  />
+                </Tooltip>
+              ) : (
+                <button
+                  type="button"
+                  disabled={isColourLocked}
+                  onClick={handleColourPickerToggle}
+                  className="h-7 w-7 rounded-md border border-gray-300 p-0.5 disabled:cursor-not-allowed"
+                  style={{ backgroundColor: isColourLocked ? "#e2e8f0" : displayColour }}
+                  aria-label="Event colour"
+                />
+              )}
+            </div>
+          </div>
           <input
             id="event-title"
             className={baseInputClass}
-            placeholder="e.g., Weekly Sync"
+            placeholder="Event title"
             type="text"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             required
-          />
-        </div>
-
-        <div>
-          <label htmlFor="event-location" className="block text-sm font-medium text-gray-700 mb-2">
-            Location
-          </label>
-          <input
-            id="event-location"
-            className={baseInputClass}
-            placeholder="e.g., Room 404 or Zoom"
-            type="text"
-            value={location}
-            onChange={(e) => setLocation(e.target.value)}
           />
         </div>
 
@@ -409,7 +521,7 @@ const EventForm = ({
             </label>
             <input
               id="event-start-date"
-              className={`${baseInputClass} ${errors.time ? errorClass : ""}`}
+              className={`${baseInputClass} text-[17px] ${errors.time ? errorClass : ""}`}
               type="date"
               value={startDate}
               onChange={(e) => {
@@ -425,7 +537,7 @@ const EventForm = ({
             </label>
             <input
               id="event-start-time"
-              className={`${baseInputClass} ${errors.time ? errorClass : ""}`}
+              className={`${baseInputClass} text-[17px] ${errors.time ? errorClass : ""}`}
               type="time"
               value={startTime}
               onChange={(e) => {
@@ -444,7 +556,7 @@ const EventForm = ({
             </label>
             <input
               id="event-end-date"
-              className={`${baseInputClass} ${errors.time ? errorClass : ""}`}
+              className={`${baseInputClass} text-[17px] ${errors.time ? errorClass : ""}`}
               type="date"
               value={endDate}
               onChange={(e) => setEndDate(e.target.value)}
@@ -457,7 +569,7 @@ const EventForm = ({
             </label>
             <input
               id="event-end-time"
-              className={`${baseInputClass} ${errors.time ? errorClass : ""}`}
+              className={`${baseInputClass} text-[17px] ${errors.time ? errorClass : ""}`}
               type="time"
               value={endTime}
               onChange={(e) => setEndTime(e.target.value)}
@@ -473,22 +585,22 @@ const EventForm = ({
         )}
 
         <div>
-          <label htmlFor="event-description" className="block text-sm font-medium text-gray-700 mb-2">
-            Description
+          <label htmlFor="event-location" className="block text-sm font-medium text-gray-700 mb-2">
+            Location <span className="text-gray-400">(optional)</span>
           </label>
-          <textarea
-            id="event-description"
-            className={`${baseInputClass} resize-none`}
-            placeholder="Add details..."
-            rows={3}
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
+          <input
+            id="event-location"
+            className={baseInputClass}
+            placeholder="Location"
+            type="text"
+            value={location}
+            onChange={(e) => setLocation(e.target.value)}
           />
         </div>
 
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-3">
-            Category
+            Category <span className="text-gray-400">(optional)</span>
           </label>
           <CategoryMultiSelect
             categories={categories}
@@ -501,126 +613,135 @@ const EventForm = ({
           />
         </div>
 
-        <div className="border-t pt-4">
-          <h3 className="text-sm font-semibold text-gray-900 mb-4">Recurrence</h3>
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label htmlFor="recurrence-interval" className="block text-sm font-medium text-gray-700 mb-2">
-                Interval
-              </label>
-              <select
-                id="recurrence-interval"
-                className={baseInputClass}
-                value={recurrenceInterval ?? ""}
-                onChange={(e) => {
-                  const value = e.target.value || null;
-                  setRecurrenceInterval(value);
-                  // Clear end date when switching to one-off
-                  if (!value) {
-                    setRecurrenceEnd("");
-                  }
-                }}
-              >
-                <option value="">One-off</option>
-                <option value="daily">Daily</option>
-                <option value="weekly">Weekly</option>
-                <option value="monthly">Monthly</option>
-                <option value="yearly">Yearly</option>
-              </select>
-            </div>
-            <div>
-              <label htmlFor="recurrence-end-type" className="block text-sm font-medium text-gray-700 mb-2">
-                End Date
-              </label>
-              {recurrenceInterval ? (
-                <>
-                  <select
-                    id="recurrence-end-type"
-                    className={`${baseInputClass} mb-2`}
-                    value={recurrenceEnd ? "date" : "never"}
-                    onChange={(e) => {
-                      if (e.target.value === "never") {
-                        setRecurrenceEnd("");
-                      } else {
-                        // Set a default date when switching to "On Date"
-                        const defaultDate = new Date();
-                        defaultDate.setMonth(defaultDate.getMonth() + 1);
-                        setRecurrenceEnd(defaultDate.toISOString().split("T")[0]);
-                      }
-                    }}
-                  >
-                    <option value="never">Never</option>
-                    <option value="date">On Date</option>
-                  </select>
-                  {recurrenceEnd && (
-                    <input
-                      id="recurrence-end"
-                      className={baseInputClass}
-                      type="date"
-                      value={recurrenceEnd}
-                      onChange={(e) => setRecurrenceEnd(e.target.value)}
-                    />
-                  )}
-                </>
-              ) : (
-                <input
-                  id="recurrence-end"
-                  className={baseInputClass}
-                  type="date"
-                  value={recurrenceEnd}
-                  onChange={(e) => setRecurrenceEnd(e.target.value)}
-                  disabled
-                />
-              )}
-            </div>
-          </div>
+        <div>
+          <label htmlFor="event-description" className="block text-sm font-medium text-gray-700 mb-2">
+            Description <span className="text-gray-400">(optional)</span>
+          </label>
+          <textarea
+            id="event-description"
+            className={`${baseInputClass} resize-none`}
+            placeholder=""
+            rows={3}
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+          />
         </div>
 
-        <div className="border-t pt-4">
-          <div className="flex justify-between items-center mb-1">
-            <h3 className="text-sm font-semibold text-gray-900">Reminders ({reminders.length}/{MAX_REMINDERS})</h3>
+        <div>
+          <div className="flex items-center justify-between gap-4">
+            <label htmlFor="event-recurring" className="text-sm font-medium text-gray-700">
+              Recurring
+            </label>
+            <button
+              id="event-recurring"
+              type="button"
+              onClick={() => {
+                const nextValue = !recurrenceEnabled;
+                setRecurrenceEnabled(nextValue);
+                if (!nextValue) {
+                  setRecurrenceInterval(null);
+                  setRecurrenceEnd("");
+                } else if (!recurrenceInterval) {
+                  setRecurrenceInterval("weekly");
+                }
+              }}
+              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                recurrenceEnabled ? "bg-primary" : "bg-gray-300"
+              }`}
+              aria-pressed={recurrenceEnabled}
+            >
+              <span
+                className={`inline-block h-5 w-5 transform rounded-full bg-white shadow-sm transition-transform ${
+                  recurrenceEnabled ? "translate-x-5" : "translate-x-1"
+                }`}
+              />
+            </button>
+          </div>
+
+          {recurrenceEnabled && (
+            <div className="mt-4 grid grid-cols-2 gap-4">
+              <div>
+                <label htmlFor="recurrence-interval" className="block text-sm font-medium text-gray-700 mb-2">
+                  Interval
+                </label>
+                <select
+                  id="recurrence-interval"
+                  className={baseInputClass}
+                  value={recurrenceInterval ?? "weekly"}
+                  onChange={(e) => {
+                    const value = e.target.value || null;
+                    setRecurrenceInterval(value);
+                    if (!value) {
+                      setRecurrenceEnd("");
+                    }
+                  }}
+                >
+                  <option value="daily">Daily</option>
+                  <option value="weekly">Weekly</option>
+                  <option value="monthly">Monthly</option>
+                  <option value="yearly">Yearly</option>
+                </select>
+              </div>
+              <div>
+                <label htmlFor="recurrence-end-type" className="block text-sm font-medium text-gray-700 mb-2">
+                  End Date
+                </label>
+                <select
+                  id="recurrence-end-type"
+                  className={`${baseInputClass} mb-2`}
+                  value={recurrenceEnd ? "date" : "never"}
+                  onChange={(e) => {
+                    if (e.target.value === "never") {
+                      setRecurrenceEnd("");
+                    } else {
+                      const defaultDate = new Date();
+                      defaultDate.setMonth(defaultDate.getMonth() + 1);
+                      setRecurrenceEnd(defaultDate.toISOString().split("T")[0]);
+                    }
+                  }}
+                >
+                  <option value="never">Never</option>
+                  <option value="date">On Date</option>
+                </select>
+                {recurrenceEnd && (
+                  <input
+                    id="recurrence-end"
+                    className={baseInputClass}
+                    type="date"
+                    value={recurrenceEnd}
+                    onChange={(e) => setRecurrenceEnd(e.target.value)}
+                  />
+                )}
+              </div>
+            </div>
+          )}
+        </div>
+
+        <div className="pt-2">
+          <div className="flex justify-between items-center mb-2">
+            <div className="flex items-center gap-2">
+              <h3 className="text-sm font-medium text-gray-900">Reminders ({reminders.length}/{MAX_REMINDERS})</h3>
+              <Tooltip content="In-app notifications are always sent. Select additional channels below.">
+                <span className="inline-flex h-5 w-5 items-center justify-center rounded-full border border-gray-300 text-[10px] text-gray-500 cursor-help">
+                  ?
+                </span>
+              </Tooltip>
+            </div>
             <button
               type="button"
               onClick={addReminder}
               disabled={!canAddReminder}
-              className={`text-xs font-medium flex items-center gap-1 ${canAddReminder ? "text-orange-600 hover:text-orange-700" : "text-gray-400 cursor-not-allowed"}`}
+              className={`text-sm font-medium flex items-center gap-1 ${canAddReminder ? "text-orange-600 hover:text-orange-700" : "text-gray-400 cursor-not-allowed"}`}
             >
               <span className="material-icons text-sm">add</span> Add Reminder
             </button>
           </div>
-          <p className="text-xs text-gray-500 mb-4">
-            In-app notifications are always sent. Select additional channels below:
-          </p>
-          <div className="space-y-3">
+          <div className="space-y-2">
             {reminders.map((reminder, index) => (
-              <div key={index} className={`flex flex-col gap-2 bg-gray-50 p-3 rounded-lg border ${pastReminderIndices.has(index) ? "border-red-400 bg-red-50" : "border-gray-200"}`}>
+              <div key={index} className={`flex flex-col gap-2 rounded-lg px-3 py-2 ${pastReminderIndices.has(index) ? "bg-red-50 text-red-700" : "bg-gray-50 text-gray-700"}`}>
                 <div className="flex flex-wrap items-center gap-3">
-                  <span className="text-xs font-semibold text-gray-600">Reminder type</span>
-                  <label className={`inline-flex items-center gap-2 text-xs ${isSubscribed ? "text-gray-600" : "text-gray-400"}`}>
-                    <input
-                      type="checkbox"
-                      checked={reminder.send_push}
-                      disabled={!isSubscribed}
-                      onChange={(e) => {
-                        if (isSubscribed) {
-                          toggleReminderChannel(index, "send_push", e.target.checked);
-                        }
-                      }}
-                      className="h-4 w-4 rounded border-gray-300 text-orange-500 focus:ring-orange-500 disabled:opacity-50"
-                    />
-                    Popup
-                    {!isSubscribed && (
-                      <button
-                        type="button"
-                        disabled={pushLoading || permission === "denied"}
-                        onClick={() => void subscribe()}
-                        className="text-[10px] text-indigo-600 hover:text-indigo-800 underline disabled:opacity-50 disabled:no-underline"
-                      >
-                        {permission === "denied" ? "(blocked)" : pushLoading ? "..." : "(enable)"}
-                      </button>
-                    )}
-                  </label>
-                  <label className="inline-flex items-center gap-2 text-xs text-gray-600">
+                  <span className="text-sm font-medium">Reminder</span>
+                  <label className="inline-flex items-center gap-2 text-sm text-gray-600">
                     <input
                       type="checkbox"
                       checked={reminder.send_email}
@@ -629,17 +750,29 @@ const EventForm = ({
                     />
                     Email
                   </label>
+                  <label className="inline-flex items-center gap-2 text-sm text-gray-600">
+                    <input
+                      type="checkbox"
+                      checked={reminder.send_push}
+                      disabled={permission === "unsupported" || pushLoading}
+                      onChange={(e) => {
+                        void handleTogglePush(index, e.target.checked);
+                      }}
+                      className="h-4 w-4 rounded border-gray-300 text-orange-500 focus:ring-orange-500 disabled:opacity-50"
+                    />
+                    Popup
+                  </label>
                 </div>
                 <div className="flex items-center gap-2">
                   <input
                     type="number"
-                    className="w-20 text-sm border-gray-300 rounded-md focus:ring-orange-500 focus:border-orange-500"
+                    className="w-20 text-sm border-gray-300 rounded-md bg-white px-3 focus:ring-orange-500 focus:border-orange-500"
                     value={reminder.value}
                     onChange={(e) => updateReminder(index, "value", parseInt(e.target.value) || 1)}
                     min="1"
                   />
                   <select
-                    className="text-sm border-gray-300 rounded-md focus:ring-orange-500 focus:border-orange-500"
+                    className="text-sm border-gray-300 rounded-md bg-white focus:ring-orange-500 focus:border-orange-500"
                     value={reminder.unit}
                     onChange={(e) => updateReminder(index, "unit", e.target.value as TimeUnit)}
                   >
@@ -647,7 +780,7 @@ const EventForm = ({
                       <option key={opt.value} value={opt.value}>{opt.label}</option>
                     ))}
                   </select>
-                  <span className="text-xs text-gray-500">before</span>
+                  <span className="text-sm text-gray-500">before start</span>
                   <button
                     type="button"
                     onClick={() => removeReminder(index)}
@@ -657,15 +790,17 @@ const EventForm = ({
                   </button>
                 </div>
                 {pastReminderIndices.has(index) && (
-                  <p className="text-xs text-red-500">
+                  <p className="text-sm text-red-600">
                     This reminder would trigger in the past.
+                  </p>
+                )}
+                {pushDeniedNotice[index] && (
+                  <p className="text-sm text-red-600">
+                    Browser notifications are blocked. Enable them in your browser settings to use popups.
                   </p>
                 )}
               </div>
             ))}
-            {reminders.length === 0 && (
-              <p className="text-xs text-gray-400 italic">No reminders set.</p>
-            )}
           </div>
         </div>
       </div>
@@ -691,6 +826,34 @@ const EventForm = ({
           Save Event
         </button>
       </div>
+
+      <CategoryColourPicker
+        isOpen={showPickerMenu}
+        position={pickerPosition}
+        pickerRef={pickerRef}
+        colourInput={colourInput}
+        colourError={colourError}
+        currentColour={displayColour}
+        onColourInputChange={setColourInput}
+        onColourErrorChange={setColourError}
+        onCommitInput={() => {
+          const parsed = parseColourInput(colourInput);
+          if (!parsed) {
+            setColourError("Enter a valid hex or rgb colour.");
+            return;
+          }
+          setColourInput(parsed);
+        }}
+        onSelect={() => {
+          const parsed = parseColourInput(colourInput);
+          if (!parsed) {
+            setColourError("Enter a valid hex or rgb colour.");
+            return;
+          }
+          setColour(parsed);
+          setShowPickerMenu(false);
+        }}
+      />
     </form>
   );
 };

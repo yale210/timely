@@ -28,13 +28,13 @@ export const NotificationBell: React.FC<NotificationBellProps> = ({
   return (
     <Component
       type={as === 'button' ? 'button' : undefined}
-      className="relative p-1 text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+      className="relative inline-flex h-6 w-6 items-center justify-center text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-1"
       onClick={onClick}
       aria-label="View notifications"
     >
-      <BellIcon className="h-6 w-6" aria-hidden="true" />
+      <BellIcon className="h-5 w-5" aria-hidden="true" />
       {unreadCount > 0 && (
-        <span className="absolute top-0 right-0 flex h-4 w-4 transform translate-x-1/2 -translate-y-1/2 rounded-full bg-red-500 text-[10px] font-bold text-white items-center justify-center ring-2 ring-white">
+        <span className="absolute top-0 right-0 flex h-3.5 w-3.5 translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full bg-red-500 text-[8px] font-bold text-white ring-1 ring-white">
           {unreadCount > 9 ? '9+' : unreadCount}
         </span>
       )}

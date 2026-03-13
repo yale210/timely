@@ -28,11 +28,14 @@ class Task(models.Model):
         blank=True,
         related_name="tasks",
     )
+    colour = models.CharField(max_length=7, blank=True, null=True)
 
     estimated_minutes = models.PositiveIntegerField(validators=[MinValueValidator(1)])
     start_time = models.DateTimeField()
     deadline = models.DateTimeField()
     completed = models.BooleanField(default=False)
+    locked = models.BooleanField(default=False)
+    allow_split = models.BooleanField(default=False)
 
     # Query db for models with specific parent tasks when necessary.
     parent_task = models.ForeignKey(

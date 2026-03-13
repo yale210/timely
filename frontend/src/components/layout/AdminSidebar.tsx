@@ -31,7 +31,7 @@ export default function AdminSidebar({ onClose }: AdminSidebarProps) {
             className="flex items-center rounded-md px-3 py-2.5 text-base font-semibold text-indigo-600 hover:bg-indigo-50 transition-colors"
           >
             <span className="material-icons text-lg mr-2">arrow_back</span>
-            Back to Dashboard
+            Back to Overview
           </Link>
         </li>
       </ul>

@@ -130,6 +130,10 @@ const CategoryMultiSelect = ({
     setError(null);
     try {
       const created = await onCreateCategory(query.trim());
+      if (!created.colour) {
+        const randomPreset = PRESET_COLOURS[Math.floor(Math.random() * PRESET_COLOURS.length)];
+        await onUpdateCategory(created.id, { colour: randomPreset });
+      }
       onChange([...selectedIds, created.id]);
       setQuery("");
       setIsOpen(false);

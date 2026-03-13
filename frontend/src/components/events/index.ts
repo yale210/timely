@@ -1,5 +1,4 @@
 export { default as EventForm } from "./EventForm";
-export { default as EventSidebar } from "./EventSidebar";
 export { default as EventCard } from "./EventCard";
 export { default as EventListHeader } from "./EventListHeader";
 export { default as EventListToolbar } from "./EventListToolbar";

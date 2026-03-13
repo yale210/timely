@@ -41,6 +41,7 @@ class EventSerializer(serializers.ModelSerializer):
             "title",
             "description",
             "location",
+            "colour",
             "categories",
             "start_time",
             "end_time",

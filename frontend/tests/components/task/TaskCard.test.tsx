@@ -50,7 +50,7 @@ describe('TaskCard', () => {
                 onClick={vi.fn()} 
             />
         )
-        expect(screen.getByText(/High/i)).toBeDefined()
+        expect(screen.getByText(/^High$/i)).toBeDefined()
         expect(screen.getByText(/30m/i)).toBeDefined()
     })
 
@@ -69,10 +69,10 @@ describe('TaskCard', () => {
         
         fireEvent.mouseEnter(card)
         expect(screen.getByText('8')).toBeDefined()
-        expect(screen.queryByText(/High/i)).toBeNull()
+        expect(screen.queryByText(/^High$/i)).toBeNull()
         
         fireEvent.mouseLeave(card)
-        expect(screen.getByText(/High/i)).toBeDefined()
+        expect(screen.getByText(/^High$/i)).toBeDefined()
         expect(screen.queryByText('8')).toBeNull()
     })
 
@@ -201,6 +201,6 @@ describe('TaskCard', () => {
         expect(screen.getByText('8')).toBeDefined()
         
         fireEvent.blur(card)
-        expect(screen.getByText(/High/i)).toBeDefined()
+        expect(screen.getByText(/^High$/i)).toBeDefined()
     })
 })

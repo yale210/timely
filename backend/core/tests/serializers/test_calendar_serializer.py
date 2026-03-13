@@ -48,10 +48,13 @@ class CalendarSerializerTests(TestCase):
                 "title",
                 "description",
                 "categories",
+                "colour",
                 "start_time",
                 "deadline",
                 "importance",
                 "completed",
+                "locked",
+                "allow_split",
                 "estimated_minutes",  # I should check if this was in fields before, it wasn't but model has it.
                 "parent_task",
                 "allocation",
