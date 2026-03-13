@@ -373,7 +373,7 @@ const DashboardOverview = ({
 
   return (
   <main className="h-full min-h-0 w-full px-6 pt-4 pb-0 lg:px-10">
-    <header className="mb-4 flex items-center justify-between">
+    <header className="mb-4 mt-2 flex items-center justify-between">
       <h1 className="text-3xl font-semibold tracking-tight text-gray-900">
         {periodLabel} Overview
       </h1>
