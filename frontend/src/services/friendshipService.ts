@@ -30,3 +30,10 @@ export const acceptFriendRequest = async (id: number): Promise<void> => {
 export const declineFriendRequest = async (id: number): Promise<void> => {
   await api.post(`/api/friendships/${id}/decline/`);
 };
+
+/**
+ * Removes a friendship.
+ */
+export const deleteFriendship = async (id: number): Promise<void> => {
+  await api.delete(`/api/friendships/${id}/`);
+};

@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 import { authStore } from "@/services/authService";
 import { useFriendships } from "@/hooks/friends/useFriendships";
 import AppLayout from "@/layouts/AppLayout";
+import ConfirmationModal from "@/components/modals/ConfirmationModal";
 
 const renderUserLabel = (userId?: number | null) => {
   if (!userId) return "Unknown user";
@@ -13,6 +14,10 @@ export default function Friends() {
   const currentUserId = user?.id ?? null;
   const [receiverId, setReceiverId] = useState("");
   const [activeTab, setActiveTab] = useState<"friends" | "requests">("friends");
+  const [friendPendingRemoval, setFriendPendingRemoval] = useState<{
+    id: number;
+    label: string;
+  } | null>(null);
   const {
     friendships,
     loading,
@@ -22,6 +27,7 @@ export default function Friends() {
     sendRequest,
     acceptRequest,
     declineRequest,
+    removeFriend,
   } = useFriendships();
 
   const { incoming, outgoing, accepted, declined } = useMemo(() => {
@@ -45,6 +51,12 @@ export default function Friends() {
     }
     void sendRequest(numericId);
     setReceiverId("");
+  };
+
+  const confirmRemove = () => {
+    if (!friendPendingRemoval) return;
+    void removeFriend(friendPendingRemoval.id);
+    setFriendPendingRemoval(null);
   };
 
   return (
@@ -134,6 +146,19 @@ export default function Friends() {
                             <p className="text-sm font-semibold">{renderUserLabel(friendId)}</p>
                             <p className="text-xs text-gray-500">Friends</p>
                           </div>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setFriendPendingRemoval({
+                                id: friendship.id,
+                                label: renderUserLabel(friendId),
+                              });
+                            }}
+                            disabled={actingIds.has(friendship.id)}
+                            className="rounded-md border border-gray-200 px-3 py-1.5 text-xs font-semibold text-gray-700 hover:bg-gray-100 disabled:cursor-not-allowed disabled:bg-gray-100"
+                          >
+                            Remove
+                          </button>
                         </li>
                       );
                     })}
@@ -223,8 +248,21 @@ export default function Friends() {
                 ) : null}
               </>
             )}
-        </div>
-      </main>
+          </div>
+        </main>
+
+        <ConfirmationModal
+          isOpen={friendPendingRemoval !== null}
+          onClose={() => setFriendPendingRemoval(null)}
+          onConfirm={confirmRemove}
+          title="Remove friend?"
+          message={
+            friendPendingRemoval
+              ? `Are you sure you want to remove ${friendPendingRemoval.label}?`
+              : "Are you sure you want to remove this friend?"
+          }
+          confirmText="Remove"
+        />
       </div>
     </AppLayout>
   );

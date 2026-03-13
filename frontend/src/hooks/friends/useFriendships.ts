@@ -73,6 +73,32 @@ export const useFriendships = () => {
     }
   }, [refresh]);
 
+  const removeFriend = useCallback(async (id: number) => {
+    setState((prev) => {
+      const nextIds = new Set(prev.actingIds);
+      nextIds.add(id);
+      return { ...prev, actingIds: nextIds };
+    });
+
+    try {
+      await friendshipService.deleteFriendship(id);
+      setState((prev) => ({
+        ...prev,
+        friendships: prev.friendships.filter((friendship) => friendship.id !== id),
+        error: null,
+      }));
+    } catch (err) {
+      console.error("Failed to remove friend", err);
+      setState((prev) => ({ ...prev, error: "Failed to remove friend" }));
+    } finally {
+      setState((prev) => {
+        const nextIds = new Set(prev.actingIds);
+        nextIds.delete(id);
+        return { ...prev, actingIds: nextIds };
+      });
+    }
+  }, []);
+
   useEffect(() => {
     void refresh();
   }, [refresh]);
@@ -87,5 +113,6 @@ export const useFriendships = () => {
     sendRequest,
     acceptRequest: (id: number) => actOnRequest(id, "accept"),
     declineRequest: (id: number) => actOnRequest(id, "decline"),
+    removeFriend,
   };
 };
