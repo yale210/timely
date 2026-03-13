@@ -3,7 +3,7 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from core.models import Event
 from django.db import transaction
-from datetime import datetime
+from datetime import datetime, timezone
 
 # Test1
 
@@ -167,12 +167,12 @@ class ImportView(APIView):
                             # A DTSTAMP is optional, no error for it not existing,
                             # But, the applicaiton will manually create one this is because a DTSTAMP is the
                             # "last edited" date/time of an event, importing events that don't have this detail
-                            # will be assumed to have been last edited at time of uploading -> datetime.now()
+                            # will be assumed to have been last edited at time of uploading -> timezone.now()
                             if "DTSTAMP" in current_event:
                                 dt_stamp = current_event["DTSTAMP"]
                             else:
                                 # Current date/time
-                                current_date_time_unformatted = datetime.now()
+                                current_date_time_unformatted = timezone.now()
 
                                 # This is the format that is required by iCalendar
                                 current_date_time = (
@@ -246,6 +246,8 @@ class ImportView(APIView):
                                 events.append(new_event_to_import_data)
 
                             print(testN)
+
+                            current_event = None
                             """
                             response = {
                             "message": f"Import successful! {summary, dt_start, dt_end, description, location, r_rule, testN, event_exists_pre_import, a.location}",
@@ -258,7 +260,7 @@ class ImportView(APIView):
                     # All these lines follow the format of "variable:detail", e.g. LOCATION:London
                     # This can be represented as key:value pairs in a dictionary
                     elif current_event is not None:
-                        key, value = line.split(":")
+                        key, value = line.split(":", 1)
                         current_event[key] = value
 
             # At this stage the file format is correct and all duplicate events have been ignored
