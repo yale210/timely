@@ -87,7 +87,6 @@ export default function AppNavbar() {
 
   const visibleFeatureItems = featureItems.filter((item) => {
     if (item.key === "gradebook") return featureFlags.gradebook
-    if (item.key === "weekly_summaries") return featureFlags.weekly_summaries
     return false
   })
 
