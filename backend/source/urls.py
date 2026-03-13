@@ -28,6 +28,7 @@ from core.views import (
     WeeklySummaryView,
     FriendshipViewSet,
     SpecialDatesViewSet,
+    AssessmentViewSet,
 )
 
 from scheduler.views import ScheduleTasksAPIView, UnscheduleTasksAPIView
@@ -41,7 +42,7 @@ router.register(r"events", EventViewSet, basename="event")
 router.register(r"preferences", PreferenceViewSet, basename="preference")
 router.register(r"friendships", FriendshipViewSet, basename="friendship")
 router.register(r"special-dates", SpecialDatesViewSet, basename="special-dates")
-
+router.register(r"assessments", AssessmentViewSet, basename="assessment")
 
 urlpatterns = [
     path("api/admin/", include("admin_panel.urls")),

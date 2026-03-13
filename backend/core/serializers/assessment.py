@@ -4,13 +4,10 @@ from core.models import Assessment
 
 
 class AssessmentSerializer(serializers.ModelSerializer):
-    user = serializers.HiddenField(default=serializers.CurrentUserDefault())
-
     class Meta:
         model = Assessment
         fields = [
             "id",
-            "user",
             "title",
             "module",
             "assessment_type",
@@ -31,6 +28,5 @@ class AssessmentSerializer(serializers.ModelSerializer):
             "id",
             "created_at",
             "updated_at",
-            "user",
             "linked_event",
         ]
