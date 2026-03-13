@@ -1,9 +1,10 @@
 import { useMemo, useState } from "react";
-import PlaceholderSection from "@/components/settings/PlaceholderSection";
 import PreferencesSection from "@/components/settings/PreferencesSection";
 import SettingsSidebar from "@/components/settings/SettingsSidebar";
 import ThemeSection from "@/components/settings/ThemeSection";
+import ProfileSection from "@/components/settings/ProfileSection";
 import type { UseSettingsReturn } from "@/hooks/settings/useSettings";
+import { useProfileSettings } from "@/hooks/settings/useProfileSettings";
 
 interface SettingsContentProps {
   state: UseSettingsReturn["state"];
@@ -56,6 +57,8 @@ const SettingsContent = ({
     setFeatureFlags((prev) => ({ ...prev, [key]: value }));
     window.dispatchEvent(new Event("feature-flags-changed"));
   };
+
+  const profileState = useProfileSettings(state.activeSection === "profile");
 
   return (
     <div className="min-h-screen bg-white text-black">
@@ -192,9 +195,17 @@ const SettingsContent = ({
               </div>
             ) : null}
             {state.activeSection === "profile" ? (
-              <PlaceholderSection
-                title="Profile"
-                description="Profile settings will go here."
+              <ProfileSection
+                profile={profileState.state.profile}
+                loading={profileState.state.loading}
+                saving={profileState.state.saving}
+                error={profileState.state.error}
+                fieldErrors={profileState.state.fieldErrors}
+                onChange={profileState.actions.setProfile}
+                onAvatarChange={profileState.actions.setAvatarFile}
+                onSave={() => {
+                  void profileState.actions.saveProfile();
+                }}
               />
             ) : null}
           </section>

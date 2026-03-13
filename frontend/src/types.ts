@@ -176,6 +176,19 @@ export type PreferenceUpdate = Partial<Pick<
 >>
 
 /**
+ * Represents a user profile.
+ * @interface Profile
+ */
+export interface Profile {
+  name: string;
+  date_of_birth: string | null;
+  creation_date: string;
+  slogan: string;
+  bio: string;
+  avatar: string | null;
+}
+
+/**
  * Represents a friendship between two users.
  * @interface Friendship
  */
