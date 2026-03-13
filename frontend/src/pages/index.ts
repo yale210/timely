@@ -6,5 +6,4 @@ export { default as CalendarPage } from "./Calendar"
 export { default as Dashboard } from "./Dashboard"
 export { default as TaskList } from "./TaskList"
 export { default as Gradebook } from "./Gradebook" 
-export { default as WeeklySummaries } from "./WeeklySummaries";
 export { default as Settings } from "./Settings";
