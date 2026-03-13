@@ -38,7 +38,7 @@ const SettingsSidebar = ({
   ];
 
   return (
-    <aside className="w-[13%] min-w-40">
+    <aside className="w-56 min-w-56 shrink-0">
       <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
         {navItems.map((item, index) => {
           const isActive = state.activeSection === item.value;
