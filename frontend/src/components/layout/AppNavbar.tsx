@@ -48,9 +48,7 @@ export default function AppNavbar() {
     unreadCount,
     markRead,
     markUnread,
-    markAllRead,
     deleteNotification,
-    deleteAllNotifications,
   } = useNotificationContext()
 
   const user = authStore.getUser()
@@ -116,8 +114,6 @@ export default function AppNavbar() {
           <NotificationDropdown
             notifications={notifications}
             unreadCount={unreadCount}
-            onMarkAllRead={() => void markAllRead()}
-            onDeleteAll={() => void deleteAllNotifications()}
             onItemClick={handleNotificationClick}
             onToggleRead={(notification) =>
               notification.is_read
