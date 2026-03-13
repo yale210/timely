@@ -14,8 +14,14 @@ import { AdminNotificationHistoryDetail } from "@/pages/Admin/Notifications/Admi
  * The root component of the application which organises the routing logic.
  * @returns The rendered application routes.
  */
+
+const urls = ["/login", "/signup", "/"]
+
+/**
+ * The root component of the application which organises the routing logic.
+ * @returns The rendered application routes.
+ */
 export default function App() {
-  const urls = ["/login", "/signup", "/"]
   const location = useLocation()
   console.log(!urls.includes(String(location.pathname)))
 
