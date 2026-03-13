@@ -61,12 +61,12 @@ describe("App Component", () => {
     delete document.documentElement.dataset.font;
   });
 
-  it("should render and apply saved theme and font from localStorage", () => {
+  it("should render and apply saved theme and font from localStorage on protected routes", () => {
     localStorage.setItem("theme", "dark");
     localStorage.setItem("font", "open-dyslexic");
 
     render(
-      <MemoryRouter initialEntries={["/"]}>
+      <MemoryRouter initialEntries={["/dashboard"]}>
         <App />
       </MemoryRouter>
     );
@@ -75,15 +75,15 @@ describe("App Component", () => {
     expect(document.documentElement.dataset.font).toBe("open-dyslexic");
   });
 
-  it("should render without saved theme or font", () => {
+  it("should apply default theme and font on public routes", () => {
     render(
       <MemoryRouter initialEntries={["/"]}>
         <App />
       </MemoryRouter>
     );
 
-    expect(document.documentElement.dataset.theme).toBeUndefined();
-    expect(document.documentElement.dataset.font).toBeUndefined();
+    expect(document.documentElement.dataset.theme).toBe("light");
+    expect(document.documentElement.dataset.font).toBe("poppins");
   });
 
   it("should render Home page at root path", () => {

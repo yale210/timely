@@ -10,12 +10,7 @@ import { AdminNotifications } from "@/pages/Admin/Notifications/AdminNotificatio
 import { AdminNotificationHistory } from "@/pages/Admin/Notifications/AdminNotificationHistory"
 import { AdminNotificationHistoryDetail } from "@/pages/Admin/Notifications/AdminNotificationHistoryDetail"
 
-/**
- * The root component of the application which organises the routing logic.
- * @returns The rendered application routes.
- */
-
-const urls = ["/login", "/signup", "/"]
+const PUBLIC_ROUTES = ["/login", "/signup", "/"]
 
 /**
  * The root component of the application which organises the routing logic.
@@ -23,10 +18,9 @@ const urls = ["/login", "/signup", "/"]
  */
 export default function App() {
   const location = useLocation()
-  console.log(!urls.includes(String(location.pathname)))
 
   useEffect(() => {
-    if (!urls.includes(String(location.pathname))) {
+    if (!PUBLIC_ROUTES.includes(location.pathname)) {
       const savedTheme = localStorage.getItem("theme")
       if (savedTheme) {
         document.documentElement.dataset.theme = savedTheme
@@ -41,7 +35,7 @@ export default function App() {
       document.documentElement.dataset.theme = "light"
       document.documentElement.dataset.font = "poppins"
     }
-  }, [location])
+  }, [location.pathname])
 
   return (
     <Routes>
