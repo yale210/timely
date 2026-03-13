@@ -1,7 +1,7 @@
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 from django.conf import settings
-from django.utils.timezone import now
+from django.core.exceptions import ValidationError
 
 
 class Assessment(models.Model):
@@ -10,7 +10,6 @@ class Assessment(models.Model):
     which enable them to keep on top of their upcoming assessments and deadlines.
     """
 
-    
     class AssessmentType(models.TextChoices):
         COURSEWORK = "COURSEWORK", "Coursework"
         EXAM = "EXAM", "Exam"
@@ -21,18 +20,17 @@ class Assessment(models.Model):
         SUMMATIVE = "SUMMATIVE", "Summative"
         OTHER = "OTHER", "Other"
 
-
     user = models.ForeignKey(
-        settings.AUTH_USER_MODEL,
-        on_delete=models.CASCADE,
-        related_name="assessments"
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="assessments"
     )
 
-    title = models.CharField(max_length=500, default="Unnamed Assessment")
+    title = models.CharField(max_length=500)
 
-    module = models.CharField(max_length=255, blank=True, default="Unknown Module")
+    module = models.CharField(max_length=100, blank=False)
 
-    assessment_type = models.CharField(max_length=255, blank=True, default="Summative")
+    assessment_type = models.CharField(
+        max_length=255, choices=AssessmentType.choices, default=AssessmentType.SUMMATIVE
+    )
 
     due_date = models.DateTimeField()
 
@@ -44,8 +42,6 @@ class Assessment(models.Model):
 
     weighting_of_assessment = models.PositiveIntegerField(
         validators=[MinValueValidator(0), MaxValueValidator(100)],
-        null=True,
-        blank=True,
     )
 
     notes = models.TextField(blank=True)
@@ -64,15 +60,39 @@ class Assessment(models.Model):
         blank=True,
     )
 
-    created_at = models.DateTimeField(default=now)
+    created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
         ordering = ["due_date"]
 
-
-    
-
     # Return the assessment.
     def __str__(self):
         return self.title
+
+    def clean(self):
+        super().clean()
+        errors = {}
+
+        # Ensure title is not empty.
+        if not self.title.strip():
+            errors["title"] = "Assessment must have a title."
+
+        # Ensure module is not empty.
+        if not self.module.strip():
+            errors["module"] = "Assessment must have a module."
+
+        # Ensure the weighting is between 0 and 100 if provided.
+        if (
+            self.weighting_of_assessment is not None
+            and self.weighting_of_assessment < 0
+        ):
+            errors["weighting_of_assessment"] = (
+                "Weighting of assessment must be greater than or equal to 0."
+            )
+
+        if self.reminder_offset is not None and self.reminder_offset < 0:
+            errors["reminder_offset"] = "Reminder offset cannot be less than 0."
+
+        if errors:
+            raise ValidationError(errors)
