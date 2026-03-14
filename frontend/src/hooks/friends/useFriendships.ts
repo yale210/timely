@@ -10,6 +10,10 @@ type FriendshipEventDetail =
   | { kind: "remove"; friendshipId: number }
   | { kind: "bulk"; friendships: Friendship[] };
 
+/**
+ * Broadcasts friendship updates to all listeners.
+ * @param detail - Update payload describing the change.
+ */
 const emitFriendshipEvent = (detail: FriendshipEventDetail) => {
   window.dispatchEvent(new CustomEvent<FriendshipEventDetail>(FRIENDSHIP_EVENT, { detail }));
 };
@@ -22,6 +26,9 @@ interface UseFriendshipsState {
   actingIds: Set<number>;
 }
 
+/**
+ * Provides friendship state and actions for the current user.
+ */
 export const useFriendships = () => {
   const [state, setState] = useState<UseFriendshipsState>({
     friendships: [],
@@ -108,7 +115,7 @@ export const useFriendships = () => {
         return { ...prev, actingIds: nextIds };
       });
     }
-  }, [refresh]);
+  }, []);
 
   const removeFriend = useCallback(async (id: number) => {
     setState((prev) => {

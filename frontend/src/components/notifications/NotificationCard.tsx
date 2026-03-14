@@ -29,6 +29,8 @@ interface NotificationCardProps {
  * @param root0.onToggleRead - Callback to toggle read/unread state.
  * @param root0.onDelete - Callback to delete the notification.
  * @param root0.showActions - Whether to show action buttons.
+ * @param root0.showReadToggle - Whether to show the read toggle button.
+ * @param root0.showDivider - Whether to show the divider border.
  * @param root0.compact - Whether to render in compact mode.
  * @param root0.unreadIndicatorPlacement - Position of the unread indicator dot.
  */

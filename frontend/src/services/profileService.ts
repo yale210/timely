@@ -11,6 +11,8 @@ export const getMyProfile = async (): Promise<Profile> => {
 
 /**
  * Updates the current user's profile.
+ * @param payload - Fields to update.
+ * @param avatarFile - Optional avatar file upload.
  */
 export const updateMyProfile = async (
   payload: Partial<Profile>,

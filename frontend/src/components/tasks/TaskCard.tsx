@@ -102,7 +102,7 @@ const TaskCard = ({ task, onToggleComplete, onClick }: TaskCardProps) => {
                 }
                 onToggleComplete(task.id);
               }}
-              className="h-5 w-5 rounded-full border-gray-300 bg-transparent text-primary focus:ring-primary"
+              className="task-circle-checkbox text-cyan-600 focus:ring-cyan-400"
             />
             <span
               className={`text-sm font-medium truncate ${

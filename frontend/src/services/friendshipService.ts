@@ -11,6 +11,7 @@ export const getFriendships = async (): Promise<Friendship[]> => {
 
 /**
  * Sends a friend request to the specified user id.
+ * @param receiverUsername - Username of the receiver.
  */
 export const sendFriendRequest = async (receiverUsername: string): Promise<Friendship> => {
   const response = await api.post<Friendship>("/api/friendships/", { receiver_username: receiverUsername });
@@ -19,6 +20,7 @@ export const sendFriendRequest = async (receiverUsername: string): Promise<Frien
 
 /**
  * Accepts a friend request.
+ * @param id - Friendship id.
  */
 export const acceptFriendRequest = async (id: number): Promise<void> => {
   await api.post(`/api/friendships/${id}/accept/`);
@@ -26,6 +28,7 @@ export const acceptFriendRequest = async (id: number): Promise<void> => {
 
 /**
  * Declines a friend request.
+ * @param id - Friendship id.
  */
 export const declineFriendRequest = async (id: number): Promise<void> => {
   await api.post(`/api/friendships/${id}/decline/`);
@@ -33,6 +36,7 @@ export const declineFriendRequest = async (id: number): Promise<void> => {
 
 /**
  * Removes a friendship.
+ * @param id - Friendship id.
  */
 export const deleteFriendship = async (id: number): Promise<void> => {
   await api.delete(`/api/friendships/${id}/`);

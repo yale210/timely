@@ -12,6 +12,10 @@ interface UseProfileState {
   avatarFile: File | null;
 }
 
+/**
+ * Manages profile settings state and persistence.
+ * @param isActive - Whether the profile section is active.
+ */
 export const useProfileSettings = (isActive: boolean) => {
   const [state, setState] = useState<UseProfileState>({
     profile: null,
@@ -40,8 +44,31 @@ export const useProfileSettings = (isActive: boolean) => {
 
   useEffect(() => {
     if (!isActive) return;
-    void loadProfile();
-  }, [isActive, loadProfile]);
+    let isMounted = true;
+
+    const fetchProfile = async () => {
+      setState((prev) => ({ ...prev, loading: true, error: null, fieldErrors: {} }));
+      try {
+        const profile = await profileService.getMyProfile();
+        if (!isMounted) return;
+        setState((prev) => ({ ...prev, profile, loading: false }));
+      } catch (error) {
+        if (!isMounted) return;
+        const parsed = formatDjangoFormError(error);
+        setState((prev) => ({
+          ...prev,
+          loading: false,
+          error: parsed.message,
+          fieldErrors: parsed.fieldErrors,
+        }));
+      }
+    };
+
+    void fetchProfile();
+    return () => {
+      isMounted = false;
+    };
+  }, [isActive]);
 
   const setProfile = (profile: Profile) => {
     setState((prev) => ({ ...prev, profile }));

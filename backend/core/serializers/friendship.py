@@ -44,7 +44,9 @@ class FriendshipSerializer(serializers.ModelSerializer):
         receiver_username = attrs.pop("receiver_username", None)
         if receiver and receiver_username:
             raise serializers.ValidationError(
-                {"receiver_username": "Provide either receiver id or username, not both."}
+                {
+                    "receiver_username": "Provide either receiver id or username, not both."
+                }
             )
         if receiver_username:
             try:

@@ -5,6 +5,11 @@ import AppLayout from "@/layouts/AppLayout";
 import ConfirmationModal from "@/components/modals/ConfirmationModal";
 import type { Friendship } from "@/types";
 
+/**
+ * Gets the "other user" display information for a friendship.
+ * @param friendship - Friendship record.
+ * @param currentUserId - Current user id.
+ */
 const getFriendInfo = (friendship: Friendship, currentUserId: number | null) => {
   const isSender = friendship.sender === currentUserId;
   return {
@@ -15,16 +20,27 @@ const getFriendInfo = (friendship: Friendship, currentUserId: number | null) => 
   };
 };
 
+/**
+ * Formats the profile name for display.
+ * @param name - Profile name.
+ */
 const renderName = (name?: string | null) => {
   if (!name) return null;
   return name;
 };
 
+/**
+ * Uses the first letter of a username as an avatar fallback.
+ * @param username - Username string.
+ */
 const getAvatarFallback = (username?: string | null) => {
   if (!username) return "?";
   return username.slice(0, 1).toUpperCase();
 };
 
+/**
+ * Renders the Friends page.
+ */
 export default function Friends() {
   const user = authStore.getUser();
   const currentUserId = user?.id ?? null;
