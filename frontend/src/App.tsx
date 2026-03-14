@@ -1,5 +1,5 @@
 import { useEffect } from "react"
-import { Routes, Route } from "react-router-dom"
+import { Routes, Route, useLocation } from "react-router-dom"
 import RequireAuth from "@/components/auth/RequireAuth"
 import RedirectAuth from "@/components/auth/RedirectAuth"
 import RequireAdmin from "@/components/auth/RequireAdmin"
@@ -10,22 +10,32 @@ import { AdminNotifications } from "@/pages/Admin/Notifications/AdminNotificatio
 import { AdminNotificationHistory } from "@/pages/Admin/Notifications/AdminNotificationHistory"
 import { AdminNotificationHistoryDetail } from "@/pages/Admin/Notifications/AdminNotificationHistoryDetail"
 
+const PUBLIC_ROUTES = ["/login", "/signup", "/"]
+
 /**
  * The root component of the application which organises the routing logic.
  * @returns The rendered application routes.
  */
 export default function App() {
-  useEffect(() => {
-    const savedTheme = localStorage.getItem("theme")
-    if (savedTheme) {
-      document.documentElement.dataset.theme = savedTheme
-    }
+  const location = useLocation()
 
-    const savedFont = localStorage.getItem("font")
-    if (savedFont) {
-      document.documentElement.dataset.font = savedFont
+  useEffect(() => {
+    if (!PUBLIC_ROUTES.includes(location.pathname)) {
+      const savedTheme = localStorage.getItem("theme")
+      if (savedTheme) {
+        document.documentElement.dataset.theme = savedTheme
+      }
+
+      const savedFont = localStorage.getItem("font")
+      if (savedFont) {
+        document.documentElement.dataset.font = savedFont
+      }
     }
-  }, [])
+    else {
+      document.documentElement.dataset.theme = "light"
+      document.documentElement.dataset.font = "poppins"
+    }
+  }, [location.pathname])
 
   return (
     <Routes>
