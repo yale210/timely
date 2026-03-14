@@ -4,6 +4,7 @@ import { useFriendships } from "@/hooks/friends/useFriendships";
 import AppLayout from "@/layouts/AppLayout";
 import ConfirmationModal from "@/components/modals/ConfirmationModal";
 import type { Friendship } from "@/types";
+import { Link } from "react-router-dom";
 
 /**
  * Gets the "other user" display information for a friendship.
@@ -37,6 +38,13 @@ const getAvatarFallback = (username?: string | null) => {
   if (!username) return "?";
   return username.slice(0, 1).toUpperCase();
 };
+
+/**
+ * Builds a profile route for a username.
+ * @param username - Username string.
+ */
+const getProfileLink = (username?: string | null) =>
+  username ? `/profiles/${username}` : null;
 
 /**
  * Renders the Friends page.
@@ -170,7 +178,17 @@ export default function Friends() {
                       const friendInfo = getFriendInfo(friendship, currentUserId);
                       const label = renderName(friendInfo.name) ?? friendInfo.username ?? `User #${friendInfo.id}`;
                       return (
-                        <li key={friendship.id} className="flex items-center justify-between rounded-lg border border-gray-200 px-4 py-3">
+                        <li
+                          key={friendship.id}
+                          className="relative flex items-center justify-between rounded-lg border border-gray-200 px-4 py-3"
+                        >
+                          {getProfileLink(friendInfo.username) ? (
+                            <Link
+                              to={getProfileLink(friendInfo.username) ?? "#"}
+                              className="absolute inset-0 rounded-lg"
+                              aria-label={`View ${friendInfo.username ?? "profile"}`}
+                            />
+                          ) : null}
                           <div className="flex items-center gap-3">
                             <div className="h-10 w-10 overflow-hidden rounded-full border border-gray-200 bg-white">
                               {friendInfo.avatar ? (
@@ -188,7 +206,9 @@ export default function Friends() {
                           </div>
                           <button
                             type="button"
-                            onClick={() => {
+                            className="relative z-10"
+                            onClick={(event) => {
+                              event.stopPropagation();
                               setFriendPendingRemoval({
                                 id: friendship.id,
                                 label,
@@ -216,7 +236,17 @@ export default function Friends() {
                   ) : (
                     <ul className="mt-4 space-y-3">
                       {incoming.map((friendship) => (
-                        <li key={friendship.id} className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-gray-200 px-4 py-3">
+                        <li
+                          key={friendship.id}
+                          className="relative flex flex-wrap items-center justify-between gap-3 rounded-lg border border-gray-200 px-4 py-3"
+                        >
+                          {getProfileLink(friendship.sender_username) ? (
+                            <Link
+                              to={getProfileLink(friendship.sender_username) ?? "#"}
+                              className="absolute inset-0 rounded-lg"
+                              aria-label={`View ${friendship.sender_username ?? "profile"}`}
+                            />
+                          ) : null}
                           <div className="flex items-center gap-3">
                             <div className="h-10 w-10 overflow-hidden rounded-full border border-gray-200 bg-white">
                               {friendship.sender_avatar ? (
@@ -235,7 +265,11 @@ export default function Friends() {
                           <div className="flex items-center gap-2">
                             <button
                               type="button"
-                              onClick={() => void acceptRequest(friendship.id)}
+                              className="relative z-10"
+                              onClick={(event) => {
+                                event.stopPropagation();
+                                void acceptRequest(friendship.id);
+                              }}
                               disabled={actingIds.has(friendship.id)}
                               className="rounded-md bg-emerald-500 px-3 py-1.5 text-xs font-semibold text-white hover:bg-emerald-400 disabled:cursor-not-allowed disabled:bg-gray-300"
                             >
@@ -243,7 +277,11 @@ export default function Friends() {
                             </button>
                             <button
                               type="button"
-                              onClick={() => void declineRequest(friendship.id)}
+                              className="relative z-10"
+                              onClick={(event) => {
+                                event.stopPropagation();
+                                void declineRequest(friendship.id);
+                              }}
                               disabled={actingIds.has(friendship.id)}
                               className="rounded-md bg-gray-200 px-3 py-1.5 text-xs font-semibold text-gray-700 hover:bg-gray-300 disabled:cursor-not-allowed disabled:bg-gray-200"
                             >
@@ -265,7 +303,17 @@ export default function Friends() {
                   ) : (
                     <ul className="mt-4 space-y-3">
                       {outgoing.map((friendship) => (
-                        <li key={friendship.id} className="flex items-center justify-between rounded-lg border border-gray-200 px-4 py-3">
+                        <li
+                          key={friendship.id}
+                          className="relative flex items-center justify-between rounded-lg border border-gray-200 px-4 py-3"
+                        >
+                          {getProfileLink(friendship.receiver_username_display) ? (
+                            <Link
+                              to={getProfileLink(friendship.receiver_username_display) ?? "#"}
+                              className="absolute inset-0 rounded-lg"
+                              aria-label={`View ${friendship.receiver_username_display ?? "profile"}`}
+                            />
+                          ) : null}
                           <div className="flex items-center gap-3">
                             <div className="h-10 w-10 overflow-hidden rounded-full border border-gray-200 bg-white">
                               {friendship.receiver_avatar ? (
@@ -281,7 +329,7 @@ export default function Friends() {
                               <p className="text-xs text-gray-500">{friendship.receiver_name ?? "Waiting for response"}</p>
                             </div>
                           </div>
-                          <span className="text-xs font-semibold text-gray-400">Sent</span>
+                          <span className="relative z-10 text-xs font-semibold text-gray-400">Sent</span>
                         </li>
                       ))}
                     </ul>
@@ -296,7 +344,17 @@ export default function Friends() {
                         const friendInfo = getFriendInfo(friendship, currentUserId);
                         const label = renderName(friendInfo.name) ?? friendInfo.username ?? `User #${friendInfo.id}`;
                         return (
-                          <li key={friendship.id} className="flex items-center justify-between rounded-lg border border-gray-200 px-4 py-3">
+                          <li
+                            key={friendship.id}
+                            className="relative flex items-center justify-between rounded-lg border border-gray-200 px-4 py-3"
+                          >
+                            {getProfileLink(friendInfo.username) ? (
+                              <Link
+                                to={getProfileLink(friendInfo.username) ?? "#"}
+                                className="absolute inset-0 rounded-lg"
+                                aria-label={`View ${friendInfo.username ?? "profile"}`}
+                              />
+                            ) : null}
                             <div className="flex items-center gap-3">
                               <div className="h-10 w-10 overflow-hidden rounded-full border border-gray-200 bg-white">
                                 {friendInfo.avatar ? (

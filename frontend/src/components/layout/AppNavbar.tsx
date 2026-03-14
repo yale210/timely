@@ -133,6 +133,20 @@ export default function AppNavbar() {
               className="absolute right-0 top-full mt-2 w-36 origin-top-right rounded-lg border border-gray-200 bg-white shadow-lg focus:outline-none z-50"
             >
               <div className="py-1">
+                {user?.username && (
+                  <MenuItem>
+                    {({ focus }) => (
+                      <Link
+                        to={`/profiles/${user.username}`}
+                        className={`block px-4 py-2 text-sm ${
+                          focus ? "bg-gray-50 text-gray-900" : "text-gray-700"
+                        }`}
+                      >
+                        My profile
+                      </Link>
+                    )}
+                  </MenuItem>
+                )}
                 <MenuItem>
                   {({ focus }) => (
                     <Link

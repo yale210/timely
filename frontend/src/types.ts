@@ -189,6 +189,17 @@ export interface Profile {
 }
 
 /**
+ * Represents a public profile view.
+ * @interface PublicProfile
+ */
+export interface PublicProfile {
+  username: string;
+  name: string;
+  bio: string;
+  avatar_url: string | null;
+}
+
+/**
  * Represents a friendship between two users.
  * @interface Friendship
  */
