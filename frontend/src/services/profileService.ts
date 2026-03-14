@@ -18,9 +18,10 @@ export const updateMyProfile = async (
   payload: Partial<Profile>,
   avatarFile?: File | null,
 ): Promise<Profile> => {
+  const { avatar, ...rest } = payload;
   if (avatarFile) {
     const formData = new FormData();
-    Object.entries(payload).forEach(([key, value]) => {
+    Object.entries(rest).forEach(([key, value]) => {
       if (value === undefined || value === null) return;
       formData.append(key, String(value));
     });
@@ -28,6 +29,6 @@ export const updateMyProfile = async (
     const response = await api.patch<Profile>("/api/profiles/", formData);
     return response.data;
   }
-  const response = await api.patch<Profile>("/api/profiles/", payload);
+  const response = await api.patch<Profile>("/api/profiles/", rest);
   return response.data;
 };

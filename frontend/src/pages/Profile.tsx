@@ -2,6 +2,7 @@ import { useMemo } from "react";
 import { Link, useParams } from "react-router-dom";
 import AppLayout from "@/layouts/AppLayout";
 import { usePublicProfile } from "@/hooks/profiles/usePublicProfile";
+import { authStore } from "@/services/authService";
 
 const avatarFallback = (username?: string | null) => {
   if (!username) return "?";
@@ -12,6 +13,10 @@ export default function ProfilePage() {
   const { username } = useParams();
   const resolvedUsername = username ?? null;
   const { profile, loading, error } = usePublicProfile(resolvedUsername);
+  const currentUser = authStore.getUser();
+  const isOwnProfile = currentUser?.username && profile?.username
+    ? currentUser.username === profile.username
+    : false;
 
   const displayName = useMemo(() => {
     if (!profile) return "";
@@ -38,7 +43,15 @@ export default function ProfilePage() {
           </Link>
         </div>
 
-        <div className="mt-6 rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
+        <div className="mt-6 rounded-xl border border-gray-200 bg-white p-6 shadow-sm relative">
+          {isOwnProfile && (
+            <Link
+              to="/settings"
+              className="absolute right-6 top-6 rounded-md border border-gray-200 px-3 py-1.5 text-sm font-semibold text-gray-700 hover:bg-gray-50"
+            >
+              Edit profile
+            </Link>
+          )}
           {loading ? (
             <p className="text-sm text-gray-500">Loading...</p>
           ) : error ? (
