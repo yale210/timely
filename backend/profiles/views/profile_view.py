@@ -7,7 +7,10 @@ from django.shortcuts import get_object_or_404
 from django.contrib.auth import get_user_model
 
 from profiles.models.profile import Profile
-from profiles.serializers.profile_serializer import ProfileSerializer, PublicProfileSerializer
+from profiles.serializers.profile_serializer import (
+    ProfileSerializer,
+    PublicProfileSerializer,
+)
 
 
 class ProfileAPIView(GenericAPIView):

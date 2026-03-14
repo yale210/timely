@@ -206,7 +206,7 @@ export default function Friends() {
                           </div>
                           <button
                             type="button"
-                            className="relative z-10"
+                            className="relative z-10 rounded-md border border-gray-200 px-3 py-1.5 text-xs font-semibold text-gray-700 hover:bg-gray-100 disabled:cursor-not-allowed disabled:bg-gray-100"
                             onClick={(event) => {
                               event.stopPropagation();
                               setFriendPendingRemoval({
@@ -215,7 +215,6 @@ export default function Friends() {
                               });
                             }}
                             disabled={actingIds.has(friendship.id)}
-                            className="rounded-md border border-gray-200 px-3 py-1.5 text-xs font-semibold text-gray-700 hover:bg-gray-100 disabled:cursor-not-allowed disabled:bg-gray-100"
                           >
                             Remove
                           </button>
@@ -265,25 +264,23 @@ export default function Friends() {
                           <div className="flex items-center gap-2">
                             <button
                               type="button"
-                              className="relative z-10"
+                              className="relative z-10 rounded-md bg-emerald-500 px-3 py-1.5 text-xs font-semibold text-white hover:bg-emerald-400 disabled:cursor-not-allowed disabled:bg-gray-300"
                               onClick={(event) => {
                                 event.stopPropagation();
                                 void acceptRequest(friendship.id);
                               }}
                               disabled={actingIds.has(friendship.id)}
-                              className="rounded-md bg-emerald-500 px-3 py-1.5 text-xs font-semibold text-white hover:bg-emerald-400 disabled:cursor-not-allowed disabled:bg-gray-300"
                             >
                               Accept
                             </button>
                             <button
                               type="button"
-                              className="relative z-10"
+                              className="relative z-10 rounded-md bg-gray-200 px-3 py-1.5 text-xs font-semibold text-gray-700 hover:bg-gray-300 disabled:cursor-not-allowed disabled:bg-gray-200"
                               onClick={(event) => {
                                 event.stopPropagation();
                                 void declineRequest(friendship.id);
                               }}
                               disabled={actingIds.has(friendship.id)}
-                              className="rounded-md bg-gray-200 px-3 py-1.5 text-xs font-semibold text-gray-700 hover:bg-gray-300 disabled:cursor-not-allowed disabled:bg-gray-200"
                             >
                               Decline
                             </button>

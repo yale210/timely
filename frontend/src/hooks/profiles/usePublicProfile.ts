@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import type { PublicProfile } from "@/types";
 import { formatDjangoFormError } from "@/utils/apiErrors";
 import { getPublicProfile } from "@/services/publicProfileService";
@@ -20,21 +20,37 @@ export const usePublicProfile = (username: string | null) => {
     error: null,
   });
 
-  const fetchProfile = useCallback(async () => {
-    if (!username) return;
-    setState((prev) => ({ ...prev, loading: true, error: null }));
-    try {
-      const profile = await getPublicProfile(username);
-      setState({ profile, loading: false, error: null });
-    } catch (error) {
-      const parsed = formatDjangoFormError(error);
-      setState({ profile: null, loading: false, error: parsed.message });
-    }
-  }, [username]);
-
   useEffect(() => {
+    let isActive = true;
+    if (!username) {
+      queueMicrotask(() => {
+        if (!isActive) return;
+        setState({ profile: null, loading: false, error: null });
+      });
+      return () => {
+        isActive = false;
+      };
+    }
+    const fetchProfile = async () => {
+      queueMicrotask(() => {
+        if (!isActive) return;
+        setState((prev) => ({ ...prev, loading: true, error: null }));
+      });
+      try {
+        const profile = await getPublicProfile(username);
+        if (!isActive) return;
+        setState({ profile, loading: false, error: null });
+      } catch (error) {
+        const parsed = formatDjangoFormError(error);
+        if (!isActive) return;
+        setState({ profile: null, loading: false, error: parsed.message });
+      }
+    };
     void fetchProfile();
-  }, [fetchProfile]);
+    return () => {
+      isActive = false;
+    };
+  }, [username]);
 
   return state;
 };

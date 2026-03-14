@@ -18,7 +18,7 @@ export const updateMyProfile = async (
   payload: Partial<Profile>,
   avatarFile?: File | null,
 ): Promise<Profile> => {
-  const { avatar, ...rest } = payload;
+  const { avatar: _avatar, ...rest } = payload;
   if (avatarFile) {
     const formData = new FormData();
     Object.entries(rest).forEach(([key, value]) => {

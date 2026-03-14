@@ -4,11 +4,18 @@ import AppLayout from "@/layouts/AppLayout";
 import { usePublicProfile } from "@/hooks/profiles/usePublicProfile";
 import { authStore } from "@/services/authService";
 
+/**
+ * Returns a single-letter avatar fallback for the profile header.
+ * @param username - Username to derive the fallback.
+ */
 const avatarFallback = (username?: string | null) => {
   if (!username) return "?";
   return username.slice(0, 1).toUpperCase();
 };
 
+/**
+ * Displays a public profile or the current user's profile.
+ */
 export default function ProfilePage() {
   const { username } = useParams();
   const resolvedUsername = username ?? null;

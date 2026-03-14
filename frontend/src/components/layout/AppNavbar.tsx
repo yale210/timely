@@ -88,7 +88,10 @@ export default function AppNavbar() {
   useEffect(() => {
     let isActive = true
     if (!user?.username) {
-      setProfileAvatar(null)
+      queueMicrotask(() => {
+        if (!isActive) return
+        setProfileAvatar(null)
+      })
       return () => {
         isActive = false
       }
