@@ -38,9 +38,11 @@ export default function ProfilePage() {
       <div className="mx-auto w-full max-w-3xl px-6 py-8">
         <div className="flex items-center justify-between">
           <h1 className="text-2xl font-bold text-gray-900">Profile</h1>
-          <Link to="/friends" className="text-sm font-semibold text-cyan-700 hover:text-cyan-800">
-            Back to friends
-          </Link>
+          {!isOwnProfile && (
+            <Link to="/friends" className="text-sm font-semibold text-cyan-700 hover:text-cyan-800">
+              Back to friends
+            </Link>
+          )}
         </div>
 
         <div className="mt-6 rounded-xl border border-gray-200 bg-white p-6 shadow-sm relative">
