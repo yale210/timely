@@ -2,6 +2,7 @@ import { useEffect, useState } from "react"
 import { Link, NavLink, useNavigate, useLocation } from "react-router-dom"
 import { Menu, MenuButton, MenuItems, MenuItem } from "@headlessui/react"
 import { authStore } from "@/services/authService"
+import { getMyProfile } from "@/services/profileService"
 import { NotificationDropdown } from '@/components/notifications/NotificationDropdown'
 import { useNotificationContext } from '@/context/NotificationContext'
 import { type Notification } from '@/types/notification'
@@ -53,6 +54,7 @@ export default function AppNavbar() {
 
   const user = authStore.getUser()
   const isStaff = Boolean(user?.is_staff)
+  const [profileAvatar, setProfileAvatar] = useState<string | null>(null)
 
   const handleNotificationClick = (notification: Notification) => {
     void markRead(notification.id)
@@ -82,6 +84,28 @@ export default function AppNavbar() {
       window.removeEventListener("storage", refreshFlags)
     }
   }, [])
+
+  useEffect(() => {
+    let isActive = true
+    if (!user?.username) {
+      setProfileAvatar(null)
+      return () => {
+        isActive = false
+      }
+    }
+    void getMyProfile()
+      .then((profile) => {
+        if (!isActive) return
+        setProfileAvatar(profile.avatar ?? null)
+      })
+      .catch(() => {
+        if (!isActive) return
+        setProfileAvatar(null)
+      })
+    return () => {
+      isActive = false
+    }
+  }, [user?.username])
 
   const visibleFeatureItems = featureItems.filter((item) => {
     if (item.key === "gradebook") return featureFlags.gradebook
@@ -124,8 +148,18 @@ export default function AppNavbar() {
           />
 
           <Menu as="div" className="relative flex h-8 items-center">
-            <MenuButton className="inline-flex h-8 items-center justify-center rounded-full px-3 py-0 text-sm font-semibold leading-none text-gray-900 hover:bg-gray-100">
-              <span className="material-icons mr-2 leading-none" style={{ fontSize: "24px" }}>account_circle</span>
+            <MenuButton className="inline-flex h-8 items-center justify-center gap-2 rounded-full px-2.5 py-0 text-sm font-semibold leading-none text-gray-900 hover:bg-gray-100">
+              <span className="flex h-7 w-7 items-center justify-center overflow-hidden rounded-full border border-gray-300 bg-gray-200 text-xs font-semibold text-gray-700 dark:border-white/40">
+                {typeof profileAvatar === "string" && profileAvatar ? (
+                  <img src={profileAvatar} alt={user?.username ?? "Account"} className="h-full w-full object-cover" />
+                ) : typeof user?.avatar === "string" && user.avatar ? (
+                  <img src={user.avatar} alt={user.username ?? "Account"} className="h-full w-full object-cover" />
+                ) : typeof user?.avatar_url === "string" && user.avatar_url ? (
+                  <img src={user.avatar_url} alt={user.username ?? "Account"} className="h-full w-full object-cover" />
+                ) : (
+                  (user?.username ?? "A").slice(0, 1).toUpperCase()
+                )}
+              </span>
               {user?.username ?? "Account"}
             </MenuButton>
             <MenuItems
