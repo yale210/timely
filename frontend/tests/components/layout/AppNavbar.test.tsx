@@ -81,7 +81,7 @@ describe("AppNavbar Component", () => {
       hash: "",
       state: null,
       key: "default",
-      unstable_mask: null,
+      unstable_mask: undefined,
     });
     vi.mocked(useNotificationContext).mockReturnValue({
       notifications: [],
@@ -144,7 +144,7 @@ describe("AppNavbar Component", () => {
       hash: "",
       state: null,
       key: "default",
-      unstable_mask: null,
+      unstable_mask: undefined,
     });
     render(
       <MemoryRouter>
