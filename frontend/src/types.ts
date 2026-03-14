@@ -197,6 +197,7 @@ export interface PublicProfile {
   name: string;
   bio: string;
   avatar_url: string | null;
+  joined_at: string;
 }
 
 /**

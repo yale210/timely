@@ -18,6 +18,16 @@ export default function ProfilePage() {
     return profile.name?.trim() ? profile.name : profile.username;
   }, [profile]);
 
+  const joinedDate = useMemo(() => {
+    if (!profile?.joined_at) return null;
+    const date = new Date(profile.joined_at);
+    return date.toLocaleDateString([], {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+    });
+  }, [profile]);
+
   return (
     <AppLayout>
       <div className="mx-auto w-full max-w-3xl px-6 py-8">
@@ -51,6 +61,9 @@ export default function ProfilePage() {
               <div className="flex-1">
                 <p className="text-xl font-semibold text-gray-900">{displayName}</p>
                 <p className="text-sm text-gray-500">@{profile.username}</p>
+                {joinedDate && (
+                  <p className="mt-1 text-xs text-gray-400">Joined {joinedDate}</p>
+                )}
                 <p className="mt-3 text-sm text-gray-600">
                   {profile.bio?.trim() ? profile.bio : "This user has not added a bio yet."}
                 </p>

@@ -12,11 +12,12 @@ class ProfileSerializer(serializers.ModelSerializer):
 
 class PublicProfileSerializer(serializers.ModelSerializer):
     username = serializers.CharField(source="user.username", read_only=True)
+    joined_at = serializers.DateTimeField(source="user.date_joined", read_only=True)
     avatar_url = serializers.SerializerMethodField()
 
     class Meta:
         model = Profile
-        fields = ["username", "name", "bio", "avatar_url"]
+        fields = ["username", "name", "bio", "avatar_url", "joined_at"]
 
     def get_avatar_url(self, obj):
         if not obj.avatar:
