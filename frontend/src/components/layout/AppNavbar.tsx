@@ -23,6 +23,7 @@ const FEATURE_FLAGS = {
 
 const readFeatureFlag = (key: keyof typeof FEATURE_FLAGS) => {
   const raw = localStorage.getItem(FEATURE_FLAGS[key])
+  // Missing flags default to enabled so features must be explicitly switched off.
   if (raw === null) return true
   return raw === "true"
 }
@@ -62,6 +63,7 @@ export default function AppNavbar() {
   }
 
   useEffect(() => {
+    // Persist drawer state and expose its width so the app shell can animate around it.
     document.body.classList.toggle("menu-open", open)
     document.body.style.setProperty("--drawer-width", `${drawerWidth}px`)
     localStorage.setItem("nav_drawer_open", String(open))
@@ -77,6 +79,7 @@ export default function AppNavbar() {
         gradebook: readFeatureFlag("gradebook"),
       })
     }
+    // Listen for both same-tab and cross-tab feature flag updates.
     window.addEventListener("feature-flags-changed", refreshFlags)
     window.addEventListener("storage", refreshFlags)
     return () => {

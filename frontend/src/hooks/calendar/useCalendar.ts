@@ -286,6 +286,7 @@ export const useCalendar = (): UseCalendarReturn => {
       }
     };
 
+    // Initial task/category/event loads happen together, then later effects react to date/view changes.
     void initialize();
 
     return () => {
@@ -345,6 +346,7 @@ export const useCalendar = (): UseCalendarReturn => {
         slotEnd = new Date(slotStart.getTime() + 60 * 60 * 1000);
       }
       setSidebarMode("event");
+      // Seed the sidebar with a placeholder event so the form opens in "create from slot" mode.
       setSelectedItem({
         id: 0,
         title: "",
@@ -474,6 +476,7 @@ export const useCalendar = (): UseCalendarReturn => {
         allow_split: true,
       });
       const nextOrder: Record<number, number> = {};
+      // Preserve scheduler order so newly placed tasks can animate into the calendar in sequence.
       response.results
         .filter((result) => result.success && result.scheduled_start && result.scheduled_end)
         .forEach((result, index) => {
@@ -564,6 +567,7 @@ export const useCalendar = (): UseCalendarReturn => {
       const nextCategoryObjects = categories.filter((category) =>
         nextCategoryIds.includes(category.id),
       );
+      // Update category chips locally first so the sidebar stays responsive.
       setTasks((prev) =>
         prev.map((task) =>
           task.id === id ? { ...task, categories: nextCategoryObjects } : task,
@@ -611,6 +615,7 @@ export const useCalendar = (): UseCalendarReturn => {
         end: end.toISOString(),
       };
 
+      // Mirror the drag result locally first and recover with a refetch if the save fails.
       setTasks((prev) =>
         prev.map((item) =>
           item.id === task.id ? { ...item, allocation: nextAllocations } : item,
@@ -646,6 +651,7 @@ export const useCalendar = (): UseCalendarReturn => {
         end_time: end.toISOString(),
       };
 
+      // Recurring entries need the original occurrence timestamp so the backend can target this instance only.
       const context: EventMutationContext | undefined = eventData.recurrence_interval
         ? {
             scope: "this",
