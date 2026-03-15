@@ -3,8 +3,10 @@ import { MemoryRouter } from "react-router-dom";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import LoginForm from "@/components/auth/LoginForm";
 
-const navigateMock = vi.fn();
-const loginMock = vi.fn();
+const { loginMock, navigateMock } = vi.hoisted(() => ({
+  loginMock: vi.fn(),
+  navigateMock: vi.fn(),
+}));
 
 vi.mock("@/services/authService", () => ({
   authService: {

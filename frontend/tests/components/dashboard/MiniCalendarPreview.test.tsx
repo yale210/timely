@@ -3,7 +3,9 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import MiniCalendarPreview from "@/components/dashboard/MiniCalendarPreview";
 import type { Event, Task } from "@/types";
 
-const getMyPreferenceMock = vi.fn();
+const { getMyPreferenceMock } = vi.hoisted(() => ({
+  getMyPreferenceMock: vi.fn(),
+}));
 
 vi.mock("@/services/preferenceService", () => ({
   preferenceService: {
