@@ -1,29 +1,18 @@
 import api from "@/services/api"
+import type { AuthResponse, User } from "@/types/index"
 
+// Create custom browser event, app is notified when user data changes
 export const AUTH_CHANGE_EVENT = "auth-change"
-
 const broadcastAuthChange = () => window.dispatchEvent(new Event(AUTH_CHANGE_EVENT))
 
-interface User {
-  id?: number
-  username: string
-  email: string
-  is_staff?: boolean
-  is_superuser?: boolean
-  [key: string]: unknown
-}
-
-interface AuthResponse {
-  token?: string
-  key?: string // some libs use "token" or "key"
-  auth_token?: string
-  user?: User
-  [key: string]: unknown
-}
-
+// Prevents invalid JSON formatting
 const isUser = (value: unknown): value is User => {
-  if (!value || typeof value !== "object") return false
+  if (!value || typeof value !== "object") {
+    return false
+  }
+
   const obj = value as Record<string, unknown>
+
   return (
     typeof obj.username === "string" &&
     typeof obj.email === "string" &&
@@ -31,27 +20,34 @@ const isUser = (value: unknown): value is User => {
   )
 }
 
+// Retrieve token according to backend
 function getTokenFromResponse(data: AuthResponse) {
   return data.token ?? data.key ?? data.auth_token ?? null
 }
 
+// Local browser storage
 export const authStore = {
+  // Retrieve token
   getToken(): string | null {
     return localStorage.getItem("auth_token")
   },
+  // Set token
   setToken(token: string) {
     localStorage.setItem("auth_token", token)
     broadcastAuthChange()
   },
+  // Clear all tokens
   clear() {
     localStorage.removeItem("auth_token")
     localStorage.removeItem("auth_user")
     broadcastAuthChange()
   },
+  // Set user object as JSON in local storage
   setUser(user: User) {
     localStorage.setItem("auth_user", JSON.stringify(user))
     broadcastAuthChange()
   },
+  // Retrieve user
   getUser(): User | null {
     const raw = localStorage.getItem("auth_user")
     if (!raw) return null
@@ -64,7 +60,9 @@ export const authStore = {
   },
 }
 
+// Backend API layer for authentication
 export const authService = {
+  // Sends signup data to '/api/authentication/register/'
   async register(payload: { username: string; email: string; password: string; password2: string; }) {
     const { data } = await api.post<AuthResponse>("/api/authentication/register/", payload)
 
@@ -75,6 +73,7 @@ export const authService = {
     return data
   },
 
+  // Sends login data to '/api/authentication/session/'
   async login(payload: { username: string; password: string }) {
     const { data } = await api.post<AuthResponse>("/api/authentication/session/", payload)
 
@@ -87,8 +86,8 @@ export const authService = {
     return data
   },
 
+  // Sends logout data to '/api/authentication/logout/'
   async logout() {
-    // Knox typically invalidates the current token server-side
     try {
       await api.post("/api/authentication/logout/")
     } finally {
