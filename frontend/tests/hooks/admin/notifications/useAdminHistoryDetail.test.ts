@@ -7,7 +7,7 @@ import {
   getBroadcastStatus,
   retryFailedBroadcast,
 } from "@/api/notifications";
-import type { BroadcastJobDetail, BroadcastJobStatusResponse, RetryBroadcastResponse } from "@/types/notification";
+import type { BroadcastJobDetail, BroadcastJobStatusResponse, RetryBroadcastResponse } from "@/types";
 
 // Mock react-router-dom
 vi.mock("react-router-dom", () => ({
@@ -227,3 +227,4 @@ describe("useAdminHistoryDetail Hook", () => {
     consoleSpy.mockRestore();
   });
 });
+

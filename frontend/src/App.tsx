@@ -20,6 +20,7 @@ export default function App() {
   const location = useLocation()
 
   useEffect(() => {
+    // Public entry routes intentionally keep the default theme/font instead of user preferences.
     if (!PUBLIC_ROUTES.includes(location.pathname)) {
       const savedTheme = localStorage.getItem("theme")
       if (savedTheme) {

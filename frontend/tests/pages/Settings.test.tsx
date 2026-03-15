@@ -270,3 +270,4 @@ describe("Settings page", () => {
     await waitFor(() => expect(logoutSpy).toHaveBeenCalled());
   });
 });
+

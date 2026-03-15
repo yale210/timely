@@ -13,3 +13,4 @@ export const getWeeklySummary = async (date?: string): Promise<WeeklyStats> => {
 };
 
 export default { getWeeklySummary };
+

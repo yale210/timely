@@ -1,5 +1,5 @@
 import { NotificationCard } from "@/components/notifications/NotificationCard";
-import { type Notification } from "@/types/notification";
+import { type Notification } from "@/types";
 
 interface NotificationsListProps {
   notifications: Notification[];
@@ -100,3 +100,4 @@ export const NotificationsList = (props: NotificationsListProps) => {
     </div>
   );
 };
+

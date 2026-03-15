@@ -1,4 +1,4 @@
-import { type BroadcastJobSummary } from "@/types/notification";
+import { type BroadcastJobSummary } from "@/types";
 
 interface AdminHistoryTableProps {
   items: BroadcastJobSummary[];
@@ -97,3 +97,4 @@ export const AdminHistoryTable = (props: AdminHistoryTableProps) => {
     </div>
   );
 };
+

@@ -10,7 +10,7 @@ import {
 } from "@/api/notifications";
 import { useWebSocket } from "@/hooks/common/useWebSocket";
 import { authStore, AUTH_CHANGE_EVENT } from "@/services/authService";
-import { type Notification } from "@/types/notification";
+import { type Notification } from "@/types";
 
 interface WebSocketNotificationMessage {
   type: "new_notification";
@@ -110,6 +110,7 @@ export const NotificationProvider = ({ children }: NotificationProviderProps) =>
         setNotifications((prev) =>
           prev.map((item) => (item.id === id ? { ...item, is_read: true } : item)),
         );
+        // Adjust the local badge immediately unless the item is not in the current in-memory list.
         if (existing && !existing.is_read) {
           setUnreadCount((prev) => Math.max(0, prev - 1));
         } else if (!existing) {
@@ -130,6 +131,7 @@ export const NotificationProvider = ({ children }: NotificationProviderProps) =>
         setNotifications((prev) =>
           prev.map((item) => (item.id === id ? { ...item, is_read: false } : item)),
         );
+        // Fall back to a server refresh if the current page of notifications does not include this item.
         if (existing?.is_read) {
           setUnreadCount((prev) => prev + 1);
         } else if (!existing) {
@@ -158,6 +160,7 @@ export const NotificationProvider = ({ children }: NotificationProviderProps) =>
         const notificationToDelete = notifications.find((item) => item.id === id);
         await apiDeleteNotification(id);
         setNotifications((prev) => prev.filter((item) => item.id !== id));
+        // Keep the badge in sync locally when we know whether the deleted item was unread.
         if (notificationToDelete && !notificationToDelete.is_read) {
           setUnreadCount((prev) => Math.max(0, prev - 1));
         } else if (!notificationToDelete) {
@@ -188,6 +191,7 @@ export const NotificationProvider = ({ children }: NotificationProviderProps) =>
         if (exists) {
           return prev;
         }
+        // Deduplicate reconnect bursts and keep the dropdown list bounded.
         return [message.notification, ...prev].slice(0, 20);
       });
       setUnreadCount(message.unread_count);
@@ -202,6 +206,7 @@ export const NotificationProvider = ({ children }: NotificationProviderProps) =>
     const handleAuthChange = () => {
       setHasAuthToken(Boolean(authStore.getToken()));
     };
+    // Auth state can change outside this provider, so listen for the shared browser event.
     window.addEventListener(AUTH_CHANGE_EVENT, handleAuthChange);
     return () => window.removeEventListener(AUTH_CHANGE_EVENT, handleAuthChange);
   }, []);
@@ -233,3 +238,4 @@ export const NotificationProvider = ({ children }: NotificationProviderProps) =>
 
   return <NotificationContext.Provider value={value}>{children}</NotificationContext.Provider>;
 };
+

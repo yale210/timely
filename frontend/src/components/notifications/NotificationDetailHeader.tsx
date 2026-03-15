@@ -1,5 +1,5 @@
 import { EnvelopeIcon, EnvelopeOpenIcon, TrashIcon } from "@heroicons/react/24/outline";
-import { type Notification } from "@/types/notification";
+import { type Notification } from "@/types";
 
 interface NotificationDetailHeaderProps {
   notification: Notification;
@@ -53,3 +53,4 @@ export const NotificationDetailHeader = (props: NotificationDetailHeaderProps) =
     </div>
   );
 };
+

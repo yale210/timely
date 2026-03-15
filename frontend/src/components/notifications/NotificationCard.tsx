@@ -1,5 +1,5 @@
 import type React from "react";
-import { type Notification, NotificationType } from "@/types/notification";
+import { type Notification, NotificationType } from "@/types";
 import {
   CalendarDaysIcon,
   CheckCircleIcon,
@@ -151,3 +151,4 @@ export const NotificationCard: React.FC<NotificationCardProps> = ({
     </div>
   );
 };
+

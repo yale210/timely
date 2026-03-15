@@ -1,7 +1,7 @@
 import { render, screen, fireEvent } from "@testing-library/react";
 import { vi, describe, it, expect } from "vitest";
 import { AdminHistoryTable } from "@/components/admin/notifications/AdminHistoryTable";
-import type { BroadcastJobSummary } from "@/types/notification";
+import type { BroadcastJobSummary } from "@/types";
 
 describe("AdminHistoryTable Component", () => {
   const mockOnSelectItem = vi.fn();
@@ -111,3 +111,4 @@ describe("AdminHistoryTable Component", () => {
     expect(nextBtn).toBeDisabled();
   });
 });
+

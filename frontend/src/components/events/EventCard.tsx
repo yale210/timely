@@ -151,3 +151,4 @@ const EventCard = ({ event, onClick }: EventCardProps) => {
 };
 
 export default EventCard;
+

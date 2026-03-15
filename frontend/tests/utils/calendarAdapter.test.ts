@@ -102,3 +102,4 @@ describe("buildCalendarEntries", () => {
     expect(entries[1].split).toBe(true);
   });
 });
+

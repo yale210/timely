@@ -31,3 +31,4 @@ export default function useCategories() {
 
   return { categories, loading }
 }
+

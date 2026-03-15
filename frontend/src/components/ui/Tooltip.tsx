@@ -18,6 +18,7 @@ const Tooltip = ({ content, children }: TooltipProps) => {
     if (!triggerRef.current || !tooltipRef.current) {
       return;
     }
+    // Wait one frame so the tooltip can measure its rendered size before we clamp it to the viewport.
     const raf = window.requestAnimationFrame(() => {
       if (!triggerRef.current || !tooltipRef.current) return;
       const child = triggerRef.current.firstElementChild as HTMLElement | null;
@@ -28,6 +29,7 @@ const Tooltip = ({ content, children }: TooltipProps) => {
       let left = rect.left - tooltipRect.width - gap;
       let top = rect.top + rect.height / 2 - tooltipRect.height / 2;
 
+      // Keep the tooltip inside the viewport when the trigger sits near an edge.
       left = Math.max(padding, Math.min(left, window.innerWidth - tooltipRect.width - padding));
       top = Math.max(padding, Math.min(top, window.innerHeight - tooltipRect.height - padding));
 

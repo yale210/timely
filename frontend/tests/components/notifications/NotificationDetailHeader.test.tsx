@@ -1,7 +1,7 @@
 import { render, screen, fireEvent } from "@testing-library/react";
 import { vi, describe, it, expect } from "vitest";
 import { NotificationDetailHeader } from "@/components/notifications/NotificationDetailHeader";
-import type { Notification } from "@/types/notification";
+import type { Notification } from "@/types";
 
 describe("NotificationDetailHeader Component", () => {
   const mockNotification: Notification = {
@@ -72,3 +72,4 @@ describe("NotificationDetailHeader Component", () => {
     expect(screen.getByLabelText("Mark as unread")).toBeDefined();
   });
 });
+

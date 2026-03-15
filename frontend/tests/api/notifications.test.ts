@@ -19,7 +19,7 @@ import {
   retryFailedBroadcast,
   getAdminUsers,
 } from "@/api/notifications";
-import { NotificationType } from "@/types/notification";
+import { NotificationType } from "@/types";
 
 vi.mock("@/services/api", () => ({
   default: {
@@ -158,3 +158,4 @@ describe("notifications API", () => {
     });
   });
 });
+

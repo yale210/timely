@@ -12,7 +12,7 @@ import type {
   BroadcastJobDetail,
   BroadcastJobStatusResponse,
   RetryBroadcastResponse,
-} from "@/types/notification";
+} from "@/types";
 
 /**
  * Fetches paginated list of notifications for the current user.
@@ -233,3 +233,4 @@ export const getAdminUsers = async (params: {
   });
   return response.data;
 };
+

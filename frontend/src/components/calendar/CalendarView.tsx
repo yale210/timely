@@ -56,6 +56,7 @@ const CalendarView = ({
       return;
     }
 
+    // Measure the third-party time gutter after layout so the fixed header can stay aligned.
     const measureGutter = () => {
       const shell = calendarShellRef.current;
       if (!shell) {
@@ -104,6 +105,7 @@ const CalendarView = ({
       return (document.scrollingElement instanceof HTMLElement) ? document.scrollingElement : null;
     };
 
+    // Week/day views should open near the current hour once the calendar has finished painting.
     const scrollToCurrentHour = () => {
       const slotGroups = shell.querySelectorAll(".rbc-time-gutter .rbc-timeslot-group");
       if (slotGroups.length === 0) {
@@ -141,6 +143,7 @@ const CalendarView = ({
       return;
     }
 
+    // Toggle a document-level flag so CSS can react while calendar entries are being dragged.
     const setDraggingFlag = () => {
       document.documentElement.dataset.calendarDragging = "true";
     };

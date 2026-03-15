@@ -34,3 +34,4 @@ export default function DailyTasksBarChart({ stats }: { stats: WeeklyStats | nul
     </div>
   );
 }
+
