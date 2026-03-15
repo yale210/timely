@@ -124,7 +124,7 @@ const UpcomingTasksCard = ({
               <input
                 id={`upcoming-task-${task.id}`}
                 type="checkbox"
-                className="h-4 w-4"
+                className="task-circle-checkbox text-cyan-600"
                 checked={isChecked}
                 onChange={(event) => {
                   void onToggle(task, event.target.checked);

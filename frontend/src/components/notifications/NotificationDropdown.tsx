@@ -1,32 +1,26 @@
 import type React from "react";
 import { Popover, Transition } from "@headlessui/react";
-import { Fragment, useState } from "react";
+import { Fragment } from "react";
 import { type Notification } from "@/types/notification";
 import { NotificationCard } from "@/components/notifications/NotificationCard";
 import { NotificationBell } from "@/components/notifications/NotificationBell";
 import { Link } from "react-router-dom";
-import { CheckCircleIcon, TrashIcon } from "@heroicons/react/24/outline";
-import ConfirmationModal from "@/components/modals/ConfirmationModal";
+import { useFriendships } from "@/hooks/friends/useFriendships";
+import { authStore } from "@/services/authService";
 
 interface NotificationDropdownProps {
   notifications: Notification[];
   unreadCount: number;
-  onMarkAllRead: () => Promise<void> | void;
-  onDeleteAll: () => Promise<void> | void;
   onItemClick: (notification: Notification) => void;
   onToggleRead: (notification: Notification) => Promise<void> | void;
   onDeleteItem: (notification: Notification) => Promise<void> | void;
 }
-
-type DropdownConfirmationAction = "mark_all_read" | "delete_all" | null;
 
 /**
  * Popover dropdown that displays the most recent notifications with bulk actions.
  * @param root0 - The component props.
  * @param root0.notifications - Array of notifications to display.
  * @param root0.unreadCount - Number of unread notifications.
- * @param root0.onMarkAllRead - Callback to mark all notifications as read.
- * @param root0.onDeleteAll - Callback to delete all notifications.
  * @param root0.onItemClick - Callback when a notification item is clicked.
  * @param root0.onToggleRead - Callback to toggle read/unread state of a notification.
  * @param root0.onDeleteItem - Callback to delete a single notification.
@@ -34,24 +28,18 @@ type DropdownConfirmationAction = "mark_all_read" | "delete_all" | null;
 export const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
   notifications,
   unreadCount,
-  onMarkAllRead,
-  onDeleteAll,
   onItemClick,
   onToggleRead,
   onDeleteItem,
 }) => {
-  const [confirmationAction, setConfirmationAction] =
-    useState<DropdownConfirmationAction>(null);
   const displayNotifications = notifications.slice(0, 5);
-
-  const handleConfirm = () => {
-    if (confirmationAction === "mark_all_read") {
-      void onMarkAllRead();
-    }
-    if (confirmationAction === "delete_all") {
-      void onDeleteAll();
-    }
-  };
+  const user = authStore.getUser();
+  const currentUserId = user?.id ?? null;
+  const { friendships, acceptRequest, declineRequest, actingIds } = useFriendships();
+  const incomingRequests = friendships.filter(
+    (friendship) => friendship.state === "SENT" && friendship.receiver === currentUserId,
+  ).slice(0, 3);
+  const totalBadgeCount = unreadCount + incomingRequests.length;
 
   return (
     <>
@@ -59,7 +47,7 @@ export const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
         {() => (
           <>
             <Popover.Button as="div" className="flex h-6 items-center focus:outline-none cursor-pointer">
-              <NotificationBell unreadCount={unreadCount} />
+              <NotificationBell unreadCount={totalBadgeCount} />
             </Popover.Button>
 
             <Transition
@@ -73,33 +61,61 @@ export const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
             >
               <Popover.Panel className="absolute right-0 top-full z-10 mt-2 w-96 px-4 sm:px-0">
                 <div className="overflow-hidden rounded-2xl shadow-xl ring-1 ring-black/5 bg-white">
-                  <div className="border-b px-4 py-3 flex items-center justify-between">
+                  <div className="px-4 py-3 flex items-center justify-between">
                     <h3 className="text-base font-semibold text-gray-900">
-                      Notifications ({unreadCount})
+                      Notifications ({totalBadgeCount})
                     </h3>
-                    <div className="flex items-center gap-1">
-                      <button
-                        type="button"
-                        title="Mark all as read"
-                        aria-label="Mark all as read"
-                        onClick={() => setConfirmationAction("mark_all_read")}
-                        className="rounded-md p-1.5 text-gray-500 hover:bg-gray-100 hover:text-gray-800"
-                      >
-                        <CheckCircleIcon className="h-4 w-4" />
-                      </button>
-                      <button
-                        type="button"
-                        title="Delete all"
-                        aria-label="Delete all"
-                        onClick={() => setConfirmationAction("delete_all")}
-                        className="rounded-md p-1.5 text-gray-500 hover:bg-red-50 hover:text-red-600"
-                      >
-                        <TrashIcon className="h-4 w-4" />
-                      </button>
-                    </div>
                   </div>
 
-                  <div className="max-h-105 overflow-y-auto">
+                  <div className="max-h-105 space-y-2 overflow-y-auto px-3 pb-3">
+                    {incomingRequests.map((friendship) => (
+                      <div
+                        key={`friend-${friendship.id}`}
+                        className="flex items-start gap-3 rounded-xl border border-gray-200 bg-white px-3 py-3"
+                      >
+                        <div className="mt-0.5 h-9 w-9 shrink-0 overflow-hidden rounded-full border border-gray-200 bg-white">
+                          {friendship.sender_avatar ? (
+                            <img
+                              src={friendship.sender_avatar}
+                              alt={friendship.sender_username ?? `User #${friendship.sender}`}
+                              className="h-full w-full object-cover"
+                            />
+                          ) : (
+                            <div className="flex h-full w-full items-center justify-center bg-gray-100 text-sm font-semibold text-gray-500">
+                              {(friendship.sender_username ?? "U").slice(0, 1).toUpperCase()}
+                            </div>
+                          )}
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <p className="text-sm font-semibold text-gray-900">Friend request</p>
+                          <p className="mt-0.5 text-xs text-gray-500">
+                            {friendship.sender_username ?? `User #${friendship.sender}`}
+                          </p>
+                          {friendship.sender_name && (
+                            <p className="text-[11px] text-gray-400">{friendship.sender_name}</p>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <button
+                            type="button"
+                            onClick={() => void acceptRequest(friendship.id)}
+                            disabled={actingIds.has(friendship.id)}
+                            className="rounded-md bg-emerald-500 px-2 py-1 text-[10px] font-semibold text-white hover:bg-emerald-400 disabled:cursor-not-allowed disabled:bg-gray-300"
+                          >
+                            Accept
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => void declineRequest(friendship.id)}
+                            disabled={actingIds.has(friendship.id)}
+                            className="rounded-md bg-gray-200 px-2 py-1 text-[10px] font-semibold text-gray-700 hover:bg-gray-300 disabled:cursor-not-allowed disabled:bg-gray-200"
+                          >
+                            Decline
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+
                     {displayNotifications.length > 0 ? (
                       displayNotifications.map((notification) => (
                         <NotificationCard
@@ -113,43 +129,34 @@ export const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
                             void onDeleteItem(item);
                           }}
                           showActions
+                          showReadToggle={false}
+                          showDivider={false}
                           compact
                         />
                       ))
-                    ) : (
+                    ) : incomingRequests.length === 0 ? (
                       <div className="px-6 py-12 text-center text-sm text-gray-500">
                         No notifications
                       </div>
-                    )}
+                    ) : null}
                   </div>
 
-                  <div className="bg-gray-50 p-3 text-center border-t">
-                    <Link
-                      to="/notifications"
-                      className="text-sm font-semibold text-indigo-600 hover:text-indigo-500"
-                    >
-                      View all notifications
-                    </Link>
-                  </div>
+                  {displayNotifications.length > 0 && (
+                    <div className="bg-gray-50 px-3 py-2 text-center">
+                      <Link
+                        to="/notifications"
+                        className="text-sm font-semibold text-indigo-600 hover:text-indigo-500"
+                      >
+                        View all notifications
+                      </Link>
+                    </div>
+                  )}
                 </div>
               </Popover.Panel>
             </Transition>
           </>
         )}
       </Popover>
-
-      <ConfirmationModal
-        isOpen={confirmationAction !== null}
-        onClose={() => setConfirmationAction(null)}
-        onConfirm={handleConfirm}
-        title={confirmationAction === "delete_all" ? "Delete all notifications?" : "Mark all as read?"}
-        message={
-          confirmationAction === "delete_all"
-            ? "This will permanently remove all of your notifications."
-            : "This will mark every notification as read."
-        }
-        confirmText={confirmationAction === "delete_all" ? "Delete all" : "Mark all"}
-      />
     </>
   );
 };

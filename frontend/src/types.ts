@@ -174,3 +174,46 @@ export interface Preference {
 export type PreferenceUpdate = Partial<Pick<
     Preference, "day_start"|"day_end"|"day_schedule"|"max_hours_study_per_day"|"limit_max_hours"|"disable_sound_effects"|"days_off"
 >>
+
+/**
+ * Represents a user profile.
+ * @interface Profile
+ */
+export interface Profile {
+  name: string;
+  date_of_birth: string | null;
+  creation_date: string;
+  slogan: string;
+  bio: string;
+  avatar: string | null;
+}
+
+/**
+ * Represents a public profile view.
+ * @interface PublicProfile
+ */
+export interface PublicProfile {
+  username: string;
+  name: string;
+  bio: string;
+  avatar_url: string | null;
+  joined_at: string;
+}
+
+/**
+ * Represents a friendship between two users.
+ * @interface Friendship
+ */
+export interface Friendship {
+  id: number;
+  sender: number;
+  receiver: number;
+  sender_username?: string;
+  receiver_username_display?: string;
+  sender_name?: string;
+  receiver_name?: string;
+  sender_avatar?: string | null;
+  receiver_avatar?: string | null;
+  state: "SENT" | "ACCEPTED" | "DECLINED";
+  updated_at?: string | null;
+}

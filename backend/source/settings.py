@@ -252,6 +252,9 @@ USE_TZ = True
 STATIC_URL = "/api/static/"
 STATIC_ROOT = BASE_DIR / "staticfiles"
 
+MEDIA_URL = "/api/media/"
+MEDIA_ROOT = BASE_DIR / "media"
+
 ASGI_APPLICATION = "source.asgi.application"
 
 REDIS_URL = os.getenv("REDIS_URL", "redis://localhost:6379/0")

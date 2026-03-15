@@ -7,6 +7,7 @@ import type { Preference } from "@/types";
 import Settings from "@/pages/Settings";
 import { authService } from "@/services/authService";
 import { preferenceService } from "@/services/preferenceService";
+import * as profileService from "@/services/profileService";
 
 vi.mock("@/layouts/AppLayout", () => ({
   default: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
@@ -21,6 +22,11 @@ vi.mock("@/services/preferenceService", () => ({
     getMyPreference: vi.fn(),
     updateMyPreference: vi.fn(),
   },
+}));
+
+vi.mock("@/services/profileService", () => ({
+  getMyProfile: vi.fn(),
+  updateMyProfile: vi.fn(),
 }));
 
 describe("Settings page", () => {
@@ -213,15 +219,23 @@ describe("Settings page", () => {
     expect(await screen.findByText("Something went wrong")).toBeDefined();
   });
 
-  it("renders all sections and sidebar buttons", () => {
+  it("renders all sections and sidebar buttons", async () => {
     vi.spyOn(preferenceService, "getMyPreference").mockResolvedValue(mockPref);
+    vi.spyOn(profileService, "getMyProfile").mockResolvedValue({
+      name: "Test User",
+      date_of_birth: null,
+      creation_date: "2024-01-01",
+      slogan: "",
+      bio: "",
+      avatar: null,
+    });
     render(
       <MemoryRouter>
         <Settings />
       </MemoryRouter>,
     );
     fireEvent.click(screen.getByRole("button", { name: /profile/i }));
-    expect(screen.getByText("Profile settings will go here.")).toBeDefined();
+    expect(await screen.findByRole("heading", { name: "Profile" })).toBeDefined();
 
     fireEvent.click(screen.getByRole("button", { name: /general/i }));
     expect(screen.getByRole("heading", { name: /general/i })).toBeDefined();
