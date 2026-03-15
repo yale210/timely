@@ -1,5 +1,5 @@
 import api from "@/services/api"
-import type { AuthResponse, User } from "@/types/index"
+import type { AuthResponse, User } from "@/types"
 
 // Create custom browser event, app is notified when user data changes
 export const AUTH_CHANGE_EVENT = "auth-change"

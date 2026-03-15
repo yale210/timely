@@ -3,8 +3,8 @@ import { describe, expect, it, vi } from "vitest";
 import SettingsContent from "@/components/settings/SettingsContent";
 import type { Preference } from "@/types";
 
-vi.mock("@/components/settings/PlaceholderSection", () => ({
-  default: ({ title }: { title: string }) => <div>placeholder:{title}</div>,
+vi.mock("@/components/settings/ProfileSection", () => ({
+  default: () => <div>profile-section</div>,
 }));
 
 vi.mock("@/components/settings/PreferencesSection", () => ({
@@ -71,7 +71,7 @@ describe("SettingsContent", () => {
 
   it("renders placeholder and theme branches", () => {
     const { rerender } = render(<SettingsContent {...createProps("profile")} />);
-    expect(screen.getByText("placeholder:Profile")).toBeInTheDocument();
+    expect(screen.getByText("profile-section")).toBeInTheDocument();
 
     rerender(<SettingsContent {...createProps("appearance")} />);
     expect(screen.getByText("theme-section")).toBeInTheDocument();

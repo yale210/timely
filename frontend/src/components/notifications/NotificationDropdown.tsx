@@ -1,7 +1,7 @@
 import type React from "react";
 import { Popover, Transition } from "@headlessui/react";
 import { Fragment } from "react";
-import { type Notification } from "@/types/notification";
+import { type Notification } from "@/types";
 import { NotificationCard } from "@/components/notifications/NotificationCard";
 import { NotificationBell } from "@/components/notifications/NotificationBell";
 import { Link } from "react-router-dom";
@@ -160,4 +160,3 @@ export const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
     </>
   );
 };
-
