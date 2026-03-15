@@ -2,7 +2,7 @@ import { render, screen, fireEvent } from '@testing-library/react';
 import { describe, it, expect, vi } from 'vitest';
 import { NotificationDropdown } from '@/components/notifications/NotificationDropdown';
 import { BrowserRouter } from 'react-router-dom';
-import { NotificationType } from '@/types/notification';
+import { NotificationType } from '@/types';
 
 const mockNotifications = [
   {
@@ -112,3 +112,4 @@ describe('NotificationDropdown', () => {
     expect(await screen.findByText('No notifications')).toBeDefined();
   });
 });
+

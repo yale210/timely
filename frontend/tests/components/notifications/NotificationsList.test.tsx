@@ -1,7 +1,7 @@
 import { render, screen, fireEvent, cleanup } from "@testing-library/react";
 import { vi, describe, it, expect, afterEach } from "vitest";
 import { NotificationsList } from "@/components/notifications/NotificationsList";
-import type { Notification } from "@/types/notification";
+import type { Notification } from "@/types";
 
 interface NotificationCardProps {
   notification: Notification;
@@ -130,3 +130,4 @@ describe("NotificationsList Component", () => {
     expect(screen.getByText("Loading notifications...")).toBeDefined();
   });
 });
+

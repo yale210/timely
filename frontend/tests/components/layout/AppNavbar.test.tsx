@@ -65,6 +65,15 @@ vi.mock("@/components/layout/AdminSidebar", () => ({
 
 const mockedAuthStore = vi.mocked(authStore);
 
+const createLocation = (pathname: string): ReturnType<typeof useLocation> => ({
+  pathname,
+  search: "",
+  hash: "",
+  state: null,
+  key: "default",
+  unstable_mask: undefined,
+});
+
 /**
  * Tests for the AppNavbar component.
  */
@@ -79,7 +88,7 @@ describe("AppNavbar Component", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     vi.mocked(useNavigate).mockReturnValue(mockNavigate);
-    vi.mocked(useLocation).mockReturnValue({ pathname: "/dashboard", search: "", hash: "", state: null, key: "default" });
+    vi.mocked(useLocation).mockReturnValue(createLocation("/dashboard"));
     vi.mocked(useNotificationContext).mockReturnValue({
       notifications: [],
       unreadCount: 0,
@@ -135,7 +144,7 @@ describe("AppNavbar Component", () => {
   });
 
   it("renders AdminSidebar when on an admin route", () => {
-    vi.mocked(useLocation).mockReturnValue({ pathname: "/admin/notifications", search: "", hash: "", state: null, key: "default" });
+    vi.mocked(useLocation).mockReturnValue(createLocation("/admin/notifications"));
     render(
       <MemoryRouter>
         <AppNavbar />

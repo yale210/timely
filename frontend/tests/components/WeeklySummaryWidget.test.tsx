@@ -62,3 +62,4 @@ describe("WeeklySummaryWidget", () => {
     expect(el.className).toContain("text-green-600");
   });
 });
+

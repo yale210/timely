@@ -79,3 +79,4 @@ export const getServerTime = async (): Promise<{ server_time: string }> => {
   const response = await api.get<{ server_time: string }>("/api/events/server_time/");
   return response.data;
 };
+

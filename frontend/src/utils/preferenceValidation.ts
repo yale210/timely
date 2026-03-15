@@ -55,3 +55,4 @@ export const validatePreference = (preference: Preference): Record<string, strin
 
   return errors;
 };
+

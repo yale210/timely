@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { getBroadcastHistory } from "@/api/notifications";
-import { type BroadcastJobSummary } from "@/types/notification";
+import { type BroadcastJobSummary } from "@/types";
 
 interface AdminHistoryState {
   items: BroadcastJobSummary[];
@@ -93,3 +93,4 @@ return {
     setPage,
   },
 }; };
+

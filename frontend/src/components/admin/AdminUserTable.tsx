@@ -1,4 +1,4 @@
-import { type AdminNotificationTarget, type AdminUserRole, type AdminUserSummary } from "@/types/notification";
+import { type AdminNotificationTarget, type AdminUserRole, type AdminUserSummary } from "@/types";
 
 interface AdminUserTableProps {
   target: AdminNotificationTarget;
@@ -232,3 +232,4 @@ export const AdminUserTable = (props: AdminUserTableProps) => {
   </div>
   );
 };
+

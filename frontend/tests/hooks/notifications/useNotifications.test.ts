@@ -8,7 +8,7 @@ import {
   markAllAsRead as apiMarkAllAsRead, 
   deleteNotification as apiDeleteNotification 
 } from "@/api/notifications";
-import type { Notification, NotificationListResponse } from "@/types/notification";
+import type { Notification, NotificationListResponse } from "@/types";
 
 // Mock API
 vi.mock("@/api/notifications", () => ({
@@ -171,4 +171,5 @@ describe("useNotifications Hook", () => {
     consoleSpy.mockRestore();
   });
 });
+
 

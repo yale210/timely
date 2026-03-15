@@ -472,3 +472,4 @@ const CategoryMultiSelect = ({
 };
 
 export default CategoryMultiSelect;
+

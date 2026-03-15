@@ -95,3 +95,4 @@ describe("Dashboard Page", () => {
     expect(screen.getByText(/No Upcoming Tasks/i)).toBeDefined();
   });
 });
+

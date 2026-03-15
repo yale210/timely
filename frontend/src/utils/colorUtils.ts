@@ -23,3 +23,4 @@ export const getOverrideColour = (categories: Category[] | undefined): string | 
   const match = categories.find((category) => category.colour_override && category.colour);
   return match?.colour ?? null;
 };
+

@@ -10,7 +10,7 @@ import {
 } from "@/api/notifications";
 import { useWebSocket } from "@/hooks/common/useWebSocket";
 import { authStore, AUTH_CHANGE_EVENT } from "@/services/authService";
-import { type Notification } from "@/types/notification";
+import { type Notification } from "@/types";
 
 interface WebSocketNotificationMessage {
   type: "new_notification";
@@ -233,3 +233,4 @@ export const NotificationProvider = ({ children }: NotificationProviderProps) =>
 
   return <NotificationContext.Provider value={value}>{children}</NotificationContext.Provider>;
 };
+

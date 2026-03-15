@@ -3,7 +3,7 @@ import { vi, describe, it, expect, beforeEach, afterEach } from "vitest";
 import { useAdminBroadcastForm } from "@/hooks/admin/notifications/useAdminBroadcastForm";
 import * as notificationsApi from "@/api/notifications";
 import type { FormEvent } from "react";
-import type { AdminUserListResponse } from "@/types/notification";
+import type { AdminUserListResponse } from "@/types";
 
 // Mock API
 vi.mock("@/api/notifications", () => ({
@@ -245,3 +245,4 @@ describe("useAdminBroadcastForm Hook", () => {
     expect(result.current.state.audience.selectedIdsForPayload).toEqual([1, 2, 3]);
   });
 });
+

@@ -4,7 +4,7 @@ import { Menu, MenuButton, MenuItems, MenuItem } from "@headlessui/react"
 import { authStore } from "@/services/authService"
 import { NotificationDropdown } from '@/components/notifications/NotificationDropdown'
 import { useNotificationContext } from '@/context/NotificationContext'
-import { type Notification } from '@/types/notification'
+import { type Notification } from '@/types'
 import AdminSidebar from "@/components/layout/AdminSidebar"
 
 const navItems = [
@@ -280,3 +280,4 @@ export default function AppNavbar() {
     </header>
   )
 }
+

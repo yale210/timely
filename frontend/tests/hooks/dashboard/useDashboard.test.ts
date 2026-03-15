@@ -85,3 +85,4 @@ describe("useDashboard", () => {
     expect(result.current.error.tasks).toBe("Failed to load dashboard tasks.");
   });
 });
+

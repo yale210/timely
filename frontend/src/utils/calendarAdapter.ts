@@ -75,3 +75,4 @@ export const buildCalendarEntries = ({
     eventData: event,
   })),
 ];
+

@@ -14,7 +14,7 @@ import {
   type BroadcastDeliveryStatus,
   type BroadcastJobStatusResponse,
   type ApiErrorResponse,
-} from "@/types/notification";
+} from "@/types";
 
 const USERS_PAGE_SIZE = 50;
 const TITLE_LIMIT = 60;
@@ -456,3 +456,4 @@ return {
     handleConfirmSend,
   },
 }; };
+

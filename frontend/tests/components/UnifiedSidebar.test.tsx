@@ -464,3 +464,4 @@ describe("UnifiedSidebar", () => {
     expect(onClose).toHaveBeenCalled();
   });
 });
+

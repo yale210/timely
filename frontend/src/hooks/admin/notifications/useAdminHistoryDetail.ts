@@ -5,7 +5,7 @@ import {
   getBroadcastStatus,
   retryFailedBroadcast,
 } from "@/api/notifications";
-import { type BroadcastJobDetail, type BroadcastJobStatusResponse } from "@/types/notification";
+import { type BroadcastJobDetail, type BroadcastJobStatusResponse } from "@/types";
 
 const POLL_INTERVAL_MS = 3000;
 
@@ -131,3 +131,4 @@ export const useAdminHistoryDetail = (): UseAdminHistoryDetailReturn => {
     },
   };
 };
+

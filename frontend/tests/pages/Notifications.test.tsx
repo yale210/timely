@@ -2,7 +2,7 @@ import { render, screen, fireEvent } from "@testing-library/react";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { Notifications } from "@/pages/Notification/Notifications";
 import { BrowserRouter } from "react-router-dom";
-import { NotificationType } from "@/types/notification";
+import { NotificationType } from "@/types";
 
 vi.mock("@/context/NotificationContext", () => ({
   useNotificationContext: vi.fn(),
@@ -130,3 +130,4 @@ describe("Notifications Page", () => {
     expect(markAllRead).toHaveBeenCalledTimes(1);
   });
 });
+

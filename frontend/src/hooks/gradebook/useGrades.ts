@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState, type Dispatch, type SetStateAction } from "react"
 import type { Grade } from "@/components/gradebook/GradebookTable"
-import type { EditInitial } from "@/types/gradebook"
+import type { EditInitial } from "@/types"
 
 interface UseGradesReturn {
   grades: Grade[] | null
@@ -123,3 +123,4 @@ export default function useGrades(): UseGradesReturn {
     confirmDelete,
   }
 }
+
