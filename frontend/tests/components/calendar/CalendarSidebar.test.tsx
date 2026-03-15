@@ -57,7 +57,7 @@ describe("CalendarSidebar", () => {
         state={{
           isSidebarOpen: true,
           categories: [],
-          selectedItem: null,
+          selectedItem: undefined,
           sidebarMode: "event",
         }}
         actions={actions}

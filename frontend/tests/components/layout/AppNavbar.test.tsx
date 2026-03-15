@@ -65,14 +65,15 @@ vi.mock("@/components/layout/AdminSidebar", () => ({
 
 const mockedAuthStore = vi.mocked(authStore);
 
-const createLocation = (pathname: string): ReturnType<typeof useLocation> => ({
-  pathname,
-  search: "",
-  hash: "",
-  state: null,
-  key: "default",
-  unstable_mask: undefined,
-});
+const createLocation = (pathname: string): ReturnType<typeof useLocation> =>
+  ({
+    pathname,
+    search: "",
+    hash: "",
+    state: null,
+    key: "default",
+    unstable_mask: undefined,
+  } as ReturnType<typeof useLocation>);
 
 /**
  * Tests for the AppNavbar component.
