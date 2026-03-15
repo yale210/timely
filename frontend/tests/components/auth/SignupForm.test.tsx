@@ -2,13 +2,13 @@ import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import SignupForm from "@/components/auth/SignupForm";
-import { authService } from "@/services/authService";
 
 const navigateMock = vi.fn();
+const registerMock = vi.fn();
 
 vi.mock("@/services/authService", () => ({
   authService: {
-    register: vi.fn(),
+    register: registerMock,
   },
 }));
 
@@ -49,11 +49,11 @@ describe("SignupForm", () => {
     expect(
       await screen.findByText("Try again, your passwords did not match."),
     ).toBeInTheDocument();
-    expect(authService.register).not.toHaveBeenCalled();
+    expect(registerMock).not.toHaveBeenCalled();
   });
 
   it("registers and navigates to login", async () => {
-    vi.mocked(authService.register).mockResolvedValue({} as never);
+    registerMock.mockResolvedValue({} as never);
 
     render(
       <MemoryRouter>
@@ -76,7 +76,7 @@ describe("SignupForm", () => {
     fireEvent.click(screen.getByRole("button", { name: /sign up/i }));
 
     await waitFor(() =>
-      expect(authService.register).toHaveBeenCalledWith({
+      expect(registerMock).toHaveBeenCalledWith({
         username: "alice",
         email: "alice@example.com",
         password: "secret",

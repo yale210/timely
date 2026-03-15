@@ -2,13 +2,13 @@ import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import LoginForm from "@/components/auth/LoginForm";
-import { authService } from "@/services/authService";
 
 const navigateMock = vi.fn();
+const loginMock = vi.fn();
 
 vi.mock("@/services/authService", () => ({
   authService: {
-    login: vi.fn(),
+    login: loginMock,
   },
 }));
 
@@ -26,7 +26,7 @@ describe("LoginForm", () => {
   });
 
   it("logs in and navigates to the dashboard", async () => {
-    vi.mocked(authService.login).mockResolvedValue({} as never);
+    loginMock.mockResolvedValue({} as never);
 
     render(
       <MemoryRouter>
@@ -43,7 +43,7 @@ describe("LoginForm", () => {
     fireEvent.click(screen.getByRole("button", { name: "Sign in" }));
 
     await waitFor(() =>
-      expect(authService.login).toHaveBeenCalledWith({
+      expect(loginMock).toHaveBeenCalledWith({
         username: "alice",
         password: "secret",
       }),
@@ -52,7 +52,7 @@ describe("LoginForm", () => {
   });
 
   it("shows a login error when the request fails", async () => {
-    vi.mocked(authService.login).mockRejectedValue(new Error("Bad creds"));
+    loginMock.mockRejectedValue(new Error("Bad creds"));
 
     render(
       <MemoryRouter>

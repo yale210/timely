@@ -1,12 +1,13 @@
 import { render, screen, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import MiniCalendarPreview from "@/components/dashboard/MiniCalendarPreview";
-import { preferenceService } from "@/services/preferenceService";
 import type { Event, Task } from "@/types";
+
+const getMyPreferenceMock = vi.fn();
 
 vi.mock("@/services/preferenceService", () => ({
   preferenceService: {
-    getMyPreference: vi.fn(),
+    getMyPreference: getMyPreferenceMock,
   },
 }));
 
@@ -63,7 +64,7 @@ describe("MiniCalendarPreview", () => {
   });
 
   it("loads preferences and passes combined entries to the mini calendar", async () => {
-    vi.mocked(preferenceService.getMyPreference).mockResolvedValue({
+    getMyPreferenceMock.mockResolvedValue({
       id: 1,
       day_start: "08:00:00",
       day_end: "22:00:00",
@@ -74,7 +75,7 @@ describe("MiniCalendarPreview", () => {
 
     render(<MiniCalendarPreview tasks={tasks} events={events} />);
 
-    await waitFor(() => expect(preferenceService.getMyPreference).toHaveBeenCalled());
+    await waitFor(() => expect(getMyPreferenceMock).toHaveBeenCalled());
     expect(screen.getByTestId("mini-calendar")).toHaveTextContent("events:2");
   });
 });

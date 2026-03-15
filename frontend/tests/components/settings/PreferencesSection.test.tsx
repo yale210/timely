@@ -82,7 +82,7 @@ describe("PreferencesSection", () => {
     );
   });
 
-  it("switches to per-day scheduling and toggles a day off", async () => {
+  it("switches to per-day scheduling and toggles a day off", () => {
     const onPrefChange = vi.fn();
     vi.mocked(specialDatesService.getSpecialDates).mockResolvedValue([]);
 
@@ -98,13 +98,11 @@ describe("PreferencesSection", () => {
       />,
     );
 
-    const scheduleToggleRow = screen.getByText("Set all days").parentElement;
-    expect(scheduleToggleRow).not.toBeNull();
-    fireEvent.click(within(scheduleToggleRow as HTMLElement).getByRole("button"));
+    const scheduleToggleRow = screen.getByText("Set all days").parentElement!;
+    fireEvent.click(within(scheduleToggleRow).getByRole("button"));
 
-    const monRow = screen.getByText("Mon").parentElement;
-    expect(monRow).not.toBeNull();
-    fireEvent.click(within(monRow as HTMLElement).getByRole("button"));
+    const monRow = screen.getByText("Mon").parentElement!;
+    fireEvent.click(within(monRow).getByRole("button"));
 
     expect(onPrefChange).toHaveBeenCalled();
   });
