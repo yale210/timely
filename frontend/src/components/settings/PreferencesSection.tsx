@@ -43,6 +43,7 @@ const getMaxAvailableHours = (pref: Preference): number => {
     const start = toMinutes(entry.start);
     const end = toMinutes(entry.end);
     if (start === null || end === null) return;
+    // Wrap overnight schedules correctly, e.g. 22:00 -> 06:00.
     const diff = (end - start + (24 * 60)) % (24 * 60);
     const minutesAvailable = diff === 0 ? 24 * 60 : diff;
     if (minutesAvailable > maxMinutes) {
@@ -82,6 +83,7 @@ const PreferencesSection = ({
     const isNewPref = lastPrefIdRef.current !== pref.id;
     if (isNewPref) {
       lastPrefIdRef.current = pref.id;
+      // Only reset the toggle when a different preference record loads, not on every field edit.
       setUseSetAllDays(isUniformSchedule);
     }
     setMaxHoursInput(String(pref.max_hours_study_per_day ?? 0));
@@ -195,6 +197,7 @@ const PreferencesSection = ({
                     const nextValue = !useSetAllDays;
                     setUseSetAllDays(nextValue);
                     if (nextValue) {
+                      // When switching back to a uniform schedule, seed every day from the current base hours.
                       const baseStart = pref.day_schedule?.[0]?.start ?? pref.day_start?.slice(0, 5) ?? "08:00";
                       const baseEnd = pref.day_schedule?.[0]?.end ?? pref.day_end?.slice(0, 5) ?? "22:00";
                       const nextSchedule = buildDefaultSchedule(baseStart, baseEnd);
@@ -397,6 +400,7 @@ const PreferencesSection = ({
                       limit_max_hours: nextValue,
                     });
                     if (!nextValue) {
+                      // "No limit" still stores a concrete cap equal to the widest available daily window.
                       const maxHours = getMaxAvailableHours(pref);
                       onPrefChange({
                         ...pref,
