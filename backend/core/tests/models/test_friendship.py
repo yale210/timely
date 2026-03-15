@@ -137,3 +137,18 @@ class FriendshipTests(TestCase):
         )
         self.assertEqual(new_friendship.state, "SENT")
         self.assertEqual(new_friendship.id, friendship.id)
+
+    def test_send_request_after_decline_swaps_sender_receiver(self):
+        friendship = Friendship.objects.create(
+            sender=self.sender,
+            receiver=self.receiver,
+            state="DECLINED",
+        )
+
+        new_friendship = Friendship.send_request(
+            sender=self.receiver, receiver=self.sender
+        )
+        self.assertEqual(new_friendship.state, "SENT")
+        self.assertEqual(new_friendship.id, friendship.id)
+        self.assertEqual(new_friendship.sender, self.receiver)
+        self.assertEqual(new_friendship.receiver, self.sender)

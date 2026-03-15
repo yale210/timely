@@ -14,6 +14,8 @@ vi.mock("@/pages/index", () => ({
   Gradebook: () => <div>Gradebook Page</div>,
   Dashboard: () => <div>Dashboard Page</div>,
   Settings: () => <div>Settings Page</div>,
+  Friends: () => <div>Friends Page</div>,
+  ProfilePage: () => <div>Profile Page</div>,
 }));
 
 vi.mock("@/pages/Notification/Notifications", () => ({

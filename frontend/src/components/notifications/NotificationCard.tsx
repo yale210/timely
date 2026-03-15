@@ -15,6 +15,8 @@ interface NotificationCardProps {
   onToggleRead?: (notification: Notification) => void;
   onDelete?: (notification: Notification) => void;
   showActions?: boolean;
+  showReadToggle?: boolean;
+  showDivider?: boolean;
   compact?: boolean;
   unreadIndicatorPlacement?: "right" | "left";
 }
@@ -27,6 +29,8 @@ interface NotificationCardProps {
  * @param root0.onToggleRead - Callback to toggle read/unread state.
  * @param root0.onDelete - Callback to delete the notification.
  * @param root0.showActions - Whether to show action buttons.
+ * @param root0.showReadToggle - Whether to show the read toggle button.
+ * @param root0.showDivider - Whether to show the divider border.
  * @param root0.compact - Whether to render in compact mode.
  * @param root0.unreadIndicatorPlacement - Position of the unread indicator dot.
  */
@@ -36,6 +40,8 @@ export const NotificationCard: React.FC<NotificationCardProps> = ({
   onToggleRead,
   onDelete,
   showActions = false,
+  showReadToggle = true,
+  showDivider = true,
   compact = false,
   unreadIndicatorPlacement = "right",
 }) => {
@@ -53,7 +59,7 @@ export const NotificationCard: React.FC<NotificationCardProps> = ({
 
   return (
     <div
-      className={`group border-b transition-colors ${
+      className={`group ${showDivider ? "border-b" : ""} transition-colors ${
         notification.is_read ? "bg-white hover:bg-gray-50" : "bg-indigo-50/60 hover:bg-indigo-50"
       } ${compact ? "px-4 py-3" : "px-4 py-4"} cursor-pointer`}
       onClick={() => onClick(notification)}
@@ -109,22 +115,24 @@ export const NotificationCard: React.FC<NotificationCardProps> = ({
 
         {showActions && (
           <div className="ml-1 flex shrink-0 items-center gap-1 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
-            <button
-              type="button"
-              onClick={(event) => {
-                event.stopPropagation();
-                onToggleRead?.(notification);
-              }}
-              title={notification.is_read ? "Mark as unread" : "Mark as read"}
-              aria-label={notification.is_read ? "Mark as unread" : "Mark as read"}
-              className="rounded-md p-1.5 text-gray-500 hover:bg-gray-100 hover:text-gray-700"
-            >
-              {notification.is_read ? (
-                <EnvelopeIcon className="h-4 w-4" />
-              ) : (
-                <EnvelopeOpenIcon className="h-4 w-4" />
-              )}
-            </button>
+            {showReadToggle && (
+              <button
+                type="button"
+                onClick={(event) => {
+                  event.stopPropagation();
+                  onToggleRead?.(notification);
+                }}
+                title={notification.is_read ? "Mark as unread" : "Mark as read"}
+                aria-label={notification.is_read ? "Mark as unread" : "Mark as read"}
+                className="rounded-md p-1.5 text-gray-500 hover:bg-gray-100 hover:text-gray-700"
+              >
+                {notification.is_read ? (
+                  <EnvelopeIcon className="h-4 w-4" />
+                ) : (
+                  <EnvelopeOpenIcon className="h-4 w-4" />
+                )}
+              </button>
+            )}
             <button
               type="button"
               onClick={(event) => {

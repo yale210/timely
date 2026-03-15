@@ -28,8 +28,6 @@ vi.mock("@/services/authService", () => ({
 }));
 
 interface NotificationDropdownProps {
-  onMarkAllRead: () => void;
-  onDeleteAll: () => void;
   onItemClick: (item: { id: number }) => void;
   onToggleRead: (item: { id: number; is_read: boolean }) => void;
   onDeleteItem: (item: { id: number }) => void;
@@ -38,14 +36,12 @@ interface NotificationDropdownProps {
 
 // Mock child components to simplify and focus on AppNavbar logic
 vi.mock("@/components/notifications/NotificationDropdown", () => ({
-  NotificationDropdown: ({ onMarkAllRead, onDeleteAll, onItemClick, onToggleRead, onDeleteItem, unreadCount }: NotificationDropdownProps) => (
+  NotificationDropdown: ({ onItemClick, onToggleRead, onDeleteItem, unreadCount }: NotificationDropdownProps) => (
     <div data-testid="notification-dropdown">
         <button onClick={() => onItemClick({ id: 1 })}>Item Click</button>
         <button onClick={() => onToggleRead({ id: 1, is_read: false })}>Toggle Read (to read)</button>
         <button onClick={() => onToggleRead({ id: 2, is_read: true })}>Toggle Read (to unread)</button>
         <button onClick={() => onDeleteItem({ id: 1 })}>Delete Item</button>
-        <button onClick={onMarkAllRead}>Mark All Read</button>
-        <button onClick={onDeleteAll}>Delete All</button>
         <span>Unread: {unreadCount}</span>
     </div>
   ),
@@ -89,7 +85,14 @@ describe("AppNavbar Component", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     vi.mocked(useNavigate).mockReturnValue(mockNavigate);
-    vi.mocked(useLocation).mockReturnValue(createLocation("/dashboard"));
+    vi.mocked(useLocation).mockReturnValue({
+      pathname: "/dashboard",
+      search: "",
+      hash: "",
+      state: null,
+      key: "default",
+      unstable_mask: undefined,
+    });
     vi.mocked(useNotificationContext).mockReturnValue({
       notifications: [],
       unreadCount: 0,
@@ -145,7 +148,14 @@ describe("AppNavbar Component", () => {
   });
 
   it("renders AdminSidebar when on an admin route", () => {
-    vi.mocked(useLocation).mockReturnValue(createLocation("/admin/notifications"));
+    vi.mocked(useLocation).mockReturnValue({
+      pathname: "/admin/notifications",
+      search: "",
+      hash: "",
+      state: null,
+      key: "default",
+      unstable_mask: undefined,
+    });
     render(
       <MemoryRouter>
         <AppNavbar />
@@ -237,12 +247,6 @@ describe("AppNavbar Component", () => {
 
     fireEvent.click(screen.getByText("Delete Item"));
     expect(mockDeleteNotification).toHaveBeenCalledWith(1);
-
-    fireEvent.click(screen.getByText("Mark All Read"));
-    expect(mockMarkAllRead).toHaveBeenCalled();
-
-    fireEvent.click(screen.getByText("Delete All"));
-    expect(mockDeleteAllNotifications).toHaveBeenCalled();
   });
 
   it("toggles body classes on mount and unmount via effect", () => {
@@ -265,7 +269,7 @@ describe("AppNavbar Component", () => {
       </MemoryRouter>
     );
     
-    const accountBtn = screen.getByRole("button", { name: /account/i });
+    const accountBtn = screen.getByRole("button", { name: /testuser/i });
     fireEvent.click(accountBtn);
     
     await waitFor(() => {
