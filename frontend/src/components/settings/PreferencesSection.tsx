@@ -226,8 +226,8 @@ const PreferencesSection = ({
                 <div className="mt-3 grid grid-cols-[80px_1fr] items-center gap-y-2 text-xs font-medium text-gray-500">
                   <div />
                   <div className="flex justify-end gap-3">
-                    <div className="w-[180px] text-left">Start</div>
-                    <div className="w-[180px] text-left">End</div>
+                    <div className="w-45 text-left">Start</div>
+                    <div className="w-45 text-left">End</div>
                   </div>
                 </div>
               ) : null}
@@ -249,7 +249,7 @@ const PreferencesSection = ({
                           day_schedule: nextSchedule,
                         });
                       }}
-                      className={`bg-white px-3 py-2 block outline w-[180px] rounded-md text-right ${
+                      className={`bg-white px-3 py-2 block outline w-45 rounded-md text-right ${
                         fieldErrors.day_schedule ? "outline-red-300" : "outline-gray-300"
                       } focus:outline-2 focus:outline-turquoise-600`}
                     />
@@ -267,7 +267,7 @@ const PreferencesSection = ({
                           day_schedule: nextSchedule,
                         });
                       }}
-                      className={`bg-white px-3 py-2 block outline w-[180px] rounded-md text-right ${
+                      className={`bg-white px-3 py-2 block outline w-45 rounded-md text-right ${
                         fieldErrors.day_schedule ? "outline-red-300" : "outline-gray-300"
                       } focus:outline-2 focus:outline-turquoise-600`}
                     />
@@ -279,9 +279,9 @@ const PreferencesSection = ({
                 <div className="grid grid-cols-[80px_1fr] items-center gap-y-2 text-xs font-medium text-gray-500">
                   <div />
                   <div className="flex justify-end gap-3">
-                    <div className="w-[180px] text-left">Start</div>
-                    <div className="w-[180px] text-left">End</div>
-                    <div className="w-[60px] text-right">Day off</div>
+                    <div className="w-45 text-left">Start</div>
+                    <div className="w-45 text-left">End</div>
+                    <div className="w-15 text-right">Day off</div>
                   </div>
                 </div>
                 {(pref.day_schedule && pref.day_schedule.length > 0
@@ -322,7 +322,7 @@ const PreferencesSection = ({
                             day_end: nextSchedule[0]?.end ?? pref.day_end,
                           });
                         }}
-                        className={`bg-white px-3 py-2 block outline w-[180px] rounded-md text-right ${
+                        className={`bg-white px-3 py-2 block outline w-45 rounded-md text-right ${
                           fieldErrors.day_schedule ? "outline-red-300" : "outline-gray-300"
                         } focus:outline-2 focus:outline-turquoise-600 ${isDayOff ? "opacity-60" : ""}`}
                       />
@@ -347,11 +347,11 @@ const PreferencesSection = ({
                             day_end: nextSchedule[0]?.end ?? pref.day_end,
                           });
                         }}
-                        className={`bg-white px-3 py-2 block outline w-[180px] rounded-md text-right ${
+                        className={`bg-white px-3 py-2 block outline w-45 rounded-md text-right ${
                           fieldErrors.day_schedule ? "outline-red-300" : "outline-gray-300"
                         } focus:outline-2 focus:outline-turquoise-600 ${isDayOff ? "opacity-60" : ""}`}
                       />
-                      <div className="flex w-[60px] items-center justify-end">
+                      <div className="flex w-15 items-center justify-end">
                         <button
                           type="button"
                           onClick={() => toggleDayOnOff(entry.day)}
