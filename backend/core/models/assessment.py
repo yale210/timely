@@ -24,7 +24,7 @@ class Assessment(models.Model):
         settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="assessments"
     )
 
-    title = models.CharField(max_length=500)
+    title = models.CharField(max_length=500,blank=False)
 
     module = models.CharField(max_length=100, blank=False)
 
@@ -34,6 +34,7 @@ class Assessment(models.Model):
 
     due_date = models.DateTimeField()
 
+    # Length of assessment in minutes
     length_of_assessment = models.PositiveIntegerField(
         validators=[MinValueValidator(1)],
         null=True,
