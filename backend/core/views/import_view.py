@@ -3,7 +3,9 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from core.models import Event
 from django.db import transaction
-from datetime import datetime, timezone
+from datetime import datetime
+from django.utils import timezone
+
 
 # Test1
 
@@ -114,8 +116,8 @@ class ImportView(APIView):
                                     # The actual date/time of the event
                                     dt_start = current_event[key]
                                     # The name of the timezone e.g. TZID=Europe/London
-                                    dt_start_timezone = 1
-                                    print(dt_start_timezone)
+                                    # dt_start_timezone = 1
+
                                     # Date/time has been found
                                     start_date_time_exists = True
 
@@ -135,8 +137,8 @@ class ImportView(APIView):
                                     # The actual date/time of the event
                                     dt_end = current_event[key]
                                     # The name of the timezone e.g. TZID=Europe/London
-                                    dt_end_timezone = 1
-                                    print(dt_end_timezone)
+                                    # dt_end_timezone = 1
+
                                     # Date/time has been found
                                     end_date_time_exists = True
 
@@ -182,7 +184,6 @@ class ImportView(APIView):
                                 )
 
                                 dt_stamp = current_date_time
-                            print(dt_stamp)
 
                             # A location is optional, no error for it not existing
                             # This is because not all events repeat
@@ -191,9 +192,33 @@ class ImportView(APIView):
                             # There are different types of repetitions, this will be managed during object creation
                             if "RRULE" in current_event:
                                 r_rule = current_event["RRULE"]
+
+                                a, b = r_rule.split(";")
+
+                                c, frequency_interval = a.split("=")
+
+                                d, until_date = b.split("=")
+
+                                # E.g. DAILY
+                                frequency_interval_final = Event.RecurrenceInterval[
+                                    frequency_interval
+                                ]
+
+                                # Useless
+                                c = c
+                                d = d
+
+                                if until_date == "None":
+                                    until_date_final = None
+                                else:
+                                    until_date_final = datetime.strptime(
+                                        until_date, "%Y%m%dT%H%M%S"
+                                    ).date()
+
                             else:
                                 r_rule = None
-                            print(r_rule)
+                                frequency_interval_final = None
+                                until_date_final = None
 
                             # At this stage all the details about the event have been collected, and the required details,
                             # are definitely provided also
@@ -206,23 +231,26 @@ class ImportView(APIView):
                             # the event will not be added, however, this is not an error that causes the program to stop,
                             # as the user may be importing other events that are unqique, so it is necessary to check all events
 
+                            # The DB stores date/time using the DJango format, but iCalendar uses a different format so conversion is necessary
+                            start_date_time_django_format = datetime.strptime(
+                                dt_start, "%Y%m%dT%H%M%S"
+                            )
+                            end_date_time_django_format = datetime.strptime(
+                                dt_end, "%Y%m%dT%H%M%S"
+                            )
+
                             # True / False, does this event already exist?
                             event_exists_pre_import = Event.objects.filter(
                                 user=request.user,
                                 title=summary,
-                                start_time=dt_start,
-                                end_time=dt_end,
+                                start_time=start_date_time_django_format,
+                                end_time=end_date_time_django_format,
                             ).exists()
-
-                            # This means that the exact same event already exists in the DB, so there is no reason to import it again
-                            if event_exists_pre_import:
-                                testN = 1
 
                             # This event is a new event, so it will be added to the DB, this event will be added to the list
                             # This approach ensures that if the file is broken halfway through, there will not be a scenario where half
                             # of the events are imported but the other half are not
-                            else:
-                                testN = 2
+                            if not event_exists_pre_import:
                                 # The DB stores date/time using the DJango format, but iCalendar uses a different format so conversion is necessary
                                 start_date_time_django_format = datetime.strptime(
                                     dt_start, "%Y%m%dT%H%M%S"
@@ -231,30 +259,24 @@ class ImportView(APIView):
                                     dt_end, "%Y%m%dT%H%M%S"
                                 )
 
-                                # To:Do --------------> support r_rule
+                                # Event Data
                                 new_event_to_import_data = [
                                     {
                                         "title": f"{summary}",
                                         "description": f"{description}",
                                         "location": f"{location}",
+                                        "dt_stamp": f"{dt_stamp}",
                                         "start_time": f"{start_date_time_django_format}",
                                         "end_time": f"{end_date_time_django_format}",
+                                        "r_rule_freq": f"{frequency_interval_final}",
+                                        "r_rule_until": f"{until_date_final}",
                                     }
                                 ]
 
                                 # This is the list of events to import at the very end, this current event is added to it
                                 events.append(new_event_to_import_data)
 
-                            print(testN)
-
                             current_event = None
-                            """
-                            response = {
-                            "message": f"Import successful! {summary, dt_start, dt_end, description, location, r_rule, testN, event_exists_pre_import, a.location}",
-                            "test": f"Hello {start_date_time_django_format}, aaaa {end_date_time_django_format}",
-                            }
-                            return Response(response)
-                            """
 
                     # Every line that is not a begin or end event contains information about the event
                     # All these lines follow the format of "variable:detail", e.g. LOCATION:London
@@ -270,19 +292,42 @@ class ImportView(APIView):
             # Every event is added to the DB
             for e in events:
                 for event in e:
-                    Event.objects.create(
-                        user=request.user,
-                        title=event["title"],
-                        description=event["description"],
-                        location=event["location"],
-                        start_time=event["start_time"],
-                        end_time=event["end_time"],
-                    )
+                    if ("r_rule_freq" in event) and (
+                        event["r_rule_freq"] and event["r_rule_freq"] != "None"
+                    ):
+                        if event["r_rule_until"] == "None":
+                            event["r_rule_until"] = None
+
+                        Event.objects.create(
+                            user=request.user,
+                            title=event["title"],
+                            description=event["description"],
+                            location=event["location"],
+                            start_time=event["start_time"],
+                            end_time=event["end_time"],
+                            recurrence_interval=event["r_rule_freq"],
+                            recurrence_end=event["r_rule_until"],
+                        )
+
+                    else:
+                        Event.objects.create(
+                            user=request.user,
+                            title=event["title"],
+                            description=event["description"],
+                            location=event["location"],
+                            start_time=event["start_time"],
+                            end_time=event["end_time"],
+                        )
 
             # Response letting the user know that the import was successful
-            response = {
-                "message": f"Import successful! Imported: {len(events)} event(s)."
-            }
+            if len(events) == 0:
+                response = {
+                    "message": "0 Events were imported, but the file is correctly formatted. Check for duplicates?"
+                }
+            else:
+                response = {
+                    "message": f"Import successful! Imported: {len(events)} event(s)."
+                }
             return Response(response)
 
         # File format incorrect, error response
