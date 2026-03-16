@@ -21,12 +21,13 @@ class TaskSeeder(BaseSeeder):
         for task in tasks:
             try:
                 self._create_task(task)
-            except Exception:
-                pass
+            except Exception as exception:
+                print(f"Error creating task: {exception}")
 
     def _create_task(self, data):
+        user = get_user_model().objects.get(id=data["fields"]["user"])
         temporary_task, _ = Task.objects.get_or_create(
-            user=data["fields"]["user"],
+            user=user,
             title=data["fields"]["title"],
             description=data["fields"]["description"],
             estimated_minutes=data["fields"]["estimated_minutes"],
@@ -70,7 +71,7 @@ class TaskSeeder(BaseSeeder):
         self._create_task(
             {
                 "fields": {
-                    "user": temporary_user,
+                    "user": temporary_user.id,
                     "title": self.faker.sentence(),
                     "description": self.faker.sentence(),
                     "categories": [temporary_category],
@@ -78,7 +79,7 @@ class TaskSeeder(BaseSeeder):
                     "start_time": timezone.make_aware(self.faker.date_time()),
                     "deadline": timezone.make_aware(self.faker.date_time()),
                     "completed": random.randint(0, 1) == 1,
-                    "parent_task": Task.objects.order_by("?").first()
+                    "parent_task": Task.objects.order_by("?").first().id
                     if Task.objects.exists() and random.randint(0, 3) == 1
                     else None,
                     "total_task_allocations": random.randint(0, 24),

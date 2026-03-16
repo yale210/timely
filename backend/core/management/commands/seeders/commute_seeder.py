@@ -20,8 +20,8 @@ class CommuteSeeder(BaseSeeder):
         for commute in commutes:
             try:
                 self._create_commute(commute)
-            except Exception:
-                pass
+            except Exception as exception:
+                print(f"Error creating commute: {exception}")
 
     def _populate_random_commute(self):
         User = get_user_model()
@@ -44,7 +44,7 @@ class CommuteSeeder(BaseSeeder):
         self._create_commute(
             {
                 "fields": {
-                    "user": temporary_user,
+                    "user": temporary_user.id,
                     "commute_start": commute_start,
                     "commute_end": commute_end,
                 }
@@ -57,8 +57,9 @@ class CommuteSeeder(BaseSeeder):
         return datetime.time(hour=hours, minute=minutes)
 
     def _create_commute(self, data):
+        user = get_user_model().objects.get(id=data["fields"]["user"])
         Commute.objects.get_or_create(
-            user=data["fields"]["user"],
+            user=user,
             commute_start=data["fields"]["commute_start"],
             commute_end=data["fields"]["commute_end"],
         )

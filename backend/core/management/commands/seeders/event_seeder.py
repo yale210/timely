@@ -22,12 +22,14 @@ class EventSeeder(BaseSeeder):
         for event in events:
             try:
                 self._create_event(event)
-            except Exception:
-                pass
+            except Exception as exception:
+                print(f"Error creating event: {exception}")
 
     def _create_event(self, data):
+        user = get_user_model().objects.get(id=data["fields"]["user"])
+        
         temporary_event, _ = Event.objects.get_or_create(
-            user=data["fields"]["user"],
+            user=user,
             title=data["fields"]["title"],
             description=data["fields"]["description"],
             location=data["fields"]["location"],
@@ -35,11 +37,14 @@ class EventSeeder(BaseSeeder):
             end_time=data["fields"]["end_time"],
             recurrence_interval=data["fields"]["recurrence_interval"],
             recurrence_end=data["fields"]["recurrence_end"],
+            colour=data["fields"].get("colour"),
+            exception_dates=data["fields"].get("exception_dates", []),
+            split_from_event=data["fields"].get("split_from_event")
         )
 
-        categories = data["fields"]["categories"]
+        categories = data["fields"].get("categories",[])
         if categories:
-            temporary_event.categories.set(categories)
+            temporary_event.categories.set(Category.objects.filter(id__in=categories))
 
     def _populate_random_event(self):
         User = get_user_model()
@@ -72,8 +77,8 @@ class EventSeeder(BaseSeeder):
             self._create_event(
                 {
                     "fields": {
-                        "user": temporary_user,
-                        "categories": [temporary_category],
+                        "user": temporary_user.id,
+                        "categories": [temporary_category.id],
                         "title": self.faker.sentence(),
                         "description": self.faker.sentence(),
                         "location": self.faker.word(),
@@ -85,6 +90,10 @@ class EventSeeder(BaseSeeder):
                         "recurrence_end": (
                             start + timedelta(random.randint(0, 100))
                         ).date(),
+                        "exception_dates": [],
+                        "split_from_event": None,
+                        "colour": self.faker.hex_color(),
+
                     }
                 }
             )
@@ -95,8 +104,8 @@ class EventSeeder(BaseSeeder):
             self._create_event(
                 {
                     "fields": {
-                        "user": temporary_user,
-                        "categories": [temporary_category],
+                        "user": temporary_user.id,
+                        "categories": [temporary_category.id],
                         "title": self.faker.sentence(),
                         "description": self.faker.sentence(),
                         "location": self.faker.word(),
@@ -104,6 +113,9 @@ class EventSeeder(BaseSeeder):
                         "end_time": end,
                         "recurrence_interval": None,
                         "recurrence_end": None,
+                        "exception_dates":[],
+                        "split_from_event": None,
+                        "colour": self.faker.hex_color(),
                     }
                 }
             )

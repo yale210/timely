@@ -71,7 +71,7 @@ special_dates = [
     {
         "model": "core.specialdates",
         "pk": 14,
-        "fields": {"user": 1, "date": "0000-00-00", "text": "New me.."},
+        "fields": {"user": 1, "date": "0001-01-01", "text": "New me.."},
     },
     {
         "model": "core.specialdates",

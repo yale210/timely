@@ -21,12 +21,13 @@ class PreferenceSeeder(BaseSeeder):
         for temporary_preference in preferences:
             try:
                 self._create_preference(temporary_preference)
-            except Exception:
-                pass
+            except Exception as exception:
+                print(f"Error creating preference: {exception}")
 
     def _create_preference(self, data):
+        user = get_user_model().objects.get(id=data["fields"]["user"])
         temporary_preference, created = Preference.objects.get_or_create(
-            user=data["fields"]["user"],
+            user=user,
             defaults={
                 "day_start": data["fields"]["day_start"],
                 "day_end": data["fields"]["day_end"],
@@ -56,7 +57,7 @@ class PreferenceSeeder(BaseSeeder):
         return self._create_preference(
             {
                 "fields": {
-                    "user": temporary_user,
+                    "user": temporary_user.id,
                     "day_start": self._random_time(),
                     "day_end": self._random_time(),
                     "timezone": "Europe/London",

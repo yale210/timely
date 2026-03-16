@@ -20,12 +20,13 @@ class ProfileSeeder(BaseSeeder):
         for profile in profiles:
             try:
                 self._create_profile(profile)
-            except Exception:
-                pass
+            except Exception as exception:
+                print(f"Error creating profile: {exception}")
 
     def _create_profile(self, data):
+        user = get_user_model().objects.get(id=data["fields"]["user"])
         Profile.objects.get_or_create(
-            user=data["fields"]["user"],
+            user=user,
             defaults={
                 "date_of_birth": data["fields"]["date_of_birth"],
                 "creation_date": data["fields"]["creation_date"],
@@ -47,7 +48,7 @@ class ProfileSeeder(BaseSeeder):
         self._create_profile(
             {
                 "fields": {
-                    "user": temporary_user,
+                    "user": temporary_user.id,
                     "date_of_birth": self.faker.date(),
                     "creation_date": self.faker.date(),
                 }

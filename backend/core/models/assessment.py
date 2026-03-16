@@ -24,7 +24,7 @@ class Assessment(models.Model):
         settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="assessments"
     )
 
-    title = models.CharField(max_length=500,blank=False)
+    title = models.CharField(max_length=500, blank=False)
 
     module = models.CharField(max_length=100, blank=False)
 

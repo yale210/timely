@@ -17,8 +17,8 @@ class UserSeeder(BaseSeeder):
         for user in users:
             try:
                 self._create_user(user)
-            except Exception:
-                pass
+            except Exception as exception:
+                print(f"Error creating user: {exception}")
 
     def _create_user(self, data):
         User = get_user_model()
@@ -32,6 +32,7 @@ class UserSeeder(BaseSeeder):
             return None
 
         User.objects.get_or_create(
+            id=data.get("pk"),
             username=username,
             defaults={
                 "email": email,

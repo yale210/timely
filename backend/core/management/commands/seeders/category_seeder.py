@@ -19,8 +19,8 @@ class CategorySeeder(BaseSeeder):
         for category in categories:
             try:
                 self._create_category(category)
-            except Exception:
-                pass
+            except Exception as exception:
+                print(f"Error creating category: {exception}")
 
     def _populate_random_category(self):
         word = self.faker.word()
@@ -40,7 +40,7 @@ class CategorySeeder(BaseSeeder):
         self._create_category(
             {
                 "pk": None,
-                "user": temporary_user,
+                "user": temporary_user.id,
                 "fields": {
                     "text": word,
                     "colour": colour,
@@ -50,21 +50,12 @@ class CategorySeeder(BaseSeeder):
         )
 
     def _create_category(self, data):
+        user = get_user_model().objects.get(id=data["user"])
         Category.objects.get_or_create(
             id=data["pk"],
-            user=data["user"],
+            user=user,
             text=data["fields"]["text"],
             colour=data["fields"].get("colour", None),
             max_daily_study_time=data["fields"].get("max_daily_study_time", None),
         )
 
-
-# text = models.CharField(max_length=20, blank=False, null=False)
-# colour = models.CharField(
-#    max_length=10, blank=True, null=True
-# )  # Store the hex code
-# max_daily_study_time = models.PositiveSmallIntegerField(
-#    validators=[MinValueValidator(0), MaxValueValidator(24)],
-#    null=True,
-#    blank=True,
-# )
