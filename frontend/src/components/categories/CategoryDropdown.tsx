@@ -175,3 +175,4 @@ export const CategoryDropdown = ({
     document.body,
   );
 };
+

@@ -4,7 +4,7 @@ import { NotificationProvider, useNotificationContext } from "@/context/Notifica
 import * as notificationsApi from "@/api/notifications";
 import { useWebSocket } from "@/hooks/common/useWebSocket";
 import { authStore, AUTH_CHANGE_EVENT } from "@/services/authService";
-import type { Notification, NotificationListResponse } from "@/types/notification";
+import type { Notification, NotificationListResponse } from "@/types";
 
 // Mock API
 vi.mock("@/api/notifications", () => ({
@@ -342,4 +342,5 @@ describe("NotificationContext", () => {
     expect(result.current.notifications.length).toBe(2);
   });
 });
+
 

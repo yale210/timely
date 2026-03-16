@@ -34,3 +34,4 @@ export default function DailyTimeBarChart({ stats }: { stats: WeeklyStats | null
     </div>
   );
 }
+

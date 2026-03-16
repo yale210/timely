@@ -134,3 +134,4 @@ describe("useSettings", () => {
     expect(mockNavigate).toHaveBeenCalledWith("/login");
   });
 });
+

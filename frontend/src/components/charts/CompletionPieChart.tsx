@@ -49,3 +49,4 @@ export default function CompletionPieChart(props: { stats: WeeklyStats | null })
     </PieChart>
   );
 }
+

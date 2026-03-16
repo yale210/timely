@@ -27,3 +27,4 @@ export const createSpecialDate = async (
 export const deleteSpecialDate = async (id: number): Promise<void> => {
   await api.delete(`/api/special-dates/${id}/`);
 };
+

@@ -202,3 +202,4 @@ const MiniCalendarPreview = ({ tasks, events }: MiniCalendarPreviewProps) => {
 };
 
 export default MiniCalendarPreview;
+

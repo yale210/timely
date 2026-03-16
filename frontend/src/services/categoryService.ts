@@ -38,3 +38,4 @@ export const updateCategory = async (
 export const deleteCategory = async (id: number): Promise<void> => {
   await api.delete(`/api/categories/${id}/`);
 };
+

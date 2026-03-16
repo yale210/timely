@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { getNotifications } from "@/api/notifications";
 import { useNotificationContext } from "@/context/NotificationContext";
-import { type Notification, NotificationType } from "@/types/notification";
+import { type Notification, NotificationType } from "@/types";
 
 const PAGE_SIZE = 10;
 
@@ -117,6 +117,7 @@ export const useNotificationsPage = (): UseNotificationsPageReturn => {
   useEffect(() => {
     if (contextNotifications !== prevContextNotificationsRef.current) {
       prevContextNotificationsRef.current = contextNotifications;
+      // Refetch the current page when the shared notification context changes elsewhere in the app.
       void fetchPage();
     }
   }, [contextNotifications, fetchPage]);
@@ -155,6 +156,7 @@ export const useNotificationsPage = (): UseNotificationsPageReturn => {
   async (notification: Notification) => {
     await deleteNotification(notification.id);
     const isLastItemOnPage = notifications.length === 1 && page > 1;
+    // Step back a page when deleting the final row so the user never lands on an empty trailing page.
     if (isLastItemOnPage) {
       setPage((prev) => Math.max(1, prev - 1));
     } else {
@@ -216,3 +218,4 @@ export const useNotificationsPage = (): UseNotificationsPageReturn => {
     },
   };
 };
+

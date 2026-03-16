@@ -1,5 +1,5 @@
 import { NotificationCard } from "@/components/notifications/NotificationCard";
-import { NotificationType } from "@/types/notification";
+import { NotificationType } from "@/types";
 
 interface AdminLivePreviewProps {
   title: string;
@@ -38,3 +38,4 @@ export const AdminLivePreview = (props: AdminLivePreviewProps) => {
     </div>
   );
 };
+

@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import api from "@/services/api";
 import { useNotificationContext } from "@/context/NotificationContext";
-import { type Notification } from "@/types/notification";
+import { type Notification } from "@/types";
 
 interface NotificationDetailState {
   notification: Notification | null;
@@ -103,3 +103,4 @@ export const useNotificationDetail = (): UseNotificationDetailReturn => {
     },
   };
 };
+

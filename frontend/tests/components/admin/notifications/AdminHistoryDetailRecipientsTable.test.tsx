@@ -1,7 +1,7 @@
 import { render, screen } from "@testing-library/react";
 import { describe, it, expect } from "vitest";
 import { AdminHistoryDetailRecipientsTable } from "@/components/admin/notifications/AdminHistoryDetailRecipientsTable";
-import type { BroadcastRecipientDetail } from "@/types/notification";
+import type { BroadcastRecipientDetail } from "@/types";
 
 describe("AdminHistoryDetailRecipientsTable Component", () => {
   const mockRecipients: BroadcastRecipientDetail[] = [
@@ -54,3 +54,4 @@ describe("AdminHistoryDetailRecipientsTable Component", () => {
     expect(screen.getAllByText("-").length).toBeGreaterThanOrEqual(1);
   });
 });
+

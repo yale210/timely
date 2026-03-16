@@ -29,3 +29,4 @@ export const unscheduleTasks = async (): Promise<{ unscheduled_count: number }> 
   const response = await api.post<{ unscheduled_count: number }>("/api/unschedule/");
   return response.data;
 };
+

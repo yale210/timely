@@ -1,0 +1,43 @@
+import api from "@/services/api";
+import type { Friendship } from "@/types";
+
+/**
+ * Retrieves friendships for the current user.
+ */
+export const getFriendships = async (): Promise<Friendship[]> => {
+  const response = await api.get<Friendship[]>("/api/friendships/");
+  return response.data;
+};
+
+/**
+ * Sends a friend request to the specified user id.
+ * @param receiverUsername - Username of the receiver.
+ */
+export const sendFriendRequest = async (receiverUsername: string): Promise<Friendship> => {
+  const response = await api.post<Friendship>("/api/friendships/", { receiver_username: receiverUsername });
+  return response.data;
+};
+
+/**
+ * Accepts a friend request.
+ * @param id - Friendship id.
+ */
+export const acceptFriendRequest = async (id: number): Promise<void> => {
+  await api.post(`/api/friendships/${id}/accept/`);
+};
+
+/**
+ * Declines a friend request.
+ * @param id - Friendship id.
+ */
+export const declineFriendRequest = async (id: number): Promise<void> => {
+  await api.post(`/api/friendships/${id}/decline/`);
+};
+
+/**
+ * Removes a friendship.
+ * @param id - Friendship id.
+ */
+export const deleteFriendship = async (id: number): Promise<void> => {
+  await api.delete(`/api/friendships/${id}/`);
+};

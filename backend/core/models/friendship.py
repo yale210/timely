@@ -70,6 +70,12 @@ class Friendship(models.Model):
             # User has had their request declined. Send it again.
             else:
                 request_exists.state = cls.State.SENT
+                if (
+                    request_exists.sender != sender
+                    or request_exists.receiver != receiver
+                ):
+                    request_exists.sender = sender
+                    request_exists.receiver = receiver
                 request_exists.save()
                 return request_exists
         else:

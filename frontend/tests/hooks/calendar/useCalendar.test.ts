@@ -191,3 +191,4 @@ describe("useCalendar", () => {
     expect(result.current.state.categories).toHaveLength(0);
   });
 });
+

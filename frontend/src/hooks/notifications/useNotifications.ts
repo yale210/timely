@@ -6,7 +6,7 @@ import {
   markAllAsRead as apiMarkAllAsRead, 
   deleteNotification as apiDeleteNotification 
 } from '@/api/notifications';
-import { type Notification } from '@/types/notification';
+import { type Notification } from '@/types';
 
 /**
  * A custom hook for managing and fetching notifications.
@@ -108,3 +108,4 @@ export const useNotifications = () => {
     setUnreadCount
   };
 };
+

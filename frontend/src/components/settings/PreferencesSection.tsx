@@ -43,6 +43,7 @@ const getMaxAvailableHours = (pref: Preference): number => {
     const start = toMinutes(entry.start);
     const end = toMinutes(entry.end);
     if (start === null || end === null) return;
+    // Wrap overnight schedules correctly, e.g. 22:00 -> 06:00.
     const diff = (end - start + (24 * 60)) % (24 * 60);
     const minutesAvailable = diff === 0 ? 24 * 60 : diff;
     if (minutesAvailable > maxMinutes) {
@@ -82,6 +83,7 @@ const PreferencesSection = ({
     const isNewPref = lastPrefIdRef.current !== pref.id;
     if (isNewPref) {
       lastPrefIdRef.current = pref.id;
+      // Only reset the toggle when a different preference record loads, not on every field edit.
       setUseSetAllDays(isUniformSchedule);
     }
     setMaxHoursInput(String(pref.max_hours_study_per_day ?? 0));
@@ -195,6 +197,7 @@ const PreferencesSection = ({
                     const nextValue = !useSetAllDays;
                     setUseSetAllDays(nextValue);
                     if (nextValue) {
+                      // When switching back to a uniform schedule, seed every day from the current base hours.
                       const baseStart = pref.day_schedule?.[0]?.start ?? pref.day_start?.slice(0, 5) ?? "08:00";
                       const baseEnd = pref.day_schedule?.[0]?.end ?? pref.day_end?.slice(0, 5) ?? "22:00";
                       const nextSchedule = buildDefaultSchedule(baseStart, baseEnd);
@@ -226,8 +229,8 @@ const PreferencesSection = ({
                 <div className="mt-3 grid grid-cols-[80px_1fr] items-center gap-y-2 text-xs font-medium text-gray-500">
                   <div />
                   <div className="flex justify-end gap-3">
-                    <div className="w-[180px] text-left">Start</div>
-                    <div className="w-[180px] text-left">End</div>
+                    <div className="w-45 text-left">Start</div>
+                    <div className="w-45 text-left">End</div>
                   </div>
                 </div>
               ) : null}
@@ -249,7 +252,7 @@ const PreferencesSection = ({
                           day_schedule: nextSchedule,
                         });
                       }}
-                      className={`bg-white px-3 py-2 block outline w-[180px] rounded-md text-right ${
+                      className={`bg-white px-3 py-2 block outline w-45 rounded-md text-right ${
                         fieldErrors.day_schedule ? "outline-red-300" : "outline-gray-300"
                       } focus:outline-2 focus:outline-turquoise-600`}
                     />
@@ -267,7 +270,7 @@ const PreferencesSection = ({
                           day_schedule: nextSchedule,
                         });
                       }}
-                      className={`bg-white px-3 py-2 block outline w-[180px] rounded-md text-right ${
+                      className={`bg-white px-3 py-2 block outline w-45 rounded-md text-right ${
                         fieldErrors.day_schedule ? "outline-red-300" : "outline-gray-300"
                       } focus:outline-2 focus:outline-turquoise-600`}
                     />
@@ -279,9 +282,9 @@ const PreferencesSection = ({
                 <div className="grid grid-cols-[80px_1fr] items-center gap-y-2 text-xs font-medium text-gray-500">
                   <div />
                   <div className="flex justify-end gap-3">
-                    <div className="w-[180px] text-left">Start</div>
-                    <div className="w-[180px] text-left">End</div>
-                    <div className="w-[60px] text-right">Day off</div>
+                    <div className="w-45 text-left">Start</div>
+                    <div className="w-45 text-left">End</div>
+                    <div className="w-15 text-right">Day off</div>
                   </div>
                 </div>
                 {(pref.day_schedule && pref.day_schedule.length > 0
@@ -322,7 +325,7 @@ const PreferencesSection = ({
                             day_end: nextSchedule[0]?.end ?? pref.day_end,
                           });
                         }}
-                        className={`bg-white px-3 py-2 block outline w-[180px] rounded-md text-right ${
+                        className={`bg-white px-3 py-2 block outline w-45 rounded-md text-right ${
                           fieldErrors.day_schedule ? "outline-red-300" : "outline-gray-300"
                         } focus:outline-2 focus:outline-turquoise-600 ${isDayOff ? "opacity-60" : ""}`}
                       />
@@ -347,11 +350,11 @@ const PreferencesSection = ({
                             day_end: nextSchedule[0]?.end ?? pref.day_end,
                           });
                         }}
-                        className={`bg-white px-3 py-2 block outline w-[180px] rounded-md text-right ${
+                        className={`bg-white px-3 py-2 block outline w-45 rounded-md text-right ${
                           fieldErrors.day_schedule ? "outline-red-300" : "outline-gray-300"
                         } focus:outline-2 focus:outline-turquoise-600 ${isDayOff ? "opacity-60" : ""}`}
                       />
-                      <div className="flex w-[60px] items-center justify-end">
+                      <div className="flex w-15 items-center justify-end">
                         <button
                           type="button"
                           onClick={() => toggleDayOnOff(entry.day)}
@@ -397,6 +400,7 @@ const PreferencesSection = ({
                       limit_max_hours: nextValue,
                     });
                     if (!nextValue) {
+                      // "No limit" still stores a concrete cap equal to the widest available daily window.
                       const maxHours = getMaxAvailableHours(pref);
                       onPrefChange({
                         ...pref,
@@ -607,3 +611,4 @@ const PreferencesSection = ({
 };
 
 export default PreferencesSection;
+

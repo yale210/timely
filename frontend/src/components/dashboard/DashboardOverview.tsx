@@ -20,16 +20,34 @@ const WeeklyStatCard = ({
   value,
   subtitle,
   className,
+  icon,
+  iconClassName,
+  valueClassName,
 }: {
   title: string;
   value: string;
   subtitle?: string;
   className?: string;
+  icon: string;
+  iconClassName: string;
+  valueClassName?: string;
 }) => (
-  <div className={`rounded-lg p-6 shadow-sm ring-1 ring-gray-900/5 ${className ?? "bg-white"}`}>
-    <p className="text-sm text-gray-500">{title}</p>
-    <div className="mt-3 text-2xl font-semibold text-gray-900">{value}</div>
-    {subtitle ? <p className="mt-1 text-xs text-gray-500">{subtitle}</p> : null}
+  <div className={`flex h-full flex-col rounded-xl p-5 shadow-sm ring-1 ring-gray-900/5 ${className ?? "bg-white"}`}>
+    <div className="flex items-center justify-between gap-3">
+      <p className="min-w-0 text-xs font-semibold uppercase tracking-[0.18em] text-gray-500">
+        {title}
+      </p>
+      <span
+        aria-hidden="true"
+        className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl ${iconClassName}`}
+      >
+        <span className="material-icons block text-xl leading-none">{icon}</span>
+      </span>
+    </div>
+    <div className={`mt-5 text-[clamp(1.8rem,2.3vw,2.4rem)] font-semibold leading-[1.05] tracking-tight text-gray-900 ${valueClassName ?? ""}`}>
+      {value}
+    </div>
+    {subtitle ? <p className="mt-2 text-sm text-gray-500">{subtitle}</p> : null}
   </div>
 );
 
@@ -106,7 +124,7 @@ const UpcomingTasksCard = ({
               <input
                 id={`upcoming-task-${task.id}`}
                 type="checkbox"
-                className="h-4 w-4"
+                className="task-circle-checkbox text-cyan-600"
                 checked={isChecked}
                 onChange={(event) => {
                   void onToggle(task, event.target.checked);
@@ -373,7 +391,7 @@ const DashboardOverview = ({
 
   return (
   <main className="h-full min-h-0 w-full px-6 pt-4 pb-0 lg:px-10">
-    <header className="mb-4 flex items-center justify-between">
+    <header className="mb-4 mt-2 flex items-center justify-between">
       <h1 className="text-3xl font-semibold tracking-tight text-gray-900">
         {periodLabel} Overview
       </h1>
@@ -397,19 +415,29 @@ const DashboardOverview = ({
     </header>
 
     <section className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-5">
-      <div className="rounded-lg bg-white p-6 shadow-sm ring-1 ring-gray-900/5">
-        <p className="text-sm text-gray-500">{periodLabel} Progress</p>
-        <div className="mt-3 text-2xl font-semibold text-gray-900">
+      <div className="rounded-xl bg-white p-5 shadow-sm ring-1 ring-gray-900/5">
+        <div className="flex items-center justify-between gap-3">
+          <p className="min-w-0 text-xs font-semibold uppercase tracking-[0.18em] text-gray-500">
+            {periodLabel} Progress
+          </p>
+          <span
+            aria-hidden="true"
+            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-cyan-100 text-cyan-700"
+          >
+            <span className="material-icons block text-xl leading-none">track_changes</span>
+          </span>
+        </div>
+        <div className="mt-5 text-[clamp(1.8rem,2.3vw,2.4rem)] font-semibold leading-none tracking-tight text-gray-900">
           {derivedStats ? `${derivedStats.completion_percentage}%` : "Loading..."}
         </div>
-        <p className="mt-1 text-xs text-gray-500">
+        <p className="mt-2 text-sm text-gray-500">
           {derivedStats
             ? `${derivedStats.completed_tasks}/${derivedStats.total_tasks} tasks completed`
             : "Loading..."}
         </p>
-        <div className="mt-4 h-4 w-full rounded-full bg-gray-100">
+        <div className="mt-5 h-3 w-full rounded-full bg-gray-100">
           <div
-            className="h-4 rounded-full bg-cyan-500 transition-all"
+            className="h-3 rounded-full bg-cyan-500 transition-all"
             style={{
               width: derivedStats ? `${Math.min(100, derivedStats.completion_percentage)}%` : "0%",
             }}
@@ -420,23 +448,32 @@ const DashboardOverview = ({
         title="Time Planned"
         value={minutesPlannedText}
         subtitle={derivedStats ? "Planned this period" : undefined}
+        icon="schedule"
+        iconClassName="bg-violet-100 text-violet-700"
       />
       <WeeklyStatCard
         title="Daily Averages"
         value={averageCompletedPerDayText}
         subtitle={averageTaskDurationText}
+        icon="equalizer"
+        iconClassName="bg-emerald-100 text-emerald-700"
+        valueClassName="text-[clamp(1.65rem,2vw,2.15rem)]"
       />
       <WeeklyStatCard
         title="Overdue Tasks"
         value={String(overdueCount)}
         subtitle="Past deadline"
         className={overdueToneClass}
+        icon="warning_amber"
+        iconClassName="bg-amber-100 text-amber-700"
       />
       <WeeklyStatCard
         title="Streak"
         value={`${streakCount} day${streakCount === 1 ? "" : "s"}`}
         subtitle="Consecutive days completed"
         className={streakToneClass}
+        icon="local_fire_department"
+        iconClassName="bg-rose-100 text-rose-700"
       />
     </section>
 
@@ -478,3 +515,4 @@ const DashboardOverview = ({
 };
 
 export default DashboardOverview;
+

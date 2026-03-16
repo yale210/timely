@@ -2,29 +2,29 @@ import { useEffect, useState } from "react"
 import { Link, NavLink, useNavigate, useLocation } from "react-router-dom"
 import { Menu, MenuButton, MenuItems, MenuItem } from "@headlessui/react"
 import { authStore } from "@/services/authService"
+import { getMyProfile } from "@/services/profileService"
 import { NotificationDropdown } from '@/components/notifications/NotificationDropdown'
 import { useNotificationContext } from '@/context/NotificationContext'
-import { type Notification } from '@/types/notification'
+import { type Notification } from '@/types'
 import AdminSidebar from "@/components/layout/AdminSidebar"
 
 const navItems = [
-  { label: "Overview", to: "/dashboard" },
-  { label: "Calendar", to: "/calendar" },
-  { label: "Tasks", to: "/tasks" },
+  { label: "Overview", to: "/dashboard", icon: "space_dashboard" },
+  { label: "Calendar", to: "/calendar", icon: "calendar_month" },
+  { label: "Tasks", to: "/tasks", icon: "checklist" },
 ]
 
 const featureItems = [
-  { key: "gradebook", label: "Gradebook", to: "/gradebook" },
-  { key: "weekly_summaries", label: "Weekly Summaries", to: "/weekly-summaries" },
+  { key: "gradebook", label: "Gradebook", to: "/gradebook", icon: "school" }
 ]
 
 const FEATURE_FLAGS = {
   gradebook: "feature_gradebook_enabled",
-  weekly_summaries: "feature_weekly_summaries_enabled",
 }
 
 const readFeatureFlag = (key: keyof typeof FEATURE_FLAGS) => {
   const raw = localStorage.getItem(FEATURE_FLAGS[key])
+  // Missing flags default to enabled so features must be explicitly switched off.
   if (raw === null) return true
   return raw === "true"
 }
@@ -44,20 +44,18 @@ export default function AppNavbar() {
   const isAdminRoute = location.pathname.startsWith("/admin")
   const [featureFlags, setFeatureFlags] = useState(() => ({
     gradebook: readFeatureFlag("gradebook"),
-    weekly_summaries: readFeatureFlag("weekly_summaries"),
   }))
   const {
     notifications,
     unreadCount,
     markRead,
     markUnread,
-    markAllRead,
     deleteNotification,
-    deleteAllNotifications,
   } = useNotificationContext()
 
   const user = authStore.getUser()
   const isStaff = Boolean(user?.is_staff)
+  const [profileAvatar, setProfileAvatar] = useState<string | null>(null)
 
   const handleNotificationClick = (notification: Notification) => {
     void markRead(notification.id)
@@ -65,6 +63,7 @@ export default function AppNavbar() {
   }
 
   useEffect(() => {
+    // Persist drawer state and expose its width so the app shell can animate around it.
     document.body.classList.toggle("menu-open", open)
     document.body.style.setProperty("--drawer-width", `${drawerWidth}px`)
     localStorage.setItem("nav_drawer_open", String(open))
@@ -78,9 +77,9 @@ export default function AppNavbar() {
     const refreshFlags = () => {
       setFeatureFlags({
         gradebook: readFeatureFlag("gradebook"),
-        weekly_summaries: readFeatureFlag("weekly_summaries"),
       })
     }
+    // Listen for both same-tab and cross-tab feature flag updates.
     window.addEventListener("feature-flags-changed", refreshFlags)
     window.addEventListener("storage", refreshFlags)
     return () => {
@@ -89,9 +88,33 @@ export default function AppNavbar() {
     }
   }, [])
 
+  useEffect(() => {
+    let isActive = true
+    if (!user?.username) {
+      queueMicrotask(() => {
+        if (!isActive) return
+        setProfileAvatar(null)
+      })
+      return () => {
+        isActive = false
+      }
+    }
+    void getMyProfile()
+      .then((profile) => {
+        if (!isActive) return
+        setProfileAvatar(profile.avatar ?? null)
+      })
+      .catch(() => {
+        if (!isActive) return
+        setProfileAvatar(null)
+      })
+    return () => {
+      isActive = false
+    }
+  }, [user?.username])
+
   const visibleFeatureItems = featureItems.filter((item) => {
     if (item.key === "gradebook") return featureFlags.gradebook
-    if (item.key === "weekly_summaries") return featureFlags.weekly_summaries
     return false
   })
 
@@ -121,8 +144,6 @@ export default function AppNavbar() {
           <NotificationDropdown
             notifications={notifications}
             unreadCount={unreadCount}
-            onMarkAllRead={() => void markAllRead()}
-            onDeleteAll={() => void deleteAllNotifications()}
             onItemClick={handleNotificationClick}
             onToggleRead={(notification) =>
               notification.is_read
@@ -133,8 +154,18 @@ export default function AppNavbar() {
           />
 
           <Menu as="div" className="relative flex h-8 items-center">
-            <MenuButton className="inline-flex h-8 items-center justify-center rounded-full px-3 py-0 text-sm font-semibold leading-none text-gray-900 hover:bg-gray-100">
-              <span className="material-icons mr-2 leading-none" style={{ fontSize: "24px" }}>account_circle</span>
+            <MenuButton className="inline-flex h-8 items-center justify-center gap-2 rounded-full px-2.5 py-0 text-sm font-semibold leading-none text-gray-900 hover:bg-gray-100">
+              <span className="flex h-7 w-7 items-center justify-center overflow-hidden rounded-full border border-gray-300 bg-gray-200 text-xs font-semibold text-gray-700 dark:border-white/40">
+                {typeof profileAvatar === "string" && profileAvatar ? (
+                  <img src={profileAvatar} alt={user?.username ?? "Account"} className="h-full w-full object-cover" />
+                ) : typeof user?.avatar === "string" && user.avatar ? (
+                  <img src={user.avatar} alt={user.username ?? "Account"} className="h-full w-full object-cover" />
+                ) : typeof user?.avatar_url === "string" && user.avatar_url ? (
+                  <img src={user.avatar_url} alt={user.username ?? "Account"} className="h-full w-full object-cover" />
+                ) : (
+                  (user?.username ?? "A").slice(0, 1).toUpperCase()
+                )}
+              </span>
               {user?.username ?? "Account"}
             </MenuButton>
             <MenuItems
@@ -142,6 +173,32 @@ export default function AppNavbar() {
               className="absolute right-0 top-full mt-2 w-36 origin-top-right rounded-lg border border-gray-200 bg-white shadow-lg focus:outline-none z-50"
             >
               <div className="py-1">
+                {user?.username && (
+                  <MenuItem>
+                    {({ focus }) => (
+                      <Link
+                        to={`/profiles/${user.username}`}
+                        className={`block px-4 py-2 text-sm ${
+                          focus ? "bg-gray-50 text-gray-900" : "text-gray-700"
+                        }`}
+                      >
+                        My profile
+                      </Link>
+                    )}
+                  </MenuItem>
+                )}
+                <MenuItem>
+                  {({ focus }) => (
+                    <Link
+                      to="/friends"
+                      className={`block px-4 py-2 text-sm ${
+                        focus ? "bg-gray-50 text-gray-900" : "text-gray-700"
+                      }`}
+                    >
+                      Friends
+                    </Link>
+                  )}
+                </MenuItem>
                 <MenuItem>
                   {({ focus }) => (
                     <Link
@@ -201,19 +258,20 @@ export default function AppNavbar() {
           ) : (
             /* ── Main sidebar ── */
             <>
-              <ul className="space-y-2 px-4 py-4 text-base">
+              <ul className="space-y-2 px-4 py-4">
                 {navItems.map(item => (
                   <li key={item.to}>
                     <NavLink
                       to={item.to}
                       className={({ isActive }) =>
                         [
-                          "flex items-center rounded-md px-3 py-2.5 text-base font-semibold transition-colors",
+                          "flex items-center gap-3 rounded-md px-3 py-2.5 text-sm font-semibold transition-colors",
                           isActive ? "bg-cyan-50 text-cyan-700 ring-1 ring-cyan-100" : "text-gray-800 hover:bg-gray-100",
                         ].join(" ")
                       }
                     >
-                      {item.label}
+                      <span aria-hidden="true" className="material-icons text-lg leading-none">{item.icon}</span>
+                      <span>{item.label}</span>
                     </NavLink>
                   </li>
                 ))}
@@ -225,19 +283,20 @@ export default function AppNavbar() {
                   <div className="px-4 pt-4 text-xs font-semibold uppercase tracking-wide text-gray-500">
                     Extras
                   </div>
-                  <ul className="space-y-2 px-4 py-4 text-base">
+                  <ul className="space-y-2 px-4 py-4">
                     {visibleFeatureItems.map((item) => (
                       <li key={item.to}>
                         <NavLink
                           to={item.to}
                           className={({ isActive }) =>
                             [
-                              "flex items-center rounded-md px-3 py-2.5 text-base font-semibold transition-colors",
+                              "flex items-center gap-3 rounded-md px-3 py-2.5 text-sm font-semibold transition-colors",
                               isActive ? "bg-cyan-50 text-cyan-700 ring-1 ring-cyan-100" : "text-gray-800 hover:bg-gray-100",
                             ].join(" ")
                           }
                         >
-                          {item.label}
+                          <span aria-hidden="true" className="material-icons text-lg leading-none">{item.icon}</span>
+                          <span>{item.label}</span>
                         </NavLink>
                       </li>
                     ))}
@@ -248,14 +307,14 @@ export default function AppNavbar() {
               {isStaff && (
                 <>
                   <div className="mx-4 border-t-2 border-gray-200" />
-                  <ul className="space-y-2 px-4 py-4 text-base">
+                  <ul className="space-y-2 px-4 py-4">
                     <li>
                       <Link
                         to="/admin/notifications"
-                        className="flex items-center rounded-md px-3 py-2.5 text-base font-semibold text-indigo-600 hover:bg-indigo-50 transition-colors"
+                        className="flex items-center gap-3 rounded-md px-3 py-2.5 text-sm font-semibold text-indigo-600 hover:bg-indigo-50 transition-colors"
                       >
-                        <span className="material-icons text-lg mr-2">admin_panel_settings</span>
-                        Admin Panel
+                        <span aria-hidden="true" className="material-icons text-lg leading-none">admin_panel_settings</span>
+                        <span>Admin Panel</span>
                       </Link>
                     </li>
                   </ul>
@@ -270,15 +329,17 @@ export default function AppNavbar() {
             to="/settings"
             className={({ isActive }) =>
               [
-                "flex items-center rounded-md px-3 py-2 text-base font-semibold transition-colors",
+                "flex items-center gap-3 rounded-md px-3 py-2 text-sm font-semibold transition-colors",
                 isActive ? "bg-cyan-50 text-cyan-700 ring-1 ring-cyan-100" : "text-gray-800 hover:bg-gray-100",
               ].join(" ")
             }
           >
-            Settings
+            <span aria-hidden="true" className="material-icons text-lg leading-none">settings</span>
+            <span>Settings</span>
           </NavLink>
         </div>
       </nav>
     </header>
   )
 }
+

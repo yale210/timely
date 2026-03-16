@@ -54,3 +54,4 @@ export default function WeeklySummaryWidget({ stats }: { stats: WeeklyStats | nu
     </div>
   );
 }
+

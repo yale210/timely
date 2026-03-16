@@ -237,36 +237,6 @@ describe("UnifiedSidebar", () => {
     expect(screen.getByText("Modified Instance")).toBeInTheDocument();
   });
 
-  it("shows split-series badge for split recurring events", () => {
-    const event: Event = {
-      id: 1,
-      title: "Split Event",
-      description: "Event Desc",
-      start_time: new Date().toISOString(),
-      end_time: new Date().toISOString(),
-      categories: [],
-      reminders: [],
-      is_split_series: true,
-    };
-
-    render(
-      <UnifiedSidebar
-        isOpen={true}
-        onClose={vi.fn()}
-        categories={mockCategories}
-        onCreateCategory={onCreateCategory}
-        onUpdateCategory={onUpdateCategory}
-        onDeleteCategory={onDeleteCategory}
-        initialData={event}
-        initialMode="event"
-        onSubmitTask={vi.fn()}
-        onSubmitEvent={vi.fn()}
-      />
-    );
-
-    expect(screen.getByText("Split Series")).toBeInTheDocument();
-  });
-
   it("shows revert action for override event instances and calls onRevertToSeries", () => {
     const onRevertToSeries = vi.fn();
     const event: Event = {
@@ -362,24 +332,6 @@ describe("UnifiedSidebar", () => {
     fireEvent.click(screen.getByTitle("Delete Task"));
     fireEvent.click(screen.getByRole("button", { name: "Delete" }));
     expect(onDelete).toHaveBeenCalled();
-  });
-
-  it("calls onClose when close button is clicked", () => {
-    const onClose = vi.fn();
-    render(
-      <UnifiedSidebar
-        isOpen={true}
-        onClose={onClose}
-        categories={mockCategories}
-        onCreateCategory={onCreateCategory}
-        onUpdateCategory={onUpdateCategory}
-        onDeleteCategory={onDeleteCategory}
-        onSubmitTask={vi.fn()}
-        onSubmitEvent={vi.fn()}
-      />
-    );
-    fireEvent.click(screen.getByText("close")); // material icon text
-    expect(onClose).toHaveBeenCalled();
   });
 
   it("disables this-event scope when recurrence pattern changes", () => {

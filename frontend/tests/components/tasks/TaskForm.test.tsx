@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { vi, describe, it, expect, beforeEach } from "vitest";
 import TaskForm from "@/components/tasks/TaskForm";
@@ -35,23 +35,21 @@ describe("TaskForm Component", () => {
   });
 
   it("handles input changes and submits", async () => {
-    const user = userEvent.setup();
     render(<TaskForm {...defaultProps} />);
-    
-    await user.type(screen.getByLabelText(/title/i), "New Task");
-    await user.type(screen.getByLabelText(/description/i), "Task description");
-    await user.type(screen.getByLabelText(/deadline date/i), "2099-01-01");
-    await user.type(screen.getByLabelText(/deadline time/i), "11:00");
-    await user.type(screen.getByLabelText(/est. minutes/i), "30");
-    
-    // Toggle a category
-    await user.click(screen.getByPlaceholderText(/type to search or add category/i));
-    await user.click(await screen.findByText("Category 1"));
-    
+
+    fireEvent.change(screen.getByLabelText(/title/i), { target: { value: "New Task" } });
+    fireEvent.change(screen.getByLabelText(/description/i), { target: { value: "Task description" } });
+    fireEvent.change(screen.getByLabelText(/deadline date/i), { target: { value: "2099-01-01" } });
+    fireEvent.change(screen.getByLabelText(/deadline time/i), { target: { value: "11:00" } });
+    fireEvent.change(screen.getByLabelText(/est. minutes/i), { target: { value: "30" } });
+
+    fireEvent.focus(screen.getByPlaceholderText(/type to search or add category/i));
+    fireEvent.mouseDown(await screen.findByText("Category 1"));
+
     const saveButton = screen.getByRole("button", { name: /save task/i });
     expect(saveButton).not.toBeDisabled();
-    
-    await user.click(saveButton);
+
+    fireEvent.click(saveButton);
     expect(defaultProps.onSubmit).toHaveBeenCalledWith(expect.objectContaining({
       title: "New Task",
       description: "Task description",
@@ -122,21 +120,21 @@ describe("TaskForm Component", () => {
   });
 
   it("toggles categories correctly", async () => {
-    const user = userEvent.setup();
     render(<TaskForm {...defaultProps} />);
-    
-    await user.click(screen.getByPlaceholderText(/type to search or add category/i));
+
+    fireEvent.focus(screen.getByPlaceholderText(/type to search or add category/i));
     const cat1 = await screen.findByText("Category 1");
-    await user.click(cat1); // Select
-    await user.click(cat1); // Unselect
-    await user.click(cat1); // Select again
-    
-    await user.type(screen.getByLabelText(/title/i), "Task");
-    await user.type(screen.getByLabelText(/deadline date/i), "2099-01-01");
-    await user.type(screen.getByLabelText(/deadline time/i), "11:00");
-    await user.type(screen.getByLabelText(/est. minutes/i), "30");
-    await user.click(screen.getByRole("button", { name: /save task/i }));
-    
+    fireEvent.mouseDown(cat1); // Select
+    fireEvent.click(screen.getByText("Category 1", { selector: "button" })); // Unselect selected chip
+    fireEvent.focus(screen.getByPlaceholderText(/type to search or add category/i));
+    fireEvent.mouseDown(await screen.findByText("Category 1")); // Select again
+
+    fireEvent.change(screen.getByLabelText(/title/i), { target: { value: "Task" } });
+    fireEvent.change(screen.getByLabelText(/deadline date/i), { target: { value: "2099-01-01" } });
+    fireEvent.change(screen.getByLabelText(/deadline time/i), { target: { value: "11:00" } });
+    fireEvent.change(screen.getByLabelText(/est. minutes/i), { target: { value: "30" } });
+    fireEvent.click(screen.getByRole("button", { name: /save task/i }));
+
     expect(defaultProps.onSubmit).toHaveBeenCalledWith(expect.objectContaining({
       categories: [1],
     }));

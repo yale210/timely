@@ -63,6 +63,7 @@ export const useWebSocket = (url: string | null, onMessage: (data: unknown) => v
       socketRef.current = null;
 
       if (event.code !== 1000) {
+        // Reconnect with exponential backoff for unexpected disconnects, but not for intentional closes.
         const timeout = Math.min(1000 * Math.pow(2, reconnectAttemptsRef.current), 30000);
         reconnectTimeoutRef.current = window.setTimeout(() => {
           reconnectAttemptsRef.current += 1;
@@ -82,7 +83,7 @@ export const useWebSocket = (url: string | null, onMessage: (data: unknown) => v
 
   useEffect(() => {
     disposedRef.current = false;
-    // Calling connect asynchronously to avoid synchronous setState in effect
+    // Defer the initial connect so the effect does not synchronously set state during mount.
     const timeoutId = setTimeout(() => {
       connect();
     }, 0);

@@ -183,6 +183,7 @@ class EventResponseSerializer(serializers.ModelSerializer):
             "title",
             "description",
             "location",
+            "colour",
             "categories",
             "start_time",
             "end_time",
@@ -198,6 +199,7 @@ class ExpandedEventInstanceSerializer(serializers.Serializer):
     title = serializers.CharField()
     description = serializers.CharField(allow_blank=True)
     location = serializers.CharField(allow_blank=True)
+    colour = serializers.CharField(allow_null=True, required=False)
     categories = CategorySerializer(many=True)
     start_time = serializers.DateTimeField()
     end_time = serializers.DateTimeField()

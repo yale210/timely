@@ -33,3 +33,4 @@ export default function ImportanceBarChart({ stats }: { stats: WeeklyStats | nul
     </div>
   );
 }
+
