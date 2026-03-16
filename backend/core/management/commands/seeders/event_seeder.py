@@ -47,6 +47,41 @@ class EventSeeder(BaseSeeder):
             temporary_event.categories.set(Category.objects.filter(id__in=categories))
 
     def _populate_random_event(self):
+        temporary_user = self._get_or_create_random_user()
+        temporary_category = self._get_or_create_random_category(temporary_user)
+
+        if random.randint(0, 1) == 1:
+            self._create_recurring_event(
+                {
+                    "fields": {
+                        "user": temporary_user,
+                        "categories": [temporary_category],
+                    }
+                }
+            )
+        else:
+            self._create_non_recurring_event(
+                {
+                    "fields": {
+                        "user": temporary_user,
+                        "categories": [temporary_category],
+                    }
+                }
+            )
+
+    def _get_or_create_random_category(self, user):
+        temporary_category = Category.objects.filter(user=user).order_by("?").first()
+
+        if temporary_category is None:
+            temporary_category = Category.objects.create(
+                user=user,
+                text=self.faker.word(),
+                colour=self.faker.hex_color(),
+                max_daily_study_time=random.randint(1, 24),
+            )
+        return temporary_category
+
+    def _get_or_create_random_user(self):
         User = get_user_model()
         # Shuffle users and get a random user.
         temporary_user = User.objects.order_by("?").first()
@@ -57,19 +92,35 @@ class EventSeeder(BaseSeeder):
                 email=self.faker.email(),
                 password="thomas123",
             )
+        return temporary_user
 
-        temporary_category = (
-            Category.objects.filter(user=temporary_user).order_by("?").first()
+    def _create_recurring_event(self, data):
+        start = timezone.make_aware(self.faker.date_time())
+        self._create_event(
+            {
+                "fields": {
+                    "user": data["fields"]["user"],
+                    "categories": data["fields"]["categories"],
+                    "title": self.faker.sentence(),
+                    "description": self.faker.sentence(),
+                    "location": self.faker.word(),
+                    "start_time": start,
+                    "end_time": start + timedelta(random.randint(0, 100)),
+                    "recurrence_interval": random.choice(
+                        ["daily", "weekly", "monthly", "yearly"]
+                    ),
+                    "recurrence_end": (
+                        start + timedelta(random.randint(0, 100))
+                    ).date(),
+                }
+            }
         )
 
-        if temporary_category is None:
-            temporary_category = Category.objects.create(
-                user=temporary_user,
-                text=self.faker.word(),
-                colour=self.faker.hex_color(),
-                max_daily_study_time=random.randint(1, 24),
-            )
+    def _create_non_recurring_event(self, data):
+        start = timezone.make_aware(self.faker.date_time())
+        end = start + timedelta(random.randint(0, 60))
 
+<<<<<<< HEAD
         recurring = random.randint(0, 1) == 1
 
         if recurring:
@@ -118,6 +169,23 @@ class EventSeeder(BaseSeeder):
                     }
                 }
             )
+=======
+        self._create_event(
+            {
+                "fields": {
+                    "user": data["fields"]["user"],
+                    "categories": data["fields"]["categories"],
+                    "title": self.faker.sentence(),
+                    "description": self.faker.sentence(),
+                    "location": self.faker.word(),
+                    "start_time": start,
+                    "end_time": end,
+                    "recurrence_interval": None,
+                    "recurrence_end": None,
+                }
+            }
+        )
+>>>>>>> fix/cleanup-backend
 
     def _random_time(self):
         hours = random.randint(0, 23)

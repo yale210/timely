@@ -13,6 +13,11 @@ from core.models import Event, EventOverride
 
 @dataclass(frozen=True)
 class ExpandedEventInstance:
+    """
+    Represents a single occurrence of an event after recurrence rules
+    and overrides have been applied.
+    """
+
     id: int
     title: str
     description: str
@@ -187,13 +192,12 @@ def _build_expanded_instance(
     )
 
 
-def expand_event_instances(
+def _build_expanded_content(
     event: Event,
     range_start: datetime,
     range_end: datetime,
-    *,
-    overrides: list[EventOverride] | None = None,
-) -> list[ExpandedEventInstance]:
+    overrides: list[EventOverride] | None,
+):
     range_start = _make_aware(range_start)
     range_end = _make_aware(range_end)
 
@@ -211,6 +215,42 @@ def expand_event_instances(
     overrides_by_original = {
         override.original_start_time: override for override in loaded_overrides
     }
+
+    return (
+        range_start,
+        range_end,
+        category_cache,
+        reminder_cache,
+        duration,
+        exception_dates,
+        loaded_overrides,
+        overrides_by_original,
+    )
+
+
+def expand_event_instances(
+    event: Event,
+    range_start: datetime,
+    range_end: datetime,
+    *,
+    overrides: list[EventOverride] | None = None,
+) -> list[ExpandedEventInstance]:
+    """
+    Expand a single Event into concrete event instances within the given time
+    range, applying any relevant overrides or exceptions required.
+    """
+
+    (
+        range_start,
+        range_end,
+        category_cache,
+        reminder_cache,
+        duration,
+        exception_dates,
+        loaded_overrides,
+        overrides_by_original,
+    ) = _build_expanded_content(event, range_start, range_end, overrides)
+
     seen_override_ids: set[int] = set()
     instances: list[ExpandedEventInstance] = []
 
@@ -293,6 +333,11 @@ def expand_user_events(
     range_start: datetime,
     range_end: datetime,
 ) -> list[ExpandedEventInstance]:
+    """
+    Expand all events for a given user into concrete instances
+    within the specified time range.
+    """
+
     range_start = _make_aware(range_start)
     range_end = _make_aware(range_end)
 

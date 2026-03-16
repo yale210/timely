@@ -25,7 +25,6 @@ class CategorySeeder(BaseSeeder):
     def _populate_random_category(self):
         word = self.faker.word()
         colour = self.faker.hex_color()
-
         User = get_user_model()
         # Shuffle users and get a random user.
         temporary_user = User.objects.order_by("?").first()

@@ -70,14 +70,18 @@ class EventSerializer(serializers.ModelSerializer):
             self.fields["categories"].queryset = Category.objects.none()
 
     def validate(self, attributes):
-        # Validate max reminders
         reminders_data = attributes.get("reminders", [])
-        if len(reminders_data) > MAX_REMINDERS_PER_EVENT:
-            raise serializers.ValidationError(
-                {
-                    "reminders": f"Maximum of {MAX_REMINDERS_PER_EVENT} reminders allowed per event."
-                }
-            )
+
+        self._validate_reminders(reminders_data, attributes)
+
+        event = self._build_event_for_validation(attributes)
+
+        self._clean_event(event)
+        return attributes
+
+    def _validate_reminders(self, reminders_data, attributes):
+        # Validate max reminders
+        self._validate_max_reminders(reminders_data)
 
         # Validate that no reminder would trigger in the past
         start_time = attributes.get(
@@ -85,21 +89,14 @@ class EventSerializer(serializers.ModelSerializer):
             self.instance.start_time if self.instance else None,
         )
         if start_time and reminders_data:
-            now = timezone.now()
             for reminder in reminders_data:
                 minutes_before = reminder.get("minutes_before", 0)
                 trigger_at = start_time - timedelta(minutes=minutes_before)
-                if trigger_at <= now:
-                    raise serializers.ValidationError(
-                        {
-                            "reminders": f"Reminder set to {minutes_before} minutes before would trigger in the past."
-                        }
-                    )
+                self._validate_trigger_time(trigger_at, minutes_before)
 
-        # Create a temporary instance to run clean()
+    def _build_event_for_validation(self, attributes):
         attrs_copy = attributes.copy()
-        # Pop M2M and custom fields
-        reminders_data = attrs_copy.pop("reminders", None)
+        attrs_copy.pop("reminders", None)
         attrs_copy.pop("categories", None)
 
         if self.instance is None:
@@ -117,12 +114,7 @@ class EventSerializer(serializers.ModelSerializer):
             base_values.update(attrs_copy)
             event = Event(**base_values)
             event.pk = self.instance.pk
-
-        try:
-            event.clean()
-        except DjangoValidationError as e:
-            raise serializers.ValidationError(e.message_dict)
-        return attributes
+        return event
 
     @transaction.atomic
     def create(self, validated_data):
@@ -154,6 +146,29 @@ class EventSerializer(serializers.ModelSerializer):
                 EventReminder.objects.create(event=instance, **reminder_data)
 
         return instance
+
+    def _validate_max_reminders(self, reminders_data):
+        if len(reminders_data) > MAX_REMINDERS_PER_EVENT:
+            raise serializers.ValidationError(
+                {
+                    "reminders": f"Maximum of {MAX_REMINDERS_PER_EVENT} reminders allowed per event."
+                }
+            )
+
+    def _validate_trigger_time(self, trigger_at, minutes_before):
+        now = timezone.now()
+        if trigger_at <= now:
+            raise serializers.ValidationError(
+                {
+                    "reminders": f"Reminder set to {minutes_before} minutes before would trigger in the past."
+                }
+            )
+
+    def _clean_event(self, event):
+        try:
+            event.clean()
+        except DjangoValidationError as e:
+            raise serializers.ValidationError(e.message_dict)
 
 
 class EventResponseSerializer(serializers.ModelSerializer):
