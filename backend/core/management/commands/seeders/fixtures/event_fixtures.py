@@ -51,7 +51,6 @@ events = [
             "exception_dates": [],
             "split_from_event": None,
             "categories": [3],
-            
         },
     },
     {
@@ -70,7 +69,6 @@ events = [
             "exception_dates": [],
             "split_from_event": None,
             "categories": [18],
-            
         },
     },
     {
@@ -89,7 +87,6 @@ events = [
             "exception_dates": [],
             "split_from_event": None,
             "categories": [5],
-            
         },
     },
     {
@@ -108,7 +105,6 @@ events = [
             "exception_dates": [],
             "split_from_event": None,
             "categories": [19],
-            
         },
     },
 ]

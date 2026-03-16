@@ -27,7 +27,7 @@ class EventSeeder(BaseSeeder):
 
     def _create_event(self, data):
         user = get_user_model().objects.get(id=data["fields"]["user"])
-        
+
         temporary_event, _ = Event.objects.get_or_create(
             user=user,
             title=data["fields"]["title"],
@@ -39,10 +39,10 @@ class EventSeeder(BaseSeeder):
             recurrence_end=data["fields"]["recurrence_end"],
             colour=data["fields"].get("colour"),
             exception_dates=data["fields"].get("exception_dates", []),
-            split_from_event=data["fields"].get("split_from_event")
+            split_from_event=data["fields"].get("split_from_event"),
         )
 
-        categories = data["fields"].get("categories",[])
+        categories = data["fields"].get("categories", [])
         if categories:
             temporary_event.categories.set(Category.objects.filter(id__in=categories))
 
@@ -93,7 +93,6 @@ class EventSeeder(BaseSeeder):
                         "exception_dates": [],
                         "split_from_event": None,
                         "colour": self.faker.hex_color(),
-
                     }
                 }
             )
@@ -113,7 +112,7 @@ class EventSeeder(BaseSeeder):
                         "end_time": end,
                         "recurrence_interval": None,
                         "recurrence_end": None,
-                        "exception_dates":[],
+                        "exception_dates": [],
                         "split_from_event": None,
                         "colour": self.faker.hex_color(),
                     }

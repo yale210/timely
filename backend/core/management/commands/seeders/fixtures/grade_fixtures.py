@@ -7,7 +7,7 @@ grades = [
             "name": "CS1",
             "category": None,
             "score": 85,
-            "total_possible":100,
+            "total_possible": 100,
             "date_achieved": "2025-01-01",
         },
     },

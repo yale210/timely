@@ -26,6 +26,10 @@ class TaskSeeder(BaseSeeder):
 
     def _create_task(self, data):
         user = get_user_model().objects.get(id=data["fields"]["user"])
+        parent_task = None
+        if data["fields"].get("parent_task") is not None:
+            parent_task = Task.objects.filter(id=data["fields"]["parent_task"]).first()
+
         temporary_task, _ = Task.objects.get_or_create(
             user=user,
             title=data["fields"]["title"],
@@ -34,13 +38,13 @@ class TaskSeeder(BaseSeeder):
             start_time=data["fields"]["start_time"],
             deadline=data["fields"]["deadline"],
             completed=data["fields"]["completed"],
-            parent_task=data["fields"]["parent_task"],
+            parent_task=parent_task,
             total_task_allocations=data["fields"]["total_task_allocations"],
             allocation=data["fields"]["allocation"],
             importance=data["fields"]["importance"],
         )
 
-        categories = data["fields"]["categories"]
+        categories = Category.objects.filter(id__in=data["fields"]["categories"])
         if categories:
             temporary_task.categories.set(categories)
 
@@ -74,7 +78,7 @@ class TaskSeeder(BaseSeeder):
                     "user": temporary_user.id,
                     "title": self.faker.sentence(),
                     "description": self.faker.sentence(),
-                    "categories": [temporary_category],
+                    "categories": [temporary_category.id],
                     "estimated_minutes": random.randint(1, 60 * 24),
                     "start_time": timezone.make_aware(self.faker.date_time()),
                     "deadline": timezone.make_aware(self.faker.date_time()),

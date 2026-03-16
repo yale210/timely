@@ -58,4 +58,3 @@ class CategorySeeder(BaseSeeder):
             colour=data["fields"].get("colour", None),
             max_daily_study_time=data["fields"].get("max_daily_study_time", None),
         )
-
