@@ -2,6 +2,7 @@ from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 from django.conf import settings
 from django.core.exceptions import ValidationError
+from django.utils.timezone import now
 
 
 class Assessment(models.Model):
@@ -28,10 +29,14 @@ class Assessment(models.Model):
 
     module = models.CharField(max_length=100, blank=False)
 
+    location = models.CharField(max_length=255, blank=True)
+
     assessment_type = models.CharField(
         max_length=255, choices=AssessmentType.choices, default=AssessmentType.SUMMATIVE
     )
 
+    start_time = models.DateTimeField(default=now)
+    end_time = models.DateTimeField(default=now)
     due_date = models.DateTimeField()
 
     # Length of assessment in minutes
