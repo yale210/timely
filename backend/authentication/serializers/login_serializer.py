@@ -3,8 +3,10 @@ from rest_framework import serializers
 
 from ..models import User
 
+
 class LoginSerializer(serializers.Serializer):
     """Serialize and validate user login credentials."""
+
     username = serializers.CharField(max_length=255)
     password = serializers.CharField(
         style={"input_type": "password"}, trim_whitespace=False

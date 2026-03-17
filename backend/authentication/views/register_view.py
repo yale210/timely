@@ -11,6 +11,7 @@ from ..serializers import RegisterSerializer
 
 class RegisterView(APIView):
     """Handle user registration requests."""
+
     serializer_class = RegisterSerializer
     permission_classes = (AllowAny,)
 

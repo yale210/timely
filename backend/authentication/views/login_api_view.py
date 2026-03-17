@@ -9,8 +9,10 @@ from rest_framework.response import Response
 
 from ..serializers import LoginSerializer, UserSerializer
 
+
 class LoginAPIView(LoginView):
     """Authenticate a user and return a Knox token plus user details."""
+
     permission_classes = (AllowAny,)
     serializer_class = LoginSerializer
 

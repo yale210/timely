@@ -4,6 +4,7 @@ from rest_framework.exceptions import ErrorDetail
 from ...models import User
 from ...serializers import LoginSerializer
 
+
 class LoginSerializerTest(TestCase):
     """Tests for login credential validation."""
 

@@ -4,6 +4,7 @@ from rest_framework.exceptions import ErrorDetail
 from rest_framework.test import APITestCase
 from ...models import User
 
+
 class LoginAPIViewTest(APITestCase):
     """Tests for login API validation."""
 

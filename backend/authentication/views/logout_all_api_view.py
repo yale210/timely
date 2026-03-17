@@ -7,6 +7,7 @@ from knox.views import (
     LogoutAllView as KnoxLogoutAllView,
 )
 
+
 @extend_schema_view(
     post=extend_schema(
         request=None,
@@ -19,4 +20,5 @@ from knox.views import (
 )
 class LogoutAllAPIView(KnoxLogoutAllView):
     """Log out the user from all active authenticated sessions."""
+
     pass

@@ -3,6 +3,7 @@ from rest_framework import status
 from rest_framework.test import APITestCase
 from ...models import User
 
+
 class RegisterViewTest(APITestCase):
     """Tests for registration view validation."""
 
@@ -33,5 +34,3 @@ class RegisterViewTest(APITestCase):
         self.assertIn("email", response.data)
         self.assertIn("password", response.data)
         self.assertFalse(User.objects.filter(username="invaliduser").exists())
-
-

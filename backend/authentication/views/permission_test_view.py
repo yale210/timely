@@ -7,8 +7,10 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+
 class TestPermissionView(APIView):
     """Provide a simple authenticated endpoint for permission testing."""
+
     permission_classes = (IsAuthenticated,)
 
     @extend_schema(

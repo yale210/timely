@@ -1,6 +1,7 @@
 from django.test import TestCase
 from ...models import User
 
+
 class UserModelTest(TestCase):
     """Tests for the custom user model manager methods."""
 

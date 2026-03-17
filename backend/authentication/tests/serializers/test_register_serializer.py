@@ -3,6 +3,7 @@ from rest_framework.exceptions import ErrorDetail
 from ...models import User
 from ...serializers import RegisterSerializer
 
+
 class RegisterSerializerTest(TestCase):
     """Tests for registration credential validation."""
 

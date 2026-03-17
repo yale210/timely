@@ -6,7 +6,7 @@ from .models import User
 @admin.register(User)
 class CustomUserAdmin(UserAdmin):
     """Configure admin behavior for the custom user model."""
-    
+
     readonly_fields = ("date_joined",)
 
     list_display = (
