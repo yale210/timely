@@ -1,5 +1,3 @@
-from django.contrib.auth import login
-from django.utils import timezone
 from drf_spectacular.utils import (
     extend_schema,
 )
