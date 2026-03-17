@@ -1,2 +1,0 @@
-from .test_register_serializer import RegisterSerializerTest
-from .test_login_serializer import LoginSerializerTest

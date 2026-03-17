@@ -1,2 +1,0 @@
-from .test_login_api_view import LoginAPIViewTest
-from .test_register_view import RegisterViewTest
