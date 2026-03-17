@@ -4,7 +4,22 @@ from django.db import models
 
 
 class UserManager(BaseUserManager):
+    """Manage creation of regular users and superusers."""
+
     def create_user(self, username, password=None, **extra_fields):
+        """Create and save a regular user.
+
+        Args:
+            username: The username for the new user.
+            password: The raw password for the new user.
+            **extra_fields: Additional fields for the user model, including email.
+
+        Returns:
+            User: The created user instance.
+
+        Raises:
+            ValueError: If the username or email is missing.
+        """
         if not username:
             raise ValueError("Users must have a username")
         if not extra_fields.get("email"):
@@ -17,6 +32,19 @@ class UserManager(BaseUserManager):
         return user
 
     def create_superuser(self, username, password=None, **extra_fields):
+        """Create and save a superuser.
+
+        Args:
+            username: The username for the superuser.
+            password: The raw password for the superuser.
+            **extra_fields: Additional fields for the user model.
+
+        Returns:
+            User: The created superuser instance.
+
+        Raises:
+            ValueError: If is_staff or is_superuser is not set to True.
+        """
         extra_fields.update({"is_staff": True})
         extra_fields.update({"is_superuser": True})
 
@@ -33,22 +61,14 @@ class UserManager(BaseUserManager):
 
 
 class User(AbstractBaseUser, PermissionsMixin):
+    """Custom user model that uses username as the login field."""
     username = models.CharField(max_length=255, unique=True)
-
     email = models.EmailField(max_length=255, unique=True)
-
     date_of_birth = models.DateField(null=True, blank=True)
-    is_active = models.BooleanField(
-        default=True,
-    )
-
+    is_active = models.BooleanField(default=True,)
     is_staff = models.BooleanField(default=False)
-
     is_superuser = models.BooleanField(default=False)
-
     date_joined = models.DateTimeField(auto_now_add=True)
-
     objects = UserManager()
-
     USERNAME_FIELD = "username"
     REQUIRED_FIELDS = ("email",)
