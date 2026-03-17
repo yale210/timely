@@ -1,7 +1,7 @@
 from django.test import TestCase
 from rest_framework.exceptions import ErrorDetail
 from ...models import User
-from ...serializer import RegisterSerializer
+from ...serializers import RegisterSerializer
 
 class RegisterSerializerTest(TestCase):
     """Tests for registration credential validation."""
