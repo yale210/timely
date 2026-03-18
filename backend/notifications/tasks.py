@@ -108,9 +108,95 @@ def _send_push_notification_sync(user_id, title, message):
 
 @shared_task
 def check_reminders():
+    """
+    Celery task to check for due event reminders and send notifications.
+    Handles:
+    - One-time reminders for non-recurring events.
+    - Recurring events with optional overrides and recurrence rules.
+
+    Reminders are only processed once.
+    """
     now = timezone.now()
     due_window_start = now - timedelta(minutes=1)
 
+    _process_non_recurring_reminders(now)
+
+    if not settings.ENABLE_RECURRENCE_OVERRIDES:
+        return
+
+    recurring_events = _get_due_recurring_events(now, due_window_start)
+
+    for event in recurring_events:
+        reminder_minutes = _collect_reminder_minutes(event)
+
+        if not reminder_minutes:
+            continue
+
+        expanded_by_instance_id = _expand_instances_for_reminders(
+            event, reminder_minutes, due_window_start, now
+        )
+
+        for expanded in expanded_by_instance_id.values():
+            _process_due_reminders(event, expanded, now, due_window_start)
+
+    logger.debug("Recurring reminder check completed at %s", now.isoformat())
+
+
+def _process_due_reminders(event, expanded, now, due_window_start):
+    for reminder in expanded.reminders:
+        try:
+            minutes_before = int(reminder["minutes_before"])
+        except (TypeError, ValueError, KeyError):
+            continue
+
+        trigger_at = expanded.start_time - timedelta(minutes=minutes_before)
+        if not (due_window_start <= trigger_at <= now):
+            continue
+
+        anchor = expanded.original_start_time or expanded.start_time
+        if not _record_dispatch(event, anchor, reminder):
+            continue
+
+        _send_reminder_notification(
+            user_id=event.user_id,
+            title=f"Reminder: {expanded.title}",
+            event_title=expanded.title,
+            send_push=bool(reminder.get("send_push", False)),
+        )
+
+
+def _expand_instances_for_reminders(event, reminder_minutes, due_window_start, now):
+    expanded_by_instance_id = {}
+    loaded_overrides = list(event.overrides.all())
+    for minutes_before in reminder_minutes:
+        shift = timedelta(minutes=minutes_before)
+        occurrence_start = due_window_start + shift
+        occurrence_end = now + shift
+        expanded_instances = expand_event_instances(
+            event,
+            occurrence_start,
+            occurrence_end,
+            overrides=loaded_overrides,
+        )
+        for instance in expanded_instances:
+            expanded_by_instance_id[instance.instance_id] = instance
+    return expanded_by_instance_id
+
+
+def _collect_reminder_minutes(event) -> set[int]:
+    reminder_minutes: set[int] = {
+        int(reminder.minutes_before) for reminder in event.reminders.all()
+    }
+    for override in event.overrides.all():
+        for reminder_snapshot in override.reminders_snapshot or []:
+            minutes = _check_minutes(reminder_snapshot.get("minutes_before", 0))
+            if minutes is not None:
+                reminder_minutes.add(minutes)
+
+    return reminder_minutes
+
+
+def _process_non_recurring_reminders(now):
     due_reminders = EventReminder.objects.filter(
         trigger_at__lte=now,
         processed=False,
@@ -120,10 +206,9 @@ def check_reminders():
 
     for reminder in due_reminders:
         event = reminder.event
-        user_id = event.user_id
 
         _send_reminder_notification(
-            user_id=user_id,
+            user_id=event.user_id,
             title=f"Reminder: {event.title}",
             event_title=event.title,
             send_push=reminder.send_push,
@@ -132,9 +217,8 @@ def check_reminders():
         reminder.processed = True
         reminder.save(update_fields=["processed"])
 
-    if not settings.ENABLE_RECURRENCE_OVERRIDES:
-        return
 
+def _get_due_recurring_events(now, due_window_start):
     max_offset_minutes = (
         EventReminder.objects.filter(
             event__recurrence_interval__isnull=False,
@@ -143,7 +227,7 @@ def check_reminders():
     )
     max_offset = timedelta(minutes=max_offset_minutes)
 
-    recurring_events = (
+    return (
         Event.objects.filter(recurrence_interval__isnull=False)
         .filter(
             Q(reminders__isnull=False) | Q(overrides__isnull=False),
@@ -158,60 +242,12 @@ def check_reminders():
         .order_by("id")
     )
 
-    for event in recurring_events:
-        reminder_minutes: set[int] = {
-            int(reminder.minutes_before) for reminder in event.reminders.all()
-        }
-        for override in event.overrides.all():
-            for reminder_snapshot in override.reminders_snapshot or []:
-                try:
-                    reminder_minutes.add(
-                        int(reminder_snapshot.get("minutes_before", 0))
-                    )
-                except (TypeError, ValueError):
-                    continue
 
-        if not reminder_minutes:
-            continue
-
-        expanded_by_instance_id = {}
-        loaded_overrides = list(event.overrides.all())
-        for minutes_before in reminder_minutes:
-            shift = timedelta(minutes=minutes_before)
-            occurrence_start = due_window_start + shift
-            occurrence_end = now + shift
-            expanded_instances = expand_event_instances(
-                event,
-                occurrence_start,
-                occurrence_end,
-                overrides=loaded_overrides,
-            )
-            for instance in expanded_instances:
-                expanded_by_instance_id[instance.instance_id] = instance
-
-        for expanded in expanded_by_instance_id.values():
-            for reminder in expanded.reminders:
-                try:
-                    minutes_before = int(reminder["minutes_before"])
-                except (TypeError, ValueError, KeyError):
-                    continue
-
-                trigger_at = expanded.start_time - timedelta(minutes=minutes_before)
-                if not (due_window_start <= trigger_at <= now):
-                    continue
-
-                anchor = expanded.original_start_time or expanded.start_time
-                if not _record_dispatch(event, anchor, reminder):
-                    continue
-
-                _send_reminder_notification(
-                    user_id=event.user_id,
-                    title=f"Reminder: {expanded.title}",
-                    event_title=expanded.title,
-                    send_push=bool(reminder.get("send_push", False)),
-                )
-
-    logger.debug("Recurring reminder check completed at %s", now.isoformat())
+def _check_minutes(value):
+    try:
+        return int(value)
+    except (TypeError, ValueError):
+        return None
 
 
 @shared_task(ignore_result=True)
