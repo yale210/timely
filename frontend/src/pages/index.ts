@@ -9,5 +9,4 @@ export { default as Gradebook } from "./Gradebook"
 export { default as Settings } from "./Settings";
 export { default as Friends } from "./Friends";
 export { default as ProfilePage } from "./Profile";
-export { default as Test } from "./Test";
 export { default as Leaderboard } from "./Leaderboard";

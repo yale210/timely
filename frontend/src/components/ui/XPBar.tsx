@@ -36,6 +36,7 @@ const XPBar = ({ xp = 0, level = 1 }: XPBarProps) => {
           <div
             className="h-2 rounded-full bg-cyan-500 transition-all duration-700"
             style={{ width: `${animatedProgress}%` }}
+            data-testid="xp-bar-fill"
           />
         </div>
       </div>
