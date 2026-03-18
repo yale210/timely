@@ -30,7 +30,6 @@ const SettingsContent = ({
 }: SettingsContentProps) => {
   const [featureFlags, setFeatureFlags] = useState(() => ({
     gradebook: localStorage.getItem("feature_gradebook_enabled") !== "false",
-    weeklySummaries: localStorage.getItem("feature_weekly_summaries_enabled") !== "false",
   }));
 
   const featureRows = useMemo(() => ([
@@ -40,20 +39,10 @@ const SettingsContent = ({
       description: "Track and review your grades over time.",
       value: featureFlags.gradebook,
     },
-    {
-      key: "weeklySummaries",
-      label: "Weekly Summaries",
-      description: "View weekly statistics about your tasks and productivity.",
-      value: featureFlags.weeklySummaries,
-    },
   ]), [featureFlags]);
 
-  const updateFeature = (key: "gradebook" | "weeklySummaries", value: boolean) => {
-    if (key === "gradebook") {
-      localStorage.setItem("feature_gradebook_enabled", String(value));
-    } else {
-      localStorage.setItem("feature_weekly_summaries_enabled", String(value));
-    }
+  const updateFeature = (key: "gradebook", value: boolean) => {
+    localStorage.setItem("feature_gradebook_enabled", String(value));
     setFeatureFlags((prev) => ({ ...prev, [key]: value }));
     window.dispatchEvent(new Event("feature-flags-changed"));
   };
@@ -125,7 +114,7 @@ const SettingsContent = ({
                         className="h-4 w-4"
                         checked={feature.value}
                         onChange={(event) => {
-                          updateFeature(feature.key as "gradebook" | "weeklySummaries", event.target.checked);
+                          updateFeature(feature.key as "gradebook", event.target.checked);
                         }}
                       />
                     </label>
