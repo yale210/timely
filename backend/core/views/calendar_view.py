@@ -69,6 +69,36 @@ class TaskViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)
 
+    def update(self, request, *args, **kwargs):
+        profile = request.user.user_profile
+        user_profile_level_before = profile.level
+        
+        response = super().update(request, *args, **kwargs)
+    
+        profile.refresh_from_db()
+        level_up = profile.level > user_profile_level_before
+
+        response.data["level_up"] = level_up
+        response.data["new_level"] = request.user.user_profile.level
+        response.data["xp"] = profile.xp
+        return response
+    
+
+    def partial_update(self, request, *args, **kwargs):
+        profile = request.user.user_profile
+        user_profile_level_before = profile.level
+        
+        response = super().partial_update(request, *args, **kwargs)
+    
+        profile.refresh_from_db()
+        level_up = profile.level > user_profile_level_before
+
+        response.data["level_up"] = level_up
+        response.data["new_level"] = request.user.user_profile.level
+        response.data["xp"] = profile.xp
+        return response
+
+
 
 class CategoryViewSet(viewsets.ModelViewSet):
     serializer_class = CategorySerializer

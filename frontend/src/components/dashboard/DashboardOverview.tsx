@@ -1,11 +1,15 @@
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import moment from "moment";
 import { Link } from "react-router-dom";
 import MiniCalendarPreview from "@/components/dashboard/MiniCalendarPreview";
 import * as taskService from "@/services/taskService";
+import { getMyProfile } from "@/services/profileService";
 import type { Event, Task, WeeklyStats } from "@/types";
 import { getOverrideColour, hexToRgba } from "@/utils/colorUtils";
+import { emitXpGained } from "@/utils/xpEvents";
 import completeSoundUrl from "@/assets/sounds/task-complete.mp3";
+import { XP_GAINED_EVENT } from "@/utils/xpEvents";
+import { emitLevelup } from "@/utils/levelUpEvent";
 
 interface DashboardOverviewProps {
   tasks: Task[];
@@ -51,7 +55,7 @@ const WeeklyStatCard = ({
   </div>
 );
 
-const MAX_UPCOMING_TASKS = 8;
+const MAX_UPCOMING_TASKS = 4;
 const UPCOMING_TASK_ROW_HEIGHT = 52;
 const UPCOMING_TASK_ROW_GAP = 12;
 const getImportanceLabel = (importance: number) => {
@@ -73,6 +77,11 @@ const formatDueDate = (isoString: string) => {
     minute: "2-digit",
   });
   return `${dateText} ${timeText}`;
+};
+
+const getRequiredExp = (level: number) => {
+  const nextLevel = Math.max(1, level + 1);
+  return Math.round(100 * nextLevel ** 1.5);
 };
 
 const UpcomingTasksCard = ({
@@ -161,6 +170,49 @@ const UpcomingTasksCard = ({
   </div>
 );
 
+const XpProgressCard = ({ profileStats }: { profileStats: { exp: number; level: number } | null }) => {
+  const [animatedProgress, setAnimatedProgress] = useState(0);
+  const level = profileStats?.level ?? 0;
+  const exp = profileStats?.exp ?? 0;
+  const requiredExp = getRequiredExp(level);
+  const progress = requiredExp > 0 ? Math.min(100, (exp / requiredExp) * 100) : 0;
+
+  useEffect(() => {
+    setAnimatedProgress(0);
+    const frame = window.requestAnimationFrame(() => {
+      setAnimatedProgress(progress);
+    });
+    return () => window.cancelAnimationFrame(frame);
+  }, [progress]);
+
+  if (!profileStats) {
+    return (
+      <div className="rounded-lg bg-white p-6 shadow-sm ring-1 ring-gray-900/5">
+        <p className="text-lg font-semibold text-gray-900">Experience</p>
+        <p className="mt-2 text-sm text-gray-500">Loading XP...</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="rounded-lg bg-white p-6 shadow-sm ring-1 ring-gray-900/5">
+      <div className="flex items-center justify-between">
+        <p className="text-lg font-semibold text-gray-900">Experience</p>
+        <span className="text-sm font-semibold text-cyan-700">Level {level}</span>
+      </div>
+      <p className="mt-2 text-sm text-gray-500">
+        {exp} / {requiredExp} XP to next level
+      </p>
+      <div className="mt-4 h-3 w-full rounded-full bg-gray-100">
+        <div
+          className="h-3 rounded-full bg-cyan-500 transition-all duration-700"
+          style={{ width: `${animatedProgress}%` }}
+        />
+      </div>
+    </div>
+  );
+};
+
 /**
  * Renders the dashboard header, stat cards, and calendar shortcut.
  * @param props - Dashboard content props.
@@ -179,6 +231,7 @@ const DashboardOverview = ({
   );
   const [checkedOverrides, setCheckedOverrides] = useState<Record<number, boolean | undefined>>({});
   const [selectedPeriod, setSelectedPeriod] = useState<OverviewPeriod>("weekly");
+  const [profileStats, setProfileStats] = useState<{ exp: number; level: number } | null>(null);
 
   const periodLabel = useMemo(() => {
     switch (selectedPeriod) {
@@ -373,6 +426,33 @@ const DashboardOverview = ({
     return "tone-neutral";
   }, [streakCount]);
 
+  useEffect(() => {
+    let isActive = true;
+
+    const loadProfile = async () => {
+      try {
+        const profile = await getMyProfile();
+        if (!isActive) return;
+        setProfileStats({ exp: profile.xp ?? 0, level: profile.level ?? 1 });
+      } catch {
+        if (!isActive) return;
+        setProfileStats(null);
+      }
+    };
+
+    void loadProfile();
+
+    const handleXpGained = () => {
+      void loadProfile();
+    };
+
+    window.addEventListener(XP_GAINED_EVENT, handleXpGained);
+    return () => {
+      isActive = false;
+      window.removeEventListener(XP_GAINED_EVENT, handleXpGained);
+    };
+  }, []);
+
   const handleToggleTask = (task: Task, nextChecked: boolean) => {
     setCheckedOverrides((prev) => ({ ...prev, [task.id]: nextChecked }));
     if (nextChecked && !task.completed && completeSoundRef.current) {
@@ -381,7 +461,16 @@ const DashboardOverview = ({
     }
     void (async () => {
       try {
-        await taskService.updateTask(task.id, { completed: nextChecked });
+        //await taskService.updateTask(task.id, { completed: nextChecked });
+        const response = await taskService.updateTask(task.id, {completed: nextChecked} )
+        if (nextChecked && !task.completed) {
+          const expDelta = 10 + 2 * task.importance;
+          emitXpGained(expDelta);
+        }
+
+        if (response.level_up && response.new_level != null){
+          emitLevelup(response.new_level)
+        }
       } catch (error) {
         console.error(error);
         setCheckedOverrides((prev) => ({ ...prev, [task.id]: task.completed }));
@@ -391,10 +480,12 @@ const DashboardOverview = ({
 
   return (
   <main className="h-full min-h-0 w-full px-6 pt-4 pb-0 lg:px-10">
-    <header className="mb-4 mt-2 flex items-center justify-between">
-      <h1 className="text-3xl font-semibold tracking-tight text-gray-900">
-        {periodLabel} Overview
-      </h1>
+    <header className="mb-4 mt-2 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+      <div className="flex flex-wrap items-center gap-3">
+        <h1 className="text-3xl font-semibold tracking-tight text-gray-900">
+          {periodLabel} Overview
+        </h1>
+      </div>
       <div className="flex items-center gap-2">
         <label className="text-sm text-gray-500" htmlFor="overview-period">
           Period
@@ -478,7 +569,7 @@ const DashboardOverview = ({
     </section>
 
     <section className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-5 items-stretch">
-      <section className="lg:col-span-3">
+      <section className="lg:col-span-3 min-h-[580px]">
         <Link
           to="/calendar"
           className="flex h-full w-full flex-col rounded-lg bg-white p-6 shadow-sm ring-1 ring-gray-900/5 transition hover:bg-gray-50 hover:ring-gray-300"
@@ -502,12 +593,15 @@ const DashboardOverview = ({
       </section>
 
       <section className="lg:col-span-2">
-        <UpcomingTasksCard
-          tasks={recentTasks}
-          checkedOverrides={checkedOverrides}
-          onToggle={handleToggleTask}
-          periodLabel={periodEmptyLabel}
-        />
+        <div className="flex h-full flex-col gap-6">
+          <UpcomingTasksCard
+            tasks={recentTasks}
+            checkedOverrides={checkedOverrides}
+            onToggle={handleToggleTask}
+            periodLabel={periodEmptyLabel}
+          />
+          <XpProgressCard profileStats={profileStats} />
+        </div>
       </section>
     </section>
   </main>
@@ -515,4 +609,3 @@ const DashboardOverview = ({
 };
 
 export default DashboardOverview;
-
