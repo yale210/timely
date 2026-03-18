@@ -25,7 +25,6 @@ class CategorySeeder(BaseSeeder):
     def _populate_random_category(self):
         word = self.faker.word()
         colour = self.faker.hex_color()
-
         User = get_user_model()
         # Shuffle users and get a random user.
         temporary_user = User.objects.order_by("?").first()
@@ -57,14 +56,3 @@ class CategorySeeder(BaseSeeder):
             colour=data["fields"].get("colour", None),
             max_daily_study_time=data["fields"].get("max_daily_study_time", None),
         )
-
-
-# text = models.CharField(max_length=20, blank=False, null=False)
-# colour = models.CharField(
-#    max_length=10, blank=True, null=True
-# )  # Store the hex code
-# max_daily_study_time = models.PositiveSmallIntegerField(
-#    validators=[MinValueValidator(0), MaxValueValidator(24)],
-#    null=True,
-#    blank=True,
-# )

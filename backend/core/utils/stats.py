@@ -45,22 +45,14 @@ def calculate_weekly_stats(user, now=None):
     """
     start, end = get_current_week_range(now=now)
 
-    qs = Task.objects.filter(Q(user=user))
     # Tasks with start_time or deadline inside the week
-    week_q = qs.filter(
-        Q(start_time__range=(start, end)) | Q(deadline__range=(start, end))
-    )
-
+    week_q = _get_weekly_query_set(user, start, end)
     total_tasks = week_q.count()
     completed_tasks = week_q.filter(completed=True).count()
-
-    minutes_agg = week_q.aggregate(total=Sum("estimated_minutes"))
-    total_minutes = minutes_agg.get("total") or 0
-
-    if total_tasks == 0:
-        completion_percentage = 0.0
-    else:
-        completion_percentage = round((completed_tasks / total_tasks) * 100.0, 2)
+    total_minutes = _get_total_minutes(week_q)
+    completion_percentage = _calculate_completion_percentage(
+        completed_tasks, total_tasks
+    )
 
     # Daily and importance breakdowns
     daily_stats = _get_daily_breakdown(week_q, start)
@@ -74,6 +66,24 @@ def calculate_weekly_stats(user, now=None):
         "daily_stats": daily_stats,
         "importance_stats": importance_stats,
     }
+
+
+def _get_weekly_query_set(user, start, end):
+    qs = Task.objects.filter(Q(user=user))
+    return qs.filter(
+        Q(start_time__range=(start, end)) | Q(deadline__range=(start, end))
+    )
+
+
+def _get_total_minutes(week_q):
+    minutes_agg = week_q.aggregate(total=Sum("estimated_minutes"))
+    return minutes_agg.get("total") or 0
+
+
+def _calculate_completion_percentage(completed_tasks, total_tasks):
+    if total_tasks == 0:
+        return 0.0
+    return round((completed_tasks / total_tasks) * 100.0, 2)
 
 
 def _get_daily_breakdown(week_q, start):
@@ -90,10 +100,7 @@ def _get_daily_breakdown(week_q, start):
         day_end = day_start + timedelta(
             hours=23, minutes=59, seconds=59, microseconds=999999
         )
-        day_q = week_q.filter(
-            Q(start_time__range=(day_start, day_end))
-            | Q(start_time__isnull=True, deadline__range=(day_start, day_end))
-        )
+        day_q = _get_daily_query_set(week_q, day_start, day_end)
         completed = day_q.filter(completed=True).count()
         minutes = day_q.aggregate(total=Sum("estimated_minutes")).get("total") or 0
         days.append(
@@ -104,6 +111,13 @@ def _get_daily_breakdown(week_q, start):
             }
         )
     return days
+
+
+def _get_daily_query_set(week_q, day_start, day_end):
+    return week_q.filter(
+        Q(start_time__range=(day_start, day_end))
+        | Q(start_time__isnull=True, deadline__range=(day_start, day_end))
+    )
 
 
 def _get_importance_breakdown(week_q):
