@@ -3,13 +3,9 @@
 from django.contrib.auth import get_user_model
 from rest_framework import serializers
 
-<<<<<<< HEAD
 from admin_panel.serializers.broadcast_recipient_serializer import (
     BroadcastRecipientSerializer,
 )
-=======
-from admin_panel.serializers.broadcast_recipient_serializer import BroadcastRecipientSerializer
->>>>>>> ff0fb21 (chore: seperate serializers.py into different files)
 from notifications.models import BroadcastJob
 
 User = get_user_model()

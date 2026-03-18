@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 from .admin_notification_request_serializer import (
     AdminNotificationRequestSerializer as AdminNotificationRequestSerializer,
 )
@@ -14,13 +13,6 @@ from .broadcast_job_list_serializer import (
 from .broadcast_recipient_serializer import (
     BroadcastRecipientSerializer as BroadcastRecipientSerializer,
 )
-=======
-from .admin_notification_request_serializer import AdminNotificationRequestSerializer as AdminNotificationRequestSerializer
-from .admin_user_list_serializer import AdminUserListSerializer as AdminUserListSerializer
-from .broadcast_job_detail_serializer import BroadcastJobDetailSerializer as BroadcastJobDetailSerializer
-from .broadcast_job_list_serializer import BroadcastJobListSerializer as BroadcastJobListSerializer
-from .broadcast_recipient_serializer import BroadcastRecipientSerializer as BroadcastRecipientSerializer
->>>>>>> ff0fb21 (chore: seperate serializers.py into different files)
 
 __all__ = [
     "AdminNotificationRequestSerializer",
@@ -28,8 +20,4 @@ __all__ = [
     "BroadcastJobDetailSerializer",
     "BroadcastJobListSerializer",
     "BroadcastRecipientSerializer",
-<<<<<<< HEAD
 ]
-=======
-]
->>>>>>> ff0fb21 (chore: seperate serializers.py into different files)

@@ -368,14 +368,10 @@ class AdminNotificationActionTests(APITestCase):
             message="payload",
             target=BroadcastJob.Target.ALL,
             audience_filters={"target": "all"},
-<<<<<<< HEAD
             audience_snapshot={
                 "recipient_ids": [self.regular_user.id],
                 "recipient_count": 1,
             },
-=======
-            audience_snapshot={"recipient_ids": [self.regular_user.id], "recipient_count": 1},
->>>>>>> 57c2cea (test: implement test cases for all views and serializers)
             recipient_count=1,
             status=BroadcastJob.Status.COMPLETED,
         )
