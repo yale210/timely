@@ -273,18 +273,8 @@ def _detach_non_aligned_overrides(event: Event) -> None:
         if is_occurrence_in_series(event, override.original_start_time):
             continue
 
-        detached = Event.objects.create(
-            user=event.user,
-            title=override.title,
-            description=override.description,
-            location=override.location,
-            start_time=override.start_time,
-            end_time=override.end_time,
-            recurrence_interval=None,
-            recurrence_end=None,
-            exception_dates=[],
-        )
-        detached.categories.set(override.categories.all())
+        detached = _create_detached_event(event, override)
+
         for reminder in _normalise_reminders(override.reminders_snapshot):
             EventReminder.objects.create(event=detached, **reminder)
 
@@ -300,6 +290,22 @@ def _detach_non_aligned_overrides(event: Event) -> None:
             ]
         )
         event.save(update_fields=["exception_dates"])
+
+
+def _create_detached_event(event: Event, override):
+    detached = Event.objects.create(
+        user=event.user,
+        title=override.title,
+        description=override.description,
+        location=override.location,
+        start_time=override.start_time,
+        end_time=override.end_time,
+        recurrence_interval=None,
+        recurrence_end=None,
+        exception_dates=[],
+    )
+    detached.categories.set(override.categories.all())
+    return detached
 
 
 def _update_scope_all(
