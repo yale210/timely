@@ -33,6 +33,9 @@ const ProfileSection = ({
     onChange({ ...profile, [key]: value });
   };
 
+  const today = new Date();
+  const maxDateOfBirth = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
+
   return (
     <div className="space-y-6">
       <div>
@@ -88,6 +91,7 @@ const ProfileSection = ({
           <span className="text-sm font-semibold text-gray-800">Date of birth</span>
           <input
             type="date"
+            max={maxDateOfBirth}
             value={profile.date_of_birth ?? ""}
             onChange={(event) =>
               updateField("date_of_birth", event.target.value || null)
