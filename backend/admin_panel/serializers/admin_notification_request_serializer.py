@@ -2,6 +2,7 @@
 
 from rest_framework import serializers
 
+
 class AdminNotificationRequestSerializer(serializers.Serializer):
     """Validate admin notification request data."""
 

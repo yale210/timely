@@ -3,6 +3,7 @@
 from rest_framework import serializers
 from notifications.models import BroadcastRecipient
 
+
 class BroadcastRecipientSerializer(serializers.ModelSerializer):
     """Serialize delivery details for a broadcast recipient."""
 
