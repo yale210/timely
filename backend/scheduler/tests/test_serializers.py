@@ -9,7 +9,7 @@ class SerializersTests(TestCase):
             "MockInstance",
             ["task_id", "success", "scheduled_start", "scheduled_end", "reason"],
         )
-        instance = MockInstance(1, True, None, None, None)
+        _instance = MockInstance(1, True, None, None, None)
 
         class MyInstance:
             task_id = 1

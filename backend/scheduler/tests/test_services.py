@@ -484,7 +484,7 @@ class SchedulerTest(TestCase):
         self.assertEqual(free[0], window)
 
     def test_get_occupied_slots_invalid_allocation(self):
-        task = Task.objects.create(
+        Task.objects.create(
             user=self.user,
             title="T1",
             estimated_minutes=30,
