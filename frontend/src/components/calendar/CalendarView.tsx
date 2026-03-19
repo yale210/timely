@@ -268,6 +268,7 @@ const CalendarView = ({
             onEventResize={(args) => {
               void actions.handleEventResize(args);
             }}
+            showMultiDayTimes
             toolbar={false}
             className="h-full"
             components={components}

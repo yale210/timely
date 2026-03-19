@@ -36,6 +36,7 @@ interface CalendarState {
   headerHeight: number;
   timeGutterWidth: number;
   isRescheduling: boolean;
+  rescheduleWarnings: { taskId: number; title: string; reason: string }[];
 }
 
 interface CalendarLoading {
@@ -211,6 +212,9 @@ export const useCalendar = (): UseCalendarReturn => {
   const [categoryError, setCategoryError] = useState<string | null>(null);
   const [eventError, setEventError] = useState<string | null>(null);
   const [reschedulingError, setReschedulingError] = useState<string | null>(null);
+  const [rescheduleWarnings, setRescheduleWarnings] = useState<
+    { taskId: number; title: string; reason: string }[]
+  >([]);
   const [headerHeight, setHeaderHeight] = useState(0);
   const [timeGutterWidth, setTimeGutterWidth] = useState(56);
   const hasInitialized = useRef(false);
@@ -468,6 +472,7 @@ export const useCalendar = (): UseCalendarReturn => {
   const rescheduleTasks = useCallback(async () => {
     setIsRescheduling(true);
     setReschedulingError(null);
+    setRescheduleWarnings([]);
 
     try {
       await schedulerService.unscheduleTasks();
@@ -483,6 +488,18 @@ export const useCalendar = (): UseCalendarReturn => {
           nextOrder[result.task_id] = index;
         });
       setScheduleOrder(nextOrder);
+      setRescheduleWarnings(
+        response.results
+          .filter((result) => !result.success)
+          .map((result) => {
+            const matchingTask = tasks.find((task) => task.id === result.task_id);
+            return {
+              taskId: result.task_id,
+              title: matchingTask?.title ?? `Task #${result.task_id}`,
+              reason: result.reason ?? "The scheduler could not find enough time before the deadline.",
+            };
+          }),
+      );
       await fetchTasks();
     } catch (error) {
       console.error(error);
@@ -490,7 +507,7 @@ export const useCalendar = (): UseCalendarReturn => {
     } finally {
       setIsRescheduling(false);
     }
-  }, [date, fetchTasks]);
+  }, [date, fetchTasks, tasks]);
 
   const goToToday = useCallback(() => {
     setDate(new Date());
@@ -755,6 +772,7 @@ export const useCalendar = (): UseCalendarReturn => {
       headerHeight,
       timeGutterWidth,
       isRescheduling,
+      rescheduleWarnings,
     },
     loading: {
       initializing: isInitializing,
@@ -795,4 +813,3 @@ export const useCalendar = (): UseCalendarReturn => {
     },
   };
 };
-
