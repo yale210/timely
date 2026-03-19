@@ -2,7 +2,6 @@ from channels.testing import WebsocketCommunicator
 from channels.routing import URLRouter
 from django.contrib.auth.models import AnonymousUser
 from django.test import TransactionTestCase
-from notifications.consumers.notification_consumer import NotificationConsumer
 from notifications.routing import websocket_urlpatterns
 from django.contrib.auth import get_user_model
 from channels.layers import get_channel_layer

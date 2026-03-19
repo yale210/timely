@@ -1,5 +1,4 @@
 from django.test import SimpleTestCase, override_settings
-from django.urls import clear_url_caches
 from importlib import reload
 import sys
 
@@ -13,11 +12,9 @@ class SourceUrlsTest(SimpleTestCase):
         if "source.urls" in sys.modules:
             reload(sys.modules["source.urls"])
         else:
-            import source.urls
+            import source.urls  # noqa: F401
 
-        from source.urls import urlpatterns
-
-        pass
+        from source.urls import urlpatterns  # noqa: F401
 
     @override_settings(DEBUG=False)
     def test_urls_debug_false(self):
@@ -25,8 +22,6 @@ class SourceUrlsTest(SimpleTestCase):
         if "source.urls" in sys.modules:
             reload(sys.modules["source.urls"])
         else:
-            import source.urls
+            import source.urls  # noqa: F401
 
-        from source.urls import urlpatterns
-
-        pass
+        from source.urls import urlpatterns  # noqa: F401
