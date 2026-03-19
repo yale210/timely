@@ -6,6 +6,8 @@ import { MemoryRouter } from "react-router-dom";
 // Mock AppNavbar to avoid issues with its own dependencies
 vi.mock("@/components/index", () => ({
   AppNavbar: () => <nav data-testid="app-navbar">Navbar</nav>,
+  XPToast: () => null,
+  LevelUpToast: () => null,
 }));
 
 describe("AppLayout Component", () => {
