@@ -28,7 +28,7 @@ class SchedulerViewsTests(APITestCase):
         response = self.client.post(self.unschedule_url, {}, format="json")
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
-    def test_schedule_success_updates_allocation(self):
+    def test_schedule_success_updates_allocation_without_mutating_task_window(self):
         now = timezone.now()
         task = Task.objects.create(
             user=self.user,
@@ -51,6 +51,8 @@ class SchedulerViewsTests(APITestCase):
         task.refresh_from_db()
         self.assertGreater(len(task.allocation), 0)
         self.assertEqual(task.total_task_allocations, len(task.allocation))
+        self.assertEqual(task.start_time, now)
+        self.assertEqual(task.deadline, now + timedelta(days=1))
 
     def test_schedule_split_creates_multiple_segments(self):
         base_date = timezone.localdate() + timedelta(days=1)
@@ -102,15 +104,17 @@ class SchedulerViewsTests(APITestCase):
         self.assertGreaterEqual(len(task.allocation), 2)
         self.assertEqual(task.total_task_allocations, len(task.allocation))
 
-    def test_unschedule_resets_allocation_and_start_time(self):
+    def test_unschedule_resets_allocation_without_mutating_task_window(self):
         now = timezone.now()
+        original_start_time = now - timedelta(hours=2)
+        original_deadline = now + timedelta(days=1)
         task = Task.objects.create(
             user=self.user,
             title="Unschedule me",
             description="",
             estimated_minutes=30,
-            start_time=now - timedelta(hours=2),
-            deadline=now + timedelta(days=1),
+            start_time=original_start_time,
+            deadline=original_deadline,
             importance=5,
             completed=False,
             allocation=[
@@ -128,4 +132,5 @@ class SchedulerViewsTests(APITestCase):
         task.refresh_from_db()
         self.assertEqual(task.allocation, [])
         self.assertEqual(task.total_task_allocations, 0)
-        self.assertEqual(task.start_time, task.deadline)
+        self.assertEqual(task.start_time, original_start_time)
+        self.assertEqual(task.deadline, original_deadline)

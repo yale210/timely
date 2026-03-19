@@ -164,3 +164,54 @@ class SchedulerTest(TestCase):
 
         self.assertFalse(results[0].success)
         self.assertIn("Deadline", results[0].reason)
+
+    def test_schedule_includes_deadline_day_within_horizon(self):
+        start_date = date(2026, 3, 19)
+        deadline_dt = timezone.make_aware(datetime(2026, 3, 26, 10, 0))
+
+        for offset in range(7):
+            blocked_day = start_date + timedelta(days=offset)
+            Event.objects.create(
+                user=self.user,
+                title=f"Block {blocked_day.isoformat()}",
+                start_time=timezone.make_aware(datetime.combine(blocked_day, time(7, 0))),
+                end_time=timezone.make_aware(datetime.combine(blocked_day, time(23, 0))),
+            )
+
+        Task.objects.create(
+            user=self.user,
+            title="Boundary deadline task",
+            description="",
+            estimated_minutes=59,
+            importance=5,
+            start_time=timezone.make_aware(datetime(2026, 3, 19, 13, 0)),
+            deadline=deadline_dt,
+            completed=False,
+            allow_split=True,
+        )
+
+        scheduler = Scheduler(
+            self.user, max_days_ahead=7, allow_split=True, min_block_minutes=30
+        )
+        results = scheduler.schedule_tasks(start_date=start_date)
+
+        self.assertTrue(results[0].success)
+        self.assertEqual(results[0].scheduled_start.date(), deadline_dt.date())
+
+    def test_schedule_does_not_place_task_before_task_start_time(self):
+        task = Task.objects.create(
+            user=self.user,
+            title="Afternoon task",
+            description="",
+            estimated_minutes=60,
+            importance=5,
+            start_time=timezone.make_aware(datetime(2026, 3, 19, 13, 0)),
+            deadline=timezone.make_aware(datetime(2026, 3, 19, 18, 0)),
+            completed=False,
+        )
+
+        scheduler = Scheduler(self.user, max_days_ahead=1, allow_split=False)
+        results = scheduler.schedule_tasks(start_date=date(2026, 3, 19))
+
+        self.assertTrue(results[0].success)
+        self.assertGreaterEqual(results[0].scheduled_start, task.start_time)

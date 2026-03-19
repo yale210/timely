@@ -1,5 +1,4 @@
 from __future__ import annotations
-
 from datetime import date, datetime, time, timedelta
 from typing import Iterable, List, Tuple
 
@@ -284,14 +283,26 @@ class Scheduler:
             return None
         return (start, deadline)
 
+    def _clip_to_task_start(
+        self, slot: Tuple[datetime, datetime], task_start: datetime
+    ) -> Tuple[datetime, datetime] | None:
+        start, end = slot
+        if end <= task_start:
+            return None
+        if start < task_start:
+            return (task_start, end)
+        return slot
+
     def _schedule_task_no_split(
         self,
         task: Task,
         start_date: date,
     ) -> ScheduleResult:
+        task_start = self._aware(task.start_time)
         deadline = self._aware(task.deadline)
-        for offset in range(self.max_days_ahead):
-            current_date = start_date + timedelta(days=offset)
+        search_start = max(start_date, task_start.date())
+        for offset in range(self.max_days_ahead + 1):
+            current_date = search_start + timedelta(days=offset)
             if current_date > deadline.date():
                 break
             if not self._is_day_available(current_date):
@@ -301,7 +312,10 @@ class Scheduler:
                 capped = self._clip_to_deadline(slot, deadline)
                 if not capped:
                     continue
-                start, end = capped
+                clipped = self._clip_to_task_start(capped, task_start)
+                if not clipped:
+                    continue
+                start, end = clipped
                 free_minutes = (end - start).total_seconds() / 60
                 if free_minutes >= task.estimated_minutes:
                     scheduled_end = start + timedelta(minutes=task.estimated_minutes)
@@ -325,13 +339,15 @@ class Scheduler:
         start_date: date,
     ) -> ScheduleResult:
         remaining = task.estimated_minutes
+        task_start = self._aware(task.start_time)
         deadline = self._aware(task.deadline)
         segments: List[Tuple[datetime, datetime]] = []
 
-        for offset in range(self.max_days_ahead):
+        search_start = max(start_date, task_start.date())
+        for offset in range(self.max_days_ahead + 1):
             if remaining <= 0:
                 break
-            current_date = start_date + timedelta(days=offset)
+            current_date = search_start + timedelta(days=offset)
             if current_date > deadline.date():
                 break
             if not self._is_day_available(current_date):
@@ -342,7 +358,10 @@ class Scheduler:
                 capped = self._clip_to_deadline(slot, deadline)
                 if not capped:
                     continue
-                start, end = capped
+                clipped = self._clip_to_task_start(capped, task_start)
+                if not clipped:
+                    continue
+                start, end = clipped
                 cursor = start
                 while remaining > 0 and cursor < end:
                     free_minutes = (end - cursor).total_seconds() / 60
