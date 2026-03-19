@@ -270,3 +270,129 @@ class TasksTests(TestCase):
                 title="Admin Only",
             ).exists()
         )
+
+    def test_reminder_signature(self):
+        from notifications.tasks import _reminder_signature
+        reminder = {"minutes_before": 15, "send_email": True, "send_push": False}
+        sig1 = _reminder_signature(reminder)
+        sig2 = _reminder_signature({"minutes_before": "15", "send_email": True, "send_push": False})
+        self.assertEqual(sig1, sig2)
+
+    def test_record_dispatch_integrity_error(self):
+        from notifications.tasks import _record_dispatch
+        now = timezone.now()
+        rem = {"minutes_before": 15}
+        _record_dispatch(self.event, now, rem)
+        # Try to create the same one again (IntegrityError due to unique constraint)
+        success = _record_dispatch(self.event, now, rem)
+        self.assertFalse(success)
+
+    def test_send_push_notification_sync_no_subs(self):
+        from notifications.tasks import _send_push_notification_sync
+        res = _send_push_notification_sync(self.user.id, "T", "M")
+        self.assertTrue(res["success"])
+
+    @patch("notifications.tasks.webpush")
+    def test_send_push_notification_sync_failure_all(self, mock_webpush):
+        from pywebpush import WebPushException
+        mock_webpush.side_effect = WebPushException("Fail")
+        PushSubscription.objects.create(user=self.user, endpoint="E", p256dh="P", auth="A")
+        from notifications.tasks import _send_push_notification_sync
+        res = _send_push_notification_sync(self.user.id, "T", "M")
+        self.assertFalse(res["success"])
+        self.assertEqual(res["error_code"], "PUSH_PROVIDER_FAILURE")
+
+    def test_process_broadcast_job_not_found(self):
+        from notifications.tasks import process_broadcast_job
+        self.assertEqual(process_broadcast_job(9999), "Broadcast not found")
+
+    def test_process_broadcast_job_already_processed(self):
+        from notifications.models import BroadcastJob
+        from notifications.tasks import process_broadcast_job
+        job = BroadcastJob.objects.create(
+            sender=self.user, title="T", message="M", status=BroadcastJob.Status.COMPLETED,
+            target="all", audience_filters={}, audience_snapshot={}, recipient_count=0
+        )
+        res = process_broadcast_job(job.id)
+        self.assertIn("already processed", res)
+
+    def test_process_broadcast_job_no_recipients(self):
+        from notifications.models import BroadcastJob
+        from notifications.tasks import process_broadcast_job
+        job = BroadcastJob.objects.create(
+            sender=self.user, title="T", message="M", status=BroadcastJob.Status.QUEUED,
+            target="all", audience_filters={}, audience_snapshot={}, recipient_count=0
+        )
+        res = process_broadcast_job(job.id)
+        self.assertEqual(res, "Broadcast has no recipients")
+        job.refresh_from_db()
+        self.assertEqual(job.status, BroadcastJob.Status.FAILED)
+
+    def test_broadcast_notification_zero_audience(self):
+        # target users with empty user_ids list
+        res = broadcast_notification("T", "M", target="users", user_ids=[])
+        self.assertEqual(res, "Broadcasted to 0 users")
+
+    def test_process_due_reminders_invalid_minutes(self):
+        from notifications.tasks import _process_due_reminders
+        from unittest.mock import MagicMock
+        now = timezone.now()
+        expanded = MagicMock()
+        expanded.reminders = [{"minutes_before": "invalid"}]
+        # Should not crash, just continue
+        _process_due_reminders(self.event, expanded, now, now - timezone.timedelta(minutes=1))
+
+    def test_check_reminders_disabled_recurrence(self):
+        from django.test import override_settings
+        with override_settings(ENABLE_RECURRENCE_OVERRIDES=False):
+            check_reminders()
+            # Should return after processing non-recurring
+
+    def test_send_push_notification_sync_success_with_error(self):
+        # One sub succeeds, one fails
+        from notifications.tasks import _send_push_notification_sync
+        from pywebpush import WebPushException
+        with patch("notifications.tasks.webpush") as mock_webpush:
+            def side_effect(*args, **kwargs):
+                if kwargs["subscription_info"]["endpoint"] == "fail":
+                    raise WebPushException("Fail")
+                return True
+            mock_webpush.side_effect = side_effect
+            PushSubscription.objects.create(user=self.user, endpoint="success", p256dh="P", auth="A")
+            PushSubscription.objects.create(user=self.user, endpoint="fail", p256dh="P", auth="A")
+            res = _send_push_notification_sync(self.user.id, "T", "M")
+            self.assertTrue(res["success"])
+
+    def test_process_broadcast_job_partial_and_failed(self):
+        from notifications.models import BroadcastJob, BroadcastRecipient
+        from notifications.tasks import process_broadcast_job
+        # Case: Partial (some success, some fail)
+        job = BroadcastJob.objects.create(
+            sender=self.user, title="T", message="M", status=BroadcastJob.Status.QUEUED,
+            target="all", audience_filters={}, audience_snapshot={}, recipient_count=2
+        )
+        BroadcastRecipient.objects.create(broadcast_job=job, recipient=self.user)
+        BroadcastRecipient.objects.create(broadcast_job=job, recipient=self.other_user)
+        
+        with patch("notifications.tasks._send_push_notification_sync") as mock_push:
+            mock_push.side_effect = [{"success": True}, {"success": False, "error_code": "E", "error_message": "M"}]
+            process_broadcast_job(job.id)
+            job.refresh_from_db()
+            self.assertEqual(job.status, BroadcastJob.Status.PARTIAL)
+
+        # Case: Failed (all fail)
+        job2 = BroadcastJob.objects.create(
+            sender=self.user, title="T", message="M", status=BroadcastJob.Status.QUEUED,
+            target="all", audience_filters={}, audience_snapshot={}, recipient_count=1
+        )
+        BroadcastRecipient.objects.create(broadcast_job=job2, recipient=self.user)
+        with patch("notifications.tasks._send_push_notification_sync") as mock_push:
+            mock_push.return_value = {"success": False, "error_code": "E", "error_message": "M"}
+            process_broadcast_job(job2.id)
+            job2.refresh_from_db()
+            self.assertEqual(job2.status, BroadcastJob.Status.FAILED)
+
+    def test_build_broadcast_queryset_none(self):
+        from notifications.tasks import _build_broadcast_queryset
+        qs = _build_broadcast_queryset("invalid-target")
+        self.assertEqual(qs.count(), 0)
