@@ -16,7 +16,6 @@ class AssessmentSerializer(serializers.ModelSerializer):
             "weighting_of_assessment",
             "notes",
             "reminder_offset",
-            "linked_event",
             "created_at",
             "updated_at",
             "location",

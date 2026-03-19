@@ -16,7 +16,7 @@ def create_assessment_event(assessment: Assessment) -> Event:
     )
 
     assessment.linked_event = event
-    assessment.save(updated_fields=["linked_event", "updated_at"])
+    assessment.save(update_fields=["linked_event", "updated_at"])
 
     return event
 
@@ -29,4 +29,21 @@ def delete_assessment_event(assessment: Assessment) -> None:
     if assessment.linked_event:
         assessment.linked_event.delete()
         assessment.linked_event = None
-        assessment.save(updated_fields=["linked_event", "updated_at"])
+        assessment.save(update_fields=["linked_event", "updated_at"])
+
+
+def update_assessment_event(assessment: Assessment) -> Event:
+    """
+    Updates the event linked to an assessment.
+    """
+
+    if assessment.linked_event:
+        event = assessment.linked_event
+        event.title = assessment.title
+        event.description = assessment.notes
+        event.location = assessment.location
+        event.start_time = assessment.start_time
+        event.end_time = assessment.end_time
+        event.save()
+
+    return assessment.linked_event
