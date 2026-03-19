@@ -100,7 +100,6 @@ assessment_event = [
             "exception_dates": [],
             "split_from_event": None,
             "categories": [],
-            "colour": "#000000"
         },
     },
     {
@@ -119,7 +118,6 @@ assessment_event = [
             "exception_dates": [],
             "split_from_event": None,
             "categories": [],
-            "colour": "#000000"
         },
     },
 ]

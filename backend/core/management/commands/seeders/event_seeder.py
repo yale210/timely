@@ -120,7 +120,6 @@ class EventSeeder(BaseSeeder):
         start = timezone.make_aware(self.faker.date_time())
         end = start + timedelta(random.randint(0, 60))
 
-<<<<<<< HEAD
         recurring = random.randint(0, 1) == 1
 
         if recurring:
@@ -128,8 +127,12 @@ class EventSeeder(BaseSeeder):
             self._create_event(
                 {
                     "fields": {
-                        "user": temporary_user.id,
-                        "categories": [temporary_category.id],
+                        "user": self._get_or_create_random_user().id,
+                        "categories": [
+                            self._get_or_create_random_category(
+                                self._get_or_create_random_user().id
+                            ).id
+                        ],
                         "title": self.faker.sentence(),
                         "description": self.faker.sentence(),
                         "location": self.faker.word(),
@@ -154,8 +157,12 @@ class EventSeeder(BaseSeeder):
             self._create_event(
                 {
                     "fields": {
-                        "user": temporary_user.id,
-                        "categories": [temporary_category.id],
+                        "user": self._get_or_create_random_user().id,
+                        "categories": [
+                            self._get_or_create_random_category(
+                                self._get_or_create_random_user().id
+                            ).id
+                        ],
                         "title": self.faker.sentence(),
                         "description": self.faker.sentence(),
                         "location": self.faker.word(),
@@ -169,23 +176,6 @@ class EventSeeder(BaseSeeder):
                     }
                 }
             )
-=======
-        self._create_event(
-            {
-                "fields": {
-                    "user": data["fields"]["user"],
-                    "categories": data["fields"]["categories"],
-                    "title": self.faker.sentence(),
-                    "description": self.faker.sentence(),
-                    "location": self.faker.word(),
-                    "start_time": start,
-                    "end_time": end,
-                    "recurrence_interval": None,
-                    "recurrence_end": None,
-                }
-            }
-        )
->>>>>>> fix/cleanup-backend
 
     def _random_time(self):
         hours = random.randint(0, 23)

@@ -19,10 +19,13 @@ class AssessmentSerializer(serializers.ModelSerializer):
             "linked_event",
             "created_at",
             "updated_at",
+            "location",
+            "start_time",
+            "end_time",
+            "linked_event",
         ]
         read_only_fields = [
             "id",
             "created_at",
             "updated_at",
-            "linked_event",
         ]
