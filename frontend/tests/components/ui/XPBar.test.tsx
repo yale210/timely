@@ -14,8 +14,7 @@ describe("XPBar", () => {
 
         const progressEl = screen.getByTestId("xp-bar-fill")
         expect(progressEl.style.width).toMatch(/0/);
-    })
-
+    });
 
     it("renders xp progress bar", () => {
         vi.spyOn(window, "requestAnimationFrame").mockImplementation((cb) => {
@@ -27,7 +26,7 @@ describe("XPBar", () => {
 
         const progressEl = screen.getByTestId("xp-bar-fill")
         expect(progressEl.style.width).toMatch(/35/);
-    })
+    });
 
      it("renders xp progress bar", () => {
         vi.spyOn(window, "requestAnimationFrame").mockImplementation((cb) => {
@@ -39,6 +38,6 @@ describe("XPBar", () => {
 
         const progressEl = screen.getByTestId("xp-bar-fill")
         expect(progressEl.style.width).toMatch(/99/);
-    })
+    });
 
 })

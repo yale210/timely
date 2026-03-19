@@ -74,8 +74,9 @@ const Leaderboard = () => {
         const message = err instanceof Error ? err.message : "Failed to load leaderboard";
         setError(message);
       } finally {
-        if (!isMounted) return;
+        if (!isMounted) {
         setIsLoading(false);
+        }
       }
     };
 
