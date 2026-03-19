@@ -1,0 +1,64 @@
+import datetime
+from django.test import TestCase
+from django.utils import timezone
+from rest_framework import serializers
+from profiles.serializers.profile_serializer import ProfileSerializer, PublicProfileSerializer
+from profiles.models.profile import Profile
+from django.contrib.auth import get_user_model
+from django.core.files.uploadedfile import SimpleUploadedFile
+from rest_framework.test import APIRequestFactory
+
+User = get_user_model()
+
+class ProfileSerializerTests(TestCase):
+    def test_validate_date_of_birth_past(self):
+        serializer = ProfileSerializer()
+        past_date = timezone.now().date() - datetime.timedelta(days=1)
+        self.assertEqual(serializer.validate_date_of_birth(past_date), past_date)
+
+    def test_validate_date_of_birth_future(self):
+        serializer = ProfileSerializer()
+        future_date = timezone.now().date() + datetime.timedelta(days=1)
+        with self.assertRaises(serializers.ValidationError) as cm:
+            serializer.validate_date_of_birth(future_date)
+        self.assertEqual(cm.exception.detail[0], "Date of birth cannot be in the future.")
+
+    def test_validate_date_of_birth_none(self):
+        serializer = ProfileSerializer()
+        self.assertIsNone(serializer.validate_date_of_birth(None))
+
+class PublicProfileSerializerTests(TestCase):
+    def setUp(self):
+        self.user = User.objects.create_user(username="testuser", email="test@example.com")
+        # Profile might be auto-created by signals
+        self.profile, _ = Profile.objects.get_or_create(user=self.user, defaults={"name": "Test"})
+
+    def test_get_avatar_url_none(self):
+        serializer = PublicProfileSerializer(instance=self.profile)
+        self.assertIsNone(serializer.get_avatar_url(self.profile))
+
+    def test_get_avatar_url_with_request(self):
+        # Add avatar
+        avatar = SimpleUploadedFile("avatar.png", b"file_content", content_type="image/png")
+        self.profile.avatar = avatar
+        self.profile.save()
+        
+        factory = APIRequestFactory()
+        request = factory.get('/')
+        
+        serializer = PublicProfileSerializer(instance=self.profile, context={'request': request})
+        avatar_url = serializer.get_avatar_url(self.profile)
+        # Should be absolute URL
+        self.assertIn("http://testserver", avatar_url)
+        self.assertIn("/api/media/avatars/avatar", avatar_url)
+
+    def test_get_avatar_url_without_request(self):
+        # Add avatar
+        avatar = SimpleUploadedFile("avatar2.png", b"file_content", content_type="image/png")
+        self.profile.avatar = avatar
+        self.profile.save()
+        
+        serializer = PublicProfileSerializer(instance=self.profile)
+        avatar_url = serializer.get_avatar_url(self.profile)
+        # Should be relative URL
+        self.assertTrue(avatar_url.startswith("/api/media/avatars/avatar2"))
