@@ -6,7 +6,16 @@ from profiles.models.profile import Profile
 class ProfileSerializer(serializers.ModelSerializer):
     class Meta:
         model = Profile
-        fields = ["name", "date_of_birth", "creation_date", "slogan", "bio", "avatar", "xp", "level"]
+        fields = [
+            "name",
+            "date_of_birth",
+            "creation_date",
+            "slogan",
+            "bio",
+            "avatar",
+            "xp",
+            "level",
+        ]
         read_only_fields = ["creation_date"]
 
 
