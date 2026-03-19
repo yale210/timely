@@ -134,20 +134,24 @@ class SchedulerViewsTests(APITestCase):
         """Test branches where scheduling fails, segments are empty, or task is missing."""
         from unittest.mock import patch
         from scheduler.scheduler_types import ScheduleResult
-        
+
         now = timezone.now()
         # Mocking the scheduler service
-        with patch('scheduler.views.Scheduler.schedule_tasks') as mock_schedule:
+        with patch("scheduler.views.Scheduler.schedule_tasks") as mock_schedule:
             mock_schedule.return_value = [
                 # 1. success=False
                 ScheduleResult(task_id=1, success=False, segments=[]),
                 # 2. success=True but segments empty
                 ScheduleResult(task_id=2, success=True, segments=[]),
                 # 3. Task.DoesNotExist (user=self.user filter will fail for task 999)
-                ScheduleResult(task_id=999, success=True, segments=[(now, now + timedelta(minutes=30))])
+                ScheduleResult(
+                    task_id=999,
+                    success=True,
+                    segments=[(now, now + timedelta(minutes=30))],
+                ),
             ]
-            
+
             response = self.client.post(self.schedule_url, {}, format="json")
             self.assertEqual(response.status_code, status.HTTP_200_OK)
-            self.assertEqual(response.data['scheduled_count'], 0)
-            self.assertEqual(response.data['failed_count'], 3)
+            self.assertEqual(response.data["scheduled_count"], 0)
+            self.assertEqual(response.data["failed_count"], 3)

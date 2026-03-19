@@ -307,7 +307,9 @@ class EventScopeMutationServiceTests(TestCase):
 
     def test_apply_update_scope_non_recurring(self):
         now = timezone.now().replace(microsecond=0)
-        event = Event.objects.create(user=self.user, start_time=now, end_time=now + timedelta(hours=1))
+        event = Event.objects.create(
+            user=self.user, start_time=now, end_time=now + timedelta(hours=1)
+        )
         apply_update_scope(event, {"title": "New Title"}, "all")
         event.refresh_from_db()
         self.assertEqual(event.title, "New Title")
@@ -329,69 +331,92 @@ class EventScopeMutationServiceTests(TestCase):
 
     def test_revert_override_instance(self):
         from core.services.event_scope_mutations import revert_override_instance
+
         now = self.base_start
         EventOverride.objects.create(
             parent_event=self.event,
             original_start_time=now,
             start_time=now + timedelta(hours=1),
             end_time=now + timedelta(hours=2),
-            title="Override"
+            title="Override",
         )
         self.event.exception_dates = [now.date().isoformat()]
         self.event.save()
-        
+
         revert_override_instance(self.event, now)
         self.assertFalse(self.event.overrides.filter(original_start_time=now).exists())
         self.event.refresh_from_db()
         self.assertNotIn(now.date().isoformat(), self.event.exception_dates)
 
         # Non-recurring event cannot revert
-        event_nr = Event.objects.create(user=self.user, start_time=now, end_time=now + timedelta(hours=1))
+        event_nr = Event.objects.create(
+            user=self.user, start_time=now, end_time=now + timedelta(hours=1)
+        )
         with self.assertRaises(ValueError):
             revert_override_instance(event_nr, now)
-        
+
         # No override exists
         with self.assertRaises(ValueError):
             revert_override_instance(self.event, now + timedelta(days=100))
 
     def test_normalise_reminders_none(self):
         from core.services.event_scope_mutations import _normalise_reminders
+
         self.assertEqual(_normalise_reminders(None), [])
 
     def test_split_exception_dates_invalid(self):
         from core.services.event_scope_mutations import _split_exception_dates
         from datetime import date
-        past, future = _split_exception_dates(["invalid-date", "2026-03-20"], date(2026, 3, 20))
+
+        past, future = _split_exception_dates(
+            ["invalid-date", "2026-03-20"], date(2026, 3, 20)
+        )
         self.assertEqual(past, [])
         self.assertEqual(future, ["2026-03-20"])
 
     def test_category_id_set_mixed(self):
         from core.services.event_scope_mutations import _category_id_set
-        class MockObj: id = 123
+
+        class MockObj:
+            id = 123
+
         self.assertEqual(_category_id_set([MockObj(), 456]), {123, 456})
 
     def test_make_aware_already_aware(self):
         from core.services.event_scope_mutations import _make_aware
+
         now = timezone.now()
         self.assertEqual(_make_aware(now), now)
 
     def test_resolve_submitted_occurrence_window_edge_cases(self):
-        from core.services.event_scope_mutations import _resolve_submitted_occurrence_window
+        from core.services.event_scope_mutations import (
+            _resolve_submitted_occurrence_window,
+        )
+
         now = self.base_start
         # No end_time, no start_time in data
-        anchor, occ_start, sub_start, sub_end = _resolve_submitted_occurrence_window(self.event, {}, now)
+        anchor, occ_start, sub_start, sub_end = _resolve_submitted_occurrence_window(
+            self.event, {}, now
+        )
         self.assertEqual(sub_start, occ_start)
-        self.assertEqual(sub_end, occ_start + (self.event.end_time - self.event.start_time))
-        
+        self.assertEqual(
+            sub_end, occ_start + (self.event.end_time - self.event.start_time)
+        )
+
         # start_time provided but no end_time
         new_start = now + timedelta(hours=5)
-        anchor, occ_start, sub_start, sub_end = _resolve_submitted_occurrence_window(self.event, {"start_time": new_start}, now)
+        anchor, occ_start, sub_start, sub_end = _resolve_submitted_occurrence_window(
+            self.event, {"start_time": new_start}, now
+        )
         self.assertEqual(sub_start, new_start)
-        self.assertEqual(sub_end, new_start + (self.event.end_time - self.event.start_time))
+        self.assertEqual(
+            sub_end, new_start + (self.event.end_time - self.event.start_time)
+        )
 
     def test_remove_exception_date_not_present(self):
         from core.services.event_scope_mutations import _remove_exception_date
         from datetime import date
+
         self.event.exception_dates = ["2026-03-19"]
         self.event.save()
         _remove_exception_date(self.event, date(2026, 3, 20))
@@ -400,9 +425,10 @@ class EventScopeMutationServiceTests(TestCase):
 
     def test_detach_non_aligned_overrides_empty_exception_dates(self):
         from core.services.event_scope_mutations import _detach_non_aligned_overrides
+
         self.event.exception_dates = []
         self.event.save()
-        _detach_non_aligned_overrides(self.event) # Should not crash
+        _detach_non_aligned_overrides(self.event)  # Should not crash
 
     def test_scope_following_delete_past_cutoff(self):
         # Cutoff < start_time.date() -> delete event
@@ -420,28 +446,31 @@ class EventScopeMutationServiceTests(TestCase):
     def test_make_aware_naive(self):
         from core.services.event_scope_mutations import _make_aware
         import datetime
+
         now = datetime.datetime.now()
         # Should become aware
         self.assertTrue(timezone.is_aware(_make_aware(now)))
 
     def test_replace_event_reminders_none(self):
         from core.services.event_scope_mutations import _replace_event_reminders
+
         # Should hit return if None
         _replace_event_reminders(self.event, None)
 
     def test_scope_following_update_with_categories_and_reminders(self):
         now = self.base_start
         from core.models import Category
+
         cat = Category.objects.create(user=self.user, text="X")
         child = apply_update_scope(
             self.event,
             {
                 "title": "New Child",
                 "categories": [cat.id],
-                "reminders": [{"minutes_before": 30}]
+                "reminders": [{"minutes_before": 30}],
             },
             "following",
-            now + timedelta(days=2)
+            now + timedelta(days=2),
         )
         self.assertEqual(child.categories.count(), 1)
         self.assertEqual(child.reminders.count(), 1)

@@ -5,6 +5,7 @@ from core.models import Assessment
 from django.utils import timezone
 import datetime
 
+
 class AssessmentModelTest(TestCase):
     def test_assessment_creation(self):
         assessment = AssessmentFactory()
@@ -13,9 +14,13 @@ class AssessmentModelTest(TestCase):
 
     def test_assessment_ordering(self):
         user = UserFactory()
-        a1 = AssessmentFactory(user=user, due_date=timezone.now() + datetime.timedelta(days=2))
-        a2 = AssessmentFactory(user=user, due_date=timezone.now() + datetime.timedelta(days=1))
-        
+        a1 = AssessmentFactory(
+            user=user, due_date=timezone.now() + datetime.timedelta(days=2)
+        )
+        a2 = AssessmentFactory(
+            user=user, due_date=timezone.now() + datetime.timedelta(days=1)
+        )
+
         assessments = Assessment.objects.filter(user=user)
         self.assertEqual(list(assessments), [a2, a1])
 
@@ -30,22 +35,22 @@ class AssessmentModelTest(TestCase):
         assessment = AssessmentFactory.build(title="  ")
         with self.assertRaises(ValidationError) as cm:
             assessment.clean()
-        self.assertIn('title', cm.exception.message_dict)
+        self.assertIn("title", cm.exception.message_dict)
 
     def test_assessment_clean_empty_module(self):
         assessment = AssessmentFactory.build(module="  ")
         with self.assertRaises(ValidationError) as cm:
             assessment.clean()
-        self.assertIn('module', cm.exception.message_dict)
+        self.assertIn("module", cm.exception.message_dict)
 
     def test_assessment_clean_negative_weighting(self):
         assessment = AssessmentFactory.build(weighting_of_assessment=-1)
         with self.assertRaises(ValidationError) as cm:
             assessment.clean()
-        self.assertIn('weighting_of_assessment', cm.exception.message_dict)
+        self.assertIn("weighting_of_assessment", cm.exception.message_dict)
 
     def test_assessment_clean_negative_reminder_offset(self):
         assessment = AssessmentFactory.build(reminder_offset=-1)
         with self.assertRaises(ValidationError) as cm:
             assessment.clean()
-        self.assertIn('reminder_offset', cm.exception.message_dict)
+        self.assertIn("reminder_offset", cm.exception.message_dict)

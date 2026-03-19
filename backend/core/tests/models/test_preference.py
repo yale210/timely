@@ -45,7 +45,9 @@ class PreferenceTests(TestCase):
         self.assertIn("day_schedule", cm.exception.message_dict)
 
     def test_day_schedule_invalid_length(self):
-        preference = Preference(user=self.user, day_schedule=[{"day": 1, "start": "08:00", "end": "22:00"}])
+        preference = Preference(
+            user=self.user, day_schedule=[{"day": 1, "start": "08:00", "end": "22:00"}]
+        )
         with self.assertRaises(ValidationError) as cm:
             preference.full_clean()
         self.assertIn("day_schedule", cm.exception.message_dict)
@@ -58,7 +60,9 @@ class PreferenceTests(TestCase):
         self.assertIn("day_schedule", cm.exception.message_dict)
 
     def test_day_schedule_invalid_day_value(self):
-        sched = [{"day": i, "start": "08:00", "end": "22:00"} for i in range(7)] # 0 to 6
+        sched = [
+            {"day": i, "start": "08:00", "end": "22:00"} for i in range(7)
+        ]  # 0 to 6
         preference = Preference(user=self.user, day_schedule=sched)
         with self.assertRaises(ValidationError) as cm:
             preference.full_clean()
@@ -88,7 +92,12 @@ class PreferenceTests(TestCase):
     def test_max_hours_exceeds_available(self):
         # 2 hours available, but max_hours_study_per_day = 4
         sched = [{"day": i, "start": "08:00", "end": "10:00"} for i in range(1, 8)]
-        preference = Preference(user=self.user, day_schedule=sched, max_hours_study_per_day=4, limit_max_hours=True)
+        preference = Preference(
+            user=self.user,
+            day_schedule=sched,
+            max_hours_study_per_day=4,
+            limit_max_hours=True,
+        )
         with self.assertRaises(ValidationError) as cm:
             preference.full_clean()
         self.assertIn("max_hours_study_per_day", cm.exception.message_dict)
@@ -96,7 +105,7 @@ class PreferenceTests(TestCase):
     def test_get_day_window_valid(self):
         preference = Preference.objects.create(user=self.user)
         # Friday is weekday 4, so day 5 in our 1-7 scheme
-        target_date = datetime.date(2026, 3, 20) # Friday
+        target_date = datetime.date(2026, 3, 20)  # Friday
         start, end = preference.get_day_window(target_date)
         self.assertEqual(start, datetime.time(8, 0))
         self.assertEqual(end, datetime.time(22, 0))
@@ -110,7 +119,12 @@ class PreferenceTests(TestCase):
         self.assertEqual(str(end), "22:00")
 
     def test_get_day_window_malformed_entry(self):
-        preference = Preference.objects.create(user=self.user, day_schedule=[{"day": 5, "start": "invalid", "end": "22:00"}] + [{"day": i, "start": "08:00", "end": "22:00"} for i in range(1, 5)] + [{"day": i, "start": "08:00", "end": "22:00"} for i in range(6, 8)])
+        preference = Preference.objects.create(
+            user=self.user,
+            day_schedule=[{"day": 5, "start": "invalid", "end": "22:00"}]
+            + [{"day": i, "start": "08:00", "end": "22:00"} for i in range(1, 5)]
+            + [{"day": i, "start": "08:00", "end": "22:00"} for i in range(6, 8)],
+        )
         target_date = datetime.date(2026, 3, 20)
         start, end = preference.get_day_window(target_date)
         self.assertEqual(str(start), "08:00")

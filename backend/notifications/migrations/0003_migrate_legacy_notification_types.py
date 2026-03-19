@@ -23,7 +23,10 @@ def backwards(apps, schema_editor):
 
 class Migration(migrations.Migration):
     dependencies = [
-        ("notifications", "0002_alter_notification_notification_type_broadcastjob_and_more"),
+        (
+            "notifications",
+            "0002_alter_notification_notification_type_broadcastjob_and_more",
+        ),
     ]
 
     operations = [

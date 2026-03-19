@@ -4,11 +4,9 @@ from django.db import migrations
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('core', '0008_alter_category_colour'),
-        ('core', '0008_remove_event_event_category_event_categories'),
+        ("core", "0008_alter_category_colour"),
+        ("core", "0008_remove_event_event_category_event_categories"),
     ]
 
-    operations = [
-    ]
+    operations = []

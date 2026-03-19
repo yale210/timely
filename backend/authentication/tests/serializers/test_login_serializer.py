@@ -62,8 +62,13 @@ class LoginSerializerTest(TestCase):
     def test_validate_method_directly(self):
         """Directly call validate to hit edge cases that DRF fields might catch earlier."""
         from rest_framework import serializers
+
         serializer = LoginSerializer()
-        with self.assertRaisesMessage(serializers.ValidationError, "Username is required."):
+        with self.assertRaisesMessage(
+            serializers.ValidationError, "Username is required."
+        ):
             serializer.validate({"username": "", "password": "password"})
-        with self.assertRaisesMessage(serializers.ValidationError, "Password is required."):
+        with self.assertRaisesMessage(
+            serializers.ValidationError, "Password is required."
+        ):
             serializer.validate({"username": "testuser", "password": ""})

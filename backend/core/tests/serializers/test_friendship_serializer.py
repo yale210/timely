@@ -9,17 +9,30 @@ from rest_framework.test import APIRequestFactory
 
 User = get_user_model()
 
+
 class FriendshipSerializerTests(TestCase):
     def setUp(self):
-        self.user = User.objects.create_user(username="sender", email="sender@example.com")
-        self.receiver = User.objects.create_user(username="receiver", email="receiver@example.com")
-        self.friendship = Friendship.objects.create(sender=self.user, receiver=self.receiver)
+        self.user = User.objects.create_user(
+            username="sender", email="sender@example.com"
+        )
+        self.receiver = User.objects.create_user(
+            username="receiver", email="receiver@example.com"
+        )
+        self.friendship = Friendship.objects.create(
+            sender=self.user, receiver=self.receiver
+        )
         # Profile might be auto-created, but ensure it exists
-        self.sender_profile, _ = Profile.objects.get_or_create(user=self.user, defaults={"name": "Sender"})
-        self.receiver_profile, _ = Profile.objects.get_or_create(user=self.receiver, defaults={"name": ""})
+        self.sender_profile, _ = Profile.objects.get_or_create(
+            user=self.user, defaults={"name": "Sender"}
+        )
+        self.receiver_profile, _ = Profile.objects.get_or_create(
+            user=self.receiver, defaults={"name": ""}
+        )
 
     def test_validate_both_provided(self):
-        serializer = FriendshipSerializer(data={"receiver": self.receiver.id, "receiver_username": "receiver"})
+        serializer = FriendshipSerializer(
+            data={"receiver": self.receiver.id, "receiver_username": "receiver"}
+        )
         with self.assertRaises(serializers.ValidationError) as cm:
             serializer.is_valid(raise_exception=True)
         self.assertIn("receiver_username", cm.exception.detail)
@@ -54,7 +67,9 @@ class FriendshipSerializerTests(TestCase):
 
     def test_get_profile_no_profile(self):
         # User without profile (should fallback to username)
-        user_no_profile = User.objects.create_user(username="noprofile", email="no@profile.com")
+        user_no_profile = User.objects.create_user(
+            username="noprofile", email="no@profile.com"
+        )
         # Ensure profile doesn't exist
         Profile.objects.filter(user=user_no_profile).delete()
         serializer = FriendshipSerializer()
@@ -65,21 +80,25 @@ class FriendshipSerializerTests(TestCase):
         self.assertIsNone(serializer._get_avatar_url(self.user))
 
     def test_get_avatar_url_with_request(self):
-        avatar = SimpleUploadedFile("avatar.png", b"file_content", content_type="image/png")
+        avatar = SimpleUploadedFile(
+            "avatar.png", b"file_content", content_type="image/png"
+        )
         self.sender_profile.avatar = avatar
         self.sender_profile.save()
-        
+
         factory = APIRequestFactory()
-        request = factory.get('/')
-        serializer = FriendshipSerializer(context={'request': request})
+        request = factory.get("/")
+        serializer = FriendshipSerializer(context={"request": request})
         avatar_url = serializer._get_avatar_url(self.user)
         self.assertIn("http://testserver", avatar_url)
 
     def test_get_avatar_url_without_request(self):
-        avatar = SimpleUploadedFile("avatar2.png", b"file_content", content_type="image/png")
+        avatar = SimpleUploadedFile(
+            "avatar2.png", b"file_content", content_type="image/png"
+        )
         self.sender_profile.avatar = avatar
         self.sender_profile.save()
-        
+
         serializer = FriendshipSerializer()
         avatar_url = serializer._get_avatar_url(self.user)
         self.assertTrue(avatar_url.startswith("/api/media/avatars/avatar2"))

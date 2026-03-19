@@ -98,7 +98,9 @@ class FriendshipViewSetTests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
     def test_friend_already_friends_fails(self):
-        Friendship.objects.create(sender=self.sender, receiver=self.receiver, state=Friendship.State.ACCEPTED)
+        Friendship.objects.create(
+            sender=self.sender, receiver=self.receiver, state=Friendship.State.ACCEPTED
+        )
         self.client.force_authenticate(user=self.sender)
         data = {"receiver": self.receiver.id}
         response = self.client.post(self.url, data, format="json")

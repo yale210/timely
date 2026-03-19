@@ -276,7 +276,7 @@ class AdminNotificationActionTests(APITestCase):
             message="Alert",
             target="all",
         )
-        
+
         response = self.client.get(f"{self.broadcasts_url}?q=Important")
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -321,7 +321,7 @@ class AdminNotificationActionTests(APITestCase):
             message="Msg",
             target="all",
         )
-        
+
         response = self.client.get(self.broadcasts_url)
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)

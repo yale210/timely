@@ -152,15 +152,21 @@ class EventViewSetTests(APITestCase):
 
     def test_list_with_invalid_dates(self):
         # Invalid format
-        response = self.client.get(self.url, {"start_date": "2023-01-01", "end_date": "invalid"})
+        response = self.client.get(
+            self.url, {"start_date": "2023-01-01", "end_date": "invalid"}
+        )
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        
+
         # End before start
-        response = self.client.get(self.url, {"start_date": "2023-01-02", "end_date": "2023-01-01"})
+        response = self.client.get(
+            self.url, {"start_date": "2023-01-02", "end_date": "2023-01-01"}
+        )
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        
+
         # Range too large (> 365 days)
-        response = self.client.get(self.url, {"start_date": "2023-01-01", "end_date": "2024-01-02"})
+        response = self.client.get(
+            self.url, {"start_date": "2023-01-01", "end_date": "2024-01-02"}
+        )
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
     def test_parse_original_start_time_invalid(self):
@@ -170,16 +176,22 @@ class EventViewSetTests(APITestCase):
             title="Recurring Event",
             start_time=now,
             end_time=now + datetime.timedelta(hours=1),
-            recurrence_interval="daily"
+            recurrence_interval="daily",
         )
         url = reverse("event-detail", args=[event.id])
-        
+
         # Invalid ISO datetime
-        response = self.client.patch(url, {"title": "New"}, QUERY_STRING="original_start_time=invalid")
+        response = self.client.patch(
+            url, {"title": "New"}, QUERY_STRING="original_start_time=invalid"
+        )
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        
+
         # Naive datetime
-        response = self.client.patch(url, {"title": "New"}, QUERY_STRING="original_start_time=2023-01-01T10:00:00")
+        response = self.client.patch(
+            url,
+            {"title": "New"},
+            QUERY_STRING="original_start_time=2023-01-01T10:00:00",
+        )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
     def test_update_with_invalid_scope(self):
@@ -188,10 +200,12 @@ class EventViewSetTests(APITestCase):
             user=self.user,
             title="Event",
             start_time=now,
-            end_time=now + datetime.timedelta(hours=1)
+            end_time=now + datetime.timedelta(hours=1),
         )
         url = reverse("event-detail", args=[event.id])
-        response = self.client.patch(url, {"title": "New"}, QUERY_STRING="scope=invalid")
+        response = self.client.patch(
+            url, {"title": "New"}, QUERY_STRING="scope=invalid"
+        )
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
     from django.test import override_settings
@@ -204,10 +218,14 @@ class EventViewSetTests(APITestCase):
             title="Recurring",
             start_time=now,
             end_time=now + datetime.timedelta(hours=1),
-            recurrence_interval="daily"
+            recurrence_interval="daily",
         )
         url = reverse("event-detail", args=[event.id])
-        response = self.client.patch(url, {"title": "New"}, QUERY_STRING="scope=this&original_start_time=2023-01-01T10:00:00Z")
+        response = self.client.patch(
+            url,
+            {"title": "New"},
+            QUERY_STRING="scope=this&original_start_time=2023-01-01T10:00:00Z",
+        )
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn("disabled by feature flag", response.data["detail"])
 
@@ -219,10 +237,12 @@ class EventViewSetTests(APITestCase):
             title="Recurring",
             start_time=now,
             end_time=now + datetime.timedelta(hours=1),
-            recurrence_interval="daily"
+            recurrence_interval="daily",
         )
         url = reverse("event-detail", args=[event.id])
-        response = self.client.delete(url, QUERY_STRING="scope=this&original_start_time=2023-01-01T10:00:00Z")
+        response = self.client.delete(
+            url, QUERY_STRING="scope=this&original_start_time=2023-01-01T10:00:00Z"
+        )
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn("disabled by feature flag", response.data["detail"])
 
@@ -234,7 +254,7 @@ class EventViewSetTests(APITestCase):
             title="Recurring",
             start_time=now,
             end_time=now + datetime.timedelta(hours=1),
-            recurrence_interval="daily"
+            recurrence_interval="daily",
         )
         url = reverse("event-detail", args=[event.id])
         response = self.client.patch(url, {"title": "New"}, QUERY_STRING="scope=this")
@@ -249,18 +269,21 @@ class EventViewSetTests(APITestCase):
             title="Recurring",
             start_time=now,
             end_time=now + datetime.timedelta(hours=1),
-            recurrence_interval="daily"
+            recurrence_interval="daily",
         )
 
         url = reverse("event-revert-instance", args=[event.id])
         # original_start_time missing
         response = self.client.post(url)
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        
+
         # Success
         from unittest.mock import patch
+
         with patch("core.views.event_view.revert_override_instance") as mock_revert:
-            response = self.client.post(url, QUERY_STRING="original_start_time=2023-01-01T10:00:00Z")
+            response = self.client.post(
+                url, QUERY_STRING="original_start_time=2023-01-01T10:00:00Z"
+            )
             self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
             mock_revert.assert_called_once()
 
@@ -272,10 +295,12 @@ class EventViewSetTests(APITestCase):
             title="Recurring",
             start_time=now,
             end_time=now + datetime.timedelta(hours=1),
-            recurrence_interval="daily"
+            recurrence_interval="daily",
         )
         url = reverse("event-revert-instance", args=[event.id])
-        response = self.client.post(url, QUERY_STRING="original_start_time=2023-01-01T10:00:00Z")
+        response = self.client.post(
+            url, QUERY_STRING="original_start_time=2023-01-01T10:00:00Z"
+        )
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn("disabled by feature flag", response.data["detail"])
 
@@ -285,11 +310,13 @@ class EventViewSetTests(APITestCase):
             user=self.user,
             title="Non-recurring",
             start_time=now,
-            end_time=now + datetime.timedelta(hours=1)
+            end_time=now + datetime.timedelta(hours=1),
         )
         url = reverse("event-revert-instance", args=[event.id])
         # original_start_time missing
-        response = self.client.post(url, QUERY_STRING="original_start_time=2023-01-01T10:00:00Z")
+        response = self.client.post(
+            url, QUERY_STRING="original_start_time=2023-01-01T10:00:00Z"
+        )
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn("Only recurring events support", response.data["detail"])
 
@@ -306,13 +333,18 @@ class EventViewSetTests(APITestCase):
             title="Recurring",
             start_time=now,
             end_time=now + datetime.timedelta(hours=1),
-            recurrence_interval="daily"
+            recurrence_interval="daily",
         )
         url = reverse("event-detail", args=[event.id])
         from unittest.mock import patch
+
         with patch("core.views.event_view.apply_update_scope") as mock_update:
             mock_update.return_value = event
-            response = self.client.patch(url, {"title": "Updated"}, QUERY_STRING="scope=this&original_start_time=2023-01-01T10:00:00Z")
+            response = self.client.patch(
+                url,
+                {"title": "Updated"},
+                QUERY_STRING="scope=this&original_start_time=2023-01-01T10:00:00Z",
+            )
             self.assertEqual(response.status_code, status.HTTP_200_OK)
             mock_update.assert_called_once()
 
@@ -324,13 +356,18 @@ class EventViewSetTests(APITestCase):
             title="Recurring",
             start_time=now,
             end_time=now + datetime.timedelta(hours=1),
-            recurrence_interval="daily"
+            recurrence_interval="daily",
         )
         url = reverse("event-detail", args=[event.id])
         from unittest.mock import patch
+
         with patch("core.views.event_view.apply_update_scope") as mock_update:
             mock_update.side_effect = ValueError("Test error")
-            response = self.client.patch(url, {"title": "Updated"}, QUERY_STRING="scope=this&original_start_time=2023-01-01T10:00:00Z")
+            response = self.client.patch(
+                url,
+                {"title": "Updated"},
+                QUERY_STRING="scope=this&original_start_time=2023-01-01T10:00:00Z",
+            )
             self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
             self.assertEqual(response.data["detail"], "Test error")
 
@@ -342,7 +379,7 @@ class EventViewSetTests(APITestCase):
             title="Recurring",
             start_time=now,
             end_time=now + datetime.timedelta(hours=1),
-            recurrence_interval="daily"
+            recurrence_interval="daily",
         )
         url = reverse("event-detail", args=[event.id])
         response = self.client.delete(url, QUERY_STRING="scope=all")
@@ -357,12 +394,15 @@ class EventViewSetTests(APITestCase):
             title="Recurring",
             start_time=now,
             end_time=now + datetime.timedelta(hours=1),
-            recurrence_interval="daily"
+            recurrence_interval="daily",
         )
         url = reverse("event-detail", args=[event.id])
         from unittest.mock import patch
+
         with patch("core.views.event_view.apply_delete_scope") as mock_delete:
-            response = self.client.delete(url, QUERY_STRING="scope=this&original_start_time=2023-01-01T10:00:00Z")
+            response = self.client.delete(
+                url, QUERY_STRING="scope=this&original_start_time=2023-01-01T10:00:00Z"
+            )
             self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
             mock_delete.assert_called_once()
 
@@ -374,13 +414,16 @@ class EventViewSetTests(APITestCase):
             title="Recurring",
             start_time=now,
             end_time=now + datetime.timedelta(hours=1),
-            recurrence_interval="daily"
+            recurrence_interval="daily",
         )
         url = reverse("event-revert-instance", args=[event.id])
         from unittest.mock import patch
+
         with patch("core.views.event_view.revert_override_instance") as mock_revert:
             mock_revert.side_effect = ValueError("Not found")
-            response = self.client.post(url, QUERY_STRING="original_start_time=2023-01-01T10:00:00Z")
+            response = self.client.post(
+                url, QUERY_STRING="original_start_time=2023-01-01T10:00:00Z"
+            )
             self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
     def test_destroy_non_recurring(self):
@@ -389,7 +432,7 @@ class EventViewSetTests(APITestCase):
             user=self.user,
             title="Non-recurring",
             start_time=now,
-            end_time=now + datetime.timedelta(hours=1)
+            end_time=now + datetime.timedelta(hours=1),
         )
         url = reverse("event-detail", args=[event.id])
         response = self.client.delete(url)

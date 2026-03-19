@@ -8,6 +8,7 @@ from rest_framework.test import APITestCase
 
 User = get_user_model()
 
+
 class ProfileAPIViewTests(APITestCase):
     def setUp(self):
         self.user = User.objects.create_user(
@@ -32,6 +33,7 @@ class ProfileAPIViewTests(APITestCase):
         response = self.client.put(self.url, {"name": "New Name"}, format="json")
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data["name"], "New Name")
+
 
 class PublicProfileAPIViewTests(APITestCase):
     def setUp(self):

@@ -3,6 +3,7 @@ from django.urls import clear_url_caches
 from importlib import reload
 import sys
 
+
 class SourceUrlsTest(SimpleTestCase):
     """Tests for the main URL configuration."""
 
@@ -13,8 +14,9 @@ class SourceUrlsTest(SimpleTestCase):
             reload(sys.modules["source.urls"])
         else:
             import source.urls
-        
+
         from source.urls import urlpatterns
+
         pass
 
     @override_settings(DEBUG=False)
@@ -24,6 +26,7 @@ class SourceUrlsTest(SimpleTestCase):
             reload(sys.modules["source.urls"])
         else:
             import source.urls
-        
+
         from source.urls import urlpatterns
+
         pass

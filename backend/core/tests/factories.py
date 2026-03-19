@@ -7,19 +7,21 @@ import datetime
 
 User = get_user_model()
 
+
 class UserFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = User
 
     username = factory.Sequence(lambda n: f"user_{n}")
     email = factory.Sequence(lambda n: f"user_{n}@example.com")
-    password = factory.PostGenerationMethodCall('set_password', 'password123')
+    password = factory.PostGenerationMethodCall("set_password", "password123")
 
     @factory.post_generation
     def create_profile(obj, create, extracted, **kwargs):
         if not create:
             return
-        Profile.objects.get_or_create(user=obj, defaults={'name': obj.username})
+        Profile.objects.get_or_create(user=obj, defaults={"name": obj.username})
+
 
 class AssessmentFactory(factory.django.DjangoModelFactory):
     class Meta:
@@ -34,6 +36,7 @@ class AssessmentFactory(factory.django.DjangoModelFactory):
     length_of_assessment = 120
     reminder_offset = 60
 
+
 class CategoryFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = Category
@@ -41,6 +44,7 @@ class CategoryFactory(factory.django.DjangoModelFactory):
     user = factory.SubFactory(UserFactory)
     text = factory.Sequence(lambda n: f"Category {n}")
     colour = "#FFFFFF"
+
 
 class TaskFactory(factory.django.DjangoModelFactory):
     class Meta:
