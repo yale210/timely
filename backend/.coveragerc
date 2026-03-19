@@ -1,6 +1,4 @@
 [run]
-parallel = true
-concurrency = multiprocessing
 branch = True
 source = .
 omit =
