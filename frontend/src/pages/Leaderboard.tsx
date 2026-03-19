@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import type { CSSProperties } from "react";
 import AppLayout from "@/layouts/AppLayout";
 import api from "@/services/api";
 import { getMyProfile } from "@/services/profileService";
@@ -14,15 +15,7 @@ const LeaderboardEntry = ({ entry, index }: { entry: Profile; index: number }) =
   const xp = entry.xp ?? 0;
   const requiredExp = getRequiredExp(level);
   const progress = requiredExp > 0 ? Math.min(100, (xp / requiredExp) * 100) : 0;
-  const [animatedProgress, setAnimatedProgress] = useState(0);
-
-  useEffect(() => {
-    setAnimatedProgress(0);
-    const frame = window.requestAnimationFrame(() => {
-      setAnimatedProgress(progress);
-    });
-    return () => window.cancelAnimationFrame(frame);
-  }, [progress]);
+  const progressStyle = { "--xp-progress": `${progress}%` } as CSSProperties;
 
   return (
     <li className="rounded-lg border border-gray-200 px-4 py-3">
@@ -37,8 +30,8 @@ const LeaderboardEntry = ({ entry, index }: { entry: Profile; index: number }) =
       </div>
       <div className="mt-3 h-2 w-full rounded-full bg-gray-100">
         <div
-          className="h-2 rounded-full bg-cyan-500 transition-all duration-700"
-          style={{ width: `${animatedProgress}%` }}
+          className="xp-progress-fill h-2 rounded-full bg-cyan-500"
+          style={progressStyle}
         />
       </div>
       <p className="mt-2 text-xs text-gray-500">

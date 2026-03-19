@@ -1,0 +1,14 @@
+@keyframes xp-progress-grow {
+  from {
+    width: 0%;
+  }
+  to {
+    width: var(--xp-progress, 0%);
+  }
+}
+
+.xp-progress-fill {
+  width: var(--xp-progress, 0%);
+  animation: xp-progress-grow 700ms ease-out forwards;
+  transition: width 700ms ease-out;
+}

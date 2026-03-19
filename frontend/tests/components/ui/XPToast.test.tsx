@@ -5,15 +5,15 @@ import { XP_GAINED_EVENT } from "@/utils/xpEvents"
 
 
 describe("XPToast", () => {
-    it("shows xp-gained messsage when xp gain up event is triggered after completing a task"), () => {
+    it("shows xp-gained messsage when xp gain up event is triggered after completing a task", () => {
         render(<XPToast />);
 
         window.dispatchEvent(new CustomEvent(XP_GAINED_EVENT, {detail: {amount : 20}}));
 
         expect(screen.getByText("+20 XP")).toBeInTheDocument();
-    };
+    });
 
-    it("xp gained message dissappears after timeout"), () => {
+    it("xp gained message dissappears after timeout", () => {
         vi.useFakeTimers()
         render(<XPToast />)
 
@@ -25,5 +25,5 @@ describe("XPToast", () => {
         expect(screen.queryByText("+30 XP")).not.toBeInTheDocument();
 
         vi.useRealTimers();
-    }
+    });
 })

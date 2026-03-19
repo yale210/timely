@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import type { CSSProperties } from "react";
 
 interface XPBarProps {
   xp?: number;
@@ -11,15 +11,7 @@ const XPBar = ({ xp = 0, level = 1 }: XPBarProps) => {
   const nextLevel = Math.max(1, level + 1);
   const requiredExp = Math.round(100 * nextLevel ** 1.5);
   const progress = requiredExp > 0 ? clamp((xp / requiredExp) * 100, 0, 100) : 0;
-  const [animatedProgress, setAnimatedProgress] = useState(0);
-
-  useEffect(() => {
-    setAnimatedProgress(0);
-    const frame = window.requestAnimationFrame(() => {
-      setAnimatedProgress(progress);
-    });
-    return () => window.cancelAnimationFrame(frame);
-  }, [progress]);
+  const progressStyle = { "--xp-progress": `${progress}%` } as CSSProperties;
 
   return (
     <div className="hidden sm:flex items-center gap-3 rounded-full border border-gray-200 bg-gray-50 px-3 py-1.5">
@@ -34,8 +26,8 @@ const XPBar = ({ xp = 0, level = 1 }: XPBarProps) => {
         </div>
         <div className="mt-1 h-2 w-full rounded-full bg-white ring-1 ring-gray-200">
           <div
-            className="h-2 rounded-full bg-cyan-500 transition-all duration-700"
-            style={{ width: `${animatedProgress}%` }}
+            className="xp-progress-fill h-2 rounded-full bg-cyan-500"
+            style={progressStyle}
             data-testid="xp-bar-fill"
           />
         </div>

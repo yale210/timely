@@ -32,7 +32,10 @@ export interface Task {
   total_task_allocations?: number;
 }
 
-export interface TaskUpdatedResponse extends Task{
+/**
+ * Response payload after updating a task, including progression fields.
+ */
+export interface TaskUpdatedResponse extends Task {
   level_up?: boolean;
   new_level?: number;
   xp?: number;
