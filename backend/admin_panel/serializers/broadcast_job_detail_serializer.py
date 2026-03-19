@@ -1,14 +1,11 @@
 """Serializers for broadcast job detail responses."""
 
-from django.contrib.auth import get_user_model
 from rest_framework import serializers
 
 from admin_panel.serializers.broadcast_recipient_serializer import (
     BroadcastRecipientSerializer,
 )
 from notifications.models import BroadcastJob
-
-User = get_user_model()
 
 
 class BroadcastJobDetailSerializer(serializers.ModelSerializer):

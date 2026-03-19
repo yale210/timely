@@ -1,11 +1,7 @@
 """Serializers for broadcast job list responses."""
 
-from django.contrib.auth import get_user_model
 from rest_framework import serializers
-
 from notifications.models import BroadcastJob
-
-User = get_user_model()
 
 
 class BroadcastJobListSerializer(serializers.ModelSerializer):
