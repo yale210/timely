@@ -13,7 +13,7 @@ describe("XPToast", () => {
     expect(await screen.findByText("+20 XP")).toBeInTheDocument();
   });
 
-  it("xp gained message dissappears after timeout", async () => {
+  it("xp gained message dissappears after timeout", () => {
     vi.useFakeTimers();
     render(<XPToast />);
 

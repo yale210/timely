@@ -2,7 +2,6 @@ import { render } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import { vi, describe, it, expect, beforeEach } from "vitest";
 import App from "@/App";
-import { Leaderboard } from "@/pages";
 
 // Mock the components used in routes to avoid deep rendering issues
 vi.mock("@/pages/index", () => ({

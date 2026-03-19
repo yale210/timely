@@ -13,7 +13,7 @@ describe("LevelUpToast", () => {
     expect(await screen.findByText("Level Up! Level 5")).toBeInTheDocument();
   });
 
-  it("level message dissappears after timeout", async () => {
+  it("level message dissappears after timeout", () => {
     vi.useFakeTimers();
     render(<LevelUpToast />);
 

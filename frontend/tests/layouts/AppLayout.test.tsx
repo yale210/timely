@@ -2,7 +2,6 @@ import { render, screen } from "@testing-library/react";
 import { describe, it, expect, vi } from "vitest";
 import AppLayout from "@/layouts/AppLayout";
 import { MemoryRouter } from "react-router-dom";
-import { LevelUpToast } from "@/components";
 
 // Mock AppNavbar to avoid issues with its own dependencies
 vi.mock("@/components/index", () => ({
