@@ -1,36 +1,30 @@
 from django.contrib.auth import authenticate
 from rest_framework import serializers
 
-from .models import User
-
-
-class RegisterSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = User
-        fields = ["id", "username", "email", "password"]
-        extra_kwargs = {
-            "password": {"write_only": True},
-            "id": {"read_only": True},
-        }
-
-    def validate(self, attrs):
-        username = attrs.get("username").strip().lower()
-        if User.objects.filter(username=username).exists():
-            raise serializers.ValidationError("User with this username already exist.")
-        return attrs
-
-    def create(self, validated_data):
-        user = User.objects.create_user(**validated_data)
-        return user
+from ..models import User
 
 
 class LoginSerializer(serializers.Serializer):
+    """Serialize and validate user login credentials."""
+
     username = serializers.CharField(max_length=255)
     password = serializers.CharField(
         style={"input_type": "password"}, trim_whitespace=False
     )
 
     def validate(self, attrs):
+        """Validate login credentials.
+
+        Args:
+            attrs: Incoming login data.
+
+        Returns:
+            dict: Validated attributes including the authenticated user.
+
+        Raises:
+            serializers.ValidationError: If required fields are missing or
+                credentials are invalid.
+        """
         username = attrs.get("username")
         password = attrs.get("password")
 
@@ -50,18 +44,3 @@ class LoginSerializer(serializers.Serializer):
             raise serializers.ValidationError("Invalid credentials.")
         attrs["user"] = user
         return attrs
-
-
-class UserSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = User
-        fields = [
-            "id",
-            "username",
-            "email",
-            "last_login",
-            "date_of_birth",
-            "date_joined",
-            "is_staff",
-            "is_superuser",
-        ]

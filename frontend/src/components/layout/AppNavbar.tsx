@@ -15,7 +15,8 @@ const navItems = [
 ]
 
 const featureItems = [
-  { key: "gradebook", label: "Gradebook", to: "/gradebook", icon: "school" }
+  { key: "gradebook", label: "Gradebook", to: "/gradebook", icon: "school" },
+  { key: "leaderboard", label: "Leaderboard", to: "/leaderboard", icon: "leaderboard" },
 ]
 
 const FEATURE_FLAGS = {
@@ -99,15 +100,20 @@ export default function AppNavbar() {
         isActive = false
       }
     }
-    void getMyProfile()
-      .then((profile) => {
+
+    const loadProfile = async () => {
+      try {
+        const profile = await getMyProfile()
         if (!isActive) return
         setProfileAvatar(profile.avatar ?? null)
-      })
-      .catch(() => {
+      } catch {
         if (!isActive) return
         setProfileAvatar(null)
-      })
+      }
+    }
+
+    void loadProfile()
+
     return () => {
       isActive = false
     }
@@ -115,6 +121,7 @@ export default function AppNavbar() {
 
   const visibleFeatureItems = featureItems.filter((item) => {
     if (item.key === "gradebook") return featureFlags.gradebook
+    if (item.key === "leaderboard") return true
     return false
   })
 
@@ -342,4 +349,3 @@ export default function AppNavbar() {
     </header>
   )
 }
-

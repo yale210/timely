@@ -1,3 +1,5 @@
+"""URL routes for the admin panel API."""
+
 from django.urls import include, path
 from rest_framework.routers import SimpleRouter
 

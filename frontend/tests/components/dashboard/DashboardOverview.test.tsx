@@ -17,8 +17,8 @@ const tasks: Task[] = [
   {
     id: 1,
     title: "Essay",
-    start_time: "2026-03-15T09:00:00.000Z",
-    deadline: "2026-03-15T11:00:00.000Z",
+    start_time: new Date(Date.now() + 60 * 60 * 1000).toISOString(),
+    deadline: new Date(Date.now() + 3 * 60 * 60 * 1000).toISOString(),
     importance: 6,
     completed: false,
     categories: [],
@@ -30,8 +30,8 @@ const events: Event[] = [
   {
     id: 1,
     title: "Seminar",
-    start_time: "2026-03-15T13:00:00.000Z",
-    end_time: "2026-03-15T14:00:00.000Z",
+    start_time: new Date(Date.now() + 5 * 60 * 60 * 1000).toISOString(),
+    end_time: new Date(Date.now() + 6 * 60 * 60 * 1000).toISOString(),
     categories: [],
     reminders: [],
   },

@@ -1,12 +1,27 @@
+from django.utils import timezone
 from rest_framework import serializers
 
 from profiles.models.profile import Profile
 
 
 class ProfileSerializer(serializers.ModelSerializer):
+    def validate_date_of_birth(self, value):
+        if value is not None and value > timezone.now().date():
+            raise serializers.ValidationError("Date of birth cannot be in the future.")
+        return value
+
     class Meta:
         model = Profile
-        fields = ["name", "date_of_birth", "creation_date", "slogan", "bio", "avatar"]
+        fields = [
+            "name",
+            "date_of_birth",
+            "creation_date",
+            "slogan",
+            "bio",
+            "avatar",
+            "xp",
+            "level",
+        ]
         read_only_fields = ["creation_date"]
 
 

@@ -9,6 +9,8 @@ export interface Profile {
   slogan: string;
   bio: string;
   avatar: string | null;
+  xp?: number;
+  level?: number;
 }
 
 /**

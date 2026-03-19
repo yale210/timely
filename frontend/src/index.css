@@ -6,6 +6,7 @@
 @import "./styles/theme.css";
 @import "./styles/calendar.css";
 @import "./styles/typography.css";
+@import "./styles/xp-progress.css";
 
 .task-circle-checkbox {
   -webkit-appearance: none;

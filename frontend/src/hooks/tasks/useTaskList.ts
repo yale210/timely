@@ -4,6 +4,8 @@ import * as taskService from "@/services/taskService";
 import * as categoryService from "@/services/categoryService";
 import { type Category, type Task, type TaskSubmission } from "@/types";
 import { useThemeFont } from "@/hooks/common/useThemeFont";
+import { emitXpGained } from "@/utils/xpEvents";
+import { emitLevelup } from "@/utils/levelUpEvent";
 
 type TaskCompletionFilter = "all" | "completed" | "pending";
 
@@ -126,20 +128,30 @@ useEffect(() => {
   void refresh();
 }, [refresh]);
 
-const toggleComplete = useCallback(
-  async (id: number) => {
-    const task = tasks.find((item) => item.id === id);
-    if (!task) {
-      return;
-    }
+  const toggleComplete = useCallback(
+    async (id: number) => {
+      const task = tasks.find((item) => item.id === id);
+      if (!task) {
+        return;
+      }
 
-    try {
-      await taskService.updateTask(id, { completed: !task.completed });
-      await fetchTasks();
-    } catch (toggleError) {
-      console.error(toggleError);
-    }
-  },
+      try {
+        const nextCompleted = !task.completed;
+        //await taskService.updateTask(id, { completed: nextCompleted });
+        const response = await taskService.updateTask(id, {completed: nextCompleted} )
+        console.log("task update response", JSON.stringify(response, null, 2))
+        if (nextCompleted && !task.completed) {
+          const expDelta = 10 + 2 * task.importance;
+          emitXpGained(expDelta);
+        }
+        if (response.level_up && response.new_level != null) {
+          emitLevelup(response.new_level)
+        }
+        await fetchTasks();
+      } catch (toggleError) {
+        console.error(toggleError);
+      }
+    },
   [fetchTasks, tasks],
 );
 
@@ -359,4 +371,3 @@ return {
   },
 };
 };
-
