@@ -2,6 +2,7 @@ import { render } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import { vi, describe, it, expect, beforeEach } from "vitest";
 import App from "@/App";
+import { Leaderboard } from "@/pages";
 
 // Mock the components used in routes to avoid deep rendering issues
 vi.mock("@/pages/index", () => ({
@@ -16,6 +17,7 @@ vi.mock("@/pages/index", () => ({
   Settings: () => <div>Settings Page</div>,
   Friends: () => <div>Friends Page</div>,
   ProfilePage: () => <div>Profile Page</div>,
+  Leaderboard: () => <div>Leaderboard Page</div>
 }));
 
 vi.mock("@/pages/Notification/Notifications", () => ({
