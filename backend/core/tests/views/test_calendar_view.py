@@ -2,8 +2,6 @@ from rest_framework.test import APITestCase
 from rest_framework import status
 from core.tests.factories import UserFactory, TaskFactory, CategoryFactory
 from core.models import Task, Category
-from django.utils import timezone
-import datetime
 
 
 class CalendarViewTests(APITestCase):

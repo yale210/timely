@@ -1,6 +1,5 @@
 from rest_framework.test import APITestCase
 from rest_framework import status
-from django.urls import reverse
 from core.tests.factories import UserFactory, CategoryFactory
 from core.models import Category
 
