@@ -17,6 +17,7 @@ const navItems = [
 const featureItems = [
   { key: "gradebook", label: "Gradebook", to: "/gradebook", icon: "school" },
   { key: "leaderboard", label: "Leaderboard", to: "/leaderboard", icon: "leaderboard" },
+  { key: "assessments", label: "Assessments", to: "/assessments", icon: "assignment" }
 ]
 
 const FEATURE_FLAGS = {

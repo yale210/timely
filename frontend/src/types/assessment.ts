@@ -21,6 +21,9 @@ export interface Assessment {
   linked_event: number | null;
   created_at: string;
   updated_at: string;
+  location: string | null;
+  start_time: string | null;
+  end_time: string | null;
 }
 
 export interface AssessmentDetails {
