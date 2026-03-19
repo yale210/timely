@@ -41,13 +41,23 @@ class RegisterSerializerTest(TestCase):
             ErrorDetail("user with this username already exists.", code="unique"),
         )
 
-    def test_registration_missing_fields(self):
-        """Verify registration fails when fields are missing."""
+    def test_registration_with_existing_username_case_insensitive(self):
+        """Verify registration using an existing username (different case/whitespace) is invalid."""
+        User.objects.create_user(
+            username="existinguser",
+            email="existing@example.com",
+            password="password123",
+        )
         data = {
-            "username": "incomplete"
-            # Missing email and password
+            "username": "  EXISTINGUSER  ",
+            "email": "another@example.com",
+            "password": "password123",
         }
         serializer = RegisterSerializer(data=data)
         self.assertFalse(serializer.is_valid())
-        self.assertIn("email", serializer.errors)
-        self.assertIn("password", serializer.errors)
+        # This should trigger our manual ValidationError in validate()
+        self.assertIn("non_field_errors", serializer.errors)
+        self.assertEqual(
+            serializer.errors["non_field_errors"][0],
+            "User with this username already exist.",
+        )
