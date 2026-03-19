@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import type { CSSProperties } from "react";
 import moment from "moment";
 import { Link } from "react-router-dom";
 import MiniCalendarPreview from "@/components/dashboard/MiniCalendarPreview";
@@ -171,19 +172,11 @@ const UpcomingTasksCard = ({
 );
 
 const XpProgressCard = ({ profileStats }: { profileStats: { exp: number; level: number } | null }) => {
-  const [animatedProgress, setAnimatedProgress] = useState(0);
   const level = profileStats?.level ?? 0;
   const exp = profileStats?.exp ?? 0;
   const requiredExp = getRequiredExp(level);
   const progress = requiredExp > 0 ? Math.min(100, (exp / requiredExp) * 100) : 0;
-
-  useEffect(() => {
-    setAnimatedProgress(0);
-    const frame = window.requestAnimationFrame(() => {
-      setAnimatedProgress(progress);
-    });
-    return () => window.cancelAnimationFrame(frame);
-  }, [progress]);
+  const progressStyle = { "--xp-progress": `${progress}%` } as CSSProperties;
 
   if (!profileStats) {
     return (
@@ -205,8 +198,8 @@ const XpProgressCard = ({ profileStats }: { profileStats: { exp: number; level: 
       </p>
       <div className="mt-4 h-3 w-full rounded-full bg-gray-100">
         <div
-          className="h-3 rounded-full bg-cyan-500 transition-all duration-700"
-          style={{ width: `${animatedProgress}%` }}
+          className="xp-progress-fill h-3 rounded-full bg-cyan-500"
+          style={progressStyle}
         />
       </div>
     </div>

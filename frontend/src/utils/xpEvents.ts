@@ -12,6 +12,7 @@ export interface XpGainedDetail {
 
 /**
  * Emits an XP gained event with the amount.
+ * @param amount - The XP amount to broadcast.
  */
 export const emitXpGained = (amount: number) => {
   if (typeof window === "undefined") return;

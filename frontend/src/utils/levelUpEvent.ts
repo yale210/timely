@@ -12,6 +12,7 @@ export interface LevelUpDetail {
 
 /**
  * Emits a level-up event with the new level.
+ * @param amount - The new level amount to broadcast.
  */
 export const emitLevelup = (amount: number) => {
   if (typeof window === "undefined") return;
