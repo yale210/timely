@@ -1,8 +1,12 @@
 [run]
-source =
-    core
-    source
+parallel = true
+concurrency = multiprocessing
+branch = True
+source = .
 omit =
+    */venv/*
+    */.venv/*
+    */env/*
     */migrations/*
     */tests/*
     */__init__.py
