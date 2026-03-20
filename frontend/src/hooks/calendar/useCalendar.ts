@@ -37,7 +37,6 @@ interface CalendarState {
   timeGutterWidth: number;
   isRescheduling: boolean;
   rescheduleWarnings: { taskId: number; title: string; reason: string }[];
-  pendingTaskLock: { taskId: number; title: string; wasLocked: boolean } | null;
 }
 
 interface CalendarLoading {
@@ -76,8 +75,6 @@ interface CalendarActions {
   handleEventDrop: (args: EventInteractionArgs<CalendarEntry>) => Promise<void>;
   handleEventResize: (args: EventInteractionArgs<CalendarEntry>) => Promise<void>;
   handleToggleTaskComplete: (taskId: number) => Promise<void>;
-  confirmTaskLock: () => Promise<void>;
-  dismissTaskLockPrompt: () => Promise<void>;
   setHeaderHeight: (height: number) => void;
   setTimeGutterWidth: (width: number) => void;
 }
@@ -218,7 +215,6 @@ export const useCalendar = (): UseCalendarReturn => {
   const [rescheduleWarnings, setRescheduleWarnings] = useState<
     { taskId: number; title: string; reason: string }[]
   >([]);
-  const [pendingTaskLock, setPendingTaskLock] = useState<{ taskId: number; title: string; wasLocked: boolean } | null>(null);
   const [headerHeight, setHeaderHeight] = useState(0);
   const [timeGutterWidth, setTimeGutterWidth] = useState(56);
   const hasInitialized = useRef(false);
@@ -642,7 +638,6 @@ export const useCalendar = (): UseCalendarReturn => {
 
       try {
         await taskService.updateTask(task.id, { allocation: nextAllocations });
-        setPendingTaskLock({ taskId: task.id, title: task.title, wasLocked: Boolean(task.locked) });
       } catch (updateError) {
         console.error(updateError);
         await fetchTasks();
@@ -650,63 +645,6 @@ export const useCalendar = (): UseCalendarReturn => {
     },
     [fetchTasks, tasks],
   );
-
-  const dismissTaskLockPrompt = useCallback(async () => {
-    if (!pendingTaskLock) {
-      return;
-    }
-
-    if (!pendingTaskLock.wasLocked) {
-      setPendingTaskLock(null);
-      return;
-    }
-
-    try {
-      await taskService.updateTask(pendingTaskLock.taskId, { locked: false });
-      setTasks((prev) =>
-        prev.map((task) =>
-          task.id === pendingTaskLock.taskId ? { ...task, locked: false } : task,
-        ),
-      );
-      setSelectedItem((prev) => {
-        if (!prev || !("deadline" in prev) || prev.id !== pendingTaskLock.taskId) {
-          return prev;
-        }
-        return { ...prev, locked: false };
-      });
-    } catch (error) {
-      console.error(error);
-      await fetchTasks();
-    } finally {
-      setPendingTaskLock(null);
-    }
-  }, [fetchTasks, pendingTaskLock]);
-
-  const confirmTaskLock = useCallback(async () => {
-    if (!pendingTaskLock) {
-      return;
-    }
-
-    try {
-      await taskService.updateTask(pendingTaskLock.taskId, { locked: true });
-      setTasks((prev) =>
-        prev.map((task) =>
-          task.id === pendingTaskLock.taskId ? { ...task, locked: true } : task,
-        ),
-      );
-      setSelectedItem((prev) => {
-        if (!prev || !("deadline" in prev) || prev.id !== pendingTaskLock.taskId) {
-          return prev;
-        }
-        return { ...prev, locked: true };
-      });
-    } catch (error) {
-      console.error(error);
-      await fetchTasks();
-    } finally {
-      setPendingTaskLock(null);
-    }
-  }, [fetchTasks, pendingTaskLock]);
 
   const updateCalendarEvent = useCallback(
     async (entry: CalendarEntry, start: Date, end: Date) => {
@@ -832,7 +770,6 @@ export const useCalendar = (): UseCalendarReturn => {
       timeGutterWidth,
       isRescheduling,
       rescheduleWarnings,
-      pendingTaskLock,
     },
     loading: {
       initializing: isInitializing,
@@ -868,8 +805,6 @@ export const useCalendar = (): UseCalendarReturn => {
       handleEventDrop,
       handleEventResize,
       handleToggleTaskComplete,
-      confirmTaskLock,
-      dismissTaskLockPrompt,
       setHeaderHeight,
       setTimeGutterWidth,
     },

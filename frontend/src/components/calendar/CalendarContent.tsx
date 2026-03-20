@@ -3,7 +3,6 @@ import type { UseCalendarReturn } from "@/hooks/calendar/useCalendar";
 import CalendarSidebar from "@/components/calendar/CalendarSidebar";
 import CalendarToolbar from "@/components/calendar/CalendarToolbar";
 import CalendarView from "@/components/calendar/CalendarView";
-import ConfirmationModal from "@/components/modals/ConfirmationModal";
 
 interface CalendarContentProps {
   state: UseCalendarReturn["state"];
@@ -118,25 +117,6 @@ const CalendarContent = ({
           deleteCategory: actions.deleteCategory,
           updateTaskCategories: actions.updateTaskCategories,
         }}
-      />
-      <ConfirmationModal
-        isOpen={state.pendingTaskLock !== null}
-        onClose={() => {
-          void actions.dismissTaskLockPrompt();
-        }}
-        onConfirm={() => {
-          void actions.confirmTaskLock();
-        }}
-        title="Lock task to new time?"
-        message={
-          state.pendingTaskLock
-            ? state.pendingTaskLock.wasLocked
-              ? `Do you want to keep "${state.pendingTaskLock.title}" locked at its new calendar position? Choose "Keep movable" to unlock it.`
-              : `Do you want to lock "${state.pendingTaskLock.title}" to its new calendar position?`
-            : ""
-        }
-        confirmText="Lock task"
-        cancelText="Keep movable"
       />
     </div>
   );

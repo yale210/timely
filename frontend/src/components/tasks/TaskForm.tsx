@@ -18,6 +18,7 @@ interface NormalisedTaskSubmission {
   importance: number;
   estimated_minutes: number;
   completed: boolean;
+  locked: boolean;
   allow_split: boolean;
   min_split_minutes: number;
 }
@@ -36,6 +37,7 @@ const normaliseTaskSubmission = (
   importance: Number(submission.importance ?? 5),
   estimated_minutes: Number(submission.estimated_minutes ?? 60),
   completed: Boolean(submission.completed),
+  locked: Boolean(submission.locked),
   allow_split: Boolean(submission.allow_split),
   min_split_minutes: Number(submission.min_split_minutes ?? DEFAULT_MIN_SPLIT_MINUTES),
 });
@@ -135,9 +137,7 @@ const TaskForm = ({
   const [minSplitMinutes, setMinSplitMinutes] = useState<string>(
     String(initialData?.min_split_minutes ?? DEFAULT_MIN_SPLIT_MINUTES),
   );
-  const [autoSchedule, setAutoSchedule] = useState(
-    initialData?.locked ? false : true,
-  );
+  const [autoSchedule, setAutoSchedule] = useState(!(initialData?.locked ?? false));
   const [isTaskLocked, setIsTaskLocked] = useState(initialData?.locked ?? false);
   const defaultColour = "#3b82f6";
   const [colour, setColour] = useState(initialData?.colour ?? defaultColour);
@@ -453,40 +453,6 @@ const TaskForm = ({
               <span
                 className={`inline-block h-5 w-5 transform rounded-full bg-white shadow-sm transition-transform ${
                   autoSchedule ? "translate-x-5" : "translate-x-1"
-                }`}
-              />
-            </button>
-          </div>
-
-          <div className="flex items-center justify-between gap-4">
-            <div className="flex items-center gap-2">
-              <label htmlFor="task-lock-toggle" className="text-sm font-medium text-gray-700">
-                Lock task
-              </label>
-              <Tooltip content="Locked tasks stay manually movable, but the automatic scheduler will not move them.">
-                <span className="inline-flex h-5 w-5 items-center justify-center rounded-full border border-gray-300 text-[10px] text-gray-500 cursor-help">
-                  ?
-                </span>
-              </Tooltip>
-            </div>
-            <button
-              id="task-lock-toggle"
-              type="button"
-              onClick={() => {
-                setIsTaskLocked((prev) => {
-                  const nextValue = !prev;
-                  setAutoSchedule(!nextValue);
-                  return nextValue;
-                });
-              }}
-              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                isTaskLocked ? "bg-primary" : "bg-gray-300"
-              }`}
-              aria-pressed={isTaskLocked}
-            >
-              <span
-                className={`inline-block h-5 w-5 transform rounded-full bg-white shadow-sm transition-transform ${
-                  isTaskLocked ? "translate-x-5" : "translate-x-1"
                 }`}
               />
             </button>
