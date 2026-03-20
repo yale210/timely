@@ -1,3 +1,5 @@
+"""Tasks for checking and sending calendar event reminders."""
+
 import json
 import hashlib
 import logging
@@ -24,8 +26,13 @@ def _send_reminder_notification(
     event_title: str,
     send_push: bool,
 ):
-    """
-    Creates and saves a reminder notification.
+    """Create and save a reminder notification.
+
+    Args:
+        user_id: ID of the recipient user.
+        title: Notification title.
+        event_title: Title of the associated event.
+        send_push: Whether to trigger a push notification.
     """
     notification = Notification(
         recipient_id=user_id,
@@ -33,14 +40,20 @@ def _send_reminder_notification(
         message=f"Your event '{event_title}' is starting soon.",
         notification_type=Notification.NotificationType.CALENDAR,
     )
+    # Hint to signal handlers to bypass push dispatch if requested
     if not send_push:
         notification._skip_push = True
     notification.save()
 
 
 def _reminder_signature(reminder: dict) -> str:
-    """
-    Generates a unique signature for a reminder to prevent duplicate dispatches.
+    """Generate a unique signature for a reminder to prevent duplicate dispatches.
+
+    Args:
+        reminder: Dictionary containing reminder details.
+
+    Returns:
+        A SHA256 hex digest representing the reminder configuration.
     """
     payload = json.dumps(
         {
@@ -54,10 +67,18 @@ def _reminder_signature(reminder: dict) -> str:
 
 
 def _record_dispatch(source_event: Event, original_start_time, reminder: dict) -> bool:
-    """
-    Records a reminder dispatch in the database. Returns False if already dispatched.
+    """Record a reminder dispatch in the database.
+
+    Args:
+        source_event: The parent Event instance.
+        original_start_time: The start time of the specific occurrence.
+        reminder: The reminder configuration dictionary.
+
+    Returns:
+        True if the record was successfully created, False if it already exists.
     """
     try:
+        # Atomic transaction ensures we don't have race conditions on creation
         with transaction.atomic():
             ReminderDispatchLog.objects.create(
                 source_event=source_event,
@@ -65,23 +86,24 @@ def _record_dispatch(source_event: Event, original_start_time, reminder: dict) -
                 reminder_signature=_reminder_signature(reminder),
             )
     except IntegrityError:
+        # Fails if a log with this signature already exists for this instance
         return False
     return True
 
 
 @shared_task
 def check_reminders():
-    """
-    Celery task to check for due event reminders and send notifications.
-    """
+    """Celery task to check for due event reminders and send notifications."""
     now = timezone.now()
     due_window_start = now - timedelta(minutes=1)
 
+    # First, handle reminders for one-off (non-recurring) events
     _process_non_recurring_reminders(now)
 
     if not settings.ENABLE_RECURRENCE_OVERRIDES:
         return
 
+    # Handle recurring events by expanding occurrences in the current window
     recurring_events = _get_due_recurring_events(now, due_window_start)
 
     for event in recurring_events:
@@ -101,8 +123,13 @@ def check_reminders():
 
 
 def _process_due_reminders(event, expanded, now, due_window_start):
-    """
-    Processes due reminders for a specific expanded event instance.
+    """Process due reminders for a specific expanded event instance.
+
+    Args:
+        event: The parent Event model instance.
+        expanded: The expanded instance data.
+        now: Current timestamp.
+        due_window_start: Start of the processing window.
     """
     for reminder in expanded.reminders:
         try:
@@ -110,10 +137,12 @@ def _process_due_reminders(event, expanded, now, due_window_start):
         except (TypeError, ValueError, KeyError):
             continue
 
+        # Calculate when this specific reminder should trigger
         trigger_at = expanded.start_time - timedelta(minutes=minutes_before)
         if not (due_window_start <= trigger_at <= now):
             continue
 
+        # Check for previous dispatch to avoid duplicates
         anchor = expanded.original_start_time or expanded.start_time
         if not _record_dispatch(event, anchor, reminder):
             continue
@@ -127,8 +156,16 @@ def _process_due_reminders(event, expanded, now, due_window_start):
 
 
 def _expand_instances_for_reminders(event, reminder_minutes, due_window_start, now):
-    """
-    Expands recurring event instances within the reminder window.
+    """Expand recurring event instances within the reminder window.
+
+    Args:
+        event: The recurring Event instance.
+        reminder_minutes: Set of reminder offsets to check.
+        due_window_start: Start of the search window.
+        now: End of the search window.
+
+    Returns:
+        A dictionary mapping instance IDs to expanded instances.
     """
     expanded_by_instance_id = {}
     loaded_overrides = list(event.overrides.all())
@@ -136,6 +173,8 @@ def _expand_instances_for_reminders(event, reminder_minutes, due_window_start, n
         shift = timedelta(minutes=minutes_before)
         occurrence_start = due_window_start + shift
         occurrence_end = now + shift
+        
+        # Expand event occurrences that fall into the trigger window
         expanded_instances = expand_event_instances(
             event,
             occurrence_start,
@@ -148,12 +187,19 @@ def _expand_instances_for_reminders(event, reminder_minutes, due_window_start, n
 
 
 def _collect_reminder_minutes(event) -> set[int]:
+    """Collect all unique reminder offsets (in minutes) for an event and its overrides.
+
+    Args:
+        event: The Event instance.
+
+    Returns:
+        A set of integer minute offsets.
     """
-    Collects all unique reminder offsets (in minutes) for an event and its overrides.
-    """
+    # Collect from base event
     reminder_minutes: set[int] = {
         int(reminder.minutes_before) for reminder in event.reminders.all()
     }
+    # Supplement with offsets from overrides
     for override in event.overrides.all():
         _add_override_reminders(reminder_minutes, override)
 
@@ -161,8 +207,11 @@ def _collect_reminder_minutes(event) -> set[int]:
 
 
 def _add_override_reminders(reminder_minutes: set[int], override):
-    """
-    Adds reminders from an override snapshot to the set.
+    """Add reminders from an override snapshot to the set.
+
+    Args:
+        reminder_minutes: The set to update.
+        override: The EventOverride instance.
     """
     for reminder_snapshot in override.reminders_snapshot or []:
         minutes = _check_minutes(reminder_snapshot.get("minutes_before", 0))
@@ -171,14 +220,18 @@ def _add_override_reminders(reminder_minutes: set[int], override):
 
 
 def _process_non_recurring_reminders(now):
+    """Process reminders for non-recurring events.
+
+    Args:
+        now: Current timestamp.
     """
-    Processes reminders for non-recurring events.
-    """
+    # Fetch due but unprocessed reminders for one-off events
     due_reminders = EventReminder.objects.filter(
         trigger_at__lte=now,
         processed=False,
     ).select_related("event", "event__user")
     
+    # If overrides are enabled, exclude events that are part of a recurrence series
     if settings.ENABLE_RECURRENCE_OVERRIDES:
         due_reminders = due_reminders.filter(event__recurrence_interval__isnull=True)
 
@@ -192,14 +245,22 @@ def _process_non_recurring_reminders(now):
             send_push=reminder.send_push,
         )
 
+        # Mark as processed to avoid double-reminding
         reminder.processed = True
         reminder.save(update_fields=["processed"])
 
 
 def _get_due_recurring_events(now, due_window_start):
+    """Retrieve recurring events that might have due reminders.
+
+    Args:
+        now: Current timestamp.
+        due_window_start: Start of the check window.
+
+    Returns:
+        A queryset of Event objects.
     """
-    Retrieves recurring events that might have due reminders.
-    """
+    # Find the maximum lead time needed for any reminder
     max_offset_minutes = (
         EventReminder.objects.filter(
             event__recurrence_interval__isnull=False,
@@ -208,6 +269,7 @@ def _get_due_recurring_events(now, due_window_start):
     )
     max_offset = timedelta(minutes=max_offset_minutes)
 
+    # Filter events based on recurrence window and reminder existence
     return (
         Event.objects.filter(recurrence_interval__isnull=False)
         .filter(
@@ -225,8 +287,13 @@ def _get_due_recurring_events(now, due_window_start):
 
 
 def _check_minutes(value):
-    """
-    Validates and converts a value to an integer minute.
+    """Validate and convert a value to an integer minute.
+
+    Args:
+        value: The value to convert.
+
+    Returns:
+        Integer minutes or None if invalid.
     """
     try:
         return int(value)

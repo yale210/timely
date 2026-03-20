@@ -1,3 +1,5 @@
+"""Asynchronous tasks for the notifications app."""
+
 from notifications.models import Notification
 from pywebpush import webpush
 from notifications.utils.websocket import notify_user
