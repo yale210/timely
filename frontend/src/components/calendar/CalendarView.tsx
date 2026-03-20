@@ -13,6 +13,7 @@ import { getOverrideColour, hexToRgba } from "@/utils/colorUtils";
 
 const localizer = momentLocalizer(moment);
 const DragAndDropCalendar = withDragAndDrop<CalendarEntry>(Calendar);
+const DEFAULT_DRAG_SNAP_MINUTES = 5;
 
 interface CalendarViewProps {
   state: Pick<
@@ -50,6 +51,8 @@ const CalendarView = ({
   actions,
 }: CalendarViewProps) => {
   const calendarShellRef = useRef<HTMLDivElement | null>(null);
+  const dragSnapMinutes = state.preference?.drag_snap_minutes ?? DEFAULT_DRAG_SNAP_MINUTES;
+  const dragSnapTimeslots = 60 / dragSnapMinutes;
 
   useLayoutEffect(() => {
     if (state.view !== Views.WEEK && state.view !== Views.DAY) {
@@ -238,8 +241,8 @@ const CalendarView = ({
             onView={actions.setView}
             date={state.date}
             onNavigate={actions.setDate}
-            step={5}
-            timeslots={12}
+            step={dragSnapMinutes}
+            timeslots={dragSnapTimeslots}
             slotPropGetter={(slotDate: Date) => {
               if ((state.view !== Views.WEEK && state.view !== Views.DAY) || !isOutsidePreferredDayWindow(slotDate, state.preference)) {
                 return {};

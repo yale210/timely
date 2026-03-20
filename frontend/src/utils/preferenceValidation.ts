@@ -26,6 +26,10 @@ export const validatePreference = (preference: Preference): Record<string, strin
     errors.max_days_ahead = ["Must be 365 days or less."];
   }
 
+  if (![5, 10, 15, 20, 30, 60].includes(preference.drag_snap_minutes)) {
+    errors.drag_snap_minutes = ["Must be one of 5, 10, 15, 20, 30, or 60 minutes."];
+  }
+
   const schedule = preference.day_schedule ?? [];
   if (schedule.length === 0) {
     if (!preference.day_start) {

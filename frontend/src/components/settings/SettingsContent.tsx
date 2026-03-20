@@ -28,6 +28,7 @@ const SettingsContent = ({
   error,
   actions,
 }: SettingsContentProps) => {
+  const dragSnapOptions = [5, 10, 15, 20, 30, 60] as const;
   const [featureFlags, setFeatureFlags] = useState(() => ({
     gradebook: localStorage.getItem("feature_gradebook_enabled") !== "false",
     weeklySummaries: localStorage.getItem("feature_weekly_summaries_enabled") !== "false",
@@ -151,6 +152,39 @@ const SettingsContent = ({
 
                   return (
                     <div className="space-y-4">
+                      <div>
+                        <label
+                          htmlFor="general-drag-snap-minutes"
+                          className="block text-sm font-medium text-gray-900"
+                        >
+                          Calendar drag timeslot
+                        </label>
+                        <p className="mt-1 text-xs text-gray-500">
+                          Controls how task drag and resize actions snap on the calendar.
+                        </p>
+                        <select
+                          id="general-drag-snap-minutes"
+                          value={preference.drag_snap_minutes}
+                          onChange={(event) => {
+                            actions.setPreference({
+                              ...preference,
+                              drag_snap_minutes: Number(event.target.value) as 5 | 10 | 15 | 20 | 30 | 60,
+                            });
+                          }}
+                          className="mt-2 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-primary focus:outline-none"
+                        >
+                          {dragSnapOptions.map((minutes) => (
+                            <option key={minutes} value={minutes}>
+                              {minutes} minutes
+                            </option>
+                          ))}
+                        </select>
+                        {state.fieldErrors.drag_snap_minutes?.length ? (
+                          <div className="mt-1 text-xs text-red-700">
+                            {state.fieldErrors.drag_snap_minutes.join(" ")}
+                          </div>
+                        ) : null}
+                      </div>
                       <div className="flex items-center justify-between rounded-lg border border-gray-200 bg-white px-4 py-3 shadow-sm">
                         <p className="text-sm font-semibold text-gray-900">Sound effects</p>
                         <button

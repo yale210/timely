@@ -128,6 +128,7 @@ export const useSettings = (): UseSettingsReturn => {
         day_schedule: preference.day_schedule,
         max_hours_study_per_day: preference.max_hours_study_per_day,
         max_days_ahead: preference.max_days_ahead,
+        drag_snap_minutes: preference.drag_snap_minutes,
         limit_max_hours: preference.limit_max_hours,
         disable_sound_effects: preference.disable_sound_effects,
         days_off: preference.days_off,

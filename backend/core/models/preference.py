@@ -49,6 +49,7 @@ class Preference(models.Model):
     max_days_ahead = models.PositiveSmallIntegerField(
         default=30, validators=[MinValueValidator(1), MaxValueValidator(365)]
     )
+    drag_snap_minutes = models.PositiveSmallIntegerField(default=5)
     limit_max_hours = models.BooleanField(default=True)
     disable_sound_effects = models.BooleanField(default=False)
 
@@ -57,6 +58,15 @@ class Preference(models.Model):
 
     def clean(self):
         super().clean()
+        allowed_drag_snap_minutes = {5, 10, 15, 20, 30, 60}
+        if self.drag_snap_minutes not in allowed_drag_snap_minutes:
+            raise ValidationError(
+                {
+                    "drag_snap_minutes": (
+                        "Drag snap minutes must be one of: 5, 10, 15, 20, 30, 60."
+                    )
+                }
+            )
         if self.timezone not in available_timezones():
             raise ValidationError({"timezone": "Timezone is not valid"})
 

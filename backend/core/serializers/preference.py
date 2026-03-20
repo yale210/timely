@@ -16,6 +16,7 @@ class PreferenceSerializer(serializers.ModelSerializer):
             "day_schedule",
             "max_hours_study_per_day",
             "max_days_ahead",
+            "drag_snap_minutes",
             "limit_max_hours",
             "disable_sound_effects",
             "days_off",
