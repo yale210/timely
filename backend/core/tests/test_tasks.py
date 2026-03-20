@@ -66,7 +66,7 @@ class TasksTests(TestCase):
         EventReminder.objects.filter(id=reminder.id).update(
             trigger_at=timezone.now() - timezone.timedelta(minutes=1)
         )
-        with patch("notifications.tasks.Notification.save", autospec=True) as mock_save:
+        with patch("notifications.tasks.reminders.Notification.save", autospec=True) as mock_save:
             check_reminders()
             self.assertTrue(mock_save.called)
             saved_instance = mock_save.call_args[0][0]
@@ -168,7 +168,7 @@ class TasksTests(TestCase):
             ).exists()
         )
 
-    @patch("notifications.tasks.webpush")
+    @patch("notifications.tasks.push.webpush")
     def test_send_push_notification(self, mock_webpush):
         PushSubscription.objects.create(
             user=self.user, endpoint="https://example.com", p256dh="p256dh", auth="auth"
@@ -176,7 +176,7 @@ class TasksTests(TestCase):
         send_push_notification(self.user.id, "Title", "Message")
         self.assertTrue(mock_webpush.called)
 
-    @patch("notifications.tasks.webpush")
+    @patch("notifications.tasks.push.webpush")
     def test_send_push_notification_error(self, mock_webpush):
         from pywebpush import WebPushException
 
@@ -207,10 +207,10 @@ class TasksTests(TestCase):
 
     def test_broadcast_notification_all(self):
         with patch(
-            "notifications.tasks._send_push_notification_sync",
+            "notifications.tasks.broadcast._send_push_notification_sync",
             return_value={"success": True, "error_code": "", "error_message": ""},
         ):
-            with patch("notifications.tasks.notify_user") as mock_notify_user:
+            with patch("notifications.tasks.broadcast.notify_user") as mock_notify_user:
                 result = broadcast_notification("Global", "Hello", target="all")
 
         self.assertEqual(result, "Broadcasted to 2 users")
