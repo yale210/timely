@@ -6,9 +6,9 @@ from pywebpush import WebPushException
 
 from django.contrib.auth import get_user_model
 from notifications.models import PushSubscription
+from notifications.tasks.push import _dispatch_to_subscription
 
 User = get_user_model()
-from notifications.tasks.push import _dispatch_to_subscription
 
 
 class PushTaskTests(TestCase):
