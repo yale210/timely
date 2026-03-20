@@ -238,8 +238,8 @@ const CalendarView = ({
             onView={actions.setView}
             date={state.date}
             onNavigate={actions.setDate}
-            step={60}
-            timeslots={1}
+            step={5}
+            timeslots={12}
             slotPropGetter={(slotDate: Date) => {
               if ((state.view !== Views.WEEK && state.view !== Views.DAY) || !isOutsidePreferredDayWindow(slotDate, state.preference)) {
                 return {};
