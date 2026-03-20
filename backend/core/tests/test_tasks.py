@@ -66,7 +66,9 @@ class TasksTests(TestCase):
         EventReminder.objects.filter(id=reminder.id).update(
             trigger_at=timezone.now() - timezone.timedelta(minutes=1)
         )
-        with patch("notifications.tasks.reminders.Notification.save", autospec=True) as mock_save:
+        with patch(
+            "notifications.tasks.reminders.Notification.save", autospec=True
+        ) as mock_save:
             check_reminders()
             self.assertTrue(mock_save.called)
             saved_instance = mock_save.call_args[0][0]

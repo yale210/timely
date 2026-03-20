@@ -26,7 +26,7 @@ def cleanup_old_notifications():
     # Remove notifications that have passed the 30-day retention period
     thirty_days_ago = timezone.now() - timezone.timedelta(days=30)
     Notification.objects.filter(timestamp__lt=thirty_days_ago).delete()
-    
+
     # Remove dispatch logs that have passed the 90-day retention period
     dispatch_cutoff = timezone.now() - timezone.timedelta(days=90)
     ReminderDispatchLog.objects.filter(dispatched_at__lt=dispatch_cutoff).delete()

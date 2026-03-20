@@ -173,7 +173,7 @@ def _expand_instances_for_reminders(event, reminder_minutes, due_window_start, n
         shift = timedelta(minutes=minutes_before)
         occurrence_start = due_window_start + shift
         occurrence_end = now + shift
-        
+
         # Expand event occurrences that fall into the trigger window
         expanded_instances = expand_event_instances(
             event,
@@ -230,7 +230,7 @@ def _process_non_recurring_reminders(now):
         trigger_at__lte=now,
         processed=False,
     ).select_related("event", "event__user")
-    
+
     # If overrides are enabled, exclude events that are part of a recurrence series
     if settings.ENABLE_RECURRENCE_OVERRIDES:
         due_reminders = due_reminders.filter(event__recurrence_interval__isnull=True)

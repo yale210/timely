@@ -28,7 +28,7 @@ def _build_broadcast_queryset(target, user_ids=None):
     """
     user_ids = user_ids or []
     base_queryset = User.objects.filter(is_active=True)
-    
+
     # Filter users based on the specified target
     if target == BroadcastJob.Target.ALL:
         return base_queryset
@@ -51,7 +51,11 @@ def process_broadcast_job(broadcast_job_id):
     Returns:
         A status message indicating the result of the processing.
     """
-    broadcast = BroadcastJob.objects.select_related("sender").filter(id=broadcast_job_id).first()
+    broadcast = (
+        BroadcastJob.objects.select_related("sender")
+        .filter(id=broadcast_job_id)
+        .first()
+    )
     if not broadcast:
         return "Broadcast not found"
 
@@ -62,16 +66,24 @@ def process_broadcast_job(broadcast_job_id):
     _initialise_broadcast_job(broadcast)
 
     # Retrieve all recipients registered for this job
-    recipients = list(BroadcastRecipient.objects.filter(broadcast_job=broadcast).select_related("recipient"))
+    recipients = list(
+        BroadcastRecipient.objects.filter(broadcast_job=broadcast).select_related(
+            "recipient"
+        )
+    )
     if not recipients:
         _handle_empty_recipients(broadcast)
         return "Broadcast has no recipients"
 
     sender_username = broadcast.sender.username if broadcast.sender else None
-    notifications_by_recipient_id = _create_broadcast_notifications(broadcast, recipients)
+    notifications_by_recipient_id = _create_broadcast_notifications(
+        broadcast, recipients
+    )
 
     # Dispatch to all identified recipients
-    delivered, failed, errors = _dispatch_to_recipients(broadcast, recipients, notifications_by_recipient_id, sender_username)
+    delivered, failed, errors = _dispatch_to_recipients(
+        broadcast, recipients, notifications_by_recipient_id, sender_username
+    )
 
     _finalise_broadcast_job(broadcast, recipients, delivered, failed, errors)
 
@@ -87,7 +99,10 @@ def _should_process_broadcast(broadcast):
     Returns:
         True if the status allows processing, False otherwise.
     """
-    return broadcast.status in {BroadcastJob.Status.QUEUED, BroadcastJob.Status.IN_PROGRESS}
+    return broadcast.status in {
+        BroadcastJob.Status.QUEUED,
+        BroadcastJob.Status.IN_PROGRESS,
+    }
 
 
 def _initialise_broadcast_job(broadcast):
@@ -101,7 +116,9 @@ def _initialise_broadcast_job(broadcast):
     broadcast.save(update_fields=["status", "started_at", "updated_at"])
 
 
-def _dispatch_to_recipients(broadcast, recipients, notifications_by_id, sender_username):
+def _dispatch_to_recipients(
+    broadcast, recipients, notifications_by_id, sender_username
+):
     """Dispatch notifications to all recipients and track results.
 
     Args:
@@ -125,7 +142,7 @@ def _dispatch_to_recipients(broadcast, recipients, notifications_by_id, sender_u
 
         # Send real-time updates via WebSocket
         _notify_recipient_websocket(recipient, notification, sender_username)
-        
+
         # Dispatch push notification
         success, error_code, error_msg = _send_single_push(recipient, broadcast)
 
@@ -133,11 +150,13 @@ def _dispatch_to_recipients(broadcast, recipients, notifications_by_id, sender_u
             delivered_count += 1
         else:
             failed_count += 1
-            provider_errors.append({
-                "recipient_id": recipient.recipient_id,
-                "code": error_code,
-                "message": error_msg
-            })
+            provider_errors.append(
+                {
+                    "recipient_id": recipient.recipient_id,
+                    "code": error_code,
+                    "message": error_msg,
+                }
+            )
 
     return delivered_count, failed_count, provider_errors
 
@@ -152,8 +171,10 @@ def _send_single_push(recipient, broadcast):
     Returns:
         A tuple containing (success_bool, error_code, error_message).
     """
-    push_result = _send_push_notification_sync(recipient.recipient_id, broadcast.title, broadcast.message)
-    
+    push_result = _send_push_notification_sync(
+        recipient.recipient_id, broadcast.title, broadcast.message
+    )
+
     if push_result["success"]:
         recipient.status = BroadcastRecipient.DeliveryStatus.SENT
         recipient.error_code = ""
@@ -176,10 +197,19 @@ def _handle_empty_recipients(broadcast):
     broadcast.completed_at = timezone.now()
     broadcast.failed_count = 0
     broadcast.delivered_count = 0
-    broadcast.provider_errors = [{"code": "ZERO_AUDIENCE", "message": "Broadcast has no recipients."}]
-    broadcast.save(update_fields=[
-        "status", "completed_at", "failed_count", "delivered_count", "provider_errors", "updated_at"
-    ])
+    broadcast.provider_errors = [
+        {"code": "ZERO_AUDIENCE", "message": "Broadcast has no recipients."}
+    ]
+    broadcast.save(
+        update_fields=[
+            "status",
+            "completed_at",
+            "failed_count",
+            "delivered_count",
+            "provider_errors",
+            "updated_at",
+        ]
+    )
 
 
 def _create_broadcast_notifications(broadcast, recipients):
@@ -204,7 +234,9 @@ def _create_broadcast_notifications(broadcast, recipients):
     ]
     # Perform bulk creation for efficiency
     with transaction.atomic():
-        created_notifications = Notification.objects.bulk_create(notifications, batch_size=1000)
+        created_notifications = Notification.objects.bulk_create(
+            notifications, batch_size=1000
+        )
 
     return {n.recipient_id: n for n in created_notifications}
 
@@ -239,7 +271,9 @@ def _notify_recipient_websocket(recipient, notification, sender_username):
         )
     else:
         # Fallback if notification object isn't fully formed
-        notify_user(recipient.recipient_id, {"type": "unread_count", "count": unread_count})
+        notify_user(
+            recipient.recipient_id, {"type": "unread_count", "count": unread_count}
+        )
 
 
 def _finalise_broadcast_job(broadcast, recipients, delivered, failed, errors):
@@ -255,7 +289,14 @@ def _finalise_broadcast_job(broadcast, recipients, delivered, failed, errors):
     # Batch update recipient statuses
     BroadcastRecipient.objects.bulk_update(
         recipients,
-        ["notification", "status", "error_code", "error_message", "last_attempt_at", "updated_at"]
+        [
+            "notification",
+            "status",
+            "error_code",
+            "error_message",
+            "last_attempt_at",
+            "updated_at",
+        ],
     )
 
     broadcast.delivered_count = delivered
@@ -263,9 +304,16 @@ def _finalise_broadcast_job(broadcast, recipients, delivered, failed, errors):
     broadcast.status = _calculate_broadcast_status(delivered, failed)
     broadcast.provider_errors = errors
     broadcast.completed_at = timezone.now()
-    broadcast.save(update_fields=[
-        "status", "delivered_count", "failed_count", "provider_errors", "completed_at", "updated_at"
-    ])
+    broadcast.save(
+        update_fields=[
+            "status",
+            "delivered_count",
+            "failed_count",
+            "provider_errors",
+            "completed_at",
+            "updated_at",
+        ]
+    )
 
 
 def _calculate_broadcast_status(delivered_count, failed_count):
@@ -299,13 +347,17 @@ def broadcast_notification(title, message, target="all", user_ids=None):
         A string summary of the broadcast operation.
     """
     if target not in {
-        BroadcastJob.Target.ALL, BroadcastJob.Target.STAFF,
-        BroadcastJob.Target.ADMIN, BroadcastJob.Target.USERS
+        BroadcastJob.Target.ALL,
+        BroadcastJob.Target.STAFF,
+        BroadcastJob.Target.ADMIN,
+        BroadcastJob.Target.USERS,
     }:
         return "Invalid target"
 
     # Identify the target user IDs
-    recipient_ids = list(_build_broadcast_queryset(target, user_ids).values_list("id", flat=True))
+    recipient_ids = list(
+        _build_broadcast_queryset(target, user_ids).values_list("id", flat=True)
+    )
     if not recipient_ids:
         return "Broadcasted to 0 users"
 
@@ -337,14 +389,17 @@ def _create_broadcast_job(title, message, target, user_ids, recipient_ids):
             audience_filters={"target": target, "user_ids": user_ids or []},
             audience_snapshot={
                 "recipient_ids": recipient_ids,
-                "recipient_count": len(recipient_ids)
+                "recipient_count": len(recipient_ids),
             },
             recipient_count=len(recipient_ids),
             status=BroadcastJob.Status.QUEUED,
         )
         # Create recipient tracking records in bulk
         BroadcastRecipient.objects.bulk_create(
-            [BroadcastRecipient(broadcast_job=broadcast, recipient_id=rid) for rid in recipient_ids],
-            batch_size=1000
+            [
+                BroadcastRecipient(broadcast_job=broadcast, recipient_id=rid)
+                for rid in recipient_ids
+            ],
+            batch_size=1000,
         )
     return broadcast

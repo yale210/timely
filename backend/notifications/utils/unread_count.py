@@ -47,7 +47,7 @@ def increment_unread_count(user_id, amount=1):
     """
     key = _unread_count_cache_key(user_id)
     cached_count = cache.get(key)
-    
+
     # If cache is empty, refresh from DB instead of guessing
     if cached_count is None:
         current_count = Notification.objects.filter(

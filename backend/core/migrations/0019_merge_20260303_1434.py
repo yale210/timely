@@ -4,11 +4,9 @@ from django.db import migrations
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('core', '0017_merge_20260302_1452'),
-        ('core', '0018_alter_preference_timezone'),
+        ("core", "0017_merge_20260302_1452"),
+        ("core", "0018_alter_preference_timezone"),
     ]
 
-    operations = [
-    ]
+    operations = []
