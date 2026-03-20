@@ -31,35 +31,36 @@ const SettingsContent = ({
   const dragSnapOptions = [5, 10, 15, 20, 30, 60] as const;
   const [featureFlags, setFeatureFlags] = useState(() => ({
     gradebook: localStorage.getItem("feature_gradebook_enabled") !== "false",
-    weeklySummaries: localStorage.getItem("feature_weekly_summaries_enabled") !== "false",
+    leaderboard: localStorage.getItem("feature_leaderboard_enabled") !== "false",
   }));
 
   const featureRows = useMemo(() => ([
+    {
+      key: "leaderboard",
+      label: "Leaderboard",
+      description: "Allows users to view how they are doing in comparison to their friends.",
+      value: featureFlags.leaderboard,
+    },
     {
       key: "gradebook",
       label: "Gradebook",
       description: "Track and review your grades over time.",
       value: featureFlags.gradebook,
     },
-    {
-      key: "weeklySummaries",
-      label: "Weekly Summaries",
-      description: "View weekly statistics about your tasks and productivity.",
-      value: featureFlags.weeklySummaries,
-    },
   ]), [featureFlags]);
 
-  const updateFeature = (key: "gradebook" | "weeklySummaries", value: boolean) => {
+  const updateFeature = (key: "gradebook" | "leaderboard", value: boolean) => {
     if (key === "gradebook") {
       localStorage.setItem("feature_gradebook_enabled", String(value));
     } else {
-      localStorage.setItem("feature_weekly_summaries_enabled", String(value));
+      localStorage.setItem("feature_leaderboard_enabled", String(value));
     }
     setFeatureFlags((prev) => ({ ...prev, [key]: value }));
     window.dispatchEvent(new Event("feature-flags-changed"));
   };
 
   const profileState = useProfileSettings(state.activeSection === "profile");
+  const isAppearanceSection = state.activeSection === "appearance";
 
   return (
     <div className="min-h-screen bg-white text-black">
@@ -83,7 +84,11 @@ const SettingsContent = ({
               },
             }}
           />
-          <section className="w-full md:w-1/2 rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
+          <section
+            className={`rounded-xl border border-gray-200 bg-white p-6 shadow-sm ${
+              isAppearanceSection ? "min-w-0 flex-1" : "w-full md:w-1/2"
+            }`}
+          >
             {state.activeSection === "preferences" ? (
               <PreferencesSection
                 pref={state.preference}
@@ -126,7 +131,7 @@ const SettingsContent = ({
                         className="h-4 w-4"
                         checked={feature.value}
                         onChange={(event) => {
-                          updateFeature(feature.key as "gradebook" | "weeklySummaries", event.target.checked);
+                          updateFeature(feature.key as "gradebook" | "leaderboard", event.target.checked);
                         }}
                       />
                     </label>

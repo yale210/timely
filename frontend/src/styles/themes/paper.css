@@ -1,0 +1,9 @@
+[data-theme="paper"] {
+  --primary: #1c1814;
+  --primary-hover: #312922;
+
+  --background: #f6eee3;
+  --text-color: #241c15;
+
+  --border: #b8a585;
+}
