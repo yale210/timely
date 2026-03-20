@@ -9,6 +9,10 @@ const formatFontName = (value: string) =>
     .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
     .join(" ");
 
+const COMPACT_SCRIPT_FONTS = new Set(["kalam", "caveat", "gloria-hallelujah", "shadows-into-light"]);
+
+const isCompactScriptFont = (value: string) => COMPACT_SCRIPT_FONTS.has(value);
+
 /**
  * Renders a compact font preview card.
  * @param root0 - Component props.
@@ -16,6 +20,9 @@ const formatFontName = (value: string) =>
  * @param root0.fontChangeFunction - Callback to update the active font.
  */
 export default function FontButton({ title, fontChangeFunction }: FontButtonProps) {
+  const previewSizeClass = isCompactScriptFont(title) ? "text-[2rem]" : "text-2xl";
+  const titleSizeClass = isCompactScriptFont(title) ? "text-base" : "text-sm";
+
   return (
     <div data-font={title} className="h-full">
       <button
@@ -26,15 +33,12 @@ export default function FontButton({ title, fontChangeFunction }: FontButtonProp
         <div className="text-[11px] font-medium uppercase tracking-[0.1em] text-gray-500">
           Font
         </div>
-        <div className="mt-4 text-2xl leading-none text-gray-900">
+        <div className={`mt-4 leading-none text-gray-900 ${previewSizeClass}`}>
           Ag
         </div>
         <div className="mt-4">
-          <div className="text-sm font-semibold text-gray-900">
+          <div className={`font-semibold text-gray-900 ${titleSizeClass}`}>
             {formatFontName(title)}
-          </div>
-          <div className="mt-1 text-[12px] text-gray-500">
-            Apply this type style across the app.
           </div>
         </div>
       </button>

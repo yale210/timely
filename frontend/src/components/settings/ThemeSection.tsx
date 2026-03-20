@@ -24,13 +24,13 @@ const darkThemeOptions = [
 
 const fontOptions = [
   "poppins",
-  "inter",
-  "arial",
-  "verdana",
-  "mono",
+  "comfortaa",
+  "righteous",
+  "fira-code",
+  "kalam",
+  "gloria-hallelujah",
   "bitcount",
   "bebas-neue",
-  "pacifico",
 ] as const;
 
 interface ThemeSectionProps {

@@ -1,4 +1,4 @@
-@import url("https://fonts.googleapis.com/css2?family=Poppins&family=Inter&family=Pacifico&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Archivo+Black&family=Caveat:wght@400;700&family=Comfortaa:wght@400;700&family=Cormorant+Garamond:wght@400;600;700&family=DM+Serif+Display&family=Fira+Code:wght@400;500;700&family=Gloria+Hallelujah&family=Jost:wght@400;500;600;700&family=Kalam:wght@400;700&family=Outfit:wght@400;500;600;700&family=Playfair+Display:wght@400;600;700&family=Poppins&family=Righteous&family=Shadows+Into+Light&display=swap");
 @import url('https://fonts.googleapis.com/css2?family=Bitcount+Grid+Double:wght@100..900&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Bitcount+Grid+Double:wght@100..900&display=swap');
 
@@ -12,37 +12,82 @@
   --slant: oblique 0deg;
 }
 
-[data-font="inter"] {
-  --primary-font: "Inter", system-ui, sans-serif;
-  --slant: oblique 0deg;
-}
-
-[data-font="arial"] {
-  --primary-font: Arial, Helvetica, sans-serif;
-  --slant: oblique 0deg;
-}
-
-[data-font="verdana"] {
-  --primary-font: Verdana, Geneva, sans-serif;
-  --slant: oblique 0deg;
-}
-
 [data-font="mono"] {
   --primary-font: "JetBrains Mono", monospace;
   --slant: oblique 0deg;
 }
 
-[data-font="pacifico"]{
-  --primary-font: "Pacifico", cursive, system-ui, sans-serif;
+[data-font="caveat"] {
+  --primary-font: "Caveat", "Comic Sans MS", cursive, system-ui, sans-serif;
   --slant: oblique 0deg;
 }
 
-[data-font="bitcount"]{
+[data-font="gloria-hallelujah"] {
+  --primary-font: "Gloria Hallelujah", "Comic Sans MS", cursive, system-ui, sans-serif;
+  --slant: oblique 0deg;
+}
+
+[data-font="shadows-into-light"] {
+  --primary-font: "Shadows Into Light", "Comic Sans MS", cursive, system-ui, sans-serif;
+  --slant: oblique 0deg;
+}
+
+[data-font="kalam"] {
+  --primary-font: "Kalam", "Comic Sans MS", cursive, system-ui, sans-serif;
+  --slant: oblique 0deg;
+}
+
+[data-font="bitcount"] {
   --primary-font: "Bitcount Grid Double", system-ui;
   --slant: oblique 0deg;
 }
 
-[data-font="bebas-neue"]{
+[data-font="bebas-neue"] {
   --primary-font: "Bebas Neue", system-ui;
   --slant: oblique 30deg;
+}
+
+[data-font="outfit"] {
+  --primary-font: "Outfit", system-ui, sans-serif;
+  --slant: oblique 0deg;
+}
+
+[data-font="playfair-display"] {
+  --primary-font: "Playfair Display", Georgia, serif;
+  --slant: oblique 0deg;
+}
+
+[data-font="righteous"] {
+  --primary-font: "Righteous", system-ui, sans-serif;
+  --slant: oblique 0deg;
+}
+
+[data-font="cormorant-garamond"] {
+  --primary-font: "Cormorant Garamond", Georgia, serif;
+  --slant: oblique 0deg;
+}
+
+[data-font="archivo-black"] {
+  --primary-font: "Archivo Black", system-ui, sans-serif;
+  --slant: oblique 0deg;
+}
+
+[data-font="comfortaa"] {
+  --primary-font: "Comfortaa", system-ui, sans-serif;
+  --slant: oblique 0deg;
+}
+
+[data-font="jost"] {
+  --primary-font: "Jost", system-ui, sans-serif;
+  --slant: oblique 0deg;
+}
+
+[data-font="dm-serif-display"] {
+  --primary-font: "DM Serif Display", Georgia, serif;
+  --slant: oblique 0deg;
+}
+
+[data-font="fira-code"] {
+  --primary-font: "Fira Code", monospace;
+  --slant: oblique 0deg;
 }

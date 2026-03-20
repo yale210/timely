@@ -58,7 +58,16 @@ export const useThemes = (): UseThemesReturn => {
     [],
   );
   const fontOptions = useMemo(
-    () => ["poppins", "inter", "arial", "verdana", "mono", "bitcount", "bebas-neue", "pacifico"],
+    () => [
+      "poppins",
+      "comfortaa",
+      "righteous",
+      "fira-code",
+      "kalam",
+      "gloria-hallelujah",
+      "bitcount",
+      "bebas-neue",
+    ],
     [],
   );
 
