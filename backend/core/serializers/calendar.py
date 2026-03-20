@@ -23,6 +23,7 @@ class CalendarSerializer(serializers.ModelSerializer):
             "completed",
             "locked",
             "allow_split",
+            "min_split_minutes",
             "parent_task",
             "allocation",
             "total_task_allocations",
@@ -64,5 +65,6 @@ class CalendarResponseSerializer(serializers.ModelSerializer):
             "completed",
             "locked",
             "allow_split",
+            "min_split_minutes",
             "parent_task",
         ]

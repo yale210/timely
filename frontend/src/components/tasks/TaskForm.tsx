@@ -19,7 +19,10 @@ interface NormalisedTaskSubmission {
   estimated_minutes: number;
   completed: boolean;
   allow_split: boolean;
+  min_split_minutes: number;
 }
+
+const DEFAULT_MIN_SPLIT_MINUTES = 30;
 
 const normaliseTaskSubmission = (
   submission: TaskSubmission,
@@ -34,6 +37,7 @@ const normaliseTaskSubmission = (
   estimated_minutes: Number(submission.estimated_minutes ?? 60),
   completed: Boolean(submission.completed),
   allow_split: Boolean(submission.allow_split),
+  min_split_minutes: Number(submission.min_split_minutes ?? DEFAULT_MIN_SPLIT_MINUTES),
 });
 
 const isTaskSubmissionEqual = (
@@ -128,9 +132,13 @@ const TaskForm = ({
   );
   const [importance, setImportance] = useState(initialData?.importance ?? 5);
   const [allowSplit, setAllowSplit] = useState(initialData?.allow_split ?? false);
+  const [minSplitMinutes, setMinSplitMinutes] = useState<string>(
+    String(initialData?.min_split_minutes ?? DEFAULT_MIN_SPLIT_MINUTES),
+  );
   const [autoSchedule, setAutoSchedule] = useState(
     initialData?.locked ? false : true,
   );
+  const [isTaskLocked, setIsTaskLocked] = useState(initialData?.locked ?? false);
   const defaultColour = "#3b82f6";
   const [colour, setColour] = useState(initialData?.colour ?? defaultColour);
   const [showPickerMenu, setShowPickerMenu] = useState(false);
@@ -175,6 +183,13 @@ const TaskForm = ({
   const isEndInvalid = Number.isNaN(endDateTime.getTime());
   const isTimeInvalid = isStartInvalid || isEndInvalid || startDateTime >= endDateTime;
   const isImportanceInvalid = importance < 1 || importance > 10 || isNaN(importance);
+  const parsedMinSplitMinutes = Number.parseInt(minSplitMinutes, 10);
+  const isMinSplitMinutesInvalid = allowSplit && (
+    minSplitMinutes.trim() === ""
+    || Number.isNaN(parsedMinSplitMinutes)
+    || parsedMinSplitMinutes < 15
+    || parsedMinSplitMinutes > 240
+  );
   const shouldValidateTime = hasSubmitted || hasTouchedTime;
   
   const errors: Record<string, boolean> = {};
@@ -185,8 +200,11 @@ const TaskForm = ({
   if (isImportanceInvalid) {
     errors.importance = true;
   }
+  if (hasSubmitted && isMinSplitMinutesInvalid) {
+    errors.min_split_minutes = true;
+  }
   
-  const hasBlockingErrors = isTimeInvalid || isImportanceInvalid;
+  const hasBlockingErrors = isTimeInvalid || isImportanceInvalid || isMinSplitMinutesInvalid;
 
   const buildSubmission = (): TaskSubmission => ({
     title,
@@ -197,8 +215,9 @@ const TaskForm = ({
     importance,
     estimated_minutes: Number(estimatedMinutes || 0),
     colour,
-    locked: !autoSchedule,
+    locked: isTaskLocked,
     allow_split: allowSplit,
+    min_split_minutes: parsedMinSplitMinutes,
     completed: initialData?.completed ?? false,
   });
 
@@ -419,7 +438,13 @@ const TaskForm = ({
             <button
               id="task-auto-schedule"
               type="button"
-              onClick={() => setAutoSchedule((prev) => !prev)}
+              onClick={() => {
+                setAutoSchedule((prev) => {
+                  const nextValue = !prev;
+                  setIsTaskLocked(!nextValue);
+                  return nextValue;
+                });
+              }}
               className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
                 autoSchedule ? "bg-primary" : "bg-gray-300"
               }`}
@@ -428,6 +453,40 @@ const TaskForm = ({
               <span
                 className={`inline-block h-5 w-5 transform rounded-full bg-white shadow-sm transition-transform ${
                   autoSchedule ? "translate-x-5" : "translate-x-1"
+                }`}
+              />
+            </button>
+          </div>
+
+          <div className="flex items-center justify-between gap-4">
+            <div className="flex items-center gap-2">
+              <label htmlFor="task-lock-toggle" className="text-sm font-medium text-gray-700">
+                Lock task
+              </label>
+              <Tooltip content="Locked tasks stay manually movable, but the automatic scheduler will not move them.">
+                <span className="inline-flex h-5 w-5 items-center justify-center rounded-full border border-gray-300 text-[10px] text-gray-500 cursor-help">
+                  ?
+                </span>
+              </Tooltip>
+            </div>
+            <button
+              id="task-lock-toggle"
+              type="button"
+              onClick={() => {
+                setIsTaskLocked((prev) => {
+                  const nextValue = !prev;
+                  setAutoSchedule(!nextValue);
+                  return nextValue;
+                });
+              }}
+              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                isTaskLocked ? "bg-primary" : "bg-gray-300"
+              }`}
+              aria-pressed={isTaskLocked}
+            >
+              <span
+                className={`inline-block h-5 w-5 transform rounded-full bg-white shadow-sm transition-transform ${
+                  isTaskLocked ? "translate-x-5" : "translate-x-1"
                 }`}
               />
             </button>
@@ -453,6 +512,30 @@ const TaskForm = ({
               />
             </button>
           </div>
+          {allowSplit ? (
+            <div>
+              <label htmlFor="task-min-split-minutes" className="block text-sm font-medium text-gray-700 mb-2">
+                Minimum split block minutes
+              </label>
+              <input
+                id="task-min-split-minutes"
+                className={`${baseInputClass} ${errors.min_split_minutes ? errorClass : ""}`}
+                type="number"
+                min="15"
+                max="240"
+                step="5"
+                value={minSplitMinutes}
+                onChange={(e) => {
+                  setMinSplitMinutes(e.target.value);
+                }}
+              />
+              {errors.min_split_minutes ? (
+                <p className="mt-2 text-xs text-red-500">
+                  Minimum split block minutes must be between 15 and 240.
+                </p>
+              ) : null}
+            </div>
+          ) : null}
         </div>
 
         <div>
@@ -545,4 +628,3 @@ const TaskForm = ({
 };
 
 export default TaskForm;
-

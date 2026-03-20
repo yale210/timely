@@ -254,14 +254,8 @@ const CalendarView = ({
             onSelectEvent={(entry) => {
               actions.selectEntry(entry);
             }}
-            draggableAccessor={(entry) =>
-              entry.kind === "event" ||
-              (entry.kind === "task" && !entry.taskData?.locked)
-            }
-            resizableAccessor={(entry) =>
-              entry.kind === "event" ||
-              (entry.kind === "task" && !entry.taskData?.locked)
-            }
+            draggableAccessor={() => true}
+            resizableAccessor={() => true}
             onEventDrop={(args) => {
               void actions.handleEventDrop(args);
             }}

@@ -92,7 +92,7 @@ const CalendarToolbar = ({
                 <button
                   type="button"
                   onClick={() => setIsWarningsOpen((current) => !current)}
-                  className="relative flex h-10 w-10 items-center justify-center rounded-full border border-red-200 bg-red-50 text-red-600 transition-colors hover:bg-red-100"
+                  className="relative flex h-10 w-10 items-center justify-center rounded-full border border-gray-200 bg-gray-100 text-red-600 transition-colors hover:bg-gray-200"
                   aria-label={`Show ${state.rescheduleWarnings.length} scheduling warnings`}
                   aria-expanded={isWarningsOpen}
                 >
@@ -112,7 +112,7 @@ const CalendarToolbar = ({
                       {state.rescheduleWarnings.map((warning) => (
                         <div
                           key={warning.taskId}
-                          className="rounded-lg border border-red-200 bg-gray-100 px-3 py-2"
+                          className="rounded-lg border border-gray-200 bg-gray-100 px-3 py-2"
                         >
                           <p className="font-medium text-gray-900">{warning.title}</p>
                           <p className="mt-1 text-sm text-gray-700">{warning.reason}</p>

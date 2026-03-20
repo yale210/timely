@@ -36,6 +36,9 @@ class Task(models.Model):
     completed = models.BooleanField(default=False)
     locked = models.BooleanField(default=False)
     allow_split = models.BooleanField(default=False)
+    min_split_minutes = models.PositiveSmallIntegerField(
+        default=30, validators=[MinValueValidator(15), MaxValueValidator(240)]
+    )
 
     # Query db for models with specific parent tasks when necessary.
     parent_task = models.ForeignKey(

@@ -25,6 +25,7 @@ export interface Task {
   completed: boolean;
   locked?: boolean;
   allow_split?: boolean;
+  min_split_minutes?: number;
   categories: Category[];
   estimated_minutes: number;
   parent_task?: number | null;

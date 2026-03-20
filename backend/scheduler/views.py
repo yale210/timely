@@ -18,7 +18,11 @@ class ScheduleTasksAPIView(APIView):
         payload = serializer.validated_data
 
         start_date = payload.get("start_date") or timezone.localdate()
-        max_days_ahead = payload.get("max_days_ahead", 7)
+        preference = getattr(request.user, "preference", None)
+        max_days_ahead = payload.get(
+            "max_days_ahead",
+            getattr(preference, "max_days_ahead", 30),
+        )
         allow_split = payload.get("allow_split", False)
         min_block_minutes = payload.get("min_block_minutes", 30)
 

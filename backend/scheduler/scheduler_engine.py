@@ -342,6 +342,7 @@ class Scheduler:
         task_start = self._aware(task.start_time)
         deadline = self._aware(task.deadline)
         segments: List[Tuple[datetime, datetime]] = []
+        min_block_minutes = getattr(task, "min_split_minutes", self.min_block_minutes)
 
         search_start = max(start_date, task_start.date())
         for offset in range(self.max_days_ahead + 1):
@@ -353,7 +354,7 @@ class Scheduler:
             if not self._is_day_available(current_date):
                 continue
 
-            slots = self.get_available_slots(current_date, self.min_block_minutes)
+            slots = self.get_available_slots(current_date, min_block_minutes)
             for slot in slots:
                 capped = self._clip_to_deadline(slot, deadline)
                 if not capped:
@@ -366,20 +367,20 @@ class Scheduler:
                 while remaining > 0 and cursor < end:
                     free_minutes = (end - cursor).total_seconds() / 60
                     if (
-                        free_minutes < self.min_block_minutes
-                        and remaining > self.min_block_minutes
+                        free_minutes < min_block_minutes
+                        and remaining > min_block_minutes
                     ):
                         break
 
                     chunk = min(remaining, free_minutes)
                     if (
-                        chunk < self.min_block_minutes
-                        and remaining > self.min_block_minutes
+                        chunk < min_block_minutes
+                        and remaining > min_block_minutes
                     ):
                         break
                     if (
-                        chunk < self.min_block_minutes
-                        and remaining <= self.min_block_minutes
+                        chunk < min_block_minutes
+                        and remaining <= min_block_minutes
                     ):
                         # last small piece fits
                         pass

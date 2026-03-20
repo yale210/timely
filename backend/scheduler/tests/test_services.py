@@ -215,3 +215,41 @@ class SchedulerTest(TestCase):
 
         self.assertTrue(results[0].success)
         self.assertGreaterEqual(results[0].scheduled_start, task.start_time)
+
+    def test_schedule_task_split_uses_task_min_split_minutes(self):
+        day_one = date(2026, 3, 19)
+        day_two = day_one + timedelta(days=1)
+
+        Event.objects.create(
+            user=self.user,
+            title="Block day one",
+            start_time=timezone.make_aware(datetime.combine(day_one, time(7, 20))),
+            end_time=timezone.make_aware(datetime.combine(day_one, time(23, 0))),
+        )
+        Event.objects.create(
+            user=self.user,
+            title="Block day two",
+            start_time=timezone.make_aware(datetime.combine(day_two, time(7, 25))),
+            end_time=timezone.make_aware(datetime.combine(day_two, time(23, 0))),
+        )
+
+        Task.objects.create(
+            user=self.user,
+            title="Small block split task",
+            description="",
+            estimated_minutes=45,
+            importance=5,
+            start_time=timezone.make_aware(datetime.combine(day_one, time(7, 0))),
+            deadline=timezone.make_aware(datetime.combine(day_two, time(23, 0))),
+            completed=False,
+            allow_split=True,
+            min_split_minutes=15,
+        )
+
+        scheduler = Scheduler(
+            self.user, max_days_ahead=2, allow_split=True, min_block_minutes=30
+        )
+        results = scheduler.schedule_tasks(start_date=day_one)
+
+        self.assertTrue(results[0].success)
+        self.assertEqual(len(results[0].segments), 2)

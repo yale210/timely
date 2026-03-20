@@ -46,6 +46,9 @@ class Preference(models.Model):
     max_hours_study_per_day = models.PositiveSmallIntegerField(
         default=4, validators=[MinValueValidator(0), MaxValueValidator(24)]
     )
+    max_days_ahead = models.PositiveSmallIntegerField(
+        default=30, validators=[MinValueValidator(1), MaxValueValidator(365)]
+    )
     limit_max_hours = models.BooleanField(default=True)
     disable_sound_effects = models.BooleanField(default=False)
 

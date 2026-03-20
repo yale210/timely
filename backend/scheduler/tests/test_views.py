@@ -6,7 +6,7 @@ from django.utils import timezone
 from rest_framework import status
 from rest_framework.test import APITestCase
 
-from core.models import Event, Task
+from core.models import Event, Preference, Task
 
 
 class SchedulerViewsTests(APITestCase):
@@ -134,3 +134,43 @@ class SchedulerViewsTests(APITestCase):
         self.assertEqual(task.total_task_allocations, 0)
         self.assertEqual(task.start_time, original_start_time)
         self.assertEqual(task.deadline, original_deadline)
+
+    def test_schedule_uses_saved_preference_horizon_when_request_omits_it(self):
+        base_date = timezone.localdate() + timedelta(days=1)
+        Preference.objects.create(
+            user=self.user,
+            day_start=time(7, 0),
+            day_end=time(23, 0),
+            max_days_ahead=30,
+        )
+
+        for offset in range(8):
+            blocked_day = base_date + timedelta(days=offset)
+            Event.objects.create(
+                user=self.user,
+                title=f"Block {blocked_day.isoformat()}",
+                start_time=timezone.make_aware(datetime.combine(blocked_day, time(7, 0))),
+                end_time=timezone.make_aware(datetime.combine(blocked_day, time(23, 0))),
+            )
+
+        task = Task.objects.create(
+            user=self.user,
+            title="Late horizon task",
+            description="",
+            estimated_minutes=30,
+            start_time=timezone.make_aware(datetime.combine(base_date, time(7, 0))),
+            deadline=timezone.make_aware(datetime.combine(base_date + timedelta(days=9), time(23, 0))),
+            importance=5,
+            completed=False,
+            allow_split=True,
+        )
+
+        response = self.client.post(
+            self.schedule_url,
+            {"start_date": base_date.isoformat(), "allow_split": True},
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        task.refresh_from_db()
+        self.assertEqual(task.total_task_allocations, 1)
