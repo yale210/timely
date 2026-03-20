@@ -24,6 +24,7 @@ class CalendarSerializer(serializers.ModelSerializer):
             "locked",
             "allow_split",
             "min_split_minutes",
+            "max_split_minutes",
             "parent_task",
             "allocation",
             "total_task_allocations",
@@ -66,5 +67,30 @@ class CalendarResponseSerializer(serializers.ModelSerializer):
             "locked",
             "allow_split",
             "min_split_minutes",
+            "max_split_minutes",
             "parent_task",
         ]
+
+    def validate(self, attrs):
+        attrs = super().validate(attrs)
+        min_split_minutes = attrs.get(
+            "min_split_minutes",
+            getattr(self.instance, "min_split_minutes", None),
+        )
+        max_split_minutes = attrs.get(
+            "max_split_minutes",
+            getattr(self.instance, "max_split_minutes", None),
+        )
+        if (
+            min_split_minutes is not None
+            and max_split_minutes is not None
+            and max_split_minutes < min_split_minutes
+        ):
+            raise serializers.ValidationError(
+                {
+                    "max_split_minutes": (
+                        "Maximum split block minutes must be greater than or equal to minimum split block minutes."
+                    )
+                }
+            )
+        return attrs

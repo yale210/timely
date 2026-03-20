@@ -253,3 +253,35 @@ class SchedulerTest(TestCase):
 
         self.assertTrue(results[0].success)
         self.assertEqual(len(results[0].segments), 2)
+
+    def test_schedule_task_split_respects_task_max_split_minutes(self):
+        start_day = date(2026, 3, 19)
+
+        Task.objects.create(
+            user=self.user,
+            title="Max block split task",
+            description="",
+            estimated_minutes=150,
+            importance=5,
+            start_time=timezone.make_aware(datetime.combine(start_day, time(7, 0))),
+            deadline=timezone.make_aware(datetime.combine(start_day, time(23, 0))),
+            completed=False,
+            allow_split=True,
+            min_split_minutes=30,
+            max_split_minutes=60,
+        )
+
+        scheduler = Scheduler(
+            self.user, max_days_ahead=1, allow_split=True, min_block_minutes=30
+        )
+        results = scheduler.schedule_tasks(start_date=start_day)
+
+        self.assertTrue(results[0].success)
+        self.assertEqual(len(results[0].segments), 3)
+        self.assertEqual(
+            [
+                int((end - start).total_seconds() // 60)
+                for start, end in results[0].segments
+            ],
+            [60, 60, 30],
+        )

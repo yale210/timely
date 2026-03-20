@@ -39,6 +39,11 @@ class Task(models.Model):
     min_split_minutes = models.PositiveSmallIntegerField(
         default=30, validators=[MinValueValidator(15), MaxValueValidator(240)]
     )
+    max_split_minutes = models.PositiveSmallIntegerField(
+        blank=True,
+        null=True,
+        validators=[MinValueValidator(15), MaxValueValidator(1440)],
+    )
 
     # Query db for models with specific parent tasks when necessary.
     parent_task = models.ForeignKey(
@@ -72,4 +77,11 @@ class Task(models.Model):
     def clean(self):
         if self.start_time and self.deadline and self.start_time > self.deadline:
             raise ValidationError("Start time must be before or on the deadline.")
+        if (
+            self.max_split_minutes is not None
+            and self.max_split_minutes < self.min_split_minutes
+        ):
+            raise ValidationError(
+                "Maximum split block minutes must be greater than or equal to minimum split block minutes."
+            )
         super().clean()

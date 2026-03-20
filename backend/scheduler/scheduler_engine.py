@@ -343,6 +343,7 @@ class Scheduler:
         deadline = self._aware(task.deadline)
         segments: List[Tuple[datetime, datetime]] = []
         min_block_minutes = getattr(task, "min_split_minutes", self.min_block_minutes)
+        max_block_minutes = getattr(task, "max_split_minutes", None)
 
         search_start = max(start_date, task_start.date())
         for offset in range(self.max_days_ahead + 1):
@@ -373,6 +374,8 @@ class Scheduler:
                         break
 
                     chunk = min(remaining, free_minutes)
+                    if max_block_minutes is not None:
+                        chunk = min(chunk, max_block_minutes)
                     if (
                         chunk < min_block_minutes
                         and remaining > min_block_minutes

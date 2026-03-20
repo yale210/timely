@@ -55,6 +55,8 @@ class CalendarSerializerTests(TestCase):
                 "completed",
                 "locked",
                 "allow_split",
+                "min_split_minutes",
+                "max_split_minutes",
                 "estimated_minutes",  # I should check if this was in fields before, it wasn't but model has it.
                 "parent_task",
                 "allocation",
@@ -73,6 +75,9 @@ class CalendarSerializerTests(TestCase):
             "importance": 5,
             "completed": False,
             "categories": [self.category1.id, self.category2.id],
+            "allow_split": True,
+            "min_split_minutes": 30,
+            "max_split_minutes": 60,
         }
 
         # To test creation, we usually use the serializer's save method
@@ -83,3 +88,26 @@ class CalendarSerializerTests(TestCase):
 
         self.assertEqual(task.categories.count(), 2)
         self.assertIn(self.category1, task.categories.all())
+        self.assertEqual(task.min_split_minutes, 30)
+        self.assertEqual(task.max_split_minutes, 60)
+
+    def test_calendar_serializer_rejects_max_split_below_minimum(self):
+        now = timezone.now()
+        serializer = CalendarSerializer(
+            data={
+                "title": "Invalid split settings",
+                "description": "",
+                "estimated_minutes": 30,
+                "start_time": now.isoformat(),
+                "deadline": (now + datetime.timedelta(hours=1)).isoformat(),
+                "importance": 5,
+                "completed": False,
+                "allow_split": True,
+                "min_split_minutes": 60,
+                "max_split_minutes": 30,
+                "categories": [],
+            }
+        )
+
+        self.assertFalse(serializer.is_valid())
+        self.assertIn("max_split_minutes", serializer.errors)

@@ -21,6 +21,7 @@ interface NormalisedTaskSubmission {
   locked: boolean;
   allow_split: boolean;
   min_split_minutes: number;
+  max_split_minutes: number | null;
 }
 
 const DEFAULT_MIN_SPLIT_MINUTES = 30;
@@ -40,6 +41,8 @@ const normaliseTaskSubmission = (
   locked: Boolean(submission.locked),
   allow_split: Boolean(submission.allow_split),
   min_split_minutes: Number(submission.min_split_minutes ?? DEFAULT_MIN_SPLIT_MINUTES),
+  max_split_minutes:
+    submission.max_split_minutes == null ? null : Number(submission.max_split_minutes),
 });
 
 const isTaskSubmissionEqual = (
@@ -137,6 +140,9 @@ const TaskForm = ({
   const [minSplitMinutes, setMinSplitMinutes] = useState<string>(
     String(initialData?.min_split_minutes ?? DEFAULT_MIN_SPLIT_MINUTES),
   );
+  const [maxSplitMinutes, setMaxSplitMinutes] = useState<string>(
+    initialData?.max_split_minutes == null ? "" : String(initialData.max_split_minutes),
+  );
   const [autoSchedule, setAutoSchedule] = useState(!(initialData?.locked ?? false));
   const [isTaskLocked, setIsTaskLocked] = useState(initialData?.locked ?? false);
   const defaultColour = "#3b82f6";
@@ -184,11 +190,18 @@ const TaskForm = ({
   const isTimeInvalid = isStartInvalid || isEndInvalid || startDateTime >= endDateTime;
   const isImportanceInvalid = importance < 1 || importance > 10 || isNaN(importance);
   const parsedMinSplitMinutes = Number.parseInt(minSplitMinutes, 10);
+  const parsedMaxSplitMinutes = Number.parseInt(maxSplitMinutes, 10);
   const isMinSplitMinutesInvalid = allowSplit && (
     minSplitMinutes.trim() === ""
     || Number.isNaN(parsedMinSplitMinutes)
     || parsedMinSplitMinutes < 15
     || parsedMinSplitMinutes > 240
+  );
+  const isMaxSplitMinutesInvalid = allowSplit && maxSplitMinutes.trim() !== "" && (
+    Number.isNaN(parsedMaxSplitMinutes)
+    || parsedMaxSplitMinutes < 15
+    || parsedMaxSplitMinutes > 1440
+    || parsedMaxSplitMinutes < parsedMinSplitMinutes
   );
   const shouldValidateTime = hasSubmitted || hasTouchedTime;
   
@@ -203,8 +216,15 @@ const TaskForm = ({
   if (hasSubmitted && isMinSplitMinutesInvalid) {
     errors.min_split_minutes = true;
   }
+  if (hasSubmitted && isMaxSplitMinutesInvalid) {
+    errors.max_split_minutes = true;
+  }
   
-  const hasBlockingErrors = isTimeInvalid || isImportanceInvalid || isMinSplitMinutesInvalid;
+  const hasBlockingErrors =
+    isTimeInvalid
+    || isImportanceInvalid
+    || isMinSplitMinutesInvalid
+    || isMaxSplitMinutesInvalid;
 
   const buildSubmission = (): TaskSubmission => ({
     title,
@@ -218,6 +238,7 @@ const TaskForm = ({
     locked: isTaskLocked,
     allow_split: allowSplit,
     min_split_minutes: parsedMinSplitMinutes,
+    max_split_minutes: maxSplitMinutes.trim() === "" ? null : parsedMaxSplitMinutes,
     completed: initialData?.completed ?? false,
   });
 
@@ -498,6 +519,30 @@ const TaskForm = ({
               {errors.min_split_minutes ? (
                 <p className="mt-2 text-xs text-red-500">
                   Minimum split block minutes must be between 15 and 240.
+                </p>
+              ) : null}
+            </div>
+          ) : null}
+          {allowSplit ? (
+            <div>
+              <label htmlFor="task-max-split-minutes" className="block text-sm font-medium text-gray-700 mb-2">
+                Maximum split block minutes <span className="text-gray-400">(optional)</span>
+              </label>
+              <input
+                id="task-max-split-minutes"
+                className={`${baseInputClass} ${errors.max_split_minutes ? errorClass : ""}`}
+                type="number"
+                min="15"
+                max="1440"
+                step="5"
+                value={maxSplitMinutes}
+                onChange={(e) => {
+                  setMaxSplitMinutes(e.target.value);
+                }}
+              />
+              {errors.max_split_minutes ? (
+                <p className="mt-2 text-xs text-red-500">
+                  Maximum split block minutes must be between 15 and 1440, and at least the minimum split block minutes.
                 </p>
               ) : null}
             </div>
