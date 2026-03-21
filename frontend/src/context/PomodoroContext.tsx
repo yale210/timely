@@ -111,13 +111,14 @@ export const PomodoroProvider = ({ children }: PomodoroProviderProps) => {
       clearInterval(intervalRef.current);
       intervalRef.current = null;
     }
-  }, []);
+    // Unify state: when stopping, ensure countdown matches the viewing mode's intended duration
+    const duration = viewingMode === "focus" ? timerManager.getFocusDuration() : timerManager.getBreakDuration();
+    setTimeLeft(duration * 60);
+  }, [viewingMode, timerManager]);
 
   const resetTimer = useCallback(() => {
     stopTimer();
-    const duration = mode === "focus" ? timerManager.getFocusDuration() : timerManager.getBreakDuration();
-    setTimeLeft(duration * 60);
-  }, [mode, timerManager, stopTimer]);
+  }, [stopTimer]);
 
   const setInitialDuration = useCallback((minutes: number | "") => {
     const validMinutes = timerManager.validateDuration(minutes);
@@ -132,17 +133,20 @@ export const PomodoroProvider = ({ children }: PomodoroProviderProps) => {
   }, [mode, viewingMode, isActive, timerManager]);
 
   const setMode = useCallback((newMode: PomodoroMode) => {
-    // This is now purely for tab switching in the UI
     setViewingMode(newMode);
     
-    // If timer is not active, we can also sync the background mode to the view
     if (!isActive) {
       setModeState(newMode);
       const duration = newMode === "focus" ? timerManager.getFocusDuration() : timerManager.getBreakDuration();
       setInitialDurationState(newMode === "focus" ? persistedFocusDuration : timerManager.getBreakDuration());
       setTimeLeft(duration * 60);
+    } else if (newMode === mode) {
+      // If we switch back to the active mode, we don't need to do anything special
+    } else {
+      // Looking at a different mode than the one ticking
+      setInitialDurationState(newMode === "focus" ? persistedFocusDuration : timerManager.getBreakDuration());
     }
-  }, [isActive, persistedFocusDuration, timerManager]);
+  }, [isActive, mode, persistedFocusDuration, timerManager]);
 
   const onTimerComplete = useCallback(async () => {
     stopTimer();
