@@ -52,6 +52,7 @@ export const PomodoroProvider = ({ children }: PomodoroProviderProps) => {
   });
 
   const [mode, setModeState] = useState<PomodoroMode>("focus");
+  const [persistedFocusDuration, setPersistedFocusDuration] = useState<number | "">(initialDuration);
   const [timeLeft, setTimeLeft] = useState(initialDuration * 60);
   const [isActive, setIsActive] = useState(false);
   const [showModal, setShowModal] = useState(false);
@@ -104,6 +105,9 @@ export const PomodoroProvider = ({ children }: PomodoroProviderProps) => {
     }
     const validMinutes = Math.max(1, Math.min(minutes, MAX_MINUTES));
     setInitialDurationState(validMinutes);
+    if (mode === "focus") {
+      setPersistedFocusDuration(validMinutes);
+    }
     localStorage.setItem("pomo_initial_duration", validMinutes.toString());
     if (mode === "focus" && !isActive) {
       setTimeLeft(validMinutes * 60);
@@ -118,12 +122,13 @@ export const PomodoroProvider = ({ children }: PomodoroProviderProps) => {
     }
     
     setModeState(newMode);
-    const duration = newMode === "focus" ? (initialDuration || DEFAULT_FOCUS_MINUTES) : DEFAULT_BREAK_MINUTES;
+    const duration = newMode === "focus" ? (persistedFocusDuration || DEFAULT_FOCUS_MINUTES) : DEFAULT_BREAK_MINUTES;
+    setInitialDurationState(newMode === "focus" ? persistedFocusDuration : DEFAULT_BREAK_MINUTES);
     setTimeLeft(duration * 60);
     
     // Handover isActive state
     // If it was active, it stays active and the useEffect will restart the interval
-  }, [initialDuration]);
+  }, [persistedFocusDuration]);
 
   const onTimerComplete = useCallback(async () => {
     stopTimer();
@@ -168,6 +173,7 @@ export const PomodoroProvider = ({ children }: PomodoroProviderProps) => {
       if (mode === "focus" && !isActive) {
         const nextMins = Math.round(validNext / 60);
         setInitialDurationState(nextMins);
+        setPersistedFocusDuration(nextMins);
         localStorage.setItem("pomo_initial_duration", nextMins.toString());
       }
       
