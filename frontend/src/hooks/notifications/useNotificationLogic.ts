@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import {
   deleteAllNotifications as apiDeleteAllNotifications,
   deleteNotification as apiDeleteNotification,
@@ -35,24 +35,41 @@ export const useNotificationLogic = () => {
   const [unreadCount, setUnreadCount] = useState(0);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const notificationsRef = useRef<Notification[]>([]);
+  const notificationsRequestIdRef = useRef(0);
+  const unreadCountRequestIdRef = useRef(0);
+
+  useEffect(() => {
+    notificationsRef.current = notifications;
+  }, [notifications]);
 
   const fetchNotifications = useCallback(async () => {
     if (!authStore.getToken()) {
       setNotifications([]);
       setError(null);
+      setLoading(false);
       return;
     }
 
+    const requestId = ++notificationsRequestIdRef.current;
     setLoading(true);
     try {
       const data = await getNotifications(1);
+      if (requestId !== notificationsRequestIdRef.current || !authStore.getToken()) {
+        return;
+      }
       setNotifications(data.results);
       setError(null);
     } catch (err) {
+      if (requestId !== notificationsRequestIdRef.current || !authStore.getToken()) {
+        return;
+      }
       setError("Failed to fetch notifications");
       console.error(err);
     } finally {
-      setLoading(false);
+      if (requestId === notificationsRequestIdRef.current) {
+        setLoading(false);
+      }
     }
   }, []);
 
@@ -62,10 +79,17 @@ export const useNotificationLogic = () => {
       return;
     }
 
+    const requestId = ++unreadCountRequestIdRef.current;
     try {
       const data = await getUnreadCount();
+      if (requestId !== unreadCountRequestIdRef.current || !authStore.getToken()) {
+        return;
+      }
       setUnreadCount(data.count);
     } catch (err) {
+      if (requestId !== unreadCountRequestIdRef.current || !authStore.getToken()) {
+        return;
+      }
       console.error("Failed to fetch unread count", err);
     }
   }, []);
@@ -75,7 +99,7 @@ export const useNotificationLogic = () => {
       try {
         await apiMarkAsRead(id);
 
-        const existing = notifications.find((item) => item.id === id);
+        const existing = notificationsRef.current.find((item) => item.id === id);
         const wasUnread = existing ? !existing.is_read : null;
 
         setNotifications((prev) =>
@@ -93,7 +117,7 @@ export const useNotificationLogic = () => {
         console.error("Failed to mark notification as read", err);
       }
     },
-    [notifications, fetchUnreadCount],
+    [fetchUnreadCount],
   );
 
   const markUnread = useCallback(
@@ -101,7 +125,7 @@ export const useNotificationLogic = () => {
       try {
         await apiMarkAsUnread(id);
 
-        const existing = notifications.find((item) => item.id === id);
+        const existing = notificationsRef.current.find((item) => item.id === id);
         const wasRead = existing ? existing.is_read : null;
 
         setNotifications((prev) =>
@@ -119,7 +143,7 @@ export const useNotificationLogic = () => {
         console.error("Failed to mark notification as unread", err);
       }
     },
-    [notifications, fetchUnreadCount],
+    [fetchUnreadCount],
   );
 
   const markAllRead = useCallback(async () => {
@@ -137,7 +161,7 @@ export const useNotificationLogic = () => {
       try {
         await apiDeleteNotification(id);
 
-        const existing = notifications.find((item) => item.id === id);
+        const existing = notificationsRef.current.find((item) => item.id === id);
 
         setNotifications((prev) => prev.filter((item) => item.id !== id));
 
@@ -150,7 +174,7 @@ export const useNotificationLogic = () => {
         console.error("Failed to delete notification", err);
       }
     },
-    [notifications, fetchUnreadCount],
+    [fetchUnreadCount],
   );
 
   const deleteAllNotifications = useCallback(async () => {
@@ -194,9 +218,12 @@ export const useNotificationLogic = () => {
       void fetchNotifications();
       void fetchUnreadCount();
     } else {
+      notificationsRequestIdRef.current += 1;
+      unreadCountRequestIdRef.current += 1;
       setNotifications([]);
       setUnreadCount(0);
       setError(null);
+      setLoading(false);
     }
   }, [hasAuthToken, fetchNotifications, fetchUnreadCount]);
 

@@ -78,6 +78,7 @@ describe("useNotificationLogic", () => {
     await waitFor(() => {
       expect(result.current.notifications).toEqual([]);
       expect(result.current.unreadCount).toBe(0);
+      expect(result.current.loading).toBe(false);
     });
   });
 
@@ -95,5 +96,28 @@ describe("useNotificationLogic", () => {
     expect(notificationsApi.markAsRead).toHaveBeenCalledWith(1);
     expect(result.current.unreadCount).toBe(0);
     expect(result.current.notifications[0].is_read).toBe(true);
+  });
+
+  it("keeps item action callbacks stable across notification updates", async () => {
+    vi.mocked(notificationsApi.markAsRead).mockResolvedValue(undefined);
+
+    const { result } = renderHook(() => useNotificationLogic());
+
+    await waitFor(() => {
+      expect(result.current.loading).toBe(false);
+      expect(result.current.unreadCount).toBe(1);
+    });
+
+    const initialMarkRead = result.current.markRead;
+    const initialMarkUnread = result.current.markUnread;
+    const initialDeleteNotification = result.current.deleteNotification;
+
+    await act(async () => {
+      await result.current.markRead(1);
+    });
+
+    expect(result.current.markRead).toBe(initialMarkRead);
+    expect(result.current.markUnread).toBe(initialMarkUnread);
+    expect(result.current.deleteNotification).toBe(initialDeleteNotification);
   });
 });
