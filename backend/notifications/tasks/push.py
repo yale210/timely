@@ -52,8 +52,8 @@ def _send_push_notification_sync(user_id, title, message):
     Returns:
         A dictionary containing success status and error details.
     """
-    subscriptions = PushSubscription.objects.filter(user_id=user_id)
-    if not subscriptions.exists():
+    subscriptions = list(PushSubscription.objects.filter(user_id=user_id))
+    if not subscriptions:
         return {"success": True, "error_code": "", "error_message": ""}
 
     payload = json.dumps({"title": title, "message": message})

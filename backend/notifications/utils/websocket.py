@@ -52,8 +52,9 @@ def notify_user(user_id, data):
         data: Payload to be delivered.
     """
     try:
-        # Lazy import to avoid circular dependency
-        from notifications.tasks import send_websocket_notification_task
+        # Lazy import from the specific submodule to avoid pulling in the
+        # entire tasks package (and its transitive imports) on first call.
+        from notifications.tasks.maintenance import send_websocket_notification_task
 
         send_websocket_notification_task.delay(user_id, data)
     except Exception:
