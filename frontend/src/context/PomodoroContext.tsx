@@ -111,11 +111,19 @@ export const PomodoroProvider = ({ children }: PomodoroProviderProps) => {
   }, [mode, isActive]);
 
   const setMode = useCallback((newMode: PomodoroMode) => {
-    stopTimer();
+    // Preserve active state but clear interval
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current);
+      intervalRef.current = null;
+    }
+    
     setModeState(newMode);
     const duration = newMode === "focus" ? (initialDuration || DEFAULT_FOCUS_MINUTES) : DEFAULT_BREAK_MINUTES;
     setTimeLeft(duration * 60);
-  }, [initialDuration, stopTimer]);
+    
+    // Handover isActive state
+    // If it was active, it stays active and the useEffect will restart the interval
+  }, [initialDuration]);
 
   const onTimerComplete = useCallback(async () => {
     stopTimer();
