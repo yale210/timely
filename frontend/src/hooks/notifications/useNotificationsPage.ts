@@ -45,15 +45,19 @@ export const useNotificationsPage = () => {
   const ctx = useNotificationContext();
   const [tab, setTab] = useState<NotificationFilterTab>("all");
   const [page, setPage] = useState(1);
-  const { notifications, count, loading, error, fetchPage } = usePageFetch(page, tab);
+  const requestedPage = Math.max(1, page);
+  const { notifications, count, loading, error, fetchPage } = usePageFetch(requestedPage, tab);
   const [confirm, setConfirm] = useState<ListConfirmationAction>(null);
   const [pend, setPending] = useState<Notification | null>(null);
   const prevRef = useRef(ctx.notifications);
+  const totalPages = Math.max(1, Math.ceil(count / PAGE_SIZE));
+  const currentPage = Math.min(requestedPage, totalPages);
+
   useEffect(() => { if (ctx.notifications !== prevRef.current) { prevRef.current = ctx.notifications; void fetchPage(); } }, [ctx.notifications, fetchPage]);
 
   const click = useCallback(async (n: Notification) => { if (!n.is_read) await ctx.markRead(n.id); await ctx.fetchNotifications(); void nav(`/notifications/${n.id}`); }, [ctx, nav]);
   const toggle = useCallback(async (n: Notification) => { if (n.is_read) await ctx.markUnread(n.id); else await ctx.markRead(n.id); await fetchPage(); await ctx.fetchNotifications(); }, [ctx, fetchPage]);
-  const del = useCallback(async (n: Notification) => { await ctx.deleteNotification(n.id); if (notifications.length === 1 && page > 1) setPage((p) => Math.max(1, p - 1)); else await fetchPage(); await ctx.fetchNotifications(); }, [ctx, fetchPage, notifications.length, page]);
+  const del = useCallback(async (n: Notification) => { await ctx.deleteNotification(n.id); if (notifications.length === 1 && currentPage > 1) setPage((p) => Math.max(1, p - 1)); else await fetchPage(); await ctx.fetchNotifications(); }, [ctx, currentPage, fetchPage, notifications.length]);
   const bulk = useCallback(async () => {
     if (confirm === "mark_all_read") {
       await ctx.markAllRead();
@@ -68,12 +72,12 @@ export const useNotificationsPage = () => {
 
   const win = useMemo(() => {
     const pages: number[] = [];
-    for (let c = Math.max(1, page - 2); c <= Math.min(Math.max(1, Math.ceil(count / PAGE_SIZE)), page + 2); c++) pages.push(c);
+    for (let c = Math.max(1, currentPage - 2); c <= Math.min(totalPages, currentPage + 2); c++) pages.push(c);
     return pages;
-  }, [page, count]);
+  }, [currentPage, totalPages]);
 
   return {
-    state: { notifications, activeTab: tab, page, count, totalPages: Math.max(1, Math.ceil(count / PAGE_SIZE)), paginationWindow: win, loading, contextLoading: ctx.loading, displayError: error ?? ctx.error, confirmAction: confirm, notificationPendingDelete: pend },
-    actions: { setTab: (t: NotificationFilterTab) => { setTab(t); setPage(1); }, setPage, setConfirmAction: setConfirm, setNotificationPendingDelete: setPending, handleNotificationClick: click, handleToggleRead: toggle, handleDeleteNotification: del, handleConfirmBulkAction: bulk },
+    state: { notifications, activeTab: tab, page: currentPage, count, totalPages, paginationWindow: win, loading, contextLoading: ctx.loading, displayError: error ?? ctx.error, confirmAction: confirm, notificationPendingDelete: pend },
+    actions: { setTab: (t: NotificationFilterTab) => { setTab(t); setPage(1); }, setPage: (nextPage: number) => { setPage(Math.max(1, nextPage)); }, setConfirmAction: setConfirm, setNotificationPendingDelete: setPending, handleNotificationClick: click, handleToggleRead: toggle, handleDeleteNotification: del, handleConfirmBulkAction: bulk },
   };
 };
