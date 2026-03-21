@@ -1,7 +1,7 @@
 import { Menu, MenuButton, MenuItems } from "@headlessui/react";
 import { usePomodoro } from "@/context/PomodoroContext";
 import { formatTime } from "@/utils/timeUtils";
-import { convertMinutesToHHMM, convertHHMMToMinutes } from "@/utils/timeFormatters";
+import { convertMinutesToHHMM, convertHHMMToMinutes, parseAndValidateHHMM } from "@/utils/timeFormatters";
 import { PlayIcon, PauseIcon, ArrowPathIcon, PlusIcon, MinusIcon } from "@heroicons/react/24/outline";
 import { useState, useEffect } from "react";
 
@@ -57,23 +57,8 @@ export const PomofocusDropdown = () => {
   };
 
   const handleBlur = () => {
-    let h = parseInt(hh, 10) || 0;
-    let m = parseInt(mm, 10) || 0;
-
-    // Recalculate if minutes > 59
-    if (m >= 60) {
-      h += Math.floor(m / 60);
-      m = m % 60;
-    }
-
-    const totalMins = convertHHMMToMinutes(h, m);
-    // Hard limit at 600 mins (10 hours)
-    const finalMins = Math.max(1, Math.min(totalMins, 600));
+    const finalMins = parseAndValidateHHMM(hh, mm);
     setInitialDuration(finalMins);
-    
-    const finalTime = convertMinutesToHHMM(finalMins);
-    setHH(finalTime.hours.toString().padStart(2, "0"));
-    setMM(finalTime.minutes.toString().padStart(2, "0"));
   };
 
   const handleFocus = (e: React.FocusEvent<HTMLInputElement>) => {

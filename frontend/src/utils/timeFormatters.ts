@@ -22,3 +22,25 @@ export const convertMinutesToHHMM = (totalMinutes: number): { hours: number; min
 export const convertHHMMToMinutes = (hours: number, minutes: number): number => {
   return (hours * 60) + minutes;
 };
+
+/**
+ * Parses and validates HH:MM strings into a total minute count.
+ * Enforces a minimum of 1 minute and a maximum of 600 minutes (10 hours).
+ * @param hh - Hours string.
+ * @param mm - Minutes string.
+ * @returns Validated total minutes.
+ */
+export const parseAndValidateHHMM = (hh: string, mm: string): number => {
+  let h = parseInt(hh, 10) || 0;
+  let m = parseInt(mm, 10) || 0;
+
+  // Overflow handling (e.g., 90 mins -> 1h 30m)
+  if (m >= 60) {
+    h += Math.floor(m / 60);
+    m = m % 60;
+  }
+
+  const totalMins = (h * 60) + m;
+  // Band 5 Constraint: 1 min floor, 10 hour ceiling
+  return Math.max(1, Math.min(totalMins, 600));
+};
