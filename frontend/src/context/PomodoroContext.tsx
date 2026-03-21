@@ -185,8 +185,15 @@ export const PomodoroProvider = ({ children }: PomodoroProviderProps) => {
   const startTimer = useCallback(() => {
     if (!hasAuth) return;
     handleExplicitModeHandover();
+
+    // Ensure timer re-initialises from duration setting if it hit zero
+    if (timeLeft <= 0) {
+      const duration = mode === "focus" ? timerManager.getFocusDuration() : timerManager.getBreakDuration();
+      setTimeLeft(duration * 60);
+    }
+
     setIsActive(true);
-  }, [hasAuth, handleExplicitModeHandover]);
+  }, [hasAuth, handleExplicitModeHandover, timeLeft, mode, timerManager]);
 
   const adjustTime = useCallback((deltaSeconds: number) => {
     setTimeLeft((prev) => {
