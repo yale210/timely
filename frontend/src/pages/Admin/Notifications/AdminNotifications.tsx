@@ -19,10 +19,30 @@ export const AdminNotifications = () => {
         <AdminNotificationsHeader />
         <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,360px)]">
           <AdminBroadcastForm
-            {...state.formData} {...state.audience} {...state.users} {...loading}
+            title={state.formData.title}
+            message={state.formData.message}
+            target={state.formData.target}
+            userIdsInput={state.formData.userIdsInput}
+            confirmationChecked={state.formData.confirmationChecked}
+            audienceCounts={state.audience.audienceCounts}
+            targetAudienceCount={state.audience.targetAudienceCount}
+            users={state.users.users}
+            selectedUserIds={state.users.selectedUserIds}
+            usersPage={state.users.usersPage}
+            usersCount={state.users.usersCount}
+            usersPageSize={constants.usersPageSize}
+            hasUsersNextPage={state.users.hasUsersNextPage}
+            hasUsersPreviousPage={state.users.hasUsersPreviousPage}
+            isAllVisibleSelected={state.users.isAllVisibleSelected}
+            search={state.users.search}
+            roleFilter={state.users.roleFilter}
+            isSubmitting={loading.isSubmitting}
+            isUsersLoading={loading.isUsersLoading}
             usersError={error.users}
             error={error.form}
-            {...constants}
+            titleLimit={constants.titleLimit}
+            messageLimit={constants.messageLimit}
+            targetOptions={constants.targetOptions}
             canSubmit={state.canSubmit}
             onSubmit={actions.handleSubmit}
             onTitleChange={actions.setTitle}
