@@ -10,6 +10,7 @@ interface PomodoroContextValue {
   initialDuration: number | "";
   isActive: boolean;
   mode: PomodoroMode;
+  viewingMode: PomodoroMode;
   showModal: boolean;
   modalMessage: string;
   setInitialDuration: (minutes: number | "") => void;
@@ -18,6 +19,7 @@ interface PomodoroContextValue {
   resetTimer: () => void;
   adjustTime: (deltaSeconds: number) => void;
   setMode: (mode: PomodoroMode) => void;
+  setViewingMode: (mode: PomodoroMode) => void;
   closeModal: () => void;
 }
 
@@ -52,6 +54,7 @@ export const PomodoroProvider = ({ children }: PomodoroProviderProps) => {
   });
 
   const [mode, setModeState] = useState<PomodoroMode>("focus");
+  const [viewingMode, setViewingMode] = useState<PomodoroMode>("focus");
   const [persistedFocusDuration, setPersistedFocusDuration] = useState<number | "">(initialDuration);
   const [timeLeft, setTimeLeft] = useState(initialDuration * 60);
   const [isActive, setIsActive] = useState(false);
@@ -119,29 +122,27 @@ export const PomodoroProvider = ({ children }: PomodoroProviderProps) => {
   const setInitialDuration = useCallback((minutes: number | "") => {
     const validMinutes = timerManager.validateDuration(minutes);
     timerManager.syncInitialDuration(validMinutes);
-    if (mode === "focus" && validMinutes !== "") {
+    if (viewingMode === "focus" && validMinutes !== "") {
       setPersistedFocusDuration(validMinutes);
     }
-    if (mode === "focus" && !isActive && validMinutes !== "") {
+    // Only update timeLeft if the timer is not active AND we are looking at the mode that is currently "active" in the background
+    if (mode === viewingMode && !isActive && validMinutes !== "") {
       setTimeLeft(validMinutes * 60);
     }
-  }, [mode, isActive, timerManager]);
+  }, [mode, viewingMode, isActive, timerManager]);
 
   const setMode = useCallback((newMode: PomodoroMode) => {
-    // Preserve active state but clear interval
-    if (intervalRef.current) {
-      clearInterval(intervalRef.current);
-      intervalRef.current = null;
+    // This is now purely for tab switching in the UI
+    setViewingMode(newMode);
+    
+    // If timer is not active, we can also sync the background mode to the view
+    if (!isActive) {
+      setModeState(newMode);
+      const duration = newMode === "focus" ? timerManager.getFocusDuration() : timerManager.getBreakDuration();
+      setInitialDurationState(newMode === "focus" ? persistedFocusDuration : timerManager.getBreakDuration());
+      setTimeLeft(duration * 60);
     }
-    
-    setModeState(newMode);
-    const duration = newMode === "focus" ? timerManager.getFocusDuration() : timerManager.getBreakDuration();
-    setInitialDurationState(newMode === "focus" ? persistedFocusDuration : timerManager.getBreakDuration());
-    setTimeLeft(duration * 60);
-    
-    // Handover isActive state
-    // If it was active, it stays active and the useEffect will restart the interval
-  }, [persistedFocusDuration, timerManager]);
+  }, [isActive, persistedFocusDuration, timerManager]);
 
   const onTimerComplete = useCallback(async () => {
     stopTimer();
@@ -215,6 +216,7 @@ export const PomodoroProvider = ({ children }: PomodoroProviderProps) => {
     initialDuration,
     isActive,
     mode,
+    viewingMode,
     showModal,
     modalMessage,
     setInitialDuration,
@@ -223,6 +225,7 @@ export const PomodoroProvider = ({ children }: PomodoroProviderProps) => {
     resetTimer,
     adjustTime,
     setMode,
+    setViewingMode,
     closeModal,
   };
 
