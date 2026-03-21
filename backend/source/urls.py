@@ -33,6 +33,7 @@ from core.views import (
 )
 from core.views.export_view import ExportView
 from core.views.import_view import ImportView
+from courses.views.courses import CourseView
 
 from scheduler.views import ScheduleTasksAPIView, UnscheduleTasksAPIView
 
@@ -46,7 +47,7 @@ router.register(r"preferences", PreferenceViewSet, basename="preference")
 router.register(r"friendships", FriendshipViewSet, basename="friendship")
 router.register(r"special-dates", SpecialDatesViewSet, basename="special-dates")
 
-
+router.register(r"courses", CourseView, basename="course")
 urlpatterns = [
     path("api/admin/", include("admin_panel.urls")),
     path("api/", include("notifications.urls")),
