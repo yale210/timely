@@ -5,6 +5,7 @@ interface NotificationBellProps {
   unreadCount: number;
   onClick?: () => void;
   as?: 'button' | 'div';
+  isDecorative?: boolean;
 }
 
 /**
@@ -16,12 +17,14 @@ interface NotificationBellProps {
  * @param props.unreadCount - The number of unread notifications to display.
  * @param props.onClick - An optional callback function to execute when the bell is clicked.
  * @param props.as - Determines the container element type, defaulting to 'button'.
+ * @param props.isDecorative - Whether the bell should be hidden from assistive technology.
  * @returns The rendered notification bell.
  */
 export const NotificationBell: React.FC<NotificationBellProps> = ({ 
   unreadCount, 
   onClick,
-  as = 'button'
+  as = 'button',
+  isDecorative = false,
 }) => {
   const Component = as;
   
@@ -30,7 +33,8 @@ export const NotificationBell: React.FC<NotificationBellProps> = ({
       type={as === 'button' ? 'button' : undefined}
       className="relative inline-flex h-6 w-6 items-center justify-center text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-1"
       onClick={onClick}
-      aria-label="View notifications"
+      aria-hidden={isDecorative ? true : undefined}
+      aria-label={isDecorative ? undefined : 'View notifications'}
     >
       <BellIcon className="h-5 w-5" aria-hidden="true" />
       {unreadCount > 0 && (

@@ -49,7 +49,9 @@ describe("NotificationDropdown Component", () => {
         <NotificationDropdown {...defaultProps} />
       </MemoryRouter>
     );
-    expect(screen.getByRole("button")).toBeDefined();
+    const bellButton = screen.getByRole("button", { name: /view notifications/i });
+    expect(bellButton).toBeDefined();
+    expect(bellButton).toHaveAttribute("type", "button");
   });
 
   it("opens the dropdown when clicked", async () => {

@@ -91,7 +91,7 @@ export const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
 
   return (
     <Popover className="relative flex h-6 items-center">
-      <Popover.Button className="flex h-6 items-center focus:outline-none cursor-pointer"><NotificationBell unreadCount={total} as="div" /></Popover.Button>
+      <Popover.Button aria-label="View notifications" type="button" className="cursor-pointer focus:outline-none flex h-6 items-center"><NotificationBell unreadCount={total} as="div" isDecorative /></Popover.Button>
       <Transition as={Fragment} enter="transition ease-out duration-200" enterFrom="opacity-0 translate-y-1" enterTo="opacity-100 translate-y-0" leave="transition ease-in duration-150" leaveFrom="opacity-100 translate-y-0" leaveTo="opacity-0 translate-y-1">
         <Popover.Panel className="absolute right-0 top-full z-10 mt-2 w-96 px-4 sm:px-0">
           <div className="overflow-hidden rounded-2xl shadow-xl ring-1 ring-black/5 bg-white">
