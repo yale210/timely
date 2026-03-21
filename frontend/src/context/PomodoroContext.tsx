@@ -105,6 +105,16 @@ export const PomodoroProvider = ({ children }: PomodoroProviderProps) => {
     }
   }, []);
 
+  /**
+   * Synchronises the countdown timer with the current duration settings.
+   * @param targetMode - The mode to synchronise with (focus or break).
+   */
+  const synchroniseCountdownWithDuration = useCallback((targetMode: PomodoroMode) => {
+    const duration = targetMode === "focus" ? timerManager.getFocusDuration() : timerManager.getBreakDuration();
+    setInitialDurationState(targetMode === "focus" ? persistedFocusDuration : timerManager.getBreakDuration());
+    setTimeLeft(duration * 60);
+  }, [timerManager, persistedFocusDuration]);
+
   const stopTimer = useCallback(() => {
     setIsActive(false);
     if (intervalRef.current) {
@@ -112,9 +122,8 @@ export const PomodoroProvider = ({ children }: PomodoroProviderProps) => {
       intervalRef.current = null;
     }
     // Unify state: when stopping, ensure countdown matches the viewing mode's intended duration
-    const duration = viewingMode === "focus" ? timerManager.getFocusDuration() : timerManager.getBreakDuration();
-    setTimeLeft(duration * 60);
-  }, [viewingMode, timerManager]);
+    synchroniseCountdownWithDuration(viewingMode);
+  }, [viewingMode, synchroniseCountdownWithDuration]);
 
   const resetTimer = useCallback(() => {
     stopTimer();
@@ -137,16 +146,12 @@ export const PomodoroProvider = ({ children }: PomodoroProviderProps) => {
     
     if (!isActive) {
       setModeState(newMode);
-      const duration = newMode === "focus" ? timerManager.getFocusDuration() : timerManager.getBreakDuration();
-      setInitialDurationState(newMode === "focus" ? persistedFocusDuration : timerManager.getBreakDuration());
-      setTimeLeft(duration * 60);
-    } else if (newMode === mode) {
-      // If we switch back to the active mode, we don't need to do anything special
-    } else {
-      // Looking at a different mode than the one ticking
+      synchroniseCountdownWithDuration(newMode);
+    } else if (newMode !== mode) {
+      // Looking at a different mode than the one ticking, update input display only
       setInitialDurationState(newMode === "focus" ? persistedFocusDuration : timerManager.getBreakDuration());
     }
-  }, [isActive, mode, persistedFocusDuration, timerManager]);
+  }, [isActive, mode, persistedFocusDuration, timerManager, synchroniseCountdownWithDuration]);
 
   const onTimerComplete = useCallback(async () => {
     stopTimer();
@@ -171,20 +176,18 @@ export const PomodoroProvider = ({ children }: PomodoroProviderProps) => {
       setShowModal(true);
       // Auto-switch to focus and start
       setModeState("focus");
-      setTimeLeft(timerManager.getFocusDuration() * 60);
+      synchroniseCountdownWithDuration("focus");
       setIsActive(true);
     }
-  }, [mode, playNotification, stopTimer, timerManager]);
+  }, [mode, playNotification, stopTimer, timerManager, synchroniseCountdownWithDuration]);
 
   const handleExplicitModeHandover = useCallback(() => {
     if (viewingMode !== mode) {
       stopTimer();
       setModeState(viewingMode);
-      const duration = viewingMode === "focus" ? timerManager.getFocusDuration() : timerManager.getBreakDuration();
-      setInitialDurationState(viewingMode === "focus" ? persistedFocusDuration : timerManager.getBreakDuration());
-      setTimeLeft(duration * 60);
+      synchroniseCountdownWithDuration(viewingMode);
     }
-  }, [viewingMode, mode, stopTimer, timerManager, persistedFocusDuration]);
+  }, [viewingMode, mode, stopTimer, synchroniseCountdownWithDuration]);
 
   const startTimer = useCallback(() => {
     if (!hasAuth) return;
