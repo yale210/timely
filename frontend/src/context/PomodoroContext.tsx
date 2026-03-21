@@ -198,7 +198,25 @@ export const PomodoroProvider = ({ children }: PomodoroProviderProps) => {
   const adjustTime = useCallback((deltaSeconds: number) => {
     setTimeLeft((prev) => {
       const next = prev + deltaSeconds;
-      const validNext = Math.max(0, Math.min(next, MAX_MINUTES * 60));
+      
+      if (next <= 0) {
+        if (isActive) {
+          // Explicitly stop and trigger completion if it was running
+          stopTimer();
+          // Defer completion to ensure state updates are clean
+          setTimeout(() => onTimerComplete(), 0);
+        }
+        
+        // Ensure synchronization even at zero
+        if (viewingMode === "focus" && !isActive) {
+          timerManager.syncInitialDuration(1); // Default to 1 instead of 0 for input
+          setPersistedFocusDuration(1);
+        }
+        
+        return 0;
+      }
+
+      const validNext = Math.min(next, MAX_MINUTES * 60);
       
       // Synchronise with initialDuration if in focus mode and not active
       if (viewingMode === "focus" && !isActive) {
@@ -209,7 +227,7 @@ export const PomodoroProvider = ({ children }: PomodoroProviderProps) => {
       
       return validNext;
     });
-  }, [viewingMode, isActive, timerManager]);
+  }, [viewingMode, isActive, timerManager, stopTimer, onTimerComplete]);
 
   useEffect(() => {
     if (isActive && timeLeft > 0) {
