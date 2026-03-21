@@ -33,7 +33,7 @@ export const useAdminHistoryDetail = (): UseAdminHistoryDetailReturn => {
     f.setStatus,
     (newBroadcastId) => {
       setActiveBroadcastId(newBroadcastId);
-      navigate(`/admin/notifications/history/${newBroadcastId}`);
+      void navigate(`/admin/notifications/history/${newBroadcastId}`);
     }
   );
 

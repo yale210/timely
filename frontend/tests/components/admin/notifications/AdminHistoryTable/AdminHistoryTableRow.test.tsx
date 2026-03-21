@@ -1,5 +1,6 @@
 import { render, screen, fireEvent } from "@testing-library/react";
 import { vi, describe, it, expect } from "vitest";
+import { MemoryRouter } from "react-router-dom";
 import { AdminHistoryTableRow } from "@/components/admin/notifications/AdminHistoryTable/AdminHistoryTableRow";
 import { type BroadcastJobSummary } from "@/types";
 
@@ -20,17 +21,20 @@ describe("AdminHistoryTableRow Component", () => {
     };
     const onSelect = vi.fn();
     render(
-      <table>
-        <tbody>
-          <AdminHistoryTableRow item={item} onSelectItem={onSelect} />
-        </tbody>
-      </table>
+      <MemoryRouter>
+        <table>
+          <tbody>
+            <AdminHistoryTableRow item={item} onSelectItem={onSelect} />
+          </tbody>
+        </table>
+      </MemoryRouter>
     );
 
     expect(screen.getByText("Test Job")).toBeDefined();
     expect(screen.getByText("admin")).toBeDefined();
     
-    fireEvent.click(screen.getByText("Test Job"));
+    const row = screen.getByText("Test Job").closest("tr");
+    fireEvent.click(row!);
     expect(onSelect).toHaveBeenCalledWith(1);
   });
 });

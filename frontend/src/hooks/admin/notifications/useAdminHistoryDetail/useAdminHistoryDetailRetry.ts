@@ -11,6 +11,7 @@ import { type BroadcastJobDetail, type BroadcastJobStatusResponse } from "@/type
  * @param broadcastId - The current broadcast ID.
  * @param setDetail - Setter for detail state.
  * @param setStatus - Setter for status state.
+ * @param onRetrySuccess - Callback invoked with the new broadcast ID after a successful retry.
  * @returns Error and retry handler.
  */
 export const useAdminHistoryDetailRetry = (
