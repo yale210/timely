@@ -59,5 +59,5 @@ class RegisterSerializerTest(TestCase):
         self.assertIn("non_field_errors", serializer.errors)
         self.assertEqual(
             serializer.errors["non_field_errors"][0],
-            "User with this username already exist.",
+            "User with this username already exists.",
         )

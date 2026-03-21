@@ -1,16 +1,9 @@
 from django.test import TestCase
 from scheduler.serializers import ScheduleResultSerializer
-from collections import namedtuple
 
 
 class SerializersTests(TestCase):
     def test_schedule_result_serializer_get_segments_none(self):
-        MockInstance = namedtuple(
-            "MockInstance",
-            ["task_id", "success", "scheduled_start", "scheduled_end", "reason"],
-        )
-        _instance = MockInstance(1, True, None, None, None)
-
         class MyInstance:
             task_id = 1
             success = True
