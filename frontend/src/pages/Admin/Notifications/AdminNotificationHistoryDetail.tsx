@@ -13,7 +13,7 @@ export const AdminNotificationHistoryDetail = () => {
   const { state, loading, error, retryError, actions } = useAdminHistoryDetail();
 
   if (loading) return <AppLayout><div className="p-8 text-center">Loading...</div></AppLayout>;
-  if (error || !state.detail || !state.status) return <AppLayout><div className="p-8 text-center text-red-600">{error ?? "Not found"}</div></AppLayout>;
+  if (error || !state.detail || !state.status) return <AppLayout><div className="p-8 text-center text-red-600">{error ?? "Broadcast not found"}</div></AppLayout>;
 
   return (
     <AppLayout>

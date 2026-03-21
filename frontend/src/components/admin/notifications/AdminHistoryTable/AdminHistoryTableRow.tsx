@@ -1,6 +1,6 @@
 import { type BroadcastJobSummary } from "@/types";
 
-interface AdminHistoryHistoryTableRowProps {
+interface AdminHistoryTableRowProps {
   /**
    * Broadcast job summary object to display.
    */
@@ -17,8 +17,8 @@ interface AdminHistoryHistoryTableRowProps {
  * @param props - Job item and selection callback.
  * @returns A table row component.
  */
-export const AdminHistoryHistoryTableRow = (
-  props: AdminHistoryHistoryTableRowProps
+export const AdminHistoryTableRow = (
+  props: AdminHistoryTableRowProps
 ) => {
   const { item, onSelectItem } = props;
 
@@ -27,6 +27,14 @@ export const AdminHistoryHistoryTableRow = (
       key={item.id}
       className="cursor-pointer hover:bg-gray-50"
       onClick={() => onSelectItem(item.id)}
+      tabIndex={0}
+      role="button"
+      onKeyDown={(e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          onSelectItem(item.id);
+        }
+      }}
     >
       <td className="px-4 py-3">
         <p className="font-medium text-gray-900">{item.title}</p>

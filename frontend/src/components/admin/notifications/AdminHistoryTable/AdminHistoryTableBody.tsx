@@ -1,5 +1,5 @@
 import { type BroadcastJobSummary } from "@/types";
-import { AdminHistoryHistoryTableRow } from "./AdminHistoryHistoryTableRow";
+import { AdminHistoryTableRow } from "./AdminHistoryTableRow";
 
 interface AdminHistoryTableBodyProps {
   /**
@@ -48,7 +48,7 @@ export const AdminHistoryTableBody = (props: AdminHistoryTableBodyProps) => {
   return (
     <tbody className="divide-y divide-gray-100">
       {items.map((item) => (
-        <AdminHistoryHistoryTableRow key={item.id} item={item} onSelectItem={onSelectItem} />
+        <AdminHistoryTableRow key={item.id} item={item} onSelectItem={onSelectItem} />
       ))}
     </tbody>
   );

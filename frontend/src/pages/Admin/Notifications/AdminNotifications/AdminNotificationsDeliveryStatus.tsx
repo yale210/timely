@@ -29,6 +29,7 @@ export const AdminNotificationsDeliveryStatus = (props: AdminNotificationsDelive
           to="/admin/notifications/history"
           className="inline-flex h-8 w-8 items-center justify-center rounded-md border border-gray-200 text-gray-500 hover:bg-gray-50 hover:text-indigo-600 transition-colors"
           title="Notification history"
+          aria-label="Notification history"
         >
           <ClockIcon className="h-5 w-5" />
         </Link>
