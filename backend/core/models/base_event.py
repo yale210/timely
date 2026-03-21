@@ -9,6 +9,7 @@ class BaseEventModel(models.Model):
     location = models.CharField(max_length=255, blank=True)
     start_time = models.DateTimeField(default=now)
     end_time = models.DateTimeField(default=now)
+    last_edited = models.DateTimeField(default=now)
 
     class Meta:
         abstract = True

@@ -31,6 +31,9 @@ from core.views import (
 from core.views.export_view import ExportView
 from core.views.import_view import ImportView
 
+from core.views.share_send_view import ShareSendView
+from core.views.share_accept_view import ShareAcceptView
+
 from scheduler.views import ScheduleTasksAPIView, UnscheduleTasksAPIView
 
 
@@ -54,5 +57,7 @@ urlpatterns = [
     path("api/authentication/", include("authentication.urls")),
     path("api/export/", ExportView.as_view()),
     path("api/import/", ImportView.as_view()),
+    path("api/share_send/", ShareSendView.as_view()),
+    path("api/share_accept/", ShareAcceptView.as_view()),
     path("api/profiles/", include("profiles.urls")),
 ]

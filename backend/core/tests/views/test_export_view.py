@@ -1,12 +1,9 @@
 from datetime import datetime
 from django.utils import timezone
-
 from django.test import TestCase
 from django.contrib.auth import get_user_model
 from rest_framework.test import APIClient
 from core.models import Event
-
-# tEST12
 
 
 class ExportViewTests(TestCase):
@@ -18,7 +15,6 @@ class ExportViewTests(TestCase):
 
     def test_fail_if_not_logged_in(self):
         response = self.client.get("/api/export/")
-        #
         self.assertEqual(response.status_code, 401)
 
     def test_success_if_logged_in(self):
@@ -48,8 +44,10 @@ class ExportViewTests(TestCase):
 
         start = datetime.strptime("20260325T200000", "%Y%m%dT%H%M%S")
         end = datetime.strptime("20260325T210000", "%Y%m%dT%H%M%S")
+        stamp = datetime.strptime("20260205T120548", "%Y%m%dT%H%M%S")
         start_aware = timezone.make_aware(start)
         end_aware = timezone.make_aware(end)
+        stamp_aware = timezone.make_aware(stamp)
 
         Event.objects.create(
             user=self.user,
@@ -58,6 +56,7 @@ class ExportViewTests(TestCase):
             location="Location Event 1",
             start_time=start_aware,
             end_time=end_aware,
+            last_edited=stamp_aware,
         )
 
         response = self.client.get("/api/export/")
@@ -70,7 +69,7 @@ class ExportViewTests(TestCase):
             "METHOD:PUBLISH\n"
             "BEGIN:VEVENT\n"
             "UID:e1\n"
-            "DTSTAMP:20260205T120548Z\n"
+            "DTSTAMP:20260205T120548\n"
             "DTSTART;TZID=Europe/London:20260325T200000\n"
             "DTEND;TZID=Europe/London:20260325T210000\n"
             "SUMMARY:Title Event 1\n"
@@ -90,13 +89,17 @@ class ExportViewTests(TestCase):
 
         start = datetime.strptime("20260325T200000", "%Y%m%dT%H%M%S")
         end = datetime.strptime("20260325T210000", "%Y%m%dT%H%M%S")
+        stamp = datetime.strptime("20260205T120548", "%Y%m%dT%H%M%S")
         start_aware = timezone.make_aware(start)
         end_aware = timezone.make_aware(end)
+        stamp_aware = timezone.make_aware(stamp)
 
         start2 = datetime.strptime("20260425T200000", "%Y%m%dT%H%M%S")
         end2 = datetime.strptime("20260425T210000", "%Y%m%dT%H%M%S")
+        stamp2 = datetime.strptime("20260205T120548", "%Y%m%dT%H%M%S")
         start_aware2 = timezone.make_aware(start2)
         end_aware2 = timezone.make_aware(end2)
+        stamp_aware2 = timezone.make_aware(stamp2)
 
         Event.objects.create(
             user=self.user,
@@ -105,6 +108,7 @@ class ExportViewTests(TestCase):
             location="Location Event 1",
             start_time=start_aware,
             end_time=end_aware,
+            last_edited=stamp_aware,
         )
 
         Event.objects.create(
@@ -114,6 +118,7 @@ class ExportViewTests(TestCase):
             location="Location Event 2",
             start_time=start_aware2,
             end_time=end_aware2,
+            last_edited=stamp_aware2,
         )
 
         response = self.client.get("/api/export/")
@@ -126,7 +131,7 @@ class ExportViewTests(TestCase):
             "METHOD:PUBLISH\n"
             "BEGIN:VEVENT\n"
             "UID:e1\n"
-            "DTSTAMP:20260205T120548Z\n"
+            "DTSTAMP:20260205T120548\n"
             "DTSTART;TZID=Europe/London:20260325T200000\n"
             "DTEND;TZID=Europe/London:20260325T210000\n"
             "SUMMARY:Title Event 1\n"
@@ -135,7 +140,7 @@ class ExportViewTests(TestCase):
             "END:VEVENT\n"
             "BEGIN:VEVENT\n"
             "UID:e2\n"
-            "DTSTAMP:20260205T120548Z\n"
+            "DTSTAMP:20260205T120548\n"
             "DTSTART;TZID=Europe/London:20260425T200000\n"
             "DTEND;TZID=Europe/London:20260425T210000\n"
             "SUMMARY:Title Event 2\n"
@@ -156,8 +161,10 @@ class ExportViewTests(TestCase):
 
         start = datetime.strptime("20260325T200000", "%Y%m%dT%H%M%S")
         end = datetime.strptime("20260325T210000", "%Y%m%dT%H%M%S")
+        stamp = datetime.strptime("20260205T120548", "%Y%m%dT%H%M%S")
         start_aware = timezone.make_aware(start)
         end_aware = timezone.make_aware(end)
+        stamp_aware = timezone.make_aware(stamp)
 
         Event.objects.create(
             user=self.user,
@@ -166,6 +173,7 @@ class ExportViewTests(TestCase):
             location="Location Event 1",
             start_time=start_aware,
             end_time=end_aware,
+            last_edited=stamp_aware,
             recurrence_interval=Event.RecurrenceInterval.DAILY,
             recurrence_end=None,
         )
@@ -180,7 +188,7 @@ class ExportViewTests(TestCase):
             "METHOD:PUBLISH\n"
             "BEGIN:VEVENT\n"
             "UID:e1\n"
-            "DTSTAMP:20260205T120548Z\n"
+            "DTSTAMP:20260205T120548\n"
             "DTSTART;TZID=Europe/London:20260325T200000\n"
             "DTEND;TZID=Europe/London:20260325T210000\n"
             "SUMMARY:Title Event 1\n"
@@ -201,8 +209,10 @@ class ExportViewTests(TestCase):
 
         start = datetime.strptime("20260325T200000", "%Y%m%dT%H%M%S")
         end = datetime.strptime("20260325T210000", "%Y%m%dT%H%M%S")
+        stamp = datetime.strptime("20260205T120548", "%Y%m%dT%H%M%S")
         start_aware = timezone.make_aware(start)
         end_aware = timezone.make_aware(end)
+        stamp_aware = timezone.make_aware(stamp)
 
         rec_end = datetime.strptime("20260417T000000", "%Y%m%dT%H%M%S").date()
 
@@ -213,6 +223,7 @@ class ExportViewTests(TestCase):
             location="Location Event 1",
             start_time=start_aware,
             end_time=end_aware,
+            last_edited=stamp_aware,
             recurrence_interval=Event.RecurrenceInterval.DAILY,
             recurrence_end=rec_end,
         )
@@ -227,7 +238,7 @@ class ExportViewTests(TestCase):
             "METHOD:PUBLISH\n"
             "BEGIN:VEVENT\n"
             "UID:e1\n"
-            "DTSTAMP:20260205T120548Z\n"
+            "DTSTAMP:20260205T120548\n"
             "DTSTART;TZID=Europe/London:20260325T200000\n"
             "DTEND;TZID=Europe/London:20260325T210000\n"
             "SUMMARY:Title Event 1\n"

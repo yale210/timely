@@ -126,6 +126,12 @@ export interface ScheduleResponse {
   results: ScheduleResult[];
 }
 
+export interface ExportResponse {
+  file_name: string;
+  content_type: string;
+  data: string;
+}
+
 /**
  * Represents weekly task statistics.
  * @interface WeeklyStats

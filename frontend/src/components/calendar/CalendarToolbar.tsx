@@ -1,12 +1,13 @@
+
 import { Views } from "react-big-calendar";
 import type { UseCalendarReturn } from "@/hooks/calendar/useCalendar";
 
 interface CalendarToolbarProps {
   state: Pick<UseCalendarReturn["state"], "view" | "currentLabel">;
-  loading: Pick<UseCalendarReturn["loading"], "scheduling" | "unscheduling">;
+  loading: Pick<UseCalendarReturn["loading"], "scheduling" | "unscheduling" | "exporting" | "importing">;
   actions: Pick<
     UseCalendarReturn["actions"],
-    "setView" | "goToToday" | "goToPrevious" | "goToNext" | "scheduleTasks" | "unscheduleTasks"
+    "setView" | "goToToday" | "goToPrevious" | "goToNext" | "scheduleTasks" | "unscheduleTasks" | "exportEvents" | "importEvents"
   >;
 }
 
@@ -83,6 +84,55 @@ const CalendarToolbar = ({
             <span className="material-icons mr-1.5 text-lg">event_busy</span>
             {loading.unscheduling ? "Unscheduling..." : "Unschedule Tasks"}
           </button>
+          //
+          <button
+            type="button"
+            onClick={() => {
+              void actions.exportEvents();
+            }}
+            disabled={loading.exporting}
+            className={`flex items-center rounded-lg px-4 py-2 text-sm font-medium shadow-sm transition-colors ${
+              loading.exporting
+                ? "cursor-not-allowed bg-gray-200 text-gray-500"
+                : "border border-gray-300 bg-white text-gray-700 hover:bg-gray-50"
+            }`}
+          >
+            <span className="material-icons mr-1.5 text-lg">event_busy</span>
+            {loading.exporting ? "Exporting..." : "Export Events"}
+          </button>
+
+
+          //
+    
+
+          <button
+            type="button"
+            onClick={() => {
+              const input = document.createElement("input")
+              input.type = "file"
+              input.onchange = (event) => {
+                const target = event.target
+                
+                if (target instanceof HTMLInputElement && target.files) {
+                  const file = target.files[0]
+                  actions.importEvents(file)
+                }
+              }
+              input.click()
+            }}
+            
+            className={`flex items-center rounded-lg px-4 py-2 text-sm font-medium shadow-sm transition-colors ${
+              loading.importing
+                ? "cursor-not-allowed bg-gray-200 text-gray-500"
+                : "border border-gray-300 bg-white text-gray-700 hover:bg-gray-50"
+            }`}
+          >
+            <span className="material-icons mr-1.5 text-lg">event_busy</span>
+            {loading.importing ? "Importing..." : "Import Events"}
+          </button>
+
+
+          //
         </div>
         <div className="flex items-center overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm">
           <button
@@ -114,5 +164,7 @@ const CalendarToolbar = ({
     </div>
   </header>
 );
+
+
 
 export default CalendarToolbar;

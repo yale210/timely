@@ -11,6 +11,7 @@ from .profile import Profile
 from .grade import Grade
 from .friendship import Friendship
 from .reminder_dispatch_log import ReminderDispatchLog
+from .pending_share_event import PendingShareEvent
 
 __all__ = [
     "Commute",
@@ -26,4 +27,5 @@ __all__ = [
     "Grade",
     "Friendship",
     "ReminderDispatchLog",
+    "PendingShareEvent",
 ]

@@ -4,6 +4,8 @@ import { type View, Views } from "react-big-calendar";
 import type { EventInteractionArgs } from "react-big-calendar/lib/addons/dragAndDrop";
 import * as eventService from "@/services/eventService";
 import * as schedulerService from "@/services/schedulerService";
+import * as exportService from "@/services/exportService"
+import * as importService from "@/services/importService"
 import * as categoryService from "@/services/categoryService";
 import * as taskService from "@/services/taskService";
 import type {
@@ -37,6 +39,8 @@ interface CalendarLoading {
   events: boolean;
   scheduling: boolean;
   unscheduling: boolean;
+  exporting: boolean;
+  importing: boolean;
 }
 
 interface CalendarError {
@@ -45,6 +49,8 @@ interface CalendarError {
   events: string | null;
   scheduling: string | null;
   unscheduling: string | null;
+  exporting: string | null;
+  importing: string | null;
 }
 
 interface CalendarActions {
@@ -62,6 +68,8 @@ interface CalendarActions {
   revertSelectedEvent: (context: EventMutationContext) => Promise<void>;
   scheduleTasks: () => Promise<void>;
   unscheduleTasks: () => Promise<void>;
+  exportEvents: () => Promise<void>;
+  importEvents: (file: File) => Promise<void>;
   createCategory: (text: string) => Promise<Category>;
   updateCategory: (id: number, patch: { colour?: string | null; colour_override?: boolean }) => Promise<Category>;
   deleteCategory: (id: number) => Promise<void>;
@@ -139,11 +147,15 @@ export const useCalendar = (): UseCalendarReturn => {
   const [isEventsLoading, setIsEventsLoading] = useState(false);
   const [isScheduling, setIsScheduling] = useState(false);
   const [isUnscheduling, setIsUnscheduling] = useState(false);
+  const [isExporting, setIsExporting] = useState(false);
+  const [isImporting, setIsImporting] = useState(false);
   const [taskError, setTaskError] = useState<string | null>(null);
   const [categoryError, setCategoryError] = useState<string | null>(null);
   const [eventError, setEventError] = useState<string | null>(null);
   const [schedulingError, setSchedulingError] = useState<string | null>(null);
   const [unschedulingError, setUnschedulingError] = useState<string | null>(null);
+  const [exportingError, setExportingError] = useState<string | null>(null);
+  const [importingError, setImportingError] = useState<string | null>(null);
   const hasInitialized = useRef(false);
 
   const fetchTasks = useCallback(async () => {
@@ -395,6 +407,48 @@ export const useCalendar = (): UseCalendarReturn => {
     }
   }, [fetchTasks]);
 
+  const exportEvents = useCallback(async () => {
+    setIsExporting(true);
+    setExportingError(null);
+
+    try {
+      const response = await exportService.exportEvents();
+    
+      if (response) {
+        const url = window.URL.createObjectURL(new Blob([response]));
+        const link = document.createElement("a")
+        link.href = url;
+        link.setAttribute("download", "events.txt");
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      }
+    } catch (error) {
+      console.error(error);
+      setExportingError("Failed to export events.");
+    } finally {
+      setIsExporting(false);
+    }
+  }, []);
+
+  const importEvents = useCallback(async (file: File) => {
+    setIsImporting(true);
+    setImportingError(null);
+
+    try {
+      await importService.importEvents(file);
+      
+    } catch (error) {
+      console.error(error);
+      setImportingError("Failed to import events.");
+    } finally {
+      setIsImporting(false);
+    }
+    
+
+  }, []);
+    
+
   const goToToday = useCallback(() => {
     setDate(new Date());
   }, []);
@@ -620,6 +674,8 @@ export const useCalendar = (): UseCalendarReturn => {
       events: isEventsLoading,
       scheduling: isScheduling,
       unscheduling: isUnscheduling,
+      exporting: isExporting,
+      importing: isImporting,
     },
     error: {
       tasks: taskError,
@@ -627,6 +683,8 @@ export const useCalendar = (): UseCalendarReturn => {
       events: eventError,
       scheduling: schedulingError,
       unscheduling: unschedulingError,
+      exporting: exportingError,
+      importing: importingError
     },
     actions: {
       setView,
@@ -643,6 +701,8 @@ export const useCalendar = (): UseCalendarReturn => {
       revertSelectedEvent,
       scheduleTasks,
       unscheduleTasks,
+      exportEvents,
+      importEvents,
       createCategory,
       updateCategory,
       deleteCategory,

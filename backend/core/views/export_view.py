@@ -30,7 +30,7 @@ class ExportView(APIView):
             # Event ID, this is just e + the event id in the DB
             lines.append(f"UID:e{event.id}")
             # Last Modified standard foramt, not tracked by the DB so date irrelevant
-            lines.append("DTSTAMP:20260205T120548Z")
+            lines.append(f"DTSTAMP:{event.last_edited.strftime('%Y%m%dT%H%M%S')}")
             # Start Date standard format
             lines.append(
                 f"DTSTART;TZID=Europe/London:{event.start_time.strftime('%Y%m%dT%H%M%S')}"

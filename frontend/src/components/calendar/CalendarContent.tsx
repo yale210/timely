@@ -25,7 +25,7 @@ const CalendarContent = ({
   <div className="flex h-full flex-col overflow-hidden bg-white text-black">
     <CalendarToolbar
       state={{ view: state.view, currentLabel: state.currentLabel }}
-      loading={{ scheduling: loading.scheduling, unscheduling: loading.unscheduling }}
+      loading={{ scheduling: loading.scheduling, unscheduling: loading.unscheduling, exporting: loading.exporting, importing: loading.importing }}
       actions={{
         setView: actions.setView,
         goToToday: actions.goToToday,
@@ -33,6 +33,8 @@ const CalendarContent = ({
         goToNext: actions.goToNext,
         scheduleTasks: actions.scheduleTasks,
         unscheduleTasks: actions.unscheduleTasks,
+        exportEvents: actions.exportEvents,
+        importEvents: actions.importEvents
       }}
     />
     <CalendarView
