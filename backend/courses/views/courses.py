@@ -1,7 +1,8 @@
+from knox.auth import TokenAuthentication
 from rest_framework import status
 from rest_framework.decorators import action
 from rest_framework.generics import get_object_or_404
-from rest_framework.permissions import BasePermission
+from rest_framework.permissions import BasePermission, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.viewsets import ViewSet
 
@@ -18,7 +19,9 @@ from courses.serializers.course import (
 
 class CoursePermission(BasePermission):
     def has_permission(self, request, view):
-        if view.action == "list":
+        if not request.user.is_authenticated:
+            return False
+        elif view.action == "list":
             return request.user.is_authenticated
         elif view.action == "create":
             return request.user.is_authenticated and IsTeacher().has_permission(
@@ -26,8 +29,10 @@ class CoursePermission(BasePermission):
             )
         elif view.action in ["retrieve", "update", "partial_update", "destroy"]:
             return True
-        else:
+        elif view.action in ["events", "join", "leave"]:
             return True
+        else:
+            return False
 
     def has_object_permission(self, request, view, obj):
         # Deny actions on objects if the user is not authenticated
@@ -46,8 +51,9 @@ class CoursePermission(BasePermission):
 
 class CourseView(ViewSet):
     serializer_class = CourseSerializer
-
+    authentication_classes = [TokenAuthentication]
     permission_classes = [
+        IsAuthenticated,
         CoursePermission,
     ]
 
