@@ -4,6 +4,8 @@ import { Menu, MenuButton, MenuItems, MenuItem } from "@headlessui/react"
 import { authStore } from "@/services/authService"
 import { getMyProfile } from "@/services/profileService"
 import { NotificationDropdown } from '@/components/notifications/NotificationDropdown'
+import { PomofocusDropdown } from '@/components/layout/PomofocusDropdown'
+import { PomodoroModal } from '@/components/layout/PomodoroModal'
 import { useNotificationContext } from '@/context/NotificationContext'
 import { type Notification } from '@/types'
 import AdminSidebar from "@/components/layout/AdminSidebar"
@@ -120,6 +122,7 @@ export default function AppNavbar() {
 
   return (
     <header className="fixed left-0 right-0 top-0 z-30 m-0 bg-white shadow-sm ring-1 ring-gray-200">
+      <PomodoroModal />
       <div className="grid w-full grid-cols-3 items-center gap-2 px-3 py-0 min-h-10">
         <div className="flex justify-start">
           <button
@@ -141,6 +144,7 @@ export default function AppNavbar() {
         <div className="flex justify-center" />
 
         <div className="flex h-10 items-center justify-end gap-1.5">
+          <PomofocusDropdown />
           <NotificationDropdown
             notifications={notifications}
             unreadCount={unreadCount}
