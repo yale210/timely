@@ -6,7 +6,7 @@ import { useBroadcastValidation } from "./useAdminBroadcastForm/useBroadcastVali
 import { useBroadcastSubmission } from "./useAdminBroadcastForm/useBroadcastSubmission";
 import { useBroadcastFormState } from "./useAdminBroadcastForm/useBroadcastFormState";
 import { useBroadcastFormEffects } from "./useAdminBroadcastForm/useBroadcastFormEffects";
-import { targetOptions } from "./useAdminBroadcastForm/constants";
+import { TITLE_LIMIT, MESSAGE_LIMIT, targetOptions } from "./useAdminBroadcastForm/constants";
 
 /**
  * Manages state and actions for composing and sending admin broadcasts.
@@ -47,7 +47,7 @@ export const useAdminBroadcastForm = () => {
       delivery: d, validation: v, canSubmit, isConfirmModalOpen: s.isConfirmModalOpen,
     },
     loading: { isSubmitting: sub.isSubmitting, isUsersLoading: u.isUsersLoading }, error: { form: sub.error, users: u.usersError },
-    constants: { usersPageSize: 50, titleLimit: 60, messageLimit: 240, targetOptions },
+    constants: { usersPageSize: 50, titleLimit: TITLE_LIMIT, messageLimit: MESSAGE_LIMIT, targetOptions },
     actions: {
       setTitle: s.setTitle, setMessage: s.setMessage, setTarget: s.setTarget, setSearch: u.setSearch, setRoleFilter: u.setRoleFilter,
       setUsersPage: u.setUsersPage, setUserIdsInput: s.setUserIdsInput, setConfirmationChecked: s.setConfirmationChecked, setConfirmModalOpen: s.setIsConfirmModalOpen,

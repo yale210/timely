@@ -1,8 +1,6 @@
 import { useMemo } from "react";
 import { type AdminNotificationTarget } from "@/types";
-
-const TITLE_LIMIT = 60;
-const MESSAGE_LIMIT = 240;
+import { TITLE_LIMIT, MESSAGE_LIMIT } from "./constants";
 
 /**
  * Hook to manage validation for the broadcast form.
