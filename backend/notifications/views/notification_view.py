@@ -99,14 +99,20 @@ class NotificationViewSet(viewsets.ModelViewSet):
     def mark_all_read(self, request):
         """Mark all notifications for the current user as read.
 
+        Uses an unfiltered queryset to ensure every notification is
+        included regardless of query-param filters on the viewset.
+
         Args:
             request: The current request.
 
         Returns:
             A Response indicating completion.
         """
-        # Batch update all unread notifications to read
-        self.get_queryset().filter(is_read=False).update(is_read=True)
+        # Use unfiltered queryset so query-param filters do not cause a
+        # partial update while the cache is unconditionally zeroed.
+        Notification.objects.filter(recipient=request.user, is_read=False).update(
+            is_read=True
+        )
         # Reset the cached count to zero
         set_unread_count(request.user.id, 0)
         return Response({"status": "all notifications marked as read"})
@@ -115,13 +121,18 @@ class NotificationViewSet(viewsets.ModelViewSet):
     def delete_all(self, request):
         """Delete all notifications for the current user.
 
+        Uses an unfiltered queryset to ensure every notification is
+        removed regardless of query-param filters on the viewset.
+
         Args:
             request: The current request.
 
         Returns:
             A 204 No Content response.
         """
-        self.get_queryset().delete()
+        # Use unfiltered queryset so query-param filters do not leave
+        # notifications behind while the cache is unconditionally zeroed.
+        Notification.objects.filter(recipient=request.user).delete()
         # Reset the cached count to zero after deletion
         set_unread_count(request.user.id, 0)
         return Response(
