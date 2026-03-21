@@ -1,128 +1,46 @@
 import { useState, useEffect, useCallback } from "react";
-import {
-  isPushSupported,
-  subscribeUserToPush,
-  unsubscribeUserFromPush,
-} from "@/utils/pushNotifications";
+import { isPushSupported, subscribeUserToPush, unsubscribeUserFromPush } from "@/utils/pushNotifications";
 
 type PushPermission = NotificationPermission | "unsupported";
+interface UseReturn { isSupported: boolean; isSubscribed: boolean; permission: PushPermission; loading: boolean; error: string | null; subscribe: () => Promise<void>; unsubscribe: () => Promise<void>; refresh: () => Promise<void>; }
 
-interface UsePushSubscriptionReturn {
-  /** Whether the browser supports push notifications */
-  isSupported: boolean;
-  /** Whether the user currently has an active push subscription */
-  isSubscribed: boolean;
-  /** Current Notification permission: "default" | "granted" | "denied" | "unsupported" */
-  permission: PushPermission;
-  /** Whether a subscribe/unsubscribe operation is in progress */
-  loading: boolean;
-  /** Error message from the last subscribe/unsubscribe attempt, or null */
-  error: string | null;
-  /** Subscribe to push notifications (triggers browser permission prompt if needed) */
-  subscribe: () => Promise<void>;
-  /** Unsubscribe from push notifications */
-  unsubscribe: () => Promise<void>;
-  /** Re-check the current subscription state */
-  refresh: () => Promise<void>;
-}
-
-const getPermission = (): PushPermission => {
-  if (!isPushSupported()) return "unsupported";
-  return Notification.permission;
-};
-
-const checkSubscription = async (): Promise<boolean> => {
+const getP = (): PushPermission => isPushSupported() ? Notification.permission : "unsupported";
+const checkS = async (): Promise<boolean> => {
   if (!isPushSupported()) return false;
-  try {
-    const registration = await navigator.serviceWorker.ready;
-    const subscription = await registration.pushManager.getSubscription();
-    return subscription !== null;
-  } catch {
-    return false;
-  }
+  try { const r = await navigator.serviceWorker.ready; const s = await r.pushManager.getSubscription(); return s !== null; } catch { return false; }
 };
 
 /**
- * A custom hook to manage browser push notification subscriptions.
- *
- * This hook provides state and functions for managing subscriptions,
- * checking browser support, handling user permissions, and subscribing
- * or unsubscribing from push notifications using the VAPID key.
- * @returns An object containing the subscription state and management functions.
+ * Hook to manage push subscription.
  */
-export const usePushSubscription = (): UsePushSubscriptionReturn => {
-  const [isSubscribed, setIsSubscribed] = useState(false);
-  const [permission, setPermission] = useState<PushPermission>(getPermission);
+export const usePushSubscription = (): UseReturn => {
+  const [sub, setSub] = useState(false);
+  const [perm, setPerm] = useState<PushPermission>(getP);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const isSupported = isPushSupported();
+  const [err, setErr] = useState<string | null>(null);
+  const isSupp = isPushSupported();
 
-  const refresh = useCallback(async () => {
-    setPermission(getPermission());
-    const subscribed = await checkSubscription();
-    setIsSubscribed(subscribed);
-  }, []);
-
-  useEffect(() => {
-    void refresh();
-  }, [refresh]);
+  const refresh = useCallback(async () => { setPerm(getP()); setSub(await checkS()); }, []);
+  useEffect(() => { void refresh(); }, [refresh]);
 
   const subscribe = useCallback(async () => {
-    if (!isSupported) return;
-    setLoading(true);
-    setError(null);
+    if (!isSupp) return;
+    setLoading(true); setErr(null);
     try {
-      if (Notification.permission === "default") {
-        const permissionResult = await Notification.requestPermission();
-        setPermission(permissionResult);
-        if (permissionResult !== "granted") {
-          setIsSubscribed(false);
-          return;
-        }
-      }
-      if (Notification.permission === "denied") {
-        setPermission("denied");
-        setIsSubscribed(false);
-        return;
-      }
-      await subscribeUserToPush();
-      setPermission(getPermission());
-      const subscribed = await checkSubscription();
-      setIsSubscribed(subscribed);
-    } catch (err) {
-      setPermission(getPermission());
-      const message =
-        err instanceof Error ? err.message : "Failed to enable push notifications.";
-      setError(message);
-    } finally {
-      setLoading(false);
-    }
-  }, [isSupported]);
+      const p = Notification.permission === "default" ? await Notification.requestPermission() : Notification.permission;
+      setPerm(p); if (p !== "granted") { setSub(false); return; }
+      await subscribeUserToPush(); setSub(await checkS());
+    } catch (e) { setPerm(getP()); setErr(e instanceof Error ? e.message : "Failed to enable push notifications.");
+    } finally { setLoading(false); }
+  }, [isSupp]);
 
   const unsubscribe = useCallback(async () => {
-    if (!isSupported) return;
-    setLoading(true);
-    setError(null);
-    try {
-      await unsubscribeUserFromPush();
-      setIsSubscribed(false);
-    } catch (err) {
-      const message =
-        err instanceof Error ? err.message : "Failed to disable push notifications.";
-      setError(message);
-    } finally {
-      setLoading(false);
-    }
-  }, [isSupported]);
+    if (!isSupp) return;
+    setLoading(true); setErr(null);
+    try { await unsubscribeUserFromPush(); setSub(false);
+    } catch (e) { setErr(e instanceof Error ? e.message : "Failed to disable push notifications.");
+    } finally { setLoading(false); }
+  }, [isSupp]);
 
-  return {
-    isSupported,
-    isSubscribed,
-    permission,
-    loading,
-    error,
-    subscribe,
-    unsubscribe,
-    refresh,
-  };
+  return { isSupported: isSupp, isSubscribed: sub, permission: perm, loading, error: err, subscribe, unsubscribe, refresh };
 };
