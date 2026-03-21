@@ -1,4 +1,4 @@
-import { type FormEvent, useCallback } from "react";
+import { type FormEvent, useCallback, useEffect } from "react";
 import { useBroadcastUsers } from "./useAdminBroadcastForm/useBroadcastUsers";
 import { useBroadcastAudience } from "./useAdminBroadcastForm/useBroadcastAudience";
 import { useBroadcastDelivery } from "./useAdminBroadcastForm/useBroadcastDelivery";
@@ -21,6 +21,17 @@ export const useAdminBroadcastForm = () => {
   const sub = useBroadcastSubmission(d);
 
   useBroadcastFormEffects(s.title, s.message, s.setPreviewTitle, s.setPreviewMessage);
+
+  const { target } = s;
+  const { setSelectedUserIds } = u;
+  const { setUserIdsInput } = s;
+
+  useEffect(() => {
+    if (target !== "users") {
+      setSelectedUserIds([]);
+      setUserIdsInput("");
+    }
+  }, [target, setSelectedUserIds, setUserIdsInput]);
 
   const handleSubmit = useCallback((e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();

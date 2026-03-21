@@ -19,7 +19,9 @@ export const AdminNotifications = () => {
         <AdminNotificationsHeader />
         <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,360px)]">
           <AdminBroadcastForm
-            {...state.formData} {...state.audience} {...state.users} {...loading} {...error}
+            {...state.formData} {...state.audience} {...state.users} {...loading}
+            usersError={error.users}
+            error={error.form}
             {...constants}
             canSubmit={state.canSubmit}
             onSubmit={actions.handleSubmit}
