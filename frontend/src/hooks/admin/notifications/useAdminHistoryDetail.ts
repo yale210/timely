@@ -1,5 +1,5 @@
-import { useMemo, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useEffect, useMemo, useState } from "react";
+import { useNavigate, useParams } from "react-router-dom";
 import { type BroadcastJobDetail, type BroadcastJobStatusResponse } from "@/types";
 import { useAdminHistoryDetailFetch } from "./useAdminHistoryDetail/useAdminHistoryDetailFetch";
 import { useAdminHistoryDetailPolling } from "./useAdminHistoryDetail/useAdminHistoryDetailPolling";
@@ -15,13 +15,27 @@ interface UseAdminHistoryDetailReturn {
  * Provides state and actions for the admin broadcast detail page.
  */
 export const useAdminHistoryDetail = (): UseAdminHistoryDetailReturn => {
+  const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
   const broadcastId = Number(id);
+  const [activeBroadcastId, setActiveBroadcastId] = useState(broadcastId);
   const [isRetryConfirmOpen, setIsRetryConfirmOpen] = useState(false);
 
-  const f = useAdminHistoryDetailFetch(broadcastId);
-  useAdminHistoryDetailPolling(broadcastId, f.status, f.setStatus);
-  const r = useAdminHistoryDetailRetry(broadcastId, f.setDetail, f.setStatus);
+  useEffect(() => {
+    setActiveBroadcastId(broadcastId);
+  }, [broadcastId]);
+
+  const f = useAdminHistoryDetailFetch(activeBroadcastId);
+  useAdminHistoryDetailPolling(activeBroadcastId, f.status, f.setStatus);
+  const r = useAdminHistoryDetailRetry(
+    activeBroadcastId,
+    f.setDetail,
+    f.setStatus,
+    (newBroadcastId) => {
+      setActiveBroadcastId(newBroadcastId);
+      navigate(`/admin/notifications/history/${newBroadcastId}`);
+    }
+  );
 
   const failedRecipientsCount = useMemo(
     () => f.detail?.recipients.filter((item) => item.status === "FAILED").length ?? 0,

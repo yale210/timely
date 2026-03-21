@@ -16,7 +16,8 @@ import { type BroadcastJobDetail, type BroadcastJobStatusResponse } from "@/type
 export const useAdminHistoryDetailRetry = (
   broadcastId: number,
   setDetail: (d: BroadcastJobDetail) => void,
-  setStatus: (s: BroadcastJobStatusResponse) => void
+  setStatus: (s: BroadcastJobStatusResponse) => void,
+  onRetrySuccess: (broadcastId: number) => void
 ) => {
   const [retryError, setRetryError] = useState<string | null>(null);
 
@@ -24,6 +25,7 @@ export const useAdminHistoryDetailRetry = (
     try {
       setRetryError(null);
       const response = await retryFailedBroadcast(broadcastId);
+      onRetrySuccess(response.broadcast_id);
       const [detailResponse, statusResponse] = await Promise.all([
         getBroadcastDetail(response.broadcast_id),
         getBroadcastStatus(response.broadcast_id),
@@ -34,7 +36,7 @@ export const useAdminHistoryDetailRetry = (
       console.error("Retry failed", err);
       setRetryError("Retry failed. Please try again.");
     }
-  }, [broadcastId, setDetail, setStatus]);
+  }, [broadcastId, onRetrySuccess, setDetail, setStatus]);
 
   return { retryError, handleRetry };
 };

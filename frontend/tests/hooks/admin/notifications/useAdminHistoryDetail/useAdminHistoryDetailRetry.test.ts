@@ -21,13 +21,15 @@ describe("useAdminHistoryDetailRetry hook", () => {
 
     const setDetail = vi.fn();
     const setStatus = vi.fn();
-    const { result } = renderHook(() => useAdminHistoryDetailRetry(1, setDetail, setStatus));
+    const onRetrySuccess = vi.fn();
+    const { result } = renderHook(() => useAdminHistoryDetailRetry(1, setDetail, setStatus, onRetrySuccess));
 
     await act(async () => {
       await result.current.handleRetry();
     });
 
     expect(api.retryFailedBroadcast).toHaveBeenCalledWith(1);
+    expect(onRetrySuccess).toHaveBeenCalledWith(2);
     expect(setDetail).toHaveBeenCalledWith({ id: 2 });
   });
 });
