@@ -1,4 +1,4 @@
-import { renderHook, act } from "@testing-library/react";
+import { renderHook, act, waitFor } from "@testing-library/react";
 import { vi, describe, it, expect, beforeEach } from "vitest";
 import { useBroadcastUsers } from "@/hooks/admin/notifications/useAdminBroadcastForm/useBroadcastUsers";
 import * as api from "@/api/notifications";
@@ -23,8 +23,8 @@ describe("useBroadcastUsers hook", () => {
 
     const { result } = renderHook(() => useBroadcastUsers("users"));
 
-    await act(async () => {
-      // wait for effect to settle
+    await waitFor(() => {
+      expect(result.current.isUsersLoading).toBe(false);
     });
 
     expect(result.current.users).toEqual(mockData.results);

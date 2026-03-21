@@ -1,4 +1,4 @@
-import { renderHook, act } from "@testing-library/react";
+import { renderHook, waitFor } from "@testing-library/react";
 import { vi, describe, it, expect, beforeEach } from "vitest";
 import { useBroadcastAudience } from "@/hooks/admin/notifications/useAdminBroadcastForm/useBroadcastAudience";
 import * as api from "@/api/notifications";
@@ -18,8 +18,8 @@ describe("useBroadcastAudience hook", () => {
 
     const { result } = renderHook(() => useBroadcastAudience("all", [], ""));
 
-    await act(async () => {
-      // wait for effect to settle
+    await waitFor(() => {
+      expect(result.current.targetAudienceCount).toBe(10);
     });
 
     expect(result.current.targetAudienceCount).toBe(10);

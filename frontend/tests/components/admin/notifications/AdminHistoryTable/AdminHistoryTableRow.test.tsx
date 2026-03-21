@@ -1,9 +1,9 @@
 import { render, screen, fireEvent } from "@testing-library/react";
 import { vi, describe, it, expect } from "vitest";
-import { AdminHistoryHistoryTableRow } from "@/components/admin/notifications/AdminHistoryTable/AdminHistoryHistoryTableRow";
+import { AdminHistoryTableRow } from "@/components/admin/notifications/AdminHistoryTable/AdminHistoryTableRow";
 import { type BroadcastJobSummary } from "@/types";
 
-describe("AdminHistoryHistoryTableRow Component", () => {
+describe("AdminHistoryTableRow Component", () => {
   it("renders item and handles click", () => {
     const item: BroadcastJobSummary = {
       id: 1,
@@ -22,7 +22,7 @@ describe("AdminHistoryHistoryTableRow Component", () => {
     render(
       <table>
         <tbody>
-          <AdminHistoryHistoryTableRow item={item} onSelectItem={onSelect} />
+          <AdminHistoryTableRow item={item} onSelectItem={onSelect} />
         </tbody>
       </table>
     );
