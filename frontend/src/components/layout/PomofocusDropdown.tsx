@@ -1,7 +1,9 @@
 import { Menu, MenuButton, MenuItems } from "@headlessui/react";
 import { usePomodoro } from "@/context/PomodoroContext";
 import { formatTime } from "@/utils/timeUtils";
+import { convertMinutesToHHMM, convertHHMMToMinutes } from "@/utils/timeFormatters";
 import { PlayIcon, PauseIcon, ArrowPathIcon, PlusIcon, MinusIcon } from "@heroicons/react/24/outline";
+import { useState, useEffect } from "react";
 
 /**
  * Dropdown component for the Pomofocus timer in the navbar.
@@ -21,22 +23,57 @@ export const PomofocusDropdown = () => {
     setMode,
   } = usePomodoro();
 
-  const handleInitialDurationChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const val = e.target.value;
-    if (val === "") {
-      setInitialDuration("");
-      return;
+  const [hh, setHH] = useState("");
+  const [mm, setMM] = useState("");
+
+  // Update local HH:MM when initialDuration or viewingMode changes
+  useEffect(() => {
+    if (viewingMode === "focus") {
+      const totalMins = typeof initialDuration === "number" ? initialDuration : 0;
+      const { hours, minutes } = convertMinutesToHHMM(totalMins);
+      setHH(hours.toString().padStart(2, "0"));
+      setMM(minutes.toString().padStart(2, "0"));
     }
-    const numericVal = parseInt(val, 10);
-    if (!isNaN(numericVal)) {
-      setInitialDuration(numericVal);
+  }, [initialDuration, viewingMode]);
+
+  const handleHHChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = e.target.value;
+    if (val === "" || /^\d+$/.test(val)) {
+      setHH(val);
+      const h = val === "" ? 0 : parseInt(val, 10);
+      const m = mm === "" ? 0 : parseInt(mm, 10);
+      setInitialDuration(convertHHMMToMinutes(h, m));
+    }
+  };
+
+  const handleMMChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = e.target.value;
+    if (val === "" || /^\d+$/.test(val)) {
+      setMM(val);
+      const h = hh === "" ? 0 : parseInt(hh, 10);
+      const m = val === "" ? 0 : parseInt(val, 10);
+      setInitialDuration(convertHHMMToMinutes(h, m));
     }
   };
 
   const handleBlur = () => {
-    if (initialDuration === "") {
-      setInitialDuration(1);
+    let h = parseInt(hh, 10) || 0;
+    let m = parseInt(mm, 10) || 0;
+
+    // Recalculate if minutes > 59
+    if (m >= 60) {
+      h += Math.floor(m / 60);
+      m = m % 60;
     }
+
+    const totalMins = convertHHMMToMinutes(h, m);
+    // Hard limit at 600 mins (10 hours)
+    const finalMins = Math.max(1, Math.min(totalMins, 600));
+    setInitialDuration(finalMins);
+    
+    const finalTime = convertMinutesToHHMM(finalMins);
+    setHH(finalTime.hours.toString().padStart(2, "0"));
+    setMM(finalTime.minutes.toString().padStart(2, "0"));
   };
 
   const handleFocus = (e: React.FocusEvent<HTMLInputElement>) => {
@@ -87,18 +124,30 @@ export const PomofocusDropdown = () => {
           {/* Timer Display & Input */}
           <div className="flex flex-col items-center gap-2">
             {viewingMode === mode && !isActive && viewingMode === "focus" ? (
-              <div className="relative flex items-center">
+              <div className="flex items-center gap-1 font-mono text-4xl font-bold text-gray-800">
                 <input
                   type="text"
                   inputMode="numeric"
-                  value={initialDuration}
-                  onChange={handleInitialDurationChange}
+                  value={hh}
+                  onChange={handleHHChange}
                   onBlur={handleBlur}
                   onFocus={handleFocus}
                   onKeyDown={handleKeyDown}
-                  className="w-24 rounded border border-gray-300 pr-10 pl-2 py-1 text-center font-mono text-xl focus:border-cyan-500 focus:outline-none"
+                  className="w-14 rounded border border-gray-300 p-1 text-center focus:border-cyan-500 focus:outline-none"
+                  placeholder="00"
                 />
-                <span className="absolute right-3 text-xs font-medium text-gray-400 pointer-events-none">mins</span>
+                <span>:</span>
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  value={mm}
+                  onChange={handleMMChange}
+                  onBlur={handleBlur}
+                  onFocus={handleFocus}
+                  onKeyDown={handleKeyDown}
+                  className="w-14 rounded border border-gray-300 p-1 text-center focus:border-cyan-500 focus:outline-none"
+                  placeholder="00"
+                />
               </div>
             ) : (
               <div className="relative flex flex-col items-center">
