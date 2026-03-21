@@ -62,6 +62,24 @@ export const PomodoroProvider = ({ children }: PomodoroProviderProps) => {
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const intervalRef = useRef<number | null>(null);
 
+  /**
+   * Timer Manager handles duration validation and mode transitions.
+   */
+  const timerManager = {
+    validateDuration: (mins: number | ""): number | "" => {
+      if (mins === "") return "";
+      return Math.max(1, Math.min(mins, MAX_MINUTES));
+    },
+    getFocusDuration: () => (typeof persistedFocusDuration === "number" ? persistedFocusDuration : DEFAULT_FOCUS_MINUTES),
+    getBreakDuration: () => DEFAULT_BREAK_MINUTES,
+    syncInitialDuration: (mins: number | "") => {
+      setInitialDurationState(mins);
+      if (mins !== "") {
+        localStorage.setItem("pomo_initial_duration", mins.toString());
+      }
+    }
+  };
+
   useEffect(() => {
     audioRef.current = new Audio(completeSoundUrl);
   }, []);
@@ -94,25 +112,20 @@ export const PomodoroProvider = ({ children }: PomodoroProviderProps) => {
 
   const resetTimer = useCallback(() => {
     stopTimer();
-    const duration = mode === "focus" ? (initialDuration || DEFAULT_FOCUS_MINUTES) : DEFAULT_BREAK_MINUTES;
+    const duration = mode === "focus" ? timerManager.getFocusDuration() : timerManager.getBreakDuration();
     setTimeLeft(duration * 60);
-  }, [mode, initialDuration, stopTimer]);
+  }, [mode, timerManager, stopTimer]);
 
   const setInitialDuration = useCallback((minutes: number | "") => {
-    if (minutes === "") {
-      setInitialDurationState("");
-      return;
-    }
-    const validMinutes = Math.max(1, Math.min(minutes, MAX_MINUTES));
-    setInitialDurationState(validMinutes);
-    if (mode === "focus") {
+    const validMinutes = timerManager.validateDuration(minutes);
+    timerManager.syncInitialDuration(validMinutes);
+    if (mode === "focus" && validMinutes !== "") {
       setPersistedFocusDuration(validMinutes);
     }
-    localStorage.setItem("pomo_initial_duration", validMinutes.toString());
-    if (mode === "focus" && !isActive) {
+    if (mode === "focus" && !isActive && validMinutes !== "") {
       setTimeLeft(validMinutes * 60);
     }
-  }, [mode, isActive]);
+  }, [mode, isActive, timerManager]);
 
   const setMode = useCallback((newMode: PomodoroMode) => {
     // Preserve active state but clear interval
@@ -122,13 +135,13 @@ export const PomodoroProvider = ({ children }: PomodoroProviderProps) => {
     }
     
     setModeState(newMode);
-    const duration = newMode === "focus" ? (persistedFocusDuration || DEFAULT_FOCUS_MINUTES) : DEFAULT_BREAK_MINUTES;
-    setInitialDurationState(newMode === "focus" ? persistedFocusDuration : DEFAULT_BREAK_MINUTES);
+    const duration = newMode === "focus" ? timerManager.getFocusDuration() : timerManager.getBreakDuration();
+    setInitialDurationState(newMode === "focus" ? persistedFocusDuration : timerManager.getBreakDuration());
     setTimeLeft(duration * 60);
     
     // Handover isActive state
     // If it was active, it stays active and the useEffect will restart the interval
-  }, [persistedFocusDuration]);
+  }, [persistedFocusDuration, timerManager]);
 
   const onTimerComplete = useCallback(async () => {
     stopTimer();
@@ -140,8 +153,7 @@ export const PomodoroProvider = ({ children }: PomodoroProviderProps) => {
       
       // Record session in backend
       try {
-        const duration = typeof initialDuration === "number" ? initialDuration : DEFAULT_FOCUS_MINUTES;
-        await pomoService.recordSession(duration);
+        await pomoService.recordSession(timerManager.getFocusDuration());
       } catch (error) {
         console.error("Failed to record session:", error);
       }
@@ -154,10 +166,10 @@ export const PomodoroProvider = ({ children }: PomodoroProviderProps) => {
       setShowModal(true);
       // Auto-switch to focus and start
       setModeState("focus");
-      setTimeLeft(initialDuration * 60);
+      setTimeLeft(timerManager.getFocusDuration() * 60);
       setIsActive(true);
     }
-  }, [mode, initialDuration, playNotification, stopTimer]);
+  }, [mode, playNotification, stopTimer, timerManager]);
 
   const startTimer = useCallback(() => {
     if (!hasAuth) return;
@@ -172,14 +184,13 @@ export const PomodoroProvider = ({ children }: PomodoroProviderProps) => {
       // Synchronise with initialDuration if in focus mode and not active
       if (mode === "focus" && !isActive) {
         const nextMins = Math.round(validNext / 60);
-        setInitialDurationState(nextMins);
+        timerManager.syncInitialDuration(nextMins);
         setPersistedFocusDuration(nextMins);
-        localStorage.setItem("pomo_initial_duration", nextMins.toString());
       }
       
       return validNext;
     });
-  }, [mode, isActive]);
+  }, [mode, isActive, timerManager]);
 
   useEffect(() => {
     if (isActive && timeLeft > 0) {
