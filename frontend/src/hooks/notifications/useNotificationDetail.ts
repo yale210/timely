@@ -14,6 +14,8 @@ const useFetch = (id: string | undefined, markRead: (id: number) => Promise<void
   const [error, setError] = useState<string | null>(null);
   useEffect(() => {
     const f = async () => {
+      setLoading(true);
+      setError(null);
       try {
         const res = await api.get<Notification>(`/api/notifications/${id}/`);
         setNotification(res.data);

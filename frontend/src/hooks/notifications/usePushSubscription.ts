@@ -27,8 +27,8 @@ export const usePushSubscription = (): UsePushSubscriptionReturn => {
     if (!isSupported) return;
     setLoading(true); setError(null);
     try {
-      const perm = Notification.permission === "default" ? await Notification.requestPermission() : Notification.permission;
-      setPermission(perm); if (perm !== "granted") { setIsSubscribed(false); return; }
+      const resolvedPermission = Notification.permission === "default" ? await Notification.requestPermission() : Notification.permission;
+      setPermission(resolvedPermission); if (resolvedPermission !== "granted") { setIsSubscribed(false); return; }
       await subscribeUserToPush(); setIsSubscribed(await checkSubscription());
     } catch (e) { setPermission(getPermission()); setError(e instanceof Error ? e.message : "Failed to enable push notifications.");
     } finally { setLoading(false); }

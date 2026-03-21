@@ -7,7 +7,7 @@ import { type Notification, NotificationType } from "@/types";
 const PAGE_SIZE = 10;
 /** Filter tabs available on the notifications page. */
 export type NotificationFilterTab = "all" | "unread" | "system" | "tasks" | "calendar";
-/** Bulk confirmation actions available in the list UI. */
+/** Bulk confirmation actions available in the notifications list UI. */
 export type ListConfirmationAction = "mark_all_read" | "delete_all" | null;
 export const filterTabs: { key: NotificationFilterTab; label: string }[] = [
   { key: "all", label: "All" }, { key: "unread", label: "Unread" }, { key: "system", label: "System" }, { key: "tasks", label: "Tasks" }, { key: "calendar", label: "Calendar" },
