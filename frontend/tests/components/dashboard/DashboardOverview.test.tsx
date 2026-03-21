@@ -4,6 +4,7 @@ import { describe, expect, it, vi } from "vitest";
 import DashboardOverview from "@/components/dashboard/DashboardOverview";
 import * as taskService from "@/services/taskService";
 import type { Event, Task, WeeklyStats } from "@/types";
+import moment from "moment";
 
 vi.mock("@/components/dashboard/MiniCalendarPreview", () => ({
   default: () => <div data-testid="mini-calendar-preview" />,
@@ -17,8 +18,8 @@ const tasks: Task[] = [
   {
     id: 1,
     title: "Essay",
-    start_time: "2026-03-15T09:00:00.000Z",
-    deadline: "2026-03-15T11:00:00.000Z",
+    start_time: moment().startOf("day").add(9, "hours").toISOString(),
+    deadline: moment().startOf("day").add(11, "hours").toISOString(),
     importance: 6,
     completed: false,
     categories: [],
@@ -30,8 +31,8 @@ const events: Event[] = [
   {
     id: 1,
     title: "Seminar",
-    start_time: "2026-03-15T13:00:00.000Z",
-    end_time: "2026-03-15T14:00:00.000Z",
+    start_time: moment().startOf("day").add(13, "hours").toISOString(),
+    end_time: moment().startOf("day").add(14, "hours").toISOString(),
     categories: [],
     reminders: [],
   },

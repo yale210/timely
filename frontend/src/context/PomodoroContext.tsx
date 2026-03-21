@@ -1,8 +1,11 @@
-import { createContext, useContext, useState, useEffect, useCallback, useRef, type ReactNode } from "react";
+import { createContext, useContext, useState, useEffect, useCallback, useRef, useMemo, type ReactNode } from "react";
 import { authStore, AUTH_CHANGE_EVENT } from "@/services/authService";
 import { pomoService } from "@/services/pomoService";
 import completeSoundUrl from "@/assets/sounds/task-complete.mp3";
 
+/**
+ * Represents the modes of the Pomodoro timer.
+ */
 export type PomodoroMode = "focus" | "break";
 
 interface PomodoroContextValue {
@@ -46,6 +49,8 @@ const MAX_MINUTES = 600; // 10 hours
 
 /**
  * Provider for Pomodoro state and logic.
+ * @param props - The component props.
+ * @param props.children - The child components to be wrapped by the provider.
  */
 export const PomodoroProvider = ({ children }: PomodoroProviderProps) => {
   const [initialDuration, setInitialDurationState] = useState<number | "">(() => {
@@ -68,7 +73,7 @@ export const PomodoroProvider = ({ children }: PomodoroProviderProps) => {
   /**
    * Timer Manager handles duration validation and mode transitions.
    */
-  const timerManager = {
+  const timerManager = useMemo(() => ({
     validateDuration: (mins: number | ""): number | "" => {
       if (mins === "") return "";
       return Math.max(1, Math.min(mins, MAX_MINUTES));
@@ -81,7 +86,7 @@ export const PomodoroProvider = ({ children }: PomodoroProviderProps) => {
         localStorage.setItem("pomo_initial_duration", mins.toString());
       }
     }
-  };
+  }), [persistedFocusDuration]);
 
   useEffect(() => {
     audioRef.current = new Audio(completeSoundUrl);
@@ -211,7 +216,9 @@ export const PomodoroProvider = ({ children }: PomodoroProviderProps) => {
           // Explicitly stop and trigger completion if it was running
           stopTimer();
           // Defer completion to ensure state updates are clean
-          setTimeout(() => onTimerComplete(), 0);
+          setTimeout(() => {
+            void onTimerComplete();
+          }, 0);
         }
         
         // Ensure synchronization even at zero
@@ -242,7 +249,9 @@ export const PomodoroProvider = ({ children }: PomodoroProviderProps) => {
         setTimeLeft((prev) => prev - 1);
       }, 1000);
     } else if (timeLeft === 0 && isActive) {
-      onTimerComplete();
+      setTimeout(() => {
+        void onTimerComplete();
+      }, 0);
     }
 
     return () => {
