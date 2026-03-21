@@ -1,9 +1,10 @@
-from rest_framework import viewsets, permissions, filters
 from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import OpenApiParameter, extend_schema, extend_schema_view
 from django_filters import rest_framework as django_filters
-from core.models import Task, Category
-from core.serializers.calendar import CalendarSerializer, CalendarResponseSerializer
+from rest_framework import filters, permissions, viewsets
+
+from core.models import Category, Task
+from core.serializers.calendar import CalendarResponseSerializer, CalendarSerializer
 from core.serializers.category import CategorySerializer
 
 
@@ -52,7 +53,7 @@ class TaskFilter(django_filters.FilterSet):
     destroy=extend_schema(
         parameters=[
             OpenApiParameter("id", OpenApiTypes.INT, OpenApiParameter.PATH),
-        ]
+        ],
     ),
 )
 class TaskViewSet(viewsets.ModelViewSet):
@@ -68,6 +69,34 @@ class TaskViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)
+
+    def update(self, request, *args, **kwargs):
+        profile = request.user.user_profile
+        user_profile_level_before = profile.level
+
+        response = super().update(request, *args, **kwargs)
+
+        profile.refresh_from_db()
+        level_up = profile.level > user_profile_level_before
+
+        response.data["level_up"] = level_up
+        response.data["new_level"] = request.user.user_profile.level
+        response.data["xp"] = profile.xp
+        return response
+
+    def partial_update(self, request, *args, **kwargs):
+        profile = request.user.user_profile
+        user_profile_level_before = profile.level
+
+        response = super().partial_update(request, *args, **kwargs)
+
+        profile.refresh_from_db()
+        level_up = profile.level > user_profile_level_before
+
+        response.data["level_up"] = level_up
+        response.data["new_level"] = request.user.user_profile.level
+        response.data["xp"] = profile.xp
+        return response
 
 
 class CategoryViewSet(viewsets.ModelViewSet):

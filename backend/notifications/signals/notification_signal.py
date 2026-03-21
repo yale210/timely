@@ -9,6 +9,12 @@ from notifications.utils.websocket import notify_user
 
 @receiver(post_save, sender=Notification)
 def push_notification_on_create(sender, instance, created, **kwargs):
+    """
+    Signal handler triggered when a Notification instance is created.
+    Sends a WebSocket message to the recipient, and queues a push
+    notification task unless the instance skips push notifications.
+    """
+
     if not created:
         return
 

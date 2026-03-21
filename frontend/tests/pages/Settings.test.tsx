@@ -269,5 +269,29 @@ describe("Settings page", () => {
     fireEvent.click(within(confirmModal).getByRole("button", { name: /^log out$/i }));
     await waitFor(() => expect(logoutSpy).toHaveBeenCalled());
   });
-});
 
+  it("caps the profile date of birth input at today", async () => {
+    const today = new Date();
+    const expectedMax = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
+
+    vi.spyOn(profileService, "getMyProfile").mockResolvedValue({
+      name: "Test User",
+      date_of_birth: null,
+      creation_date: "2024-01-01",
+      slogan: "",
+      bio: "",
+      avatar: null,
+    });
+
+    render(
+      <MemoryRouter>
+        <Settings />
+      </MemoryRouter>,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: /profile/i }));
+
+    const dobInput = await screen.findByLabelText(/date of birth/i);
+    expect(dobInput).toHaveAttribute("max", expectedMax);
+  });
+});

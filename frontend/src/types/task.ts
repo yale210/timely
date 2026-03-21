@@ -33,6 +33,15 @@ export interface Task {
 }
 
 /**
+ * Response payload after updating a task, including progression fields.
+ */
+export interface TaskUpdatedResponse extends Task {
+  level_up?: boolean;
+  new_level?: number;
+  xp?: number;
+}
+
+/**
  * Represents the data structure used when submitting a task to the server.
  * This extends the Task interface but replaces the full category objects with their identifiers.
  * @interface TaskSubmission
