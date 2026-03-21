@@ -21,10 +21,25 @@ export const PomofocusDropdown = () => {
   } = usePomodoro();
 
   const handleInitialDurationChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const val = parseInt(e.target.value, 10);
-    if (!isNaN(val)) {
-      setInitialDuration(val);
+    const val = e.target.value;
+    if (val === "") {
+      setInitialDuration("");
+      return;
     }
+    const numericVal = parseInt(val, 10);
+    if (!isNaN(numericVal)) {
+      setInitialDuration(numericVal);
+    }
+  };
+
+  const handleBlur = () => {
+    if (initialDuration === "") {
+      setInitialDuration(1);
+    }
+  };
+
+  const handleFocus = (e: React.FocusEvent<HTMLInputElement>) => {
+    e.target.select();
   };
 
   return (
@@ -66,6 +81,8 @@ export const PomofocusDropdown = () => {
                   type="number"
                   value={initialDuration}
                   onChange={handleInitialDurationChange}
+                  onBlur={handleBlur}
+                  onFocus={handleFocus}
                   className="w-16 rounded border border-gray-300 px-2 py-1 text-center font-mono text-xl focus:border-cyan-500 focus:outline-none"
                   min="1"
                   max="600"
