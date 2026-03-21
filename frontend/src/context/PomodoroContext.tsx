@@ -174,8 +174,18 @@ export const PomodoroProvider = ({ children }: PomodoroProviderProps) => {
 
   const startTimer = useCallback(() => {
     if (!hasAuth) return;
+
+    if (viewingMode !== mode) {
+      // Hijack: stop current, switch mode, start new
+      stopTimer();
+      setModeState(viewingMode);
+      const duration = viewingMode === "focus" ? timerManager.getFocusDuration() : timerManager.getBreakDuration();
+      setInitialDurationState(viewingMode === "focus" ? persistedFocusDuration : timerManager.getBreakDuration());
+      setTimeLeft(duration * 60);
+    }
+
     setIsActive(true);
-  }, [hasAuth]);
+  }, [hasAuth, viewingMode, mode, stopTimer, timerManager, persistedFocusDuration]);
 
   const adjustTime = useCallback((deltaSeconds: number) => {
     setTimeLeft((prev) => {
