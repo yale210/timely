@@ -12,6 +12,7 @@ export const PomofocusDropdown = () => {
     initialDuration,
     isActive,
     mode,
+    viewingMode,
     setInitialDuration,
     startTimer,
     stopTimer,
@@ -68,7 +69,7 @@ export const PomofocusDropdown = () => {
             <button
               onClick={() => setMode("focus")}
               className={`flex-1 rounded-md py-1 text-xs font-medium transition-colors ${
-                mode === "focus" ? "bg-white text-orange-600 shadow-sm" : "text-gray-500 hover:text-gray-700"
+                viewingMode === "focus" ? "bg-white text-orange-600 shadow-sm" : "text-gray-500 hover:text-gray-700"
               }`}
             >
               Pomofocus
@@ -76,7 +77,7 @@ export const PomofocusDropdown = () => {
             <button
               onClick={() => setMode("break")}
               className={`flex-1 rounded-md py-1 text-xs font-medium transition-colors ${
-                mode === "break" ? "bg-white text-teal-600 shadow-sm" : "text-gray-500 hover:text-gray-700"
+                viewingMode === "break" ? "bg-white text-teal-600 shadow-sm" : "text-gray-500 hover:text-gray-700"
               }`}
             >
               Short Break
@@ -85,7 +86,7 @@ export const PomofocusDropdown = () => {
 
           {/* Timer Display & Input */}
           <div className="flex flex-col items-center gap-2">
-            {mode === "focus" && !isActive ? (
+            {viewingMode === mode && !isActive && viewingMode === "focus" ? (
               <div className="relative flex items-center">
                 <input
                   type="text"
@@ -102,15 +103,15 @@ export const PomofocusDropdown = () => {
             ) : (
               <div className="relative flex flex-col items-center">
                 <span className="font-mono text-4xl font-bold text-gray-800">
-                  {formatTime(timeLeft)}
+                  {viewingMode === mode ? formatTime(timeLeft) : (viewingMode === "focus" ? formatTime((typeof initialDuration === 'number' ? initialDuration : 25) * 60) : "05:00")}
                 </span>
                 <div className="mt-2 h-1 w-full overflow-hidden rounded-full bg-gray-100">
                   <div
                     className={`h-full transition-all duration-1000 ${
-                      mode === "focus" ? "bg-orange-500" : "bg-teal-500"
+                      viewingMode === "focus" ? "bg-orange-500" : "bg-teal-500"
                     }`}
                     style={{
-                      width: `${(timeLeft / (mode === "focus" ? initialDuration * 60 : 300)) * 100}%`,
+                      width: viewingMode === mode ? `${(timeLeft / (mode === "focus" ? (typeof initialDuration === 'number' ? initialDuration : 25) * 60 : 300)) * 100}%` : '100%',
                     }}
                   />
                 </div>
