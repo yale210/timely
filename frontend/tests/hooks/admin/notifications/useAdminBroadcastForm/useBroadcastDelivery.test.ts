@@ -1,5 +1,5 @@
 import { renderHook, act } from "@testing-library/react";
-import { vi, describe, it, expect, beforeEach } from "vitest";
+import { vi, describe, it, expect, beforeEach, afterEach } from "vitest";
 import { useBroadcastDelivery } from "@/hooks/admin/notifications/useAdminBroadcastForm/useBroadcastDelivery";
 import * as api from "@/api/notifications";
 import { type BroadcastJobStatusResponse } from "@/types";
@@ -12,6 +12,10 @@ describe("useBroadcastDelivery hook", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     vi.useFakeTimers();
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
   });
 
   it("polls for status", () => {
