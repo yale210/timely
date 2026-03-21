@@ -110,29 +110,35 @@ export const PomofocusDropdown = () => {
           <div className="flex flex-col items-center gap-2">
             {viewingMode === mode && !isActive && viewingMode === "focus" ? (
               <div className="flex items-center gap-1 font-mono text-4xl font-bold text-gray-800">
-                <input
-                  type="text"
-                  inputMode="numeric"
-                  value={hh}
-                  onChange={handleHHChange}
-                  onBlur={handleBlur}
-                  onFocus={handleFocus}
-                  onKeyDown={handleKeyDown}
-                  className="w-14 rounded border border-gray-300 p-1 text-center focus:border-cyan-500 focus:outline-none"
-                  placeholder="00"
-                />
+                <div className="relative flex items-center">
+                  <input
+                    type="text"
+                    inputMode="numeric"
+                    value={hh}
+                    onChange={handleHHChange}
+                    onBlur={handleBlur}
+                    onFocus={handleFocus}
+                    onKeyDown={handleKeyDown}
+                    className="w-14 rounded border border-gray-300 p-1 text-center focus:border-cyan-500 focus:outline-none"
+                    placeholder="00"
+                  />
+                  <span className="absolute -bottom-4 left-1/2 -translate-x-1/2 text-[10px] font-bold uppercase text-gray-400">hours</span>
+                </div>
                 <span>:</span>
-                <input
-                  type="text"
-                  inputMode="numeric"
-                  value={mm}
-                  onChange={handleMMChange}
-                  onBlur={handleBlur}
-                  onFocus={handleFocus}
-                  onKeyDown={handleKeyDown}
-                  className="w-14 rounded border border-gray-300 p-1 text-center focus:border-cyan-500 focus:outline-none"
-                  placeholder="00"
-                />
+                <div className="relative flex items-center">
+                  <input
+                    type="text"
+                    inputMode="numeric"
+                    value={mm}
+                    onChange={handleMMChange}
+                    onBlur={handleBlur}
+                    onFocus={handleFocus}
+                    onKeyDown={handleKeyDown}
+                    className="w-14 rounded border border-gray-300 p-1 text-center focus:border-cyan-500 focus:outline-none"
+                    placeholder="00"
+                  />
+                  <span className="absolute -bottom-4 left-1/2 -translate-x-1/2 text-[10px] font-bold uppercase text-gray-400">mins</span>
+                </div>
               </div>
             ) : (
               <div className="relative flex flex-col items-center">
