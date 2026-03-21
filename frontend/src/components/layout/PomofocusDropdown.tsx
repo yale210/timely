@@ -42,6 +42,16 @@ export const PomofocusDropdown = () => {
     e.target.select();
   };
 
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter") {
+      if (isActive) {
+        stopTimer();
+      } else {
+        startTimer();
+      }
+    }
+  };
+
   return (
     <Menu as="div" className="relative flex h-8 items-center">
       <MenuButton className="inline-flex h-8 items-center justify-center gap-2 rounded-md px-2.5 py-0 text-sm font-semibold leading-none text-gray-900 hover:bg-gray-100 focus:outline-none">
@@ -84,6 +94,7 @@ export const PomofocusDropdown = () => {
                   onChange={handleInitialDurationChange}
                   onBlur={handleBlur}
                   onFocus={handleFocus}
+                  onKeyDown={handleKeyDown}
                   className="w-24 rounded border border-gray-300 pr-10 pl-2 py-1 text-center font-mono text-xl focus:border-cyan-500 focus:outline-none"
                 />
                 <span className="absolute right-3 text-xs font-medium text-gray-400 pointer-events-none">mins</span>
