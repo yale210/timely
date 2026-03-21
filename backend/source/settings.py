@@ -123,6 +123,7 @@ INSTALLED_APPS = [
     "channels",
     "scheduler",
     "profiles.apps.ProfilesConfig",
+    "courses.apps.CoursesConfig",
 ]
 
 
