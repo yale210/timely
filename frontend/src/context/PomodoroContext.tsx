@@ -7,12 +7,12 @@ export type PomodoroMode = "focus" | "break";
 
 interface PomodoroContextValue {
   timeLeft: number;
-  initialDuration: number;
+  initialDuration: number | "";
   isActive: boolean;
   mode: PomodoroMode;
   showModal: boolean;
   modalMessage: string;
-  setInitialDuration: (minutes: number) => void;
+  setInitialDuration: (minutes: number | "") => void;
   startTimer: () => void;
   stopTimer: () => void;
   resetTimer: () => void;
@@ -46,7 +46,7 @@ const MAX_MINUTES = 600; // 10 hours
  * Provider for Pomodoro state and logic.
  */
 export const PomodoroProvider = ({ children }: PomodoroProviderProps) => {
-  const [initialDuration, setInitialDurationState] = useState(() => {
+  const [initialDuration, setInitialDurationState] = useState<number | "">(() => {
     const saved = localStorage.getItem("pomo_initial_duration");
     return saved ? Math.min(parseInt(saved, 10), MAX_MINUTES) : DEFAULT_FOCUS_MINUTES;
   });
@@ -93,11 +93,15 @@ export const PomodoroProvider = ({ children }: PomodoroProviderProps) => {
 
   const resetTimer = useCallback(() => {
     stopTimer();
-    const duration = mode === "focus" ? initialDuration : DEFAULT_BREAK_MINUTES;
+    const duration = mode === "focus" ? (initialDuration || DEFAULT_FOCUS_MINUTES) : DEFAULT_BREAK_MINUTES;
     setTimeLeft(duration * 60);
   }, [mode, initialDuration, stopTimer]);
 
-  const setInitialDuration = useCallback((minutes: number) => {
+  const setInitialDuration = useCallback((minutes: number | "") => {
+    if (minutes === "") {
+      setInitialDurationState("");
+      return;
+    }
     const validMinutes = Math.max(1, Math.min(minutes, MAX_MINUTES));
     setInitialDurationState(validMinutes);
     localStorage.setItem("pomo_initial_duration", validMinutes.toString());
@@ -109,7 +113,7 @@ export const PomodoroProvider = ({ children }: PomodoroProviderProps) => {
   const setMode = useCallback((newMode: PomodoroMode) => {
     stopTimer();
     setModeState(newMode);
-    const duration = newMode === "focus" ? initialDuration : DEFAULT_BREAK_MINUTES;
+    const duration = newMode === "focus" ? (initialDuration || DEFAULT_FOCUS_MINUTES) : DEFAULT_BREAK_MINUTES;
     setTimeLeft(duration * 60);
   }, [initialDuration, stopTimer]);
 
@@ -123,7 +127,8 @@ export const PomodoroProvider = ({ children }: PomodoroProviderProps) => {
       
       // Record session in backend
       try {
-        await pomoService.recordSession(initialDuration);
+        const duration = typeof initialDuration === "number" ? initialDuration : DEFAULT_FOCUS_MINUTES;
+        await pomoService.recordSession(duration);
       } catch (error) {
         console.error("Failed to record session:", error);
       }
