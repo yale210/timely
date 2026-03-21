@@ -18,8 +18,10 @@ export const useAdminHistoryDetailPolling = (
   status: BroadcastJobStatusResponse | null,
   setStatus: (s: BroadcastJobStatusResponse) => void
 ) => {
+  const currentStatus = status?.status;
+
   useEffect(() => {
-    if (!broadcastId || !status || isTerminal(status.status)) {
+    if (!broadcastId || !currentStatus || isTerminal(currentStatus)) {
       return;
     }
 
@@ -34,5 +36,5 @@ export const useAdminHistoryDetailPolling = (
     }, POLL_INTERVAL_MS);
 
     return () => window.clearInterval(intervalId);
-  }, [broadcastId, status, setStatus]);
+  }, [broadcastId, currentStatus, setStatus]);
 };

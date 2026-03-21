@@ -20,12 +20,10 @@ export const useBroadcastDelivery = () => {
     null
   );
 
+  const pollStatus = deliveryStatus?.status;
+
   useEffect(() => {
-    if (
-      !currentBroadcastId ||
-      !deliveryStatus ||
-      isTerminalStatus(deliveryStatus.status)
-    ) {
+    if (!currentBroadcastId || !pollStatus || isTerminalStatus(pollStatus)) {
       return;
     }
 
@@ -40,7 +38,7 @@ export const useBroadcastDelivery = () => {
     }, POLL_INTERVAL_MS);
 
     return () => window.clearInterval(intervalId);
-  }, [currentBroadcastId, deliveryStatus]);
+  }, [currentBroadcastId, pollStatus]);
 
   const statusLabel = deliveryStatus?.status ?? "IDLE";
   const statusTone =
