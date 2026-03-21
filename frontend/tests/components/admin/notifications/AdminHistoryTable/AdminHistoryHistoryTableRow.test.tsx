@@ -9,12 +9,14 @@ describe("AdminHistoryHistoryTableRow Component", () => {
       id: 1,
       title: "Test Job",
       target: "all",
+      sender: 1,
       sender_username: "admin",
       status: "COMPLETED",
       recipient_count: 10,
       delivered_count: 10,
       failed_count: 0,
       queued_at: "2023-01-01T12:00:00Z",
+      completed_at: "2023-01-01T12:05:00Z",
     };
     const onSelect = vi.fn();
     render(

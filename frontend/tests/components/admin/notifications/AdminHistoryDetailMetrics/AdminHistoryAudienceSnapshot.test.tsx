@@ -10,11 +10,21 @@ describe("AdminHistoryAudienceSnapshot Component", () => {
       title: "Test",
       message: "Test",
       target: "all",
+      status: "COMPLETED",
+      task_id: "test-task-id",
       recipient_count: 50,
       delivered_count: 50,
       failed_count: 0,
-      created_at: "2023-01-01",
+      sender: null,
+      sender_username: null,
+      audience_filters: {},
       audience_snapshot: { recipient_count: 50 },
+      provider_errors: [],
+      queued_at: "2023-01-01T00:00:00Z",
+      started_at: "2023-01-01T00:00:01Z",
+      completed_at: "2023-01-01T00:05:00Z",
+      retry_of: null,
+      recipients: [],
     };
     render(<AdminHistoryAudienceSnapshot detail={detail} />);
 

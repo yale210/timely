@@ -16,7 +16,7 @@ describe("AdminHistoryTableBody Component", () => {
 
   it("renders items", () => {
     const items: BroadcastJobSummary[] = [{
-      id: 1, title: "T", target: "all", status: "C", recipient_count: 1, delivered_count: 1, failed_count: 0, queued_at: "2023-01-01", sender_username: "u"
+      id: 1, title: "T", target: "all", status: "COMPLETED", recipient_count: 1, delivered_count: 1, failed_count: 0, queued_at: "2023-01-01", sender: 1, sender_username: "u", completed_at: "2023-01-01"
     }];
     render(<table><AdminHistoryTableBody items={items} loading={false} onSelectItem={vi.fn()} /></table>);
     expect(screen.getByText("T")).toBeDefined();

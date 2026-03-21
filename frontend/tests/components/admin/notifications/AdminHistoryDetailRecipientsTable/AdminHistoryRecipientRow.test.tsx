@@ -7,10 +7,14 @@ describe("AdminHistoryRecipientRow Component", () => {
   it("renders recipient information", () => {
     const recipient: BroadcastRecipientDetail = {
       id: 1,
+      recipient: 1,
       username: "alice",
       email: "alice@test.com",
-      status: "delivered",
-      error_message: null,
+      status: "SENT",
+      error_code: "",
+      error_message: "",
+      last_attempt_at: null,
+      notification: null,
     };
     render(
       <table>
@@ -22,6 +26,6 @@ describe("AdminHistoryRecipientRow Component", () => {
 
     expect(screen.getByText("alice")).toBeDefined();
     expect(screen.getByText("alice@test.com")).toBeDefined();
-    expect(screen.getByText("delivered")).toBeDefined();
+    expect(screen.getByText("SENT")).toBeDefined();
   });
 });
