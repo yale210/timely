@@ -17,29 +17,33 @@ import { type Friendship, type Notification } from "@/types";
  * @param root0.onDecline - Decline callback.
  * @param root0.isActing - Whether action is in progress.
  */
-const FriendRequestItem: React.FC<{ friendship: Friendship; onAccept: (id: number) => void; onDecline: (id: number) => void; isActing: boolean }> = ({ friendship, onAccept, onDecline, isActing }) => (
-  <li className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-gray-200 px-4 py-3">
-    <div className="flex items-center gap-3">
-      <div className="h-10 w-10 overflow-hidden rounded-full border border-gray-200 bg-white">
-        {friendship.sender_avatar ? (
-          <img src={friendship.sender_avatar} alt={friendship.sender_username} className="h-full w-full object-cover" />
-        ) : (
-          <div className="flex h-full w-full items-center justify-center bg-gray-100 text-sm font-semibold text-gray-500">
-            {(friendship.sender_username ?? "U").slice(0, 1).toUpperCase()}
-          </div>
-        )}
+const FriendRequestItem: React.FC<{ friendship: Friendship; onAccept: (id: number) => void; onDecline: (id: number) => void; isActing: boolean }> = ({ friendship, onAccept, onDecline, isActing }) => {
+  const senderLabel = friendship.sender_username ?? `User #${friendship.sender}`;
+
+  return (
+    <li className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-gray-200 px-4 py-3">
+      <div className="flex items-center gap-3">
+        <div className="h-10 w-10 overflow-hidden rounded-full border border-gray-200 bg-white">
+          {friendship.sender_avatar ? (
+            <img src={friendship.sender_avatar} alt={senderLabel} className="h-full w-full object-cover" />
+          ) : (
+            <div className="flex h-full w-full items-center justify-center bg-gray-100 text-sm font-semibold text-gray-500">
+              {(friendship.sender_username ?? "U").slice(0, 1).toUpperCase()}
+            </div>
+          )}
+        </div>
+        <div>
+          <p className="text-sm font-semibold">{senderLabel}</p>
+          <p className="text-xs text-gray-500">{friendship.sender_name ?? "Request pending"}</p>
+        </div>
       </div>
-      <div>
-        <p className="text-sm font-semibold">{friendship.sender_username}</p>
-        <p className="text-xs text-gray-500">{friendship.sender_name ?? "Request pending"}</p>
+      <div className="flex items-center gap-2">
+        <button type="button" onClick={() => void onAccept(friendship.id)} disabled={isActing} className="rounded-md bg-emerald-500 px-3 py-1.5 text-xs font-semibold text-white hover:bg-emerald-400 disabled:bg-gray-300">Accept</button>
+        <button type="button" onClick={() => void onDecline(friendship.id)} disabled={isActing} className="rounded-md bg-gray-200 px-3 py-1.5 text-xs font-semibold text-gray-700 hover:bg-gray-300 disabled:bg-gray-200">Decline</button>
       </div>
-    </div>
-    <div className="flex items-center gap-2">
-      <button type="button" onClick={() => void onAccept(friendship.id)} disabled={isActing} className="rounded-md bg-emerald-500 px-3 py-1.5 text-xs font-semibold text-white hover:bg-emerald-400 disabled:bg-gray-300">Accept</button>
-      <button type="button" onClick={() => void onDecline(friendship.id)} disabled={isActing} className="rounded-md bg-gray-200 px-3 py-1.5 text-xs font-semibold text-gray-700 hover:bg-gray-300 disabled:bg-gray-200">Decline</button>
-    </div>
-  </li>
-);
+    </li>
+  );
+};
 
 /**
  * Renders the friend requests section.

@@ -17,7 +17,14 @@ const useFetch = (id: string | undefined, markRead: (id: number) => Promise<void
       try {
         const res = await api.get<Notification>(`/api/notifications/${id}/`);
         setNotification(res.data);
-        if (!res.data.is_read) { void markRead(res.data.id); setNotification({ ...res.data, is_read: true }); }
+        if (!res.data.is_read) {
+          try {
+            await markRead(res.data.id);
+            setNotification({ ...res.data, is_read: true });
+          } catch (markReadError) {
+            console.error("Failed to mark notification as read", markReadError);
+          }
+        }
       } catch (err) { setError("Failed to fetch notification details"); console.error(err);
       } finally { setLoading(false); }
     };

@@ -24,15 +24,13 @@ describe("NotificationDropdown Component", () => {
   const mockNotifications = [
     {
       id: 1,
+      recipient: 1,
+      sender: null,
       title: "Test Notif",
       message: "Message",
       is_read: false,
       timestamp: new Date().toISOString(),
       notification_type: NotificationType.SYSTEM,
-      target_url: "",
-      sender_id: null,
-      sender_name: null,
-      sender_avatar: null,
       sender_username: null
     },
   ];

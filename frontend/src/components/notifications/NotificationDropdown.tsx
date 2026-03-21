@@ -51,7 +51,7 @@ const FriendRequestCard: React.FC<{
     <FriendAvatar friendship={friendship} />
     <div className="min-w-0 flex-1">
       <p className="text-sm font-semibold text-gray-900">Friend request</p>
-      <p className="mt-0.5 text-xs text-gray-500">{friendship.sender_username}</p>
+      <p className="mt-0.5 text-xs text-gray-500">{friendship.sender_username ?? `User #${friendship.sender}`}</p>
       {friendship.sender_name && <p className="text-[11px] text-gray-400">{friendship.sender_name}</p>}
     </div>
     <div className="flex items-center gap-1">
@@ -99,7 +99,9 @@ export const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
             <div className="max-h-105 space-y-2 overflow-y-auto px-3 pb-3">
               {requests.map((f) => <FriendRequestCard key={f.id} friendship={f} acceptRequest={(id) => { void acceptRequest(id); }} declineRequest={(id) => { void declineRequest(id); }} isActing={actingIds.has(f.id)} />)}
               {displayNotifs.map((n) => <NotificationCard key={n.id} notification={n} onClick={onItemClick} onToggleRead={handleToggle} onDelete={handleDelete} showActions showReadToggle={false} showDivider={false} compact />)}
-              {total === 0 && <div className="px-6 py-12 text-center text-sm text-gray-500">No notifications</div>}
+              {displayNotifs.length === 0 && requests.length === 0 && (
+                <div className="px-6 py-12 text-center text-sm text-gray-500">No notifications</div>
+              )}
             </div>
             {displayNotifs.length > 0 && <DropdownFooter />}
           </div>
