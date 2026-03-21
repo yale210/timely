@@ -2,8 +2,9 @@ import { useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import type { SettingsSection } from "@/components/settings/types";
 import { authService } from "@/services/authService";
+import * as categoryService from "@/services/categoryService";
 import { preferenceService } from "@/services/preferenceService";
-import type { Preference } from "@/types";
+import type { Category, Preference } from "@/types";
 import { formatDjangoFormError } from "@/utils/apiErrors";
 import { validatePreference } from "@/utils/preferenceValidation";
 import { applyFont, applyTheme } from "@/utils/themeSettings";
@@ -11,22 +12,27 @@ import { applyFont, applyTheme } from "@/utils/themeSettings";
 interface SettingsState {
   activeSection: SettingsSection;
   preference: Preference | null;
+  categories: Category[];
   fieldErrors: Record<string, string[]>;
 }
 
 interface SettingsLoading {
   preference: boolean;
+  categories: boolean;
   saving: boolean;
 }
 
 interface SettingsError {
   preference: string | null;
+  categories: string | null;
 }
 
 interface SettingsActions {
   selectSection: (section: SettingsSection) => void;
   setPreference: (nextPreference: Preference) => void;
+  setCategoryLimit: (categoryId: number, value: number | null) => void;
   savePreferences: () => Promise<void>;
+  saveCategoryLimits: () => Promise<void>;
   logout: () => Promise<void>;
   applyTheme: (themeName: string) => void;
   applyFont: (fontName: string) => void;
@@ -50,9 +56,12 @@ export const useSettings = (): UseSettingsReturn => {
   const navigate = useNavigate();
   const [activeSection, setActiveSection] = useState<SettingsSection>("profile");
   const [preference, setPreference] = useState<Preference | null>(null);
+  const [categories, setCategories] = useState<Category[]>([]);
   const [isPreferenceLoading, setIsPreferenceLoading] = useState(false);
+  const [isCategoriesLoading, setIsCategoriesLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [preferenceError, setPreferenceError] = useState<string | null>(null);
+  const [categoriesError, setCategoriesError] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string[]>>({});
 
   const selectSection = useCallback(
@@ -105,6 +114,37 @@ export const useSettings = (): UseSettingsReturn => {
     void loadPreference();
   }, [activeSection, loadPreference]);
 
+  const loadCategories = useCallback(async () => {
+    setIsCategoriesLoading(true);
+    setCategoriesError(null);
+
+    try {
+      const nextCategories = await categoryService.getCategories();
+      setCategories(nextCategories);
+    } catch (error) {
+      const parsed = formatDjangoFormError(error);
+      setCategoriesError(parsed.message);
+    } finally {
+      setIsCategoriesLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (activeSection !== "categories") {
+      return;
+    }
+
+    void loadCategories();
+  }, [activeSection, loadCategories]);
+
+  const setCategoryLimit = useCallback((categoryId: number, value: number | null) => {
+    setCategories((prev) => prev.map((category) => (
+      category.id === categoryId
+        ? { ...category, max_daily_study_time: value }
+        : category
+    )));
+  }, []);
+
   const savePreferences = useCallback(async () => {
     if (!preference) {
       return;
@@ -147,23 +187,47 @@ export const useSettings = (): UseSettingsReturn => {
     }
   }, [preference]);
 
+  const saveCategoryLimits = useCallback(async () => {
+    setIsSaving(true);
+    setCategoriesError(null);
+
+    try {
+      const updatedCategories = await Promise.all(
+        categories.map(async (category) => categoryService.updateCategory(category.id, {
+          max_daily_study_time: category.max_daily_study_time ?? null,
+        })),
+      );
+      setCategories(updatedCategories);
+    } catch (error) {
+      const parsed = formatDjangoFormError(error);
+      setCategoriesError(parsed.message);
+    } finally {
+      setIsSaving(false);
+    }
+  }, [categories]);
+
   return {
     state: {
       activeSection,
       preference,
+      categories,
       fieldErrors,
     },
     loading: {
       preference: isPreferenceLoading,
+      categories: isCategoriesLoading,
       saving: isSaving,
     },
     error: {
       preference: preferenceError,
+      categories: categoriesError,
     },
     actions: {
       selectSection,
       setPreference,
+      setCategoryLimit,
       savePreferences,
+      saveCategoryLimits,
       logout,
       applyTheme,
       applyFont,

@@ -475,10 +475,10 @@ export const useCalendar = (): UseCalendarReturn => {
     setRescheduleWarnings([]);
 
     try {
-      await schedulerService.unscheduleTasks();
       const response = await schedulerService.scheduleTasks({
         start_date: moment(date).format("YYYY-MM-DD"),
         allow_split: true,
+        replace_existing: true,
       });
       const nextOrder: Record<number, number> = {};
       // Preserve scheduler order so newly placed tasks can animate into the calendar in sequence.

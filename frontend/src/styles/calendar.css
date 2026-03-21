@@ -106,7 +106,7 @@
   min-height: 64px;
 }
 
-.calendar-grid-shell .calendar-off-hours-slot {
+.calendar-grid-shell .rbc-day-slot .calendar-off-hours-slot {
   background-color: color-mix(in srgb, var(--text-color) 6%, var(--background));
 }
 

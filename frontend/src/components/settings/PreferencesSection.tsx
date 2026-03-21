@@ -389,7 +389,7 @@ const PreferencesSection = ({
               </label>
               <div className="mt-2 flex items-center gap-3">
                 <div className="text-xs font-medium text-gray-600">
-                  {pref.limit_max_hours === false ? "No limit (uses daily hours max)" : "Limit max hours"}
+                  {pref.limit_max_hours === false ? "No limit (uses daily hours)" : "Limit max hours"}
                 </div>
                 <button
                   type="button"

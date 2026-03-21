@@ -3,6 +3,7 @@ import PreferencesSection from "@/components/settings/PreferencesSection";
 import SettingsSidebar from "@/components/settings/SettingsSidebar";
 import ThemeSection from "@/components/settings/ThemeSection";
 import ProfileSection from "@/components/settings/ProfileSection";
+import CategoryLimitsSection from "@/components/settings/CategoryLimitsSection";
 import type { UseSettingsReturn } from "@/hooks/settings/useSettings";
 import { useProfileSettings } from "@/hooks/settings/useProfileSettings";
 
@@ -60,7 +61,7 @@ const SettingsContent = ({
   };
 
   const profileState = useProfileSettings(state.activeSection === "profile");
-  const isAppearanceSection = state.activeSection === "appearance";
+  const isWideSection = state.activeSection === "appearance";
 
   return (
     <div className="min-h-screen bg-white text-black">
@@ -86,7 +87,7 @@ const SettingsContent = ({
           />
           <section
             className={`rounded-xl border border-gray-200 bg-white p-6 shadow-sm ${
-              isAppearanceSection ? "min-w-0 flex-1" : "w-full md:w-1/2"
+              isWideSection ? "min-w-0 flex-1" : "w-full md:w-1/2"
             }`}
           >
             {state.activeSection === "preferences" ? (
@@ -106,6 +107,18 @@ const SettingsContent = ({
               <ThemeSection
                 onThemeChange={actions.applyTheme}
                 onFontChange={actions.applyFont}
+              />
+            ) : null}
+            {state.activeSection === "categories" ? (
+              <CategoryLimitsSection
+                categories={state.categories}
+                loading={loading.categories}
+                saving={loading.saving}
+                error={error.categories}
+                onLimitChange={actions.setCategoryLimit}
+                onSave={() => {
+                  void actions.saveCategoryLimits();
+                }}
               />
             ) : null}
             {state.activeSection === "features" ? (
@@ -157,6 +170,28 @@ const SettingsContent = ({
 
                   return (
                     <div className="space-y-4">
+                      <div className="flex items-center justify-between rounded-lg border border-gray-200 bg-white px-4 py-3 shadow-sm">
+                        <p className="text-sm font-semibold text-gray-900">Sound effects</p>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            actions.setPreference({
+                              ...preference,
+                              disable_sound_effects: !preference.disable_sound_effects,
+                            });
+                          }}
+                          className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${
+                            preference.disable_sound_effects ? "bg-gray-300" : "bg-primary"
+                          }`}
+                          aria-pressed={!preference.disable_sound_effects}
+                        >
+                          <span
+                            className={`inline-block h-4 w-4 transform rounded-full bg-white shadow-sm transition-transform ${
+                              preference.disable_sound_effects ? "translate-x-1" : "translate-x-4"
+                            }`}
+                          />
+                        </button>
+                      </div>
                       <div>
                         <label
                           htmlFor="general-drag-snap-minutes"
@@ -189,28 +224,6 @@ const SettingsContent = ({
                             {state.fieldErrors.drag_snap_minutes.join(" ")}
                           </div>
                         ) : null}
-                      </div>
-                      <div className="flex items-center justify-between rounded-lg border border-gray-200 bg-white px-4 py-3 shadow-sm">
-                        <p className="text-sm font-semibold text-gray-900">Sound effects</p>
-                        <button
-                          type="button"
-                          onClick={() => {
-                            actions.setPreference({
-                              ...preference,
-                              disable_sound_effects: !preference.disable_sound_effects,
-                            });
-                          }}
-                          className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${
-                            preference.disable_sound_effects ? "bg-gray-300" : "bg-primary"
-                          }`}
-                          aria-pressed={!preference.disable_sound_effects}
-                        >
-                          <span
-                            className={`inline-block h-4 w-4 transform rounded-full bg-white shadow-sm transition-transform ${
-                              preference.disable_sound_effects ? "translate-x-1" : "translate-x-4"
-                            }`}
-                          />
-                        </button>
                       </div>
                       <div className="flex justify-end">
                         <button

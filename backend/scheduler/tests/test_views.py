@@ -174,3 +174,45 @@ class SchedulerViewsTests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         task.refresh_from_db()
         self.assertEqual(task.total_task_allocations, 1)
+
+    def test_schedule_with_replace_existing_reschedules_without_separate_unschedule(self):
+        now = timezone.now()
+        original_start = now + timedelta(hours=1)
+        Event.objects.create(
+            user=self.user,
+            title="Block original slot",
+            start_time=original_start,
+            end_time=original_start + timedelta(minutes=30),
+        )
+        task = Task.objects.create(
+            user=self.user,
+            title="Reschedule me safely",
+            description="",
+            estimated_minutes=30,
+            start_time=now,
+            deadline=now + timedelta(days=1),
+            importance=5,
+            completed=False,
+            allocation=[
+                {
+                    "start": original_start.isoformat(),
+                    "end": (original_start + timedelta(minutes=30)).isoformat(),
+                }
+            ],
+            total_task_allocations=1,
+        )
+
+        response = self.client.post(
+            self.schedule_url,
+            {
+                "start_date": now.date().isoformat(),
+                "allow_split": False,
+                "replace_existing": True,
+            },
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        task.refresh_from_db()
+        self.assertEqual(task.total_task_allocations, len(task.allocation))
+        self.assertNotEqual(task.allocation[0]["start"], original_start.isoformat())

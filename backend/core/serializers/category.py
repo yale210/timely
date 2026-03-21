@@ -8,5 +8,5 @@ class CategorySerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Category
-        fields = ["id", "text", "colour", "colour_override", "user"]
+        fields = ["id", "text", "colour", "colour_override", "max_daily_study_time", "user"]
         read_only_fields = ["id"]

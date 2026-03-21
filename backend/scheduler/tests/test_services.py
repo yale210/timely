@@ -285,3 +285,70 @@ class SchedulerTest(TestCase):
             ],
             [60, 60, 30],
         )
+
+    def test_schedule_task_split_does_not_create_block_below_task_minimum(self):
+        day_one = date(2026, 3, 19)
+        day_two = day_one + timedelta(days=1)
+
+        Event.objects.create(
+            user=self.user,
+            title="Block day one",
+            start_time=timezone.make_aware(datetime.combine(day_one, time(7, 30))),
+            end_time=timezone.make_aware(datetime.combine(day_one, time(23, 0))),
+        )
+        Event.objects.create(
+            user=self.user,
+            title="Block day two",
+            start_time=timezone.make_aware(datetime.combine(day_two, time(7, 40))),
+            end_time=timezone.make_aware(datetime.combine(day_two, time(23, 0))),
+        )
+
+        Task.objects.create(
+            user=self.user,
+            title="Too small final split block",
+            description="",
+            estimated_minutes=50,
+            importance=5,
+            start_time=timezone.make_aware(datetime.combine(day_one, time(7, 0))),
+            deadline=timezone.make_aware(datetime.combine(day_two, time(23, 0))),
+            completed=False,
+            allow_split=True,
+            min_split_minutes=30,
+        )
+
+        scheduler = Scheduler(
+            self.user, max_days_ahead=2, allow_split=True, min_block_minutes=30
+        )
+        results = scheduler.schedule_tasks(start_date=day_one)
+
+        self.assertFalse(results[0].success)
+        self.assertEqual(results[0].segments, [])
+
+    def test_schedule_respects_category_daily_limit(self):
+        start_day = date(2026, 3, 19)
+        category = Category.objects.create(
+            user=self.user,
+            text="Study",
+            max_daily_study_time=60,
+        )
+
+        Task.objects.create(
+            user=self.user,
+            title="Capped category task",
+            description="",
+            estimated_minutes=90,
+            importance=5,
+            start_time=timezone.make_aware(datetime.combine(start_day, time(7, 0))),
+            deadline=timezone.make_aware(datetime.combine(start_day, time(23, 0))),
+            completed=False,
+            allow_split=True,
+            min_split_minutes=30,
+        ).categories.add(category)
+
+        scheduler = Scheduler(
+            self.user, max_days_ahead=1, allow_split=True, min_block_minutes=30
+        )
+        results = scheduler.schedule_tasks(start_date=start_day)
+
+        self.assertFalse(results[0].success)
+        self.assertEqual(results[0].segments, [])

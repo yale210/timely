@@ -3,6 +3,7 @@ import datetime
 from django.contrib.auth import get_user_model
 from django.test import TestCase
 from django.utils import timezone
+from rest_framework.test import APIRequestFactory
 
 from core.models import Category, Task
 from core.serializers import CalendarSerializer
@@ -13,8 +14,14 @@ class CalendarSerializerTests(TestCase):
         self.user = get_user_model().objects.create_user(
             username="serializeruser", password="password123", email="test@user.com"
         )
-        self.category1 = Category.objects.create(text="Study")
-        self.category2 = Category.objects.create(text="Work")
+        self.request_factory = APIRequestFactory()
+        self.category1 = Category.objects.create(user=self.user, text="Study")
+        self.category2 = Category.objects.create(user=self.user, text="Work")
+
+    def _request_context(self):
+        request = self.request_factory.post("/api/tasks/")
+        request.user = self.user
+        return {"request": request}
 
     def test_calendar_serializer_fields(self):
         now = timezone.now()
@@ -82,7 +89,7 @@ class CalendarSerializerTests(TestCase):
 
         # To test creation, we usually use the serializer's save method
         # but we need a request context usually for user, or pass it explicitly
-        serializer = CalendarSerializer(data=data)
+        serializer = CalendarSerializer(data=data, context=self._request_context())
         self.assertTrue(serializer.is_valid(), serializer.errors)
         task = serializer.save(user=self.user)
 
@@ -106,7 +113,8 @@ class CalendarSerializerTests(TestCase):
                 "min_split_minutes": 60,
                 "max_split_minutes": 30,
                 "categories": [],
-            }
+            },
+            context=self._request_context(),
         )
 
         self.assertFalse(serializer.is_valid())

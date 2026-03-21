@@ -38,6 +38,7 @@ class Scheduler:
         self.commutes = self._get_commutes()
         self.special_dates = self._get_special_dates()
         self._scheduled_blocks: List[Tuple[datetime, datetime]] = []
+        self._scheduled_task_segments: List[Tuple[Task, datetime, datetime]] = []
 
     # ----- data access -------------------------------------------------
     def _get_preference(self):
@@ -201,6 +202,78 @@ class Scheduler:
         end_of_day = self._aware(datetime.combine(target_date, time.max))
         return start_of_day, end_of_day
 
+    def _get_remaining_category_minutes(
+        self,
+        task: Task,
+        target_date: date,
+        current_segments: List[Tuple[datetime, datetime]] | None = None,
+    ) -> int | None:
+        limited_categories = [
+            category
+            for category in task.categories.all()
+            if category.max_daily_study_time is not None
+        ]
+        if not limited_categories:
+            return None
+
+        day_start = self._aware(datetime.combine(target_date, time.min))
+        day_end = self._aware(datetime.combine(target_date, time.max))
+        limited_category_ids = {category.id for category in limited_categories}
+        category_limits = {
+            category.id: int(category.max_daily_study_time)
+            for category in limited_categories
+            if category.id is not None
+        }
+        minutes_used = {category_id: 0 for category_id in category_limits}
+
+        def add_overlap(
+            start: datetime,
+            end: datetime,
+            category_ids: set[int],
+        ) -> None:
+            overlap_start = max(start, day_start)
+            overlap_end = min(end, day_end)
+            if overlap_end <= overlap_start:
+                return
+            overlap_minutes = int((overlap_end - overlap_start).total_seconds() // 60)
+            for category_id in category_ids & limited_category_ids:
+                minutes_used[category_id] += overlap_minutes
+
+        for scheduled_task in self.scheduled_tasks:
+            scheduled_category_ids = set(
+                scheduled_task.categories.values_list("id", flat=True)
+            )
+            if not scheduled_category_ids & limited_category_ids:
+                continue
+            for slot in scheduled_task.allocation or []:
+                try:
+                    start = self._aware(datetime.fromisoformat(slot["start"]))
+                    end = self._aware(datetime.fromisoformat(slot["end"]))
+                except (KeyError, ValueError, TypeError):
+                    continue
+                add_overlap(start, end, scheduled_category_ids)
+
+        for scheduled_task, start, end in self._scheduled_task_segments:
+            scheduled_category_ids = set(
+                scheduled_task.categories.values_list("id", flat=True)
+            )
+            if not scheduled_category_ids & limited_category_ids:
+                continue
+            add_overlap(start, end, scheduled_category_ids)
+
+        if current_segments:
+            task_category_ids = set(
+                task.categories.values_list("id", flat=True)
+            )
+            for start, end in current_segments:
+                add_overlap(start, end, task_category_ids)
+
+        remaining_minutes = [
+            max(0, category_limits[category_id] - minutes_used[category_id])
+            for category_id in category_limits
+        ]
+        return min(remaining_minutes) if remaining_minutes else None
+
     def get_available_slots(
         self, target_date: date, min_minutes: int
     ) -> List[Tuple[datetime, datetime]]:
@@ -317,6 +390,12 @@ class Scheduler:
                     continue
                 start, end = clipped
                 free_minutes = (end - start).total_seconds() / 60
+                category_minutes_left = self._get_remaining_category_minutes(
+                    task,
+                    start.date(),
+                )
+                if category_minutes_left is not None and task.estimated_minutes > category_minutes_left:
+                    continue
                 if free_minutes >= task.estimated_minutes:
                     scheduled_end = start + timedelta(minutes=task.estimated_minutes)
                     return ScheduleResult(
@@ -356,6 +435,13 @@ class Scheduler:
                 continue
 
             slots = self.get_available_slots(current_date, min_block_minutes)
+            category_minutes_left = self._get_remaining_category_minutes(
+                task,
+                current_date,
+                current_segments=segments,
+            )
+            if category_minutes_left is not None and category_minutes_left < min_block_minutes:
+                continue
             for slot in slots:
                 capped = self._clip_to_deadline(slot, deadline)
                 if not capped:
@@ -366,6 +452,8 @@ class Scheduler:
                 start, end = clipped
                 cursor = start
                 while remaining > 0 and cursor < end:
+                    if category_minutes_left is not None and category_minutes_left < min_block_minutes:
+                        break
                     free_minutes = (end - cursor).total_seconds() / 60
                     if (
                         free_minutes < min_block_minutes
@@ -374,22 +462,17 @@ class Scheduler:
                         break
 
                     chunk = min(remaining, free_minutes)
+                    if category_minutes_left is not None:
+                        chunk = min(chunk, category_minutes_left)
                     if max_block_minutes is not None:
                         chunk = min(chunk, max_block_minutes)
-                    if (
-                        chunk < min_block_minutes
-                        and remaining > min_block_minutes
-                    ):
+                    if chunk < min_block_minutes:
                         break
-                    if (
-                        chunk < min_block_minutes
-                        and remaining <= min_block_minutes
-                    ):
-                        # last small piece fits
-                        pass
                     scheduled_end = cursor + timedelta(minutes=chunk)
                     segments.append((cursor, scheduled_end))
                     remaining -= chunk
+                    if category_minutes_left is not None:
+                        category_minutes_left -= int(chunk)
                     cursor = scheduled_end
                     if remaining <= 0:
                         break
@@ -440,9 +523,15 @@ class Scheduler:
             ):
                 if result.segments:
                     self._scheduled_blocks.extend(result.segments)
+                    self._scheduled_task_segments.extend(
+                        (task, start, end) for start, end in result.segments
+                    )
                 else:
                     self._scheduled_blocks.append(
                         (result.scheduled_start, result.scheduled_end)
+                    )
+                    self._scheduled_task_segments.append(
+                        (task, result.scheduled_start, result.scheduled_end)
                     )
 
         return results
