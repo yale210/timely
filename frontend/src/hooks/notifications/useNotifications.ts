@@ -15,6 +15,9 @@ const useNotifState = () => {
   return { notifications, setNotifications, unreadCount, setUnreadCount, loading, setLoading, error, setError, page, setPage, hasMore, setHasMore };
 };
 
+/**
+ * Hook to manage paginated notification fetching and CRUD operations.
+ */
 export const useNotifications = () => {
   const { notifications, setNotifications, unreadCount, setUnreadCount, loading, setLoading, error, setError, page, setPage, hasMore, setHasMore } = useNotifState();
   

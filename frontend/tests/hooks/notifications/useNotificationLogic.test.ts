@@ -83,7 +83,10 @@ describe("useNotificationLogic", () => {
 
   it("handles markRead and updates local state", async () => {
     const { result } = renderHook(() => useNotificationLogic());
-    await waitFor(() => expect(result.current.loading).toBe(false));
+    await waitFor(() => {
+      expect(result.current.loading).toBe(false);
+      expect(result.current.unreadCount).toBe(1);
+    });
 
     await act(async () => {
       await result.current.markRead(1);

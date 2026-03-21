@@ -74,52 +74,52 @@ export const useNotificationLogic = () => {
     async (id: number) => {
       try {
         await apiMarkAsRead(id);
-        setNotifications((prev) => {
-          const existing = prev.find((item) => item.id === id);
-          const wasUnread = existing ? !existing.is_read : null;
-          const next = prev.map((item) =>
+
+        const existing = notifications.find((item) => item.id === id);
+        const wasUnread = existing ? !existing.is_read : null;
+
+        setNotifications((prev) =>
+          prev.map((item) =>
             item.id === id ? { ...item, is_read: true } : item,
-          );
+          ),
+        );
 
-          if (existing && wasUnread) {
-            setUnreadCount((prevCount) => Math.max(0, prevCount - 1));
-          } else if (!existing) {
-            void fetchUnreadCount();
-          }
-
-          return next;
-        });
+        if (existing && wasUnread) {
+          setUnreadCount((prevCount) => Math.max(0, prevCount - 1));
+        } else if (!existing) {
+          void fetchUnreadCount();
+        }
       } catch (err) {
         console.error("Failed to mark notification as read", err);
       }
     },
-    [fetchUnreadCount],
+    [notifications, fetchUnreadCount],
   );
 
   const markUnread = useCallback(
     async (id: number) => {
       try {
         await apiMarkAsUnread(id);
-        setNotifications((prev) => {
-          const existing = prev.find((item) => item.id === id);
-          const wasRead = existing ? existing.is_read : null;
-          const next = prev.map((item) =>
+
+        const existing = notifications.find((item) => item.id === id);
+        const wasRead = existing ? existing.is_read : null;
+
+        setNotifications((prev) =>
+          prev.map((item) =>
             item.id === id ? { ...item, is_read: false } : item,
-          );
+          ),
+        );
 
-          if (existing && wasRead) {
-            setUnreadCount((prevCount) => prevCount + 1);
-          } else if (!existing) {
-            void fetchUnreadCount();
-          }
-
-          return next;
-        });
+        if (existing && wasRead) {
+          setUnreadCount((prevCount) => prevCount + 1);
+        } else if (!existing) {
+          void fetchUnreadCount();
+        }
       } catch (err) {
         console.error("Failed to mark notification as unread", err);
       }
     },
-    [fetchUnreadCount],
+    [notifications, fetchUnreadCount],
   );
 
   const markAllRead = useCallback(async () => {
@@ -136,22 +136,21 @@ export const useNotificationLogic = () => {
     async (id: number) => {
       try {
         await apiDeleteNotification(id);
-        setNotifications((prev) => {
-          const existing = prev.find((item) => item.id === id);
 
-          if (existing && !existing.is_read) {
-            setUnreadCount((prevCount) => Math.max(0, prevCount - 1));
-          } else if (!existing) {
-            void fetchUnreadCount();
-          }
+        const existing = notifications.find((item) => item.id === id);
 
-          return prev.filter((item) => item.id !== id);
-        });
+        setNotifications((prev) => prev.filter((item) => item.id !== id));
+
+        if (existing && !existing.is_read) {
+          setUnreadCount((prevCount) => Math.max(0, prevCount - 1));
+        } else if (!existing) {
+          void fetchUnreadCount();
+        }
       } catch (err) {
         console.error("Failed to delete notification", err);
       }
     },
-    [fetchUnreadCount],
+    [notifications, fetchUnreadCount],
   );
 
   const deleteAllNotifications = useCallback(async () => {

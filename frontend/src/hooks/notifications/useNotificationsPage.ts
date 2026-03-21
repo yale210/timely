@@ -54,7 +54,17 @@ export const useNotificationsPage = () => {
   const click = useCallback(async (n: Notification) => { if (!n.is_read) await ctx.markRead(n.id); await ctx.fetchNotifications(); void nav(`/notifications/${n.id}`); }, [ctx, nav]);
   const toggle = useCallback(async (n: Notification) => { if (n.is_read) await ctx.markUnread(n.id); else await ctx.markRead(n.id); await fetchPage(); await ctx.fetchNotifications(); }, [ctx, fetchPage]);
   const del = useCallback(async (n: Notification) => { await ctx.deleteNotification(n.id); if (notifications.length === 1 && page > 1) setPage((p) => Math.max(1, p - 1)); else await fetchPage(); await ctx.fetchNotifications(); }, [ctx, fetchPage, notifications.length, page]);
-  const bulk = useCallback(async () => { if (confirm === "mark_all_read") await ctx.markAllRead(); if (confirm === "delete_all") { await ctx.deleteAllNotifications(); setPage(1); } await fetchPage(); await ctx.fetchNotifications(); }, [confirm, ctx, fetchPage]);
+  const bulk = useCallback(async () => {
+    if (confirm === "mark_all_read") {
+      await ctx.markAllRead();
+      await fetchPage();
+    }
+    if (confirm === "delete_all") {
+      await ctx.deleteAllNotifications();
+      setPage(1);
+    }
+    await ctx.fetchNotifications();
+  }, [confirm, ctx, fetchPage]);
 
   const win = useMemo(() => {
     const pages: number[] = [];
