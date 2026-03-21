@@ -130,12 +130,17 @@ export const PomofocusDropdown = () => {
             </button>
 
             <button
-              onClick={isActive ? stopTimer : startTimer}
+              onClick={isActive && viewingMode === mode ? stopTimer : startTimer}
               className={`flex h-12 w-12 items-center justify-center rounded-full text-white shadow-md transition-transform hover:scale-105 active:scale-95 ${
-                isActive ? "bg-red-500" : "bg-cyan-600"
+                isActive && viewingMode === mode ? "bg-red-500" : "bg-cyan-600"
               }`}
+              title={isActive && viewingMode !== mode ? `Switch to ${viewingMode}` : (isActive ? "Stop" : "Start")}
             >
-              {isActive ? <PauseIcon className="h-6 w-6" /> : <PlayIcon className="h-6 w-6" />}
+              {isActive && viewingMode === mode ? (
+                <PauseIcon className="h-6 w-6" />
+              ) : (
+                <PlayIcon className="h-6 w-6" />
+              )}
             </button>
 
             <button
