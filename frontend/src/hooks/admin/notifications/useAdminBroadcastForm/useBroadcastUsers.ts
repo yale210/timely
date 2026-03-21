@@ -14,8 +14,8 @@ const USERS_PAGE_SIZE = 50;
  * @returns User related state and actions.
  */
 export const useBroadcastUsers = (target: AdminNotificationTarget) => {
-  const [search, setSearch] = useState("");
-  const [roleFilter, setRoleFilter] = useState<AdminUserRole>("all");
+  const [search, setSearchState] = useState("");
+  const [roleFilter, setRoleFilterState] = useState<AdminUserRole>("all");
   const [users, setUsers] = useState<AdminUserSummary[]>([]);
   const [selectedUserIds, setSelectedUserIds] = useState<number[]>([]);
   const [isUsersLoading, setIsUsersLoading] = useState(false);
@@ -25,9 +25,19 @@ export const useBroadcastUsers = (target: AdminNotificationTarget) => {
   const [hasUsersNextPage, setHasUsersNextPage] = useState(false);
   const [hasUsersPreviousPage, setHasUsersPreviousPage] = useState(false);
 
+  const setSearch = useCallback((value: string) => {
+    setSearchState(value);
+    setUsersPage(1);
+  }, []);
+
+  const setRoleFilter = useCallback((value: AdminUserRole) => {
+    setRoleFilterState(value);
+    setUsersPage(1);
+  }, []);
+
   useEffect(() => {
     setUsersPage(1);
-  }, [search, roleFilter, target]);
+  }, [target]);
 
   useEffect(() => {
     if (target !== "users") {

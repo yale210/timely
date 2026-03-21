@@ -1,3 +1,4 @@
+import { Link } from "react-router-dom";
 import { type BroadcastJobSummary } from "@/types";
 
 interface AdminHistoryTableRowProps {
@@ -27,20 +28,18 @@ export const AdminHistoryTableRow = (
       key={item.id}
       className="cursor-pointer hover:bg-gray-50"
       onClick={() => onSelectItem(item.id)}
-      tabIndex={0}
-      role="button"
-      onKeyDown={(e) => {
-        if (e.key === "Enter" || e.key === " ") {
-          e.preventDefault();
-          onSelectItem(item.id);
-        }
-      }}
     >
       <td className="px-4 py-3">
-        <p className="font-medium text-gray-900">{item.title}</p>
-        <p className="text-xs text-gray-500">
-          Delivered {item.delivered_count}/{item.recipient_count}
-        </p>
+        <Link
+          to={`/admin/notifications/history/${item.id}`}
+          className="block"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <p className="font-medium text-gray-900">{item.title}</p>
+          <p className="text-xs text-gray-500">
+            Delivered {item.delivered_count}/{item.recipient_count}
+          </p>
+        </Link>
       </td>
       <td className="px-4 py-3 capitalize text-gray-600">{item.target}</td>
       <td className="px-4 py-3 text-gray-600">{item.sender_username ?? "System"}</td>
