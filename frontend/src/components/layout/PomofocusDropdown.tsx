@@ -76,18 +76,17 @@ export const PomofocusDropdown = () => {
           {/* Timer Display & Input */}
           <div className="flex flex-col items-center gap-2">
             {mode === "focus" && !isActive ? (
-              <div className="flex items-center gap-2">
+              <div className="relative flex items-center">
                 <input
-                  type="number"
+                  type="text"
+                  inputMode="numeric"
                   value={initialDuration}
                   onChange={handleInitialDurationChange}
                   onBlur={handleBlur}
                   onFocus={handleFocus}
-                  className="w-16 rounded border border-gray-300 px-2 py-1 text-center font-mono text-xl focus:border-cyan-500 focus:outline-none"
-                  min="1"
-                  max="600"
+                  className="w-24 rounded border border-gray-300 pr-10 pl-2 py-1 text-center font-mono text-xl focus:border-cyan-500 focus:outline-none"
                 />
-                <span className="text-sm text-gray-500">mins</span>
+                <span className="absolute right-3 text-xs font-medium text-gray-400 pointer-events-none">mins</span>
               </div>
             ) : (
               <div className="relative flex flex-col items-center">
