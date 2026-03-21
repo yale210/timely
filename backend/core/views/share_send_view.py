@@ -19,7 +19,7 @@ class ShareSendView(APIView):
             response = {"error": "Please provide a username and event ID"}
             return Response(response)
 
-        # Events begin with an e visually to the user, but in the DB they are just an int
+        # Events begin with an "e" visually to the user, but in the DB they are just an int
         # e.g. e123 -> 123
         event_id_in_db = event_id[1:]
 
