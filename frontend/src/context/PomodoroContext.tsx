@@ -193,7 +193,7 @@ export const PomodoroProvider = ({ children }: PomodoroProviderProps) => {
       const validNext = Math.max(0, Math.min(next, MAX_MINUTES * 60));
       
       // Synchronise with initialDuration if in focus mode and not active
-      if (mode === "focus" && !isActive) {
+      if (viewingMode === "focus" && !isActive) {
         const nextMins = Math.round(validNext / 60);
         timerManager.syncInitialDuration(nextMins);
         setPersistedFocusDuration(nextMins);
@@ -201,7 +201,7 @@ export const PomodoroProvider = ({ children }: PomodoroProviderProps) => {
       
       return validNext;
     });
-  }, [mode, isActive, timerManager]);
+  }, [viewingMode, isActive, timerManager]);
 
   useEffect(() => {
     if (isActive && timeLeft > 0) {
