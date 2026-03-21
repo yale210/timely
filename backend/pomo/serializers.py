@@ -1,6 +1,7 @@
 from rest_framework import serializers
 from .models import PomoSession
 
+
 class PomoSessionSerializer(serializers.ModelSerializer):
     class Meta:
         model = PomoSession

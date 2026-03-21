@@ -6,17 +6,17 @@ from pomo.models import PomoSession
 
 User = get_user_model()
 
+
 class PomoSessionTests(APITestCase):
     def setUp(self):
-        self.user = User.objects.create_user(username="testuser", email="test@example.com", password="password")
+        self.user = User.objects.create_user(
+            username="testuser", email="test@example.com", password="password"
+        )
         self.client.force_authenticate(user=self.user)
         self.url = "/api/pomo/sessions/"
 
     def test_create_pomo_session(self):
-        data = {
-            "duration_minutes": 25,
-            "completed_at": timezone.now().isoformat()
-        }
+        data = {"duration_minutes": 25, "completed_at": timezone.now().isoformat()}
         response = self.client.post(self.url, data)
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(PomoSession.objects.count(), 1)
@@ -24,9 +24,7 @@ class PomoSessionTests(APITestCase):
 
     def test_get_pomo_sessions(self):
         PomoSession.objects.create(
-            user=self.user,
-            duration_minutes=25,
-            completed_at=timezone.now()
+            user=self.user, duration_minutes=25, completed_at=timezone.now()
         )
         response = self.client.get(self.url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
