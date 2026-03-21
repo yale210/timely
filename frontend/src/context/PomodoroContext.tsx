@@ -154,9 +154,18 @@ export const PomodoroProvider = ({ children }: PomodoroProviderProps) => {
   const adjustTime = useCallback((deltaSeconds: number) => {
     setTimeLeft((prev) => {
       const next = prev + deltaSeconds;
-      return Math.max(0, Math.min(next, MAX_MINUTES * 60));
+      const validNext = Math.max(0, Math.min(next, MAX_MINUTES * 60));
+      
+      // Synchronise with initialDuration if in focus mode and not active
+      if (mode === "focus" && !isActive) {
+        const nextMins = Math.round(validNext / 60);
+        setInitialDurationState(nextMins);
+        localStorage.setItem("pomo_initial_duration", nextMins.toString());
+      }
+      
+      return validNext;
     });
-  }, []);
+  }, [mode, isActive]);
 
   useEffect(() => {
     if (isActive && timeLeft > 0) {
