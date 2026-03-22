@@ -1,4 +1,6 @@
+import { useState } from "react";
 import type { SettingsSection } from "@/components/settings/types";
+import ConfirmationModal from "@/components/modals/ConfirmationModal";
 
 interface SettingsSidebarProps {
   state: {
@@ -26,15 +28,17 @@ const SettingsSidebar = ({
   loading,
   actions,
 }: SettingsSidebarProps) => {
-  const navItems: { label: string; value: SettingsSection }[] = [
-    { label: "Profile", value: "profile" },
-    { label: "Features", value: "features" },
-    { label: "Scheduling", value: "preferences" },
-    { label: "Theme", value: "theme" },
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+  const navItems: { label: string; value: SettingsSection; icon: string }[] = [
+    { label: "Profile", value: "profile", icon: "person" },
+    { label: "General", value: "general", icon: "tune" },
+    { label: "Features", value: "features", icon: "extension" },
+    { label: "Scheduling", value: "preferences", icon: "schedule" },
+    { label: "Appearance", value: "appearance", icon: "palette" },
   ];
 
   return (
-    <aside className="w-[10%] min-w-35">
+    <aside className="w-56 min-w-56 shrink-0">
       <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
         {navItems.map((item, index) => {
           const isActive = state.activeSection === item.value;
@@ -52,18 +56,33 @@ const SettingsSidebar = ({
                   : "text-gray-600 hover:bg-gray-50"
               } disabled:cursor-not-allowed disabled:opacity-70`}
             >
-              {item.label}
+              <span className="flex items-center gap-2">
+                <span className="material-icons text-lg">{item.icon}</span>
+                {item.label}
+              </span>
             </button>
           );
         })}
-        <button
-          type="button"
-          onClick={actions.logout}
-          className="mt-6 w-full rounded-md px-3 py-2 text-left text-sm font-semibold text-red-700 hover:bg-red-50"
-        >
-          Log out
-        </button>
+        <div className="my-4 border-t border-gray-200" />
+        <div className="flex items-center justify-center">
+          <button
+            type="button"
+            onClick={() => setShowLogoutConfirm(true)}
+            className="w-full rounded-md px-3 py-2 text-center text-sm font-semibold text-red-700 hover:bg-red-50"
+          >
+            Log out
+          </button>
+        </div>
       </div>
+      <ConfirmationModal
+        isOpen={showLogoutConfirm}
+        onClose={() => setShowLogoutConfirm(false)}
+        onConfirm={actions.logout}
+        title="Log out?"
+        message="You will be signed out of your account."
+        confirmText="Log out"
+        cancelText="Cancel"
+      />
     </aside>
   );
 };

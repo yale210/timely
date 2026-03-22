@@ -1,7 +1,9 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import moment from "moment";
 import * as taskService from "@/services/taskService";
-import type { Task } from "@/types";
+import * as eventService from "@/services/eventService";
+import { getWeeklySummary } from "@/services/statsService";
+import type { Event, Task, WeeklyStats } from "@/types";
 
 interface DashboardSections {
   todayTasks: Task[];
@@ -17,16 +19,20 @@ interface DashboardCardValues {
 
 interface DashboardState {
   tasks: Task[];
+  events: Event[];
+  weeklyStats: WeeklyStats | null;
   sections: DashboardSections;
   cardValues: DashboardCardValues;
 }
 
 interface DashboardLoading {
   tasks: boolean;
+  summary: boolean;
 }
 
 interface DashboardError {
   tasks: string | null;
+  summary: string | null;
 }
 
 interface DashboardActions {
@@ -49,22 +55,40 @@ export interface UseDashboardReturn {
  */
 export const useDashboard = (): UseDashboardReturn => {
   const [tasks, setTasks] = useState<Task[]>([]);
+  const [events, setEvents] = useState<Event[]>([]);
+  const [weeklyStats, setWeeklyStats] = useState<WeeklyStats | null>(null);
   const [isTasksLoading, setIsTasksLoading] = useState(true);
+  const [isSummaryLoading, setIsSummaryLoading] = useState(true);
   const [taskError, setTaskError] = useState<string | null>(null);
+  const [summaryError, setSummaryError] = useState<string | null>(null);
 
   const refresh = useCallback(async () => {
     setIsTasksLoading(true);
+    setIsSummaryLoading(true);
 
     try {
-      const nextTasks = await taskService.getTasks();
+      const startOfWeek = moment().startOf("isoWeek").format("YYYY-MM-DD");
+      const endOfWeek = moment().endOf("isoWeek").format("YYYY-MM-DD");
+      const [nextTasks, nextEvents, nextStats] = await Promise.all([
+        taskService.getTasks(),
+        eventService.getEvents({ start_date: startOfWeek, end_date: endOfWeek }),
+        getWeeklySummary(startOfWeek),
+      ]);
       setTasks(nextTasks);
+      setEvents(nextEvents);
+      setWeeklyStats(nextStats);
       setTaskError(null);
+      setSummaryError(null);
     } catch (error) {
       console.error(error);
       setTasks([]);
+      setEvents([]);
       setTaskError("Failed to load dashboard tasks.");
+      setWeeklyStats(null);
+      setSummaryError("Failed to load weekly summary.");
     } finally {
       setIsTasksLoading(false);
+      setIsSummaryLoading(false);
     }
   }, []);
 
@@ -109,17 +133,22 @@ export const useDashboard = (): UseDashboardReturn => {
   return {
     state: {
       tasks,
+      events,
+      weeklyStats,
       sections,
       cardValues,
     },
     loading: {
       tasks: isTasksLoading,
+      summary: isSummaryLoading,
     },
     error: {
       tasks: taskError,
+      summary: summaryError,
     },
     actions: {
       refresh,
     },
   };
 };
+

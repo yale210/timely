@@ -1,49 +1,101 @@
-
+import type { RefObject } from "react";
+import moment from "moment";
 import { Views } from "react-big-calendar";
 import type { UseCalendarReturn } from "@/hooks/calendar/useCalendar";
 
 interface CalendarToolbarProps {
-  state: Pick<UseCalendarReturn["state"], "view" | "currentLabel">;
-  loading: Pick<UseCalendarReturn["loading"], "scheduling" | "unscheduling" | "exporting" | "importing">;
+  headerRef: RefObject<HTMLElement | null>;
+  calendarHeaderTopClass: string;
+  state: Pick<
+    UseCalendarReturn["state"],
+    "view" | "date" | "currentLabel" | "dateStripDays" | "timeGutterWidth" | "isRescheduling"
+  >;
   actions: Pick<
     UseCalendarReturn["actions"],
-    "setView" | "goToToday" | "goToPrevious" | "goToNext" | "scheduleTasks" | "unscheduleTasks" | "exportEvents" | "importEvents"
+    "setView" | "goToToday" | "goToPrevious" | "goToNext" | "rescheduleTasks"
   >;
 }
 
 /**
- * Renders the calendar toolbar controls.
+ * Renders the calendar header controls and date strip.
  * @param props - Toolbar props.
+ * @param props.headerRef - Ref to measure header height.
+ * @param props.calendarHeaderTopClass - Top offset class for fixed header.
  * @param props.state - Toolbar state values.
- * @param props.loading - Toolbar loading values.
  * @param props.actions - Toolbar action callbacks.
  * @returns The calendar toolbar.
  */
 const CalendarToolbar = ({
+  headerRef,
+  calendarHeaderTopClass,
   state,
-  loading,
   actions,
 }: CalendarToolbarProps) => (
-  <header className="z-10 flex-none border-b border-gray-200 bg-white p-6 shadow-sm">
-    <div className="flex flex-col items-center justify-between gap-4 md:flex-row">
+  <header
+    ref={headerRef}
+    className={`calendar-header fixed left-0 right-0 z-20 flex-none border-b border-gray-200 bg-white pt-2 pb-0 shadow-sm ${calendarHeaderTopClass}`}
+  >
+    <div className="flex flex-col md:flex-row justify-between items-center gap-2 px-4">
       <div className="flex items-center gap-6">
         <h1 className="text-2xl font-bold tracking-tight text-black">
           Calendar
         </h1>
-        <div className="hidden rounded-lg bg-gray-100 p-1 md:flex">
-          {[
-            { label: "Month", value: Views.MONTH },
-            { label: "Week", value: Views.WEEK },
-            { label: "Day", value: Views.DAY },
-            { label: "Agenda", value: Views.AGENDA },
-          ].map((item) => (
+        <div className="flex items-center bg-white border border-gray-200 rounded-lg overflow-hidden shadow-sm">
+          <button
+            type="button"
+            onClick={actions.goToPrevious}
+            className="flex h-8 w-8 items-center justify-center hover:bg-blue-100 text-gray-500 transition-colors border-r border-gray-200"
+          >
+            <span className="material-icons text-xl">chevron_left</span>
+          </button>
+          <button
+            type="button"
+            onClick={actions.goToToday}
+            className="hidden h-8 items-center justify-center px-4 text-sm font-medium text-black hover:bg-blue-100 transition-colors sm:flex"
+          >
+            Today
+          </button>
+          <button
+            type="button"
+            onClick={actions.goToNext}
+            className="flex h-8 w-8 items-center justify-center hover:bg-blue-100 text-gray-500 transition-colors border-l border-gray-200"
+          >
+            <span className="material-icons text-xl">chevron_right</span>
+          </button>
+        </div>
+      </div>
+      <div className="flex items-center gap-4">
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => { void actions.rescheduleTasks(); }}
+            disabled={state.isRescheduling}
+            className={`px-4 py-2 rounded-lg text-sm font-medium flex items-center shadow-sm transition-colors ${
+              state.isRescheduling
+                ? "bg-gray-200 text-gray-500 cursor-not-allowed"
+                : "bg-primary text-white hover:bg-blue-300"
+            }`}
+          >
+            <span className="material-icons text-lg mr-1.5">update</span>
+            {state.isRescheduling ? "Rescheduling..." : "Reschedule"}
+          </button>
+        </div>
+        <div className="hidden md:flex bg-gray-100 p-1 rounded-lg">
+          {(
+            [
+              { label: "Month", value: Views.MONTH },
+              { label: "Week", value: Views.WEEK },
+              { label: "Day", value: Views.DAY },
+              { label: "Agenda", value: Views.AGENDA },
+            ] as const
+          ).map((item) => (
             <button
               key={item.value}
               type="button"
               onClick={() => actions.setView(item.value)}
-              className={`rounded-md px-3 py-1 text-sm font-medium transition-all ${
+              className={`px-3 py-1 text-sm font-medium rounded-md transition-all ${
                 state.view === item.value
-                  ? "bg-white text-black shadow-sm"
+                  ? "bg-white shadow-sm text-black"
                   : "text-gray-500 hover:bg-blue-100 hover:text-black"
               }`}
             >
@@ -51,117 +103,42 @@ const CalendarToolbar = ({
             </button>
           ))}
         </div>
-      </div>
-      <div className="flex items-center gap-4">
-        <div className="flex items-center gap-2">
-          <button
-            type="button"
-            onClick={() => {
-              void actions.scheduleTasks();
-            }}
-            disabled={loading.scheduling || loading.unscheduling}
-            className={`flex items-center rounded-lg px-4 py-2 text-sm font-medium shadow-sm transition-colors ${
-              loading.scheduling || loading.unscheduling
-                ? "cursor-not-allowed bg-gray-200 text-gray-500"
-                : "bg-primary text-white hover:bg-blue-300"
-            }`}
-          >
-            <span className="material-icons mr-1.5 text-lg">auto_awesome</span>
-            {loading.scheduling ? "Scheduling..." : "Schedule Tasks"}
-          </button>
-          <button
-            type="button"
-            onClick={() => {
-              void actions.unscheduleTasks();
-            }}
-            disabled={loading.scheduling || loading.unscheduling}
-            className={`flex items-center rounded-lg px-4 py-2 text-sm font-medium shadow-sm transition-colors ${
-              loading.scheduling || loading.unscheduling
-                ? "cursor-not-allowed bg-gray-200 text-gray-500"
-                : "border border-gray-300 bg-white text-gray-700 hover:bg-gray-50"
-            }`}
-          >
-            <span className="material-icons mr-1.5 text-lg">event_busy</span>
-            {loading.unscheduling ? "Unscheduling..." : "Unschedule Tasks"}
-          </button>
-          //
-          <button
-            type="button"
-            onClick={() => {
-              void actions.exportEvents();
-            }}
-            disabled={loading.exporting}
-            className={`flex items-center rounded-lg px-4 py-2 text-sm font-medium shadow-sm transition-colors ${
-              loading.exporting
-                ? "cursor-not-allowed bg-gray-200 text-gray-500"
-                : "border border-gray-300 bg-white text-gray-700 hover:bg-gray-50"
-            }`}
-          >
-            <span className="material-icons mr-1.5 text-lg">event_busy</span>
-            {loading.exporting ? "Exporting..." : "Export Events"}
-          </button>
-
-
-          //
-    
-
-          <button
-            type="button"
-            onClick={() => {
-              const input = document.createElement("input")
-              input.type = "file"
-              input.onchange = (event) => {
-                const target = event.target
-                
-                if (target instanceof HTMLInputElement && target.files) {
-                  const file = target.files[0]
-                  actions.importEvents(file)
-                }
-              }
-              input.click()
-            }}
-            
-            className={`flex items-center rounded-lg px-4 py-2 text-sm font-medium shadow-sm transition-colors ${
-              loading.importing
-                ? "cursor-not-allowed bg-gray-200 text-gray-500"
-                : "border border-gray-300 bg-white text-gray-700 hover:bg-gray-50"
-            }`}
-          >
-            <span className="material-icons mr-1.5 text-lg">event_busy</span>
-            {loading.importing ? "Importing..." : "Import Events"}
-          </button>
-
-
-          //
-        </div>
-        <div className="flex items-center overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm">
-          <button
-            type="button"
-            onClick={actions.goToPrevious}
-            className="border-r border-gray-200 p-2 text-gray-500 transition-colors hover:bg-blue-100"
-          >
-            <span className="material-icons text-xl">chevron_left</span>
-          </button>
-          <button
-            type="button"
-            onClick={actions.goToToday}
-            className="px-4 py-2 font-medium text-black transition-colors hover:bg-blue-100"
-          >
-            Today
-          </button>
-          <button
-            type="button"
-            onClick={actions.goToNext}
-            className="border-l border-gray-200 p-2 text-gray-500 transition-colors hover:bg-blue-100"
-          >
-            <span className="material-icons text-xl">chevron_right</span>
-          </button>
-        </div>
-        <h2 className="w-48 text-center text-xl font-semibold uppercase tracking-wide text-black">
+        <h2 className="text-xl font-semibold w-48 text-center uppercase tracking-wide text-black">
           {state.currentLabel}
         </h2>
       </div>
     </div>
+    {state.dateStripDays.length > 0 && (
+      <div
+        className="mt-2 grid border-t border-gray-200 bg-white"
+        style={{
+          gridTemplateColumns: `${state.timeGutterWidth}px repeat(${state.dateStripDays.length}, minmax(0, 1fr))`,
+        }}
+      >
+        <div className="border-r border-gray-200 bg-gray-50" />
+        {state.dateStripDays.map((dayMoment) => {
+          const isToday = dayMoment.isSame(moment(), "day");
+          const isActiveDay = state.view === Views.DAY && dayMoment.isSame(moment(state.date), "day");
+          return (
+            <div
+              key={dayMoment.format("YYYY-MM-DD")}
+              className={`border-l border-gray-200 px-3 py-2 text-center ${
+                isToday || isActiveDay
+                  ? "calendar-day-header-highlight text-black"
+                  : "bg-white text-gray-700"
+              }`}
+            >
+              <p className="text-xs font-medium uppercase tracking-wide text-gray-500">
+                {dayMoment.format("ddd")}
+              </p>
+              <p className="text-sm font-semibold">
+                {dayMoment.format("D MMM")}
+              </p>
+            </div>
+          );
+        })}
+      </div>
+    )}
   </header>
 );
 

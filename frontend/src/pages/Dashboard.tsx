@@ -12,9 +12,9 @@ export default function Dashboard() {
   return (
     <AppLayout>
       <DashboardOverview
-        todayTaskTitles={state.cardValues.today}
-        pendingTaskTitles={state.cardValues.pending}
-        overdueTaskTitles={state.cardValues.overdue}
+        tasks={state.tasks}
+        events={state.events}
+        weeklyStats={state.weeklyStats}
       />
     </AppLayout>
   );

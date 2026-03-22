@@ -66,8 +66,17 @@ export const CategoryColourPicker = ({
       style={{ top: position.top, left: position.left }}
       onMouseDown={(event) => event.stopPropagation()}
     >
-      <div className="px-3 py-2 text-xs font-semibold text-gray-500 uppercase">
-        Custom Colour
+      <div className="flex items-center justify-between px-3 py-2">
+        <div className="text-xs font-semibold text-gray-500 uppercase">
+          Custom Colour
+        </div>
+        <button
+          type="button"
+          onClick={onSelect}
+          className="inline-flex items-center rounded-md border border-emerald-200 bg-emerald-50 px-2 py-1 text-[11px] font-semibold text-emerald-700 hover:bg-emerald-100"
+        >
+          Select
+        </button>
       </div>
       <div className="px-3 pb-3">
         <div className="rounded-lg border border-gray-200 bg-white p-2 overflow-hidden">
@@ -100,16 +109,6 @@ export const CategoryColourPicker = ({
         {colourError && (
           <div className="mt-1 text-[11px] text-red-600">{colourError}</div>
         )}
-      </div>
-      <div className="px-3 pb-3 flex justify-end">
-        <button
-          type="button"
-          onClick={onSelect}
-          className="inline-flex items-center gap-1 rounded-md border border-gray-200 bg-white px-2 py-1.5 text-xs font-semibold text-gray-700 hover:bg-gray-50"
-        >
-          <span className="material-icons text-[14px]">check</span>
-          Select
-        </button>
       </div>
     </div>,
     document.body,

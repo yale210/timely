@@ -79,6 +79,7 @@ class UnscheduleTasksAPIView(APIView):
         updated = (
             Task.objects.filter(user=request.user)
             .exclude(allocation=[])
+            .filter(completed=False, locked=False)
             .update(allocation=[], total_task_allocations=0, start_time=F("deadline"))
         )
         return Response(

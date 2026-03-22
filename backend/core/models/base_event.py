@@ -7,6 +7,7 @@ class BaseEventModel(models.Model):
     title = models.CharField(max_length=500, default="Untitled Event")
     description = models.TextField(blank=True)
     location = models.CharField(max_length=255, blank=True)
+    colour = models.CharField(max_length=7, blank=True, null=True)
     start_time = models.DateTimeField(default=now)
     end_time = models.DateTimeField(default=now)
     last_edited = models.DateTimeField(default=now)

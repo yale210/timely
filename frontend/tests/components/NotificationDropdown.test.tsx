@@ -2,7 +2,7 @@ import { render, screen, fireEvent } from '@testing-library/react';
 import { describe, it, expect, vi } from 'vitest';
 import { NotificationDropdown } from '@/components/notifications/NotificationDropdown';
 import { BrowserRouter } from 'react-router-dom';
-import { NotificationType } from '@/types/notification';
+import { NotificationType } from '@/types';
 
 const mockNotifications = [
   {
@@ -36,8 +36,6 @@ describe('NotificationDropdown', () => {
         <NotificationDropdown 
           notifications={[]} 
           unreadCount={0} 
-          onMarkAllRead={() => undefined} 
-          onDeleteAll={() => undefined}
           onItemClick={() => undefined} 
           onToggleRead={() => undefined}
           onDeleteItem={() => undefined}
@@ -53,8 +51,6 @@ describe('NotificationDropdown', () => {
         <NotificationDropdown 
           notifications={mockNotifications} 
           unreadCount={1} 
-          onMarkAllRead={() => undefined} 
-          onDeleteAll={() => undefined}
           onItemClick={() => undefined} 
           onToggleRead={() => undefined}
           onDeleteItem={() => undefined}
@@ -69,28 +65,24 @@ describe('NotificationDropdown', () => {
     expect(screen.getByText('Test Notification 2')).toBeDefined();
   });
 
-  it('calls onMarkAllRead when button is clicked', async () => {
-    const handleMarkAllRead = vi.fn();
+  it('calls onDeleteItem when delete button is clicked', async () => {
+    const handleDeleteItem = vi.fn();
     render(
       <BrowserRouter>
         <NotificationDropdown 
           notifications={mockNotifications} 
           unreadCount={1} 
-          onMarkAllRead={handleMarkAllRead} 
-          onDeleteAll={() => undefined}
           onItemClick={() => undefined} 
           onToggleRead={() => undefined}
-          onDeleteItem={() => undefined}
+          onDeleteItem={handleDeleteItem}
         />
       </BrowserRouter>
     );
     
     fireEvent.click(screen.getByLabelText('View notifications'));
-    const markAllReadBtn = await screen.findByLabelText('Mark all as read');
-    fireEvent.click(markAllReadBtn);
-    fireEvent.click(await screen.findByText('Mark all'));
-    
-    expect(handleMarkAllRead).toHaveBeenCalledTimes(1);
+    const deleteButtons = await screen.findAllByLabelText('Delete notification');
+    fireEvent.click(deleteButtons[0]);
+    expect(handleDeleteItem).toHaveBeenCalledTimes(1);
   });
 
   it('shows empty state when no notifications', async () => {
@@ -99,8 +91,6 @@ describe('NotificationDropdown', () => {
         <NotificationDropdown 
           notifications={[]} 
           unreadCount={0} 
-          onMarkAllRead={() => undefined} 
-          onDeleteAll={() => undefined}
           onItemClick={() => undefined} 
           onToggleRead={() => undefined}
           onDeleteItem={() => undefined}
@@ -112,3 +102,4 @@ describe('NotificationDropdown', () => {
     expect(await screen.findByText('No notifications')).toBeDefined();
   });
 });
+

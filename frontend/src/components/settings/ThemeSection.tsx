@@ -7,7 +7,7 @@ interface ThemeSectionProps {
 
 const ThemeSection = ({ onThemeChange, onFontChange }: ThemeSectionProps) => (
   <>
-    <h2 className="text-lg font-semibold">Theme</h2>
+    <h2 className="text-lg font-semibold">Appearance</h2>
     <p className="mt-2 text-sm text-gray-600">
       Choose a theme and font for your dashboard.
     </p>

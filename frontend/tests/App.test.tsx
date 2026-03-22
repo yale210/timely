@@ -11,12 +11,12 @@ vi.mock("@/pages/index", () => ({
   Logout: () => <div>Logout Page</div>,
   CalendarPage: () => <div>Calendar Page</div>,
   TaskList: () => <div>Task List Page</div>,
-  EventList: () => <div>Event List Page</div>,
   Gradebook: () => <div>Gradebook Page</div>,
   Dashboard: () => <div>Dashboard Page</div>,
-  WeeklySummaries: () => <div>Weekly Summaries Page</div>,
   Settings: () => <div>Settings Page</div>,
-  Themes: () => <div>Themes Page</div>,
+  Friends: () => <div>Friends Page</div>,
+  ProfilePage: () => <div>Profile Page</div>,
+  Leaderboard: () => <div>Leaderboard Page</div>
 }));
 
 vi.mock("@/pages/Notification/Notifications", () => ({
@@ -61,12 +61,12 @@ describe("App Component", () => {
     delete document.documentElement.dataset.font;
   });
 
-  it("should render and apply saved theme and font from localStorage", () => {
+  it("should render and apply saved theme and font from localStorage on protected routes", () => {
     localStorage.setItem("theme", "dark");
     localStorage.setItem("font", "open-dyslexic");
 
     render(
-      <MemoryRouter initialEntries={["/"]}>
+      <MemoryRouter initialEntries={["/dashboard"]}>
         <App />
       </MemoryRouter>
     );
@@ -75,15 +75,15 @@ describe("App Component", () => {
     expect(document.documentElement.dataset.font).toBe("open-dyslexic");
   });
 
-  it("should render without saved theme or font", () => {
+  it("should apply default theme and font on public routes", () => {
     render(
       <MemoryRouter initialEntries={["/"]}>
         <App />
       </MemoryRouter>
     );
 
-    expect(document.documentElement.dataset.theme).toBeUndefined();
-    expect(document.documentElement.dataset.font).toBeUndefined();
+    expect(document.documentElement.dataset.theme).toBe("light");
+    expect(document.documentElement.dataset.font).toBe("poppins");
   });
 
   it("should render Home page at root path", () => {
@@ -140,15 +140,6 @@ describe("App Component", () => {
     expect(getByText("Task List Page")).toBeDefined();
   });
 
-  it("should render Event List page", () => {
-    const { getByText } = render(
-      <MemoryRouter initialEntries={["/events"]}>
-        <App />
-      </MemoryRouter>
-    );
-    expect(getByText("Event List Page")).toBeDefined();
-  });
-
   it("should render Gradebook page", () => {
     const { getByText } = render(
       <MemoryRouter initialEntries={["/gradebook"]}>
@@ -165,15 +156,6 @@ describe("App Component", () => {
       </MemoryRouter>
     );
     expect(getByText("Dashboard Page")).toBeDefined();
-  });
-
-  it("should render Weekly Summaries page", () => {
-    const { getByText } = render(
-      <MemoryRouter initialEntries={["/weekly-summaries"]}>
-        <App />
-      </MemoryRouter>
-    );
-    expect(getByText("Weekly Summaries Page")).toBeDefined();
   });
 
   it("should render Notifications page", () => {
@@ -230,12 +212,4 @@ describe("App Component", () => {
     expect(getByText("Settings Page")).toBeDefined();
   });
 
-  it("should render Themes page", () => {
-    const { getByText } = render(
-      <MemoryRouter initialEntries={["/themes"]}>
-        <App />
-      </MemoryRouter>
-    );
-    expect(getByText("Themes Page")).toBeDefined();
-  });
 });

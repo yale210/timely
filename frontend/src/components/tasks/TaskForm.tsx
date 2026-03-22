@@ -1,5 +1,6 @@
-import { useState, useEffect, type FormEvent } from "react";
-import { CategoryMultiSelect } from "@/components";
+import { useState, useEffect, useRef, type FormEvent, type MouseEvent as ReactMouseEvent } from "react";
+import { CategoryColourPicker, CategoryMultiSelect, Tooltip } from "@/components";
+import { getOverrideColour } from "@/utils/colorUtils";
 import { type Category, type Task, type TaskSubmission } from "@/types";
 
 /**
@@ -12,10 +13,12 @@ interface NormalisedTaskSubmission {
   description: string;
   start_time: string;
   deadline: string;
+  colour: string;
   categories: number[];
   importance: number;
   estimated_minutes: number;
   completed: boolean;
+  allow_split: boolean;
 }
 
 const normaliseTaskSubmission = (
@@ -25,10 +28,12 @@ const normaliseTaskSubmission = (
   description: submission.description ?? "",
   start_time: submission.start_time ?? "",
   deadline: submission.deadline ?? "",
+  colour: submission.colour ?? "",
   categories: [...(submission.categories ?? [])].sort((a, b) => a - b),
   importance: Number(submission.importance ?? 5),
-  estimated_minutes: Number(submission.estimated_minutes ?? 30),
+  estimated_minutes: Number(submission.estimated_minutes ?? 60),
   completed: Boolean(submission.completed),
+  allow_split: Boolean(submission.allow_split),
 });
 
 const isTaskSubmissionEqual = (
@@ -105,7 +110,7 @@ const TaskForm = ({
   const [deadline, setDeadline] = useState(
     initialData?.deadline
       ? new Date(initialData.deadline).toISOString().split("T")[0]
-      : new Date().toISOString().split("T")[0]
+      : ""
   );
   const [deadlineTime, setDeadlineTime] = useState(
     initialData?.deadline
@@ -114,15 +119,54 @@ const TaskForm = ({
           minute: "2-digit",
           hour12: false,
         })
-      : "11:00"
+      : ""
   );
+  const [hasSubmitted, setHasSubmitted] = useState(false);
+  const [hasTouchedTime, setHasTouchedTime] = useState(false);
   const [selectedCategories, setSelectedCategories] = useState<number[]>(
     initialData?.categories?.map((c) => (typeof c === "object" ? c.id : c)) ?? []
   );
   const [importance, setImportance] = useState(initialData?.importance ?? 5);
-  const [estimatedMinutes, setEstimatedMinutes] = useState(
-    initialData?.estimated_minutes ?? 30
+  const [allowSplit, setAllowSplit] = useState(initialData?.allow_split ?? false);
+  const [autoSchedule, setAutoSchedule] = useState(
+    initialData?.locked ? false : true,
   );
+  const defaultColour = "#3b82f6";
+  const [colour, setColour] = useState(initialData?.colour ?? defaultColour);
+  const [showPickerMenu, setShowPickerMenu] = useState(false);
+  const [pickerPosition, setPickerPosition] = useState<{ top: number; left: number } | null>(null);
+  const pickerRef = useRef<HTMLDivElement | null>(null);
+  const [colourInput, setColourInput] = useState(colour);
+  const [colourError, setColourError] = useState<string | null>(null);
+  const [estimatedMinutes, setEstimatedMinutes] = useState<number | "">(
+    initialData?.estimated_minutes ?? ""
+  );
+  const selectedCategoryObjects = categories.filter((category) =>
+    selectedCategories.includes(category.id),
+  );
+  const overrideColour = getOverrideColour(selectedCategoryObjects);
+  const isColourLocked = Boolean(overrideColour);
+  const displayColour = overrideColour ?? colour;
+  const handleColourPickerToggle = (event: ReactMouseEvent<HTMLButtonElement>) => {
+    if (isColourLocked) return;
+    const rect = event.currentTarget.getBoundingClientRect();
+    setPickerPosition({ top: rect.bottom + 8, left: rect.right - 272 });
+    setColourInput(displayColour);
+    setColourError(null);
+    setShowPickerMenu((prev) => !prev);
+  };
+  const parseColourInput = (value: string): string | null => {
+    const trimmed = value.trim().toLowerCase();
+    if (trimmed.startsWith("#") && trimmed.length === 7) {
+      return trimmed;
+    }
+    const match = /^rgb\(\s*(\d{1,3})\s*,\s*(\d{1,3})\s*,\s*(\d{1,3})\s*\)$/
+      .exec(trimmed);
+    if (!match) return null;
+    const [r, g, b] = match.slice(1).map((v) => Math.min(255, Math.max(0, Number(v))));
+    const toHex = (n: number) => n.toString(16).padStart(2, "0");
+    return `#${toHex(r)}${toHex(g)}${toHex(b)}`;
+  };
 
   // Derived Validation
   const startDateTime = new Date(`${date}T${startTime}`);
@@ -131,9 +175,10 @@ const TaskForm = ({
   const isEndInvalid = Number.isNaN(endDateTime.getTime());
   const isTimeInvalid = isStartInvalid || isEndInvalid || startDateTime >= endDateTime;
   const isImportanceInvalid = importance < 1 || importance > 10 || isNaN(importance);
+  const shouldValidateTime = hasSubmitted || hasTouchedTime;
   
   const errors: Record<string, boolean> = {};
-  if (isTimeInvalid) {
+  if (shouldValidateTime && isTimeInvalid) {
     errors.start = true;
     errors.deadline = true;
   }
@@ -141,7 +186,7 @@ const TaskForm = ({
     errors.importance = true;
   }
   
-  const hasErrors = Object.keys(errors).length > 0;
+  const hasBlockingErrors = isTimeInvalid || isImportanceInvalid;
 
   const buildSubmission = (): TaskSubmission => ({
     title,
@@ -150,9 +195,49 @@ const TaskForm = ({
     deadline: toIsoOrEmpty(endDateTime),
     categories: selectedCategories,
     importance,
-    estimated_minutes: estimatedMinutes,
+    estimated_minutes: Number(estimatedMinutes || 0),
+    colour,
+    locked: !autoSchedule,
+    allow_split: allowSplit,
     completed: initialData?.completed ?? false,
   });
+
+  useEffect(() => {
+    if (!showPickerMenu) return;
+    const handleOutsideClick = (event: MouseEvent) => {
+      if (pickerRef.current?.contains(event.target as Node)) return;
+      setShowPickerMenu(false);
+    };
+    const raf = window.requestAnimationFrame(() => {
+      if (!pickerRef.current || !pickerPosition) return;
+      const rect = pickerRef.current.getBoundingClientRect();
+      const padding = 8;
+      let nextLeft = pickerPosition.left;
+      let nextTop = pickerPosition.top;
+
+      if (rect.right > window.innerWidth - padding) {
+        nextLeft = Math.max(padding, window.innerWidth - rect.width - padding);
+      }
+      if (rect.left < padding) {
+        nextLeft = padding;
+      }
+      if (rect.bottom > window.innerHeight - padding) {
+        nextTop = Math.max(padding, window.innerHeight - rect.height - padding);
+      }
+      if (rect.top < padding) {
+        nextTop = padding;
+      }
+
+      if (nextLeft !== pickerPosition.left || nextTop !== pickerPosition.top) {
+        setPickerPosition({ left: nextLeft, top: nextTop });
+      }
+    });
+    window.addEventListener("mousedown", handleOutsideClick);
+    return () => {
+      window.cancelAnimationFrame(raf);
+      window.removeEventListener("mousedown", handleOutsideClick);
+    };
+  }, [pickerPosition, showPickerMenu]);
 
   const normalisedCurrentSubmission = normaliseTaskSubmission(buildSubmission());
   const [initialSubmission] = useState<NormalisedTaskSubmission>(
@@ -165,7 +250,8 @@ const TaskForm = ({
 
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
-    if (hasErrors || !hasChanges) return;
+    setHasSubmitted(true);
+    if (hasBlockingErrors || !hasChanges) return;
 
     const data = buildSubmission();
     onSubmit(data);
@@ -178,13 +264,38 @@ const TaskForm = ({
     <form onSubmit={handleSubmit} className="flex flex-col h-full bg-white text-black">
       <div className="grow overflow-y-auto p-6 space-y-6">
         <div>
-          <label htmlFor="task-title" className="block text-sm font-medium text-gray-700 mb-2">
-            Title
-          </label>
+          <div className="flex items-center justify-between gap-4 mb-2">
+            <label htmlFor="task-title" className="block text-sm font-medium text-gray-700">
+              Title
+            </label>
+            <div className="flex items-center">
+              {isColourLocked ? (
+                <Tooltip content="Category colour override set. To set a custom colour, uncheck category colour override.">
+                  <button
+                  type="button"
+                  disabled={isColourLocked}
+                onClick={handleColourPickerToggle}
+                className="h-7 w-7 rounded-md border border-gray-300 p-0.5 disabled:cursor-not-allowed"
+                style={{ backgroundColor: isColourLocked ? "#e2e8f0" : displayColour }}
+                aria-label="Task colour"
+                  />
+                </Tooltip>
+              ) : (
+                <button
+                  type="button"
+                  disabled={isColourLocked}
+                  onClick={handleColourPickerToggle}
+                  className="h-7 w-7 rounded-md border border-gray-300 p-0.5 disabled:cursor-not-allowed"
+                  style={{ backgroundColor: isColourLocked ? "#e2e8f0" : displayColour }}
+                  aria-label="Task colour"
+                />
+              )}
+            </div>
+          </div>
           <input
             id="task-title"
             className={baseInputClass}
-            placeholder="e.g., Marketing Sync"
+            placeholder="Task title"
             type="text"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
@@ -197,37 +308,33 @@ const TaskForm = ({
             <label htmlFor="task-start-date" className="block text-sm font-medium text-gray-700 mb-2">
               Start Date
             </label>
-            <div className="relative">
-              <span className="material-icons absolute left-3 top-2.5 text-gray-400 text-lg">
-                calendar_today
-              </span>
-              <input
-                id="task-start-date"
-                className={`${baseInputClass} pl-10 ${errors.start ? errorClass : ""}`}
-                type="date"
-                value={date}
-                onChange={(e) => setDate(e.target.value)}
-                required
-              />
-            </div>
+            <input
+              id="task-start-date"
+              className={`${baseInputClass} text-[17px] ${errors.start ? errorClass : ""}`}
+              type="date"
+              value={date}
+              onChange={(e) => {
+                setHasTouchedTime(true);
+                setDate(e.target.value);
+              }}
+              required
+            />
           </div>
           <div>
             <label htmlFor="task-start-time" className="block text-sm font-medium text-gray-700 mb-2">
               Start Time
             </label>
-            <div className="relative">
-              <span className="material-icons absolute left-3 top-2.5 text-gray-400 text-lg">
-                schedule
-              </span>
-              <input
-                id="task-start-time"
-                className={`${baseInputClass} pl-10 ${errors.start ? errorClass : ""}`}
-                type="time"
-                value={startTime}
-                onChange={(e) => setStartTime(e.target.value)}
-                required
-              />
-            </div>
+            <input
+              id="task-start-time"
+              className={`${baseInputClass} text-[17px] ${errors.start ? errorClass : ""}`}
+              type="time"
+              value={startTime}
+              onChange={(e) => {
+                setHasTouchedTime(true);
+                setStartTime(e.target.value);
+              }}
+              required
+            />
           </div>
         </div>
 
@@ -236,79 +343,39 @@ const TaskForm = ({
             <label htmlFor="task-deadline-date" className="block text-sm font-medium text-gray-700 mb-2">
               Deadline Date
             </label>
-            <div className="relative">
-              <span className="material-icons absolute left-3 top-2.5 text-gray-400 text-lg">
-                event
-              </span>
-              <input
-                id="task-deadline-date"
-                className={`${baseInputClass} pl-10 ${errors.deadline ? errorClass : ""}`}
-                type="date"
-                value={deadline}
-                onChange={(e) => setDeadline(e.target.value)}
-                required
-              />
-            </div>
+            <input
+              id="task-deadline-date"
+              className={`${baseInputClass} text-[17px] ${errors.deadline ? errorClass : ""}`}
+              type="date"
+              value={deadline}
+              onChange={(e) => {
+                setHasTouchedTime(true);
+                setDeadline(e.target.value);
+              }}
+            />
           </div>
           <div>
             <label htmlFor="task-deadline-time" className="block text-sm font-medium text-gray-700 mb-2">
               Deadline Time
             </label>
-            <div className="relative">
-              <span className="material-icons absolute left-3 top-2.5 text-gray-400 text-lg">
-                timer
-              </span>
-              <input
-                id="task-deadline-time"
-                className={`${baseInputClass} pl-10 ${errors.deadline ? errorClass : ""}`}
-                type="time"
-                value={deadlineTime}
-                onChange={(e) => setDeadlineTime(e.target.value)}
-                required
-              />
-            </div>
+            <input
+              id="task-deadline-time"
+              className={`${baseInputClass} text-[17px] ${errors.deadline ? errorClass : ""}`}
+              type="time"
+              value={deadlineTime}
+              onChange={(e) => {
+                setHasTouchedTime(true);
+                setDeadlineTime(e.target.value);
+              }}
+            />
           </div>
         </div>
 
         {errors.deadline && (
           <p className="text-xs text-red-500 -mt-4">
-            Start time must be before the deadline.
+            {deadline ? "Start time must be before the deadline." : "Please set a deadline."}
           </p>
         )}
-
-        <div>
-          <label htmlFor="task-description" className="block text-sm font-medium text-gray-700 mb-2">
-            Description
-          </label>
-          <textarea
-            id="task-description"
-            className={`${baseInputClass} resize-none`}
-            placeholder="Add details..."
-            rows={4}
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-          />
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-3">
-            Category
-          </label>
-          <CategoryMultiSelect
-            categories={categories}
-            selectedIds={selectedCategories}
-            onChange={(nextCategories) => {
-              setSelectedCategories(nextCategories);
-              if (initialData?.id && onCategoryChange) {
-                onCategoryChange(nextCategories);
-              }
-            }}
-            onCreateCategory={onCreateCategory}
-            onUpdateCategory={onUpdateCategory}
-            onDeleteCategory={onDeleteCategory}
-            variant="task"
-          />
-        </div>
 
         <div className="grid grid-cols-2 gap-4">
           <div>
@@ -335,10 +402,93 @@ const TaskForm = ({
               type="number"
               min="1"
               value={estimatedMinutes}
-              onChange={(e) => setEstimatedMinutes(parseInt(e.target.value))}
+              onChange={(e) => {
+                const nextValue = e.target.value;
+                setEstimatedMinutes(nextValue ? parseInt(nextValue) : "");
+              }}
+              required
             />
           </div>
         </div>
+
+        <div className="flex flex-col gap-4">
+          <div className="flex items-center justify-between gap-4">
+            <label htmlFor="task-auto-schedule" className="text-sm font-medium text-gray-700">
+              Auto-schedule
+            </label>
+            <button
+              id="task-auto-schedule"
+              type="button"
+              onClick={() => setAutoSchedule((prev) => !prev)}
+              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                autoSchedule ? "bg-primary" : "bg-gray-300"
+              }`}
+              aria-pressed={autoSchedule}
+            >
+              <span
+                className={`inline-block h-5 w-5 transform rounded-full bg-white shadow-sm transition-transform ${
+                  autoSchedule ? "translate-x-5" : "translate-x-1"
+                }`}
+              />
+            </button>
+          </div>
+
+          <div className="flex items-center justify-between gap-4">
+            <label htmlFor="task-allow-split" className="text-sm font-medium text-gray-700">
+              Splittable
+            </label>
+            <button
+              id="task-allow-split"
+              type="button"
+              onClick={() => setAllowSplit((prev) => !prev)}
+              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                allowSplit ? "bg-primary" : "bg-gray-300"
+              }`}
+              aria-pressed={allowSplit}
+            >
+              <span
+                className={`inline-block h-5 w-5 transform rounded-full bg-white shadow-sm transition-transform ${
+                  allowSplit ? "translate-x-5" : "translate-x-1"
+                }`}
+              />
+            </button>
+          </div>
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-3">
+            Category <span className="text-gray-400">(optional)</span>
+          </label>
+          <CategoryMultiSelect
+            categories={categories}
+            selectedIds={selectedCategories}
+            onChange={(nextCategories) => {
+              setSelectedCategories(nextCategories);
+              if (initialData?.id && onCategoryChange) {
+                onCategoryChange(nextCategories);
+              }
+            }}
+            onCreateCategory={onCreateCategory}
+            onUpdateCategory={onUpdateCategory}
+            onDeleteCategory={onDeleteCategory}
+            variant="task"
+          />
+        </div>
+
+        <div>
+          <label htmlFor="task-description" className="block text-sm font-medium text-gray-700 mb-2">
+            Description <span className="text-gray-400">(optional)</span>
+          </label>
+          <textarea
+            id="task-description"
+            className={`${baseInputClass} resize-none`}
+            placeholder=""
+            rows={4}
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+          />
+        </div>
+
       </div>
 
       <div className="p-6 border-t border-gray-200 flex gap-3 bg-gray-50">
@@ -351,9 +501,9 @@ const TaskForm = ({
         </button>
         <button
           type="submit"
-          disabled={hasErrors || !hasChanges}
+          disabled={!hasChanges}
           className={`flex-1 px-4 py-2 text-white font-medium rounded-lg shadow-md transition-all flex items-center justify-center gap-2 ${
-            hasErrors || !hasChanges
+            !hasChanges
               ? "bg-gray-400 cursor-not-allowed"
               : "bg-primary hover:bg-blue-300 hover:shadow-lg"
           }`}
@@ -362,8 +512,37 @@ const TaskForm = ({
           Save Task
         </button>
       </div>
+
+      <CategoryColourPicker
+        isOpen={showPickerMenu}
+        position={pickerPosition}
+        pickerRef={pickerRef}
+        colourInput={colourInput}
+        colourError={colourError}
+        currentColour={displayColour}
+        onColourInputChange={setColourInput}
+        onColourErrorChange={setColourError}
+        onCommitInput={() => {
+          const parsed = parseColourInput(colourInput);
+          if (!parsed) {
+            setColourError("Enter a valid hex or rgb colour.");
+            return;
+          }
+          setColourInput(parsed);
+        }}
+        onSelect={() => {
+          const parsed = parseColourInput(colourInput);
+          if (!parsed) {
+            setColourError("Enter a valid hex or rgb colour.");
+            return;
+          }
+          setColour(parsed);
+          setShowPickerMenu(false);
+        }}
+      />
     </form>
   );
 };
 
 export default TaskForm;
+

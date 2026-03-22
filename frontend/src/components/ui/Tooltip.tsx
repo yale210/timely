@@ -18,16 +18,18 @@ const Tooltip = ({ content, children }: TooltipProps) => {
     if (!triggerRef.current || !tooltipRef.current) {
       return;
     }
+    // Wait one frame so the tooltip can measure its rendered size before we clamp it to the viewport.
     const raf = window.requestAnimationFrame(() => {
       if (!triggerRef.current || !tooltipRef.current) return;
       const child = triggerRef.current.firstElementChild as HTMLElement | null;
       const rect = (child ?? triggerRef.current).getBoundingClientRect();
       const tooltipRect = tooltipRef.current.getBoundingClientRect();
       const padding = 8;
-      let left = rect.left + rect.width / 2 - tooltipRect.width / 2;
-      const gap = 2;
-      let top = rect.bottom - tooltipRect.height - gap;
+      const gap = 8;
+      let left = rect.left - tooltipRect.width - gap;
+      let top = rect.top + rect.height / 2 - tooltipRect.height / 2;
 
+      // Keep the tooltip inside the viewport when the trigger sits near an edge.
       left = Math.max(padding, Math.min(left, window.innerWidth - tooltipRect.width - padding));
       top = Math.max(padding, Math.min(top, window.innerHeight - tooltipRect.height - padding));
 
@@ -55,11 +57,11 @@ const Tooltip = ({ content, children }: TooltipProps) => {
       {isOpen && (
         <span
           ref={tooltipRef}
-          className="fixed z-[1000] max-w-60 whitespace-normal break-words rounded-md border px-2 py-1 text-[11px] leading-snug shadow-sm"
+          className="fixed z-[1000] max-w-80 whitespace-normal break-words rounded-md border px-3 py-2 text-[11px] leading-snug shadow-sm"
           style={{
             left: position?.left,
             top: position?.top,
-            maxWidth: 240,
+            maxWidth: 320,
             backgroundColor: "var(--background)",
             color: "var(--text-color)",
             borderColor: "var(--border)",

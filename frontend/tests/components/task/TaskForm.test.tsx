@@ -47,6 +47,9 @@ describe('TaskForm', () => {
         )
         
         fireEvent.change(screen.getByLabelText(/Title/i), { target: { value: 'New Task' } })
+        fireEvent.change(screen.getByLabelText(/Deadline Date/i), { target: { value: '2099-01-01' } })
+        fireEvent.change(screen.getByLabelText(/Deadline Time/i), { target: { value: '11:00' } })
+        fireEvent.change(screen.getByLabelText(/Est. Minutes/i), { target: { value: '30' } })
         fireEvent.click(screen.getByRole('button', { name: /Save Task/i }))
         
         expect(onSubmit).toHaveBeenCalled()
@@ -84,3 +87,4 @@ describe('TaskForm', () => {
         expect(saveButton).not.toBeDisabled()
     })
 })
+

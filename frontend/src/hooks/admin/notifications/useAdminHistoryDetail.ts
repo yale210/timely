@@ -5,7 +5,7 @@ import {
   getBroadcastStatus,
   retryFailedBroadcast,
 } from "@/api/notifications";
-import { type BroadcastJobDetail, type BroadcastJobStatusResponse } from "@/types/notification";
+import { type BroadcastJobDetail, type BroadcastJobStatusResponse } from "@/types";
 
 const POLL_INTERVAL_MS = 3000;
 
@@ -85,6 +85,7 @@ export const useAdminHistoryDetail = (): UseAdminHistoryDetailReturn => {
       return;
     }
 
+    // Poll while the broadcast is still running so the detail page stays current without a manual refresh.
     const intervalId = window.setInterval(() => {
       void getBroadcastStatus(broadcastId)
         .then((response) => {
@@ -102,6 +103,7 @@ export const useAdminHistoryDetail = (): UseAdminHistoryDetailReturn => {
     try {
       setRetryError(null);
       const response = await retryFailedBroadcast(broadcastId);
+      // Retry creates a new broadcast job, so reload both detail and status from the returned id.
       const [detailResponse, statusResponse] = await Promise.all([
         getBroadcastDetail(response.broadcast_id),
         getBroadcastStatus(response.broadcast_id),
@@ -131,3 +133,4 @@ export const useAdminHistoryDetail = (): UseAdminHistoryDetailReturn => {
     },
   };
 };
+

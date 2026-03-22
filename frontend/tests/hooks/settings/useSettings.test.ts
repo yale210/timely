@@ -83,7 +83,7 @@ describe("useSettings", () => {
     });
 
     act(() => {
-      result.current.actions.selectSection("theme");
+      result.current.actions.selectSection("appearance");
     });
 
     expect(result.current.state.activeSection).toBe("preferences");
@@ -134,3 +134,4 @@ describe("useSettings", () => {
     expect(mockNavigate).toHaveBeenCalledWith("/login");
   });
 });
+

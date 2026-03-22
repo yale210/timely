@@ -52,6 +52,7 @@ class Scheduler:
             Task.objects.filter(  # type: ignore[query-annotated]
                 user=self.user,
                 completed=False,
+                locked=False,
                 allocation=[],
             ).order_by("-importance", "deadline")
         )
@@ -88,6 +89,10 @@ class Scheduler:
     def _merge_intervals(
         self, intervals: Iterable[Tuple[datetime, datetime]]
     ) -> List[Tuple[datetime, datetime]]:
+        """
+        Merge overlapping intervals into a set of non-overlapping intervals.
+        """
+
         merged: List[Tuple[datetime, datetime]] = []
         for start, end in sorted(intervals, key=lambda x: x[0]):
             if not merged or start > merged[-1][1]:
@@ -102,6 +107,10 @@ class Scheduler:
         window: Tuple[datetime, datetime],
         occupied: List[Tuple[datetime, datetime]],
     ) -> List[Tuple[datetime, datetime]]:
+        """
+        Calculate free time intervals within a given window
+        by subtracting occupied intervals.
+        """
         start, end = window
         free: List[Tuple[datetime, datetime]] = []
         cursor = start
@@ -131,6 +140,10 @@ class Scheduler:
         return True
 
     def _get_occupied_slots(self, target_date: date) -> List[Tuple[datetime, datetime]]:
+        """
+        Get all occupied time slots for the target date from events,
+        commutes, and scheduled tasks.
+        """
         occupied: List[Tuple[datetime, datetime]] = []
         day_start = self._aware(datetime.combine(target_date, time.min))
         day_end = self._aware(datetime.combine(target_date, time.max))
@@ -173,13 +186,14 @@ class Scheduler:
         return occupied
 
     def _working_window(self, target_date: date) -> Tuple[datetime, datetime]:
+        """
+        Determine the working window for a given date based on a user's preferences.
+
+        """
         if self.preference:
-            day_start = self._aware(
-                datetime.combine(target_date, self.preference.day_start)  # type: ignore[attr-defined]
-            )
-            day_end = self._aware(
-                datetime.combine(target_date, self.preference.day_end)  # type: ignore[attr-defined]
-            )
+            start_time, end_time = self.preference.get_day_window(target_date)  # type: ignore[attr-defined]
+            day_start = self._aware(datetime.combine(target_date, start_time))
+            day_end = self._aware(datetime.combine(target_date, end_time))
             if day_end <= day_start:  # crosses midnight
                 day_end += timedelta(days=1)
             return day_start, day_end
@@ -191,6 +205,10 @@ class Scheduler:
     def get_available_slots(
         self, target_date: date, min_minutes: int
     ) -> List[Tuple[datetime, datetime]]:
+        """
+        Get free time slots on the target date that are at minimum min_minutes long.
+        Checks the user's working window and subtracts occupied slots.
+        """
         window_start, window_end = self._working_window(target_date)
         occupied = self._get_occupied_slots(target_date)
         free_slots = self._subtract_intervals((window_start, window_end), occupied)
@@ -202,6 +220,53 @@ class Scheduler:
                 free_slots = self._subtract_intervals(
                     (window_start, window_end), occupied
                 )
+        if self.preference:
+            max_minutes = int(self.preference.max_hours_study_per_day) * 60  # type: ignore[attr-defined]
+            if max_minutes >= 0 and getattr(self.preference, "limit_max_hours", True):
+                scheduled_minutes = 0
+                for task in self.scheduled_tasks:
+                    for slot in task.allocation or []:
+                        try:
+                            start = self._aware(datetime.fromisoformat(slot["start"]))
+                            end = self._aware(datetime.fromisoformat(slot["end"]))
+                        except (KeyError, ValueError, TypeError):
+                            continue
+                        overlap_start = max(start, window_start)
+                        overlap_end = min(end, window_end)
+                        if overlap_end > overlap_start:
+                            scheduled_minutes += int(
+                                (overlap_end - overlap_start).total_seconds() // 60
+                            )
+
+                for start, end in self._scheduled_blocks:
+                    overlap_start = max(start, window_start)
+                    overlap_end = min(end, window_end)
+                    if overlap_end > overlap_start:
+                        scheduled_minutes += int(
+                            (overlap_end - overlap_start).total_seconds() // 60
+                        )
+
+                remaining_minutes = max(0, max_minutes - scheduled_minutes)
+                if remaining_minutes == 0:
+                    return []
+
+                trimmed_slots: List[Tuple[datetime, datetime]] = []
+                minutes_left = remaining_minutes
+                for start, end in free_slots:
+                    if minutes_left <= 0:
+                        break
+                    slot_minutes = int((end - start).total_seconds() // 60)
+                    if slot_minutes <= minutes_left:
+                        trimmed_slots.append((start, end))
+                        minutes_left -= slot_minutes
+                    else:
+                        trimmed_slots.append(
+                            (start, start + timedelta(minutes=minutes_left))
+                        )
+                        minutes_left = 0
+                        break
+                free_slots = trimmed_slots
+
         return [
             (start, end)
             for start, end in free_slots
@@ -340,7 +405,7 @@ class Scheduler:
                 )
                 continue
 
-            if self.allow_split:
+            if self.allow_split and task.allow_split:
                 result = self._schedule_task_split(task, start_date)
             else:
                 result = self._schedule_task_no_split(task, start_date)
@@ -350,8 +415,11 @@ class Scheduler:
                 and result.scheduled_start is not None
                 and result.scheduled_end is not None
             ):
-                self._scheduled_blocks.append(
-                    (result.scheduled_start, result.scheduled_end)
-                )
+                if result.segments:
+                    self._scheduled_blocks.extend(result.segments)
+                else:
+                    self._scheduled_blocks.append(
+                        (result.scheduled_start, result.scheduled_end)
+                    )
 
         return results

@@ -83,6 +83,7 @@ class SchedulerViewsTests(APITestCase):
             deadline=day2_start + timedelta(hours=2),
             importance=5,
             completed=False,
+            allow_split=True,
         )
 
         response = self.client.post(

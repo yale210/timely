@@ -1,7 +1,7 @@
 import { render, screen, fireEvent } from "@testing-library/react";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { NotificationCard } from "@/components/notifications/NotificationCard";
-import { NotificationType } from "@/types/notification";
+import { NotificationType } from "@/types";
 
 describe("NotificationCard Component", () => {
   const mockNotification = {
@@ -96,3 +96,4 @@ describe("NotificationCard Component", () => {
     // Just triggering the branch
   });
 });
+

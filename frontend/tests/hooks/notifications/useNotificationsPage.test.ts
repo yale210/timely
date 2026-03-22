@@ -4,7 +4,7 @@ import { useNotificationsPage } from "@/hooks/notifications/useNotificationsPage
 import { useNotificationContext } from "@/context/NotificationContext";
 import { useNavigate } from "react-router-dom";
 import { getNotifications } from "@/api/notifications";
-import { NotificationType, type Notification, type NotificationListResponse } from "@/types/notification";
+import { NotificationType, type Notification, type NotificationListResponse } from "@/types";
 
 // Mock react-router-dom
 vi.mock("react-router-dom", () => ({
@@ -239,4 +239,5 @@ describe("useNotificationsPage Hook", () => {
     });
   });
 });
+
 

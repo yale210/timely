@@ -9,7 +9,10 @@ vi.mock('axios', () => {
         patch: vi.fn(),
         delete: vi.fn(),
         create: vi.fn(),
-        interceptors: { request: { use: vi.fn() } },
+        interceptors: {
+            request: { use: vi.fn() },
+            response: { use: vi.fn() },
+        },
         defaults: {},
     } satisfies {
         get: ReturnType<typeof vi.fn>
@@ -17,7 +20,10 @@ vi.mock('axios', () => {
         patch: ReturnType<typeof vi.fn>
         delete: ReturnType<typeof vi.fn>
         create: ReturnType<typeof vi.fn>
-        interceptors: { request: { use: ReturnType<typeof vi.fn> } }
+        interceptors: {
+            request: { use: ReturnType<typeof vi.fn> }
+            response: { use: ReturnType<typeof vi.fn> }
+        }
         defaults: Record<string, unknown>
     }
     mockAxios.create.mockReturnValue(mockAxios)
@@ -85,3 +91,4 @@ describe('taskService', () => {
         expect(result).toEqual(mockCategories)
     })
 })
+

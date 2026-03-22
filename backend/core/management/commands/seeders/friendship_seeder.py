@@ -49,41 +49,38 @@ class FriendshipSeeder(BaseSeeder):
             )
 
     def _populate_random_friendship(self):
-        User = get_user_model()
+        # User = get_user_model()
 
         # Shuffle users and get a random user.
-        temporary_sender = User.objects.order_by("?").first()
-        temporary_receiver = User.objects.order_by("?").last()
+        temporary_sender, temporary_receiver = self._get_or_create_two_random_users()
+        self._create_random_friendship(temporary_sender, temporary_receiver)
 
-        if (
-            temporary_sender is None
-            or temporary_receiver is None
-            or temporary_sender == temporary_receiver
-        ):
+    def _create_random_friendship(self, temporary_sender, temporary_receiver):
+        Friendship.objects.get_or_create(
+            sender=temporary_sender,
+            receiver=temporary_receiver,
+            state=random.choice(["SENT", "ACCEPTED", "REJECTED"]),
+        )
+
+    def _get_or_create_two_random_users(self):
+        User = get_user_model()
+        # Shuffle users and get a random user.
+        temporary_sender = User.objects.order_by("?").first()
+        if temporary_sender is None:
             temporary_sender = User.objects.create_user(
                 username=self.faker.user_name(),
                 email=self.faker.email(),
                 password="thomas123",
             )
+        temporary_receiver = (
+            User.objects.exclude(id=temporary_sender.id).order_by("?").first()
+        )
+
+        if temporary_receiver is None:
             temporary_receiver = User.objects.create_user(
                 username=self.faker.user_name(),
                 email=self.faker.email(),
                 password="thomas123",
             )
 
-        self._create_friendship(
-            {
-                "pk": None,
-                "fields": {
-                    "sender": temporary_sender.id,
-                    "receiver": temporary_receiver.id,
-                    "state": random.choice(
-                        [
-                            Friendship.State.SENT,
-                            Friendship.State.ACCEPTED,
-                            Friendship.State.DECLINED,
-                        ]
-                    ),
-                },
-            }
-        )
+        return temporary_sender, temporary_receiver

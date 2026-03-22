@@ -1,4 +1,4 @@
-import { type BroadcastRecipientDetail } from "@/types/notification";
+import { type BroadcastRecipientDetail } from "@/types";
 
 interface AdminHistoryDetailRecipientsTableProps {
   recipients: BroadcastRecipientDetail[];
@@ -45,3 +45,4 @@ export const AdminHistoryDetailRecipientsTable = (props: AdminHistoryDetailRecip
     </div>
   );
 };
+

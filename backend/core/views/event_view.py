@@ -99,6 +99,13 @@ REVERT_PARAMETERS = [
     destroy=extend_schema(parameters=SCOPE_PARAMETERS),
 )
 class EventViewSet(viewsets.ModelViewSet):
+    """
+    ViewSet providing an API for managing user events.
+
+    Supports CRUD operations on events, in addition to behaviour for
+    handling recurring events.
+    """
+
     serializer_class = EventSerializer
     permission_classes = [permissions.IsAuthenticated]
 
@@ -163,13 +170,19 @@ class EventViewSet(viewsets.ModelViewSet):
         return scope, original_start_time
 
     def list(self, request, *args, **kwargs):
+        """
+        List events for the authenticated user.
+        When recurrence overrides are enabled, events are expanded
+        into individual instances based on the provided timeframe.
+        """
         if not settings.ENABLE_RECURRENCE_OVERRIDES:
             return super().list(request, *args, **kwargs)
 
         range_start, range_end = self._parse_list_window(request)
         expanded_instances = expand_user_events(request.user, range_start, range_end)
-        serializer = ExpandedEventInstanceSerializer(expanded_instances, many=True)
-        return Response(serializer.data)
+        return Response(
+            ExpandedEventInstanceSerializer(expanded_instances, many=True).data
+        )
 
     def update(self, request, *args, **kwargs):
         return self._handle_update(request, partial=False, *args, **kwargs)
@@ -185,16 +198,15 @@ class EventViewSet(viewsets.ModelViewSet):
             if scope != "all":
                 return Response(
                     {"detail": "Recurring scope updates are disabled by feature flag."},
-                    status=400,
+                    status=status.HTTP_400_BAD_REQUEST,
                 )
             return super().update(request, *args, partial=partial, **kwargs)
 
         if event.recurrence_interval and settings.ENABLE_RECURRENCE_OVERRIDES:
-            if scope in {"this", "following"} and original_start_time is None:
-                return Response(
-                    {"detail": "original_start_time is required for this scope."},
-                    status=400,
-                )
+            error = self._validate_scope(scope, original_start_time)
+            if error:
+                return error
+
             serializer = self.get_serializer(event, data=request.data, partial=partial)
             serializer.is_valid(raise_exception=True)
             try:
@@ -205,7 +217,10 @@ class EventViewSet(viewsets.ModelViewSet):
                     original_start_time,
                 )
             except ValueError as exc:
-                return Response({"detail": str(exc)}, status=400)
+                return Response(
+                    {"detail": str(exc)},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
             return Response(EventResponseSerializer(updated_event).data)
 
         return super().update(request, *args, partial=partial, **kwargs)
@@ -218,22 +233,29 @@ class EventViewSet(viewsets.ModelViewSet):
             if scope != "all":
                 return Response(
                     {"detail": "Recurring scope deletes are disabled by feature flag."},
-                    status=400,
+                    status=status.HTTP_400_BAD_REQUEST,
                 )
             return super().destroy(request, *args, **kwargs)
 
         if event.recurrence_interval and settings.ENABLE_RECURRENCE_OVERRIDES:
-            if scope in {"this", "following"} and original_start_time is None:
-                return Response(
-                    {"detail": "original_start_time is required for this scope."},
-                    status=400,
-                )
+            error = self._validate_scope(scope, original_start_time)
+            if error:
+                return error
+
             if scope == "all":
                 return super().destroy(request, *args, **kwargs)
             apply_delete_scope(event, scope, original_start_time)
-            return Response(status=204)
+            return Response(status=status.HTTP_204_NO_CONTENT)
 
         return super().destroy(request, *args, **kwargs)
+
+    def _validate_scope(self, scope, original_start_time):
+        if scope in {"this", "following"} and original_start_time is None:
+            return Response(
+                {"detail": "original_start_time is required for this scope."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        return None
 
     @extend_schema(
         parameters=REVERT_PARAMETERS,
@@ -244,6 +266,16 @@ class EventViewSet(viewsets.ModelViewSet):
     def revert_instance(self, request, *args, **kwargs):
         event = self.get_object()
 
+        original_start_time = self._parse_original_start_time(request)
+
+        error = self._validate_revert(event, original_start_time)
+
+        if error:
+            return error
+
+        return self._perform_revert(event, original_start_time)
+
+    def _validate_revert(self, event, original_start_time):
         if not settings.ENABLE_RECURRENCE_OVERRIDES:
             return Response(
                 {"detail": "Recurring overrides are disabled by feature flag."},
@@ -256,13 +288,14 @@ class EventViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        original_start_time = self._parse_original_start_time(request)
         if original_start_time is None:
             return Response(
                 {"detail": "original_start_time is required."},
                 status=status.HTTP_400_BAD_REQUEST,
             )
+        return None
 
+    def _perform_revert(self, event, original_start_time):
         try:
             revert_override_instance(event, original_start_time)
         except ValueError as exc:
@@ -280,4 +313,7 @@ class EventViewSet(viewsets.ModelViewSet):
     )
     @action(detail=False, methods=["get"])
     def server_time(self, request):
+        """
+        Return the current server time in ISO format.
+        """
         return Response({"server_time": timezone.now().isoformat()})

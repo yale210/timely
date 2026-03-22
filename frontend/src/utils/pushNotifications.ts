@@ -1,6 +1,7 @@
 import { getVapidPublicKey, subscribeToPush, unsubscribeFromPush } from '@/api/notifications';
 
 function urlBase64ToUint8Array(base64String: string) {
+  // The Push API expects the VAPID key as bytes, but the backend sends it as URL-safe base64.
   const padding = '='.repeat((4 - base64String.length % 4) % 4);
   const base64 = (base64String + padding)
     .replace(/-/g, '+')

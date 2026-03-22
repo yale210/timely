@@ -1,6 +1,6 @@
 import { type FormEvent } from "react";
 import { AdminUserTable } from "@/components/admin/AdminUserTable";
-import { type AdminNotificationTarget, type AdminUserRole, type AdminUserSummary } from "@/types/notification";
+import { type AdminNotificationTarget, type AdminUserRole, type AdminUserSummary } from "@/types";
 
 interface AdminBroadcastFormProps {
   title: string;
@@ -221,3 +221,4 @@ export const AdminBroadcastForm = (props: AdminBroadcastFormProps) => {
     </div>
   );
 };
+

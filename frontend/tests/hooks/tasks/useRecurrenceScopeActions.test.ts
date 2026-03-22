@@ -226,3 +226,4 @@ describe("useRecurrenceScopeActions Hook", () => {
     expect(mockOnRevertToSeries).not.toHaveBeenCalled();
   });
 });
+

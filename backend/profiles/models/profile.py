@@ -12,4 +12,6 @@ class Profile(models.Model):
     creation_date = models.DateTimeField(auto_now_add=True)
     slogan = models.CharField(max_length=255, blank=True)
     bio = models.TextField(blank=True)
-    avatar_url = models.URLField(blank=True)
+    avatar = models.ImageField(upload_to="avatars/", blank=True, null=True)
+    xp = models.PositiveBigIntegerField(default=0)
+    level = models.PositiveBigIntegerField(default=1)

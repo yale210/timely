@@ -5,6 +5,7 @@ import * as eventService from "@/services/eventService";
 import * as categoryService from "@/services/categoryService";
 import * as schedulerService from "@/services/schedulerService";
 import * as taskService from "@/services/taskService";
+import { preferenceService } from "@/services/preferenceService";
 import type { Category, Event, Task } from "@/types";
 
 vi.mock("react-big-calendar", () => ({
@@ -40,6 +41,12 @@ vi.mock("@/services/eventService", () => ({
 vi.mock("@/services/schedulerService", () => ({
   scheduleTasks: vi.fn(),
   unscheduleTasks: vi.fn(),
+}));
+
+vi.mock("@/services/preferenceService", () => ({
+  preferenceService: {
+    getMyPreference: vi.fn(),
+  },
 }));
 
 describe("useCalendar", () => {
@@ -80,6 +87,14 @@ describe("useCalendar", () => {
     vi.mocked(taskService.getTasks).mockResolvedValue(mockTasks);
     vi.mocked(taskService.getCategories).mockResolvedValue(mockCategories);
     vi.mocked(eventService.getEvents).mockResolvedValue(mockEvents);
+    vi.mocked(preferenceService).getMyPreference.mockResolvedValue({
+      id: 1,
+      day_start: "08:00:00",
+      day_end: "22:00:00",
+      max_hours_study_per_day: 4,
+      days_off: [],
+      day_schedule: [],
+    } as never);
     vi.mocked(schedulerService.scheduleTasks).mockResolvedValue({
       start_date: "2026-02-12",
       scheduled_count: 1,
@@ -115,7 +130,7 @@ describe("useCalendar", () => {
     expect(result.current.error.tasks).toBeNull();
   });
 
-  it("opens a task sidebar template when a slot is selected", async () => {
+  it("opens an event sidebar template when a slot is selected", async () => {
     const { result } = renderHook(() => useCalendar());
 
     await waitFor(() => expect(result.current.loading.initializing).toBe(false));
@@ -125,28 +140,22 @@ describe("useCalendar", () => {
     });
 
     expect(result.current.state.isSidebarOpen).toBe(true);
-    expect(result.current.state.sidebarMode).toBe("task");
+    expect(result.current.state.sidebarMode).toBe("event");
     expect(result.current.state.selectedItem).toMatchObject({ id: 0, title: "" });
   });
 
-  it("schedules and unschedules tasks", async () => {
+  it("reschedules tasks", async () => {
     const { result } = renderHook(() => useCalendar());
 
     await waitFor(() => expect(result.current.loading.initializing).toBe(false));
 
     await act(async () => {
-      await result.current.actions.scheduleTasks();
+      await result.current.actions.rescheduleTasks();
     });
 
     expect(schedulerService.scheduleTasks).toHaveBeenCalled();
-    expect(result.current.state.scheduleOrder[1]).toBe(0);
-
-    await act(async () => {
-      await result.current.actions.unscheduleTasks();
-    });
-
     expect(schedulerService.unscheduleTasks).toHaveBeenCalled();
-    expect(result.current.state.scheduleOrder).toEqual({});
+    expect(result.current.state.scheduleOrder[1]).toBe(0);
   });
 
   it("creates a category and adds it to state", async () => {
@@ -182,3 +191,4 @@ describe("useCalendar", () => {
     expect(result.current.state.categories).toHaveLength(0);
   });
 });
+

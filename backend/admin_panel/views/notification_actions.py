@@ -1,3 +1,5 @@
+"""Notification management actions for the admin panel."""
+
 from django.contrib.auth import get_user_model
 from django.db import transaction
 from django.utils import timezone
@@ -15,7 +17,18 @@ from notifications.tasks import process_broadcast_job
 
 
 class AdminNotificationActionMixin:
+    """Provide broadcast notification actions for admins."""
+
     def _build_target_queryset(self, target, user_ids):
+        """Build the recipient queryset for a broadcast target.
+
+        Args:
+            target: Selected broadcast target.
+            user_ids: Explicit user IDs for targeted sends.
+
+        Returns:
+            QuerySet: Recipient queryset for the requested audience.
+        """
         user_model = get_user_model()
         queryset = user_model.objects.filter(is_active=True)
         if target == BroadcastJob.Target.ALL:
@@ -29,6 +42,16 @@ class AdminNotificationActionMixin:
         return queryset.none()
 
     def _serialize_error(self, code, message, errors=None):
+        """Build a consistent error payload for admin endpoints.
+
+        Args:
+            code: Machine-readable error code.
+            message: Human-readable error message.
+            errors: Optional nested validation details.
+
+        Returns:
+            dict: Serialized error payload.
+        """
         payload = {"error": {"code": code, "message": message}}
         if errors:
             payload["error"]["errors"] = errors
@@ -36,6 +59,14 @@ class AdminNotificationActionMixin:
 
     @action(detail=False, methods=["post"])
     def send_notification(self, request):
+        """Queue a broadcast notification for the selected audience.
+
+        Args:
+            request: The incoming DRF request.
+
+        Returns:
+            Response: Accepted broadcast metadata or a validation error.
+        """
         serializer = AdminNotificationRequestSerializer(data=request.data)
         if not serializer.is_valid():
             return Response(
@@ -123,6 +154,14 @@ class AdminNotificationActionMixin:
 
     @action(detail=False, methods=["get"])
     def audience_counts(self, request):
+        """Return audience counts for admin notification targeting.
+
+        Args:
+            request: The incoming DRF request.
+
+        Returns:
+            Response: Counts for each supported audience type.
+        """
         user_model = get_user_model()
         active_users = user_model.objects.filter(is_active=True)
         raw_user_ids = request.query_params.get("user_ids", "")
@@ -145,6 +184,14 @@ class AdminNotificationActionMixin:
 
     @action(detail=False, methods=["get"], url_path="broadcasts")
     def broadcasts(self, request):
+        """List broadcast jobs with optional admin filters.
+
+        Args:
+            request: The incoming DRF request.
+
+        Returns:
+            Response: Paginated or full broadcast job list.
+        """
         queryset = BroadcastJob.objects.select_related("sender")
         target = request.query_params.get("target")
         status_filter = request.query_params.get("status")
@@ -169,6 +216,15 @@ class AdminNotificationActionMixin:
         detail=False, methods=["get"], url_path=r"broadcasts/(?P<broadcast_id>[^/.]+)"
     )
     def broadcast_detail(self, request, broadcast_id=None):
+        """Return detailed data for a single broadcast job.
+
+        Args:
+            request: The incoming DRF request.
+            broadcast_id: Broadcast job primary key from the URL.
+
+        Returns:
+            Response: Broadcast detail payload or a not-found error.
+        """
         broadcast = (
             BroadcastJob.objects.select_related("sender")
             .filter(id=broadcast_id)
@@ -192,6 +248,15 @@ class AdminNotificationActionMixin:
         url_path=r"broadcasts/(?P<broadcast_id>[^/.]+)/status",
     )
     def broadcast_status(self, request, broadcast_id=None):
+        """Return summary status information for a broadcast job.
+
+        Args:
+            request: The incoming DRF request.
+            broadcast_id: Broadcast job primary key from the URL.
+
+        Returns:
+            Response: Broadcast status payload or a not-found error.
+        """
         broadcast = BroadcastJob.objects.filter(id=broadcast_id).first()
         if not broadcast:
             return Response(
@@ -229,6 +294,15 @@ class AdminNotificationActionMixin:
         url_path=r"broadcasts/(?P<broadcast_id>[^/.]+)/retry_failed",
     )
     def retry_failed(self, request, broadcast_id=None):
+        """Create a retry broadcast for failed recipients only.
+
+        Args:
+            request: The incoming DRF request.
+            broadcast_id: Broadcast job primary key from the URL.
+
+        Returns:
+            Response: Accepted retry job metadata or an error payload.
+        """
         broadcast = BroadcastJob.objects.filter(id=broadcast_id).first()
         if not broadcast:
             return Response(

@@ -1,13 +1,13 @@
 import { Link, NavLink } from "react-router-dom"
 
 const adminSidebarItems = [
-  { label: "Notifications", to: "/admin/notifications" },
-  { label: "Notification History", to: "/admin/notifications/history" },
+  { label: "Notifications", to: "/admin/notifications", icon: "notifications_active" },
+  { label: "Notification History", to: "/admin/notifications/history", icon: "history" },
 ]
 
 const accountItems = [
-  { label: "Settings", to: "/settings" },
-  { label: "Log out", to: "/logout" },
+  { label: "Settings", to: "/settings", icon: "settings" },
+  { label: "Log out", to: "/logout", icon: "logout" },
 ]
 
 interface AdminSidebarProps {
@@ -23,22 +23,22 @@ interface AdminSidebarProps {
 export default function AdminSidebar({ onClose }: AdminSidebarProps) {
   return (
     <>
-      <ul className="space-y-2 px-4 py-4 text-base">
+      <ul className="space-y-2 px-4 py-4">
         <li>
           <Link
             to="/dashboard"
             onClick={onClose}
-            className="flex items-center rounded-md px-3 py-2.5 text-base font-semibold text-indigo-600 hover:bg-indigo-50 transition-colors"
+            className="flex items-center gap-3 rounded-md px-3 py-2.5 text-sm font-semibold text-indigo-600 hover:bg-indigo-50 transition-colors"
           >
-            <span className="material-icons text-lg mr-2">arrow_back</span>
-            Back to Dashboard
+            <span aria-hidden="true" className="material-icons text-lg leading-none">arrow_back</span>
+            <span>Back to Overview</span>
           </Link>
         </li>
       </ul>
 
       <div className="mx-4 border-t-2 border-gray-200" />
 
-      <ul className="flex-1 space-y-2 px-4 py-4 text-base">
+      <ul className="flex-1 space-y-2 px-4 py-4">
         {adminSidebarItems.map(item => (
           <li key={item.to}>
             <NavLink
@@ -46,31 +46,33 @@ export default function AdminSidebar({ onClose }: AdminSidebarProps) {
               onClick={onClose}
               className={({ isActive }) =>
                 [
-                  "flex items-center rounded-md px-3 py-2.5 text-base font-semibold transition-colors",
+                  "flex items-center gap-3 rounded-md px-3 py-2.5 text-sm font-semibold transition-colors",
                   isActive ? "bg-cyan-50 text-cyan-700 ring-1 ring-cyan-100" : "text-gray-800 hover:bg-gray-100",
                 ].join(" ")
               }
             >
-              {item.label}
+              <span aria-hidden="true" className="material-icons text-lg leading-none">{item.icon}</span>
+              <span>{item.label}</span>
             </NavLink>
           </li>
         ))}
       </ul>
 
       <div className="mx-4 border-t-2 border-gray-200" />
-      <ul className="space-y-2 px-4 py-4 text-base">
+      <ul className="space-y-2 px-4 py-4">
         {accountItems.map(item => (
           <li key={item.to}>
             <Link
               to={item.to}
               onClick={onClose}
-              className={`flex items-center rounded-md px-3 py-2.5 text-base font-semibold ${
+              className={`flex items-center gap-3 rounded-md px-3 py-2.5 text-sm font-semibold ${
                 item.to === "/logout"
                   ? "text-red-500 hover:bg-red-50"
                   : "text-gray-800 hover:bg-gray-100"
               }`}
             >
-              {item.label}
+              <span aria-hidden="true" className="material-icons text-lg leading-none">{item.icon}</span>
+              <span>{item.label}</span>
             </Link>
           </li>
         ))}

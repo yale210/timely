@@ -14,7 +14,7 @@ import {
   type BroadcastDeliveryStatus,
   type BroadcastJobStatusResponse,
   type ApiErrorResponse,
-} from "@/types/notification";
+} from "@/types";
 
 const USERS_PAGE_SIZE = 50;
 const TITLE_LIMIT = 60;
@@ -164,6 +164,7 @@ const [currentBroadcastId, setCurrentBroadcastId] = useState<number | null>(null
 const [deliveryStatus, setDeliveryStatus] = useState<BroadcastJobStatusResponse | null>(null);
 
 const parsedUserIds = useMemo(() => normalizeUserIds(userIdsInput), [userIdsInput]);
+// Prefer explicit checkbox selections, but fall back to the manual comma-separated field.
 const selectedIdsForPayload = useMemo(
   () => (selectedUserIds.length > 0 ? selectedUserIds : parsedUserIds),
   [parsedUserIds, selectedUserIds],
@@ -228,6 +229,7 @@ useEffect(() => {
 }, [loadAudienceCounts]);
 
 useEffect(() => {
+  // Debounce the live preview slightly so it follows typing without re-rendering every keystroke.
   const timeout = setTimeout(() => {
     setPreviewTitle(title.trim());
     setPreviewMessage(message.trim());
@@ -285,6 +287,7 @@ useEffect(() => {
     return;
   }
 
+  // Poll only while a broadcast is active so the delivery badge reflects background progress.
   const intervalId = window.setInterval(() => {
     void getBroadcastStatus(currentBroadcastId)
       .then((status) => {
@@ -354,6 +357,7 @@ const handleConfirmSend = useCallback(async () => {
     setError(null);
     const response = await sendAdminNotification(payload);
     setCurrentBroadcastId(response.broadcast_id);
+    // Seed the UI with the queued response immediately instead of waiting for the first poll cycle.
     const queuedStatus: BroadcastJobStatusResponse = {
       id: response.broadcast_id,
       status: response.status,
@@ -456,3 +460,4 @@ return {
     handleConfirmSend,
   },
 }; };
+

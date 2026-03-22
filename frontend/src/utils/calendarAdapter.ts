@@ -19,6 +19,7 @@ export interface CalendarEntry {
   eventData?: Event;
   categories?: Category[];
   allocationIndex?: number;
+  taskData?: Task;
 }
 
 interface BuildCalendarEntriesOptions {
@@ -54,6 +55,7 @@ export const buildCalendarEntries = ({
       allDay: moment(slot.end).diff(moment(slot.start), "hours") >= 24,
       kind: "task" as const,
       sourceId: task.id,
+      taskData: task,
       split: allocations.length > 1,
       oneGo: allocations.length === 1,
       scheduleIndex: scheduleOrder[task.id],
@@ -73,3 +75,4 @@ export const buildCalendarEntries = ({
     eventData: event,
   })),
 ];
+

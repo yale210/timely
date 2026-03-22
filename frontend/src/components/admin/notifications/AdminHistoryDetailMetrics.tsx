@@ -1,4 +1,4 @@
-import { type BroadcastJobDetail, type BroadcastJobStatusResponse } from "@/types/notification";
+import { type BroadcastJobDetail, type BroadcastJobStatusResponse } from "@/types";
 
 interface AdminHistoryDetailMetricsProps {
   detail: BroadcastJobDetail;
@@ -53,3 +53,4 @@ export const AdminHistoryDetailMetrics = (props: AdminHistoryDetailMetricsProps)
     </>
   );
 };
+

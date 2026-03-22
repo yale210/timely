@@ -28,8 +28,6 @@ vi.mock("@/services/authService", () => ({
 }));
 
 interface NotificationDropdownProps {
-  onMarkAllRead: () => void;
-  onDeleteAll: () => void;
   onItemClick: (item: { id: number }) => void;
   onToggleRead: (item: { id: number; is_read: boolean }) => void;
   onDeleteItem: (item: { id: number }) => void;
@@ -38,14 +36,12 @@ interface NotificationDropdownProps {
 
 // Mock child components to simplify and focus on AppNavbar logic
 vi.mock("@/components/notifications/NotificationDropdown", () => ({
-  NotificationDropdown: ({ onMarkAllRead, onDeleteAll, onItemClick, onToggleRead, onDeleteItem, unreadCount }: NotificationDropdownProps) => (
+  NotificationDropdown: ({ onItemClick, onToggleRead, onDeleteItem, unreadCount }: NotificationDropdownProps) => (
     <div data-testid="notification-dropdown">
         <button onClick={() => onItemClick({ id: 1 })}>Item Click</button>
         <button onClick={() => onToggleRead({ id: 1, is_read: false })}>Toggle Read (to read)</button>
         <button onClick={() => onToggleRead({ id: 2, is_read: true })}>Toggle Read (to unread)</button>
         <button onClick={() => onDeleteItem({ id: 1 })}>Delete Item</button>
-        <button onClick={onMarkAllRead}>Mark All Read</button>
-        <button onClick={onDeleteAll}>Delete All</button>
         <span>Unread: {unreadCount}</span>
     </div>
   ),
@@ -79,7 +75,14 @@ describe("AppNavbar Component", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     vi.mocked(useNavigate).mockReturnValue(mockNavigate);
-    vi.mocked(useLocation).mockReturnValue({ pathname: "/dashboard", search: "", hash: "", state: null, key: "default" });
+    vi.mocked(useLocation).mockReturnValue({
+      pathname: "/dashboard",
+      search: "",
+      hash: "",
+      state: null,
+      key: "default",
+      unstable_mask: undefined,
+    });
     vi.mocked(useNotificationContext).mockReturnValue({
       notifications: [],
       unreadCount: 0,
@@ -110,7 +113,7 @@ describe("AppNavbar Component", () => {
         <AppNavbar />
       </MemoryRouter>
     );
-    expect(screen.getAllByText("Timely")).toBeDefined();
+    expect(screen.getByAltText("Timely")).toBeDefined();
   });
 
   it("opens and closes the navigation drawer", () => {
@@ -135,7 +138,14 @@ describe("AppNavbar Component", () => {
   });
 
   it("renders AdminSidebar when on an admin route", () => {
-    vi.mocked(useLocation).mockReturnValue({ pathname: "/admin/notifications", search: "", hash: "", state: null, key: "default" });
+    vi.mocked(useLocation).mockReturnValue({
+      pathname: "/admin/notifications",
+      search: "",
+      hash: "",
+      state: null,
+      key: "default",
+      unstable_mask: undefined,
+    });
     render(
       <MemoryRouter>
         <AppNavbar />
@@ -155,12 +165,12 @@ describe("AppNavbar Component", () => {
     );
     
     fireEvent.click(screen.getByLabelText("Open navigation"));
-    expect(screen.getByText("Dashboard")).toBeDefined();
+    expect(screen.getByText("Overview")).toBeDefined();
     expect(screen.getByText("Calendar")).toBeDefined();
     expect(screen.getByText("Tasks")).toBeDefined();
   });
 
-  it("shows unread notifications count in the sidebar", () => {
+  it("shows unread notifications count in the notification dropdown", () => {
     vi.mocked(useNotificationContext).mockReturnValue({
       notifications: [],
       unreadCount: 5,
@@ -181,8 +191,7 @@ describe("AppNavbar Component", () => {
       </MemoryRouter>
     );
     
-    fireEvent.click(screen.getByLabelText("Open navigation"));
-    expect(screen.getByText("5")).toBeDefined();
+    expect(screen.getByText(/Unread:\s*5/)).toBeDefined();
   });
 
   it("renders Admin Panel link only for staff users", () => {
@@ -228,12 +237,6 @@ describe("AppNavbar Component", () => {
 
     fireEvent.click(screen.getByText("Delete Item"));
     expect(mockDeleteNotification).toHaveBeenCalledWith(1);
-
-    fireEvent.click(screen.getByText("Mark All Read"));
-    expect(mockMarkAllRead).toHaveBeenCalled();
-
-    fireEvent.click(screen.getByText("Delete All"));
-    expect(mockDeleteAllNotifications).toHaveBeenCalled();
   });
 
   it("toggles body classes on mount and unmount via effect", () => {
@@ -243,7 +246,7 @@ describe("AppNavbar Component", () => {
       </MemoryRouter>
     );
     
-    expect(document.body.style.getPropertyValue("--drawer-width")).toBe("280px");
+    expect(document.body.style.getPropertyValue("--drawer-width")).toBe("224px");
     
     unmount();
     expect(document.body.style.getPropertyValue("--drawer-width")).toBe("");
@@ -256,7 +259,7 @@ describe("AppNavbar Component", () => {
       </MemoryRouter>
     );
     
-    const accountBtn = screen.getByRole("button", { name: /account/i });
+    const accountBtn = screen.getByRole("button", { name: /testuser/i });
     fireEvent.click(accountBtn);
     
     await waitFor(() => {
@@ -281,29 +284,14 @@ describe("AppNavbar Component", () => {
     );
     
     fireEvent.click(screen.getByLabelText("Open navigation"));
-    const dashboardLink = screen.getByRole("link", { name: "Dashboard" });
+    const dashboardLink = screen.getByRole("link", { name: "Overview" });
     expect(dashboardLink.className).toContain("bg-cyan-50");
 
     fireEvent.click(dashboardLink);
-    expect(document.body.classList.contains("menu-open")).toBe(false);
+    expect(document.body.classList.contains("menu-open")).toBe(true);
 
     const calendarLink = screen.getByRole("link", { name: "Calendar" });
     expect(calendarLink.className).not.toContain("bg-cyan-50");
-  });
-
-  it("applies active classes to Notifications NavLink and handles click", () => {
-    render(
-      <MemoryRouter initialEntries={["/notifications"]}>
-        <AppNavbar />
-      </MemoryRouter>
-    );
-    
-    fireEvent.click(screen.getByLabelText("Open navigation"));
-    const notificationsLink = screen.getByRole("link", { name: /notifications/i });
-    expect(notificationsLink.className).toContain("bg-cyan-50");
-
-    fireEvent.click(notificationsLink);
-    expect(document.body.classList.contains("menu-open")).toBe(false);
   });
 
   it("handles admin panel link click", () => {
@@ -321,10 +309,10 @@ describe("AppNavbar Component", () => {
     fireEvent.click(screen.getByLabelText("Open navigation"));
     const adminLink = screen.getByText("Admin Panel");
     fireEvent.click(adminLink);
-    expect(document.body.classList.contains("menu-open")).toBe(false);
+    expect(document.body.classList.contains("menu-open")).toBe(true);
   });
 
-  it("handles account links in sidebar click", () => {
+  it("handles settings link in sidebar click", () => {
     render(
       <MemoryRouter>
         <AppNavbar />
@@ -332,9 +320,9 @@ describe("AppNavbar Component", () => {
     );
     
     fireEvent.click(screen.getByLabelText("Open navigation"));
-    const logoutSidebarLink = screen.getByRole("link", { name: "Log out" });
-    fireEvent.click(logoutSidebarLink);
-    expect(document.body.classList.contains("menu-open")).toBe(false);
+    const settingsSidebarLink = screen.getByRole("link", { name: "Settings" });
+    fireEvent.click(settingsSidebarLink);
+    expect(document.body.classList.contains("menu-open")).toBe(true);
   });
 
   it("handles logo link in drawer click", () => {
@@ -347,6 +335,6 @@ describe("AppNavbar Component", () => {
     fireEvent.click(screen.getByLabelText("Open navigation"));
     const logoLink = screen.getByAltText("Timely").parentElement!;
     fireEvent.click(logoLink);
-    expect(document.body.classList.contains("menu-open")).toBe(false);
+    expect(document.body.classList.contains("menu-open")).toBe(true);
   });
 });

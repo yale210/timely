@@ -3,10 +3,18 @@ import moment from "moment";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { useDashboard } from "@/hooks/dashboard/useDashboard";
 import * as taskService from "@/services/taskService";
+import * as eventService from "@/services/eventService";
+import * as statsService from "@/services/statsService";
 import type { Task } from "@/types";
 
 vi.mock("@/services/taskService", () => ({
   getTasks: vi.fn(),
+}));
+vi.mock("@/services/eventService", () => ({
+  getEvents: vi.fn(),
+}));
+vi.mock("@/services/statsService", () => ({
+  getWeeklySummary: vi.fn(),
 }));
 
 describe("useDashboard", () => {
@@ -32,6 +40,15 @@ describe("useDashboard", () => {
 
   it("loads tasks and derives dashboard sections", async () => {
     vi.mocked(taskService.getTasks).mockResolvedValue(mockTasks);
+    vi.mocked(eventService.getEvents).mockResolvedValue([]);
+    vi.mocked(statsService.getWeeklySummary).mockResolvedValue({
+      total_tasks: 0,
+      completed_tasks: 0,
+      completion_percentage: 0,
+      total_minutes_planned: 0,
+      daily_stats: [],
+      importance_stats: [],
+    });
 
     const { result } = renderHook(() => useDashboard());
 
@@ -47,6 +64,15 @@ describe("useDashboard", () => {
   it("falls back to empty state when loading tasks fails", async () => {
     const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => undefined);
     vi.mocked(taskService.getTasks).mockRejectedValue(new Error("API error"));
+    vi.mocked(eventService.getEvents).mockResolvedValue([]);
+    vi.mocked(statsService.getWeeklySummary).mockResolvedValue({
+      total_tasks: 0,
+      completed_tasks: 0,
+      completion_percentage: 0,
+      total_minutes_planned: 0,
+      daily_stats: [],
+      importance_stats: [],
+    });
 
     const { result } = renderHook(() => useDashboard());
 
@@ -59,3 +85,4 @@ describe("useDashboard", () => {
     expect(result.current.error.tasks).toBe("Failed to load dashboard tasks.");
   });
 });
+

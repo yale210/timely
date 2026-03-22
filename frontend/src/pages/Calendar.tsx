@@ -15,13 +15,14 @@ interface CalendarPageProps {
  * @returns The rendered calendar page.
  */
 const CalendarPage = ({ showNavbar = true, useLayout = true }: CalendarPageProps) => {
-  const { state, loading, actions } = useCalendar();
+  const { state, actions } = useCalendar();
 
   const content = (
     <CalendarContent
       state={state}
-      loading={loading}
       actions={actions}
+      showNavbar={showNavbar}
+      useLayout={useLayout}
     />
   );
 
@@ -30,7 +31,7 @@ const CalendarPage = ({ showNavbar = true, useLayout = true }: CalendarPageProps
   }
 
   return (
-    <AppLayout showNavbar={showNavbar}>
+    <AppLayout showNavbar={showNavbar} disableMainScroll>
       {content}
     </AppLayout>
   );

@@ -230,7 +230,7 @@ SPECTACULAR_SETTINGS = {
 }
 
 REST_KNOX = {
-    "USER_SERIALIZER": "authentication.serializer.UserSerializer",
+    "USER_SERIALIZER": "authentication.serializers.UserSerializer",
     "TOKEN_TTL": timedelta(hours=24),
 }
 
@@ -251,6 +251,9 @@ USE_TZ = True
 
 STATIC_URL = "/api/static/"
 STATIC_ROOT = BASE_DIR / "staticfiles"
+
+MEDIA_URL = "/api/media/"
+MEDIA_ROOT = BASE_DIR / "media"
 
 ASGI_APPLICATION = "source.asgi.application"
 

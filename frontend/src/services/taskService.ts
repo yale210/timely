@@ -1,6 +1,6 @@
 import api from "@/services/api";
 
-import { type Category, type Task, type TaskSubmission } from "@/types";
+import { type Category, type Task, type TaskUpdatedResponse,  type TaskSubmission } from "@/types";
 
 /**
  * Retrieves a list of tasks from the server, optionally filtered by the provided criteria.
@@ -28,7 +28,7 @@ export const createTask = async (data: TaskSubmission): Promise<Task> => {
  * @param data - The updated information for the task.
  * @returns A promise that resolves to the modified task object.
  */
-export const updateTask = async (id: number, data: TaskSubmission): Promise<Task> => {
+export const updateTask = async (id: number, data: TaskSubmission): Promise<TaskUpdatedResponse> => {
   const response = await api.patch<Task>(`/api/tasks/${id}/`, data);
   return response.data;
 };
@@ -50,3 +50,4 @@ export const getCategories = async (): Promise<Category[]> => {
   const response = await api.get<Category[]>("/api/categories/");
   return response.data;
 };
+

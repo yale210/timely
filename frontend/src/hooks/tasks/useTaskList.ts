@@ -4,6 +4,8 @@ import * as taskService from "@/services/taskService";
 import * as categoryService from "@/services/categoryService";
 import { type Category, type Task, type TaskSubmission } from "@/types";
 import { useThemeFont } from "@/hooks/common/useThemeFont";
+import { emitXpGained } from "@/utils/xpEvents";
+import { emitLevelup } from "@/utils/levelUpEvent";
 
 type TaskCompletionFilter = "all" | "completed" | "pending";
 
@@ -12,6 +14,7 @@ interface TaskListSections {
   overdueTasks: Task[];
   todayTasks: Task[];
   upcomingTasks: Task[];
+  completedTasks: Task[];
   groupedUpcomingTasks: Record<string, Task[]>;
   sortedUpcomingDates: string[];
 }
@@ -125,20 +128,30 @@ useEffect(() => {
   void refresh();
 }, [refresh]);
 
-const toggleComplete = useCallback(
-  async (id: number) => {
-    const task = tasks.find((item) => item.id === id);
-    if (!task) {
-      return;
-    }
+  const toggleComplete = useCallback(
+    async (id: number) => {
+      const task = tasks.find((item) => item.id === id);
+      if (!task) {
+        return;
+      }
 
-    try {
-      await taskService.updateTask(id, { completed: !task.completed });
-      await fetchTasks();
-    } catch (toggleError) {
-      console.error(toggleError);
-    }
-  },
+      try {
+        const nextCompleted = !task.completed;
+        //await taskService.updateTask(id, { completed: nextCompleted });
+        const response = await taskService.updateTask(id, {completed: nextCompleted} )
+        console.log("task update response", JSON.stringify(response, null, 2))
+        if (nextCompleted && !task.completed) {
+          const expDelta = 10 + 2 * task.importance;
+          emitXpGained(expDelta);
+        }
+        if (response.level_up && response.new_level != null) {
+          emitLevelup(response.new_level)
+        }
+        await fetchTasks();
+      } catch (toggleError) {
+        console.error(toggleError);
+      }
+    },
   [fetchTasks, tasks],
 );
 
@@ -273,8 +286,15 @@ const sections = useMemo<TaskListSections>(() => {
   );
 
   const upcomingTasks = filteredTasks.filter(
-    (task) => moment(task.deadline).isAfter(now) && !moment(task.deadline).isSame(now, "day"),
+    (task) =>
+      !task.completed
+      && moment(task.deadline).isAfter(now)
+      && !moment(task.deadline).isSame(now, "day"),
   );
+
+  const completedTasks = filteredTasks
+    .filter((task) => task.completed)
+    .sort((a, b) => moment(b.deadline).valueOf() - moment(a.deadline).valueOf());
 
   const groupedUpcomingTasks = upcomingTasks.reduce<Record<string, Task[]>>((groups, task) => {
     const date = moment(task.deadline).startOf("day").format("YYYY-MM-DD");
@@ -292,6 +312,7 @@ const sections = useMemo<TaskListSections>(() => {
     overdueTasks,
     todayTasks,
     upcomingTasks,
+    completedTasks,
     groupedUpcomingTasks,
     sortedUpcomingDates,
   };

@@ -26,6 +26,7 @@ self.addEventListener("notificationclick", function(event) {
     self.clients
       .matchAll({ type: "window", includeUncontrolled: true })
       .then(function(clientList) {
+        // Reuse an open app tab when possible so notification clicks do not spawn duplicates.
         for (const client of clientList) {
           const clientUrl = new URL(client.url);
           if (clientUrl.origin === targetUrl.origin && "focus" in client) {
