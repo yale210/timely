@@ -14,8 +14,8 @@ class PreferenceSeeder(BaseSeeder):
     def seed(self):
         self._create_fixture_preference()
 
-        #for i in range(200):
-        #    self._populate_random_preference()
+        for i in range(200):
+            self._populate_random_preference()
 
     def _create_fixture_preference(self):
         for temporary_preference in preferences:
@@ -56,7 +56,7 @@ class PreferenceSeeder(BaseSeeder):
         return self._create_preference(
             {
                 "fields": {
-                    "user": temporary_user,
+                    "user": temporary_user.id,
                     "day_start": self._random_time(),
                     "day_end": self._random_time(),
                     "timezone": "Europe/London",

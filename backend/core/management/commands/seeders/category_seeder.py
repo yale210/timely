@@ -12,8 +12,8 @@ class CategorySeeder(BaseSeeder):
 
     def seed(self):
         self._create_fixture_category()
-        #for i in range(200):
-        #    self._populate_random_category()
+        for i in range(200):
+            self._populate_random_category()
 
     def _create_fixture_category(self):
         for category in categories:
@@ -39,7 +39,7 @@ class CategorySeeder(BaseSeeder):
         self._create_category(
             {
                 "pk": None,
-                "user": temporary_user,
+                "user": temporary_user.id,
                 "fields": {
                     "text": word,
                     "colour": colour,

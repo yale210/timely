@@ -14,8 +14,8 @@ class TaskSeeder(BaseSeeder):
 
     def seed(self):
         self._create_fixture_task()
-        #for i in range(200):
-        #    self._populate_random_task()
+        for i in range(200):
+            self._populate_random_task()
 
     def _create_fixture_task(self):
         for task in tasks:
@@ -50,15 +50,15 @@ class TaskSeeder(BaseSeeder):
         self._create_task(
             {
                 "fields": {
-                    "user": temporary_user,
+                    "user": temporary_user.id,
                     "title": self.faker.sentence(),
                     "description": self.faker.sentence(),
-                    "categories": [temporary_category],
+                    "categories": [temporary_category.id],
                     "estimated_minutes": random.randint(1, 60 * 24),
                     "start_time": timezone.make_aware(self.faker.date_time()),
                     "deadline": timezone.make_aware(self.faker.date_time()),
                     "completed": random.randint(0, 1) == 1,
-                    "parent_task": Task.objects.order_by("?").first()
+                    "parent_task": Task.objects.order_by("?").first().id
                     if Task.objects.exists() and random.randint(0, 3) == 1
                     else None,
                     "total_task_allocations": random.randint(0, 24),

@@ -13,8 +13,8 @@ class FriendshipSeeder(BaseSeeder):
 
     def seed(self):
         self._create_fixture_friendship()
-        #for i in range(200):
-        #    self._populate_random_friendship()
+        for i in range(200):
+            self._populate_random_friendship()
 
     def _create_fixture_friendship(self):
         for friendship in friendships:

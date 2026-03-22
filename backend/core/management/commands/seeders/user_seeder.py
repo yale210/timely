@@ -10,8 +10,8 @@ class UserSeeder(BaseSeeder):
 
     def seed(self):
         self._create_fixture_user()
-        #for i in range(1000):
-        #    self._populate_random_user()
+        for i in range(1000):
+            self._populate_random_user()
 
     def _create_fixture_user(self):
         for user in users:

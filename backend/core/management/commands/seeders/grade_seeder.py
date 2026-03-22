@@ -13,8 +13,8 @@ class GradeSeeder(BaseSeeder):
 
     def seed(self):
         self._create_fixture_grade()
-        #for i in range(200):
-        #    self._populate_random_grade()
+        for i in range(200):
+            self._populate_random_grade()
 
     def _create_fixture_grade(self):
         for grade in grades:
@@ -48,9 +48,9 @@ class GradeSeeder(BaseSeeder):
         self._create_grade(
             {
                 "fields": {
-                    "user": temporary_user,
+                    "user": temporary_user.id,
                     "name": self.faker.sentence(),
-                    "category": Category.objects.order_by("?").first(),
+                    "category": Category.objects.order_by("?").first().id,
                     "score": random.randint(0, 100),
                     "total_possible": 100,
                     "date_achieved": self.faker.date_time(),

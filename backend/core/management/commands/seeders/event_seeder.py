@@ -15,8 +15,8 @@ class EventSeeder(BaseSeeder):
 
     def seed(self):
         self._create_fixture_event()
-        #for i in range(200):
-        #    self._populate_random_event()
+        for i in range(200):
+            self._populate_random_event()
 
     def _create_fixture_event(self):
         for event in events:
@@ -49,7 +49,7 @@ class EventSeeder(BaseSeeder):
             self._create_recurring_event(
                 {
                     "fields": {
-                        "user": temporary_user,
+                        "user": temporary_user.id,
                         "categories": [temporary_category],
                     }
                 }
@@ -58,7 +58,7 @@ class EventSeeder(BaseSeeder):
             self._create_non_recurring_event(
                 {
                     "fields": {
-                        "user": temporary_user,
+                        "user": temporary_user.id,
                         "categories": [temporary_category],
                     }
                 }
