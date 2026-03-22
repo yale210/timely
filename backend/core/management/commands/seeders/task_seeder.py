@@ -14,26 +14,26 @@ class TaskSeeder(BaseSeeder):
 
     def seed(self):
         self._create_fixture_task()
-        for i in range(200):
-            self._populate_random_task()
+        #for i in range(200):
+        #    self._populate_random_task()
 
     def _create_fixture_task(self):
         for task in tasks:
             try:
                 self._create_task(task)
-            except Exception:
-                pass
+            except Exception as exception:
+                print(f"Error occurred while creating task: {exception}")
 
     def _create_task(self, data):
         temporary_task, _ = Task.objects.get_or_create(
-            user=data["fields"]["user"],
+            user_id=data["fields"]["user"],
             title=data["fields"]["title"],
             description=data["fields"]["description"],
             estimated_minutes=data["fields"]["estimated_minutes"],
             start_time=data["fields"]["start_time"],
             deadline=data["fields"]["deadline"],
             completed=data["fields"]["completed"],
-            parent_task=data["fields"]["parent_task"],
+            parent_task_id=data["fields"]["parent_task"],
             total_task_allocations=data["fields"]["total_task_allocations"],
             allocation=data["fields"]["allocation"],
             importance=data["fields"]["importance"],

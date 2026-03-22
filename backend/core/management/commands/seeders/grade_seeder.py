@@ -13,19 +13,19 @@ class GradeSeeder(BaseSeeder):
 
     def seed(self):
         self._create_fixture_grade()
-        for i in range(200):
-            self._populate_random_grade()
+        #for i in range(200):
+        #    self._populate_random_grade()
 
     def _create_fixture_grade(self):
         for grade in grades:
             try:
                 self._create_grade(grade)
-            except Exception:
-                pass
+            except Exception as exception:
+                print(f"Error occurred while creating grade: {exception}")
 
     def _create_grade(self, data):
         Grade.objects.get_or_create(
-            user=data["fields"]["user"],
+            user_id=data["fields"]["user"],
             name=data["fields"]["name"],
             category=data["fields"]["category"],
             score=data["fields"]["score"],

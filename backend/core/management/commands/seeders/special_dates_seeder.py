@@ -12,19 +12,19 @@ class SpecialDatesSeeder(BaseSeeder):
 
     def seed(self):
         self._create_fixture_special_date()
-        for i in range(200):
-            self._populate_random_special_date()
+        #for i in range(200):
+        #    self._populate_random_special_date()
 
     def _create_fixture_special_date(self):
         for special_date in special_dates:
             try:
                 self._create_special_date(special_date)
-            except Exception:
-                pass
+            except Exception as exception:
+                print(f"Error occurred while creating special date: {exception}")
 
     def _create_special_date(self, data):
         SpecialDates.objects.get_or_create(
-            user=data["fields"]["user"],
+            user_id=data["fields"]["user"],
             date=data["fields"]["date"],
             text=data["fields"]["text"],
         )

@@ -12,15 +12,15 @@ class CategorySeeder(BaseSeeder):
 
     def seed(self):
         self._create_fixture_category()
-        for i in range(200):
-            self._populate_random_category()
+        #for i in range(200):
+        #    self._populate_random_category()
 
     def _create_fixture_category(self):
         for category in categories:
             try:
                 self._create_category(category)
-            except Exception:
-                pass
+            except Exception as exception:
+                print(f"Error occurred while creating category: {exception}")
 
     def _populate_random_category(self):
         word = self.faker.word()
@@ -51,7 +51,7 @@ class CategorySeeder(BaseSeeder):
     def _create_category(self, data):
         Category.objects.get_or_create(
             id=data["pk"],
-            user=data["user"],
+            user_id=data["user"],
             text=data["fields"]["text"],
             colour=data["fields"].get("colour", None),
             max_daily_study_time=data["fields"].get("max_daily_study_time", None),

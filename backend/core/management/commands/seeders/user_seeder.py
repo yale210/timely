@@ -10,15 +10,15 @@ class UserSeeder(BaseSeeder):
 
     def seed(self):
         self._create_fixture_user()
-        for i in range(1000):
-            self._populate_random_user()
+        #for i in range(1000):
+        #    self._populate_random_user()
 
     def _create_fixture_user(self):
         for user in users:
             try:
                 self._create_user(user)
-            except Exception:
-                pass
+            except Exception as exception:
+                print(f"Error occurred while creating user: {exception}")
 
     def _create_user(self, data):
         User = get_user_model()
@@ -33,6 +33,7 @@ class UserSeeder(BaseSeeder):
 
         User.objects.get_or_create(
             username=username,
+            id=data.get("pk"),
             defaults={
                 "email": email,
                 "password": data["fields"]["password"],

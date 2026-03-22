@@ -14,19 +14,19 @@ class PreferenceSeeder(BaseSeeder):
     def seed(self):
         self._create_fixture_preference()
 
-        for i in range(200):
-            self._populate_random_preference()
+        #for i in range(200):
+        #    self._populate_random_preference()
 
     def _create_fixture_preference(self):
         for temporary_preference in preferences:
             try:
                 self._create_preference(temporary_preference)
-            except Exception:
-                pass
+            except Exception as exception:
+                print(f"Error occurred while creating preference: {exception}")
 
     def _create_preference(self, data):
         temporary_preference, created = Preference.objects.get_or_create(
-            user=data["fields"]["user"],
+            user_id=data["fields"]["user"],
             defaults={
                 "day_start": data["fields"]["day_start"],
                 "day_end": data["fields"]["day_end"],

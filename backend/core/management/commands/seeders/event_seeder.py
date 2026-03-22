@@ -15,19 +15,19 @@ class EventSeeder(BaseSeeder):
 
     def seed(self):
         self._create_fixture_event()
-        for i in range(200):
-            self._populate_random_event()
+        #for i in range(200):
+        #    self._populate_random_event()
 
     def _create_fixture_event(self):
         for event in events:
             try:
                 self._create_event(event)
-            except Exception:
-                pass
+            except Exception as exception:
+                print(f"Error occurred while creating event: {exception}")
 
     def _create_event(self, data):
         temporary_event, _ = Event.objects.get_or_create(
-            user=data["fields"]["user"],
+            user_id=data["fields"]["user"],
             title=data["fields"]["title"],
             description=data["fields"]["description"],
             location=data["fields"]["location"],

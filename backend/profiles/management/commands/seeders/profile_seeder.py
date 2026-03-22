@@ -13,8 +13,8 @@ class ProfileSeeder(BaseSeeder):
     def seed(self):
         self._create_fixture_profile()
 
-        for i in range(200):
-            self._populate_random_profile()
+        #for i in range(200):
+        #    self._populate_random_profile()
 
     def _create_fixture_profile(self):
         for profile in profiles:
