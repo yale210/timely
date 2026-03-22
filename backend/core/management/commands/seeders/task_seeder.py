@@ -26,6 +26,7 @@ class TaskSeeder(BaseSeeder):
 
     def _create_task(self, data):
         temporary_task, _ = Task.objects.get_or_create(
+            id=data.get("pk"),
             user_id=data["fields"]["user"],
             title=data["fields"]["title"],
             description=data["fields"]["description"],

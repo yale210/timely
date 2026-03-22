@@ -27,7 +27,7 @@ class GradeSeeder(BaseSeeder):
         Grade.objects.get_or_create(
             user_id=data["fields"]["user"],
             name=data["fields"]["name"],
-            category=data["fields"]["category"],
+            category_id=data["fields"]["category"],
             score=data["fields"]["score"],
             total_possible=data["fields"]["total_possible"],
             date_achieved=data["fields"]["date_achieved"],
