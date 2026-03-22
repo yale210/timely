@@ -13,7 +13,7 @@ class ProfileSeeder(BaseSeeder):
     def seed(self):
         self._create_fixture_profile()
 
-        for i in range(100):
+        for i in range(200):
             self._populate_random_profile()
 
     def _create_fixture_profile(self):
@@ -24,7 +24,6 @@ class ProfileSeeder(BaseSeeder):
                 print(f"Error occurred while creating profile: {exception}")
 
     def _create_profile(self, data):
-
         User = get_user_model()
         user_id = data["fields"]["user"]
         temporary_user = User.objects.filter(id=user_id).first()

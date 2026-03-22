@@ -14,7 +14,7 @@ class PreferenceSeeder(BaseSeeder):
     def seed(self):
         self._create_fixture_preference()
 
-        for i in range(100):
+        for i in range(200):
             self._populate_random_preference()
 
     def _create_fixture_preference(self):
