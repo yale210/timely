@@ -102,6 +102,33 @@ class Scheduler:
                 merged[-1] = (prev_start, max(prev_end, end))
         return merged
 
+    @staticmethod
+    def _get_task_buffer_minutes(task: Task) -> Tuple[int, int]:
+        return (
+            int(getattr(task, "buffer_before_minutes", 0) or 0),
+            int(getattr(task, "buffer_after_minutes", 0) or 0),
+        )
+
+    def _expand_task_segment(
+        self, task: Task, start: datetime, end: datetime
+    ) -> Tuple[datetime, datetime]:
+        buffer_before_minutes, buffer_after_minutes = self._get_task_buffer_minutes(task)
+        return (
+            start - timedelta(minutes=buffer_before_minutes),
+            end + timedelta(minutes=buffer_after_minutes),
+        )
+
+    def _shrink_slot_for_task(
+        self, task: Task, slot: Tuple[datetime, datetime]
+    ) -> Tuple[datetime, datetime] | None:
+        start, end = slot
+        buffer_before_minutes, buffer_after_minutes = self._get_task_buffer_minutes(task)
+        actual_start = start + timedelta(minutes=buffer_before_minutes)
+        actual_end = end - timedelta(minutes=buffer_after_minutes)
+        if actual_end <= actual_start:
+            return None
+        return (actual_start, actual_end)
+
     def _subtract_intervals(
         self,
         window: Tuple[datetime, datetime],
@@ -162,7 +189,7 @@ class Scheduler:
                 except (KeyError, ValueError, TypeError):
                     continue
                 if start < day_end and end > day_start:
-                    occupied.append((start, end))
+                    occupied.append(self._expand_task_segment(task, start, end))
 
         for start, end in self._scheduled_blocks:
             if start < day_end and end > day_start:
@@ -310,7 +337,7 @@ class Scheduler:
                                 (overlap_end - overlap_start).total_seconds() // 60
                             )
 
-                for start, end in self._scheduled_blocks:
+                for _, start, end in self._scheduled_task_segments:
                     overlap_start = max(start, window_start)
                     overlap_end = min(end, window_end)
                     if overlap_end > overlap_start:
@@ -382,7 +409,10 @@ class Scheduler:
                 continue
             slots = self.get_available_slots(current_date, task.estimated_minutes)
             for slot in slots:
-                capped = self._clip_to_deadline(slot, deadline)
+                adjusted_slot = self._shrink_slot_for_task(task, slot)
+                if not adjusted_slot:
+                    continue
+                capped = self._clip_to_deadline(adjusted_slot, deadline)
                 if not capped:
                     continue
                 clipped = self._clip_to_task_start(capped, task_start)
@@ -442,8 +472,12 @@ class Scheduler:
             )
             if category_minutes_left is not None and category_minutes_left < min_block_minutes:
                 continue
+            buffer_before_minutes, buffer_after_minutes = self._get_task_buffer_minutes(task)
             for slot in slots:
-                capped = self._clip_to_deadline(slot, deadline)
+                adjusted_slot = self._shrink_slot_for_task(task, slot)
+                if not adjusted_slot:
+                    continue
+                capped = self._clip_to_deadline(adjusted_slot, deadline)
                 if not capped:
                     continue
                 clipped = self._clip_to_task_start(capped, task_start)
@@ -473,7 +507,9 @@ class Scheduler:
                     remaining -= chunk
                     if category_minutes_left is not None:
                         category_minutes_left -= int(chunk)
-                    cursor = scheduled_end
+                    cursor = scheduled_end + timedelta(
+                        minutes=buffer_before_minutes + buffer_after_minutes
+                    )
                     if remaining <= 0:
                         break
 
@@ -522,13 +558,18 @@ class Scheduler:
                 and result.scheduled_end is not None
             ):
                 if result.segments:
-                    self._scheduled_blocks.extend(result.segments)
+                    self._scheduled_blocks.extend(
+                        self._expand_task_segment(task, start, end)
+                        for start, end in result.segments
+                    )
                     self._scheduled_task_segments.extend(
                         (task, start, end) for start, end in result.segments
                     )
                 else:
                     self._scheduled_blocks.append(
-                        (result.scheduled_start, result.scheduled_end)
+                        self._expand_task_segment(
+                            task, result.scheduled_start, result.scheduled_end
+                        )
                     )
                     self._scheduled_task_segments.append(
                         (task, result.scheduled_start, result.scheduled_end)

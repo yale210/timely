@@ -4,7 +4,7 @@ from django.contrib.auth import get_user_model
 from django.test import TestCase
 from django.utils import timezone
 
-from core.models import Commute, DayOfWeek, Event, Preference, SpecialDates, Task
+from core.models import Category, Commute, DayOfWeek, Event, Preference, SpecialDates, Task
 from scheduler.services import Scheduler
 
 
@@ -352,3 +352,76 @@ class SchedulerTest(TestCase):
 
         self.assertFalse(results[0].success)
         self.assertEqual(results[0].segments, [])
+
+    def test_schedule_respects_task_buffer_before_event(self):
+        start_day = date(2026, 3, 19)
+        Event.objects.create(
+            user=self.user,
+            title="Blocking event",
+            start_time=timezone.make_aware(datetime.combine(start_day, time(10, 0))),
+            end_time=timezone.make_aware(datetime.combine(start_day, time(10, 45))),
+        )
+        Task.objects.create(
+            user=self.user,
+            title="Buffered task",
+            description="",
+            estimated_minutes=30,
+            importance=5,
+            start_time=timezone.make_aware(datetime.combine(start_day, time(10, 0))),
+            deadline=timezone.make_aware(datetime.combine(start_day, time(12, 0))),
+            completed=False,
+            buffer_before_minutes=30,
+        )
+
+        scheduler = Scheduler(self.user, max_days_ahead=1, allow_split=False)
+        results = scheduler.schedule_tasks(start_date=start_day)
+
+        self.assertTrue(results[0].success)
+        self.assertGreaterEqual(
+            results[0].scheduled_start,
+            timezone.make_aware(datetime.combine(start_day, time(11, 15))),
+        )
+
+    def test_schedule_respects_existing_task_buffers(self):
+        start_day = date(2026, 3, 19)
+        Task.objects.create(
+            user=self.user,
+            title="Already scheduled buffered task",
+            description="",
+            estimated_minutes=30,
+            importance=8,
+            start_time=timezone.make_aware(datetime.combine(start_day, time(7, 0))),
+            deadline=timezone.make_aware(datetime.combine(start_day, time(12, 0))),
+            completed=False,
+            buffer_after_minutes=30,
+            allocation=[
+                {
+                    "start": timezone.make_aware(
+                        datetime.combine(start_day, time(8, 0))
+                    ).isoformat(),
+                    "end": timezone.make_aware(
+                        datetime.combine(start_day, time(8, 30))
+                    ).isoformat(),
+                }
+            ],
+            total_task_allocations=1,
+        )
+        Task.objects.create(
+            user=self.user,
+            title="Follow-up task",
+            description="",
+            estimated_minutes=30,
+            importance=4,
+            start_time=timezone.make_aware(datetime.combine(start_day, time(7, 0))),
+            deadline=timezone.make_aware(datetime.combine(start_day, time(12, 0))),
+            completed=False,
+        )
+
+        scheduler = Scheduler(self.user, max_days_ahead=1, allow_split=False)
+        results = scheduler.schedule_tasks(start_date=start_day)
+
+        self.assertTrue(results[0].success)
+        self.assertGreaterEqual(
+            results[0].scheduled_start,
+            timezone.make_aware(datetime.combine(start_day, time(9, 0))),
+        )

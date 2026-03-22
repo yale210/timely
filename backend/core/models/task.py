@@ -44,6 +44,12 @@ class Task(models.Model):
         null=True,
         validators=[MinValueValidator(15), MaxValueValidator(1440)],
     )
+    buffer_before_minutes = models.PositiveSmallIntegerField(
+        default=0, validators=[MinValueValidator(0), MaxValueValidator(240)]
+    )
+    buffer_after_minutes = models.PositiveSmallIntegerField(
+        default=0, validators=[MinValueValidator(0), MaxValueValidator(240)]
+    )
 
     # Query db for models with specific parent tasks when necessary.
     parent_task = models.ForeignKey(

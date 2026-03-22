@@ -166,6 +166,7 @@ const submitTask = useCallback(
       await fetchTasks();
     } catch (submitError) {
       console.error(submitError);
+      throw submitError;
     }
   },
   [fetchTasks, selectedTask],

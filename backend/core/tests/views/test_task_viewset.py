@@ -6,6 +6,7 @@ from django.utils import timezone
 from rest_framework.test import APIClient
 
 from core.models import Category, Event, Task
+from profiles.models.profile import Profile
 
 
 class TaskViewSetTests(TestCase):
@@ -17,6 +18,8 @@ class TaskViewSetTests(TestCase):
         self.other_user = get_user_model().objects.create_user(
             username="otheruser", password="password123", email="other@user.com"
         )
+        Profile.objects.create(user=self.user, name="View User")
+        Profile.objects.create(user=self.other_user, name="Other User")
         self.category1 = Category.objects.create(user=self.user, text="Work")
         self.category2 = Category.objects.create(user=self.user, text="Home")
 
@@ -155,6 +158,38 @@ class TaskViewSetTests(TestCase):
         self.assertEqual(response.status_code, 400)
         self.assertIn("allocation", response.data)
 
+    def test_patch_task_allocation_rejects_buffer_overlap_with_event(self):
+        self.client.force_authenticate(user=self.user)
+        event_start = self.now + datetime.timedelta(hours=3)
+        event_end = event_start + datetime.timedelta(hours=1)
+
+        Event.objects.create(
+            user=self.user,
+            title="Busy slot",
+            start_time=event_start,
+            end_time=event_end,
+        )
+
+        allocation_end = event_start - datetime.timedelta(minutes=5)
+        allocation_start = allocation_end - datetime.timedelta(minutes=30)
+
+        response = self.client.patch(
+            f"/api/tasks/{self.task1.id}/",
+            {
+                "buffer_after_minutes": 15,
+                "allocation": [
+                    {
+                        "start": allocation_start.isoformat(),
+                        "end": allocation_end.isoformat(),
+                    }
+                ],
+            },
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, 400)
+        self.assertIn("allocation", response.data)
+
     def test_patch_task_allocation_syncs_total_task_allocations(self):
         self.client.force_authenticate(user=self.user)
         allocation_start = self.now + datetime.timedelta(days=1, hours=2)
@@ -226,3 +261,62 @@ class TaskViewSetTests(TestCase):
 
         self.assertEqual(response.status_code, 400)
         self.assertIn("allocation", response.data)
+
+    def test_patch_task_allocation_rejects_buffer_overlap_with_other_task(self):
+        self.client.force_authenticate(user=self.user)
+        other_start = self.now + datetime.timedelta(days=1, hours=4)
+        other_end = other_start + datetime.timedelta(minutes=30)
+
+        Task.objects.create(
+            user=self.user,
+            title="Buffered task",
+            estimated_minutes=30,
+            start_time=self.now + datetime.timedelta(days=1),
+            completed=False,
+            deadline=self.now + datetime.timedelta(days=2),
+            importance=4,
+            buffer_before_minutes=20,
+            allocation=[
+                {
+                    "start": other_start.isoformat(),
+                    "end": other_end.isoformat(),
+                }
+            ],
+            total_task_allocations=1,
+        )
+
+        requested_end = other_start - datetime.timedelta(minutes=10)
+        requested_start = requested_end - datetime.timedelta(minutes=30)
+
+        response = self.client.patch(
+            f"/api/tasks/{self.task1.id}/",
+            {
+                "allocation": [
+                    {
+                        "start": requested_start.isoformat(),
+                        "end": requested_end.isoformat(),
+                    }
+                ]
+            },
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, 400)
+        self.assertIn("allocation", response.data)
+
+    def test_patch_task_buffer_fields_persist(self):
+        self.client.force_authenticate(user=self.user)
+
+        response = self.client.patch(
+            f"/api/tasks/{self.task1.id}/",
+            {
+                "buffer_before_minutes": 25,
+                "buffer_after_minutes": 35,
+            },
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.task1.refresh_from_db()
+        self.assertEqual(self.task1.buffer_before_minutes, 25)
+        self.assertEqual(self.task1.buffer_after_minutes, 35)

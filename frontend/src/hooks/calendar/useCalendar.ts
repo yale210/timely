@@ -406,6 +406,7 @@ export const useCalendar = (): UseCalendarReturn => {
         closeSidebar();
       } catch (error) {
         console.error(error);
+        throw error;
       }
     },
     [closeSidebar, fetchTasks, selectedItem],

@@ -64,6 +64,8 @@ class CalendarSerializerTests(TestCase):
                 "allow_split",
                 "min_split_minutes",
                 "max_split_minutes",
+                "buffer_before_minutes",
+                "buffer_after_minutes",
                 "estimated_minutes",  # I should check if this was in fields before, it wasn't but model has it.
                 "parent_task",
                 "allocation",
@@ -85,6 +87,8 @@ class CalendarSerializerTests(TestCase):
             "allow_split": True,
             "min_split_minutes": 30,
             "max_split_minutes": 60,
+            "buffer_before_minutes": 15,
+            "buffer_after_minutes": 20,
         }
 
         # To test creation, we usually use the serializer's save method
@@ -97,6 +101,8 @@ class CalendarSerializerTests(TestCase):
         self.assertIn(self.category1, task.categories.all())
         self.assertEqual(task.min_split_minutes, 30)
         self.assertEqual(task.max_split_minutes, 60)
+        self.assertEqual(task.buffer_before_minutes, 15)
+        self.assertEqual(task.buffer_after_minutes, 20)
 
     def test_calendar_serializer_rejects_max_split_below_minimum(self):
         now = timezone.now()

@@ -29,6 +29,8 @@ class CalendarSerializer(serializers.ModelSerializer):
             "allow_split",
             "min_split_minutes",
             "max_split_minutes",
+            "buffer_before_minutes",
+            "buffer_after_minutes",
             "parent_task",
             "allocation",
             "total_task_allocations",
@@ -105,6 +107,13 @@ class CalendarSerializer(serializers.ModelSerializer):
         return left_start < right_end and left_end > right_start
 
     @staticmethod
+    def _expand_with_buffer(slot_start, slot_end, buffer_before_minutes, buffer_after_minutes):
+        return (
+            slot_start - timedelta(minutes=buffer_before_minutes),
+            slot_end + timedelta(minutes=buffer_after_minutes),
+        )
+
+    @staticmethod
     def _minutes_by_day(slots):
         minutes_by_day = {}
         for start, end in slots:
@@ -173,6 +182,8 @@ class CalendarSerializer(serializers.ModelSerializer):
         allow_split,
         min_split_minutes,
         max_split_minutes,
+        buffer_before_minutes,
+        buffer_after_minutes,
         start_time,
         deadline,
         categories,
@@ -246,14 +257,25 @@ class CalendarSerializer(serializers.ModelSerializer):
 
         if user is not None:
             for slot_start, slot_end in normalized_slots:
+                requested_blocked_start, requested_blocked_end = self._expand_with_buffer(
+                    slot_start,
+                    slot_end,
+                    buffer_before_minutes,
+                    buffer_after_minutes,
+                )
                 for event in Event.objects.filter(user=user):
                     event_start = self._aware(event.start_time)
                     event_end = self._aware(event.end_time)
-                    if self._overlaps(slot_start, slot_end, event_start, event_end):
+                    if self._overlaps(
+                        requested_blocked_start,
+                        requested_blocked_end,
+                        event_start,
+                        event_end,
+                    ):
                         raise serializers.ValidationError(
                             {
                                 "allocation": (
-                                    "Allocation slots cannot overlap calendar events."
+                                    "Allocation slots and their task buffers cannot overlap calendar events."
                                 )
                             }
                         )
@@ -262,13 +284,24 @@ class CalendarSerializer(serializers.ModelSerializer):
                 for task in other_tasks.exclude(allocation=[]):
                     task_slots, _ = self._parse_allocation_slots(task.allocation or [])
                     for other_start, other_end in task_slots:
+                        other_blocked_start, other_blocked_end = (
+                            self._expand_with_buffer(
+                                other_start,
+                                other_end,
+                                task.buffer_before_minutes,
+                                task.buffer_after_minutes,
+                            )
+                        )
                         if self._overlaps(
-                            slot_start, slot_end, other_start, other_end
+                            requested_blocked_start,
+                            requested_blocked_end,
+                            other_blocked_start,
+                            other_blocked_end,
                         ):
                             raise serializers.ValidationError(
                                 {
                                     "allocation": (
-                                        "Allocation slots cannot overlap other tasks."
+                                        "Allocation slots and task buffers cannot overlap other tasks."
                                     )
                                 }
                             )
@@ -291,6 +324,14 @@ class CalendarSerializer(serializers.ModelSerializer):
         deadline = attrs.get("deadline", getattr(self.instance, "deadline", None))
         allow_split = attrs.get(
             "allow_split", getattr(self.instance, "allow_split", False)
+        )
+        buffer_before_minutes = attrs.get(
+            "buffer_before_minutes",
+            getattr(self.instance, "buffer_before_minutes", 0),
+        )
+        buffer_after_minutes = attrs.get(
+            "buffer_after_minutes",
+            getattr(self.instance, "buffer_after_minutes", 0),
         )
         allocation = attrs.get(
             "allocation", getattr(self.instance, "allocation", [])
@@ -330,6 +371,8 @@ class CalendarSerializer(serializers.ModelSerializer):
             allow_split=allow_split,
             min_split_minutes=min_split_minutes or 15,
             max_split_minutes=max_split_minutes,
+            buffer_before_minutes=buffer_before_minutes,
+            buffer_after_minutes=buffer_after_minutes,
             start_time=start_time,
             deadline=deadline,
             categories=categories,
@@ -367,6 +410,8 @@ class CalendarResponseSerializer(serializers.ModelSerializer):
             "allow_split",
             "min_split_minutes",
             "max_split_minutes",
+            "buffer_before_minutes",
+            "buffer_after_minutes",
             "parent_task",
         ]
 
