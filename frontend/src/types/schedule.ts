@@ -18,3 +18,9 @@ export interface ScheduleResponse {
   failed_count: number;
   results: ScheduleResult[];
 }
+
+export interface ExportResponse {
+  file_name: string;
+  content_type: string;
+  data: string;
+}

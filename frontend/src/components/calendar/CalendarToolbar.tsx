@@ -12,7 +12,7 @@ interface CalendarToolbarProps {
   >;
   actions: Pick<
     UseCalendarReturn["actions"],
-    "setView" | "goToToday" | "goToPrevious" | "goToNext" | "rescheduleTasks"
+    "setView" | "goToToday" | "goToPrevious" | "goToNext" | "rescheduleTasks" | "exportEvents" | "importEvents"
   >;
 }
 
@@ -79,6 +79,48 @@ const CalendarToolbar = ({
             <span className="material-icons text-lg mr-1.5">update</span>
             {state.isRescheduling ? "Rescheduling..." : "Reschedule"}
           </button>
+          //
+
+          <button
+            type="button"
+            onClick={() => {
+              void actions.exportEvents();
+            }}
+            
+            className="px-4 py-2 rounded-lg text-sm font-medium flex items-center shadow-sm transition-colors"
+          >
+            <span className="material-icons mr-1.5 text-lg">event_busy</span>
+            Export
+          </button>
+
+
+          //
+    
+
+          <button
+            type="button"
+            onClick={() => {
+              const input = document.createElement("input")
+              input.type = "file"
+              input.onchange = (event) => {
+                const target = event.target
+                
+                if (target instanceof HTMLInputElement && target.files) {
+                  const file = target.files[0]
+                  actions.importEvents(file)
+                }
+              }
+              input.click()
+            }}
+            
+            className= "px-4 py-2 rounded-lg text-sm font-medium flex items-center shadow-sm transition-colors"
+          >
+            <span className="material-icons mr-1.5 text-lg">event_busy</span>
+            Import
+          </button>
+
+
+          //
         </div>
         <div className="hidden md:flex bg-gray-100 p-1 rounded-lg">
           {(
