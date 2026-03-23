@@ -35,6 +35,8 @@ describe("Settings page", () => {
     day_start: "08:00:00",
     day_end: "22:00:00",
     max_hours_study_per_day: 4,
+    max_days_ahead: 7,
+    drag_snap_minutes: 15,
     days_off: [3],
   };
 

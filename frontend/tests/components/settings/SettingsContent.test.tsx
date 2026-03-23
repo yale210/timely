@@ -1,7 +1,7 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import SettingsContent from "@/components/settings/SettingsContent";
-import type { Preference } from "@/types";
+import type { Category, Preference } from "@/types";
 
 vi.mock("@/components/settings/ProfileSection", () => ({
   default: () => <div>profile-section</div>,
@@ -24,27 +24,36 @@ const preference: Preference = {
   day_start: "08:00:00",
   day_end: "22:00:00",
   max_hours_study_per_day: 4,
+  max_days_ahead: 7,
+  drag_snap_minutes: 15,
   days_off: [],
 };
 
-const createProps = (activeSection: "preferences" | "features" | "appearance" | "profile") => ({
+const createProps = (
+  activeSection: "preferences" | "features" | "appearance" | "profile",
+) => ({
   state: {
     activeSection,
     preference,
+    categories: [] as Category[],
     fieldErrors: {},
   },
   loading: {
     preference: false,
+    categories: false,
     saving: false,
   },
   error: {
     preference: null,
+    categories: null,
   },
   actions: {
     selectSection: vi.fn(),
     logout: vi.fn(),
     setPreference: vi.fn(),
+    setCategoryLimit: vi.fn(),
     savePreferences: vi.fn(),
+    saveCategoryLimits: vi.fn(),
     applyTheme: vi.fn(),
     applyFont: vi.fn(),
   },
