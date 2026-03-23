@@ -1,0 +1,94 @@
+services:
+  backend:
+    build: backend
+    command: ["daphne", "-b", "0.0.0.0", "-p", "8000", "source.asgi:application"]
+    restart: always
+    volumes:
+      - ./data:/data
+      - ./backend:/app
+    environment:
+      - DEBUG=True
+      - REDIS_URL=redis://redis:6379/0
+    depends_on:
+      redis:
+        condition: service_started
+      postgres:
+        condition: service_started
+    networks:
+      - database
+      - api
+    ports:
+      - "8000:8000"
+
+  celery-worker:
+    build: backend
+    command: ["celery", "-A", "source", "worker", "--loglevel=info"]
+    restart: always
+    volumes:
+      - ./data:/data
+      - ./backend:/app
+    environment:
+      - DEBUG=True
+      - REDIS_URL=redis://redis:6379/0
+    depends_on:
+      redis:
+        condition: service_started
+      postgres:
+        condition: service_started
+    networks:
+      - database
+
+  celery-beat:
+    build: backend
+    command: ["celery", "-A", "source", "beat", "--loglevel=info", "--schedule=/data/celerybeat-schedule"]
+    restart: always
+    volumes:
+      - ./data:/data
+      - ./backend:/app
+    environment:
+      - DEBUG=True
+      - REDIS_URL=redis://redis:6379/0
+    depends_on:
+      redis:
+        condition: service_started
+      postgres:
+        condition: service_started
+    networks:
+      - database
+  redis:
+    image: redis:7-alpine
+    restart: always
+    networks:
+      - database
+
+  frontend:
+
+    build: frontend
+    command: ["nginx", "-g", "daemon off;"]
+    restart: always
+    ports:
+      - "80:80"
+    volumes:
+      - ./frontend/nginx.dev.conf:/etc/nginx/nginx.conf
+    depends_on:
+      - backend
+    networks:
+        - api
+
+  postgres:
+    image: postgres:14-alpine
+    restart: always
+    env_file:
+      - .env
+    networks:
+      - database
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./data/postgres:/var/lib/postgresql/data
+
+networks:
+  database:
+    driver: bridge
+  api:
+    driver: bridge

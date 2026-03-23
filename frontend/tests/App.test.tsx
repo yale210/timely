@@ -17,7 +17,8 @@ vi.mock("@/pages/index", () => ({
   Friends: () => <div>Friends Page</div>,
   Sharing: () => <div>Sharing Page</div>,
   ProfilePage: () => <div>Profile Page</div>,
-  Leaderboard: () => <div>Leaderboard Page</div>
+  Leaderboard: () => <div>Leaderboard Page</div>,
+  NotFound: () => <div>Page not found</div>,
 }));
 
 vi.mock("@/pages/Notification/Notifications", () => ({
@@ -214,4 +215,13 @@ describe("App Component", () => {
     expect(getByText("Settings Page")).toBeDefined();
   });
 
+  it("should render 404 page for unknown routes", () => {
+    const { getByText } = render(
+      <MemoryRouter initialEntries={["/does-not-exist"]}>
+        <App />
+      </MemoryRouter>
+    );
+
+    expect(getByText("Page not found")).toBeDefined();
+  });
 });

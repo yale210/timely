@@ -1,6 +1,6 @@
 """Profile Seeder"""
 
-from core.models import Profile
+from profiles.models import Profile
 
 from .fixtures.profile_fixtures import profiles
 from django.contrib.auth import get_user_model
@@ -13,20 +13,27 @@ class ProfileSeeder(BaseSeeder):
     def seed(self):
         self._create_fixture_profile()
 
-        for i in range(100):
-            self._populate_random_profile()
+        # for i in range(200):
+        #    self._populate_random_profile()
 
     def _create_fixture_profile(self):
         for profile in profiles:
             try:
                 self._create_profile(profile)
-            except Exception:
-                pass
+            except Exception as exception:
+                print(f"Error occurred while creating profile: {exception}")
 
     def _create_profile(self, data):
+        User = get_user_model()
+        user_id = data["fields"]["user"]
+        temporary_user = User.objects.filter(id=user_id).first()
+        if temporary_user is None:
+            return
+
         Profile.objects.get_or_create(
-            user=data["fields"]["user"],
+            user_id=user_id,
             defaults={
+                "name": temporary_user.username,
                 "date_of_birth": data["fields"]["date_of_birth"],
                 "creation_date": data["fields"]["creation_date"],
             },
@@ -47,7 +54,7 @@ class ProfileSeeder(BaseSeeder):
         self._create_profile(
             {
                 "fields": {
-                    "user": temporary_user,
+                    "user": temporary_user.id,
                     "date_of_birth": self.faker.date(),
                     "creation_date": self.faker.date(),
                 }
