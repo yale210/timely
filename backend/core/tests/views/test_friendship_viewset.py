@@ -77,3 +77,31 @@ class FriendshipViewSetTests(APITestCase):
 
         friendship.refresh_from_db()
         self.assertEqual(friendship.state, Friendship.State.SENT)
+
+    def test_sender_cannot_decline_own_request(self):
+        friendship = Friendship.objects.create(
+            sender=self.sender,
+            receiver=self.receiver,
+            state=Friendship.State.SENT,
+        )
+
+        self.client.force_authenticate(user=self.sender)
+        url = reverse("friendship-decline-request", args=[friendship.id])
+        response = self.client.post(url)
+
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_friend_themselves_fails(self):
+        self.client.force_authenticate(user=self.sender)
+        data = {"receiver": self.sender.id}
+        response = self.client.post(self.url, data, format="json")
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_friend_already_friends_fails(self):
+        Friendship.objects.create(
+            sender=self.sender, receiver=self.receiver, state=Friendship.State.ACCEPTED
+        )
+        self.client.force_authenticate(user=self.sender)
+        data = {"receiver": self.receiver.id}
+        response = self.client.post(self.url, data, format="json")
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)

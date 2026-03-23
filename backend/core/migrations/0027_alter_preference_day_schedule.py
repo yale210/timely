@@ -5,15 +5,14 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('core', '0026_preference_limit_max_hours'),
+        ("core", "0026_preference_limit_max_hours"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='preference',
-            name='day_schedule',
+            model_name="preference",
+            name="day_schedule",
             field=models.JSONField(default=core.models.preference.default_day_schedule),
         ),
     ]

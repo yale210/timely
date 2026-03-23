@@ -4,11 +4,9 @@ from django.db import migrations
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('core', '0009_alter_task_allocation'),
-        ('core', '0009_merge_20260205_2044'),
+        ("core", "0009_alter_task_allocation"),
+        ("core", "0009_merge_20260205_2044"),
     ]
 
-    operations = [
-    ]
+    operations = []
