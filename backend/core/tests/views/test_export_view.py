@@ -1,6 +1,10 @@
-from django.test import TestCase
+from datetime import datetime
+
 from django.contrib.auth import get_user_model
+from django.test import TestCase
+from django.utils import timezone
 from rest_framework.test import APIClient
+
 from core.models import Event
 
 # tEST12
@@ -48,8 +52,8 @@ class ExportViewTests(TestCase):
             title="Title Event 1",
             description="Description Event 1",
             location="Location Event 1",
-            start_time="20260325T200000",
-            end_time="20260325T210000",
+            start_time=timezone.make_aware(datetime(2026, 3, 25, 20, 0)),
+            end_time=timezone.make_aware(datetime(2026, 3, 25, 21, 0)),
         )
 
         response = self.client.get("/api/export/")
@@ -85,8 +89,8 @@ class ExportViewTests(TestCase):
             title="Title Event 1",
             description="Description Event 1",
             location="Location Event 1",
-            start_time="20260325T200000",
-            end_time="20260325T210000",
+            start_time=timezone.make_aware(datetime(2026, 3, 25, 20, 0)),
+            end_time=timezone.make_aware(datetime(2026, 3, 25, 21, 0)),
         )
 
         Event.objects.create(
@@ -94,8 +98,8 @@ class ExportViewTests(TestCase):
             title="Title Event 2",
             description="Description Event 2",
             location="Location Event 2",
-            start_time="20260425T200000",
-            end_time="20260425T210000",
+            start_time=timezone.make_aware(datetime(2026, 4, 25, 20, 0)),
+            end_time=timezone.make_aware(datetime(2026, 4, 25, 21, 0)),
         )
 
         response = self.client.get("/api/export/")
@@ -141,8 +145,8 @@ class ExportViewTests(TestCase):
             title="Title Event 1",
             description="Description Event 1",
             location="Location Event 1",
-            start_time="20260325T200000",
-            end_time="20260325T210000",
+            start_time=timezone.make_aware(datetime(2026, 3, 25, 20, 0)),
+            end_time=timezone.make_aware(datetime(2026, 3, 25, 21, 0)),
             recurrence_interval=Event.RecurrenceInterval.DAILY,
             recurrence_end=None,
         )
@@ -172,3 +176,23 @@ class ExportViewTests(TestCase):
         self.assertEqual(
             response.content.decode("utf-8").strip(), expected_file_content.strip()
         )
+
+    def test_export_r_rule_until(self):
+        self.client.login(username="testuser", password="password")
+        from datetime import date, datetime
+        from django.utils import timezone
+
+        Event.objects.create(
+            user=self.user,
+            title="Until Event",
+            description="Until Desc",
+            location="Until Loc",
+            start_time=timezone.make_aware(datetime(2026, 3, 25, 20, 0, 0)),
+            end_time=timezone.make_aware(datetime(2026, 3, 25, 21, 0, 0)),
+            recurrence_interval=Event.RecurrenceInterval.WEEKLY,
+            recurrence_end=date(2026, 4, 25),
+        )
+
+        response = self.client.get("/api/export/")
+        content = response.content.decode("utf-8")
+        self.assertIn("RRULE:FREQ=WEEKLY;UNTIL=20260425T000000", content)

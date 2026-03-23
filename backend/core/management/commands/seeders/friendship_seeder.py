@@ -20,8 +20,8 @@ class FriendshipSeeder(BaseSeeder):
         for friendship in friendships:
             try:
                 self._create_friendship(friendship)
-            except Exception:
-                pass
+            except Exception as exception:
+                print(f"Error occurred while creating friendship: {exception}")
 
     def _create_friendship(self, data):
         User = get_user_model()

@@ -26,6 +26,7 @@ describe("CalendarToolbar", () => {
           dateStripDays: [moment("2026-03-15"), moment("2026-03-16")],
           timeGutterWidth: 60,
           isRescheduling: false,
+          rescheduleWarnings: [],
         }}
         actions={actions}
       />,

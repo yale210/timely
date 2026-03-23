@@ -1,0 +1,9 @@
+[data-theme="signal"] {
+  --primary: #f97316;
+  --primary-hover: #fb923c;
+
+  --background: #171717;
+  --text-color: #f3efe8;
+
+  --border: #4a4a4a;
+}

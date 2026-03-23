@@ -14,8 +14,8 @@ describe("ThemeSection", () => {
       />,
     );
 
-    fireEvent.click(screen.getByRole("button", { name: "dark" }));
-    fireEvent.click(screen.getByRole("button", { name: "poppins" }));
+    fireEvent.click(screen.getByRole("button", { name: "Dark Surface" }));
+    fireEvent.click(screen.getByRole("button", { name: "Font Ag Poppins" }));
 
     expect(onThemeChange).toHaveBeenCalledWith("dark");
     expect(onFontChange).toHaveBeenCalledWith("poppins");

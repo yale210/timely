@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, type FormEvent, type MouseEvent as ReactMo
 import { CategoryColourPicker, CategoryMultiSelect, Tooltip } from "@/components";
 import { getOverrideColour } from "@/utils/colorUtils";
 import { type Category, type Task, type TaskSubmission } from "@/types";
+import { formatDjangoFormError } from "@/utils/apiErrors";
 
 /**
  * Safely convert a Date to ISO string, returning "" for invalid dates.
@@ -17,9 +18,17 @@ interface NormalisedTaskSubmission {
   categories: number[];
   importance: number;
   estimated_minutes: number;
+  completed_minutes: number;
   completed: boolean;
+  locked: boolean;
   allow_split: boolean;
+  min_split_minutes: number;
+  max_split_minutes: number | null;
+  buffer_before_minutes: number;
+  buffer_after_minutes: number;
 }
+
+const DEFAULT_MIN_SPLIT_MINUTES = 30;
 
 const normaliseTaskSubmission = (
   submission: TaskSubmission,
@@ -32,8 +41,15 @@ const normaliseTaskSubmission = (
   categories: [...(submission.categories ?? [])].sort((a, b) => a - b),
   importance: Number(submission.importance ?? 5),
   estimated_minutes: Number(submission.estimated_minutes ?? 60),
+  completed_minutes: Number(submission.completed_minutes ?? 0),
   completed: Boolean(submission.completed),
+  locked: Boolean(submission.locked),
   allow_split: Boolean(submission.allow_split),
+  min_split_minutes: Number(submission.min_split_minutes ?? DEFAULT_MIN_SPLIT_MINUTES),
+  max_split_minutes:
+    submission.max_split_minutes == null ? null : Number(submission.max_split_minutes),
+  buffer_before_minutes: Number(submission.buffer_before_minutes ?? 0),
+  buffer_after_minutes: Number(submission.buffer_after_minutes ?? 0),
 });
 
 const isTaskSubmissionEqual = (
@@ -48,7 +64,7 @@ interface TaskFormProps {
   onUpdateCategory: (id: number, patch: { colour?: string | null; colour_override?: boolean }) => Promise<Category>;
   onDeleteCategory: (id: number) => Promise<void>;
   onCategoryChange?: (categories: number[]) => void;
-  onSubmit: (data: TaskSubmission) => void;
+  onSubmit: (data: TaskSubmission) => Promise<void> | void;
   onCancel: () => void;
   onDataChange?: (data: Partial<Task>) => void;
 }
@@ -122,15 +138,35 @@ const TaskForm = ({
       : ""
   );
   const [hasSubmitted, setHasSubmitted] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
+  const [serverFieldErrors, setServerFieldErrors] = useState<Record<string, string[]>>({});
   const [hasTouchedTime, setHasTouchedTime] = useState(false);
   const [selectedCategories, setSelectedCategories] = useState<number[]>(
     initialData?.categories?.map((c) => (typeof c === "object" ? c.id : c)) ?? []
   );
   const [importance, setImportance] = useState(initialData?.importance ?? 5);
-  const [allowSplit, setAllowSplit] = useState(initialData?.allow_split ?? false);
-  const [autoSchedule, setAutoSchedule] = useState(
-    initialData?.locked ? false : true,
+  const [completedMinutes, setCompletedMinutes] = useState<number | "">(
+    initialData?.completed_minutes ?? 0
   );
+  const [allowSplit, setAllowSplit] = useState(initialData?.allow_split ?? false);
+  const [bufferEnabled, setBufferEnabled] = useState(
+    (initialData?.buffer_before_minutes ?? 0) > 0 || (initialData?.buffer_after_minutes ?? 0) > 0,
+  );
+  const [minSplitMinutes, setMinSplitMinutes] = useState<string>(
+    String(initialData?.min_split_minutes ?? DEFAULT_MIN_SPLIT_MINUTES),
+  );
+  const [maxSplitMinutes, setMaxSplitMinutes] = useState<string>(
+    initialData?.max_split_minutes == null ? "" : String(initialData.max_split_minutes),
+  );
+  const [bufferBeforeMinutes, setBufferBeforeMinutes] = useState<string>(
+    String(initialData?.buffer_before_minutes ?? 0),
+  );
+  const [bufferAfterMinutes, setBufferAfterMinutes] = useState<string>(
+    String(initialData?.buffer_after_minutes ?? 0),
+  );
+  const [autoSchedule, setAutoSchedule] = useState(!(initialData?.locked ?? false));
+  const [isTaskLocked, setIsTaskLocked] = useState(initialData?.locked ?? false);
   const defaultColour = "#3b82f6";
   const [colour, setColour] = useState(initialData?.colour ?? defaultColour);
   const [showPickerMenu, setShowPickerMenu] = useState(false);
@@ -175,7 +211,45 @@ const TaskForm = ({
   const isEndInvalid = Number.isNaN(endDateTime.getTime());
   const isTimeInvalid = isStartInvalid || isEndInvalid || startDateTime >= endDateTime;
   const isImportanceInvalid = importance < 1 || importance > 10 || isNaN(importance);
+  const normalizedEstimatedMinutes = Number(estimatedMinutes || 0);
+  const parsedCompletedMinutes = Number(completedMinutes || 0);
+  const isCompletedMinutesInvalid =
+    completedMinutes === ""
+    || Number.isNaN(parsedCompletedMinutes)
+    || parsedCompletedMinutes < 0
+    || parsedCompletedMinutes > normalizedEstimatedMinutes;
+  const parsedMinSplitMinutes = Number.parseInt(minSplitMinutes, 10);
+  const parsedMaxSplitMinutes = Number.parseInt(maxSplitMinutes, 10);
+  const isMinSplitMinutesInvalid = allowSplit && (
+    minSplitMinutes.trim() === ""
+    || Number.isNaN(parsedMinSplitMinutes)
+    || parsedMinSplitMinutes < 15
+    || parsedMinSplitMinutes > 240
+  );
+  const isMaxSplitMinutesInvalid = allowSplit && maxSplitMinutes.trim() !== "" && (
+    Number.isNaN(parsedMaxSplitMinutes)
+    || parsedMaxSplitMinutes < 15
+    || parsedMaxSplitMinutes > 1440
+    || parsedMaxSplitMinutes < parsedMinSplitMinutes
+  );
+  const parsedBufferBeforeMinutes = Number.parseInt(bufferBeforeMinutes, 10);
+  const parsedBufferAfterMinutes = Number.parseInt(bufferAfterMinutes, 10);
+  const isBufferBeforeMinutesInvalid = bufferEnabled && (
+    bufferBeforeMinutes.trim() === ""
+    || Number.isNaN(parsedBufferBeforeMinutes)
+    || parsedBufferBeforeMinutes < 0
+    || parsedBufferBeforeMinutes > 240
+  );
+  const isBufferAfterMinutesInvalid = bufferEnabled && (
+    bufferAfterMinutes.trim() === ""
+    || Number.isNaN(parsedBufferAfterMinutes)
+    || parsedBufferAfterMinutes < 0
+    || parsedBufferAfterMinutes > 240
+  );
   const shouldValidateTime = hasSubmitted || hasTouchedTime;
+  const progressPercent = normalizedEstimatedMinutes > 0
+    ? Math.min(100, Math.max(0, (parsedCompletedMinutes / normalizedEstimatedMinutes) * 100))
+    : 0;
   
   const errors: Record<string, boolean> = {};
   if (shouldValidateTime && isTimeInvalid) {
@@ -185,8 +259,30 @@ const TaskForm = ({
   if (isImportanceInvalid) {
     errors.importance = true;
   }
+  if (hasSubmitted && isCompletedMinutesInvalid) {
+    errors.completed_minutes = true;
+  }
+  if (hasSubmitted && isMinSplitMinutesInvalid) {
+    errors.min_split_minutes = true;
+  }
+  if (hasSubmitted && isMaxSplitMinutesInvalid) {
+    errors.max_split_minutes = true;
+  }
+  if (hasSubmitted && isBufferBeforeMinutesInvalid) {
+    errors.buffer_before_minutes = true;
+  }
+  if (hasSubmitted && isBufferAfterMinutesInvalid) {
+    errors.buffer_after_minutes = true;
+  }
   
-  const hasBlockingErrors = isTimeInvalid || isImportanceInvalid;
+  const hasBlockingErrors =
+    isTimeInvalid
+    || isImportanceInvalid
+    || isCompletedMinutesInvalid
+    || isMinSplitMinutesInvalid
+    || isMaxSplitMinutesInvalid
+    || isBufferBeforeMinutesInvalid
+    || isBufferAfterMinutesInvalid;
 
   const buildSubmission = (): TaskSubmission => ({
     title,
@@ -195,11 +291,16 @@ const TaskForm = ({
     deadline: toIsoOrEmpty(endDateTime),
     categories: selectedCategories,
     importance,
-    estimated_minutes: Number(estimatedMinutes || 0),
+    estimated_minutes: normalizedEstimatedMinutes,
+    completed_minutes: parsedCompletedMinutes,
     colour,
-    locked: !autoSchedule,
+    locked: isTaskLocked,
     allow_split: allowSplit,
-    completed: initialData?.completed ?? false,
+    min_split_minutes: parsedMinSplitMinutes,
+    max_split_minutes: maxSplitMinutes.trim() === "" ? null : parsedMaxSplitMinutes,
+    buffer_before_minutes: bufferEnabled ? parsedBufferBeforeMinutes : 0,
+    buffer_after_minutes: bufferEnabled ? parsedBufferAfterMinutes : 0,
+    completed: normalizedEstimatedMinutes > 0 && parsedCompletedMinutes >= normalizedEstimatedMinutes,
   });
 
   useEffect(() => {
@@ -247,22 +348,50 @@ const TaskForm = ({
     normalisedCurrentSubmission,
     initialSubmission,
   );
+  const lastSubmissionRef = useRef<NormalisedTaskSubmission>(normalisedCurrentSubmission);
+
+  useEffect(() => {
+    if (isTaskSubmissionEqual(normalisedCurrentSubmission, lastSubmissionRef.current)) {
+      return;
+    }
+
+    lastSubmissionRef.current = normalisedCurrentSubmission;
+    if (submitError) {
+      setSubmitError(null);
+    }
+    if (Object.keys(serverFieldErrors).length > 0) {
+      setServerFieldErrors({});
+    }
+  }, [normalisedCurrentSubmission, serverFieldErrors, submitError]);
+
+  const handleFormSubmit = async () => {
+    const data = buildSubmission();
+    try {
+      setIsSubmitting(true);
+      setServerFieldErrors({});
+      await onSubmit(data);
+    } catch (error) {
+      const parsed = formatDjangoFormError(error);
+      setSubmitError(parsed.message);
+      setServerFieldErrors(parsed.fieldErrors);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
     setHasSubmitted(true);
     if (hasBlockingErrors || !hasChanges) return;
-
-    const data = buildSubmission();
-    onSubmit(data);
+    void handleFormSubmit();
   };
 
   const errorClass = "ring-2 ring-red-500 border-red-500 focus:ring-red-500 focus:border-red-500";
-  const baseInputClass = "w-full rounded-lg border border-gray-300 bg-white text-black focus:ring-primary focus:border-primary shadow-sm p-2.5";
+  const baseInputClass = "w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-black shadow-sm focus:border-primary focus:ring-primary";
 
   return (
     <form onSubmit={handleSubmit} className="flex flex-col h-full bg-white text-black">
-      <div className="grow overflow-y-auto p-6 space-y-6">
+      <div className="grow overflow-y-auto space-y-4 p-5">
         <div>
           <div className="flex items-center justify-between gap-4 mb-2">
             <label htmlFor="task-title" className="block text-sm font-medium text-gray-700">
@@ -303,72 +432,62 @@ const TaskForm = ({
           />
         </div>
 
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <label htmlFor="task-start-date" className="block text-sm font-medium text-gray-700 mb-2">
-              Start Date
-            </label>
-            <input
-              id="task-start-date"
-              className={`${baseInputClass} text-[17px] ${errors.start ? errorClass : ""}`}
-              type="date"
-              value={date}
-              onChange={(e) => {
-                setHasTouchedTime(true);
-                setDate(e.target.value);
-              }}
-              required
-            />
-          </div>
-          <div>
-            <label htmlFor="task-start-time" className="block text-sm font-medium text-gray-700 mb-2">
-              Start Time
-            </label>
-            <input
-              id="task-start-time"
-              className={`${baseInputClass} text-[17px] ${errors.start ? errorClass : ""}`}
-              type="time"
-              value={startTime}
-              onChange={(e) => {
-                setHasTouchedTime(true);
-                setStartTime(e.target.value);
-              }}
-              required
-            />
-          </div>
+        <div className="grid grid-cols-[72px_minmax(0,1fr)_104px] items-center gap-2">
+          <label htmlFor="task-start-date" className="min-w-0 text-sm font-medium text-gray-700">
+            Start date
+          </label>
+          <input
+            id="task-start-date"
+            aria-label="Start date"
+            className={`${baseInputClass} min-w-0 text-[17px] ${errors.start ? errorClass : ""}`}
+            type="date"
+            value={date}
+            onChange={(e) => {
+              setHasTouchedTime(true);
+              setDate(e.target.value);
+            }}
+            required
+          />
+          <input
+            id="task-start-time"
+            aria-label="Start time"
+            className={`${baseInputClass} w-full text-[17px] ${errors.start ? errorClass : ""}`}
+            type="time"
+            value={startTime}
+            onChange={(e) => {
+              setHasTouchedTime(true);
+              setStartTime(e.target.value);
+            }}
+            required
+          />
         </div>
 
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <label htmlFor="task-deadline-date" className="block text-sm font-medium text-gray-700 mb-2">
-              Deadline Date
-            </label>
-            <input
-              id="task-deadline-date"
-              className={`${baseInputClass} text-[17px] ${errors.deadline ? errorClass : ""}`}
-              type="date"
-              value={deadline}
-              onChange={(e) => {
-                setHasTouchedTime(true);
-                setDeadline(e.target.value);
-              }}
-            />
-          </div>
-          <div>
-            <label htmlFor="task-deadline-time" className="block text-sm font-medium text-gray-700 mb-2">
-              Deadline Time
-            </label>
-            <input
-              id="task-deadline-time"
-              className={`${baseInputClass} text-[17px] ${errors.deadline ? errorClass : ""}`}
-              type="time"
-              value={deadlineTime}
-              onChange={(e) => {
-                setHasTouchedTime(true);
-                setDeadlineTime(e.target.value);
-              }}
-            />
-          </div>
+        <div className="grid grid-cols-[72px_minmax(0,1fr)_104px] items-center gap-2">
+          <label htmlFor="task-deadline-date" className="min-w-0 text-sm font-medium text-gray-700">
+            Deadline
+          </label>
+          <input
+            id="task-deadline-date"
+            aria-label="Deadline date"
+            className={`${baseInputClass} min-w-0 text-[17px] ${errors.deadline ? errorClass : ""}`}
+            type="date"
+            value={deadline}
+            onChange={(e) => {
+              setHasTouchedTime(true);
+              setDeadline(e.target.value);
+            }}
+          />
+          <input
+            id="task-deadline-time"
+            aria-label="Deadline time"
+            className={`${baseInputClass} w-full text-[17px] ${errors.deadline ? errorClass : ""}`}
+            type="time"
+            value={deadlineTime}
+            onChange={(e) => {
+              setHasTouchedTime(true);
+              setDeadlineTime(e.target.value);
+            }}
+          />
         </div>
 
         {errors.deadline && (
@@ -377,9 +496,9 @@ const TaskForm = ({
           </p>
         )}
 
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <label htmlFor="task-importance" className="block text-sm font-medium text-gray-700 mb-2">
+        <div className="space-y-3">
+          <div className="grid grid-cols-[minmax(0,1fr)_92px] items-center gap-3">
+            <label htmlFor="task-importance" className="min-w-0 text-sm font-medium text-gray-700">
               Importance (1-10)
             </label>
             <input
@@ -389,11 +508,14 @@ const TaskForm = ({
               min="1"
               max="10"
               value={importance}
-              onChange={(e) => setImportance(parseInt(e.target.value))}
+              onChange={(e) => {
+                const nextValue = Number.parseInt(e.target.value, 10);
+                setImportance(Number.isNaN(nextValue) ? 0 : nextValue);
+              }}
             />
           </div>
-          <div>
-            <label htmlFor="task-minutes" className="block text-sm font-medium text-gray-700 mb-2">
+          <div className="grid grid-cols-[minmax(0,1fr)_92px] items-center gap-3">
+            <label htmlFor="task-minutes" className="min-w-0 text-sm font-medium text-gray-700">
               Est. Minutes
             </label>
             <input
@@ -411,15 +533,32 @@ const TaskForm = ({
           </div>
         </div>
 
-        <div className="flex flex-col gap-4">
+        <div className="rounded-xl border border-gray-200 bg-transparent p-3">
           <div className="flex items-center justify-between gap-4">
-            <label htmlFor="task-auto-schedule" className="text-sm font-medium text-gray-700">
-              Auto-schedule
-            </label>
+            <div className="flex items-center gap-2">
+              <label htmlFor="task-auto-schedule" className="text-sm font-medium text-gray-700">
+                Auto-schedule
+              </label>
+              <Tooltip content="Automatically includes this task in scheduling and rescheduling. Turn this off to keep it out of auto-allocation.">
+                <button
+                  type="button"
+                  className="inline-flex h-5 w-5 items-center justify-center rounded-full border border-gray-300 text-xs text-gray-500 hover:bg-gray-100"
+                  aria-label="Explain auto-schedule"
+                >
+                  ?
+                </button>
+              </Tooltip>
+            </div>
             <button
               id="task-auto-schedule"
               type="button"
-              onClick={() => setAutoSchedule((prev) => !prev)}
+              onClick={() => {
+                setAutoSchedule((prev) => {
+                  const nextValue = !prev;
+                  setIsTaskLocked(!nextValue);
+                  return nextValue;
+                });
+              }}
               className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
                 autoSchedule ? "bg-primary" : "bg-gray-300"
               }`}
@@ -432,11 +571,24 @@ const TaskForm = ({
               />
             </button>
           </div>
+        </div>
 
+        <div className="rounded-xl border border-gray-200 bg-transparent p-3">
           <div className="flex items-center justify-between gap-4">
-            <label htmlFor="task-allow-split" className="text-sm font-medium text-gray-700">
-              Splittable
-            </label>
+            <div className="flex items-center gap-2">
+              <label htmlFor="task-allow-split" className="text-sm font-medium text-gray-700">
+                Splittable
+              </label>
+              <Tooltip content="Allows the scheduler to break this task into multiple smaller sessions instead of scheduling it as one continuous block.">
+                <button
+                  type="button"
+                  className="inline-flex h-5 w-5 items-center justify-center rounded-full border border-gray-300 text-xs text-gray-500 hover:bg-gray-100"
+                  aria-label="Explain splittable"
+                >
+                  ?
+                </button>
+              </Tooltip>
+            </div>
             <button
               id="task-allow-split"
               type="button"
@@ -453,10 +605,140 @@ const TaskForm = ({
               />
             </button>
           </div>
+          {allowSplit ? (
+            <div className="mt-3 space-y-3">
+              <div className="grid grid-cols-[minmax(0,1fr)_92px] items-center gap-3">
+                <label htmlFor="task-min-split-minutes" className="min-w-0 text-sm font-medium text-gray-700">
+                  Minimum split block minutes
+                </label>
+                <input
+                  id="task-min-split-minutes"
+                  className={`${baseInputClass} ${errors.min_split_minutes ? errorClass : ""}`}
+                  type="number"
+                  min="15"
+                  max="240"
+                  step="5"
+                  value={minSplitMinutes}
+                  onChange={(e) => {
+                    setMinSplitMinutes(e.target.value);
+                  }}
+                />
+                {errors.min_split_minutes ? (
+                  <p className="col-span-2 text-xs text-red-500">
+                    Minimum split block minutes must be between 15 and 240.
+                  </p>
+                ) : null}
+              </div>
+              <div className="grid grid-cols-[minmax(0,1fr)_92px] items-center gap-3">
+                <label htmlFor="task-max-split-minutes" className="min-w-0 text-sm font-medium text-gray-700">
+                  Maximum split block minutes <span className="text-gray-400">(optional)</span>
+                </label>
+                <input
+                  id="task-max-split-minutes"
+                  className={`${baseInputClass} ${errors.max_split_minutes ? errorClass : ""}`}
+                  type="number"
+                  min="15"
+                  max="1440"
+                  step="5"
+                  value={maxSplitMinutes}
+                  onChange={(e) => {
+                    setMaxSplitMinutes(e.target.value);
+                  }}
+                />
+                {errors.max_split_minutes ? (
+                  <p className="col-span-2 text-xs text-red-500">
+                    Maximum split block minutes must be between 15 and 1440, and at least the minimum split block minutes.
+                  </p>
+                ) : null}
+              </div>
+            </div>
+          ) : null}
+        </div>
+
+        <div className="rounded-xl border border-gray-200 bg-transparent p-3">
+          <div className={`${bufferEnabled ? "mb-2" : ""} flex items-center justify-between gap-4`}>
+            <div className="flex items-center gap-2">
+              <label htmlFor="task-buffer-enabled" className="block text-sm font-medium text-gray-700">
+                Scheduling Buffer
+              </label>
+              <Tooltip content="Reserves extra time before and after this task so the scheduler leaves a gap around it.">
+                <button
+                  type="button"
+                  className="inline-flex h-5 w-5 items-center justify-center rounded-full border border-gray-300 text-xs text-gray-500 hover:bg-gray-100"
+                  aria-label="Explain scheduling buffer"
+                >
+                  ?
+                </button>
+              </Tooltip>
+            </div>
+            <button
+              id="task-buffer-enabled"
+              type="button"
+              onClick={() => setBufferEnabled((prev) => !prev)}
+              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                bufferEnabled ? "bg-primary" : "bg-gray-300"
+              }`}
+              aria-pressed={bufferEnabled}
+            >
+              <span
+                className={`inline-block h-5 w-5 transform rounded-full bg-white shadow-sm transition-transform ${
+                  bufferEnabled ? "translate-x-5" : "translate-x-1"
+                }`}
+              />
+            </button>
+          </div>
+          {bufferEnabled ? (
+            <div className="space-y-3">
+              <div className="grid grid-cols-[minmax(0,1fr)_92px] items-center gap-3">
+                <label htmlFor="task-buffer-before-minutes" className="min-w-0 text-sm font-medium text-gray-700">
+                  Buffer before (mins)
+                </label>
+                <input
+                  id="task-buffer-before-minutes"
+                  className={`${baseInputClass} ${errors.buffer_before_minutes ? errorClass : ""}`}
+                  type="number"
+                  min="0"
+                  max="240"
+                  step="5"
+                  value={bufferBeforeMinutes}
+                  onChange={(e) => {
+                    setBufferBeforeMinutes(e.target.value);
+                  }}
+                />
+                {errors.buffer_before_minutes ? (
+                  <p className="col-span-2 text-xs text-red-500">
+                    Buffer before must be between 0 and 240 minutes.
+                  </p>
+                ) : null}
+              </div>
+              <div className="grid grid-cols-[minmax(0,1fr)_92px] items-center gap-3">
+                <label htmlFor="task-buffer-after-minutes" className="min-w-0 text-sm font-medium text-gray-700">
+                  Buffer after (mins)
+                </label>
+                <input
+                  id="task-buffer-after-minutes"
+                  className={`${baseInputClass} ${errors.buffer_after_minutes ? errorClass : ""}`}
+                  type="number"
+                  min="0"
+                  max="240"
+                  step="5"
+                  value={bufferAfterMinutes}
+                  onChange={(e) => {
+                    setBufferAfterMinutes(e.target.value);
+                  }}
+                />
+                {errors.buffer_after_minutes ? (
+                  <p className="col-span-2 text-xs text-red-500">
+                    Buffer after must be between 0 and 240 minutes.
+                  </p>
+                ) : null}
+              </div>
+            </div>
+          ) : null}
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-3">
+          <label className="mb-2 block text-sm font-medium text-gray-700">
             Category <span className="text-gray-400">(optional)</span>
           </label>
           <CategoryMultiSelect
@@ -483,15 +765,57 @@ const TaskForm = ({
             id="task-description"
             className={`${baseInputClass} resize-none`}
             placeholder=""
-            rows={4}
+            rows={3}
             value={description}
             onChange={(e) => setDescription(e.target.value)}
           />
         </div>
 
+        <div>
+          <div className="mb-2">
+            <label htmlFor="task-completed-minutes" className="block text-sm font-medium text-gray-700">
+              Progress
+            </label>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="h-2.5 min-w-0 flex-1 overflow-hidden rounded-full bg-gray-200">
+              <div
+                className="h-full rounded-full bg-primary transition-[width] duration-200"
+                style={{ width: `${progressPercent}%` }}
+              />
+            </div>
+            <input
+              id="task-completed-minutes"
+              className={`w-11 appearance-none rounded-md border border-gray-300 bg-white px-2 py-1 text-sm text-black shadow-sm focus:border-primary focus:ring-primary [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none ${errors.completed_minutes ? errorClass : ""}`}
+              type="number"
+              min="0"
+              max={Math.max(0, normalizedEstimatedMinutes)}
+              value={completedMinutes}
+              onChange={(e) => {
+                const nextValue = e.target.value;
+                setCompletedMinutes(nextValue === "" ? "" : parseInt(nextValue));
+              }}
+            />
+            <span className="text-sm font-medium text-gray-700">
+              / {normalizedEstimatedMinutes} mins
+            </span>
+          </div>
+          {errors.completed_minutes ? (
+            <p className="mt-2 text-xs text-red-500">
+              Completed minutes must be between 0 and the estimated minutes.
+            </p>
+          ) : null}
+        </div>
+
+        {submitError ? (
+          <div className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+            {submitError}
+          </div>
+        ) : null}
+
       </div>
 
-      <div className="p-6 border-t border-gray-200 flex gap-3 bg-gray-50">
+      <div className="flex gap-3 border-t border-gray-200 bg-gray-50 p-4">
         <button
           type="button"
           onClick={onCancel}
@@ -501,15 +825,15 @@ const TaskForm = ({
         </button>
         <button
           type="submit"
-          disabled={!hasChanges}
+          disabled={!hasChanges || isSubmitting}
           className={`flex-1 px-4 py-2 text-white font-medium rounded-lg shadow-md transition-all flex items-center justify-center gap-2 ${
-            !hasChanges
+            !hasChanges || isSubmitting
               ? "bg-gray-400 cursor-not-allowed"
               : "bg-primary hover:bg-blue-300 hover:shadow-lg"
           }`}
         >
           <span className="material-icons text-sm">check</span>
-          Save Task
+          {isSubmitting ? "Saving..." : "Save Task"}
         </button>
       </div>
 
@@ -545,4 +869,3 @@ const TaskForm = ({
 };
 
 export default TaskForm;
-

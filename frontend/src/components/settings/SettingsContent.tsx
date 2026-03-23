@@ -3,8 +3,10 @@ import PreferencesSection from "@/components/settings/PreferencesSection";
 import SettingsSidebar from "@/components/settings/SettingsSidebar";
 import ThemeSection from "@/components/settings/ThemeSection";
 import ProfileSection from "@/components/settings/ProfileSection";
+import CategoryLimitsSection from "@/components/settings/CategoryLimitsSection";
 import type { UseSettingsReturn } from "@/hooks/settings/useSettings";
 import { useProfileSettings } from "@/hooks/settings/useProfileSettings";
+import { getSchedulingDayMaxMinutes } from "@/utils/schedulingLimits";
 
 interface SettingsContentProps {
   state: UseSettingsReturn["state"];
@@ -28,37 +30,43 @@ const SettingsContent = ({
   error,
   actions,
 }: SettingsContentProps) => {
+  const dragSnapOptions = [5, 10, 15, 20, 30, 60] as const;
   const [featureFlags, setFeatureFlags] = useState(() => ({
     gradebook: localStorage.getItem("feature_gradebook_enabled") !== "false",
-    weeklySummaries: localStorage.getItem("feature_weekly_summaries_enabled") !== "false",
+    leaderboard: localStorage.getItem("feature_leaderboard_enabled") !== "false",
   }));
 
   const featureRows = useMemo(() => ([
+    {
+      key: "leaderboard",
+      label: "Leaderboard",
+      description: "Allows users to view how they are doing in comparison to their friends.",
+      value: featureFlags.leaderboard,
+    },
     {
       key: "gradebook",
       label: "Gradebook",
       description: "Track and review your grades over time.",
       value: featureFlags.gradebook,
     },
-    {
-      key: "weeklySummaries",
-      label: "Weekly Summaries",
-      description: "View weekly statistics about your tasks and productivity.",
-      value: featureFlags.weeklySummaries,
-    },
   ]), [featureFlags]);
 
-  const updateFeature = (key: "gradebook" | "weeklySummaries", value: boolean) => {
+  const updateFeature = (key: "gradebook" | "leaderboard", value: boolean) => {
     if (key === "gradebook") {
       localStorage.setItem("feature_gradebook_enabled", String(value));
     } else {
-      localStorage.setItem("feature_weekly_summaries_enabled", String(value));
+      localStorage.setItem("feature_leaderboard_enabled", String(value));
     }
     setFeatureFlags((prev) => ({ ...prev, [key]: value }));
     window.dispatchEvent(new Event("feature-flags-changed"));
   };
 
   const profileState = useProfileSettings(state.activeSection === "profile");
+  const isWideSection = state.activeSection === "appearance";
+  const categoryLimitMaxMinutes = useMemo(
+    () => getSchedulingDayMaxMinutes(state.preference),
+    [state.preference],
+  );
 
   return (
     <div className="min-h-screen bg-white text-black">
@@ -82,7 +90,11 @@ const SettingsContent = ({
               },
             }}
           />
-          <section className="w-full md:w-1/2 rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
+          <section
+            className={`rounded-xl border border-gray-200 bg-white p-6 shadow-sm ${
+              isWideSection ? "min-w-0 flex-1" : "w-full md:w-1/2"
+            }`}
+          >
             {state.activeSection === "preferences" ? (
               <PreferencesSection
                 pref={state.preference}
@@ -100,6 +112,19 @@ const SettingsContent = ({
               <ThemeSection
                 onThemeChange={actions.applyTheme}
                 onFontChange={actions.applyFont}
+              />
+            ) : null}
+            {state.activeSection === "categories" ? (
+              <CategoryLimitsSection
+                categories={state.categories}
+                maxDailyMinutes={categoryLimitMaxMinutes}
+                loading={loading.categories}
+                saving={loading.saving}
+                error={error.categories}
+                onLimitChange={actions.setCategoryLimit}
+                onSave={() => {
+                  void actions.saveCategoryLimits();
+                }}
               />
             ) : null}
             {state.activeSection === "features" ? (
@@ -125,7 +150,11 @@ const SettingsContent = ({
                         className="h-4 w-4"
                         checked={feature.value}
                         onChange={(event) => {
-                          updateFeature(feature.key as "gradebook" | "weeklySummaries", event.target.checked);
+                          updateFeature(feature.key as "gradebook" | "leaderboard", event.target.checked);
+                          updateFeature(
+                            feature.key as "gradebook" | "leaderboard",
+                            event.target.checked,
+                          );
                         }}
                       />
                     </label>
@@ -172,6 +201,39 @@ const SettingsContent = ({
                             }`}
                           />
                         </button>
+                      </div>
+                      <div>
+                        <label
+                          htmlFor="general-drag-snap-minutes"
+                          className="block text-sm font-medium text-gray-900"
+                        >
+                          Calendar drag timeslot
+                        </label>
+                        <p className="mt-1 text-xs text-gray-500">
+                          Controls how task drag and resize actions snap on the calendar.
+                        </p>
+                        <select
+                          id="general-drag-snap-minutes"
+                          value={preference.drag_snap_minutes}
+                          onChange={(event) => {
+                            actions.setPreference({
+                              ...preference,
+                              drag_snap_minutes: Number(event.target.value) as 5 | 10 | 15 | 20 | 30 | 60,
+                            });
+                          }}
+                          className="mt-2 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-primary focus:outline-none"
+                        >
+                          {dragSnapOptions.map((minutes) => (
+                            <option key={minutes} value={minutes}>
+                              {minutes} minutes
+                            </option>
+                          ))}
+                        </select>
+                        {state.fieldErrors.drag_snap_minutes?.length ? (
+                          <div className="mt-1 text-xs text-red-700">
+                            {state.fieldErrors.drag_snap_minutes.join(" ")}
+                          </div>
+                        ) : null}
                       </div>
                       <div className="flex justify-end">
                         <button

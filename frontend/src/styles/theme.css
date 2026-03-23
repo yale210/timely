@@ -12,8 +12,8 @@
   --color-gray-600: color-mix(in srgb, var(--text-color) 68%, var(--background));
   --color-gray-500: color-mix(in srgb, var(--text-color) 56%, var(--background));
   --color-gray-400: color-mix(in srgb, var(--text-color) 32%, var(--background));
-  --color-gray-300: color-mix(in srgb, var(--text-color) 20%, var(--background));
-  --color-gray-200: color-mix(in srgb, var(--text-color) 12%, var(--background));
+  --color-gray-300: var(--border);
+  --color-gray-200: var(--border);
   --color-gray-100: color-mix(in srgb, var(--text-color) 8%, var(--background));
   --color-gray-50: color-mix(in srgb, var(--text-color) 4%, var(--background));
 
@@ -93,5 +93,22 @@
   textarea,
   select {
     @apply bg-white text-black border-gray-300 focus:border-primary focus:ring-primary;
+  }
+
+  [data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator,
+  [data-theme="dark"] input[type="time"]::-webkit-calendar-picker-indicator,
+  [data-theme="midnight"] input[type="date"]::-webkit-calendar-picker-indicator,
+  [data-theme="midnight"] input[type="time"]::-webkit-calendar-picker-indicator,
+  [data-theme="forest-night"] input[type="date"]::-webkit-calendar-picker-indicator,
+  [data-theme="forest-night"] input[type="time"]::-webkit-calendar-picker-indicator,
+  [data-theme="plum-ink"] input[type="date"]::-webkit-calendar-picker-indicator,
+  [data-theme="plum-ink"] input[type="time"]::-webkit-calendar-picker-indicator,
+  [data-theme="neon-noir"] input[type="date"]::-webkit-calendar-picker-indicator,
+  [data-theme="neon-noir"] input[type="time"]::-webkit-calendar-picker-indicator,
+  [data-theme="terminal"] input[type="date"]::-webkit-calendar-picker-indicator,
+  [data-theme="terminal"] input[type="time"]::-webkit-calendar-picker-indicator,
+  [data-theme="signal"] input[type="date"]::-webkit-calendar-picker-indicator,
+  [data-theme="signal"] input[type="time"]::-webkit-calendar-picker-indicator {
+    filter: invert(1);
   }
 }
