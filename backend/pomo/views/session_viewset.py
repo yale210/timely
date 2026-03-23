@@ -6,6 +6,7 @@ from pomo.serializers import PomoSessionSerializer
 class PomoSessionViewSet(viewsets.ModelViewSet):
     serializer_class = PomoSessionSerializer
     permission_classes = [permissions.IsAuthenticated]
+    http_method_names = ["get", "post", "head", "options"]
 
     def get_queryset(self):
         return PomoSession.objects.filter(user=self.request.user)
