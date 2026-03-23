@@ -129,13 +129,12 @@ export const PomodoroProvider = ({ children }: PomodoroProviderProps) => {
       clearInterval(intervalRef.current);
       intervalRef.current = null;
     }
-    // Unify state: when stopping, ensure countdown matches the viewing mode's intended duration
-    synchroniseCountdownWithDuration(viewingMode);
-  }, [viewingMode, synchroniseCountdownWithDuration]);
+  }, []);
 
   const resetTimer = useCallback(() => {
     stopTimer();
-  }, [stopTimer]);
+    synchroniseCountdownWithDuration(viewingMode);
+  }, [stopTimer, synchroniseCountdownWithDuration, viewingMode]);
 
   const setInitialDuration = useCallback((minutes: number | "") => {
     const validMinutes = timerManager.validateDuration(minutes);
