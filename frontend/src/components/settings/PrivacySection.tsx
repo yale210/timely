@@ -17,7 +17,7 @@ const PrivacySection = ({
 
     const [action, setAction] = useState<"tasks" | "events" | null>(null);
     const [message, setMessage ] = useState<string | null>(null);
-
+    /*
     const handleConfirm = () => {
         if (action === "events" ) {
             onDeleteEvents();
@@ -28,6 +28,7 @@ const PrivacySection = ({
         }
         setAction(null);
     };
+    */
   
   return (
 
@@ -42,31 +43,35 @@ const PrivacySection = ({
                         
 
 
-                        <button
-                        onClick={async () => {
+                        <button onClick={() => {
                             console.log("Button test click")
-                            const result = await onDeleteEvents()
-                            console.log(result)
-                            setMessage(result)
-                        }
-                            }
+                            onDeleteEvents().then((res) => {
+                              console.log(res);
+                              setMessage(res);
+                            }).catch((error) => {
+                              console.error(error);
+                              setMessage("Failed to delete events");
+                            });
+                        }}
                         disabled={deleting}
-                        className="px-3 py-3 rounded-lg text-lg flex items-center shadow-sm transition-colors"
-                        >
+                        className="px-3 py-3 rounded-lg text-lg flex items-center shadow-sm transition-colors">
                         <span className="material-icons mr-2 text-xl">delete_forever</span>
                         { deleting ? "Deleting": "Delete Events"}
                         </button>
 
                         <button
-                        onClick={async () => {
+                        onClick={() => {
                             console.log("Button test click")
-                            const result = await onDeleteTasks()
-                            setMessage(result)
-                        }
-                            }
+                            onDeleteTasks().then((res) => {
+                              console.log(res);
+                              setMessage(res);
+                            }).catch((error) => {
+                              console.error(error);
+                              setMessage("Failed to delete tasks");
+                            });
+                        }}
                         disabled={deleting}
-                        className="px-3 py-3 rounded-lg text-lg flex items-center shadow-sm transition-colors"
-                        >
+                        className="px-3 py-3 rounded-lg text-lg flex items-center shadow-sm transition-colors">
                         <span className="material-icons mr-2 text-xl">delete_forever</span>
                         { deleting ? "Deleting": "Delete Tasks"}
                         

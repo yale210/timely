@@ -85,12 +85,12 @@ const CalendarToolbar = ({
             onClick={() => {
               const input = document.createElement("input")
               input.type = "file"
-              input.onchange = (event) => {
+              input.onchange = async (event) => {
                 const target = event.target
                 
                 if (target instanceof HTMLInputElement && target.files) {
                   const file = target.files[0]
-                  actions.importEvents(file)
+                  await actions.importEvents(file)
                 }
               }
               input.click()

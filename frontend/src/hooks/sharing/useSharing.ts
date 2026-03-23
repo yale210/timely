@@ -35,8 +35,8 @@ export function useSharing() {
     }, []);
 
     useEffect(() => {
-        fetchShares();
-    }, []);
+        void fetchShares();
+    }, [fetchShares]);
 
 
     const shareEvent = useCallback(async (username: string, eventID: string) => {
@@ -51,8 +51,9 @@ export function useSharing() {
         } catch (error) {
 
           if (axios.isAxiosError(error)) {
-            const message = error.response?.data?.detail|| "Please enter a valid username and ID.";
-            console.log(error.response?.data?.detail)
+            const data = error.response?.data as { detail?: string } | undefined;
+            const message = data?.detail ?? "Please enter a valid username and ID.";
+            console.log(data?.detail)
             console.log("AAAAA")
             setShareError(message)
           }
@@ -96,4 +97,3 @@ export function useSharing() {
     fetchShares,
   }
 }
-
