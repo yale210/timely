@@ -137,6 +137,7 @@ export const PomofocusDropdown = () => {
                     onBlur={handleBlur}
                     onFocus={handleFocus}
                     onKeyDown={handleKeyDown}
+                    aria-label="Hours"
                     className="w-14 rounded border border-gray-300 p-1 text-center focus:border-cyan-500 focus:outline-none"
                     placeholder="00"
                   />
@@ -152,6 +153,7 @@ export const PomofocusDropdown = () => {
                     onBlur={handleBlur}
                     onFocus={handleFocus}
                     onKeyDown={handleKeyDown}
+                    aria-label="Minutes"
                     className="w-14 rounded border border-gray-300 p-1 text-center focus:border-cyan-500 focus:outline-none"
                     placeholder="00"
                   />
