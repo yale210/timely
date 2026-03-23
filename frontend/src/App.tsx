@@ -23,6 +23,7 @@ import { NotificationDetail } from "@/pages/Notification/NotificationDetail"
 import { AdminNotifications } from "@/pages/Admin/Notifications/AdminNotifications"
 import { AdminNotificationHistory } from "@/pages/Admin/Notifications/AdminNotificationHistory"
 import { AdminNotificationHistoryDetail } from "@/pages/Admin/Notifications/AdminNotificationHistoryDetail"
+import { setDocumentTheme } from "@/utils/themeSettings"
 
 const PUBLIC_ROUTES = ["/login", "/signup", "/"]
 
@@ -38,7 +39,7 @@ export default function App() {
     if (!PUBLIC_ROUTES.includes(location.pathname)) {
       const savedTheme = localStorage.getItem("theme")
       if (savedTheme) {
-        document.documentElement.dataset.theme = savedTheme
+        setDocumentTheme(savedTheme)
       }
 
       const savedFont = localStorage.getItem("font")
@@ -47,7 +48,7 @@ export default function App() {
       }
     }
     else {
-      document.documentElement.dataset.theme = "light"
+      setDocumentTheme("light")
       document.documentElement.dataset.font = "poppins"
     }
   }, [location.pathname])

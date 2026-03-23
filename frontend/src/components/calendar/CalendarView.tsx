@@ -13,6 +13,7 @@ import { getOverrideColour, hexToRgba } from "@/utils/colorUtils";
 
 const localizer = momentLocalizer(moment);
 const DragAndDropCalendar = withDragAndDrop<CalendarEntry>(Calendar);
+const DEFAULT_DRAG_SNAP_MINUTES = 5;
 
 interface CalendarViewProps {
   state: Pick<
@@ -50,6 +51,8 @@ const CalendarView = ({
   actions,
 }: CalendarViewProps) => {
   const calendarShellRef = useRef<HTMLDivElement | null>(null);
+  const dragSnapMinutes = state.preference?.drag_snap_minutes ?? DEFAULT_DRAG_SNAP_MINUTES;
+  const dragSnapTimeslots = 60 / dragSnapMinutes;
 
   useLayoutEffect(() => {
     if (state.view !== Views.WEEK && state.view !== Views.DAY) {
@@ -181,7 +184,8 @@ const CalendarView = ({
   const components = useMemo<Components<CalendarEntry>>(
     () => ({
       event: ({ event }: { event: CalendarEntry }) => {
-        const timeLabel = `${formatEventTime(event.start)} - ${formatEventTime(event.end)}`;
+        const actualEnd = event.actualEnd ?? event.end;
+        const timeLabel = `${formatEventTime(event.start)} - ${formatEventTime(actualEnd)}`;
         if (event.kind !== "task") {
           return (
             <div className="flex h-full w-full items-start gap-2">
@@ -238,8 +242,8 @@ const CalendarView = ({
             onView={actions.setView}
             date={state.date}
             onNavigate={actions.setDate}
-            step={60}
-            timeslots={1}
+            step={dragSnapMinutes}
+            timeslots={dragSnapTimeslots}
             slotPropGetter={(slotDate: Date) => {
               if ((state.view !== Views.WEEK && state.view !== Views.DAY) || !isOutsidePreferredDayWindow(slotDate, state.preference)) {
                 return {};
@@ -254,20 +258,15 @@ const CalendarView = ({
             onSelectEvent={(entry) => {
               actions.selectEntry(entry);
             }}
-            draggableAccessor={(entry) =>
-              entry.kind === "event" ||
-              (entry.kind === "task" && !entry.taskData?.locked)
-            }
-            resizableAccessor={(entry) =>
-              entry.kind === "event" ||
-              (entry.kind === "task" && !entry.taskData?.locked)
-            }
+            draggableAccessor={() => true}
+            resizableAccessor={() => true}
             onEventDrop={(args) => {
               void actions.handleEventDrop(args);
             }}
             onEventResize={(args) => {
               void actions.handleEventResize(args);
             }}
+            showMultiDayTimes
             toolbar={false}
             className="h-full"
             components={components}

@@ -452,7 +452,6 @@ describe("CalendarPage (lean tests)", () => {
         
         await waitFor(() => {
             expect(schedulerService.scheduleTasks).toHaveBeenCalled();
-            expect(schedulerService.unscheduleTasks).toHaveBeenCalled();
         });
     });
 

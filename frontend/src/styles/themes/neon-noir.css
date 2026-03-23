@@ -1,0 +1,9 @@
+[data-theme="neon-noir"] {
+  --primary: #ff5c8a;
+  --primary-hover: #ff87a8;
+
+  --background: #111424;
+  --text-color: #f4eef8;
+
+  --border: #a85a75;
+}

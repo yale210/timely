@@ -37,11 +37,37 @@ export interface UseThemesReturn {
  */
 export const useThemes = (): UseThemesReturn => {
   const themeOptions = useMemo(
-    () => ["dark", "light", "retro", "bento", "taro"],
+    () => [
+      "light",
+      "dark",
+      "midnight",
+      "retro",
+      "bento",
+      "taro",
+      "paper",
+      "terminal",
+      "sea-glass",
+      "coral",
+      "forest-night",
+      "plum-ink",
+      "neon-noir",
+      "ivy",
+      "arctic",
+      "signal",
+    ],
     [],
   );
   const fontOptions = useMemo(
-    () => ["poppins", "pacifico", "comic-sans", "bitcount", "bebas-neue"],
+    () => [
+      "poppins",
+      "comfortaa",
+      "righteous",
+      "fira-code",
+      "kalam",
+      "gloria-hallelujah",
+      "bitcount",
+      "bebas-neue",
+    ],
     [],
   );
 

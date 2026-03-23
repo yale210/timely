@@ -35,9 +35,7 @@ const CalendarSidebar = ({
     }}
     initialData={state.selectedItem}
     initialMode={state.sidebarMode}
-    onSubmitTask={(data) => {
-      void actions.submitTask(data);
-    }}
+    onSubmitTask={actions.submitTask}
     onSubmitEvent={(data, context) => {
       void actions.submitEvent(data, context);
     }}

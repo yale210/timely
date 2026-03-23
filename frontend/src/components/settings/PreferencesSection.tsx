@@ -2,6 +2,7 @@ import { Fragment, useEffect, useMemo, useRef, useState } from "react";
 import { Dialog, DialogPanel, DialogTitle, Transition, TransitionChild } from "@headlessui/react";
 import type { Preference, SpecialDate } from "@/types";
 import * as specialDatesService from "@/services/specialDatesService";
+import { getSchedulingDayMaxMinutes } from "@/utils/schedulingLimits";
 
 interface PreferencesSectionProps {
   pref: Preference | null;
@@ -25,33 +26,6 @@ const dayLabels: [number, string][] = [
 
 const buildDefaultSchedule = (start: string, end: string) =>
   dayLabels.map(([day]) => ({ day, start, end }));
-
-const toMinutes = (value: string): number | null => {
-  const [hourRaw, minuteRaw] = value.split(":");
-  const hour = Number.parseInt(hourRaw ?? "", 10);
-  const minute = Number.parseInt(minuteRaw ?? "", 10);
-  if (Number.isNaN(hour) || Number.isNaN(minute)) return null;
-  return (hour * 60) + minute;
-};
-
-const getMaxAvailableHours = (pref: Preference): number => {
-  const schedule = pref.day_schedule && pref.day_schedule.length > 0
-    ? pref.day_schedule
-    : buildDefaultSchedule(pref.day_start?.slice(0, 5) ?? "08:00", pref.day_end?.slice(0, 5) ?? "22:00");
-  let maxMinutes = 0;
-  schedule.forEach((entry) => {
-    const start = toMinutes(entry.start);
-    const end = toMinutes(entry.end);
-    if (start === null || end === null) return;
-    // Wrap overnight schedules correctly, e.g. 22:00 -> 06:00.
-    const diff = (end - start + (24 * 60)) % (24 * 60);
-    const minutesAvailable = diff === 0 ? 24 * 60 : diff;
-    if (minutesAvailable > maxMinutes) {
-      maxMinutes = minutesAvailable;
-    }
-  });
-  return Math.max(0, Math.floor(maxMinutes / 60));
-};
 
 const PreferencesSection = ({
   pref,
@@ -389,7 +363,7 @@ const PreferencesSection = ({
               </label>
               <div className="mt-2 flex items-center gap-3">
                 <div className="text-xs font-medium text-gray-600">
-                  {pref.limit_max_hours === false ? "No limit (uses daily hours max)" : "Limit max hours"}
+                  {pref.limit_max_hours === false ? "No limit (uses daily hours)" : "Limit max hours"}
                 </div>
                 <button
                   type="button"
@@ -401,7 +375,7 @@ const PreferencesSection = ({
                     });
                     if (!nextValue) {
                       // "No limit" still stores a concrete cap equal to the widest available daily window.
-                      const maxHours = getMaxAvailableHours(pref);
+                      const maxHours = Math.floor(getSchedulingDayMaxMinutes(pref) / 60);
                       onPrefChange({
                         ...pref,
                         limit_max_hours: false,
@@ -456,6 +430,37 @@ const PreferencesSection = ({
               {fieldErrors.max_hours_study_per_day?.length ? (
                 <div className="mt-1 text-xs text-red-700">
                   {fieldErrors.max_hours_study_per_day.join(" ")}
+                </div>
+              ) : null}
+            </div>
+
+            <div className="sm:col-span-2">
+              <label htmlFor="pref-max-days-ahead" className="block text-sm font-medium text-gray-900">
+                Max schedule ahead
+              </label>
+              <p className="mt-1 text-xs text-gray-500">
+                The scheduler will search this many days ahead when auto-scheduling tasks.
+              </p>
+              <input
+                id="pref-max-days-ahead"
+                type="number"
+                min={1}
+                max={365}
+                value={pref.max_days_ahead}
+                onChange={(event) => {
+                  const parsed = Number(event.target.value);
+                  onPrefChange({
+                    ...pref,
+                    max_days_ahead: parsed,
+                  });
+                }}
+                className={`mt-2 bg-white px-3 py-2 block outline w-full rounded-md ${
+                  fieldErrors.max_days_ahead ? "outline-red-300" : "outline-gray-300"
+                } focus:outline-2 focus:outline-turquoise-600`}
+              />
+              {fieldErrors.max_days_ahead?.length ? (
+                <div className="mt-1 text-xs text-red-700">
+                  {fieldErrors.max_days_ahead.join(" ")}
                 </div>
               ) : null}
             </div>
@@ -611,4 +616,3 @@ const PreferencesSection = ({
 };
 
 export default PreferencesSection;
-
