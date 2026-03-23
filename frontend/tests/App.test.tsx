@@ -123,6 +123,7 @@ describe("App Component", () => {
     expect(getByText("Logout Page")).toBeDefined();
   });
 
+  
   it("should render Calendar page", () => {
     const { getByText } = render(
       <MemoryRouter initialEntries={["/calendar"]}>
