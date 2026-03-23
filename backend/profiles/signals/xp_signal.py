@@ -2,6 +2,7 @@ from django.db.models.signals import post_save, pre_save
 from django.dispatch import receiver
 
 from core.models.task import Task
+from profiles.models.profile import Profile
 
 
 def exp_required_for_level_up(user):
@@ -37,7 +38,10 @@ def award_exp(sender, instance, **kwargs):
     if prev == now:
         return
 
-    user_profile = instance.user.user_profile
+    user_profile, _ = Profile.objects.get_or_create(
+        user=instance.user,
+        defaults={"name": instance.user.username},
+    )
     xp_delta = 10 + (2 * instance.importance)
 
     if not prev and now:
