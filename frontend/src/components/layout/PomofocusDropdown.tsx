@@ -3,7 +3,7 @@ import { usePomodoro } from "@/context/PomodoroContext";
 import { formatTime } from "@/utils/timeUtils";
 import { convertMinutesToHHMM, convertHHMMToMinutes, parseAndValidateHHMM } from "@/utils/timeFormatters";
 import { PlayIcon, PauseIcon, ArrowPathIcon, PlusIcon, MinusIcon } from "@heroicons/react/24/outline";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 /**
  * Dropdown component for the Pomofocus timer in the navbar.
@@ -40,19 +40,14 @@ export const PomofocusDropdown = () => {
     return "";
   });
 
-  const [prevInitialDuration, setPrevInitialDuration] = useState(initialDuration);
-  const [prevViewingMode, setPrevViewingMode] = useState(viewingMode);
-
-  if (initialDuration !== prevInitialDuration || viewingMode !== prevViewingMode) {
-    setPrevInitialDuration(initialDuration);
-    setPrevViewingMode(viewingMode);
+  useEffect(() => {
     if (viewingMode === "focus") {
       const totalMins = typeof initialDuration === "number" ? initialDuration : 0;
       const { hours, minutes } = convertMinutesToHHMM(totalMins);
       setHH(hours.toString().padStart(2, "0"));
       setMM(minutes.toString().padStart(2, "0"));
     }
-  }
+  }, [initialDuration, viewingMode]);
 
   /**
    * Handles changes to the hours input.
