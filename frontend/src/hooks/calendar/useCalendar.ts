@@ -422,7 +422,10 @@ export const useCalendar = (): UseCalendarReturn => {
           const bufferAfterChanged =
             typeof data.buffer_after_minutes === "number" &&
             data.buffer_after_minutes !== (selectedItem.buffer_after_minutes ?? 0);
-          if (bufferBeforeChanged || bufferAfterChanged) {
+          const completedMinutesChanged =
+            typeof data.completed_minutes === "number" &&
+            data.completed_minutes !== (selectedItem.completed_minutes ?? 0);
+          if (bufferBeforeChanged || bufferAfterChanged || completedMinutesChanged) {
             await taskService.saveAndRescheduleTask(
               selectedItem.id,
               data,
@@ -789,7 +792,11 @@ export const useCalendar = (): UseCalendarReturn => {
           completeSoundRef.current.currentTime = 0;
           void completeSoundRef.current.play().catch(() => undefined);
         }
-        await taskService.updateTask(taskId, { completed: !task.completed });
+        const nextCompleted = !task.completed;
+        await taskService.updateTask(taskId, {
+          completed: nextCompleted,
+          completed_minutes: nextCompleted ? task.estimated_minutes : 0,
+        });
         await fetchTasks();
       } catch (error) {
         console.error(error);

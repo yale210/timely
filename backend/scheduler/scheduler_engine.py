@@ -2,6 +2,7 @@ from __future__ import annotations
 from datetime import date, datetime, time, timedelta
 from typing import Iterable, List, Tuple
 
+from django.db.models import Q
 from django.utils import timezone
 
 from core.models import Commute, Event, Preference, SpecialDates, Task
@@ -20,6 +21,7 @@ class Scheduler:
         allow_split: bool = False,
         min_block_minutes: int = 30,
         task_ids: List[int] | None = None,
+        include_locked_task_ids: List[int] | None = None,
     ):
         """
         Args:
@@ -33,6 +35,7 @@ class Scheduler:
         self.allow_split = allow_split
         self.min_block_minutes = min_block_minutes
         self.task_ids = set(task_ids or [])
+        self.include_locked_task_ids = set(include_locked_task_ids or [])
 
         self.preference = self._get_preference()
         self.tasks = self._get_unscheduled_tasks()
@@ -53,11 +56,16 @@ class Scheduler:
 
     def _get_unscheduled_tasks(self) -> List[Task]:
         queryset = Task.objects.filter(  # type: ignore[query-annotated]
-                user=self.user,
-                completed=False,
-                locked=False,
-                allocation=[],
+            user=self.user,
+            completed=False,
+            allocation=[],
+        )
+        if self.include_locked_task_ids:
+            queryset = queryset.filter(
+                Q(locked=False) | Q(id__in=self.include_locked_task_ids)
             )
+        else:
+            queryset = queryset.filter(locked=False)
         if self.task_ids:
             queryset = queryset.filter(id__in=self.task_ids)
         return list(queryset.order_by("-importance", "deadline"))
@@ -65,10 +73,19 @@ class Scheduler:
     def _get_scheduled_tasks(self) -> List[Task]:
         return list(
             Task.objects.filter(  # type: ignore[query-annotated]
-                user=self.user
+                user=self.user,
+                completed=False,
             )
             .exclude(allocation=[])
             .order_by("start_time")
+        )
+
+    @staticmethod
+    def _get_task_remaining_minutes(task: Task) -> int:
+        return max(
+            0,
+            int(getattr(task, "estimated_minutes", 0) or 0)
+            - int(getattr(task, "completed_minutes", 0) or 0),
         )
 
     def _get_events(self) -> List[Event]:
@@ -423,6 +440,15 @@ class Scheduler:
     ) -> ScheduleResult:
         task_start = self._aware(task.start_time)
         deadline = self._aware(task.deadline)
+        remaining_minutes = self._get_task_remaining_minutes(task)
+        if remaining_minutes <= 0:
+            return ScheduleResult(
+                task_id=task.id,  # type: ignore[arg-type]
+                success=True,
+                scheduled_start=None,
+                scheduled_end=None,
+                segments=[],
+            )
         search_start = max(start_date, task_start.date())
         for offset in range(self.max_days_ahead + 1):
             current_date = search_start + timedelta(days=offset)
@@ -430,7 +456,7 @@ class Scheduler:
                 break
             if not self._is_day_available(current_date):
                 continue
-            slots = self.get_available_slots(current_date, task.estimated_minutes)
+            slots = self.get_available_slots(current_date, remaining_minutes)
             for slot in slots:
                 adjusted_slot = self._shrink_slot_for_task(task, slot)
                 if not adjusted_slot:
@@ -447,10 +473,10 @@ class Scheduler:
                     task,
                     start.date(),
                 )
-                if category_minutes_left is not None and task.estimated_minutes > category_minutes_left:
+                if category_minutes_left is not None and remaining_minutes > category_minutes_left:
                     continue
-                if free_minutes >= task.estimated_minutes:
-                    scheduled_end = start + timedelta(minutes=task.estimated_minutes)
+                if free_minutes >= remaining_minutes:
+                    scheduled_end = start + timedelta(minutes=remaining_minutes)
                     return ScheduleResult(
                         task_id=task.id,  # type: ignore[arg-type]
                         success=True,
@@ -470,10 +496,18 @@ class Scheduler:
         task: Task,
         start_date: date,
     ) -> ScheduleResult:
-        remaining = task.estimated_minutes
+        remaining = self._get_task_remaining_minutes(task)
         task_start = self._aware(task.start_time)
         deadline = self._aware(task.deadline)
         segments: List[Tuple[datetime, datetime]] = []
+        if remaining <= 0:
+            return ScheduleResult(
+                task_id=task.id,  # type: ignore[arg-type]
+                success=True,
+                scheduled_start=None,
+                scheduled_end=None,
+                segments=[],
+            )
         min_block_minutes = getattr(task, "min_split_minutes", self.min_block_minutes)
         max_block_minutes = getattr(task, "max_split_minutes", None)
 

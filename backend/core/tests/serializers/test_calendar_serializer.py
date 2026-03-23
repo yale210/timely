@@ -60,6 +60,8 @@ class CalendarSerializerTests(TestCase):
                 "deadline",
                 "importance",
                 "completed",
+                "completed_minutes",
+                "remaining_minutes",
                 "locked",
                 "allow_split",
                 "min_split_minutes",
@@ -83,6 +85,7 @@ class CalendarSerializerTests(TestCase):
             "deadline": (now + datetime.timedelta(hours=1)).isoformat(),
             "importance": 5,
             "completed": False,
+            "completed_minutes": 10,
             "categories": [self.category1.id, self.category2.id],
             "allow_split": True,
             "min_split_minutes": 30,
@@ -101,6 +104,7 @@ class CalendarSerializerTests(TestCase):
         self.assertIn(self.category1, task.categories.all())
         self.assertEqual(task.min_split_minutes, 30)
         self.assertEqual(task.max_split_minutes, 60)
+        self.assertEqual(task.completed_minutes, 10)
         self.assertEqual(task.buffer_before_minutes, 15)
         self.assertEqual(task.buffer_after_minutes, 20)
 
@@ -125,3 +129,45 @@ class CalendarSerializerTests(TestCase):
 
         self.assertFalse(serializer.is_valid())
         self.assertIn("max_split_minutes", serializer.errors)
+
+    def test_calendar_serializer_marks_task_complete_when_completed_minutes_reaches_estimate(self):
+        now = timezone.now()
+        serializer = CalendarSerializer(
+            data={
+                "title": "Finished task",
+                "description": "",
+                "estimated_minutes": 45,
+                "completed_minutes": 45,
+                "start_time": now.isoformat(),
+                "deadline": (now + datetime.timedelta(hours=2)).isoformat(),
+                "importance": 5,
+                "completed": False,
+                "categories": [],
+            },
+            context=self._request_context(),
+        )
+
+        self.assertTrue(serializer.is_valid(), serializer.errors)
+        task = serializer.save(user=self.user)
+        self.assertTrue(task.completed)
+        self.assertEqual(task.remaining_minutes, 0)
+
+    def test_calendar_serializer_rejects_completed_minutes_above_estimate(self):
+        now = timezone.now()
+        serializer = CalendarSerializer(
+            data={
+                "title": "Too much progress",
+                "description": "",
+                "estimated_minutes": 30,
+                "completed_minutes": 40,
+                "start_time": now.isoformat(),
+                "deadline": (now + datetime.timedelta(hours=1)).isoformat(),
+                "importance": 5,
+                "completed": False,
+                "categories": [],
+            },
+            context=self._request_context(),
+        )
+
+        self.assertFalse(serializer.is_valid())
+        self.assertIn("completed_minutes", serializer.errors)

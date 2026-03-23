@@ -31,6 +31,9 @@ class Task(models.Model):
     colour = models.CharField(max_length=7, blank=True, null=True)
 
     estimated_minutes = models.PositiveIntegerField(validators=[MinValueValidator(1)])
+    completed_minutes = models.PositiveIntegerField(
+        default=0, validators=[MinValueValidator(0)]
+    )
     start_time = models.DateTimeField()
     deadline = models.DateTimeField()
     completed = models.BooleanField(default=False)
@@ -80,9 +83,17 @@ class Task(models.Model):
             return 0
         return (deadline_date - current_time).days
 
+    @property
+    def remaining_minutes(self):
+        return max(0, self.estimated_minutes - self.completed_minutes)
+
     def clean(self):
         if self.start_time and self.deadline and self.start_time > self.deadline:
             raise ValidationError("Start time must be before or on the deadline.")
+        if self.completed_minutes > self.estimated_minutes:
+            raise ValidationError(
+                "Completed minutes cannot be greater than estimated minutes."
+            )
         if (
             self.max_split_minutes is not None
             and self.max_split_minutes < self.min_split_minutes

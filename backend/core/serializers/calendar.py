@@ -20,6 +20,7 @@ class CalendarSerializer(serializers.ModelSerializer):
     categories = serializers.PrimaryKeyRelatedField(
         many=True, queryset=Category.objects.all(), required=False
     )
+    remaining_minutes = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
         model = Task
@@ -30,6 +31,8 @@ class CalendarSerializer(serializers.ModelSerializer):
             "categories",
             "colour",
             "estimated_minutes",
+            "completed_minutes",
+            "remaining_minutes",
             "start_time",
             "deadline",
             "importance",
@@ -52,6 +55,9 @@ class CalendarSerializer(serializers.ModelSerializer):
             instance.categories.all(), many=True
         ).data
         return representation
+
+    def get_remaining_minutes(self, instance):
+        return max(0, instance.estimated_minutes - instance.completed_minutes)
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -196,6 +202,8 @@ class CalendarSerializer(serializers.ModelSerializer):
         start_time,
         deadline,
         categories,
+        estimated_minutes,
+        completed_minutes,
     ):
         if allocation in (None, []):
             return
@@ -218,6 +226,8 @@ class CalendarSerializer(serializers.ModelSerializer):
             )
 
         normalized_slots.sort(key=lambda slot: slot[0])
+        remaining_minutes = max(0, estimated_minutes - completed_minutes)
+        allocated_minutes = 0
         for index, (slot_start, slot_end) in enumerate(normalized_slots):
             if start_time is not None and slot_start < start_time:
                 raise serializers.ValidationError(
@@ -233,6 +243,7 @@ class CalendarSerializer(serializers.ModelSerializer):
                 )
 
             slot_minutes = int((slot_end - slot_start).total_seconds() // 60)
+            allocated_minutes += slot_minutes
             if len(normalized_slots) > 1 and slot_minutes < min_split_minutes:
                 raise serializers.ValidationError(
                     {
@@ -260,6 +271,15 @@ class CalendarSerializer(serializers.ModelSerializer):
                 raise serializers.ValidationError(
                     {"allocation": "Allocation slots cannot overlap each other."}
                 )
+
+        if allocated_minutes > remaining_minutes:
+            raise serializers.ValidationError(
+                {
+                    "allocation": (
+                        "Allocation slots cannot exceed the task's remaining minutes."
+                    )
+                }
+            )
 
         user = self._resolve_user()
         current_task_id = getattr(self.instance, "id", None)
@@ -354,6 +374,14 @@ class CalendarSerializer(serializers.ModelSerializer):
             "max_split_minutes",
             getattr(self.instance, "max_split_minutes", None),
         )
+        estimated_minutes = attrs.get(
+            "estimated_minutes",
+            getattr(self.instance, "estimated_minutes", None),
+        )
+        completed_minutes = attrs.get(
+            "completed_minutes",
+            getattr(self.instance, "completed_minutes", 0),
+        )
         start_time = attrs.get(
             "start_time", getattr(self.instance, "start_time", None)
         )
@@ -394,6 +422,32 @@ class CalendarSerializer(serializers.ModelSerializer):
                     )
                 }
             )
+        if (
+            estimated_minutes is not None
+            and completed_minutes is not None
+            and completed_minutes > estimated_minutes
+        ):
+            raise serializers.ValidationError(
+                {
+                    "completed_minutes": (
+                        "Completed minutes cannot be greater than estimated minutes."
+                    )
+                }
+            )
+
+        completed_requested = attrs.get("completed")
+        if completed_requested is True:
+            completed_minutes = estimated_minutes
+            attrs["completed_minutes"] = completed_minutes
+        elif completed_requested is False and "completed_minutes" not in attrs:
+            completed_minutes = 0
+            attrs["completed_minutes"] = completed_minutes
+
+        attrs["completed"] = bool(
+            estimated_minutes is not None
+            and completed_minutes is not None
+            and completed_minutes >= estimated_minutes
+        )
 
         if "categories" in attrs:
             categories = list(attrs["categories"])
@@ -413,17 +467,23 @@ class CalendarSerializer(serializers.ModelSerializer):
                 start_time=start_time,
                 deadline=deadline,
                 categories=categories,
+                estimated_minutes=estimated_minutes or 0,
+                completed_minutes=completed_minutes or 0,
             )
         except serializers.ValidationError as exc:
             raise self._rewrite_buffer_only_conflict(attrs, exc)
         return attrs
 
     def create(self, validated_data):
+        if validated_data.get("completed"):
+            validated_data["allocation"] = []
         allocation = validated_data.get("allocation") or []
         validated_data["total_task_allocations"] = len(allocation)
         return super().create(validated_data)
 
     def update(self, instance, validated_data):
+        if validated_data.get("completed"):
+            validated_data["allocation"] = []
         allocation = validated_data.get("allocation", instance.allocation or [])
         validated_data["total_task_allocations"] = len(allocation)
         return super().update(instance, validated_data)
@@ -431,6 +491,7 @@ class CalendarSerializer(serializers.ModelSerializer):
 
 class CalendarResponseSerializer(serializers.ModelSerializer):
     categories = CategorySerializer(many=True, read_only=True)
+    remaining_minutes = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
         model = Task
@@ -441,6 +502,8 @@ class CalendarResponseSerializer(serializers.ModelSerializer):
             "categories",
             "colour",
             "estimated_minutes",
+            "completed_minutes",
+            "remaining_minutes",
             "start_time",
             "deadline",
             "importance",
@@ -453,6 +516,9 @@ class CalendarResponseSerializer(serializers.ModelSerializer):
             "buffer_after_minutes",
             "parent_task",
         ]
+
+    def get_remaining_minutes(self, instance):
+        return max(0, instance.estimated_minutes - instance.completed_minutes)
 
     def validate(self, attrs):
         attrs = super().validate(attrs)

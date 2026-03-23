@@ -138,8 +138,13 @@ useEffect(() => {
 
       try {
         const nextCompleted = !task.completed;
-        //await taskService.updateTask(id, { completed: nextCompleted });
-        const response = await taskService.updateTask(id, {completed: nextCompleted} )
+        const response = await taskService.updateTask(
+          id,
+          {
+            completed: nextCompleted,
+            completed_minutes: nextCompleted ? task.estimated_minutes : 0,
+          },
+        )
         console.log("task update response", JSON.stringify(response, null, 2))
         if (nextCompleted && !task.completed) {
           const expDelta = 10 + 2 * task.importance;
@@ -167,7 +172,10 @@ const submitTask = useCallback(
         const bufferAfterChanged =
           typeof data.buffer_after_minutes === "number" &&
           data.buffer_after_minutes !== (selectedTask.buffer_after_minutes ?? 0);
-        savedTask = bufferBeforeChanged || bufferAfterChanged
+        const completedMinutesChanged =
+          typeof data.completed_minutes === "number" &&
+          data.completed_minutes !== (selectedTask.completed_minutes ?? 0);
+        savedTask = bufferBeforeChanged || bufferAfterChanged || completedMinutesChanged
           ? await taskService.saveAndRescheduleTask(
               selectedTask.id,
               data,

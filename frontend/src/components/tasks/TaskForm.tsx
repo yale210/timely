@@ -18,6 +18,7 @@ interface NormalisedTaskSubmission {
   categories: number[];
   importance: number;
   estimated_minutes: number;
+  completed_minutes: number;
   completed: boolean;
   locked: boolean;
   allow_split: boolean;
@@ -40,6 +41,7 @@ const normaliseTaskSubmission = (
   categories: [...(submission.categories ?? [])].sort((a, b) => a - b),
   importance: Number(submission.importance ?? 5),
   estimated_minutes: Number(submission.estimated_minutes ?? 60),
+  completed_minutes: Number(submission.completed_minutes ?? 0),
   completed: Boolean(submission.completed),
   locked: Boolean(submission.locked),
   allow_split: Boolean(submission.allow_split),
@@ -144,6 +146,9 @@ const TaskForm = ({
     initialData?.categories?.map((c) => (typeof c === "object" ? c.id : c)) ?? []
   );
   const [importance, setImportance] = useState(initialData?.importance ?? 5);
+  const [completedMinutes, setCompletedMinutes] = useState<number | "">(
+    initialData?.completed_minutes ?? 0
+  );
   const [allowSplit, setAllowSplit] = useState(initialData?.allow_split ?? false);
   const [minSplitMinutes, setMinSplitMinutes] = useState<string>(
     String(initialData?.min_split_minutes ?? DEFAULT_MIN_SPLIT_MINUTES),
@@ -203,6 +208,13 @@ const TaskForm = ({
   const isEndInvalid = Number.isNaN(endDateTime.getTime());
   const isTimeInvalid = isStartInvalid || isEndInvalid || startDateTime >= endDateTime;
   const isImportanceInvalid = importance < 1 || importance > 10 || isNaN(importance);
+  const normalizedEstimatedMinutes = Number(estimatedMinutes || 0);
+  const parsedCompletedMinutes = Number(completedMinutes || 0);
+  const isCompletedMinutesInvalid =
+    completedMinutes === ""
+    || Number.isNaN(parsedCompletedMinutes)
+    || parsedCompletedMinutes < 0
+    || parsedCompletedMinutes > normalizedEstimatedMinutes;
   const parsedMinSplitMinutes = Number.parseInt(minSplitMinutes, 10);
   const parsedMaxSplitMinutes = Number.parseInt(maxSplitMinutes, 10);
   const isMinSplitMinutesInvalid = allowSplit && (
@@ -230,6 +242,9 @@ const TaskForm = ({
     || parsedBufferAfterMinutes < 0
     || parsedBufferAfterMinutes > 240;
   const shouldValidateTime = hasSubmitted || hasTouchedTime;
+  const progressPercent = normalizedEstimatedMinutes > 0
+    ? Math.min(100, Math.max(0, (parsedCompletedMinutes / normalizedEstimatedMinutes) * 100))
+    : 0;
   
   const errors: Record<string, boolean> = {};
   if (shouldValidateTime && isTimeInvalid) {
@@ -238,6 +253,9 @@ const TaskForm = ({
   }
   if (isImportanceInvalid) {
     errors.importance = true;
+  }
+  if (hasSubmitted && isCompletedMinutesInvalid) {
+    errors.completed_minutes = true;
   }
   if (hasSubmitted && isMinSplitMinutesInvalid) {
     errors.min_split_minutes = true;
@@ -248,19 +266,14 @@ const TaskForm = ({
   if (hasSubmitted && isBufferBeforeMinutesInvalid) {
     errors.buffer_before_minutes = true;
   }
-  if (serverFieldErrors.buffer_before_minutes?.length) {
-    errors.buffer_before_minutes = true;
-  }
   if (hasSubmitted && isBufferAfterMinutesInvalid) {
-    errors.buffer_after_minutes = true;
-  }
-  if (serverFieldErrors.buffer_after_minutes?.length) {
     errors.buffer_after_minutes = true;
   }
   
   const hasBlockingErrors =
     isTimeInvalid
     || isImportanceInvalid
+    || isCompletedMinutesInvalid
     || isMinSplitMinutesInvalid
     || isMaxSplitMinutesInvalid
     || isBufferBeforeMinutesInvalid
@@ -273,7 +286,8 @@ const TaskForm = ({
     deadline: toIsoOrEmpty(endDateTime),
     categories: selectedCategories,
     importance,
-    estimated_minutes: Number(estimatedMinutes || 0),
+    estimated_minutes: normalizedEstimatedMinutes,
+    completed_minutes: parsedCompletedMinutes,
     colour,
     locked: isTaskLocked,
     allow_split: allowSplit,
@@ -281,7 +295,7 @@ const TaskForm = ({
     max_split_minutes: maxSplitMinutes.trim() === "" ? null : parsedMaxSplitMinutes,
     buffer_before_minutes: parsedBufferBeforeMinutes,
     buffer_after_minutes: parsedBufferAfterMinutes,
-    completed: initialData?.completed ?? false,
+    completed: normalizedEstimatedMinutes > 0 && parsedCompletedMinutes >= normalizedEstimatedMinutes,
   });
 
   useEffect(() => {
@@ -651,11 +665,7 @@ const TaskForm = ({
                   setBufferBeforeMinutes(e.target.value);
                 }}
               />
-              {serverFieldErrors.buffer_before_minutes?.length ? (
-                <p className="mt-2 text-xs text-red-500">
-                  {serverFieldErrors.buffer_before_minutes[0]}
-                </p>
-              ) : errors.buffer_before_minutes ? (
+              {errors.buffer_before_minutes ? (
                 <p className="mt-2 text-xs text-red-500">
                   Buffer before must be between 0 and 240 minutes.
                 </p>
@@ -677,11 +687,7 @@ const TaskForm = ({
                   setBufferAfterMinutes(e.target.value);
                 }}
               />
-              {serverFieldErrors.buffer_after_minutes?.length ? (
-                <p className="mt-2 text-xs text-red-500">
-                  {serverFieldErrors.buffer_after_minutes[0]}
-                </p>
-              ) : errors.buffer_after_minutes ? (
+              {errors.buffer_after_minutes ? (
                 <p className="mt-2 text-xs text-red-500">
                   Buffer after must be between 0 and 240 minutes.
                 </p>
@@ -722,6 +728,45 @@ const TaskForm = ({
             value={description}
             onChange={(e) => setDescription(e.target.value)}
           />
+        </div>
+
+        <div>
+          <div className="mb-2 flex items-center justify-between gap-4">
+            <label htmlFor="task-completed-minutes" className="block text-sm font-medium text-gray-700">
+              Progress
+            </label>
+            <span className="text-xs text-gray-500">
+              Remaining: {Math.max(0, normalizedEstimatedMinutes - parsedCompletedMinutes)} mins
+            </span>
+          </div>
+          <div className="mb-3 h-3 overflow-hidden rounded-full bg-gray-200">
+            <div
+              className="h-full rounded-full bg-primary transition-[width] duration-200"
+              style={{ width: `${progressPercent}%` }}
+            />
+          </div>
+          <div className="flex items-center gap-2">
+            <input
+              id="task-completed-minutes"
+              className={`w-12 appearance-none rounded-lg border border-gray-300 bg-white text-black focus:ring-primary focus:border-primary shadow-sm p-2.5 [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none ${errors.completed_minutes ? errorClass : ""}`}
+              type="number"
+              min="0"
+              max={Math.max(0, normalizedEstimatedMinutes)}
+              value={completedMinutes}
+              onChange={(e) => {
+                const nextValue = e.target.value;
+                setCompletedMinutes(nextValue === "" ? "" : parseInt(nextValue));
+              }}
+            />
+            <span className="text-base font-medium text-gray-700">
+              / {normalizedEstimatedMinutes} mins
+            </span>
+          </div>
+          {errors.completed_minutes ? (
+            <p className="mt-2 text-xs text-red-500">
+              Completed minutes must be between 0 and the estimated minutes.
+            </p>
+          ) : null}
         </div>
 
         {submitError ? (

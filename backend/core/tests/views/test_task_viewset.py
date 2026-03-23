@@ -321,6 +321,22 @@ class TaskViewSetTests(TestCase):
         self.assertEqual(self.task1.buffer_before_minutes, 25)
         self.assertEqual(self.task1.buffer_after_minutes, 35)
 
+    def test_patch_task_completed_minutes_persist(self):
+        self.client.force_authenticate(user=self.user)
+
+        response = self.client.patch(
+            f"/api/tasks/{self.task1.id}/",
+            {
+                "completed_minutes": 20,
+            },
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.task1.refresh_from_db()
+        self.assertEqual(self.task1.completed_minutes, 20)
+        self.assertFalse(self.task1.completed)
+
     def test_patch_task_buffer_only_shows_reschedule_message_when_existing_schedule_conflicts(self):
         self.client.force_authenticate(user=self.user)
         allocation_start = self.now + datetime.timedelta(days=1, hours=1)

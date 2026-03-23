@@ -1,6 +1,7 @@
 from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import OpenApiParameter, extend_schema, extend_schema_view
 from django.db import transaction
+from django.db.models import Q
 from django.utils import timezone
 from django_filters import rest_framework as django_filters
 from rest_framework import filters, permissions, serializers, status, viewsets
@@ -130,8 +131,10 @@ class TaskViewSet(viewsets.ModelViewSet):
         with transaction.atomic():
             task = serializer.save()
             Task.objects.filter(user=request.user).exclude(allocation=[]).filter(
-                completed=False, locked=False
-            ).update(allocation=[], total_task_allocations=0)
+                completed=False
+            ).filter(Q(locked=False) | Q(id=task.id)).update(
+                allocation=[], total_task_allocations=0
+            )
             task.allocation = []
             task.total_task_allocations = 0
             scheduler = Scheduler(
@@ -139,6 +142,7 @@ class TaskViewSet(viewsets.ModelViewSet):
                 max_days_ahead=max_days_ahead,
                 allow_split=True,
                 min_block_minutes=30,
+                include_locked_task_ids=[task.id],
             )
             results = scheduler.schedule_tasks(start_date=start_date)
             result = next(
