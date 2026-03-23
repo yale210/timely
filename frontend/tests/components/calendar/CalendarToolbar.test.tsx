@@ -13,6 +13,8 @@ describe("CalendarToolbar", () => {
       goToPrevious: vi.fn(),
       goToNext: vi.fn(),
       rescheduleTasks: vi.fn(),
+      exportEvents: vi.fn(),
+      importEvents: vi.fn(),
     };
 
     render(

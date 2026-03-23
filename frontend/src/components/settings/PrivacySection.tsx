@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 
 interface PrivacySectionProps {
@@ -12,23 +11,8 @@ const PrivacySection = ({
   deleting,
   onDeleteTasks,
   onDeleteEvents,
-
 }: PrivacySectionProps) => {
-
-    const [action, setAction] = useState<"tasks" | "events" | null>(null);
-    const [message, setMessage ] = useState<string | null>(null);
-    /*
-    const handleConfirm = () => {
-        if (action === "events" ) {
-            onDeleteEvents();
-            setAction(null);
-
-        } else if (action === "tasks") {
-            onDeleteTasks();
-        }
-        setAction(null);
-    };
-    */
+  const [message, setMessage] = useState<string | null>(null);
   
   return (
 
@@ -101,4 +85,3 @@ const PrivacySection = ({
 
 
 export default PrivacySection
-

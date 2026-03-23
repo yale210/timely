@@ -36,6 +36,7 @@ const createProps = (activeSection: "preferences" | "features" | "appearance" | 
   loading: {
     preference: false,
     saving: false,
+    deleting: false,
   },
   error: {
     preference: null,
@@ -47,6 +48,8 @@ const createProps = (activeSection: "preferences" | "features" | "appearance" | 
     savePreferences: vi.fn(),
     applyTheme: vi.fn(),
     applyFont: vi.fn(),
+    deleteEvents: vi.fn(),
+    deleteTasks: vi.fn(),
   },
 });
 
