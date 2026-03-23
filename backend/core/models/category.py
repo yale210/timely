@@ -28,11 +28,7 @@ class Category(models.Model):
             )
         ],
     )
-    max_daily_study_time = models.PositiveSmallIntegerField(
-        validators=[MinValueValidator(0), MaxValueValidator(24)],
-        null=True,
-        blank=True,
-    )
+    
     colour_override = models.BooleanField(default=False)
 
     # Return the category.

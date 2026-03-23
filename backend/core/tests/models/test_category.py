@@ -31,22 +31,7 @@ class CategoryTests(TestCase):
             self.category.text = ""
             self.category.full_clean()
 
-    def test_category_max_daily_study_time_allows_bounds(self):
-        self.category.max_daily_study_time = 0
-        self.category.full_clean()
-
-        self.category.max_daily_study_time = 24
-        self.category.full_clean()
-
-    def test_category_max_daily_study_time_rejects_out_of_bounds(self):
-        self.category.max_daily_study_time = -1
-        with self.assertRaises(ValidationError):
-            self.category.full_clean()
-
-        self.category.max_daily_study_time = 25
-        with self.assertRaises(ValidationError):
-            self.category.full_clean()
-
+   
     def test_category_colour_accepts_hex_code(self):
         self.category.colour = "#A1B2C3"
         self.category.full_clean()

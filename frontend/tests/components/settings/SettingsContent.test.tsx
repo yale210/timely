@@ -69,6 +69,15 @@ describe("SettingsContent", () => {
     expect(dispatchSpy).toHaveBeenCalledWith(expect.any(Event));
   });
 
+  it("does not render a weekly summaries feature toggle", () => {
+    localStorage.setItem("feature_weekly_summaries_enabled", "true");
+
+    render(<SettingsContent {...createProps("features")} />);
+
+    expect(screen.queryByRole("checkbox", { name: /weekly summaries/i })).not.toBeInTheDocument();
+    expect(screen.queryByText(/view weekly statistics about your tasks and productivity\./i)).not.toBeInTheDocument();
+  });
+
   it("renders placeholder and theme branches", () => {
     const { rerender } = render(<SettingsContent {...createProps("profile")} />);
     expect(screen.getByText("profile-section")).toBeInTheDocument();

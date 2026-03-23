@@ -43,7 +43,7 @@ class CategorySeeder(BaseSeeder):
                 "fields": {
                     "text": word,
                     "colour": colour,
-                    "max_daily_study_time": random.randint(0, 24),
+                    
                 },
             }
         )
@@ -55,5 +55,5 @@ class CategorySeeder(BaseSeeder):
             user=user,
             text=data["fields"]["text"],
             colour=data["fields"].get("colour", None),
-            max_daily_study_time=data["fields"].get("max_daily_study_time", None),
+            
         )

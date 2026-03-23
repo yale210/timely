@@ -77,7 +77,6 @@ class EventSeeder(BaseSeeder):
                 user=user,
                 text=self.faker.word(),
                 colour=self.faker.hex_color(),
-                max_daily_study_time=random.randint(1, 24),
             )
         return temporary_category
 
