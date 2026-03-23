@@ -488,10 +488,10 @@ class SchedulerTest(TestCase):
         )
         mocked_now = timezone.make_aware(datetime.combine(day_one, time(21, 48)))
         with patch(
-            "scheduler.scheduler_engine.timezone.localdate", return_value=day_one
+            "scheduler.engine.availability.timezone.localdate", return_value=day_one
         ):
             with patch(
-                "scheduler.scheduler_engine.timezone.now", return_value=mocked_now
+                "scheduler.engine.availability.timezone.now", return_value=mocked_now
             ):
                 results = scheduler.schedule_tasks(start_date=day_one)
 
@@ -519,9 +519,13 @@ class SchedulerTest(TestCase):
             self.user, max_days_ahead=2, allow_split=True, min_block_minutes=20
         )
         mocked_now = timezone.make_aware(datetime.combine(today, time(21, 48, 37)))
-        with patch("scheduler.scheduler_engine.timezone.localdate", return_value=today):
+        with patch(
+            "scheduler.engine.availability.timezone.localdate",
+            return_value=today,
+        ):
             with patch(
-                "scheduler.scheduler_engine.timezone.now", return_value=mocked_now
+                "scheduler.engine.availability.timezone.now",
+                return_value=mocked_now,
             ):
                 results = scheduler.schedule_tasks(start_date=today)
 
