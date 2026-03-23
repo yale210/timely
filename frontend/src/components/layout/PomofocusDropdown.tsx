@@ -4,6 +4,7 @@ import { formatTime } from "@/utils/timeUtils";
 import { convertMinutesToHHMM, convertHHMMToMinutes, parseAndValidateHHMM } from "@/utils/timeFormatters";
 import { PlayIcon, PauseIcon, ArrowPathIcon, PlusIcon, MinusIcon } from "@heroicons/react/24/outline";
 import { useState, useEffect } from "react";
+import type React from "react";
 
 /**
  * Dropdown component for the Pomofocus timer in the navbar.
