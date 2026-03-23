@@ -9,7 +9,6 @@ class ShareEventsView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def get(self, request):
-
         shared_events = PendingShareEvent.objects.filter(
             Q(sender=request.user) | Q(receiver=request.user)
         )

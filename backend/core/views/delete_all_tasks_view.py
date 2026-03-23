@@ -8,7 +8,6 @@ class DeleteAllTasksView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def delete(self, request):
-
         all_tasks_count = Task.objects.filter(user=request.user).count()
 
         all_tasks = Task.objects.filter(user=request.user)

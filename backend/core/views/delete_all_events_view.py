@@ -8,7 +8,6 @@ class DeleteAllEventsView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def delete(self, request):
-
         all_events_count = Event.objects.filter(user=request.user).count()
 
         all_events = Event.objects.filter(user=request.user)
