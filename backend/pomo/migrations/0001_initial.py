@@ -18,7 +18,7 @@ class Migration(migrations.Migration):
             name='PomoSession',
             fields=[
                 ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('duration_minutes', models.IntegerField()),
+                ('duration_minutes', models.PositiveIntegerField()),
                 ('completed_at', models.DateTimeField()),
                 ('created_at', models.DateTimeField(auto_now_add=True, db_index=True)),
                 ('user', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='pomo_sessions', to=settings.AUTH_USER_MODEL)),
