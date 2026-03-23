@@ -45,8 +45,10 @@ export const PomofocusDropdown = () => {
     if (viewingMode === "focus") {
       const totalMins = typeof initialDuration === "number" ? initialDuration : 0;
       const { hours, minutes } = convertMinutesToHHMM(totalMins);
+      /* eslint-disable react-hooks/set-state-in-effect */
       setHH(hours.toString().padStart(2, "0"));
       setMM(minutes.toString().padStart(2, "0"));
+      /* eslint-enable react-hooks/set-state-in-effect */
     }
   }, [initialDuration, viewingMode]);
 
