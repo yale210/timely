@@ -235,14 +235,10 @@ export const PomodoroProvider = ({ children }: PomodoroProviderProps) => {
   }, [timeLeft, isActive, onTimerComplete]);
 
   useEffect(() => {
-    if (isActive && timeLeft > 0) {
+    if (isActive) {
       intervalRef.current = window.setInterval(() => {
         setTimeLeft((prev) => prev - 1);
       }, 1000);
-    } else if (timeLeft === 0 && isActive) {
-      setTimeout(() => {
-        void onTimerComplete();
-      }, 0);
     }
 
     return () => {
@@ -250,7 +246,7 @@ export const PomodoroProvider = ({ children }: PomodoroProviderProps) => {
         clearInterval(intervalRef.current);
       }
     };
-  }, [isActive, timeLeft, onTimerComplete]);
+  }, [isActive]);
 
   const closeModal = () => setShowModal(false);
 
