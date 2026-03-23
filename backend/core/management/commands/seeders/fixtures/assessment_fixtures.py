@@ -7,7 +7,7 @@ assessments = [
             "title": "PPA Exam",
             "module": "PPA",
             "assessment_type": "QUIZ",
-            "due_date": "2026-08-01",
+            "due_date": "2026-08-01T00:00:00Z",
             "start_time": "2026-08-01T11:30:00Z",
             "end_time": "2026-08-01T16:00:00Z",
             "length_of_assessment": 100,

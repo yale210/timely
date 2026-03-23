@@ -71,11 +71,7 @@ special_dates = [
     {
         "model": "core.specialdates",
         "pk": 14,
-<<<<<<< HEAD
-        "fields": {"user": 1, "date": "0001-01-01", "text": "New me.."},
-=======
         "fields": {"user": 1, "date": "2025-01-01", "text": "New me.."},
->>>>>>> origin/main
     },
     {
         "model": "core.specialdates",

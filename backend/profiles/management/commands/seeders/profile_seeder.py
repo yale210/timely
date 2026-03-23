@@ -21,14 +21,6 @@ class ProfileSeeder(BaseSeeder):
             try:
                 self._create_profile(profile)
             except Exception as exception:
-<<<<<<< HEAD:backend/core/management/commands/seeders/profile_seeder.py
-                print(f"Error creating profile: {exception}")
-
-    def _create_profile(self, data):
-        user = get_user_model().objects.get(id=data["fields"]["user"])
-        Profile.objects.get_or_create(
-            user=user,
-=======
                 print(f"Error occurred while creating profile: {exception}")
 
     def _create_profile(self, data):
@@ -40,7 +32,6 @@ class ProfileSeeder(BaseSeeder):
 
         Profile.objects.get_or_create(
             user_id=user_id,
->>>>>>> origin/main:backend/profiles/management/commands/seeders/profile_seeder.py
             defaults={
                 "name": temporary_user.username,
                 "date_of_birth": data["fields"]["date_of_birth"],

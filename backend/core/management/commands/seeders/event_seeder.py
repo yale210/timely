@@ -51,7 +51,7 @@ class EventSeeder(BaseSeeder):
         temporary_category = self._get_or_create_random_category(temporary_user)
 
         if random.randint(0, 1) == 1:
-            self._create_recurring_event(
+            self._create_random_event_type(
                 {
                     "fields": {
                         "user": temporary_user.id,
@@ -60,7 +60,7 @@ class EventSeeder(BaseSeeder):
                 }
             )
         else:
-            self._create_non_recurring_event(
+            self._create_random_event_type(
                 {
                     "fields": {
                         "user": temporary_user.id,
@@ -115,7 +115,7 @@ class EventSeeder(BaseSeeder):
             }
         )
 
-    def _create_non_recurring_event(self, data):
+    def _create_random_event_type(self, data):
         start = timezone.make_aware(self.faker.date_time())
         end = start + timedelta(random.randint(0, 60))
 
@@ -129,7 +129,7 @@ class EventSeeder(BaseSeeder):
                         "user": self._get_or_create_random_user().id,
                         "categories": [
                             self._get_or_create_random_category(
-                                self._get_or_create_random_user().id
+                                self._get_or_create_random_user()
                             ).id
                         ],
                         "title": self.faker.sentence(),
@@ -159,7 +159,7 @@ class EventSeeder(BaseSeeder):
                         "user": self._get_or_create_random_user().id,
                         "categories": [
                             self._get_or_create_random_category(
-                                self._get_or_create_random_user().id
+                                self._get_or_create_random_user()
                             ).id
                         ],
                         "title": self.faker.sentence(),

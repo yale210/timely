@@ -26,13 +26,8 @@ tasks = [
             "description": "50 pullups, 50 pushups, 50 situps, 5km running",
             "categories": [2],
             "estimated_minutes": 120,
-<<<<<<< HEAD
-            "start_time": "2026-03-01T01:00:00Z",
-            "deadline": "2027-03-01T01:00:00Z",
-=======
             "start_time": "2020-02-10T00:30:00Z",
             "deadline": "2030-02-10T01:30:00Z",
->>>>>>> origin/main
             "completed": False,
             "parent_task": None,
             "total_task_allocations": 0,
@@ -67,13 +62,8 @@ tasks = [
             "description": "Build a robot that can climb walls",
             "categories": [1],
             "estimated_minutes": 500,
-<<<<<<< HEAD
-            "start_time": "2022-03-01T01:00:00Z",
-            "deadline": "2028-03-01T01:00:00Z",
-=======
             "start_time": "2026-02-09T19:30:00Z",
             "deadline": "2026-05-20T19:30:00Z",
->>>>>>> origin/main
             "completed": False,
             "parent_task": None,
             "total_task_allocations": 0,
@@ -90,13 +80,8 @@ tasks = [
             "description": "Put components onto breadboard",
             "categories": [1],
             "estimated_minutes": 400,
-<<<<<<< HEAD
-            "start_time": "2026-01-01T01:00:00Z",
-            "deadline": "2027-12-01T01:00:00Z",
-=======
             "start_time": "2026-03-22T19:30:00Z",
             "deadline": "2027-02-10T19:30:00Z",
->>>>>>> origin/main
             "completed": False,
             "parent_task": 4,
             "total_task_allocations": 0,
@@ -113,13 +98,8 @@ tasks = [
             "description": "Code the robot so the motors move",
             "categories": [],
             "estimated_minutes": 100,
-<<<<<<< HEAD
-            "start_time": "2026-03-01T12:00:00Z",
-            "deadline": "2027-03-01T23:00:00Z",
-=======
             "start_time": "2026-02-09T19:30:00Z",
             "deadline": "2026-02-15T16:30:00Z",
->>>>>>> origin/main
             "completed": False,
             "parent_task": 4,
             "total_task_allocations": 0,
@@ -154,13 +134,8 @@ tasks = [
             "description": "",
             "categories": [],
             "estimated_minutes": 10,
-<<<<<<< HEAD
-            "start_time": "2022-03-01T01:00:00Z",
-            "deadline": "2027-10-01T10:00:00Z",
-=======
             "start_time": "2026-02-10T19:30:00Z",
             "deadline": "2026-03-10T19:30:00Z",
->>>>>>> origin/main
             "completed": False,
             "parent_task": None,
             "total_task_allocations": 0,

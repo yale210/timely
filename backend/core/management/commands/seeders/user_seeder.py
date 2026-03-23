@@ -34,7 +34,6 @@ class UserSeeder(BaseSeeder):
         User.objects.get_or_create(
             id=data.get("pk"),
             username=username,
-            id=data.get("pk"),
             defaults={
                 "email": email,
                 "password": data["fields"]["password"],

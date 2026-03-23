@@ -65,9 +65,9 @@ class AssessmentSeeder(BaseSeeder):
                             "PRACTICAL",
                         ]
                     ),
-                    "due_date": self.faker.date(),
-                    "start_time": self.faker.date_time(),
-                    "end_time": self.faker.date_time(),
+                    "due_date": timezone.make_aware(self.faker.date_time()),
+                    "start_time": timezone.make_aware(self.faker.date_time()),
+                    "end_time": timezone.make_aware(self.faker.date_time()),
                     "length_of_assessment": random.randint(1, 300),
                     "weighting_of_assessment": random.randint(1, 100),
                     "notes": self.faker.sentence(),
@@ -81,7 +81,7 @@ class AssessmentSeeder(BaseSeeder):
 
     def _populate_random_assessment_event(self):
         start = timezone.make_aware(self.faker.date_time())
-        end = start + timedelta(random.randint(0, 60))
+        end = start + timedelta(minutes=random.randint(1, 60))
 
         self._create_event(
             {
@@ -89,7 +89,7 @@ class AssessmentSeeder(BaseSeeder):
                     "user": self._get_or_create_random_user().id,
                     "categories": [
                         self._get_or_create_random_category(
-                            self._get_or_create_random_user().id
+                            self._get_or_create_random_user()
                         ).id
                     ],
                     "title": self.faker.sentence(),
@@ -108,11 +108,10 @@ class AssessmentSeeder(BaseSeeder):
 
     def _create_assessment(self, data):
         user = get_user_model().objects.get(id=data["fields"]["user"])
-        event = (
-            Event.objects.get(id=data["fields"]["linked_event"])
-            if data["fields"]["linked_event"]
-            else None
-        )
+        linked_event = data["fields"].get("linked_event") 
+        if linked_event is not None and not hasattr(linked_event, "id"): 
+            linked_event=Event.objects.filter(id=linked_event).first()
+        
         Assessment.objects.get_or_create(
             user=user,
             start_time=data["fields"]["start_time"],
@@ -125,7 +124,7 @@ class AssessmentSeeder(BaseSeeder):
             weighting_of_assessment=data["fields"]["weighting_of_assessment"],
             notes=data["fields"]["notes"],
             reminder_offset=data["fields"]["reminder_offset"],
-            linked_event=event,
+            linked_event=linked_event,
         )
 
     def _create_event(self, data):
