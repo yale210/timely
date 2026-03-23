@@ -181,6 +181,7 @@ export const PomodoroProvider = ({ children }: PomodoroProviderProps) => {
       setShowModal(true);
       // Auto-switch to focus and start
       setModeState("focus");
+      setViewingMode("focus");
       synchroniseCountdownWithDuration("focus");
       setIsActive(true);
     }
