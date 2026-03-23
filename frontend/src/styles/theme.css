@@ -94,4 +94,21 @@
   select {
     @apply bg-white text-black border-gray-300 focus:border-primary focus:ring-primary;
   }
+
+  [data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator,
+  [data-theme="dark"] input[type="time"]::-webkit-calendar-picker-indicator,
+  [data-theme="midnight"] input[type="date"]::-webkit-calendar-picker-indicator,
+  [data-theme="midnight"] input[type="time"]::-webkit-calendar-picker-indicator,
+  [data-theme="forest-night"] input[type="date"]::-webkit-calendar-picker-indicator,
+  [data-theme="forest-night"] input[type="time"]::-webkit-calendar-picker-indicator,
+  [data-theme="plum-ink"] input[type="date"]::-webkit-calendar-picker-indicator,
+  [data-theme="plum-ink"] input[type="time"]::-webkit-calendar-picker-indicator,
+  [data-theme="neon-noir"] input[type="date"]::-webkit-calendar-picker-indicator,
+  [data-theme="neon-noir"] input[type="time"]::-webkit-calendar-picker-indicator,
+  [data-theme="terminal"] input[type="date"]::-webkit-calendar-picker-indicator,
+  [data-theme="terminal"] input[type="time"]::-webkit-calendar-picker-indicator,
+  [data-theme="signal"] input[type="date"]::-webkit-calendar-picker-indicator,
+  [data-theme="signal"] input[type="time"]::-webkit-calendar-picker-indicator {
+    filter: invert(1);
+  }
 }
