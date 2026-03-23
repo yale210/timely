@@ -4,6 +4,7 @@ const DEFAULT_SWATCH = "#94a3b8";
 
 interface CategoryLimitsSectionProps {
   categories: Category[];
+  maxDailyMinutes: number;
   loading: boolean;
   saving: boolean;
   error: string | null;
@@ -18,6 +19,7 @@ interface CategoryLimitsSectionProps {
  */
 const CategoryLimitsSection = ({
   categories,
+  maxDailyMinutes,
   loading,
   saving,
   error,
@@ -34,6 +36,9 @@ const CategoryLimitsSection = ({
         <h2 className="text-lg font-semibold text-gray-900">Category Limits</h2>
         <p className="mt-1 text-sm text-gray-500">
           Set an optional maximum number of minutes per day for each category when scheduling tasks.
+        </p>
+        <p className="mt-1 text-xs text-gray-500">
+          Limits cannot exceed your current daily scheduling maximum of {maxDailyMinutes} minutes.
         </p>
       </div>
 
@@ -74,14 +79,14 @@ const CategoryLimitsSection = ({
                   <input
                     type="number"
                     min="0"
-                    max="1440"
+                    max={maxDailyMinutes}
                     step="5"
                     value={category.max_daily_study_time ?? ""}
                     onChange={(event) => {
                       const rawValue = event.target.value;
                       onLimitChange(
                         category.id,
-                        rawValue === "" ? null : Number(rawValue),
+                        rawValue === "" ? null : Math.min(Number(rawValue), maxDailyMinutes),
                       );
                     }}
                     className="w-24 rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-primary focus:outline-none"

@@ -106,9 +106,7 @@ const TaskList = () => {
         onTaskCategoryChange={(id, nextCategories) => {
           void actions.updateTaskCategories(id, nextCategories);
         }}
-        onSubmitTask={(data) => {
-          void actions.submitTask(data);
-        }}
+        onSubmitTask={actions.submitTask}
         onSubmitEvent={() => undefined}
         onDelete={() => {
           if (selectedTask?.id) {

@@ -17,6 +17,7 @@ import type {
   TaskSubmission,
 } from "@/types";
 import { buildCalendarEntries, type CalendarEntry } from "@/utils/calendarAdapter";
+import { hasTaskBufferRescheduleConflict } from "@/utils/apiErrors";
 import completeSoundUrl from "@/assets/sounds/task-complete.mp3";
 
 interface CalendarState {
@@ -144,6 +145,23 @@ const parseClockMinutes = (value: string): number => {
   }
 
   return (hour * 60) + minute;
+};
+
+const normalizeInteractionStart = (value: Date): Date => {
+  const next = new Date(value);
+  next.setSeconds(0, 0);
+  return next;
+};
+
+const normalizeInteractionEnd = (value: Date): Date => {
+  const next = new Date(value);
+  if (next.getSeconds() === 0 && next.getMilliseconds() === 0) {
+    return next;
+  }
+
+  next.setSeconds(0, 0);
+  next.setMinutes(next.getMinutes() + 1);
+  return next;
 };
 
 const getDayScheduleWindow = (preference: Preference, slotDate: Date): { start: string; end: string } => {
@@ -398,18 +416,42 @@ export const useCalendar = (): UseCalendarReturn => {
     async (data: TaskSubmission) => {
       try {
         if (selectedItem && "deadline" in selectedItem && selectedItem.id !== 0) {
-          await taskService.updateTask(selectedItem.id, data);
+          const bufferBeforeChanged =
+            typeof data.buffer_before_minutes === "number" &&
+            data.buffer_before_minutes !== (selectedItem.buffer_before_minutes ?? 0);
+          const bufferAfterChanged =
+            typeof data.buffer_after_minutes === "number" &&
+            data.buffer_after_minutes !== (selectedItem.buffer_after_minutes ?? 0);
+          if (bufferBeforeChanged || bufferAfterChanged) {
+            await taskService.saveAndRescheduleTask(
+              selectedItem.id,
+              data,
+              moment(date).format("YYYY-MM-DD"),
+            );
+          } else {
+            await taskService.updateTask(selectedItem.id, data);
+          }
         } else {
           await taskService.createTask(data);
         }
         await fetchTasks();
         closeSidebar();
       } catch (error) {
+        if (selectedItem && "deadline" in selectedItem && selectedItem.id !== 0 && hasTaskBufferRescheduleConflict(error)) {
+          await taskService.saveAndRescheduleTask(
+            selectedItem.id,
+            data,
+            moment(date).format("YYYY-MM-DD"),
+          );
+          await fetchTasks();
+          closeSidebar();
+          return;
+        }
         console.error(error);
         throw error;
       }
     },
-    [closeSidebar, fetchTasks, selectedItem],
+    [closeSidebar, date, fetchTasks, selectedItem],
   );
 
   const submitEvent = useCallback(
@@ -708,11 +750,13 @@ export const useCalendar = (): UseCalendarReturn => {
       if (Object.keys(scheduleOrder).length > 0) {
         setScheduleOrder({});
       }
+      const nextStart = normalizeInteractionStart(new Date(start));
+      const nextEnd = normalizeInteractionEnd(new Date(end));
       if (event.kind === "task") {
-        await updateTaskAllocation(event, new Date(start), new Date(end));
+        await updateTaskAllocation(event, nextStart, nextEnd);
         return;
       }
-      await updateCalendarEvent(event, new Date(start), new Date(end));
+      await updateCalendarEvent(event, nextStart, nextEnd);
     },
     [scheduleOrder, updateCalendarEvent, updateTaskAllocation],
   );
@@ -722,11 +766,13 @@ export const useCalendar = (): UseCalendarReturn => {
       if (Object.keys(scheduleOrder).length > 0) {
         setScheduleOrder({});
       }
+      const nextStart = normalizeInteractionStart(new Date(start));
+      const nextEnd = normalizeInteractionEnd(new Date(end));
       if (event.kind === "task") {
-        await updateTaskAllocation(event, new Date(start), new Date(end));
+        await updateTaskAllocation(event, nextStart, nextEnd);
         return;
       }
-      await updateCalendarEvent(event, new Date(start), new Date(end));
+      await updateCalendarEvent(event, nextStart, nextEnd);
     },
     [scheduleOrder, updateCalendarEvent, updateTaskAllocation],
   );

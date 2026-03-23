@@ -6,6 +6,7 @@ import ProfileSection from "@/components/settings/ProfileSection";
 import CategoryLimitsSection from "@/components/settings/CategoryLimitsSection";
 import type { UseSettingsReturn } from "@/hooks/settings/useSettings";
 import { useProfileSettings } from "@/hooks/settings/useProfileSettings";
+import { getSchedulingDayMaxMinutes } from "@/utils/schedulingLimits";
 
 interface SettingsContentProps {
   state: UseSettingsReturn["state"];
@@ -62,6 +63,10 @@ const SettingsContent = ({
 
   const profileState = useProfileSettings(state.activeSection === "profile");
   const isWideSection = state.activeSection === "appearance";
+  const categoryLimitMaxMinutes = useMemo(
+    () => getSchedulingDayMaxMinutes(state.preference),
+    [state.preference],
+  );
 
   return (
     <div className="min-h-screen bg-white text-black">
@@ -112,6 +117,7 @@ const SettingsContent = ({
             {state.activeSection === "categories" ? (
               <CategoryLimitsSection
                 categories={state.categories}
+                maxDailyMinutes={categoryLimitMaxMinutes}
                 loading={loading.categories}
                 saving={loading.saving}
                 error={error.categories}

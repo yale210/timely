@@ -8,6 +8,15 @@ from .category import CategorySerializer
 
 
 class CalendarSerializer(serializers.ModelSerializer):
+    BUFFER_CONFLICT_MESSAGES = {
+        "Allocation slots and their task buffers cannot overlap calendar events.": (
+            "This buffer conflicts with the task's current scheduled time because it would overlap a calendar event. Reschedule or unschedule the task first."
+        ),
+        "Allocation slots and task buffers cannot overlap other tasks.": (
+            "This buffer conflicts with the task's current scheduled time because it would overlap another scheduled task. Reschedule or unschedule the task first."
+        ),
+    }
+
     categories = serializers.PrimaryKeyRelatedField(
         many=True, queryset=Category.objects.all(), required=False
     )
@@ -308,6 +317,33 @@ class CalendarSerializer(serializers.ModelSerializer):
 
             self._validate_category_limits(user, categories, normalized_slots)
 
+    def _rewrite_buffer_only_conflict(self, attrs, exc):
+        if self.instance is None or "allocation" in attrs:
+            return exc
+        if not (
+            "buffer_before_minutes" in attrs or "buffer_after_minutes" in attrs
+        ):
+            return exc
+        if not (self.instance.allocation or []):
+            return exc
+
+        allocation_error = exc.detail.get("allocation")
+        if isinstance(allocation_error, list) and len(allocation_error) == 1:
+            allocation_error = allocation_error[0]
+        if allocation_error is None:
+            return exc
+
+        message = self.BUFFER_CONFLICT_MESSAGES.get(str(allocation_error))
+        if not message:
+            return exc
+
+        field_errors = {}
+        if "buffer_before_minutes" in attrs:
+            field_errors["buffer_before_minutes"] = message
+        if "buffer_after_minutes" in attrs:
+            field_errors["buffer_after_minutes"] = message
+        return serializers.ValidationError(field_errors)
+
     def validate(self, attrs):
         attrs = super().validate(attrs)
         min_split_minutes = attrs.get(
@@ -366,17 +402,20 @@ class CalendarSerializer(serializers.ModelSerializer):
         else:
             categories = []
 
-        self._validate_allocation_slots(
-            allocation=allocation,
-            allow_split=allow_split,
-            min_split_minutes=min_split_minutes or 15,
-            max_split_minutes=max_split_minutes,
-            buffer_before_minutes=buffer_before_minutes,
-            buffer_after_minutes=buffer_after_minutes,
-            start_time=start_time,
-            deadline=deadline,
-            categories=categories,
-        )
+        try:
+            self._validate_allocation_slots(
+                allocation=allocation,
+                allow_split=allow_split,
+                min_split_minutes=min_split_minutes or 15,
+                max_split_minutes=max_split_minutes,
+                buffer_before_minutes=buffer_before_minutes,
+                buffer_after_minutes=buffer_after_minutes,
+                start_time=start_time,
+                deadline=deadline,
+                categories=categories,
+            )
+        except serializers.ValidationError as exc:
+            raise self._rewrite_buffer_only_conflict(attrs, exc)
         return attrs
 
     def create(self, validated_data):

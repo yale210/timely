@@ -320,3 +320,97 @@ class TaskViewSetTests(TestCase):
         self.task1.refresh_from_db()
         self.assertEqual(self.task1.buffer_before_minutes, 25)
         self.assertEqual(self.task1.buffer_after_minutes, 35)
+
+    def test_patch_task_buffer_only_shows_reschedule_message_when_existing_schedule_conflicts(self):
+        self.client.force_authenticate(user=self.user)
+        allocation_start = self.now + datetime.timedelta(days=1, hours=1)
+        allocation_end = allocation_start + datetime.timedelta(minutes=30)
+        self.task1.allocation = [
+            {
+                "start": allocation_start.isoformat(),
+                "end": allocation_end.isoformat(),
+            }
+        ]
+        self.task1.total_task_allocations = 1
+        self.task1.save(update_fields=["allocation", "total_task_allocations"])
+
+        Task.objects.create(
+            user=self.user,
+            title="Adjacent scheduled task",
+            estimated_minutes=30,
+            start_time=self.now + datetime.timedelta(days=1),
+            completed=False,
+            deadline=self.now + datetime.timedelta(days=2),
+            importance=4,
+            allocation=[
+                {
+                    "start": allocation_end.isoformat(),
+                    "end": (allocation_end + datetime.timedelta(minutes=30)).isoformat(),
+                }
+            ],
+            total_task_allocations=1,
+        )
+
+        response = self.client.patch(
+            f"/api/tasks/{self.task1.id}/",
+            {
+                "buffer_after_minutes": 10,
+            },
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(
+            response.data["buffer_after_minutes"][0],
+            "This buffer conflicts with the task's current scheduled time because it would overlap another scheduled task. Reschedule or unschedule the task first.",
+        )
+
+    def test_save_and_reschedule_reoptimizes_all_tasks_for_new_buffer(self):
+        self.client.force_authenticate(user=self.user)
+        allocation_start = self.now + datetime.timedelta(days=1, hours=1)
+        allocation_end = allocation_start + datetime.timedelta(minutes=30)
+        self.task1.allocation = [
+            {
+                "start": allocation_start.isoformat(),
+                "end": allocation_end.isoformat(),
+            }
+        ]
+        self.task1.total_task_allocations = 1
+        self.task1.save(update_fields=["allocation", "total_task_allocations"])
+
+        other_task = Task.objects.create(
+            user=self.user,
+            title="Adjacent scheduled task",
+            estimated_minutes=30,
+            start_time=self.now + datetime.timedelta(days=1),
+            completed=False,
+            deadline=self.now + datetime.timedelta(days=2),
+            importance=4,
+            allocation=[
+                {
+                    "start": allocation_end.isoformat(),
+                    "end": (allocation_end + datetime.timedelta(minutes=30)).isoformat(),
+                }
+            ],
+            total_task_allocations=1,
+        )
+
+        response = self.client.post(
+            f"/api/tasks/{self.task1.id}/save-and-reschedule/",
+            {
+                "buffer_after_minutes": 10,
+                "start_date": (self.now + datetime.timedelta(days=1)).date().isoformat(),
+            },
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.task1.refresh_from_db()
+        other_task.refresh_from_db()
+        self.assertEqual(self.task1.buffer_after_minutes, 10)
+        self.assertEqual(self.task1.total_task_allocations, 1)
+        self.assertEqual(other_task.total_task_allocations, 1)
+        self.assertNotEqual(
+            self.task1.allocation[0]["start"],
+            allocation_start.isoformat(),
+        )

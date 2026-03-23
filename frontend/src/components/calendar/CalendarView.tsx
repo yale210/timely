@@ -184,7 +184,7 @@ const CalendarView = ({
   const components = useMemo<Components<CalendarEntry>>(
     () => ({
       event: ({ event }: { event: CalendarEntry }) => {
-        const timeLabel = `${formatEventTime(event.start)} - ${formatEventTime(event.end)}`;
+        const timeLabel = `${formatEventTime(event.start)} - ${formatEventTime(event.actualEnd)}`;
         if (event.kind !== "task") {
           return (
             <div className="flex h-full w-full items-start gap-2">

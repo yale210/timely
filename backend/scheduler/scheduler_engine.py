@@ -5,6 +5,7 @@ from typing import Iterable, List, Tuple
 from django.utils import timezone
 
 from core.models import Commute, Event, Preference, SpecialDates, Task
+from core.services import expand_user_events
 from scheduler.scheduler_types import ScheduleResult
 
 
@@ -18,6 +19,7 @@ class Scheduler:
         max_days_ahead: int = 7,
         allow_split: bool = False,
         min_block_minutes: int = 30,
+        task_ids: List[int] | None = None,
     ):
         """
         Args:
@@ -30,6 +32,7 @@ class Scheduler:
         self.max_days_ahead = max_days_ahead
         self.allow_split = allow_split
         self.min_block_minutes = min_block_minutes
+        self.task_ids = set(task_ids or [])
 
         self.preference = self._get_preference()
         self.tasks = self._get_unscheduled_tasks()
@@ -39,6 +42,7 @@ class Scheduler:
         self.special_dates = self._get_special_dates()
         self._scheduled_blocks: List[Tuple[datetime, datetime]] = []
         self._scheduled_task_segments: List[Tuple[Task, datetime, datetime]] = []
+        self._expanded_events_by_date: dict[date, list[Tuple[datetime, datetime]]] = {}
 
     # ----- data access -------------------------------------------------
     def _get_preference(self):
@@ -48,14 +52,15 @@ class Scheduler:
             return None
 
     def _get_unscheduled_tasks(self) -> List[Task]:
-        return list(
-            Task.objects.filter(  # type: ignore[query-annotated]
+        queryset = Task.objects.filter(  # type: ignore[query-annotated]
                 user=self.user,
                 completed=False,
                 locked=False,
                 allocation=[],
-            ).order_by("-importance", "deadline")
-        )
+            )
+        if self.task_ids:
+            queryset = queryset.filter(id__in=self.task_ids)
+        return list(queryset.order_by("-importance", "deadline"))
 
     def _get_scheduled_tasks(self) -> List[Task]:
         return list(
@@ -85,6 +90,12 @@ class Scheduler:
         if timezone.is_naive(dt):
             return timezone.make_aware(dt)
         return dt
+
+    @staticmethod
+    def _ceil_to_minute(dt: datetime) -> datetime:
+        if dt.second == 0 and dt.microsecond == 0:
+            return dt
+        return dt.replace(second=0, microsecond=0) + timedelta(minutes=1)
 
     def _merge_intervals(
         self, intervals: Iterable[Tuple[datetime, datetime]]
@@ -175,9 +186,7 @@ class Scheduler:
         day_start = self._aware(datetime.combine(target_date, time.min))
         day_end = self._aware(datetime.combine(target_date, time.max))
 
-        for event in self.events:
-            start = self._aware(event.start_time)
-            end = self._aware(event.end_time)
+        for start, end in self._get_expanded_event_slots(target_date):
             if start < day_end and end > day_start:
                 occupied.append((start, end))
 
@@ -228,6 +237,20 @@ class Scheduler:
         start_of_day = self._aware(datetime.combine(target_date, time.min))
         end_of_day = self._aware(datetime.combine(target_date, time.max))
         return start_of_day, end_of_day
+
+    def _get_expanded_event_slots(
+        self, target_date: date
+    ) -> List[Tuple[datetime, datetime]]:
+        cached = self._expanded_events_by_date.get(target_date)
+        if cached is not None:
+            return cached
+
+        day_start = self._aware(datetime.combine(target_date, time.min))
+        day_end = self._aware(datetime.combine(target_date, time.max))
+        instances = expand_user_events(self.user, day_start, day_end)
+        slots = [(instance.start_time, instance.end_time) for instance in instances]
+        self._expanded_events_by_date[target_date] = slots
+        return slots
 
     def _get_remaining_category_minutes(
         self,
@@ -315,7 +338,7 @@ class Scheduler:
         if target_date == timezone.localdate():
             now = timezone.now()
             if now > window_start:
-                window_start = now
+                window_start = self._ceil_to_minute(now)
                 free_slots = self._subtract_intervals(
                     (window_start, window_end), occupied
                 )
@@ -473,6 +496,9 @@ class Scheduler:
             if category_minutes_left is not None and category_minutes_left < min_block_minutes:
                 continue
             buffer_before_minutes, buffer_after_minutes = self._get_task_buffer_minutes(task)
+            day_remaining = remaining
+            day_segments: List[Tuple[datetime, datetime]] = []
+            day_category_minutes_left = category_minutes_left
             for slot in slots:
                 adjusted_slot = self._shrink_slot_for_task(task, slot)
                 if not adjusted_slot:
@@ -485,33 +511,47 @@ class Scheduler:
                     continue
                 start, end = clipped
                 cursor = start
-                while remaining > 0 and cursor < end:
-                    if category_minutes_left is not None and category_minutes_left < min_block_minutes:
+                while day_remaining > 0 and cursor < end:
+                    if (
+                        day_category_minutes_left is not None
+                        and day_category_minutes_left < min_block_minutes
+                    ):
                         break
                     free_minutes = (end - cursor).total_seconds() / 60
                     if (
                         free_minutes < min_block_minutes
-                        and remaining > min_block_minutes
+                        and day_remaining > min_block_minutes
                     ):
                         break
 
-                    chunk = min(remaining, free_minutes)
-                    if category_minutes_left is not None:
-                        chunk = min(chunk, category_minutes_left)
+                    chunk = min(day_remaining, free_minutes)
+                    if day_category_minutes_left is not None:
+                        chunk = min(chunk, day_category_minutes_left)
                     if max_block_minutes is not None:
                         chunk = min(chunk, max_block_minutes)
                     if chunk < min_block_minutes:
                         break
                     scheduled_end = cursor + timedelta(minutes=chunk)
-                    segments.append((cursor, scheduled_end))
-                    remaining -= chunk
-                    if category_minutes_left is not None:
-                        category_minutes_left -= int(chunk)
+                    day_segments.append((cursor, scheduled_end))
+                    day_remaining -= chunk
+                    if day_category_minutes_left is not None:
+                        day_category_minutes_left -= int(chunk)
                     cursor = scheduled_end + timedelta(
                         minutes=buffer_before_minutes + buffer_after_minutes
                     )
-                    if remaining <= 0:
+                    if day_remaining <= 0:
                         break
+
+            if not day_segments:
+                continue
+
+            # If this day would leave a remainder smaller than the minimum split block,
+            # discard the day's tentative chunks and keep searching future days.
+            if 0 < day_remaining < min_block_minutes:
+                continue
+
+            segments.extend(day_segments)
+            remaining = day_remaining
 
         if remaining <= 0 and segments:
             return ScheduleResult(

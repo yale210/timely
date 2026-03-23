@@ -138,6 +138,7 @@ const TaskForm = ({
   const [hasSubmitted, setHasSubmitted] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
+  const [serverFieldErrors, setServerFieldErrors] = useState<Record<string, string[]>>({});
   const [hasTouchedTime, setHasTouchedTime] = useState(false);
   const [selectedCategories, setSelectedCategories] = useState<number[]>(
     initialData?.categories?.map((c) => (typeof c === "object" ? c.id : c)) ?? []
@@ -247,7 +248,13 @@ const TaskForm = ({
   if (hasSubmitted && isBufferBeforeMinutesInvalid) {
     errors.buffer_before_minutes = true;
   }
+  if (serverFieldErrors.buffer_before_minutes?.length) {
+    errors.buffer_before_minutes = true;
+  }
   if (hasSubmitted && isBufferAfterMinutesInvalid) {
+    errors.buffer_after_minutes = true;
+  }
+  if (serverFieldErrors.buffer_after_minutes?.length) {
     errors.buffer_after_minutes = true;
   }
   
@@ -322,21 +329,32 @@ const TaskForm = ({
     normalisedCurrentSubmission,
     initialSubmission,
   );
+  const lastSubmissionRef = useRef<NormalisedTaskSubmission>(normalisedCurrentSubmission);
 
   useEffect(() => {
+    if (isTaskSubmissionEqual(normalisedCurrentSubmission, lastSubmissionRef.current)) {
+      return;
+    }
+
+    lastSubmissionRef.current = normalisedCurrentSubmission;
     if (submitError) {
       setSubmitError(null);
     }
-  }, [normalisedCurrentSubmission, submitError]);
+    if (Object.keys(serverFieldErrors).length > 0) {
+      setServerFieldErrors({});
+    }
+  }, [normalisedCurrentSubmission, serverFieldErrors, submitError]);
 
   const handleFormSubmit = async () => {
     const data = buildSubmission();
     try {
       setIsSubmitting(true);
+      setServerFieldErrors({});
       await onSubmit(data);
     } catch (error) {
       const parsed = formatDjangoFormError(error);
       setSubmitError(parsed.message);
+      setServerFieldErrors(parsed.fieldErrors);
     } finally {
       setIsSubmitting(false);
     }
@@ -633,7 +651,11 @@ const TaskForm = ({
                   setBufferBeforeMinutes(e.target.value);
                 }}
               />
-              {errors.buffer_before_minutes ? (
+              {serverFieldErrors.buffer_before_minutes?.length ? (
+                <p className="mt-2 text-xs text-red-500">
+                  {serverFieldErrors.buffer_before_minutes[0]}
+                </p>
+              ) : errors.buffer_before_minutes ? (
                 <p className="mt-2 text-xs text-red-500">
                   Buffer before must be between 0 and 240 minutes.
                 </p>
@@ -655,7 +677,11 @@ const TaskForm = ({
                   setBufferAfterMinutes(e.target.value);
                 }}
               />
-              {errors.buffer_after_minutes ? (
+              {serverFieldErrors.buffer_after_minutes?.length ? (
+                <p className="mt-2 text-xs text-red-500">
+                  {serverFieldErrors.buffer_after_minutes[0]}
+                </p>
+              ) : errors.buffer_after_minutes ? (
                 <p className="mt-2 text-xs text-red-500">
                   Buffer after must be between 0 and 240 minutes.
                 </p>

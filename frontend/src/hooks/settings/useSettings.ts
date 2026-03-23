@@ -7,6 +7,7 @@ import { preferenceService } from "@/services/preferenceService";
 import type { Category, Preference } from "@/types";
 import { formatDjangoFormError } from "@/utils/apiErrors";
 import { validatePreference } from "@/utils/preferenceValidation";
+import { getSchedulingDayMaxMinutes } from "@/utils/schedulingLimits";
 import { applyFont, applyTheme } from "@/utils/themeSettings";
 
 interface SettingsState {
@@ -107,7 +108,11 @@ export const useSettings = (): UseSettingsReturn => {
   }, []);
 
   useEffect(() => {
-    if (activeSection !== "preferences" && activeSection !== "general") {
+    if (
+      activeSection !== "preferences"
+      && activeSection !== "general"
+      && activeSection !== "categories"
+    ) {
       return;
     }
 
@@ -138,12 +143,17 @@ export const useSettings = (): UseSettingsReturn => {
   }, [activeSection, loadCategories]);
 
   const setCategoryLimit = useCallback((categoryId: number, value: number | null) => {
+    const maxDailyMinutes = getSchedulingDayMaxMinutes(preference);
     setCategories((prev) => prev.map((category) => (
       category.id === categoryId
-        ? { ...category, max_daily_study_time: value }
+        ? {
+          ...category,
+          max_daily_study_time:
+            value === null ? null : Math.max(0, Math.min(value, maxDailyMinutes)),
+        }
         : category
     )));
-  }, []);
+  }, [preference]);
 
   const savePreferences = useCallback(async () => {
     if (!preference) {
@@ -190,11 +200,15 @@ export const useSettings = (): UseSettingsReturn => {
   const saveCategoryLimits = useCallback(async () => {
     setIsSaving(true);
     setCategoriesError(null);
+    const maxDailyMinutes = getSchedulingDayMaxMinutes(preference);
 
     try {
       const updatedCategories = await Promise.all(
         categories.map(async (category) => categoryService.updateCategory(category.id, {
-          max_daily_study_time: category.max_daily_study_time ?? null,
+          max_daily_study_time:
+            category.max_daily_study_time == null
+              ? null
+              : Math.max(0, Math.min(category.max_daily_study_time, maxDailyMinutes)),
         })),
       );
       setCategories(updatedCategories);
@@ -204,7 +218,7 @@ export const useSettings = (): UseSettingsReturn => {
     } finally {
       setIsSaving(false);
     }
-  }, [categories]);
+  }, [categories, preference]);
 
   return {
     state: {

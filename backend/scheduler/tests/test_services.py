@@ -1,4 +1,5 @@
 from datetime import date, datetime, time, timedelta
+from unittest.mock import patch
 
 from django.contrib.auth import get_user_model
 from django.test import TestCase
@@ -123,12 +124,13 @@ class SchedulerTest(TestCase):
         self.assertEqual(results[0].scheduled_start.date(), date(2026, 2, 12))
 
     def test_schedule_task_split_across_days(self):
+        base_day = timezone.localdate() + timedelta(days=1)
         # Leave only 60 mins on day 1; rest on day 2
         Event.objects.create(
             user=self.user,
             title="Long event",
-            start_time=timezone.make_aware(datetime(2026, 2, 12, 8, 0)),
-            end_time=timezone.make_aware(datetime(2026, 2, 12, 22, 0)),
+            start_time=timezone.make_aware(datetime.combine(base_day, time(8, 0))),
+            end_time=timezone.make_aware(datetime.combine(base_day, time(22, 0))),
         )
         Task.objects.create(
             user=self.user,
@@ -136,14 +138,16 @@ class SchedulerTest(TestCase):
             description="",
             estimated_minutes=120,
             importance=8,
-            start_time=timezone.now(),
-            deadline=timezone.make_aware(datetime(2026, 2, 14, 18, 0)),
+            start_time=timezone.make_aware(datetime.combine(base_day, time(7, 0))),
+            deadline=timezone.make_aware(
+                datetime.combine(base_day + timedelta(days=2), time(18, 0))
+            ),
             completed=False,
         )
         scheduler = Scheduler(
             self.user, max_days_ahead=3, allow_split=True, min_block_minutes=30
         )
-        results = scheduler.schedule_tasks(start_date=date(2026, 2, 12))
+        results = scheduler.schedule_tasks(start_date=base_day)
 
         self.assertTrue(results[0].success)
         self.assertGreater(results[0].scheduled_end, results[0].scheduled_start)
@@ -217,33 +221,20 @@ class SchedulerTest(TestCase):
         self.assertGreaterEqual(results[0].scheduled_start, task.start_time)
 
     def test_schedule_task_split_uses_task_min_split_minutes(self):
-        day_one = date(2026, 3, 19)
-        day_two = day_one + timedelta(days=1)
-
-        Event.objects.create(
-            user=self.user,
-            title="Block day one",
-            start_time=timezone.make_aware(datetime.combine(day_one, time(7, 20))),
-            end_time=timezone.make_aware(datetime.combine(day_one, time(23, 0))),
-        )
-        Event.objects.create(
-            user=self.user,
-            title="Block day two",
-            start_time=timezone.make_aware(datetime.combine(day_two, time(7, 25))),
-            end_time=timezone.make_aware(datetime.combine(day_two, time(23, 0))),
-        )
+        day_one = timezone.localdate() + timedelta(days=1)
 
         Task.objects.create(
             user=self.user,
             title="Small block split task",
             description="",
-            estimated_minutes=45,
+            estimated_minutes=30,
             importance=5,
             start_time=timezone.make_aware(datetime.combine(day_one, time(7, 0))),
-            deadline=timezone.make_aware(datetime.combine(day_two, time(23, 0))),
+            deadline=timezone.make_aware(datetime.combine(day_one, time(23, 0))),
             completed=False,
             allow_split=True,
             min_split_minutes=15,
+            max_split_minutes=15,
         )
 
         scheduler = Scheduler(
@@ -253,6 +244,13 @@ class SchedulerTest(TestCase):
 
         self.assertTrue(results[0].success)
         self.assertEqual(len(results[0].segments), 2)
+        self.assertEqual(
+            [
+                int((end - start).total_seconds() // 60)
+                for start, end in results[0].segments
+            ],
+            [15, 15],
+        )
 
     def test_schedule_task_split_respects_task_max_split_minutes(self):
         start_day = date(2026, 3, 19)
@@ -425,3 +423,90 @@ class SchedulerTest(TestCase):
             results[0].scheduled_start,
             timezone.make_aware(datetime.combine(start_day, time(9, 0))),
         )
+
+    def test_schedule_respects_recurring_event_instances(self):
+        start_day = timezone.localdate() + timedelta(days=1)
+        Event.objects.create(
+            user=self.user,
+            title="Recurring block",
+            start_time=timezone.make_aware(datetime.combine(start_day, time(10, 0))),
+            end_time=timezone.make_aware(datetime.combine(start_day, time(11, 0))),
+            recurrence_interval=Event.RecurrenceInterval.DAILY,
+        )
+        Task.objects.create(
+            user=self.user,
+            title="Task around recurring event",
+            description="",
+            estimated_minutes=90,
+            importance=5,
+            start_time=timezone.make_aware(datetime.combine(start_day, time(7, 0))),
+            deadline=timezone.make_aware(datetime.combine(start_day, time(23, 0))),
+            completed=False,
+        )
+
+        scheduler = Scheduler(self.user, max_days_ahead=1, allow_split=False)
+        results = scheduler.schedule_tasks(start_date=start_day)
+
+        self.assertTrue(results[0].success)
+        self.assertLessEqual(
+            results[0].scheduled_end,
+            timezone.make_aware(datetime.combine(start_day, time(10, 0))),
+        )
+
+    def test_schedule_split_skips_day_that_leaves_remainder_below_minimum(self):
+        day_one = date(2026, 3, 19)
+        day_two = day_one + timedelta(days=1)
+
+        Task.objects.create(
+            user=self.user,
+            title="Defer to next day",
+            description="",
+            estimated_minutes=120,
+            importance=5,
+            start_time=timezone.make_aware(datetime.combine(day_one, time(7, 0))),
+            deadline=timezone.make_aware(datetime.combine(day_two, time(23, 0))),
+            completed=False,
+            allow_split=True,
+            min_split_minutes=20,
+        )
+
+        scheduler = Scheduler(self.user, max_days_ahead=2, allow_split=True, min_block_minutes=20)
+        mocked_now = timezone.make_aware(datetime.combine(day_one, time(21, 48)))
+        with patch("scheduler.scheduler_engine.timezone.localdate", return_value=day_one):
+            with patch("scheduler.scheduler_engine.timezone.now", return_value=mocked_now):
+                results = scheduler.schedule_tasks(start_date=day_one)
+
+        self.assertTrue(results[0].success)
+        self.assertEqual(results[0].scheduled_start.date(), day_two)
+
+    def test_schedule_today_uses_minute_precision_boundaries(self):
+        today = date(2026, 3, 19)
+        tomorrow = today + timedelta(days=1)
+
+        Task.objects.create(
+            user=self.user,
+            title="Minute precision split task",
+            description="",
+            estimated_minutes=120,
+            importance=5,
+            start_time=timezone.make_aware(datetime.combine(today, time(7, 0))),
+            deadline=timezone.make_aware(datetime.combine(tomorrow, time(23, 0))),
+            completed=False,
+            allow_split=True,
+            min_split_minutes=20,
+        )
+
+        scheduler = Scheduler(
+            self.user, max_days_ahead=2, allow_split=True, min_block_minutes=20
+        )
+        mocked_now = timezone.make_aware(datetime.combine(today, time(21, 48, 37)))
+        with patch("scheduler.scheduler_engine.timezone.localdate", return_value=today):
+            with patch("scheduler.scheduler_engine.timezone.now", return_value=mocked_now):
+                results = scheduler.schedule_tasks(start_date=today)
+
+        self.assertTrue(results[0].success)
+        for start, end in results[0].segments:
+            self.assertEqual(start.second, 0)
+            self.assertEqual(start.microsecond, 0)
+            self.assertEqual(end.second, 0)
+            self.assertEqual(end.microsecond, 0)
