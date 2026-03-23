@@ -4,6 +4,8 @@ from django.conf import settings
 
 
 class Profile(models.Model):
+    """Profile model definitions."""
+
     user = models.OneToOneField(
         settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="user_profile"
     )
