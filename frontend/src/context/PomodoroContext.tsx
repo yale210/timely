@@ -55,7 +55,10 @@ const MAX_MINUTES = 600; // 10 hours
 export const PomodoroProvider = ({ children }: PomodoroProviderProps) => {
   const [initialDuration, setInitialDurationState] = useState<number | "">(() => {
     const saved = localStorage.getItem("pomo_initial_duration");
-    return saved ? Math.min(parseInt(saved, 10), MAX_MINUTES) : DEFAULT_FOCUS_MINUTES;
+    if (!saved) return DEFAULT_FOCUS_MINUTES;
+    const parsed = parseInt(saved, 10);
+    if (!Number.isFinite(parsed) || parsed <= 0) return DEFAULT_FOCUS_MINUTES;
+    return Math.min(Math.max(parsed, 1), MAX_MINUTES);
   });
 
   const [mode, setModeState] = useState<PomodoroMode>("focus");
