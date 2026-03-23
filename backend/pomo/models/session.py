@@ -6,7 +6,7 @@ class PomoSession(models.Model):
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="pomo_sessions"
     )
-    duration_minutes = models.IntegerField()
+    duration_minutes = models.PositiveIntegerField()
     completed_at = models.DateTimeField()
     created_at = models.DateTimeField(db_index=True, auto_now_add=True)
 
