@@ -4,6 +4,7 @@ events = [
         "pk": 1,
         "fields": {
             "user": 1,
+<<<<<<< HEAD
             "title": "Meeting with TA",
             "description": "Discuss project progress",
             "location": "Bush House 2.01",
@@ -15,6 +16,16 @@ events = [
             "exception_dates": [],
             "split_from_event": None,
             "categories": [1],
+=======
+            "title": "Meal with teachers",
+            "description": "Should be nice",
+            "location": "Kings kitchen",
+            "start_time": "2026-03-22T12:00:00Z",
+            "end_time": "2026-03-22T13:00:00Z",
+            "categories": [1],
+            "recurrence_end": None,
+            "recurrence_interval": None,
+>>>>>>> origin/main
         },
     },
     {
@@ -22,6 +33,7 @@ events = [
         "pk": 2,
         "fields": {
             "user": 2,
+<<<<<<< HEAD
             "title": "Revision Session",
             "description": "Discuss project progress",
             "location": "Bush House 2.01",
@@ -33,6 +45,16 @@ events = [
             "exception_dates": [],
             "split_from_event": None,
             "categories": [9],
+=======
+            "title": "OSC Lecture",
+            "description": "Lecture on paging",
+            "location": "Bush House",
+            "start_time": "2026-03-22T14:00:00Z",
+            "end_time": "2026-03-22T15:00:00Z",
+            "categories": [8],
+            "recurrence_end": "2026-06-22",
+            "recurrence_interval": "weekly",
+>>>>>>> origin/main
         },
     },
     {
@@ -40,6 +62,7 @@ events = [
         "pk": 3,
         "fields": {
             "user": 1,
+<<<<<<< HEAD
             "title": "OSC Lab",
             "description": "Do coursework",
             "location": "Bush House 2.01",
@@ -51,12 +74,23 @@ events = [
             "exception_dates": [],
             "split_from_event": None,
             "categories": [3],
+=======
+            "title": "Eye test",
+            "description": "Annual Eye test",
+            "location": "Specsavers near strand",
+            "start_time": "2026-04-22T16:00:00Z",
+            "end_time": "2026-04-22T17:00:00Z",
+            "categories": [1],
+            "recurrence_end": None,
+            "recurrence_interval": None,
+>>>>>>> origin/main
         },
     },
     {
         "model": "core.event",
         "pk": 4,
         "fields": {
+<<<<<<< HEAD
             "user": 3,
             "title": "AKC lecture",
             "description": "",
@@ -69,12 +103,24 @@ events = [
             "exception_dates": [],
             "split_from_event": None,
             "categories": [18],
+=======
+            "user": 1,
+            "title": "Meeting with boss",
+            "description": "Hopefully not fired...",
+            "location": "Main office",
+            "start_time": "2026-10-25T10:00:00Z",
+            "end_time": "2026-10-25T11:00:00Z",
+            "categories": [5],
+            "recurrence_end": None,
+            "recurrence_interval": None,
+>>>>>>> origin/main
         },
     },
     {
         "model": "core.event",
         "pk": 5,
         "fields": {
+<<<<<<< HEAD
             "user": 1,
             "title": "Meal with friends",
             "description": "Go to wasabi",
@@ -87,6 +133,17 @@ events = [
             "exception_dates": [],
             "split_from_event": None,
             "categories": [5],
+=======
+            "user": 2,
+            "title": "Team meeting",
+            "description": "Weekly team meeting",
+            "location": "FWB library",
+            "start_time": "2026-03-23T14:00:00Z",
+            "end_time": "2026-03-23T16:00:00Z",
+            "categories": [13],
+            "recurrence_end": None,
+            "recurrence_interval": None,
+>>>>>>> origin/main
         },
     },
     {
@@ -94,6 +151,7 @@ events = [
         "pk": 6,
         "fields": {
             "user": 3,
+<<<<<<< HEAD
             "title": "Driving lesson",
             "description": "Final lesson",
             "location": "Home",
@@ -105,6 +163,16 @@ events = [
             "exception_dates": [],
             "split_from_event": None,
             "categories": [19],
+=======
+            "title": "Driving test",
+            "description": "Driving test",
+            "location": "Exam centre",
+            "start_time": "2026-04-23T10:00:00Z",
+            "end_time": "2026-04-23T10:25:00Z",
+            "categories": [19],
+            "recurrence_end": None,
+            "recurrence_interval": None,
+>>>>>>> origin/main
         },
     },
 ]

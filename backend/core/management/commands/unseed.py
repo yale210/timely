@@ -14,10 +14,10 @@ from core.models import (
     Task,
     Grade,
     Preference,
-    Profile,
     SpecialDates,
     Friendship,
 )
+from profiles.models import Profile
 
 
 class Command(BaseCommand):

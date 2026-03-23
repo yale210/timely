@@ -20,7 +20,7 @@ class CategorySeeder(BaseSeeder):
             try:
                 self._create_category(category)
             except Exception as exception:
-                print(f"Error creating category: {exception}")
+                print(f"Error occurred while creating category: {exception}")
 
     def _populate_random_category(self):
         word = self.faker.word()
@@ -52,7 +52,7 @@ class CategorySeeder(BaseSeeder):
         user = get_user_model().objects.get(id=data["user"])
         Category.objects.get_or_create(
             id=data["pk"],
-            user=user,
+            user_id=data["user"],
             text=data["fields"]["text"],
             colour=data["fields"].get("colour", None),
             

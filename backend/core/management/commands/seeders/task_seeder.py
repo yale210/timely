@@ -22,7 +22,7 @@ class TaskSeeder(BaseSeeder):
             try:
                 self._create_task(task)
             except Exception as exception:
-                print(f"Error creating task: {exception}")
+                print(f"Error occurred while creating task: {exception}")
 
     def _create_task(self, data):
         user = get_user_model().objects.get(id=data["fields"]["user"])
@@ -31,14 +31,15 @@ class TaskSeeder(BaseSeeder):
             parent_task = Task.objects.filter(id=data["fields"]["parent_task"]).first()
 
         temporary_task, _ = Task.objects.get_or_create(
-            user=user,
+            id=data.get("pk"),
+            user_id=data["fields"]["user"],
             title=data["fields"]["title"],
             description=data["fields"]["description"],
             estimated_minutes=data["fields"]["estimated_minutes"],
             start_time=data["fields"]["start_time"],
             deadline=data["fields"]["deadline"],
             completed=data["fields"]["completed"],
-            parent_task=parent_task,
+            parent_task_id=data["fields"]["parent_task"],
             total_task_allocations=data["fields"]["total_task_allocations"],
             allocation=data["fields"]["allocation"],
             importance=data["fields"]["importance"],

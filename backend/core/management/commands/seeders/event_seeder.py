@@ -23,13 +23,13 @@ class EventSeeder(BaseSeeder):
             try:
                 self._create_event(event)
             except Exception as exception:
-                print(f"Error creating event: {exception}")
+                print(f"Error occurred while creating event: {exception}")
 
     def _create_event(self, data):
         user = get_user_model().objects.get(id=data["fields"]["user"])
 
         temporary_event, _ = Event.objects.get_or_create(
-            user=user,
+            user_id=data["fields"]["user"],
             title=data["fields"]["title"],
             description=data["fields"]["description"],
             location=data["fields"]["location"],

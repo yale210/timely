@@ -5,9 +5,15 @@ grades = [
         "fields": {
             "user": 1,
             "name": "CS1",
+<<<<<<< HEAD
             "category": None,
             "score": 85,
             "total_possible": 100,
+=======
+            "category": 1,
+            "score": 85,
+            "total_possible": 150,
+>>>>>>> origin/main
             "date_achieved": "2025-01-01",
         },
     },
@@ -17,7 +23,11 @@ grades = [
         "fields": {
             "user": 2,
             "name": "ELA",
+<<<<<<< HEAD
             "category": None,
+=======
+            "category": 10,
+>>>>>>> origin/main
             "score": 85,
             "total_possible": 100,
             "date_achieved": "2025-01-01",
@@ -41,7 +51,11 @@ grades = [
         "fields": {
             "user": 2,
             "name": "DBS",
+<<<<<<< HEAD
             "category": 9,
+=======
+            "category": 13,
+>>>>>>> origin/main
             "score": 100,
             "total_possible": 100,
             "date_achieved": "2025-01-01",
@@ -53,7 +67,11 @@ grades = [
         "fields": {
             "user": 3,
             "name": "IPP",
+<<<<<<< HEAD
             "category": 16,
+=======
+            "category": 20,
+>>>>>>> origin/main
             "score": 75,
             "total_possible": 100,
             "date_achieved": "2025-01-01",
@@ -67,6 +85,10 @@ grades = [
             "name": "FC1",
             "category": None,
             "score": 44,
+<<<<<<< HEAD
+=======
+            "category": 3,
+>>>>>>> origin/main
             "total_possible": 100,
             "date_achieved": "2025-01-01",
         },
@@ -79,6 +101,10 @@ grades = [
             "name": "AKC",
             "category": None,
             "score": 100,
+<<<<<<< HEAD
+=======
+            "category": 6,
+>>>>>>> origin/main
             "total_possible": 100,
             "date_achieved": "2025-01-01",
         },
@@ -91,7 +117,12 @@ grades = [
             "name": "CS1",
             "category": None,
             "score": 85,
+<<<<<<< HEAD
             "total_possible": 85,
+=======
+            "category": 25,
+            "total_possible": 100,
+>>>>>>> origin/main
             "date_achieved": "2025-01-01",
         },
     },
