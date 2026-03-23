@@ -299,7 +299,7 @@ class TasksTests(TestCase):
         res = _send_push_notification_sync(self.user.id, "T", "M")
         self.assertTrue(res["success"])
 
-    @patch("notifications.tasks.webpush")
+    @patch("notifications.tasks.push.webpush")
     def test_send_push_notification_sync_failure_all(self, mock_webpush):
         from pywebpush import WebPushException
 
@@ -383,7 +383,7 @@ class TasksTests(TestCase):
         from notifications.tasks import _send_push_notification_sync
         from pywebpush import WebPushException
 
-        with patch("notifications.tasks.webpush") as mock_webpush:
+        with patch("notifications.tasks.push.webpush") as mock_webpush:
 
             def side_effect(*args, **kwargs):
                 if kwargs["subscription_info"]["endpoint"] == "fail":
@@ -418,7 +418,9 @@ class TasksTests(TestCase):
         BroadcastRecipient.objects.create(broadcast_job=job, recipient=self.user)
         BroadcastRecipient.objects.create(broadcast_job=job, recipient=self.other_user)
 
-        with patch("notifications.tasks._send_push_notification_sync") as mock_push:
+        with patch(
+            "notifications.tasks.broadcast._send_push_notification_sync"
+        ) as mock_push:
             mock_push.side_effect = [
                 {"success": True},
                 {"success": False, "error_code": "E", "error_message": "M"},
@@ -439,7 +441,9 @@ class TasksTests(TestCase):
             recipient_count=1,
         )
         BroadcastRecipient.objects.create(broadcast_job=job2, recipient=self.user)
-        with patch("notifications.tasks._send_push_notification_sync") as mock_push:
+        with patch(
+            "notifications.tasks.broadcast._send_push_notification_sync"
+        ) as mock_push:
             mock_push.return_value = {
                 "success": False,
                 "error_code": "E",
