@@ -244,10 +244,10 @@ describe("Settings page", () => {
     expect(screen.getByText("Toggle optional sections of the app.")).toBeDefined();
 
     fireEvent.click(screen.getByRole("button", { name: /appearance/i }));
-    expect(screen.getByText("Choose a theme and font for your dashboard.")).toBeDefined();
+    expect(screen.getByText("Choose the colour theme and type style used across the app.")).toBeDefined();
 
-    fireEvent.click(screen.getByRole("button", { name: "dark" }));
-    fireEvent.click(screen.getByRole("button", { name: "poppins" }));
+    fireEvent.click(screen.getByRole("button", { name: "Dark Surface" }));
+    fireEvent.click(screen.getByRole("button", { name: "Font Ag Poppins" }));
     expect(document.documentElement.dataset.theme).toBe("dark");
     expect(document.documentElement.dataset.font).toBe("poppins");
     expect(localStorage.getItem("theme")).toBe("dark");

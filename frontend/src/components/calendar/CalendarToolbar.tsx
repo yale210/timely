@@ -33,6 +33,7 @@ const CalendarToolbar = ({
 }: CalendarToolbarProps) => {
   const [isWarningsOpen, setIsWarningsOpen] = useState(false);
   const warningPanelRef = useRef<HTMLDivElement | null>(null);
+  const rescheduleWarnings = state.rescheduleWarnings ?? [];
 
   useEffect(() => {
     if (!isWarningsOpen) {
@@ -87,29 +88,29 @@ const CalendarToolbar = ({
         </div>
         <div className="flex items-center gap-4">
           <div className="relative flex items-center gap-2" ref={warningPanelRef}>
-            {state.rescheduleWarnings.length > 0 ? (
+            {rescheduleWarnings.length > 0 ? (
               <>
                 <button
                   type="button"
                   onClick={() => setIsWarningsOpen((current) => !current)}
                   className="relative flex h-10 w-10 items-center justify-center rounded-full border border-gray-200 bg-gray-100 text-red-600 transition-colors hover:bg-gray-200"
-                  aria-label={`Show ${state.rescheduleWarnings.length} scheduling warnings`}
+                  aria-label={`Show ${rescheduleWarnings.length} scheduling warnings`}
                   aria-expanded={isWarningsOpen}
                 >
                   <span className="material-icons text-xl">warning</span>
                   <span className="absolute -right-1 -top-1 min-w-5 rounded-full bg-red-600 px-1.5 text-center text-[11px] font-semibold leading-5 text-white">
-                    {state.rescheduleWarnings.length}
+                    {rescheduleWarnings.length}
                   </span>
                 </button>
                 {isWarningsOpen ? (
                   <div className="absolute right-0 top-12 z-30 w-96 max-w-[calc(100vw-2rem)] rounded-xl border border-red-200 bg-background p-4 text-sm text-gray-900 shadow-lg">
                     <p className="font-semibold text-red-600">
-                      {state.rescheduleWarnings.length === 1
+                      {rescheduleWarnings.length === 1
                         ? "1 task could not be scheduled."
-                        : `${state.rescheduleWarnings.length} tasks could not be scheduled.`}
+                        : `${rescheduleWarnings.length} tasks could not be scheduled.`}
                     </p>
                     <div className="mt-3 space-y-2 text-gray-700">
-                      {state.rescheduleWarnings.map((warning) => (
+                      {rescheduleWarnings.map((warning) => (
                         <div
                           key={warning.taskId}
                           className="rounded-lg border border-gray-200 bg-gray-100 px-3 py-2"

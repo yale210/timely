@@ -18,15 +18,18 @@ export const validatePreference = (preference: Preference): Record<string, strin
     errors.max_hours_study_per_day = ["Must be 24 or less."];
   }
 
-  if (Number.isNaN(preference.max_days_ahead)) {
+  if (preference.max_days_ahead != null && Number.isNaN(preference.max_days_ahead)) {
     errors.max_days_ahead = ["Must be a number."];
-  } else if (preference.max_days_ahead < 1) {
+  } else if (preference.max_days_ahead != null && preference.max_days_ahead < 1) {
     errors.max_days_ahead = ["Must be at least 1 day."];
-  } else if (preference.max_days_ahead > 365) {
+  } else if (preference.max_days_ahead != null && preference.max_days_ahead > 365) {
     errors.max_days_ahead = ["Must be 365 days or less."];
   }
 
-  if (![5, 10, 15, 20, 30, 60].includes(preference.drag_snap_minutes)) {
+  if (
+    preference.drag_snap_minutes != null
+    && ![5, 10, 15, 20, 30, 60].includes(preference.drag_snap_minutes)
+  ) {
     errors.drag_snap_minutes = ["Must be one of 5, 10, 15, 20, 30, or 60 minutes."];
   }
 

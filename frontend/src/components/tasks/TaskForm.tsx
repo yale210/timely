@@ -438,6 +438,7 @@ const TaskForm = ({
           </label>
           <input
             id="task-start-date"
+            aria-label="Start date"
             className={`${baseInputClass} min-w-0 text-[17px] ${errors.start ? errorClass : ""}`}
             type="date"
             value={date}
@@ -449,6 +450,7 @@ const TaskForm = ({
           />
           <input
             id="task-start-time"
+            aria-label="Start time"
             className={`${baseInputClass} w-full text-[17px] ${errors.start ? errorClass : ""}`}
             type="time"
             value={startTime}
@@ -466,6 +468,7 @@ const TaskForm = ({
           </label>
           <input
             id="task-deadline-date"
+            aria-label="Deadline date"
             className={`${baseInputClass} min-w-0 text-[17px] ${errors.deadline ? errorClass : ""}`}
             type="date"
             value={deadline}
@@ -476,6 +479,7 @@ const TaskForm = ({
           />
           <input
             id="task-deadline-time"
+            aria-label="Deadline time"
             className={`${baseInputClass} w-full text-[17px] ${errors.deadline ? errorClass : ""}`}
             type="time"
             value={deadlineTime}
@@ -504,7 +508,10 @@ const TaskForm = ({
               min="1"
               max="10"
               value={importance}
-              onChange={(e) => setImportance(parseInt(e.target.value))}
+              onChange={(e) => {
+                const nextValue = Number.parseInt(e.target.value, 10);
+                setImportance(Number.isNaN(nextValue) ? 0 : nextValue);
+              }}
             />
           </div>
           <div className="grid grid-cols-[minmax(0,1fr)_92px] items-center gap-3">

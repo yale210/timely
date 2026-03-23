@@ -520,6 +520,7 @@ const EventForm = ({
           </label>
           <input
             id="event-start-date"
+            aria-label="Start date"
             className={`${baseInputClass} min-w-0 text-[17px] ${errors.time ? errorClass : ""}`}
             type="date"
             value={startDate}
@@ -531,6 +532,7 @@ const EventForm = ({
           />
           <input
             id="event-start-time"
+            aria-label="Start time"
             className={`${baseInputClass} w-full text-[17px] ${errors.time ? errorClass : ""}`}
             type="time"
             value={startTime}
@@ -548,6 +550,7 @@ const EventForm = ({
           </label>
           <input
             id="event-end-date"
+            aria-label="End date"
             className={`${baseInputClass} min-w-0 text-[17px] ${errors.time ? errorClass : ""}`}
             type="date"
             value={endDate}
@@ -556,6 +559,7 @@ const EventForm = ({
           />
           <input
             id="event-end-time"
+            aria-label="End time"
             className={`${baseInputClass} w-full text-[17px] ${errors.time ? errorClass : ""}`}
             type="time"
             value={endTime}
@@ -757,6 +761,7 @@ const EventForm = ({
                     type="button"
                     onClick={() => removeReminder(index)}
                     className="ml-auto text-gray-400 hover:text-red-500"
+                    aria-label={`Delete reminder ${index + 1}`}
                   >
                     <span className="material-icons text-sm">delete</span>
                   </button>

@@ -145,7 +145,6 @@ useEffect(() => {
             completed_minutes: nextCompleted ? task.estimated_minutes : 0,
           },
         )
-        console.log("task update response", JSON.stringify(response, null, 2))
         if (nextCompleted && !task.completed) {
           const expDelta = 10 + 2 * task.importance;
           emitXpGained(expDelta);
