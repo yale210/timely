@@ -16,7 +16,8 @@ vi.mock("@/pages/index", () => ({
   Settings: () => <div>Settings Page</div>,
   Friends: () => <div>Friends Page</div>,
   ProfilePage: () => <div>Profile Page</div>,
-  Leaderboard: () => <div>Leaderboard Page</div>
+  Leaderboard: () => <div>Leaderboard Page</div>,
+  NotFound: () => <div>Page not found</div>,
 }));
 
 vi.mock("@/pages/Notification/Notifications", () => ({
