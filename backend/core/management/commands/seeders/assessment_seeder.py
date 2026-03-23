@@ -72,9 +72,7 @@ class AssessmentSeeder(BaseSeeder):
                     "weighting_of_assessment": random.randint(1, 100),
                     "notes": self.faker.sentence(),
                     "reminder_offset": random.randint(1, 100),
-                    "linked_event": Event.objects.filter(user=temporary_user)
-                    .order_by("?")
-                    .first(),
+                    "linked_event": Event.objects.filter(user=temporary_user,assessment__isnull=True).order_by("?").first(),
                 }
             }
         )
