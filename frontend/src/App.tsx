@@ -14,6 +14,7 @@ import {
   Dashboard, 
   Settings, 
   Friends, 
+  Sharing,
   ProfilePage, 
   Leaderboard,
   NotFound 
