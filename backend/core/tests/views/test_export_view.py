@@ -176,3 +176,23 @@ class ExportViewTests(TestCase):
         self.assertEqual(
             response.content.decode("utf-8").strip(), expected_file_content.strip()
         )
+
+    def test_export_r_rule_until(self):
+        self.client.login(username="testuser", password="password")
+        from datetime import date, datetime
+        from django.utils import timezone
+
+        Event.objects.create(
+            user=self.user,
+            title="Until Event",
+            description="Until Desc",
+            location="Until Loc",
+            start_time=timezone.make_aware(datetime(2026, 3, 25, 20, 0, 0)),
+            end_time=timezone.make_aware(datetime(2026, 3, 25, 21, 0, 0)),
+            recurrence_interval=Event.RecurrenceInterval.WEEKLY,
+            recurrence_end=date(2026, 4, 25),
+        )
+
+        response = self.client.get("/api/export/")
+        content = response.content.decode("utf-8")
+        self.assertIn("RRULE:FREQ=WEEKLY;UNTIL=20260425T000000", content)

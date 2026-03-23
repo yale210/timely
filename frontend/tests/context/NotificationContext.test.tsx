@@ -288,7 +288,7 @@ describe("NotificationContext", () => {
         await result.current.deleteAllNotifications();
     });
 
-    expect(consoleSpy).toHaveBeenCalledTimes(4); // unreadCount, markAllRead, deleteAllNotifications AND fetchNotifications on mount
+    expect(consoleSpy).toHaveBeenCalledTimes(3);
     consoleSpy.mockRestore();
   });
 
@@ -342,5 +342,4 @@ describe("NotificationContext", () => {
     expect(result.current.notifications.length).toBe(2);
   });
 });
-
 

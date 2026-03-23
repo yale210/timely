@@ -224,3 +224,26 @@ class SchedulerViewsTests(APITestCase):
         task.refresh_from_db()
         self.assertEqual(task.total_task_allocations, len(task.allocation))
         self.assertNotEqual(task.allocation[0]["start"], original_start.isoformat())
+
+    def test_schedule_tasks_failure_results(self):
+        from unittest.mock import patch
+
+        from scheduler.scheduler_types import ScheduleResult
+
+        now = timezone.now()
+        with patch("scheduler.views.Scheduler.schedule_tasks") as mock_schedule:
+            mock_schedule.return_value = [
+                ScheduleResult(task_id=1, success=False, segments=[]),
+                ScheduleResult(task_id=2, success=True, segments=[]),
+                ScheduleResult(
+                    task_id=999,
+                    success=True,
+                    segments=[(now, now + timedelta(minutes=30))],
+                ),
+            ]
+
+            response = self.client.post(self.schedule_url, {}, format="json")
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data["scheduled_count"], 0)
+        self.assertEqual(response.data["failed_count"], 3)

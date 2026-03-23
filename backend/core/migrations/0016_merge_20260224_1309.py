@@ -4,11 +4,9 @@ from django.db import migrations
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('core', '0015_event_split_from_event'),
-        ('core', '0015_merge_notification_and_settings'),
+        ("core", "0015_event_split_from_event"),
+        ("core", "0015_merge_notification_and_settings"),
     ]
 
-    operations = [
-    ]
+    operations = []

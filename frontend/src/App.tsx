@@ -3,7 +3,21 @@ import { Routes, Route, useLocation } from "react-router-dom"
 import RequireAuth from "@/components/auth/RequireAuth"
 import RedirectAuth from "@/components/auth/RedirectAuth"
 import RequireAdmin from "@/components/auth/RequireAdmin"
-import { Home, Login, Signup, Logout, CalendarPage, TaskList, Gradebook, Dashboard, Settings, Friends, ProfilePage, Leaderboard } from "@/pages"
+import { 
+  Home, 
+  Login, 
+  Signup, 
+  Logout, 
+  CalendarPage, 
+  TaskList, 
+  Gradebook, 
+  Dashboard, 
+  Settings, 
+  Friends, 
+  ProfilePage, 
+  Leaderboard,
+  NotFound 
+} from "@/pages"
 import { Notifications } from "@/pages/Notification/Notifications"
 import { NotificationDetail } from "@/pages/Notification/NotificationDetail"
 import { AdminNotifications } from "@/pages/Admin/Notifications/AdminNotifications"
@@ -108,33 +122,42 @@ export default function App() {
           <Notifications />
         </RequireAuth>
       } />
+
       <Route path="/notifications/:id" element={
         <RequireAuth>
           <NotificationDetail />
         </RequireAuth>
       } />
+
       <Route path="/admin/notifications" element={
         <RequireAdmin>
           <AdminNotifications />
         </RequireAdmin>
       } />
+
       <Route path="/admin/notifications/history" element={
         <RequireAdmin>
           <AdminNotificationHistory />
         </RequireAdmin>
       } />
+
       <Route path="/admin/notifications/history/:id" element={
         <RequireAdmin>
           <AdminNotificationHistoryDetail />
         </RequireAdmin>
       } />
+
       <Route path="/settings" element={
         <RequireAuth>
           <Settings />
         </RequireAuth>}
       />
 
-   
+      <Route path="*" element={
+        <NotFound/>
+      }>
+      </Route>
+
     </Routes>
   )
 }

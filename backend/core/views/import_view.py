@@ -239,11 +239,11 @@ class ImportView(APIView):
                             # as the user may be importing other events that are unqique, so it is necessary to check all events
 
                             # The DB stores date/time using the DJango format, but iCalendar uses a different format so conversion is necessary
-                            start_date_time_django_format = datetime.strptime(
-                                dt_start, "%Y%m%dT%H%M%S"
+                            start_date_time_django_format = timezone.make_aware(
+                                datetime.strptime(dt_start, "%Y%m%dT%H%M%S")
                             )
-                            end_date_time_django_format = datetime.strptime(
-                                dt_end, "%Y%m%dT%H%M%S"
+                            end_date_time_django_format = timezone.make_aware(
+                                datetime.strptime(dt_end, "%Y%m%dT%H%M%S")
                             )
 
                             # True / False, does this event already exist?

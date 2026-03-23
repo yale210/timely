@@ -28,3 +28,11 @@ class UserModelTest(TestCase):
         self.assertTrue(admin_user.is_staff)
         self.assertTrue(admin_user.is_superuser)
         self.assertTrue(admin_user.check_password("adminpassword"))
+
+    def test_create_user_no_username(self):
+        with self.assertRaisesMessage(ValueError, "Users must have a username"):
+            User.objects.create_user(username="", email="test@example.com")
+
+    def test_create_user_no_email(self):
+        with self.assertRaisesMessage(ValueError, "Users must have an email address"):
+            User.objects.create_user(username="testuser", email="")

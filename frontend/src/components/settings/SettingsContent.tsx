@@ -151,6 +151,10 @@ const SettingsContent = ({
                         checked={feature.value}
                         onChange={(event) => {
                           updateFeature(feature.key as "gradebook" | "leaderboard", event.target.checked);
+                          updateFeature(
+                            feature.key as "gradebook" | "leaderboard",
+                            event.target.checked,
+                          );
                         }}
                       />
                     </label>

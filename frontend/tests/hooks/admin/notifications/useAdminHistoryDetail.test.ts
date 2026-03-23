@@ -1,7 +1,7 @@
 import { renderHook, act, waitFor } from "@testing-library/react";
 import { vi, describe, it, expect, beforeEach, afterEach } from "vitest";
 import { useAdminHistoryDetail } from "@/hooks/admin/notifications/useAdminHistoryDetail";
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import {
   getBroadcastDetail,
   getBroadcastStatus,
@@ -12,6 +12,7 @@ import type { BroadcastJobDetail, BroadcastJobStatusResponse, RetryBroadcastResp
 // Mock react-router-dom
 vi.mock("react-router-dom", () => ({
   useParams: vi.fn(),
+  useNavigate: vi.fn(),
 }));
 
 // Mock API
@@ -22,12 +23,14 @@ vi.mock("@/api/notifications", () => ({
 }));
 
 const mockedUseParams = vi.mocked(useParams);
+const mockedUseNavigate = vi.mocked(useNavigate);
 const mockedGetBroadcastDetail = vi.mocked(getBroadcastDetail);
 const mockedGetBroadcastStatus = vi.mocked(getBroadcastStatus);
 const mockedRetryFailedBroadcast = vi.mocked(retryFailedBroadcast);
 
 describe("useAdminHistoryDetail Hook", () => {
   const mockId = "1";
+  const mockNavigate = vi.fn();
   const mockDetail: BroadcastJobDetail = {
     id: 1,
     title: "B1",
@@ -88,6 +91,7 @@ describe("useAdminHistoryDetail Hook", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockedUseParams.mockReturnValue({ id: mockId });
+    mockedUseNavigate.mockReturnValue(mockNavigate);
     mockedGetBroadcastDetail.mockResolvedValue(mockDetail);
     mockedGetBroadcastStatus.mockResolvedValue(mockStatus);
   });
@@ -138,21 +142,25 @@ describe("useAdminHistoryDetail Hook", () => {
     await waitFor(() => expect(result.current.loading).toBe(false));
 
     mockedRetryFailedBroadcast.mockResolvedValue({ 
-      broadcast_id: 1,
+      broadcast_id: 2,
       status: "QUEUED",
       task_id: "t2",
       queued_at: "2023-01-01T11:00:00Z",
       recipient_count: 1
     } as RetryBroadcastResponse);
-    const newDetail = { ...mockDetail, title: "Retried" };
+    const newDetail = { ...mockDetail, id: 2, title: "Retried" };
+    const newStatus = { ...mockStatus, id: 2, status: "QUEUED" as const, task_id: "t2" };
     mockedGetBroadcastDetail.mockResolvedValue(newDetail);
+    mockedGetBroadcastStatus.mockResolvedValue(newStatus);
 
     await act(async () => {
       await result.current.actions.handleRetry();
     });
 
     expect(mockedRetryFailedBroadcast).toHaveBeenCalledWith(1);
+    expect(mockNavigate).toHaveBeenCalledWith("/admin/notifications/history/2");
     expect(result.current.state.detail).toEqual(newDetail);
+    expect(result.current.state.status).toEqual(newStatus);
   });
 
   it("sets retryError on retry failure", async () => {
@@ -227,4 +235,3 @@ describe("useAdminHistoryDetail Hook", () => {
     consoleSpy.mockRestore();
   });
 });
-
