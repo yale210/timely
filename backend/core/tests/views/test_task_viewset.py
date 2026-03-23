@@ -224,7 +224,10 @@ class TaskViewSetTests(TestCase):
         self.category1.max_daily_study_time = 60
         self.category1.save(update_fields=["max_daily_study_time"])
 
-        existing_start = self.now + datetime.timedelta(days=1, hours=2)
+        day_start = self.now.replace(
+            hour=0, minute=0, second=0, microsecond=0
+        ) + datetime.timedelta(days=1)
+        existing_start = day_start + datetime.timedelta(hours=8)
         existing_end = existing_start + datetime.timedelta(minutes=45)
         other_task = Task.objects.create(
             user=self.user,

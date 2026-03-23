@@ -1,9 +1,15 @@
+"""Models for user notifications."""
+
 from django.conf import settings
 from django.db import models
 
 
 class Notification(models.Model):
+    """Represents a single notification sent to a user."""
+
     class NotificationType(models.TextChoices):
+        """Supported notification categories."""
+
         SYSTEM = "SYSTEM", "System"
         TASK = "TASK", "Task"
         CALENDAR = "CALENDAR", "Calendar"
@@ -31,8 +37,11 @@ class Notification(models.Model):
     )
 
     class Meta:
+        """Meta options for Notification."""
+
         ordering = ["-timestamp"]
         db_table = "core_notification"
 
     def __str__(self):
+        """String representation of a Notification."""
         return self.title[:50]
