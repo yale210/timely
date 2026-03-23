@@ -18,10 +18,7 @@ export default function NotFound() {
           </p>
           <div className="flex justify-center gap-3">
             <Link to="/" className="rounded-md bg-black px-4 py-2 text-white">
-              Go Home
-            </Link>
-            <Link to="/dashboard" className="rounded-md border px-4 py-2">
-              Dashboard
+              Go Overview
             </Link>
           </div>
         </div>
