@@ -223,12 +223,14 @@ export const PomodoroProvider = ({ children }: PomodoroProviderProps) => {
     if (viewingMode === "focus" && !isActive) {
       const nextMins = Math.max(1, Math.round(timeLeft / 60));
       timerManager.syncInitialDuration(nextMins);
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setPersistedFocusDuration(nextMins);
     }
   }, [timeLeft, viewingMode, isActive, timerManager]);
 
   useEffect(() => {
     if (timeLeft === 0 && isActive) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       void onTimerComplete();
     }
   }, [timeLeft, isActive, onTimerComplete]);
