@@ -9,7 +9,7 @@ from django.utils import timezone
 from rest_framework import status
 from rest_framework.test import APITestCase
 
-from admin_panel.views.admin_panel_viewset import AdminPanelViewSet
+from admin_panel.views.admin_panel_viewset_view import AdminPanelViewSet
 from notifications.models import BroadcastAuditLog, BroadcastJob, BroadcastRecipient
 
 User = get_user_model()
