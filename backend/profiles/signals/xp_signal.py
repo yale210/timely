@@ -1,3 +1,5 @@
+"""Signal handlers for profile XP and level updates."""
+
 from django.db.models.signals import post_save, pre_save
 from django.dispatch import receiver
 
@@ -6,12 +8,16 @@ from profiles.models.profile import Profile
 
 
 def exp_required_for_level_up(user):
+    """Return whether the user has enough XP to advance a level."""
+
     next_level = user.level + 1
     required_xp = 100 * next_level**1.5
     return user.xp >= required_xp
 
 
 def exp_required_for_level_down(user):
+    """Return whether the user should drop a level after XP loss."""
+
     next_level = user.level - 1
     required_xp = 100 * next_level**1.5
     return user.xp < required_xp
@@ -19,6 +25,8 @@ def exp_required_for_level_down(user):
 
 @receiver(pre_save, sender=Task)
 def snapshot_task_state(sender, instance, **kwargs):
+    """Capture a task's completion state before it is updated."""
+
     if instance.pk:
         try:
             instance._prev_completed = (
@@ -32,6 +40,8 @@ def snapshot_task_state(sender, instance, **kwargs):
 
 @receiver(post_save, sender=Task)
 def award_exp(sender, instance, **kwargs):
+    """Adjust profile XP and level when a task completion state changes."""
+
     prev = getattr(instance, "_prev_completed", False)
     now = instance.completed
 
