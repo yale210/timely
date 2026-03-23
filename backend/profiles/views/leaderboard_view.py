@@ -1,3 +1,5 @@
+"""Views for profile leaderboard endpoints."""
+
 from django.db.models import Q
 from rest_framework.generics import GenericAPIView
 from rest_framework.parsers import FormParser, JSONParser, MultiPartParser
@@ -10,12 +12,22 @@ from profiles.serializers.profile_serializer import ProfileSerializer
 
 
 class LeaderboardAPIView(GenericAPIView):
+    """Return leaderboard data for the authenticated user and their friends."""
+
     permission_classes = [IsAuthenticated]
 
     serializer_class = ProfileSerializer
     parser_classes = [JSONParser, FormParser, MultiPartParser]
 
     def getProfile(self, user):
+        """Return a profile for a user, creating a default one if needed.
+
+        Args:
+            user: The authenticated Django user.
+
+        Returns:
+            Profile: The existing or newly created profile.
+        """
         profile, _ = Profile.objects.get_or_create(
             user=user,
             defaults={"name": user.username},
@@ -23,6 +35,14 @@ class LeaderboardAPIView(GenericAPIView):
         return profile
 
     def get(self, request):
+        """Return leaderboard entries for the current user and accepted friends.
+
+        Args:
+            request: The incoming DRF request.
+
+        Returns:
+            Response: Serialized leaderboard profiles ordered by level.
+        """
         target_profile = self.getProfile(request.user)
 
         target_profile_friendship_entries = Friendship.objects.filter(
