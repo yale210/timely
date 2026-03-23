@@ -247,8 +247,8 @@ class ImportView(APIView):
                             )
 
                             # True / False, does this event already exist?
-                            start_date_time_django_format = (
-                                self._parse_ical_datetime(dt_start)
+                            start_date_time_django_format = self._parse_ical_datetime(
+                                dt_start
                             )
                             end_date_time_django_format = self._parse_ical_datetime(
                                 dt_end
@@ -265,7 +265,6 @@ class ImportView(APIView):
                             # This approach ensures that if the file is broken halfway through, there will not be a scenario where half
                             # of the events are imported but the other half are not
                             if not event_exists_pre_import:
-
                                 # Event Data
                                 new_event_to_import_data = [
                                     {

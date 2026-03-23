@@ -232,7 +232,9 @@ class SchedulerSchedulingMixin:
         day_remaining = remaining
         day_segments: list[tuple[datetime, datetime]] = []
         for slot in slots:
-            candidate = self._clip_slot(self._task_slot(task, slot), task_start, deadline)
+            candidate = self._clip_slot(
+                self._task_slot(task, slot), task_start, deadline
+            )
             if not candidate:
                 continue
             next_segments, day_remaining, category_minutes = self._split_slot(
@@ -332,10 +334,11 @@ class SchedulerSchedulingMixin:
             (result.scheduled_start, result.scheduled_end)  # type: ignore[list-item]
         ]
         self._scheduled_blocks.extend(
-            self._expand_task_segment(task, start, end)
-            for start, end in segments
+            self._expand_task_segment(task, start, end) for start, end in segments
         )
-        self._scheduled_task_segments.extend((task, start, end) for start, end in segments)
+        self._scheduled_task_segments.extend(
+            (task, start, end) for start, end in segments
+        )
 
     @staticmethod
     def _should_store_result(result: ScheduleResult) -> bool:

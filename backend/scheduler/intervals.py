@@ -81,7 +81,9 @@ def trim_slots_to_minutes(slots: list[TimeRange], minutes: int) -> list[TimeRang
     return trimmed
 
 
-def filter_slots_by_minutes(slots: list[TimeRange], min_minutes: int) -> list[TimeRange]:
+def filter_slots_by_minutes(
+    slots: list[TimeRange], min_minutes: int
+) -> list[TimeRange]:
     return [
         (start, end)
         for start, end in slots
