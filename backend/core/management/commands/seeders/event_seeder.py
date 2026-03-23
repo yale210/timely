@@ -54,8 +54,8 @@ class EventSeeder(BaseSeeder):
             self._create_recurring_event(
                 {
                     "fields": {
-                        "user": temporary_user,
-                        "categories": [temporary_category],
+                        "user": temporary_user.id,
+                        "categories": [temporary_category.id],
                     }
                 }
             )
@@ -63,8 +63,8 @@ class EventSeeder(BaseSeeder):
             self._create_non_recurring_event(
                 {
                     "fields": {
-                        "user": temporary_user,
-                        "categories": [temporary_category],
+                        "user": temporary_user.id,
+                        "categories": [temporary_category.id],
                     }
                 }
             )
