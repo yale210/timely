@@ -214,38 +214,25 @@ export const PomodoroProvider = ({ children }: PomodoroProviderProps) => {
   const adjustTime = useCallback((deltaSeconds: number) => {
     setTimeLeft((prev) => {
       const next = prev + deltaSeconds;
-      
-      if (next <= 0) {
-        if (isActive) {
-          // Explicitly stop and trigger completion if it was running
-          stopTimer();
-          // Defer completion to ensure state updates are clean
-          setTimeout(() => {
-            void onTimerComplete();
-          }, 0);
-        }
-        
-        // Ensure synchronization even at zero
-        if (viewingMode === "focus" && !isActive) {
-          timerManager.syncInitialDuration(1); // Default to 1 instead of 0 for input
-          setPersistedFocusDuration(1);
-        }
-        
-        return 0;
-      }
-
-      const validNext = Math.min(next, MAX_MINUTES * 60);
-      
-      // Synchronise with initialDuration if in focus mode and not active
-      if (viewingMode === "focus" && !isActive) {
-        const nextMins = Math.round(validNext / 60);
-        timerManager.syncInitialDuration(nextMins);
-        setPersistedFocusDuration(nextMins);
-      }
-      
-      return validNext;
+      if (next <= 0) return 0;
+      return Math.min(next, MAX_MINUTES * 60);
     });
-  }, [viewingMode, isActive, timerManager, stopTimer, onTimerComplete]);
+  }, []);
+
+  useEffect(() => {
+    // Synchronise with initialDuration if in focus mode and not active
+    if (viewingMode === "focus" && !isActive) {
+      const nextMins = Math.max(1, Math.round(timeLeft / 60));
+      timerManager.syncInitialDuration(nextMins);
+      setPersistedFocusDuration(nextMins);
+    }
+  }, [timeLeft, viewingMode, isActive, timerManager]);
+
+  useEffect(() => {
+    if (timeLeft === 0 && isActive) {
+      void onTimerComplete();
+    }
+  }, [timeLeft, isActive, onTimerComplete]);
 
   useEffect(() => {
     if (isActive && timeLeft > 0) {
