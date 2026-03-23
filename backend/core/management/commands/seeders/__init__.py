@@ -10,6 +10,7 @@ from .preference_seeder import PreferenceSeeder
 from .profile_seeder import ProfileSeeder
 from .special_dates_seeder import SpecialDatesSeeder
 from .task_seeder import TaskSeeder
+from .assessment_seeder import AssessmentSeeder
 
 
 __all__ = [
@@ -23,4 +24,5 @@ __all__ = [
     "ProfileSeeder",
     "SpecialDatesSeeder",
     "TaskSeeder",
+    "AssessmentSeeder",
 ]

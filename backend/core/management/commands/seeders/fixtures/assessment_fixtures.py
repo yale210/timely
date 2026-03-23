@@ -1,4 +1,4 @@
-assessment = [
+assessments = [
     {
         "model": "core.assessment",
         "pk": 1,
@@ -31,6 +31,8 @@ assessment = [
             "notes": "Need to do well!",
             "reminder_offset": 25,
             "linked_event": None,
+            "start_time": "2026-08-01T11:30:00Z",
+            "end_time": "2026-08-01T16:00:00Z",
         },
     },
     {
@@ -40,6 +42,8 @@ assessment = [
             "user": 1,
             "title": "SEG Coursework",
             "module": "SEG",
+            "start_time": "2026-08-01T11:30:00Z",
+            "end_time": "2026-08-01T16:00:00Z",
             "assessment_type": "COURSEWORK",
             "due_date": "2026-04-01T16:00:00Z",
             "length_of_assessment": 10000,
@@ -59,6 +63,8 @@ assessment = [
             "assessment_type": "COURSEWORK",
             "due_date": "2025-12-01T16:00:00Z",
             "length_of_assessment": 250,
+            "start_time": "2026-10-01T11:30:00Z",
+            "end_time": "2026-10-01T12:00:00Z",
             "weighting_of_assessment": 15,
             "notes": "",
             "reminder_offset": 5,
@@ -79,11 +85,13 @@ assessment = [
             "notes": "",
             "reminder_offset": 15,
             "linked_event": None,
+            "start_time": "2027-01-01T08:30:00Z",
+            "end_time": "2027-01-01T09:00:00Z",
         },
     },
 ]
 
-assessment_event = [
+assessment_events = [
     {
         "model": "core.event",
         "pk": 11,
