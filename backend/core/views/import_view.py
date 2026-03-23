@@ -7,9 +7,6 @@ from datetime import datetime
 from django.utils import timezone
 
 
-# Test1
-
-
 class ImportView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
