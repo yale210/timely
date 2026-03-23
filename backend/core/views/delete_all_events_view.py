@@ -9,20 +9,16 @@ class DeleteAllEventsView(APIView):
 
     def delete(self, request):
 
-        all_events_count = Event.objects.filter(user = request.user).count()
+        all_events_count = Event.objects.filter(user=request.user).count()
 
         all_events = Event.objects.filter(user=request.user)
 
         all_events.delete()
 
         if all_events_count == 0:
-            response = {"message": f"You do not have any events to delete"}
-            
+            response = {"message": "You do not have any events to delete"}
+
         else:
             response = {"message": f"All {all_events_count} events have been deleted"}
 
-        
-
         return Response(response)
-
-    

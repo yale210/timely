@@ -1,9 +1,6 @@
-from datetime import datetime
-from django.utils import timezone
 from django.test import TestCase
 from django.contrib.auth import get_user_model
 from rest_framework.test import APIClient
-from core.models import Event
 
 
 class DeleteAllEventsViewTests(TestCase):
@@ -21,5 +18,3 @@ class DeleteAllEventsViewTests(TestCase):
         self.client.login(username="testuser", password="password")
         response = self.client.get("/api/export/")
         self.assertEqual(response.status_code, 200)
-
-    

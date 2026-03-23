@@ -10,12 +10,9 @@ class ShareEventsView(APIView):
 
     def get(self, request):
 
-
-
         shared_events = PendingShareEvent.objects.filter(
-            Q(sender = request.user) | Q(receiver = request.user)
+            Q(sender=request.user) | Q(receiver=request.user)
         )
-
 
         response = [
             {
@@ -25,11 +22,9 @@ class ShareEventsView(APIView):
                 "sender_username": s.sender.username,
                 "receiver_username": s.receiver.username,
                 "event_id": s.event.id,
-                "event_title": s.event.title,    
+                "event_title": s.event.title,
             }
             for s in shared_events
         ]
 
         return Response(response)
-
-    

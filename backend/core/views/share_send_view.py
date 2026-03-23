@@ -21,17 +21,15 @@ class ShareSendView(APIView):
 
         # Events begin with an "e" visually to the user, but in the DB they are just an int
         # e.g. e123 -> 123
-        try: 
+        try:
             event_id_string = str(event_id).strip()
             if event_id_string.startswith("e"):
                 event_id_in_db = int(event_id_string[1:])
             else:
                 event_id_in_db = int(event_id_string)
-        except(ValueError, TypeError):
+        except (ValueError, TypeError):
             response = {"error": "Please provide a valid username and event ID"}
             return Response(response, status=400)
-
-        
 
         # This is a security measure to ensure that a user can't share an event they don't own
         event_belongs_to_sharer = Event.objects.filter(
@@ -45,7 +43,6 @@ class ShareSendView(APIView):
 
         # If the user owns the event, its details are stored
         try:
-            
             event_to_share = Event.objects.get(pk=event_id_in_db)
         except Event.DoesNotExist:
             response = {"detail": "Please provide an event ID that you own"}
