@@ -25,6 +25,7 @@ class SchedulerTest(TestCase):
             email="test@example.com",
             password="password",
         )
+        self.reference_dt = timezone.make_aware(datetime(2026, 2, 12, 9, 0))
         self.preference = Preference.objects.create(
             user=self.user,
             day_start=time(7, 0),
@@ -119,7 +120,7 @@ class SchedulerTest(TestCase):
             description="",
             estimated_minutes=90,
             importance=5,
-            start_time=timezone.now(),
+            start_time=self.reference_dt,
             deadline=timezone.make_aware(datetime(2026, 2, 20, 12, 0)),
             completed=False,
         )
@@ -167,7 +168,7 @@ class SchedulerTest(TestCase):
             description="",
             estimated_minutes=30,
             importance=1,
-            start_time=timezone.now(),
+            start_time=self.reference_dt,
             deadline=timezone.make_aware(datetime(2026, 2, 10, 10, 0)),
             completed=False,
         )

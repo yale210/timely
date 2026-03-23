@@ -344,7 +344,12 @@ class Scheduler:
         return min(remaining_minutes) if remaining_minutes else None
 
     def get_available_slots(
-        self, target_date: date, min_minutes: int
+        self,
+        target_date: date,
+        min_minutes: int,
+        *,
+        not_before: datetime | None = None,
+        not_after: datetime | None = None,
     ) -> List[Tuple[datetime, datetime]]:
         """
         Get free time slots on the target date that are at minimum min_minutes long.
@@ -353,14 +358,35 @@ class Scheduler:
         window_start, window_end = self._working_window(target_date)
         occupied = self._get_occupied_slots(target_date)
         free_slots = self._subtract_intervals((window_start, window_end), occupied)
+
+        if not_before is not None:
+            free_slots = [
+                (max(start, not_before), end)
+                for start, end in free_slots
+                if end > not_before
+            ]
+        if not_after is not None:
+            free_slots = [
+                (start, min(end, not_after))
+                for start, end in free_slots
+                if start < not_after
+            ]
         # Do not schedule into past time on the start date.
         if target_date == timezone.localdate():
             now = timezone.now()
             if now > window_start:
-                window_start = self._ceil_to_minute(now)
+                effective_start = self._ceil_to_minute(now)
+                if not_before is not None:
+                    effective_start = max(effective_start, not_before)
                 free_slots = self._subtract_intervals(
-                    (window_start, window_end), occupied
+                    (effective_start, window_end), occupied
                 )
+                if not_after is not None:
+                    free_slots = [
+                        (start, min(end, not_after))
+                        for start, end in free_slots
+                        if start < not_after
+                    ]
         if self.preference:
             max_minutes = int(self.preference.max_hours_study_per_day) * 60  # type: ignore[attr-defined]
             if max_minutes >= 0 and getattr(self.preference, "limit_max_hours", True):
@@ -458,7 +484,12 @@ class Scheduler:
                 break
             if not self._is_day_available(current_date):
                 continue
-            slots = self.get_available_slots(current_date, remaining_minutes)
+            slots = self.get_available_slots(
+                current_date,
+                remaining_minutes,
+                not_before=task_start if current_date == task_start.date() else None,
+                not_after=deadline if current_date == deadline.date() else None,
+            )
             for slot in slots:
                 adjusted_slot = self._shrink_slot_for_task(task, slot)
                 if not adjusted_slot:
@@ -526,7 +557,12 @@ class Scheduler:
             if not self._is_day_available(current_date):
                 continue
 
-            slots = self.get_available_slots(current_date, min_block_minutes)
+            slots = self.get_available_slots(
+                current_date,
+                min_block_minutes,
+                not_before=task_start if current_date == task_start.date() else None,
+                not_after=deadline if current_date == deadline.date() else None,
+            )
             category_minutes_left = self._get_remaining_category_minutes(
                 task,
                 current_date,

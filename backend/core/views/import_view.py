@@ -13,6 +13,13 @@ from django.utils import timezone
 class ImportView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
+    @staticmethod
+    def _parse_ical_datetime(value: str) -> datetime:
+        parsed = datetime.strptime(value, "%Y%m%dT%H%M%S")
+        if timezone.is_naive(parsed):
+            return timezone.make_aware(parsed)
+        return parsed
+
     def post(self, request):
         # The file that the user uploaded
         uploaded_file = request.FILES.get("file")
@@ -240,6 +247,13 @@ class ImportView(APIView):
                             )
 
                             # True / False, does this event already exist?
+                            start_date_time_django_format = (
+                                self._parse_ical_datetime(dt_start)
+                            )
+                            end_date_time_django_format = self._parse_ical_datetime(
+                                dt_end
+                            )
+
                             event_exists_pre_import = Event.objects.filter(
                                 user=request.user,
                                 title=summary,
@@ -251,13 +265,6 @@ class ImportView(APIView):
                             # This approach ensures that if the file is broken halfway through, there will not be a scenario where half
                             # of the events are imported but the other half are not
                             if not event_exists_pre_import:
-                                # The DB stores date/time using the DJango format, but iCalendar uses a different format so conversion is necessary
-                                start_date_time_django_format = datetime.strptime(
-                                    dt_start, "%Y%m%dT%H%M%S"
-                                )
-                                end_date_time_django_format = datetime.strptime(
-                                    dt_end, "%Y%m%dT%H%M%S"
-                                )
 
                                 # Event Data
                                 new_event_to_import_data = [
@@ -266,8 +273,8 @@ class ImportView(APIView):
                                         "description": f"{description}",
                                         "location": f"{location}",
                                         "dt_stamp": f"{dt_stamp}",
-                                        "start_time": f"{start_date_time_django_format}",
-                                        "end_time": f"{end_date_time_django_format}",
+                                        "start_time": start_date_time_django_format,
+                                        "end_time": end_date_time_django_format,
                                         "r_rule_freq": f"{frequency_interval_final}",
                                         "r_rule_until": f"{until_date_final}",
                                     }

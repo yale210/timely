@@ -29,7 +29,7 @@ class TaskViewSetTests(TestCase):
         self.task1 = Task.objects.create(
             user=self.user,
             title="Task 1",
-            estimated_minutes=30,
+            estimated_minutes=60,
             start_time=self.now + datetime.timedelta(days=1),
             completed=False,
             deadline=self.now + datetime.timedelta(days=10),
