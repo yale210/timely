@@ -3,6 +3,7 @@ import PreferencesSection from "@/components/settings/PreferencesSection";
 import SettingsSidebar from "@/components/settings/SettingsSidebar";
 import ThemeSection from "@/components/settings/ThemeSection";
 import ProfileSection from "@/components/settings/ProfileSection";
+import PrivacySection from "@/components/settings/PrivacySection";
 import type { UseSettingsReturn } from "@/hooks/settings/useSettings";
 import { useProfileSettings } from "@/hooks/settings/useProfileSettings";
 
@@ -194,6 +195,19 @@ const SettingsContent = ({
                 onAvatarChange={profileState.actions.setAvatarFile}
                 onSave={() => {
                   void profileState.actions.saveProfile();
+                }}
+              />
+            ) : null}
+            {state.activeSection === "privacy" ? (
+              <PrivacySection
+                deleting={false}
+                onDeleteEvents={() => {
+                  console.log("Delete Log Test")
+                  return actions.deleteEvents()
+                }}
+                onDeleteTasks={() => {
+                  console.log("Delete Log Test")
+                  return actions.deleteTasks();
                 }}
               />
             ) : null}

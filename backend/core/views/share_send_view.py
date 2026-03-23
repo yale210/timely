@@ -15,13 +15,23 @@ class ShareSendView(APIView):
         event_id = request.data.get("Event-ID")
 
         # Cannot be left empty
-        if not (username and event_id):
+        if not (username and event_id and str(event_id).strip()):
             response = {"error": "Please provide a username and event ID"}
-            return Response(response)
+            return Response(response, status=400)
 
         # Events begin with an "e" visually to the user, but in the DB they are just an int
         # e.g. e123 -> 123
-        event_id_in_db = event_id[1:]
+        try: 
+            event_id_string = str(event_id).strip()
+            if event_id_string.startswith("e"):
+                event_id_in_db = int(event_id_string[1:])
+            else:
+                event_id_in_db = int(event_id_string)
+        except(ValueError, TypeError):
+            response = {"error": "Please provide a valid username and event ID"}
+            return Response(response, status=400)
+
+        
 
         # This is a security measure to ensure that a user can't share an event they don't own
         event_belongs_to_sharer = Event.objects.filter(
@@ -30,11 +40,17 @@ class ShareSendView(APIView):
         ).exists()
 
         if not event_belongs_to_sharer:
-            response = {"error": "Please provide a valid event ID"}
-            return Response(response)
+            response = {"detail": "Please provide an event ID that you own"}
+            return Response(response, status=400)
 
         # If the user owns the event, its details are stored
-        event_to_share = Event.objects.get(pk=event_id_in_db)
+        try:
+            
+            event_to_share = Event.objects.get(pk=event_id_in_db)
+        except Event.DoesNotExist:
+            response = {"detail": "Please provide an event ID that you own"}
+            return Response(response, status=400)
+
         event_summary = event_to_share.title
         event_start = event_to_share.start_time
         event_end = event_to_share.end_time
@@ -49,8 +65,8 @@ class ShareSendView(APIView):
             receiver_exists = False
 
         if not receiver_exists:
-            response = {"error": "Please provide a valid username"}
-            return Response(response)
+            response = {"detail": "Please provide a username that exists"}
+            return Response(response, status=400)
 
         # This checks to make sure that the user doesn't already have the same event (duplicates not allowed)
         event_belongs_to_receiver = Event.objects.filter(
@@ -66,7 +82,7 @@ class ShareSendView(APIView):
         # e.g. A malicious user could try sending different events to someone to see what they already have in their calendar
         # this would be a privacy violation.
         if event_belongs_to_receiver:
-            response = {"message": "Event sent 0"}
+            response = {"detail": "Event sent 0"}
             return Response(response)
 
         request_already_exists = PendingShareEvent.objects.filter(
@@ -79,9 +95,9 @@ class ShareSendView(APIView):
         # This ensures that the GUI is kept clean
         if request_already_exists:
             response = {
-                "error": "You may not send more than 1 of the same event to the same person"
+                "detail": "You may not send more than 1 of the same event to the same person"
             }
-            return Response(response)
+            return Response(response, status=400)
 
         # Just because the event was shared successfully doesn't mean that the receiver will want to accept it
         # The receiver will have a chance to accept or reject it
@@ -91,5 +107,5 @@ class ShareSendView(APIView):
             event=event_to_share,
         )
 
-        response = {"message": "Event sent 1"}
+        response = {"detail": "Event sent 1"}
         return Response(response)

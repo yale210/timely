@@ -51,3 +51,21 @@ export const getCategories = async (): Promise<Category[]> => {
   return response.data;
 };
 
+export const deleteEvents = async (): Promise<string> => {
+  
+  const response = await api.delete("/api/delete_events/");
+  console.log("AAA")
+  console.log(response.data.message)
+  
+  return response.data.message;
+  
+};
+
+export const deleteTasks = async (): Promise<string> => {
+  
+  const response = await api.delete("/api/delete_tasks/");
+  
+  return response.data.message;
+  
+};
+

@@ -2,6 +2,8 @@ import { useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import type { SettingsSection } from "@/components/settings/types";
 import { authService } from "@/services/authService";
+import { deleteEvents as deleteEventsAPI} from "@/services/taskService";
+import { deleteTasks as deleteTasksAPI} from "@/services/taskService";
 import { preferenceService } from "@/services/preferenceService";
 import type { Preference } from "@/types";
 import { formatDjangoFormError } from "@/utils/apiErrors";
@@ -17,6 +19,7 @@ interface SettingsState {
 interface SettingsLoading {
   preference: boolean;
   saving: boolean;
+  deleting: boolean;
 }
 
 interface SettingsError {
@@ -30,6 +33,8 @@ interface SettingsActions {
   logout: () => Promise<void>;
   applyTheme: (themeName: string) => void;
   applyFont: (fontName: string) => void;
+  deleteEvents: () => Promise<string>;
+  deleteTasks: () => Promise<string>;
 }
 
 /**
@@ -54,6 +59,7 @@ export const useSettings = (): UseSettingsReturn => {
   const [isSaving, setIsSaving] = useState(false);
   const [preferenceError, setPreferenceError] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string[]>>({});
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const selectSection = useCallback(
     (section: SettingsSection) => {
@@ -75,6 +81,36 @@ export const useSettings = (): UseSettingsReturn => {
       await navigate("/login");
     }
   }, [navigate]);
+
+  const deleteEvents = useCallback(async () => {
+    setIsDeleting(true);
+    console.log("Delete Events hook run")
+    try {
+      const result = await deleteEventsAPI();
+      return result;
+    } catch (error){
+      console.log(error);
+      throw error;
+      
+    } finally {
+      setIsDeleting(false);
+    }
+  }, []);
+
+  const deleteTasks = useCallback(async () => {
+    setIsDeleting(true);
+    try {
+      const result = await deleteTasksAPI();
+      return result;
+    } catch (error){
+      console.log(error);
+      throw error;
+      
+    } finally {
+      setIsDeleting(false);
+    }
+  }, []);
+  
 
   const loadPreference = useCallback(async () => {
     setIsPreferenceLoading(true);
@@ -154,6 +190,7 @@ export const useSettings = (): UseSettingsReturn => {
     loading: {
       preference: isPreferenceLoading,
       saving: isSaving,
+      deleting: isDeleting,
     },
     error: {
       preference: preferenceError,
@@ -165,6 +202,8 @@ export const useSettings = (): UseSettingsReturn => {
       logout,
       applyTheme,
       applyFont,
+      deleteTasks,
+      deleteEvents,
     },
   };
 };

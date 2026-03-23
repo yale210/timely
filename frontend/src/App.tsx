@@ -3,7 +3,7 @@ import { Routes, Route, useLocation } from "react-router-dom"
 import RequireAuth from "@/components/auth/RequireAuth"
 import RedirectAuth from "@/components/auth/RedirectAuth"
 import RequireAdmin from "@/components/auth/RequireAdmin"
-import { Home, Login, Signup, Logout, CalendarPage, TaskList, Gradebook, Dashboard, Settings, Friends, ProfilePage, Leaderboard } from "@/pages"
+import { Home, Login, Signup, Logout, CalendarPage, TaskList, Gradebook, Dashboard, Settings, Friends, Sharing, ProfilePage, Leaderboard } from "@/pages"
 import { Notifications } from "@/pages/Notification/Notifications"
 import { NotificationDetail } from "@/pages/Notification/NotificationDetail"
 import { AdminNotifications } from "@/pages/Admin/Notifications/AdminNotifications"
@@ -87,6 +87,12 @@ export default function App() {
       <Route path="/friends" element={
         <RequireAuth>
           <Friends />
+        </RequireAuth>}
+      />
+
+      <Route path="/sharing" element={
+        <RequireAuth>
+          <Sharing />
         </RequireAuth>}
       />
 
