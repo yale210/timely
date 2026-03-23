@@ -65,7 +65,6 @@ grades = [
         "fields": {
             "user": 1,
             "name": "FC1",
-            "category": None,
             "score": 44,
             "category": 3,
             "total_possible": 100,
@@ -78,7 +77,6 @@ grades = [
         "fields": {
             "user": 1,
             "name": "AKC",
-            "category": None,
             "score": 100,
             "category": 6,
             "total_possible": 100,
@@ -91,9 +89,8 @@ grades = [
         "fields": {
             "user": 4,
             "name": "CS1",
-            "category": None,
-            "score": 85,
             "category": 25,
+            "score": 85,
             "total_possible": 100,
             "date_achieved": "2025-01-01",
         },

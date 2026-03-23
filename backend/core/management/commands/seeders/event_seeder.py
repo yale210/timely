@@ -26,8 +26,6 @@ class EventSeeder(BaseSeeder):
                 print(f"Error occurred while creating event: {exception}")
 
     def _create_event(self, data):
-        user = get_user_model().objects.get(id=data["fields"]["user"])
-
         temporary_event, _ = Event.objects.get_or_create(
             user_id=data["fields"]["user"],
             title=data["fields"]["title"],

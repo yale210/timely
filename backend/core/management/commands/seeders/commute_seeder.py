@@ -56,7 +56,6 @@ class CommuteSeeder(BaseSeeder):
         return datetime.time(hour=hours, minute=minutes)
 
     def _create_commute(self, data):
-        user = get_user_model().objects.get(id=data["fields"]["user"])
         Commute.objects.get_or_create(
             user_id=data["fields"]["user"],
             commute_start=data["fields"]["commute_start"],

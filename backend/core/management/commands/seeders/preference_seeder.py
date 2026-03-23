@@ -25,7 +25,6 @@ class PreferenceSeeder(BaseSeeder):
                 print(f"Error occurred while creating preference: {exception}")
 
     def _create_preference(self, data):
-        user = get_user_model().objects.get(id=data["fields"]["user"])
         temporary_preference, created = Preference.objects.get_or_create(
             user_id=data["fields"]["user"],
             defaults={

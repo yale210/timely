@@ -24,10 +24,6 @@ class GradeSeeder(BaseSeeder):
                 print(f"Error occurred while creating grade: {exception}")
 
     def _create_grade(self, data):
-        user = get_user_model().objects.get(id=data["fields"]["user"])
-        category = None
-        if data["fields"]["category"] is not None:
-            category = Category.objects.get(id=data["fields"]["category"])
         Grade.objects.get_or_create(
             user_id=data["fields"]["user"],
             name=data["fields"]["name"],

@@ -72,7 +72,11 @@ class AssessmentSeeder(BaseSeeder):
                     "weighting_of_assessment": random.randint(1, 100),
                     "notes": self.faker.sentence(),
                     "reminder_offset": random.randint(1, 100),
-                    "linked_event": Event.objects.filter(user=temporary_user,assessment__isnull=True).order_by("?").first(),
+                    "linked_event": Event.objects.filter(
+                        user=temporary_user, assessment__isnull=True
+                    )
+                    .order_by("?")
+                    .first(),
                 }
             }
         )
@@ -106,10 +110,10 @@ class AssessmentSeeder(BaseSeeder):
 
     def _create_assessment(self, data):
         user = get_user_model().objects.get(id=data["fields"]["user"])
-        linked_event = data["fields"].get("linked_event") 
-        if linked_event is not None and not hasattr(linked_event, "id"): 
-            linked_event=Event.objects.filter(id=linked_event).first()
-        
+        linked_event = data["fields"].get("linked_event")
+        if linked_event is not None and not hasattr(linked_event, "id"):
+            linked_event = Event.objects.filter(id=linked_event).first()
+
         Assessment.objects.get_or_create(
             user=user,
             start_time=data["fields"]["start_time"],

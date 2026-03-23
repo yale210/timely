@@ -1,6 +1,5 @@
 """Category Seeder"""
 
-import random
 from core.models import Category
 from django.contrib.auth import get_user_model
 from core.management.commands.seeders.base import BaseSeeder
@@ -43,17 +42,14 @@ class CategorySeeder(BaseSeeder):
                 "fields": {
                     "text": word,
                     "colour": colour,
-                    
                 },
             }
         )
 
     def _create_category(self, data):
-        user = get_user_model().objects.get(id=data["user"])
         Category.objects.get_or_create(
             id=data["pk"],
             user_id=data["user"],
             text=data["fields"]["text"],
             colour=data["fields"].get("colour", None),
-            
         )

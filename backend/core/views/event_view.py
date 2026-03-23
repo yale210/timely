@@ -193,6 +193,7 @@ class EventViewSet(viewsets.ModelViewSet):
     """
     Handles update logic for events, including validation and updating of recurring events.
     """
+
     def _handle_update(self, request, partial, *args, **kwargs):
         event = self.get_object()
         scope, original_start_time = self._parse_scope_context(request)

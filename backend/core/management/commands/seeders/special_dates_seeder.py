@@ -26,7 +26,7 @@ class SpecialDatesSeeder(BaseSeeder):
     def _create_special_date(self, data):
         user = get_user_model().objects.get(id=data["fields"]["user"])
         SpecialDates.objects.get_or_create(
-            user_id=data["fields"]["user"],
+            user_id=user.id,
             date=data["fields"]["date"],
             text=data["fields"]["text"],
         )
