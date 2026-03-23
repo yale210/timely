@@ -114,8 +114,9 @@ describe("AdminNotificationHistory Page", () => {
         <AdminNotificationHistory />
       </MemoryRouter>
     );
-    // Find the row or the item title and click it
-    fireEvent.click(screen.getByText("Broadcast 1"));
+
+    const row = screen.getByText("Broadcast 1").closest("tr");
+    fireEvent.click(row!);
     expect(mockNavigate).toHaveBeenCalledWith("/admin/notifications/history/1");
   });
 

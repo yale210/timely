@@ -1,8 +1,10 @@
 from datetime import datetime
-from django.utils import timezone
-from django.test import TestCase
+
 from django.contrib.auth import get_user_model
+from django.test import TestCase
+from django.utils import timezone
 from rest_framework.test import APIClient
+
 from core.models import Event
 
 
@@ -253,3 +255,31 @@ class ExportViewTests(TestCase):
         self.assertEqual(
             response.content.decode("utf-8").strip(), expected_file_content.strip()
         )
+
+    def test_export_r_rule_until(self):
+        self.client.login(username="testuser", password="password")
+
+        start = datetime.strptime("20260325T200000", "%Y%m%dT%H%M%S")
+        end = datetime.strptime("20260325T210000", "%Y%m%dT%H%M%S")
+        stamp = datetime.strptime("20260205T120548", "%Y%m%dT%H%M%S")
+        start_aware = timezone.make_aware(start)
+        end_aware = timezone.make_aware(end)
+        stamp_aware = timezone.make_aware(stamp)
+        rec_end = datetime.strptime("20260425T000000", "%Y%m%dT%H%M%S").date()
+
+        Event.objects.create(
+            user=self.user,
+            title="Until Event",
+            description="Until Desc",
+            location="Until Loc",
+            start_time=start_aware,
+            end_time=end_aware,
+            last_edited=stamp_aware,
+            recurrence_interval=Event.RecurrenceInterval.WEEKLY,
+            recurrence_end=rec_end,
+        )
+
+        response = self.client.get("/api/export/")
+        content = response.content.decode("utf-8")
+
+        self.assertIn("RRULE:FREQ=WEEKLY;UNTIL=20260425T000000", content)

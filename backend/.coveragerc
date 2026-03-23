@@ -1,8 +1,10 @@
 [run]
-source =
-    core
-    source
+branch = True
+source = .
 omit =
+    */venv/*
+    */.venv/*
+    */env/*
     */migrations/*
     */tests/*
     */__init__.py

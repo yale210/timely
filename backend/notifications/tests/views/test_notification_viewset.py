@@ -52,6 +52,18 @@ class NotificationViewSetTest(APITestCase):
         self.notification.refresh_from_db()
         self.assertFalse(self.notification.is_read)
 
+    def test_mark_read_already_read(self):
+        Notification.objects.filter(id=self.notification.id).update(is_read=True)
+        url = reverse("notification-mark-read", kwargs={"pk": self.notification.pk})
+        response = self.client.post(url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+    def test_mark_unread_already_unread(self):
+        Notification.objects.filter(id=self.notification.id).update(is_read=False)
+        url = reverse("notification-mark-unread", kwargs={"pk": self.notification.pk})
+        response = self.client.post(url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
     def test_mark_all_read(self):
         Notification.objects.create(
             recipient=self.user,

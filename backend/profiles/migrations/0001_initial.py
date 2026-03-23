@@ -6,39 +6,68 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     initial = True
 
     dependencies = [
-        ('core', '0015_merge_notification_and_settings'),
+        ("core", "0015_merge_notification_and_settings"),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='Preference',
+            name="Preference",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('sleep_start', models.TimeField()),
-                ('sleep_end', models.TimeField()),
-                ('max_tasks_per_day', models.IntegerField(default=3)),
-                ('max_schedule_ahead_days', models.IntegerField(default=14)),
-                ('timezone_offset', models.IntegerField(default=0)),
-                ('days_off', models.ManyToManyField(blank=True, to='core.dayofweek')),
-                ('user', models.OneToOneField(on_delete=django.db.models.deletion.CASCADE, related_name='profile_preference', to=settings.AUTH_USER_MODEL)),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("sleep_start", models.TimeField()),
+                ("sleep_end", models.TimeField()),
+                ("max_tasks_per_day", models.IntegerField(default=3)),
+                ("max_schedule_ahead_days", models.IntegerField(default=14)),
+                ("timezone_offset", models.IntegerField(default=0)),
+                ("days_off", models.ManyToManyField(blank=True, to="core.dayofweek")),
+                (
+                    "user",
+                    models.OneToOneField(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="profile_preference",
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
             ],
         ),
         migrations.CreateModel(
-            name='Profile',
+            name="Profile",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('name', models.CharField(max_length=255)),
-                ('date_of_birth', models.DateField(blank=True, null=True)),
-                ('creation_date', models.DateTimeField(auto_now_add=True)),
-                ('slogan', models.CharField(blank=True, max_length=255)),
-                ('bio', models.TextField(blank=True)),
-                ('avatar_url', models.URLField(blank=True)),
-                ('user', models.OneToOneField(on_delete=django.db.models.deletion.CASCADE, related_name='user_profile', to=settings.AUTH_USER_MODEL)),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("name", models.CharField(max_length=255)),
+                ("date_of_birth", models.DateField(blank=True, null=True)),
+                ("creation_date", models.DateTimeField(auto_now_add=True)),
+                ("slogan", models.CharField(blank=True, max_length=255)),
+                ("bio", models.TextField(blank=True)),
+                ("avatar_url", models.URLField(blank=True)),
+                (
+                    "user",
+                    models.OneToOneField(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="user_profile",
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
             ],
         ),
     ]
