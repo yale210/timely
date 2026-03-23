@@ -212,4 +212,13 @@ describe("App Component", () => {
     expect(getByText("Settings Page")).toBeDefined();
   });
 
+  it("should render 404 page for unknown routes", () => {
+    const { getByText } = render(
+      <MemoryRouter initialEntries={["/does-not-exist"]}>
+        <App />
+      </MemoryRouter>
+    );
+
+    expect(getByText("Page not found")).toBeDefined();
+  });
 });
