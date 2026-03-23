@@ -1,8 +1,8 @@
 import api from "@/services/api";
 
-type ImportResponse = {
+interface ImportResponse {
   message: string;
-};
+}
 
 /**
  * Retrieves the weekly task summary for a given week.
