@@ -1,14 +1,12 @@
 let logoSvgTemplatePromise: Promise<string> | null = null;
 
 const getLogoSvgTemplate = async (): Promise<string> => {
-  if (!logoSvgTemplatePromise) {
-    logoSvgTemplatePromise = fetch("/t.svg").then(async (response) => {
-      if (!response.ok) {
-        throw new Error("Failed to load favicon source.");
-      }
-      return response.text();
-    });
-  }
+  logoSvgTemplatePromise ??= fetch("/t.svg").then(async (response) => {
+    if (!response.ok) {
+      throw new Error("Failed to load favicon source.");
+    }
+    return response.text();
+  });
 
   return logoSvgTemplatePromise;
 };
@@ -26,6 +24,10 @@ const getFaviconLink = (): HTMLLinkElement => {
   return link;
 };
 
+/**
+ * Updates the favicon to match the active theme primary color.
+ * Falls back to the default logo if the themed favicon cannot be generated.
+ */
 export const updateThemeFavicon = (): void => {
   const primaryColor = getComputedStyle(document.documentElement)
     .getPropertyValue("--primary")
@@ -48,6 +50,10 @@ export const updateThemeFavicon = (): void => {
     });
 };
 
+/**
+ * Applies the provided theme name to the document root.
+ * @param themeName - The theme identifier to assign to the document.
+ */
 export const setDocumentTheme = (themeName: string) => {
   document.documentElement.dataset.theme = themeName;
   updateThemeFavicon();

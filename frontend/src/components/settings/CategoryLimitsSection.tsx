@@ -15,6 +15,13 @@ interface CategoryLimitsSectionProps {
 /**
  * Renders category-level daily study time limits.
  * @param props - Component props.
+ * @param props.categories - Categories that can have per-day scheduling limits.
+ * @param props.maxDailyMinutes - Maximum number of schedulable minutes allowed in a day.
+ * @param props.loading - Whether category data is still being loaded.
+ * @param props.saving - Whether a save request is currently in progress.
+ * @param props.error - Error message to show when saving fails.
+ * @param props.onLimitChange - Callback that updates a category's local daily limit value.
+ * @param props.onSave - Callback that persists the current category limits.
  * @returns The category limits settings section.
  */
 const CategoryLimitsSection = ({
