@@ -1,4 +1,7 @@
-"""Asynchronous tasks for the notifications app."""
+"""Asynchronous tasks and helper utilities for the notifications app.
+
+This package also re-exports commonly used notification models and helpers
+for convenience and backwards compatibility."""
 
 from notifications.models import Notification
 from pywebpush import webpush

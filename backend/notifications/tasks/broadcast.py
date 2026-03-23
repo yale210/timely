@@ -51,19 +51,23 @@ def process_broadcast_job(broadcast_job_id):
     Returns:
         A status message indicating the result of the processing.
     """
-    broadcast = (
-        BroadcastJob.objects.select_related("sender")
-        .filter(id=broadcast_job_id)
-        .first()
-    )
-    if not broadcast:
-        return "Broadcast not found"
+    # Use a transaction and row-level locking to ensure only one worker
+    # can decide to process and initialise this broadcast job.
+    with transaction.atomic():
+        broadcast = (
+            BroadcastJob.objects.select_related("sender")
+            .select_for_update()
+            .filter(id=broadcast_job_id)
+            .first()
+        )
+        if not broadcast:
+            return "Broadcast not found"
 
-    # Ensure the job hasn't already been processed or failed
-    if not _should_process_broadcast(broadcast):
-        return f"Broadcast already processed with status={broadcast.status}"
+        # Ensure the job hasn't already been processed or failed
+        if not _should_process_broadcast(broadcast):
+            return f"Broadcast already processed with status={broadcast.status}"
 
-    _initialise_broadcast_job(broadcast)
+        _initialise_broadcast_job(broadcast)
 
     # Retrieve all recipients registered for this job
     recipients = list(
