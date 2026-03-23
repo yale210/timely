@@ -3,7 +3,7 @@ import { usePomodoro } from "@/context/PomodoroContext";
 import { formatTime } from "@/utils/timeUtils";
 import { convertMinutesToHHMM, convertHHMMToMinutes, parseAndValidateHHMM } from "@/utils/timeFormatters";
 import { PlayIcon, PauseIcon, ArrowPathIcon, PlusIcon, MinusIcon } from "@heroicons/react/24/outline";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 
 /**
  * Dropdown component for the Pomofocus timer in the navbar.
@@ -23,19 +23,41 @@ export const PomofocusDropdown = () => {
     setMode,
   } = usePomodoro();
 
-  const [hh, setHH] = useState("");
-  const [mm, setMM] = useState("");
+  const [hh, setHH] = useState(() => {
+    if (viewingMode === "focus") {
+      const totalMins = typeof initialDuration === "number" ? initialDuration : 0;
+      const { hours } = convertMinutesToHHMM(totalMins);
+      return hours.toString().padStart(2, "0");
+    }
+    return "";
+  });
+  const [mm, setMM] = useState(() => {
+    if (viewingMode === "focus") {
+      const totalMins = typeof initialDuration === "number" ? initialDuration : 0;
+      const { minutes } = convertMinutesToHHMM(totalMins);
+      return minutes.toString().padStart(2, "0");
+    }
+    return "";
+  });
 
-  // Update local HH:MM when initialDuration or viewingMode changes
-  useEffect(() => {
+  const [prevInitialDuration, setPrevInitialDuration] = useState(initialDuration);
+  const [prevViewingMode, setPrevViewingMode] = useState(viewingMode);
+
+  if (initialDuration !== prevInitialDuration || viewingMode !== prevViewingMode) {
+    setPrevInitialDuration(initialDuration);
+    setPrevViewingMode(viewingMode);
     if (viewingMode === "focus") {
       const totalMins = typeof initialDuration === "number" ? initialDuration : 0;
       const { hours, minutes } = convertMinutesToHHMM(totalMins);
       setHH(hours.toString().padStart(2, "0"));
       setMM(minutes.toString().padStart(2, "0"));
     }
-  }, [initialDuration, viewingMode]);
+  }
 
+  /**
+   * Handles changes to the hours input.
+   * @param e - The change event from the input element.
+   */
   const handleHHChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const val = e.target.value;
     if (val === "" || /^\d+$/.test(val)) {

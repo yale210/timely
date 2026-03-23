@@ -61,7 +61,7 @@ export const PomodoroProvider = ({ children }: PomodoroProviderProps) => {
   const [mode, setModeState] = useState<PomodoroMode>("focus");
   const [viewingMode, setViewingMode] = useState<PomodoroMode>("focus");
   const [persistedFocusDuration, setPersistedFocusDuration] = useState<number | "">(initialDuration);
-  const [timeLeft, setTimeLeft] = useState(initialDuration * 60);
+  const [timeLeft, setTimeLeft] = useState((typeof initialDuration === "number" ? initialDuration : DEFAULT_FOCUS_MINUTES) * 60);
   const [isActive, setIsActive] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [modalMessage, setModalMessage] = useState("");
