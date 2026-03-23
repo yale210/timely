@@ -130,7 +130,9 @@ class CalendarSerializerTests(TestCase):
         self.assertFalse(serializer.is_valid())
         self.assertIn("max_split_minutes", serializer.errors)
 
-    def test_calendar_serializer_marks_task_complete_when_completed_minutes_reaches_estimate(self):
+    def test_calendar_serializer_marks_task_complete_when_completed_minutes_reaches_estimate(
+        self,
+    ):
         now = timezone.now()
         serializer = CalendarSerializer(
             data={

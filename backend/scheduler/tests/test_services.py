@@ -5,7 +5,15 @@ from django.contrib.auth import get_user_model
 from django.test import TestCase
 from django.utils import timezone
 
-from core.models import Category, Commute, DayOfWeek, Event, Preference, SpecialDates, Task
+from core.models import (
+    Category,
+    Commute,
+    DayOfWeek,
+    Event,
+    Preference,
+    SpecialDates,
+    Task,
+)
 from scheduler.services import Scheduler
 
 
@@ -178,8 +186,12 @@ class SchedulerTest(TestCase):
             Event.objects.create(
                 user=self.user,
                 title=f"Block {blocked_day.isoformat()}",
-                start_time=timezone.make_aware(datetime.combine(blocked_day, time(7, 0))),
-                end_time=timezone.make_aware(datetime.combine(blocked_day, time(23, 0))),
+                start_time=timezone.make_aware(
+                    datetime.combine(blocked_day, time(7, 0))
+                ),
+                end_time=timezone.make_aware(
+                    datetime.combine(blocked_day, time(23, 0))
+                ),
             )
 
         Task.objects.create(
@@ -470,10 +482,16 @@ class SchedulerTest(TestCase):
             min_split_minutes=20,
         )
 
-        scheduler = Scheduler(self.user, max_days_ahead=2, allow_split=True, min_block_minutes=20)
+        scheduler = Scheduler(
+            self.user, max_days_ahead=2, allow_split=True, min_block_minutes=20
+        )
         mocked_now = timezone.make_aware(datetime.combine(day_one, time(21, 48)))
-        with patch("scheduler.scheduler_engine.timezone.localdate", return_value=day_one):
-            with patch("scheduler.scheduler_engine.timezone.now", return_value=mocked_now):
+        with patch(
+            "scheduler.scheduler_engine.timezone.localdate", return_value=day_one
+        ):
+            with patch(
+                "scheduler.scheduler_engine.timezone.now", return_value=mocked_now
+            ):
                 results = scheduler.schedule_tasks(start_date=day_one)
 
         self.assertTrue(results[0].success)
@@ -501,7 +519,9 @@ class SchedulerTest(TestCase):
         )
         mocked_now = timezone.make_aware(datetime.combine(today, time(21, 48, 37)))
         with patch("scheduler.scheduler_engine.timezone.localdate", return_value=today):
-            with patch("scheduler.scheduler_engine.timezone.now", return_value=mocked_now):
+            with patch(
+                "scheduler.scheduler_engine.timezone.now", return_value=mocked_now
+            ):
                 results = scheduler.schedule_tasks(start_date=today)
 
         self.assertTrue(results[0].success)
@@ -531,6 +551,9 @@ class SchedulerTest(TestCase):
 
         self.assertTrue(results[0].success)
         self.assertEqual(
-            int((results[0].scheduled_end - results[0].scheduled_start).total_seconds() // 60),
+            int(
+                (results[0].scheduled_end - results[0].scheduled_start).total_seconds()
+                // 60
+            ),
             75,
         )

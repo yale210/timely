@@ -102,11 +102,7 @@ class CalendarSerializer(serializers.ModelSerializer):
                 end = self._aware(datetime.fromisoformat(str(end_raw)))
             except ValueError:
                 errors.append(
-                    {
-                        index: (
-                            "Allocation slots must use valid ISO 8601 datetimes."
-                        )
-                    }
+                    {index: ("Allocation slots must use valid ISO 8601 datetimes.")}
                 )
                 continue
             if end <= start:
@@ -122,7 +118,9 @@ class CalendarSerializer(serializers.ModelSerializer):
         return left_start < right_end and left_end > right_start
 
     @staticmethod
-    def _expand_with_buffer(slot_start, slot_end, buffer_before_minutes, buffer_after_minutes):
+    def _expand_with_buffer(
+        slot_start, slot_end, buffer_before_minutes, buffer_after_minutes
+    ):
         return (
             slot_start - timedelta(minutes=buffer_before_minutes),
             slot_end + timedelta(minutes=buffer_after_minutes),
@@ -286,11 +284,13 @@ class CalendarSerializer(serializers.ModelSerializer):
 
         if user is not None:
             for slot_start, slot_end in normalized_slots:
-                requested_blocked_start, requested_blocked_end = self._expand_with_buffer(
-                    slot_start,
-                    slot_end,
-                    buffer_before_minutes,
-                    buffer_after_minutes,
+                requested_blocked_start, requested_blocked_end = (
+                    self._expand_with_buffer(
+                        slot_start,
+                        slot_end,
+                        buffer_before_minutes,
+                        buffer_after_minutes,
+                    )
                 )
                 for event in Event.objects.filter(user=user):
                     event_start = self._aware(event.start_time)
@@ -340,9 +340,7 @@ class CalendarSerializer(serializers.ModelSerializer):
     def _rewrite_buffer_only_conflict(self, attrs, exc):
         if self.instance is None or "allocation" in attrs:
             return exc
-        if not (
-            "buffer_before_minutes" in attrs or "buffer_after_minutes" in attrs
-        ):
+        if not ("buffer_before_minutes" in attrs or "buffer_after_minutes" in attrs):
             return exc
         if not (self.instance.allocation or []):
             return exc
@@ -382,9 +380,7 @@ class CalendarSerializer(serializers.ModelSerializer):
             "completed_minutes",
             getattr(self.instance, "completed_minutes", 0),
         )
-        start_time = attrs.get(
-            "start_time", getattr(self.instance, "start_time", None)
-        )
+        start_time = attrs.get("start_time", getattr(self.instance, "start_time", None))
         deadline = attrs.get("deadline", getattr(self.instance, "deadline", None))
         allow_split = attrs.get(
             "allow_split", getattr(self.instance, "allow_split", False)
@@ -397,9 +393,7 @@ class CalendarSerializer(serializers.ModelSerializer):
             "buffer_after_minutes",
             getattr(self.instance, "buffer_after_minutes", 0),
         )
-        allocation = attrs.get(
-            "allocation", getattr(self.instance, "allocation", [])
-        )
+        allocation = attrs.get("allocation", getattr(self.instance, "allocation", []))
 
         if start_time is not None:
             start_time = self._aware(start_time)

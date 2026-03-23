@@ -249,7 +249,9 @@ class TaskViewSetTests(TestCase):
             {
                 "allocation": [
                     {
-                    "start": (existing_end + datetime.timedelta(minutes=15)).isoformat(),
+                        "start": (
+                            existing_end + datetime.timedelta(minutes=15)
+                        ).isoformat(),
                         "end": (
                             existing_end + datetime.timedelta(minutes=45)
                         ).isoformat(),
@@ -337,7 +339,9 @@ class TaskViewSetTests(TestCase):
         self.assertEqual(self.task1.completed_minutes, 20)
         self.assertFalse(self.task1.completed)
 
-    def test_patch_task_buffer_only_shows_reschedule_message_when_existing_schedule_conflicts(self):
+    def test_patch_task_buffer_only_shows_reschedule_message_when_existing_schedule_conflicts(
+        self,
+    ):
         self.client.force_authenticate(user=self.user)
         allocation_start = self.now + datetime.timedelta(days=1, hours=1)
         allocation_end = allocation_start + datetime.timedelta(minutes=30)
@@ -361,7 +365,9 @@ class TaskViewSetTests(TestCase):
             allocation=[
                 {
                     "start": allocation_end.isoformat(),
-                    "end": (allocation_end + datetime.timedelta(minutes=30)).isoformat(),
+                    "end": (
+                        allocation_end + datetime.timedelta(minutes=30)
+                    ).isoformat(),
                 }
             ],
             total_task_allocations=1,
@@ -405,7 +411,9 @@ class TaskViewSetTests(TestCase):
             allocation=[
                 {
                     "start": allocation_end.isoformat(),
-                    "end": (allocation_end + datetime.timedelta(minutes=30)).isoformat(),
+                    "end": (
+                        allocation_end + datetime.timedelta(minutes=30)
+                    ).isoformat(),
                 }
             ],
             total_task_allocations=1,
@@ -415,7 +423,9 @@ class TaskViewSetTests(TestCase):
             f"/api/tasks/{self.task1.id}/save-and-reschedule/",
             {
                 "buffer_after_minutes": 10,
-                "start_date": (self.now + datetime.timedelta(days=1)).date().isoformat(),
+                "start_date": (self.now + datetime.timedelta(days=1))
+                .date()
+                .isoformat(),
             },
             format="json",
         )

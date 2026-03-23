@@ -146,7 +146,11 @@ class TaskViewSet(viewsets.ModelViewSet):
             )
             results = scheduler.schedule_tasks(start_date=start_date)
             result = next(
-                (schedule_result for schedule_result in results if schedule_result.task_id == task.id),
+                (
+                    schedule_result
+                    for schedule_result in results
+                    if schedule_result.task_id == task.id
+                ),
                 None,
             )
             if not result or not result.success or not result.segments:

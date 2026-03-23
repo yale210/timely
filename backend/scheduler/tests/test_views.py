@@ -149,8 +149,12 @@ class SchedulerViewsTests(APITestCase):
             Event.objects.create(
                 user=self.user,
                 title=f"Block {blocked_day.isoformat()}",
-                start_time=timezone.make_aware(datetime.combine(blocked_day, time(7, 0))),
-                end_time=timezone.make_aware(datetime.combine(blocked_day, time(23, 0))),
+                start_time=timezone.make_aware(
+                    datetime.combine(blocked_day, time(7, 0))
+                ),
+                end_time=timezone.make_aware(
+                    datetime.combine(blocked_day, time(23, 0))
+                ),
             )
 
         task = Task.objects.create(
@@ -159,7 +163,9 @@ class SchedulerViewsTests(APITestCase):
             description="",
             estimated_minutes=30,
             start_time=timezone.make_aware(datetime.combine(base_date, time(7, 0))),
-            deadline=timezone.make_aware(datetime.combine(base_date + timedelta(days=9), time(23, 0))),
+            deadline=timezone.make_aware(
+                datetime.combine(base_date + timedelta(days=9), time(23, 0))
+            ),
             importance=5,
             completed=False,
             allow_split=True,
@@ -175,7 +181,9 @@ class SchedulerViewsTests(APITestCase):
         task.refresh_from_db()
         self.assertEqual(task.total_task_allocations, 1)
 
-    def test_schedule_with_replace_existing_reschedules_without_separate_unschedule(self):
+    def test_schedule_with_replace_existing_reschedules_without_separate_unschedule(
+        self,
+    ):
         now = timezone.now()
         original_start = now + timedelta(hours=1)
         Event.objects.create(

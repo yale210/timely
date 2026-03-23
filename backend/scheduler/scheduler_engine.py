@@ -140,7 +140,9 @@ class Scheduler:
     def _expand_task_segment(
         self, task: Task, start: datetime, end: datetime
     ) -> Tuple[datetime, datetime]:
-        buffer_before_minutes, buffer_after_minutes = self._get_task_buffer_minutes(task)
+        buffer_before_minutes, buffer_after_minutes = self._get_task_buffer_minutes(
+            task
+        )
         return (
             start - timedelta(minutes=buffer_before_minutes),
             end + timedelta(minutes=buffer_after_minutes),
@@ -150,7 +152,9 @@ class Scheduler:
         self, task: Task, slot: Tuple[datetime, datetime]
     ) -> Tuple[datetime, datetime] | None:
         start, end = slot
-        buffer_before_minutes, buffer_after_minutes = self._get_task_buffer_minutes(task)
+        buffer_before_minutes, buffer_after_minutes = self._get_task_buffer_minutes(
+            task
+        )
         actual_start = start + timedelta(minutes=buffer_before_minutes)
         actual_end = end - timedelta(minutes=buffer_after_minutes)
         if actual_end <= actual_start:
@@ -329,9 +333,7 @@ class Scheduler:
             add_overlap(start, end, scheduled_category_ids)
 
         if current_segments:
-            task_category_ids = set(
-                task.categories.values_list("id", flat=True)
-            )
+            task_category_ids = set(task.categories.values_list("id", flat=True))
             for start, end in current_segments:
                 add_overlap(start, end, task_category_ids)
 
@@ -473,7 +475,10 @@ class Scheduler:
                     task,
                     start.date(),
                 )
-                if category_minutes_left is not None and remaining_minutes > category_minutes_left:
+                if (
+                    category_minutes_left is not None
+                    and remaining_minutes > category_minutes_left
+                ):
                     continue
                 if free_minutes >= remaining_minutes:
                     scheduled_end = start + timedelta(minutes=remaining_minutes)
@@ -527,9 +532,14 @@ class Scheduler:
                 current_date,
                 current_segments=segments,
             )
-            if category_minutes_left is not None and category_minutes_left < min_block_minutes:
+            if (
+                category_minutes_left is not None
+                and category_minutes_left < min_block_minutes
+            ):
                 continue
-            buffer_before_minutes, buffer_after_minutes = self._get_task_buffer_minutes(task)
+            buffer_before_minutes, buffer_after_minutes = self._get_task_buffer_minutes(
+                task
+            )
             day_remaining = remaining
             day_segments: List[Tuple[datetime, datetime]] = []
             day_category_minutes_left = category_minutes_left
