@@ -7,14 +7,14 @@ import api from "@/services/api";
  */
 export const exportEvents = async (): Promise<string> => {
   
-  const response = await api.get("/api/export/", {
+  const response = await api.get<string>("/api/export/", {
     headers: {
         'Authorization': `Token ${localStorage.getItem('auth_token')}`
     }
   });
 
 
-  if (response.status != 200) {
+  if (response.status !== 200) {
     throw new Error("Error Exporting Events")
   }
   return response.data

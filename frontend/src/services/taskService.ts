@@ -2,6 +2,10 @@ import api from "@/services/api";
 
 import { type Category, type Task, type TaskUpdatedResponse,  type TaskSubmission } from "@/types";
 
+type DeleteResponse = {
+  message: string;
+};
+
 /**
  * Retrieves a list of tasks from the server, optionally filtered by the provided criteria.
  * @param filters - An optional object containing filtration criteria.
@@ -53,7 +57,7 @@ export const getCategories = async (): Promise<Category[]> => {
 
 export const deleteEvents = async (): Promise<string> => {
   
-  const response = await api.delete("/api/delete_events/");
+  const response = await api.delete<DeleteResponse>("/api/delete_events/");
   console.log("AAA")
   console.log(response.data.message)
   
@@ -63,9 +67,8 @@ export const deleteEvents = async (): Promise<string> => {
 
 export const deleteTasks = async (): Promise<string> => {
   
-  const response = await api.delete("/api/delete_tasks/");
+  const response = await api.delete<DeleteResponse>("/api/delete_tasks/");
   
   return response.data.message;
   
 };
-

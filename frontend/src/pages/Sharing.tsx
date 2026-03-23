@@ -136,7 +136,7 @@ export default function Sharing() {
                       setActiveTab(tab)
 
                       if (tab == "requests") {
-                        fetchShares();
+                        void fetchShares();
                       }
                     }}
                     className={`flex-1 rounded-lg px-4 py-2 text-sm font-semibold transition-colors ${

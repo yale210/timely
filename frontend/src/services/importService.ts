@@ -1,5 +1,9 @@
 import api from "@/services/api";
 
+type ImportResponse = {
+  message: string;
+};
+
 /**
  * Retrieves the weekly task summary for a given week.
  * @param date - Optional date (YYYY-MM-DD) within the desired week.
@@ -10,20 +14,19 @@ export const importEvents = async (file: File): Promise<string> => {
     data.append("file", file)
 
 
-    const response = await api.post("/api/import/", data, {
+    const response = await api.post<ImportResponse>("/api/import/", data, {
         headers: {
             'Authorization': `Token ${localStorage.getItem('auth_token')}`
         },
     });
 
-    if (response.status != 200) {
-    throw new Error("Error Importing Events")
+    if (response.status !== 200) {
+        throw new Error("Error Importing Events")
     }
     
     alert(response.data.message)
     window.location.reload()
     
-    return response.data
+    return response.data.message
 };
   
-
