@@ -72,6 +72,11 @@ const MESSAGE_BANDS = [
   },
 ] as const
 
+/**
+ * Displays the average percentage summary card and motivational message for the gradebook.
+ * @param props - Gradebook summary inputs.
+ * @returns The rendered average percentage summary card.
+ */
 export default function GradebookFilterCategories(props: GradeBookFilterCategoriesProps) {
   const {
     loading,
@@ -79,6 +84,11 @@ export default function GradebookFilterCategories(props: GradeBookFilterCategori
     filteredGrades,
   } = props
 
+  /**
+   * Returns the colour treatment for the average summary card.
+   * @param p - Current average percentage or null when unavailable.
+   * @returns Tailwind classes for the card tone.
+   */
   function averageToneClass(p: number | null): string {
     if (p === null) return "bg-gray-200 text-gray-900"
     if (p < 50) return "bg-red-200 text-red-950"

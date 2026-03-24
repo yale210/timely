@@ -1,6 +1,9 @@
 import type { Category } from "./category";
 import type { Event } from "./event";
 
+/**
+ * Supported assessment type values.
+ */
 export type AssessmentType =
   | "COURSEWORK"
   | "EXAM"
@@ -11,12 +14,18 @@ export type AssessmentType =
   | "SUMMATIVE"
   | "OTHER";
 
+/**
+ * Event details used when an assessment is represented as a calendar event.
+ */
 export interface AssessmentEventDetails {
   start_time: string;
   end_time: string;
   location?: string;
 }
 
+/**
+ * Assessment record returned by the API.
+ */
 export interface Assessment {
   id: number;
   title: string;
@@ -36,6 +45,9 @@ export interface Assessment {
   updated_at: string;
 }
 
+/**
+ * Payload used to create or update an assessment.
+ */
 export interface AssessmentSubmission
   extends Omit<Partial<Assessment>, "categories" | "linked_event_details" | "assessment_category" | "module_category"> {
   categories?: number[];

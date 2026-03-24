@@ -7,7 +7,7 @@ interface GradebookHeaderProps {
   sortBy: "date_desc" | "date_asc" | "percentage_desc" | "percentage_asc" | "name_asc"
   performanceFilter: "all" | "excellent" | "good" | "needs_attention"
   selectedCategoryId: number | null
-  categories: Array<{ id: number; text: string }>
+  categories: { id: number; text: string }[]
   onSearchChange: Dispatch<SetStateAction<string>>
   onSortChange: Dispatch<SetStateAction<"date_desc" | "date_asc" | "percentage_desc" | "percentage_asc" | "name_asc">>
   onPerformanceFilterChange: Dispatch<SetStateAction<"all" | "excellent" | "good" | "needs_attention">>

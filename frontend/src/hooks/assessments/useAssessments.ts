@@ -10,6 +10,9 @@ interface AssessmentSections {
   completed: Assessment[];
 }
 
+/**
+ * State exposed by the assessments hook.
+ */
 export interface UseAssessmentsState {
   assessments: Assessment[];
   categories: Category[];
@@ -47,6 +50,11 @@ interface UseAssessmentsReturn {
   actions: UseAssessmentsActions;
 }
 
+/**
+ * Determines whether an assessment should be treated as completed in the UI.
+ * @param assessment - Assessment to evaluate.
+ * @returns Whether the assessment is completed or has already passed.
+ */
 const isAssessmentCompleted = (assessment: Assessment): boolean => {
   if (assessment.completed) {
     return true;
@@ -56,6 +64,10 @@ const isAssessmentCompleted = (assessment: Assessment): boolean => {
   return new Date(comparisonDate).getTime() < Date.now();
 };
 
+/**
+ * Reads the local gradebook feature flag.
+ * @returns Whether gradebook is currently enabled.
+ */
 const readGradebookFeatureFlag = (): boolean => {
   const raw = localStorage.getItem("feature_gradebook_enabled");
   if (raw === null) {
@@ -64,6 +76,10 @@ const readGradebookFeatureFlag = (): boolean => {
   return raw === "true";
 };
 
+/**
+ * Provides state and actions for the assessments page.
+ * @returns Structured assessments state, loading, error, and actions.
+ */
 export const useAssessments = (): UseAssessmentsReturn => {
   const [assessments, setAssessments] = useState<Assessment[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);

@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import { hexToRgba } from "@/utils/colorUtils";
 import type { Assessment, Category } from "@/types";
 
@@ -26,13 +27,13 @@ const formatCompactDateTime = (value: string): string => {
   });
 };
 
-const getCountdownLabel = (value: string, isCompleted: boolean): string | null => {
+const getCountdownLabel = (value: string, nowMs: number, isCompleted: boolean): string | null => {
   if (isCompleted) {
     return null;
   }
 
   const targetTime = new Date(value).getTime();
-  const diffMs = targetTime - Date.now();
+  const diffMs = targetTime - nowMs;
   if (diffMs <= 0) {
     return "Now";
   }
@@ -46,8 +47,8 @@ const getCountdownLabel = (value: string, isCompleted: boolean): string | null =
   return `${Math.ceil(diffDays)}d left`;
 };
 
-const getCountdownTone = (value: string) => {
-  const diffMs = new Date(value).getTime() - Date.now();
+const getCountdownTone = (value: string, nowMs: number) => {
+  const diffMs = new Date(value).getTime() - nowMs;
   const diffDays = diffMs / (1000 * 60 * 60 * 24);
 
   if (diffDays < 3) {
@@ -69,16 +70,27 @@ const AssessmentCard = ({
   onAddToGradebook,
   isGradebookEnabled,
 }: AssessmentCardProps) => {
+  const [currentTime, setCurrentTime] = useState(() => Date.now());
   const comparisonDate = assessment.linked_event_details?.end_time ?? assessment.due_date;
   const countdownDate = assessment.linked_event_details?.start_time ?? assessment.due_date;
-  const isCompleted = assessment.completed || new Date(comparisonDate).getTime() < Date.now();
-  const isOverdue = !isCompleted && new Date(assessment.due_date).getTime() < Date.now();
+  const isCompleted = assessment.completed || new Date(comparisonDate).getTime() < currentTime;
+  const isOverdue = !isCompleted && new Date(assessment.due_date).getTime() < currentTime;
   const primaryCategory = assessment.assessment_category ?? assessment.categories[0] ?? null;
   const supplementalCategories = assessment.categories.filter((category) => (
     category.id !== assessment.assessment_category?.id && category.id !== assessment.module_category?.id
   ));
-  const countdownLabel = getCountdownLabel(countdownDate, isCompleted);
-  const countdownTone = getCountdownTone(countdownDate);
+  useEffect(() => {
+    const intervalId = window.setInterval(() => {
+      setCurrentTime(Date.now());
+    }, 60_000);
+
+    return () => {
+      window.clearInterval(intervalId);
+    };
+  }, []);
+
+  const countdownLabel = getCountdownLabel(countdownDate, currentTime, isCompleted);
+  const countdownTone = getCountdownTone(countdownDate, currentTime);
   const cardColour = assessment.module_category?.colour ?? "#e5e7eb";
   const dueItem = {
     value: assessment.linked_event_details

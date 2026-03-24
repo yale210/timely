@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { type Task } from "@/types";
 import { hexToRgba } from "@/utils/colorUtils";
 import completeSoundUrl from "@/assets/sounds/task-complete.mp3";
@@ -20,14 +20,24 @@ interface TaskCardProps {
 const TaskCard = ({ task, onToggleComplete, onClick }: TaskCardProps) => {
   const [isHovered, setIsHovered] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
-  const now = Date.now();
+  const [currentTime, setCurrentTime] = useState(() => Date.now());
   const startTimeMs = new Date(task.start_time).getTime();
   const deadlineMs = new Date(task.deadline).getTime();
-  const isNotStarted = !task.completed && startTimeMs > now;
-  const isOverdue = deadlineMs < now && !task.completed;
+  const isNotStarted = !task.completed && startTimeMs > currentTime;
+  const isOverdue = deadlineMs < currentTime && !task.completed;
   const completeSoundRef = useRef<HTMLAudioElement | null>(
     typeof Audio === "undefined" ? null : new Audio(completeSoundUrl),
   );
+
+  useEffect(() => {
+    const intervalId = window.setInterval(() => {
+      setCurrentTime(Date.now());
+    }, 60_000);
+
+    return () => {
+      window.clearInterval(intervalId);
+    };
+  }, []);
 
   const playCompleteSound = () => {
     if (!completeSoundRef.current) return;
@@ -68,13 +78,13 @@ const TaskCard = ({ task, onToggleComplete, onClick }: TaskCardProps) => {
 
   const importanceInfo = getImportanceInfo(task.importance);
 
-  const getCountdownLabel = (value: string, prefix?: string): string | null => {
+  const getCountdownLabel = (value: string, nowMs: number, prefix?: string): string | null => {
     if (task.completed) {
       return null;
     }
 
     const targetTime = new Date(value).getTime();
-    const diffMs = targetTime - Date.now();
+    const diffMs = targetTime - nowMs;
     if (diffMs <= 0) {
       return prefix ? "Now" : "Overdue";
     }
@@ -88,8 +98,8 @@ const TaskCard = ({ task, onToggleComplete, onClick }: TaskCardProps) => {
     return prefix ? `${prefix} ${Math.ceil(diffDays)}d` : `${Math.ceil(diffDays)}d left`;
   };
 
-  const getCountdownTone = (value: string) => {
-    const diffMs = new Date(value).getTime() - Date.now();
+  const getCountdownTone = (value: string, nowMs: number) => {
+    const diffMs = new Date(value).getTime() - nowMs;
     const diffDays = diffMs / (1000 * 60 * 60 * 24);
 
     if (diffDays < 1) {
@@ -108,11 +118,12 @@ const TaskCard = ({ task, onToggleComplete, onClick }: TaskCardProps) => {
   const countdownTarget = isNotStarted ? task.start_time : task.deadline;
   const countdownLabel = getCountdownLabel(
     countdownTarget,
+    currentTime,
     isNotStarted ? "Starts in" : undefined,
   );
   const countdownTone = isNotStarted
     ? "border-gray-200 bg-gray-50 text-gray-700"
-    : getCountdownTone(countdownTarget);
+    : getCountdownTone(countdownTarget, currentTime);
 
   const formatDue = (isoString: string) => {
     const date = new Date(isoString);

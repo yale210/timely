@@ -160,10 +160,7 @@ export default function App() {
         </RequireAuth>}
       />
 
-      <Route path="*" element={
-        <NotFound/>
-      }>
-      </Route>
+      <Route path="*" element={<NotFound />} />
 
     </Routes>
   )

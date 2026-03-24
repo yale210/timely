@@ -1,4 +1,4 @@
-import { Fragment, useEffect, useMemo, useState, type FormEvent } from "react";
+import { Fragment, useMemo, useState, type FormEvent } from "react";
 import { Dialog, DialogPanel, DialogTitle, Transition, TransitionChild } from "@headlessui/react";
 
 import useCategories from "@/hooks/tasks/useCategories";
@@ -26,29 +26,23 @@ const getCookie = (name: string): string | null => {
   return match ? decodeURIComponent(match[2]) : null;
 };
 
-const CreateGradeModal = ({
-  open,
+interface CreateGradeModalFormProps extends Props {
+  categories: Category[];
+}
+
+const CreateGradeModalForm = ({
   onClose,
   onCreated,
   onUpdated,
   initialData,
-}: Props) => {
+  categories,
+}: CreateGradeModalFormProps) => {
   const [name, setName] = useState(initialData?.name ?? "");
   const [score, setScore] = useState<number | "">(initialData?.score ?? "");
   const [total, setTotal] = useState<number | "">(initialData?.total ?? "");
   const [date, setDate] = useState(initialData?.date ?? "");
   const [error, setError] = useState<string | null>(null);
   const [categoryId, setCategoryId] = useState<number | null>(initialData?.categoryId ?? null);
-  const { categories } = useCategories();
-
-  useEffect(() => {
-    setName(initialData?.name ?? "");
-    setScore(initialData?.score ?? "");
-    setTotal(initialData?.total ?? "");
-    setDate(initialData?.date ?? "");
-    setCategoryId(initialData?.categoryId ?? null);
-    setError(null);
-  }, [initialData, open]);
 
   const selectedCategory = useMemo(
     () => categories.find((category: Category) => category.id === categoryId),
@@ -67,11 +61,6 @@ const CreateGradeModal = ({
       boxShadow: `inset 0 0 0 1px ${hexToRgba(category.colour, 0.2)}`,
     };
   };
-
-  if (!open) {
-    return null;
-  }
-
   const createGrade = async (payload: Record<string, unknown>) => {
     const csrf = getCookie("csrftoken");
     return fetch("/api/grades/", {
@@ -142,33 +131,7 @@ const CreateGradeModal = ({
   };
 
   return (
-    <Transition show={open} as={Fragment}>
-      <Dialog as="div" className="relative z-50" onClose={onClose}>
-        <TransitionChild
-          as={Fragment}
-          enter="ease-out duration-300"
-          enterFrom="opacity-0"
-          enterTo="opacity-100"
-          leave="ease-in duration-200"
-          leaveFrom="opacity-100"
-          leaveTo="opacity-0"
-        >
-          <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm transition-opacity" />
-        </TransitionChild>
-
-        <div className="fixed inset-0 z-10 overflow-y-auto">
-          <div className="flex min-h-full items-end justify-center p-0 sm:items-center sm:p-4">
-            <TransitionChild
-              as={Fragment}
-              enter="ease-out duration-300"
-              enterFrom="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
-              enterTo="opacity-100 translate-y-0 sm:scale-100"
-              leave="ease-in duration-200"
-              leaveFrom="opacity-100 translate-y-0 sm:scale-100"
-              leaveTo="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
-            >
-              <DialogPanel className="w-full transform bg-white shadow-xl transition-all sm:max-w-xl sm:rounded-2xl">
-                <form onSubmit={(event) => void submit(event)} className="flex max-h-[100dvh] flex-col sm:max-h-[90vh]">
+    <form onSubmit={(event) => void submit(event)} className="flex max-h-[100dvh] flex-col sm:max-h-[90vh]">
                   <div className="flex items-center justify-between border-b border-gray-200 px-6 py-4">
                     <DialogTitle className="text-lg font-semibold text-black">
                       {initialData ? "Edit grade" : "Create grade"}
@@ -297,7 +260,61 @@ const CreateGradeModal = ({
                       {initialData ? "Update grade" : "Create grade"}
                     </button>
                   </div>
-                </form>
+    </form>
+  );
+};
+
+const CreateGradeModal = ({
+  open,
+  onClose,
+  onCreated,
+  onUpdated,
+  initialData,
+}: Props) => {
+  const { categories } = useCategories();
+
+  if (!open) {
+    return null;
+  }
+
+  const formKey = `${initialData?.id ?? "new"}-${initialData?.name ?? ""}-${open ? "open" : "closed"}`;
+
+  return (
+    <Transition show={open} as={Fragment}>
+      <Dialog as="div" className="relative z-50" onClose={onClose}>
+        <TransitionChild
+          as={Fragment}
+          enter="ease-out duration-300"
+          enterFrom="opacity-0"
+          enterTo="opacity-100"
+          leave="ease-in duration-200"
+          leaveFrom="opacity-100"
+          leaveTo="opacity-0"
+        >
+          <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm transition-opacity" />
+        </TransitionChild>
+
+        <div className="fixed inset-0 z-10 overflow-y-auto">
+          <div className="flex min-h-full items-end justify-center p-0 sm:items-center sm:p-4">
+            <TransitionChild
+              as={Fragment}
+              enter="ease-out duration-300"
+              enterFrom="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
+              enterTo="opacity-100 translate-y-0 sm:scale-100"
+              leave="ease-in duration-200"
+              leaveFrom="opacity-100 translate-y-0 sm:scale-100"
+              leaveTo="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
+            >
+              <DialogPanel className="w-full transform bg-white shadow-xl transition-all sm:max-w-xl sm:rounded-2xl">
+                <CreateGradeModalForm
+                  key={formKey}
+                  open={open}
+                  onClose={onClose}
+                  onCreated={onCreated}
+                  onUpdated={onUpdated}
+                  initialData={initialData}
+                  categories={categories}
+                />
               </DialogPanel>
             </TransitionChild>
           </div>
