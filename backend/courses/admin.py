@@ -2,7 +2,14 @@ from django.contrib import admin
 from django.utils import timezone
 from django.utils.html import format_html
 
-from courses.models import Course, CourseEnrollment, CourseEvent, CourseStaff, Student, Teacher
+from courses.models import (
+    Course,
+    CourseEnrollment,
+    CourseEvent,
+    CourseStaff,
+    Student,
+    Teacher,
+)
 from courses.models.course import CourseJoinCode
 
 
@@ -13,6 +20,7 @@ class CourseStaffAdmin(admin.ModelAdmin):
     search_fields = ("course__name", "student__username", "student__email")
     autocomplete_fields = ("course", "student")
     list_editable = ("active",)
+
 
 @admin.action(description="Expire selected join codes")
 def expire_selected_codes(modeladmin, request, queryset):
@@ -39,16 +47,17 @@ class CourseJoinCodeAdmin(admin.ModelAdmin):
 
     @admin.display(description="Join URL")
     def copy_join_url(self, obj):
-        join_url = f"/courses/join-by-code/"
+        join_url = "/courses/join-by-code/"
         return format_html(
             '<span title="POST {} with code={}">Copy join URL</span>',
             join_url,
             obj.code,
         )
 
+
 @admin.register(Course)
 class CourseAdmin(admin.ModelAdmin):
-    search_fields = ("name","description")
+    search_fields = ("name", "description")
 
 
 admin.site.register(Student)
