@@ -19,6 +19,7 @@ import type {
   TaskSubmission,
 } from "@/types";
 import { buildCalendarEntries, type CalendarEntry } from "@/utils/calendarAdapter";
+import { hasTaskBufferRescheduleConflict } from "@/utils/apiErrors";
 import completeSoundUrl from "@/assets/sounds/task-complete.mp3";
 
 interface CalendarState {
@@ -38,6 +39,7 @@ interface CalendarState {
   headerHeight: number;
   timeGutterWidth: number;
   isRescheduling: boolean;
+  rescheduleWarnings: { taskId: number; title: string; reason: string }[];
 }
 
 interface CalendarLoading {
@@ -153,6 +155,23 @@ const parseClockMinutes = (value: string): number => {
   return (hour * 60) + minute;
 };
 
+const normalizeInteractionStart = (value: Date): Date => {
+  const next = new Date(value);
+  next.setSeconds(0, 0);
+  return next;
+};
+
+const normalizeInteractionEnd = (value: Date): Date => {
+  const next = new Date(value);
+  if (next.getSeconds() === 0 && next.getMilliseconds() === 0) {
+    return next;
+  }
+
+  next.setSeconds(0, 0);
+  next.setMinutes(next.getMinutes() + 1);
+  return next;
+};
+
 const getDayScheduleWindow = (preference: Preference, slotDate: Date): { start: string; end: string } => {
   const dayKey = slotDate.getDay() === 0 ? 7 : slotDate.getDay();
   const schedule = preference.day_schedule ?? [];
@@ -221,6 +240,9 @@ export const useCalendar = (): UseCalendarReturn => {
   const [categoryError, setCategoryError] = useState<string | null>(null);
   const [eventError, setEventError] = useState<string | null>(null);
   const [reschedulingError, setReschedulingError] = useState<string | null>(null);
+  const [rescheduleWarnings, setRescheduleWarnings] = useState<
+    { taskId: number; title: string; reason: string }[]
+  >([]);
   const [headerHeight, setHeaderHeight] = useState(0);
   const [timeGutterWidth, setTimeGutterWidth] = useState(56);
   const [exportingError, setExportingError] = useState<string | null>(null);
@@ -406,17 +428,45 @@ export const useCalendar = (): UseCalendarReturn => {
     async (data: TaskSubmission) => {
       try {
         if (selectedItem && "deadline" in selectedItem && selectedItem.id !== 0) {
-          await taskService.updateTask(selectedItem.id, data);
+          const bufferBeforeChanged =
+            typeof data.buffer_before_minutes === "number" &&
+            data.buffer_before_minutes !== (selectedItem.buffer_before_minutes ?? 0);
+          const bufferAfterChanged =
+            typeof data.buffer_after_minutes === "number" &&
+            data.buffer_after_minutes !== (selectedItem.buffer_after_minutes ?? 0);
+          const completedMinutesChanged =
+            typeof data.completed_minutes === "number" &&
+            data.completed_minutes !== (selectedItem.completed_minutes ?? 0);
+          if (bufferBeforeChanged || bufferAfterChanged || completedMinutesChanged) {
+            await taskService.saveAndRescheduleTask(
+              selectedItem.id,
+              data,
+              moment(date).format("YYYY-MM-DD"),
+            );
+          } else {
+            await taskService.updateTask(selectedItem.id, data);
+          }
         } else {
           await taskService.createTask(data);
         }
         await fetchTasks();
         closeSidebar();
       } catch (error) {
+        if (selectedItem && "deadline" in selectedItem && selectedItem.id !== 0 && hasTaskBufferRescheduleConflict(error)) {
+          await taskService.saveAndRescheduleTask(
+            selectedItem.id,
+            data,
+            moment(date).format("YYYY-MM-DD"),
+          );
+          await fetchTasks();
+          closeSidebar();
+          return;
+        }
         console.error(error);
+        throw error;
       }
     },
-    [closeSidebar, fetchTasks, selectedItem],
+    [closeSidebar, date, fetchTasks, selectedItem],
   );
 
   const submitEvent = useCallback(
@@ -480,12 +530,13 @@ export const useCalendar = (): UseCalendarReturn => {
   const rescheduleTasks = useCallback(async () => {
     setIsRescheduling(true);
     setReschedulingError(null);
+    setRescheduleWarnings([]);
 
     try {
-      await schedulerService.unscheduleTasks();
       const response = await schedulerService.scheduleTasks({
         start_date: moment(date).format("YYYY-MM-DD"),
         allow_split: true,
+        replace_existing: true,
       });
       const nextOrder: Record<number, number> = {};
       // Preserve scheduler order so newly placed tasks can animate into the calendar in sequence.
@@ -495,6 +546,18 @@ export const useCalendar = (): UseCalendarReturn => {
           nextOrder[result.task_id] = index;
         });
       setScheduleOrder(nextOrder);
+      setRescheduleWarnings(
+        response.results
+          .filter((result) => !result.success)
+          .map((result) => {
+            const matchingTask = tasks.find((task) => task.id === result.task_id);
+            return {
+              taskId: result.task_id,
+              title: matchingTask?.title ?? `Task #${result.task_id}`,
+              reason: result.reason ?? "The scheduler could not find enough time before the deadline.",
+            };
+          }),
+      );
       await fetchTasks();
     } catch (error) {
       console.error(error);
@@ -502,7 +565,7 @@ export const useCalendar = (): UseCalendarReturn => {
     } finally {
       setIsRescheduling(false);
     }
-  }, [date, fetchTasks]);
+  }, [date, fetchTasks, tasks]);
 
   const exportEvents = useCallback(async () => {
     setIsExporting(true);
@@ -645,9 +708,6 @@ export const useCalendar = (): UseCalendarReturn => {
 
   const updateTaskAllocation = useCallback(
     async (entry: CalendarEntry, start: Date, end: Date) => {
-      if (entry.taskData?.locked) {
-        return;
-      }
       if (typeof entry.allocationIndex !== "number") {
         return;
       }
@@ -747,11 +807,13 @@ export const useCalendar = (): UseCalendarReturn => {
       if (Object.keys(scheduleOrder).length > 0) {
         setScheduleOrder({});
       }
+      const nextStart = normalizeInteractionStart(new Date(start));
+      const nextEnd = normalizeInteractionEnd(new Date(end));
       if (event.kind === "task") {
-        await updateTaskAllocation(event, new Date(start), new Date(end));
+        await updateTaskAllocation(event, nextStart, nextEnd);
         return;
       }
-      await updateCalendarEvent(event, new Date(start), new Date(end));
+      await updateCalendarEvent(event, nextStart, nextEnd);
     },
     [scheduleOrder, updateCalendarEvent, updateTaskAllocation],
   );
@@ -761,11 +823,13 @@ export const useCalendar = (): UseCalendarReturn => {
       if (Object.keys(scheduleOrder).length > 0) {
         setScheduleOrder({});
       }
+      const nextStart = normalizeInteractionStart(new Date(start));
+      const nextEnd = normalizeInteractionEnd(new Date(end));
       if (event.kind === "task") {
-        await updateTaskAllocation(event, new Date(start), new Date(end));
+        await updateTaskAllocation(event, nextStart, nextEnd);
         return;
       }
-      await updateCalendarEvent(event, new Date(start), new Date(end));
+      await updateCalendarEvent(event, nextStart, nextEnd);
     },
     [scheduleOrder, updateCalendarEvent, updateTaskAllocation],
   );
@@ -782,7 +846,11 @@ export const useCalendar = (): UseCalendarReturn => {
           completeSoundRef.current.currentTime = 0;
           void completeSoundRef.current.play().catch(() => undefined);
         }
-        await taskService.updateTask(taskId, { completed: !task.completed });
+        const nextCompleted = !task.completed;
+        await taskService.updateTask(taskId, {
+          completed: nextCompleted,
+          completed_minutes: nextCompleted ? task.estimated_minutes : 0,
+        });
         await fetchTasks();
       } catch (error) {
         console.error(error);
@@ -809,6 +877,7 @@ export const useCalendar = (): UseCalendarReturn => {
       headerHeight,
       timeGutterWidth,
       isRescheduling,
+      rescheduleWarnings,
     },
     loading: {
       initializing: isInitializing,
@@ -855,4 +924,3 @@ export const useCalendar = (): UseCalendarReturn => {
     },
   };
 };
-

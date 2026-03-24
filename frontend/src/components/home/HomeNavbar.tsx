@@ -2,9 +2,11 @@ import { useState } from 'react'
 import { Dialog, DialogPanel } from '@headlessui/react'
 import { Bars3Icon, XMarkIcon } from '@heroicons/react/24/outline'
 import { Link } from "react-router-dom"
+import { LogoMark } from "@/components/ui"
 
 const guestNavigation = [
     { name: 'Home', href: '/' },
+    { name: 'About', href: '/about' },
     { name: 'Signup', href: '/signup' },
 ]
 
@@ -59,7 +61,7 @@ export default function HomeNavbar() {
                         <div className="flex items-center justify-between">
                             <Link to="/" className="-m-1.5 p-1.5">
                                 <span className="sr-only">Timely</span>
-                                <img alt="Timely" src="/t.png" className="h-8 w-8" />
+                                <LogoMark className="h-8 w-8" />
                             </Link>
                             <button
                                 type="button"

@@ -1,3 +1,5 @@
+"""Static fixture data used by the profile seeder."""
+
 profiles = [
     {
         "model": "profiles.profile",

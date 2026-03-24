@@ -31,7 +31,7 @@
 }
 
 .event-slot.is-split {
-  outline: 2px dashed #f59e1b;
+  outline: 2px dashed color-mix(in srgb, var(--primary) 70%, var(--text-color));
   outline-offset: -2px;
 }
 
@@ -96,9 +96,9 @@
   }
 }
 
-/* Calendar hour slot height */
+/* Keep the visible grid hourly while allowing finer internal drag resolution. */
 .rbc-time-view .rbc-time-slot {
-  min-height: 36px;
+  min-height: 0;
 }
 
 .calendar-grid-shell .rbc-timeslot-group {
@@ -106,7 +106,7 @@
   min-height: 64px;
 }
 
-.calendar-grid-shell .calendar-off-hours-slot {
+.calendar-grid-shell .rbc-day-slot .calendar-off-hours-slot {
   background-color: color-mix(in srgb, var(--text-color) 6%, var(--background));
 }
 
@@ -124,7 +124,7 @@
 
 .calendar-grid-shell .rbc-day-slot .rbc-time-slot,
 .calendar-grid-shell .rbc-time-slot {
-  border-top: 1px solid color-mix(in srgb, var(--text-color) 20%, var(--background)) !important;
+  border-top: 0 !important;
 }
 
 .calendar-grid-shell .rbc-time-content > .rbc-day-slot {

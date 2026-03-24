@@ -105,8 +105,12 @@ describe("AppNavbar Component", () => {
   });
 
   it("renders the brand name and logo link", () => {
-    renderNavbar();
-    expect(screen.getByAltText("Timely")).toBeDefined();
+    render(
+      <MemoryRouter>
+        <AppNavbar />
+      </MemoryRouter>
+    );
+    expect(screen.getByRole("link", { name: "Timely" })).toBeDefined();
   });
 
   it("opens and closes the navigation drawer", () => {
@@ -270,7 +274,7 @@ describe("AppNavbar Component", () => {
     renderNavbar();
     
     fireEvent.click(screen.getByLabelText("Open navigation"));
-    const logoLink = screen.getByAltText("Timely").parentElement!;
+    const logoLink = screen.getByRole("link", { name: "Timely" });
     fireEvent.click(logoLink);
     expect(document.body.classList.contains("menu-open")).toBe(true);
   });

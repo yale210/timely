@@ -1,0 +1,9 @@
+[data-theme="forest-night"] {
+  --primary: #4fd1a5;
+  --primary-hover: #7be0bd;
+
+  --background: #0d1613;
+  --text-color: #e6f1ea;
+
+  --border: #24443a;
+}

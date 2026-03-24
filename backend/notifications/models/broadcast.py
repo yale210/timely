@@ -1,9 +1,15 @@
+"""Models for managing broadcast notification jobs."""
+
 from django.conf import settings
 from django.db import models
 
 
 class BroadcastJob(models.Model):
+    """Represents a bulk notification task targeting multiple users."""
+
     class Target(models.TextChoices):
+        """Possible targets for a broadcast job."""
+
         ALL = "all", "All users"
         STAFF = "staff", "Staff"
         ADMIN = "admin", "Admins"
@@ -11,6 +17,8 @@ class BroadcastJob(models.Model):
         RETRY_FAILED = "retry_failed", "Retry failed recipients"
 
     class Status(models.TextChoices):
+        """Execution status of a broadcast job."""
+
         QUEUED = "QUEUED", "Queued"
         IN_PROGRESS = "IN_PROGRESS", "In progress"
         COMPLETED = "COMPLETED", "Completed"
@@ -53,14 +61,21 @@ class BroadcastJob(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
+        """Meta options for BroadcastJob."""
+
         ordering = ["-queued_at"]
 
     def __str__(self):
+        """String representation of a BroadcastJob."""
         return f"BroadcastJob#{self.pk} {self.status}"
 
 
 class BroadcastRecipient(models.Model):
+    """Tracks the delivery status of a broadcast to a specific user."""
+
     class DeliveryStatus(models.TextChoices):
+        """Status of broadcast delivery to an individual recipient."""
+
         PENDING = "PENDING", "Pending"
         SENT = "SENT", "Sent"
         FAILED = "FAILED", "Failed"
@@ -94,15 +109,22 @@ class BroadcastRecipient(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
+        """Meta options for BroadcastRecipient."""
+
         unique_together = ("broadcast_job", "recipient")
         ordering = ["id"]
 
     def __str__(self):
+        """String representation of a BroadcastRecipient."""
         return f"BroadcastRecipient#{self.pk} {self.status}"
 
 
 class BroadcastAuditLog(models.Model):
+    """Audit log for actions taken on broadcast jobs."""
+
     class Action(models.TextChoices):
+        """Audited actions for broadcast jobs."""
+
         SEND = "SEND", "Send"
         RETRY = "RETRY", "Retry"
 
@@ -124,7 +146,10 @@ class BroadcastAuditLog(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
+        """Meta options for BroadcastAuditLog."""
+
         ordering = ["-created_at"]
 
     def __str__(self):
+        """String representation of a BroadcastAuditLog."""
         return f"BroadcastAuditLog#{self.pk} {self.action}"

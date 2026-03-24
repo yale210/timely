@@ -1,3 +1,5 @@
+"""Signal handlers for reacting to notification model changes."""
+
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 
@@ -9,18 +11,24 @@ from notifications.utils.websocket import notify_user
 
 @receiver(post_save, sender=Notification)
 def push_notification_on_create(sender, instance, created, **kwargs):
-    """
-    Signal handler triggered when a Notification instance is created.
+    """Signal handler triggered when a Notification instance is created.
+
     Sends a WebSocket message to the recipient, and queues a push
     notification task unless the instance skips push notifications.
-    """
 
+    Args:
+        sender: The model class.
+        instance: The actual instance being saved.
+        created: Boolean; True if a new record was created.
+        **kwargs: Supplemental arguments.
+    """
     if not created:
         return
 
     # Recalculate from the DB to avoid stale per-process cache drift.
     unread_count = refresh_unread_count(instance.recipient_id)
 
+    # Dispatch real-time update via WebSocket
     notify_user(
         instance.recipient_id,
         {
@@ -42,6 +50,7 @@ def push_notification_on_create(sender, instance, created, **kwargs):
         },
     )
 
+    # Queue push notification if not explicitly skipped
     if not getattr(instance, "_skip_push", False):
         send_push_notification.delay(
             instance.recipient_id,

@@ -1,7 +1,10 @@
+"""Tests for leaderboard API behavior."""
+
 from django.contrib.auth import get_user_model
 from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APITestCase
+
 from core.models import Friendship
 from profiles.models.profile import Profile
 
@@ -9,7 +12,10 @@ User = get_user_model()
 
 
 class LeaderboardAPIViewTests(APITestCase):
+    """Test leaderboard responses for authenticated and anonymous users."""
+
     def setUp(self):
+        """Create a user, a friend, a non-friend, and the leaderboard URL."""
         self.user = User.objects.create_user(
             username="me", password="password", email="me@example.com"
         )
@@ -34,6 +40,7 @@ class LeaderboardAPIViewTests(APITestCase):
         self.url = reverse("leaderboard")
 
     def test_leaderboard_authenticated_no_friends(self):
+        """Verify the leaderboard only includes the requester without friends."""
         self.client.force_authenticate(user=self.user)
         response = self.client.get(self.url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -42,7 +49,7 @@ class LeaderboardAPIViewTests(APITestCase):
         self.assertEqual(response.data[0]["name"], "Me")
 
     def test_leaderboard_authenticated_with_friends(self):
-        # Create friendship
+        """Verify accepted friends appear and results are level-ordered."""
         Friendship.objects.create(
             sender=self.user, receiver=self.friend, state=Friendship.State.ACCEPTED
         )
@@ -56,7 +63,7 @@ class LeaderboardAPIViewTests(APITestCase):
         self.assertEqual(response.data[1]["name"], "Me")  # Me has level 10
 
     def test_leaderboard_reverse_friendship(self):
-        # Create friendship where I am receiver
+        """Verify accepted friendships work regardless of sender direction."""
         Friendship.objects.create(
             sender=self.friend, receiver=self.user, state=Friendship.State.ACCEPTED
         )
@@ -67,5 +74,6 @@ class LeaderboardAPIViewTests(APITestCase):
         self.assertEqual(len(response.data), 2)
 
     def test_leaderboard_unauthenticated(self):
+        """Verify anonymous requests are rejected."""
         response = self.client.get(self.url)
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)

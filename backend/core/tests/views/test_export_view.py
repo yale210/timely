@@ -44,21 +44,13 @@ class ExportViewTests(TestCase):
     def test_export_one_event_only(self):
         self.client.login(username="testuser", password="password")
 
-        start = datetime.strptime("20260325T200000", "%Y%m%dT%H%M%S")
-        end = datetime.strptime("20260325T210000", "%Y%m%dT%H%M%S")
-        stamp = datetime.strptime("20260205T120548", "%Y%m%dT%H%M%S")
-        start_aware = timezone.make_aware(start)
-        end_aware = timezone.make_aware(end)
-        stamp_aware = timezone.make_aware(stamp)
-
         Event.objects.create(
             user=self.user,
             title="Title Event 1",
             description="Description Event 1",
             location="Location Event 1",
-            start_time=start_aware,
-            end_time=end_aware,
-            last_edited=stamp_aware,
+            start_time=timezone.make_aware(datetime(2026, 3, 25, 20, 0)),
+            end_time=timezone.make_aware(datetime(2026, 3, 25, 21, 0)),
         )
 
         response = self.client.get("/api/export/")
@@ -89,28 +81,13 @@ class ExportViewTests(TestCase):
     def test_export_two_events(self):
         self.client.login(username="testuser", password="password")
 
-        start = datetime.strptime("20260325T200000", "%Y%m%dT%H%M%S")
-        end = datetime.strptime("20260325T210000", "%Y%m%dT%H%M%S")
-        stamp = datetime.strptime("20260205T120548", "%Y%m%dT%H%M%S")
-        start_aware = timezone.make_aware(start)
-        end_aware = timezone.make_aware(end)
-        stamp_aware = timezone.make_aware(stamp)
-
-        start2 = datetime.strptime("20260425T200000", "%Y%m%dT%H%M%S")
-        end2 = datetime.strptime("20260425T210000", "%Y%m%dT%H%M%S")
-        stamp2 = datetime.strptime("20260205T120548", "%Y%m%dT%H%M%S")
-        start_aware2 = timezone.make_aware(start2)
-        end_aware2 = timezone.make_aware(end2)
-        stamp_aware2 = timezone.make_aware(stamp2)
-
         Event.objects.create(
             user=self.user,
             title="Title Event 1",
             description="Description Event 1",
             location="Location Event 1",
-            start_time=start_aware,
-            end_time=end_aware,
-            last_edited=stamp_aware,
+            start_time=timezone.make_aware(datetime(2026, 3, 25, 20, 0)),
+            end_time=timezone.make_aware(datetime(2026, 3, 25, 21, 0)),
         )
 
         Event.objects.create(
@@ -118,9 +95,8 @@ class ExportViewTests(TestCase):
             title="Title Event 2",
             description="Description Event 2",
             location="Location Event 2",
-            start_time=start_aware2,
-            end_time=end_aware2,
-            last_edited=stamp_aware2,
+            start_time=timezone.make_aware(datetime(2026, 4, 25, 20, 0)),
+            end_time=timezone.make_aware(datetime(2026, 4, 25, 21, 0)),
         )
 
         response = self.client.get("/api/export/")
@@ -161,21 +137,13 @@ class ExportViewTests(TestCase):
     def test_export_r_rule_1(self):
         self.client.login(username="testuser", password="password")
 
-        start = datetime.strptime("20260325T200000", "%Y%m%dT%H%M%S")
-        end = datetime.strptime("20260325T210000", "%Y%m%dT%H%M%S")
-        stamp = datetime.strptime("20260205T120548", "%Y%m%dT%H%M%S")
-        start_aware = timezone.make_aware(start)
-        end_aware = timezone.make_aware(end)
-        stamp_aware = timezone.make_aware(stamp)
-
         Event.objects.create(
             user=self.user,
             title="Title Event 1",
             description="Description Event 1",
             location="Location Event 1",
-            start_time=start_aware,
-            end_time=end_aware,
-            last_edited=stamp_aware,
+            start_time=timezone.make_aware(datetime(2026, 3, 25, 20, 0)),
+            end_time=timezone.make_aware(datetime(2026, 3, 25, 21, 0)),
             recurrence_interval=Event.RecurrenceInterval.DAILY,
             recurrence_end=None,
         )
