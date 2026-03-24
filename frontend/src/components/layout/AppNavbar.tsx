@@ -17,10 +17,12 @@ const navItems = [
 const featureItems = [
   { key: "gradebook", label: "Gradebook", to: "/gradebook", icon: "school" },
   { key: "leaderboard", label: "Leaderboard", to: "/leaderboard", icon: "leaderboard" },
+  { key: "courses", label: "Courses", to: "/courses", icon: "school" },
 ]
 
 const FEATURE_FLAGS = {
   gradebook: "feature_gradebook_enabled",
+  courses: "feature_courses_enabled",
 }
 
 const readFeatureFlag = (key: keyof typeof FEATURE_FLAGS) => {
@@ -45,6 +47,7 @@ export default function AppNavbar() {
   const isAdminRoute = location.pathname.startsWith("/admin")
   const [featureFlags, setFeatureFlags] = useState(() => ({
     gradebook: readFeatureFlag("gradebook"),
+    courses: readFeatureFlag("courses"),
   }))
   const {
     notifications,
@@ -78,9 +81,9 @@ export default function AppNavbar() {
     const refreshFlags = () => {
       setFeatureFlags({
         gradebook: readFeatureFlag("gradebook"),
+        courses: readFeatureFlag("courses"),
       })
     }
-    // Listen for both same-tab and cross-tab feature flag updates.
     window.addEventListener("feature-flags-changed", refreshFlags)
     window.addEventListener("storage", refreshFlags)
     return () => {
@@ -121,6 +124,7 @@ export default function AppNavbar() {
 
   const visibleFeatureItems = featureItems.filter((item) => {
     if (item.key === "gradebook") return featureFlags.gradebook
+    if (item.key === "courses") return featureFlags.courses
     if (item.key === "leaderboard") return true
     return false
   })

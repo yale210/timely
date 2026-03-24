@@ -4,11 +4,15 @@ import RequireAuth from "@/components/auth/RequireAuth"
 import RedirectAuth from "@/components/auth/RedirectAuth"
 import RequireAdmin from "@/components/auth/RequireAdmin"
 import { Home, Login, Signup, Logout, CalendarPage, TaskList, Gradebook, Dashboard, Settings, Friends, ProfilePage, Leaderboard } from "@/pages"
+import Courses from "@/pages/Course/Course.tsx"
+import CourseDetail from "@/pages/Course/CourseDetail.tsx"
 import { Notifications } from "@/pages/Notification/Notifications"
 import { NotificationDetail } from "@/pages/Notification/NotificationDetail"
 import { AdminNotifications } from "@/pages/Admin/Notifications/AdminNotifications"
 import { AdminNotificationHistory } from "@/pages/Admin/Notifications/AdminNotificationHistory"
 import { AdminNotificationHistoryDetail } from "@/pages/Admin/Notifications/AdminNotificationHistoryDetail"
+import CourseManagement from "@/pages/Course/CourseManagement.tsx";
+import RequireTeacher from "@/context/auth/RequireTeacher.tsx";
 
 const PUBLIC_ROUTES = ["/login", "/signup", "/"]
 
@@ -57,7 +61,7 @@ export default function App() {
           <Signup />
         </RedirectAuth>
       }/>
-      
+
       <Route path="/logout" element={<Logout />} />
 
       <Route path="/calendar" element={
@@ -72,6 +76,24 @@ export default function App() {
         </RequireAuth>}
       />
 
+      <Route path="/courses" element={
+        <RequireAuth>
+          <Courses />
+        </RequireAuth>}
+      />
+
+      <Route path="/courses/:id" element={
+        <RequireAuth>
+          <CourseDetail />
+        </RequireAuth>}
+      />
+
+      <Route path="/courses/manage" element={
+        <RequireTeacher>
+          <CourseManagement />
+        </RequireTeacher>}
+      />
+
       <Route path="/gradebook" element={
         <RequireAuth>
           <Gradebook />
@@ -83,7 +105,7 @@ export default function App() {
           <Dashboard />
         </RequireAuth>}
       />
-      
+
       <Route path="/friends" element={
         <RequireAuth>
           <Friends />
@@ -133,7 +155,6 @@ export default function App() {
         </RequireAuth>}
       />
 
-   
     </Routes>
   )
 }
