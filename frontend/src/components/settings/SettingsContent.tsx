@@ -30,6 +30,7 @@ const SettingsContent = ({
 }: SettingsContentProps) => {
   const [featureFlags, setFeatureFlags] = useState(() => ({
     gradebook: localStorage.getItem("feature_gradebook_enabled") !== "false",
+    pomodoro: localStorage.getItem("feature_pomodoro_enabled") !== "false",
   }));
 
   const featureRows = useMemo(() => ([
@@ -39,10 +40,16 @@ const SettingsContent = ({
       description: "Track and review your grades over time.",
       value: featureFlags.gradebook,
     },
+    {
+      key: "pomodoro",
+      label: "Pomodoro",
+      description: "Use the dedicated Pomodoro timer page from Extras.",
+      value: featureFlags.pomodoro,
+    },
   ]), [featureFlags]);
 
-  const updateFeature = (key: "gradebook", value: boolean) => {
-    localStorage.setItem("feature_gradebook_enabled", String(value));
+  const updateFeature = (key: "gradebook" | "pomodoro", value: boolean) => {
+    localStorage.setItem(`feature_${key}_enabled`, String(value));
     setFeatureFlags((prev) => ({ ...prev, [key]: value }));
     window.dispatchEvent(new Event("feature-flags-changed"));
   };
@@ -114,7 +121,7 @@ const SettingsContent = ({
                         className="h-4 w-4"
                         checked={feature.value}
                         onChange={(event) => {
-                          updateFeature(feature.key as "gradebook", event.target.checked);
+                          updateFeature(feature.key as "gradebook" | "pomodoro", event.target.checked);
                         }}
                       />
                     </label>

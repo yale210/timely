@@ -4,7 +4,6 @@ import { Menu, MenuButton, MenuItems, MenuItem } from "@headlessui/react"
 import { authStore } from "@/services/authService"
 import { getMyProfile } from "@/services/profileService"
 import { NotificationDropdown } from '@/components/notifications/NotificationDropdown'
-import { PomofocusDropdown } from '@/components/layout/PomofocusDropdown'
 import { PomodoroModal } from '@/components/layout/PomodoroModal'
 import { useNotificationContext } from '@/context/NotificationContext'
 import { type Notification } from '@/types'
@@ -19,10 +18,12 @@ const navItems = [
 const featureItems = [
   { key: "gradebook", label: "Gradebook", to: "/gradebook", icon: "school" },
   { key: "leaderboard", label: "Leaderboard", to: "/leaderboard", icon: "leaderboard" },
+  { key: "pomodoro", label: "Pomodoro", to: "/pomodoro", icon: "timer" },
 ]
 
 const FEATURE_FLAGS = {
   gradebook: "feature_gradebook_enabled",
+  pomodoro: "feature_pomodoro_enabled",
 }
 
 const readFeatureFlag = (key: keyof typeof FEATURE_FLAGS) => {
@@ -47,6 +48,7 @@ export default function AppNavbar() {
   const isAdminRoute = location.pathname.startsWith("/admin")
   const [featureFlags, setFeatureFlags] = useState(() => ({
     gradebook: readFeatureFlag("gradebook"),
+    pomodoro: readFeatureFlag("pomodoro"),
   }))
   const {
     notifications,
@@ -80,6 +82,7 @@ export default function AppNavbar() {
     const refreshFlags = () => {
       setFeatureFlags({
         gradebook: readFeatureFlag("gradebook"),
+        pomodoro: readFeatureFlag("pomodoro"),
       })
     }
     // Listen for both same-tab and cross-tab feature flag updates.
@@ -123,6 +126,7 @@ export default function AppNavbar() {
 
   const visibleFeatureItems = featureItems.filter((item) => {
     if (item.key === "gradebook") return featureFlags.gradebook
+    if (item.key === "pomodoro") return featureFlags.pomodoro
     if (item.key === "leaderboard") return true
     return false
   })
@@ -151,7 +155,6 @@ export default function AppNavbar() {
         <div className="flex justify-center" />
 
         <div className="flex h-10 items-center justify-end gap-1.5">
-          <PomofocusDropdown />
           <NotificationDropdown
             notifications={notifications}
             unreadCount={unreadCount}

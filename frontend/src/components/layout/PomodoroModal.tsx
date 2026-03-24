@@ -3,7 +3,7 @@ import { Fragment } from "react";
 import { usePomodoro } from "@/context/PomodoroContext";
 
 /**
- * Global modal for Pomodoro timer completion alerts.
+ * Global modal for focus timer completion alerts.
  */
 export const PomodoroModal = () => {
   const { showModal, modalMessage, closeModal } = usePomodoro();
@@ -39,7 +39,7 @@ export const PomodoroModal = () => {
                   as="h3"
                   className="text-lg font-bold leading-6 text-gray-900"
                 >
-                  Pomofocus
+                  Pomodoro
                 </DialogTitle>
                 <div className="mt-4">
                   <p className="text-md text-gray-600">

@@ -66,6 +66,11 @@ describe("SettingsContent", () => {
     fireEvent.click(gradebookToggle);
 
     expect(localStorage.getItem("feature_gradebook_enabled")).toBe("false");
+
+    const pomodoroToggle = screen.getByRole("checkbox", { name: /pomodoro/i });
+    fireEvent.click(pomodoroToggle);
+
+    expect(localStorage.getItem("feature_pomodoro_enabled")).toBe("false");
     expect(dispatchSpy).toHaveBeenCalledWith(expect.any(Event));
   });
 

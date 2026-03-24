@@ -16,7 +16,8 @@ vi.mock("@/pages/index", () => ({
   Settings: () => <div>Settings Page</div>,
   Friends: () => <div>Friends Page</div>,
   ProfilePage: () => <div>Profile Page</div>,
-  Leaderboard: () => <div>Leaderboard Page</div>
+  Leaderboard: () => <div>Leaderboard Page</div>,
+  Pomodoro: () => <div>Pomodoro Page</div>
 }));
 
 vi.mock("@/pages/Notification/Notifications", () => ({
@@ -147,6 +148,15 @@ describe("App Component", () => {
       </MemoryRouter>
     );
     expect(getByText("Gradebook Page")).toBeDefined();
+  });
+
+  it("should render Pomodoro page", () => {
+    const { getByText } = render(
+      <MemoryRouter initialEntries={["/pomodoro"]}>
+        <App />
+      </MemoryRouter>
+    );
+    expect(getByText("Pomodoro Page")).toBeDefined();
   });
 
   it("should render Dashboard page", () => {
