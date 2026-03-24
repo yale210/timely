@@ -1,5 +1,4 @@
 from django.db import transaction
-from django.db.models import F
 from django.utils import timezone
 from rest_framework import permissions, status
 from rest_framework.response import Response
@@ -19,22 +18,32 @@ class ScheduleTasksAPIView(APIView):
         payload = serializer.validated_data
 
         start_date = payload.get("start_date") or timezone.localdate()
-        max_days_ahead = payload.get("max_days_ahead", 7)
-        allow_split = payload.get("allow_split", False)
-        min_block_minutes = payload.get("min_block_minutes", 30)
-
-        scheduler = Scheduler(
-            request.user,
-            max_days_ahead=max_days_ahead,
-            allow_split=allow_split,
-            min_block_minutes=min_block_minutes,
+        preference = getattr(request.user, "preference", None)
+        max_days_ahead = payload.get(
+            "max_days_ahead",
+            getattr(preference, "max_days_ahead", 30),
         )
-        results = scheduler.schedule_tasks(start_date=start_date)
+        allow_split = payload.get("allow_split", False)
+        replace_existing = payload.get("replace_existing", False)
+        min_block_minutes = payload.get("min_block_minutes", 30)
 
         scheduled_count = 0
         failed_count = 0
 
         with transaction.atomic():
+            if replace_existing:
+                Task.objects.filter(user=request.user).exclude(allocation=[]).filter(
+                    completed=False, locked=False
+                ).update(allocation=[], total_task_allocations=0)
+
+            scheduler = Scheduler(
+                request.user,
+                max_days_ahead=max_days_ahead,
+                allow_split=allow_split,
+                min_block_minutes=min_block_minutes,
+            )
+            results = scheduler.schedule_tasks(start_date=start_date)
+
             for result in results:
                 segments = result.segments or []
                 if not result.success or not segments:
@@ -51,12 +60,10 @@ class ScheduleTasksAPIView(APIView):
                     {"start": start.isoformat(), "end": end.isoformat()}
                     for start, end in segments
                 ]
-                task.start_time = segments[0][0]
                 task.allocation = allocation
                 task.total_task_allocations = len(allocation)
                 task.save(
                     update_fields=[
-                        "start_time",
                         "allocation",
                         "total_task_allocations",
                     ]
@@ -80,7 +87,7 @@ class UnscheduleTasksAPIView(APIView):
             Task.objects.filter(user=request.user)
             .exclude(allocation=[])
             .filter(completed=False, locked=False)
-            .update(allocation=[], total_task_allocations=0, start_time=F("deadline"))
+            .update(allocation=[], total_task_allocations=0)
         )
         return Response(
             {"unscheduled_count": updated},

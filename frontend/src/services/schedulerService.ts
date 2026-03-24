@@ -8,6 +8,7 @@ export interface ScheduleRequest {
   start_date?: string;
   max_days_ahead?: number;
   allow_split?: boolean;
+  replace_existing?: boolean;
   min_block_minutes?: number;
 }
 
@@ -29,4 +30,3 @@ export const unscheduleTasks = async (): Promise<{ unscheduled_count: number }> 
   const response = await api.post<{ unscheduled_count: number }>("/api/unschedule/");
   return response.data;
 };
-

@@ -12,7 +12,7 @@ from core.management.commands.seeders.day_of_week_seeder import DayOfWeekSeeder
 from core.management.commands.seeders.event_seeder import EventSeeder
 from core.management.commands.seeders.grade_seeder import GradeSeeder
 from core.management.commands.seeders.preference_seeder import PreferenceSeeder
-from core.management.commands.seeders.profile_seeder import ProfileSeeder
+from profiles.management.commands.seeders.profile_seeder import ProfileSeeder
 from core.management.commands.seeders.special_dates_seeder import SpecialDatesSeeder
 from core.management.commands.seeders.task_seeder import TaskSeeder
 from core.management.commands.seeders.friendship_seeder import FriendshipSeeder

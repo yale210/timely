@@ -29,7 +29,7 @@ class Category(models.Model):
         ],
     )
     max_daily_study_time = models.PositiveSmallIntegerField(
-        validators=[MinValueValidator(0), MaxValueValidator(24)],
+        validators=[MinValueValidator(0), MaxValueValidator(1440)],
         null=True,
         blank=True,
     )

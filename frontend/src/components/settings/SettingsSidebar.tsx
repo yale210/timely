@@ -34,6 +34,7 @@ const SettingsSidebar = ({
     { label: "General", value: "general", icon: "tune" },
     { label: "Features", value: "features", icon: "extension" },
     { label: "Scheduling", value: "preferences", icon: "schedule" },
+    { label: "Categories", value: "categories", icon: "category" },
     { label: "Appearance", value: "appearance", icon: "palette" },
   ];
 

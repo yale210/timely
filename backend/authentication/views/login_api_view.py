@@ -28,13 +28,11 @@ class LoginAPIView(LoginView):
             and serialized user information.
         """
         serializer = self.serializer_class(data=request.data)
-        if serializer.is_valid(raise_exception=True):
-            user = serializer.validated_data["user"]
-            login(request, user)
-            user.last_login = timezone.now()
-            responses = super().post(request, format=None)
-            responses.data["user"] = UserSerializer(user).data
-        else:
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        serializer.is_valid(raise_exception=True)
+        user = serializer.validated_data["user"]
+        login(request, user)
+        user.last_login = timezone.now()
+        responses = super().post(request, format=None)
+        responses.data["user"] = UserSerializer(user).data
 
         return Response(responses.data, status=status.HTTP_200_OK)

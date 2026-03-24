@@ -1,7 +1,11 @@
 import { render, screen, fireEvent } from "@testing-library/react";
 import { vi, describe, it, expect } from "vitest";
+import { MemoryRouter } from "react-router-dom";
+import type { ReactElement } from "react";
 import { AdminHistoryTable } from "@/components/admin/notifications/AdminHistoryTable";
 import type { BroadcastJobSummary } from "@/types";
+
+const renderAdminHistoryTable = (ui: ReactElement) => render(<MemoryRouter>{ui}</MemoryRouter>);
 
 describe("AdminHistoryTable Component", () => {
   const mockOnSelectItem = vi.fn();
@@ -48,19 +52,19 @@ describe("AdminHistoryTable Component", () => {
   };
 
   it("renders loading state", () => {
-    render(<AdminHistoryTable {...defaultProps} loading={true} />);
+    renderAdminHistoryTable(<AdminHistoryTable {...defaultProps} loading={true} />);
     expect(screen.getByText("Loading...")).toBeDefined();
     expect(screen.getByText("Previous")).toBeDisabled();
     expect(screen.getByText("Next")).toBeDisabled();
   });
 
   it("renders empty state", () => {
-    render(<AdminHistoryTable {...defaultProps} items={[]} />);
+    renderAdminHistoryTable(<AdminHistoryTable {...defaultProps} items={[]} />);
     expect(screen.getByText("No broadcast history found.")).toBeDefined();
   });
 
   it("renders list of items correctly", () => {
-    render(<AdminHistoryTable {...defaultProps} />);
+    renderAdminHistoryTable(<AdminHistoryTable {...defaultProps} />);
     
     expect(screen.getByText("Test Broadcast 1")).toBeDefined();
     expect(screen.getByText("Delivered 10/10")).toBeDefined();
@@ -74,7 +78,7 @@ describe("AdminHistoryTable Component", () => {
   });
 
   it("calls onSelectItem when a row is clicked", () => {
-    render(<AdminHistoryTable {...defaultProps} />);
+    renderAdminHistoryTable(<AdminHistoryTable {...defaultProps} />);
     
     const row = screen.getByText("Test Broadcast 1").closest("tr");
     fireEvent.click(row!);
@@ -83,12 +87,12 @@ describe("AdminHistoryTable Component", () => {
   });
 
   it("displays pagination info correctly", () => {
-    render(<AdminHistoryTable {...defaultProps} page={2} totalPages={5} />);
+    renderAdminHistoryTable(<AdminHistoryTable {...defaultProps} page={2} totalPages={5} />);
     expect(screen.getByText("Page 2 of 5")).toBeDefined();
   });
 
   it("calls pagination callbacks and disables buttons correctly", () => {
-    const { rerender } = render(<AdminHistoryTable {...defaultProps} page={1} totalPages={3} />);
+    const { rerender } = renderAdminHistoryTable(<AdminHistoryTable {...defaultProps} page={1} totalPages={3} />);
     
     const prevBtn = screen.getByText("Previous");
     const nextBtn = screen.getByText("Next");
@@ -99,16 +103,15 @@ describe("AdminHistoryTable Component", () => {
     fireEvent.click(nextBtn);
     expect(mockOnNextPage).toHaveBeenCalled();
 
-    rerender(<AdminHistoryTable {...defaultProps} page={2} totalPages={3} />);
+    rerender(<MemoryRouter><AdminHistoryTable {...defaultProps} page={2} totalPages={3} /></MemoryRouter>);
     expect(prevBtn).not.toBeDisabled();
     expect(nextBtn).not.toBeDisabled();
     
     fireEvent.click(prevBtn);
     expect(mockOnPreviousPage).toHaveBeenCalled();
 
-    rerender(<AdminHistoryTable {...defaultProps} page={3} totalPages={3} />);
+    rerender(<MemoryRouter><AdminHistoryTable {...defaultProps} page={3} totalPages={3} /></MemoryRouter>);
     expect(prevBtn).not.toBeDisabled();
     expect(nextBtn).toBeDisabled();
   });
 });
-

@@ -20,14 +20,14 @@ class GradeSeeder(BaseSeeder):
         for grade in grades:
             try:
                 self._create_grade(grade)
-            except Exception:
-                pass
+            except Exception as exception:
+                print(f"Error occurred while creating grade: {exception}")
 
     def _create_grade(self, data):
         Grade.objects.get_or_create(
-            user=data["fields"]["user"],
+            user_id=data["fields"]["user"],
             name=data["fields"]["name"],
-            category=data["fields"]["category"],
+            category_id=data["fields"]["category"],
             score=data["fields"]["score"],
             total_possible=data["fields"]["total_possible"],
             date_achieved=data["fields"]["date_achieved"],
@@ -48,9 +48,9 @@ class GradeSeeder(BaseSeeder):
         self._create_grade(
             {
                 "fields": {
-                    "user": temporary_user,
+                    "user": temporary_user.id,
                     "name": self.faker.sentence(),
-                    "category": Category.objects.order_by("?").first(),
+                    "category": Category.objects.order_by("?").first().id,
                     "score": random.randint(0, 100),
                     "total_possible": 100,
                     "date_achieved": self.faker.date_time(),

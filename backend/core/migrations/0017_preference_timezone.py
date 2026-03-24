@@ -4,15 +4,14 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('core', '0016_merge_20260228_1515'),
+        ("core", "0016_merge_20260228_1515"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='preference',
-            name='timezone',
-            field=models.CharField(default='Europe/London', max_length=50),
+            model_name="preference",
+            name="timezone",
+            field=models.CharField(default="Europe/London", max_length=50),
         ),
     ]

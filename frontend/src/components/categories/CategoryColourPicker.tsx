@@ -1,6 +1,7 @@
 import { createPortal } from "react-dom";
 import type { RefObject } from "react";
 import { HexColorPicker } from "react-colorful";
+import type { FloatingPosition } from "./CategoryMultiSelect.types";
 
 /**
  * Props for the category colour picker.
@@ -18,7 +19,7 @@ import { HexColorPicker } from "react-colorful";
  */
 interface CategoryColourPickerProps {
   isOpen: boolean;
-  position: { top: number; left: number } | null;
+  position: FloatingPosition | null;
   pickerRef: RefObject<HTMLDivElement | null>;
   colourInput: string;
   colourError: string | null;
