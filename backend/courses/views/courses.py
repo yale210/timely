@@ -3,7 +3,6 @@ from django.db.models import Q
 from django.utils import timezone
 from secrets import token_urlsafe
 
-from knox.auth import TokenAuthentication
 from rest_framework import status
 from rest_framework.decorators import action
 from rest_framework.generics import get_object_or_404
@@ -11,22 +10,24 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.viewsets import ViewSet
 
-from courses.models.course import CourseEnrollment, Course, CourseEvent, CourseJoinCode, CourseStaff
+from courses.models.course import (
+    CourseEnrollment,
+    Course,
+    CourseEvent,
+    CourseJoinCode,
+    CourseStaff,
+)
 from courses.models.student import Student
 from courses.models.teacher import Teacher
 from courses.permissions.course import CoursePermission
-from courses.permissions.TeacherPermission import IsTeacher
 from courses.serializers.course import (
     CourseCreateSerializer,
-    CourseDescriptionSerializer,
     CourseEventSerializer,
     CourseJoinCodeSerializer,
-    CourseNameSerializer,
     CourseSerializer,
     CourseStaffAddSerializer,
 )
 
-from django.db.models import Q
 
 User = get_user_model()
 
@@ -54,11 +55,15 @@ class CourseView(ViewSet):
                 status=404,
             )
 
-        courses = Course.objects.filter(
-            Q(enrollments__student=student, enrollments__active=True)
-            | Q(staff_members__student=request.user, staff_members__active=True)
-            | Q(lead=teacher)
-        ).distinct().order_by("-created_at")
+        courses = (
+            Course.objects.filter(
+                Q(enrollments__student=student, enrollments__active=True)
+                | Q(staff_members__student=request.user, staff_members__active=True)
+                | Q(lead=teacher)
+            )
+            .distinct()
+            .order_by("-created_at")
+        )
 
         return Response(
             CourseSerializer(courses, many=True).data,
@@ -192,7 +197,7 @@ class CourseView(ViewSet):
         if not created and not enrollment.active:
             enrollment.active = True
             enrollment.save(update_fields=["active"])
-
+        enrollment.active = True
         return Response(
             {"message": "Course enrollment successful.", "created": created},
             status=status.HTTP_200_OK,
