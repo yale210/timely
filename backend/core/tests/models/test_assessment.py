@@ -37,12 +37,6 @@ class AssessmentModelTest(TestCase):
             assessment.clean()
         self.assertIn("title", cm.exception.message_dict)
 
-    def test_assessment_clean_empty_module(self):
-        assessment = AssessmentFactory.build(module="  ")
-        with self.assertRaises(ValidationError) as cm:
-            assessment.clean()
-        self.assertIn("module", cm.exception.message_dict)
-
     def test_assessment_clean_negative_weighting(self):
         assessment = AssessmentFactory.build(weighting_of_assessment=-1)
         with self.assertRaises(ValidationError) as cm:

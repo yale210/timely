@@ -32,6 +32,7 @@ const SettingsContent = ({
 }: SettingsContentProps) => {
   const dragSnapOptions = [5, 10, 15, 20, 30, 60] as const;
   const [featureFlags, setFeatureFlags] = useState(() => ({
+    assessments: localStorage.getItem("feature_assessments_enabled") !== "false",
     gradebook: localStorage.getItem("feature_gradebook_enabled") !== "false",
     leaderboard: localStorage.getItem("feature_leaderboard_enabled") !== "false",
   }));
@@ -44,6 +45,12 @@ const SettingsContent = ({
       value: featureFlags.leaderboard,
     },
     {
+      key: "assessments",
+      label: "Assessments",
+      description: "Track upcoming assessments with optional calendar events and gradebook handoff.",
+      value: featureFlags.assessments,
+    },
+    {
       key: "gradebook",
       label: "Gradebook",
       description: "Track and review your grades over time.",
@@ -51,8 +58,10 @@ const SettingsContent = ({
     },
   ]), [featureFlags]);
 
-  const updateFeature = (key: "gradebook" | "leaderboard", value: boolean) => {
-    if (key === "gradebook") {
+  const updateFeature = (key: "assessments" | "gradebook" | "leaderboard", value: boolean) => {
+    if (key === "assessments") {
+      localStorage.setItem("feature_assessments_enabled", String(value));
+    } else if (key === "gradebook") {
       localStorage.setItem("feature_gradebook_enabled", String(value));
     } else {
       localStorage.setItem("feature_leaderboard_enabled", String(value));
@@ -150,9 +159,8 @@ const SettingsContent = ({
                         className="h-4 w-4"
                         checked={feature.value}
                         onChange={(event) => {
-                          updateFeature(feature.key as "gradebook" | "leaderboard", event.target.checked);
                           updateFeature(
-                            feature.key as "gradebook" | "leaderboard",
+                            feature.key as "assessments" | "gradebook" | "leaderboard",
                             event.target.checked,
                           );
                         }}

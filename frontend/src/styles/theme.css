@@ -97,18 +97,25 @@
 
   [data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator,
   [data-theme="dark"] input[type="time"]::-webkit-calendar-picker-indicator,
+  [data-theme="dark"] input[type="datetime-local"]::-webkit-calendar-picker-indicator,
   [data-theme="midnight"] input[type="date"]::-webkit-calendar-picker-indicator,
   [data-theme="midnight"] input[type="time"]::-webkit-calendar-picker-indicator,
+  [data-theme="midnight"] input[type="datetime-local"]::-webkit-calendar-picker-indicator,
   [data-theme="forest-night"] input[type="date"]::-webkit-calendar-picker-indicator,
   [data-theme="forest-night"] input[type="time"]::-webkit-calendar-picker-indicator,
+  [data-theme="forest-night"] input[type="datetime-local"]::-webkit-calendar-picker-indicator,
   [data-theme="plum-ink"] input[type="date"]::-webkit-calendar-picker-indicator,
   [data-theme="plum-ink"] input[type="time"]::-webkit-calendar-picker-indicator,
+  [data-theme="plum-ink"] input[type="datetime-local"]::-webkit-calendar-picker-indicator,
   [data-theme="neon-noir"] input[type="date"]::-webkit-calendar-picker-indicator,
   [data-theme="neon-noir"] input[type="time"]::-webkit-calendar-picker-indicator,
+  [data-theme="neon-noir"] input[type="datetime-local"]::-webkit-calendar-picker-indicator,
   [data-theme="terminal"] input[type="date"]::-webkit-calendar-picker-indicator,
   [data-theme="terminal"] input[type="time"]::-webkit-calendar-picker-indicator,
+  [data-theme="terminal"] input[type="datetime-local"]::-webkit-calendar-picker-indicator,
   [data-theme="signal"] input[type="date"]::-webkit-calendar-picker-indicator,
-  [data-theme="signal"] input[type="time"]::-webkit-calendar-picker-indicator {
+  [data-theme="signal"] input[type="time"]::-webkit-calendar-picker-indicator,
+  [data-theme="signal"] input[type="datetime-local"]::-webkit-calendar-picker-indicator {
     filter: invert(1);
   }
 }

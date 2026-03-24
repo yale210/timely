@@ -1,7 +1,9 @@
+from django.core.exceptions import ValidationError
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 from django.conf import settings
-from django.core.exceptions import ValidationError
+
+from .category import Category
 
 
 class Assessment(models.Model):
@@ -25,8 +27,6 @@ class Assessment(models.Model):
     )
 
     title = models.CharField(max_length=500)
-
-    module = models.CharField(max_length=100, blank=False)
 
     assessment_type = models.CharField(
         max_length=255, choices=AssessmentType.choices, default=AssessmentType.SUMMATIVE
@@ -59,6 +59,26 @@ class Assessment(models.Model):
         null=True,
         blank=True,
     )
+    assessment_category = models.ForeignKey(
+        Category,
+        on_delete=models.SET_NULL,
+        related_name="assessment_category_assessments",
+        null=True,
+        blank=True,
+    )
+    module_category = models.ForeignKey(
+        Category,
+        on_delete=models.SET_NULL,
+        related_name="assessment_module_assessments",
+        null=True,
+        blank=True,
+    )
+    categories = models.ManyToManyField(
+        Category,
+        blank=True,
+        related_name="assessments",
+    )
+    completed = models.BooleanField(default=False)
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -77,10 +97,6 @@ class Assessment(models.Model):
         # Ensure title is not empty.
         if not self.title.strip():
             errors["title"] = "Assessment must have a title."
-
-        # Ensure module is not empty.
-        if not self.module.strip():
-            errors["module"] = "Assessment must have a module."
 
         # Ensure the weighting is between 0 and 100 if provided.
         if (

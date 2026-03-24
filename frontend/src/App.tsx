@@ -10,6 +10,7 @@ import {
   Logout, 
   CalendarPage, 
   TaskList, 
+  Assessments,
   Gradebook, 
   Dashboard, 
   Settings, 
@@ -90,6 +91,12 @@ export default function App() {
       <Route path="/gradebook" element={
         <RequireAuth>
           <Gradebook />
+        </RequireAuth>}
+      />
+
+      <Route path="/assessments" element={
+        <RequireAuth>
+          <Assessments />
         </RequireAuth>}
       />
 

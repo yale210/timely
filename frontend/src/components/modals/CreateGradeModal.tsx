@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import useCategories from "@/hooks/tasks/useCategories"
 
 interface Category { id: number; text: string }
@@ -44,6 +44,15 @@ export default function CreateGradeModal(props: Props) {
   const [error, setError] = useState<string | null>(null)
   const [categoryId, setCategoryId] = useState<number | null>(initialData?.categoryId ?? null)
   const { categories } = useCategories()
+
+  useEffect(() => {
+    setName(initialData?.name ?? "")
+    setScore(initialData?.score ?? "")
+    setTotal(initialData?.total ?? "")
+    setDate(initialData?.date ?? "")
+    setCategoryId(initialData?.categoryId ?? null)
+    setError(null)
+  }, [initialData, open])
 
   if (!open) return null
 
