@@ -457,11 +457,14 @@ class TaskViewSetTests(TestCase):
         self.task1.total_task_allocations = 1
         self.task1.save(update_fields=["allocation", "total_task_allocations"])
 
-        updated_start_time = self.now + datetime.timedelta(days=20)
+        updated_start_time = self.now + datetime.timedelta(days=9, hours=23)
+        updated_deadline = updated_start_time + datetime.timedelta(minutes=30)
         response = self.client.post(
             f"/api/tasks/{self.task1.id}/save-and-reschedule/",
             {
                 "start_time": updated_start_time.isoformat(),
+                "deadline": updated_deadline.isoformat(),
+                "estimated_minutes": 60,
                 "start_date": self.now.date().isoformat(),
             },
             format="json",
@@ -470,7 +473,7 @@ class TaskViewSetTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(
             response.data["reschedule_warning"],
-            "Could not fit this task into the schedule window.",
+            "No single slot available within horizon",
         )
         self.task1.refresh_from_db()
         self.assertEqual(self.task1.start_time, updated_start_time)
