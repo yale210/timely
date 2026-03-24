@@ -53,20 +53,35 @@ class CoursePermission(BasePermission):
         return self.can_view_course_details(request, course)
 
     def can_create_join_code(self, request, course):
-        return self._is_admin(request) or self._is_staff(request, course) or self._is_lead(request, course)
+        return (
+            self._is_admin(request)
+            or self._is_staff(request, course)
+            or self._is_lead(request, course)
+        )
 
     def can_change_name(self, request, course):
         return self._is_admin(request) or self._is_lead(request, course)
 
     def can_change_description(self, request, course):
-        return self._is_admin(request) or self._is_staff(request, course) or self._is_lead(request, course)
+        return (
+            self._is_admin(request)
+            or self._is_staff(request, course)
+            or self._is_lead(request, course)
+        )
 
     def can_update_course(self, request, course):
-        return self._is_admin(request) or self._is_staff(request, course) or self._is_lead(request, course)
+        return (
+            self._is_admin(request)
+            or self._is_staff(request, course)
+            or self._is_lead(request, course)
+        )
 
     def has_permission(self, request, view):
         if not request.user.is_authenticated:
             return False
+
+        if self._is_admin(request):
+            return True
 
         action = self._get_action(view)
 
