@@ -3,8 +3,8 @@
 from rest_framework import pagination, permissions, viewsets
 
 from admin_panel.serializers import AdminUserListSerializer
-from admin_panel.views.notification_actions import AdminNotificationActionMixin
-from admin_panel.views.users_actions import AdminUsersActionMixin
+from admin_panel.views.notification_actions_view import AdminNotificationActionMixin
+from admin_panel.views.users_actions_view import AdminUsersActionMixin
 
 
 class AdminUserPagination(pagination.PageNumberPagination):

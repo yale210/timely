@@ -1,3 +1,5 @@
+"""Signal handlers for profile XP and level updates."""
+
 from django.db.models.signals import post_save, pre_save
 from django.dispatch import receiver
 
@@ -6,12 +8,30 @@ from profiles.models.profile import Profile
 
 
 def exp_required_for_level_up(user):
+    """Return whether a profile has enough XP to advance a level.
+
+    Args:
+        user: The profile instance whose XP and level are being evaluated.
+
+    Returns:
+        bool: ``True`` when the profile meets the threshold for the next level.
+    """
+
     next_level = user.level + 1
     required_xp = 100 * next_level**1.5
     return user.xp >= required_xp
 
 
 def exp_required_for_level_down(user):
+    """Return whether a profile should drop a level after XP loss.
+
+    Args:
+        user: The profile instance whose XP and level are being evaluated.
+
+    Returns:
+        bool: ``True`` when the profile falls below the current level threshold.
+    """
+
     next_level = user.level - 1
     required_xp = 100 * next_level**1.5
     return user.xp < required_xp
@@ -19,6 +39,17 @@ def exp_required_for_level_down(user):
 
 @receiver(pre_save, sender=Task)
 def snapshot_task_state(sender, instance, **kwargs):
+    """Capture a task's previous completion state before saving.
+
+    Args:
+        sender: The model class that emitted the signal.
+        instance: The task instance being saved.
+        **kwargs: Additional Django signal metadata.
+
+    Returns:
+        None
+    """
+
     if instance.pk:
         try:
             instance._prev_completed = (
@@ -32,6 +63,17 @@ def snapshot_task_state(sender, instance, **kwargs):
 
 @receiver(post_save, sender=Task)
 def award_exp(sender, instance, **kwargs):
+    """Adjust profile XP and level after a task completion change.
+
+    Args:
+        sender: The model class that emitted the signal.
+        instance: The task instance that was saved.
+        **kwargs: Additional Django signal metadata.
+
+    Returns:
+        None
+    """
+
     prev = getattr(instance, "_prev_completed", False)
     now = instance.completed
 
