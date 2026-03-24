@@ -18,7 +18,7 @@ jobs:
 
       - name: Destroy preview
         id: preview_destroy
-        uses: SubhanAfz/branch-previewer-action@v1
+        uses: SubhanAfz/branch-previewer-action@v1.1
         with:
           operation: destroy
           api_base_url: ${{ secrets.PREVIEW_API_URL }}
@@ -83,6 +83,7 @@ jobs:
     permissions:
       contents: read
       issues: write
+      pull-requests: write
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -91,7 +92,7 @@ jobs:
 
       - name: Create preview from comment
         id: preview_create_comment
-        uses: SubhanAfz/branch-previewer-action@v1
+        uses: SubhanAfz/branch-previewer-action@v1.1
         with:
           operation: create
           api_base_url: ${{ secrets.PREVIEW_API_URL }}
@@ -105,11 +106,11 @@ jobs:
           script: |
             const marker = "<!-- preview-environment-comment -->";
             const ip = `${{ steps.preview_create_comment.outputs.ip || '' }}`.trim();
-            const previewUrl = ip ? `http://${ip}` : "N/A";
+            const previewUrl = `${{ steps.preview_create_comment.outputs.url || '' }}`.trim();
 
             const body = `${marker}
             ## Preview Environment
-            - **URL:** ${ip ? `[${previewUrl}](${previewUrl})` : "`N/A`"}
+            - **URL:** ${previewUrl ? `[${previewUrl}](${previewUrl})` : "`N/A`"}
             - **IP:** \`${ip || "N/A"}\`
             - **Droplet ID:** \`${{ steps.preview_create_comment.outputs.droplet_id || 'N/A' }}\`
             - **Created:** \`${{ steps.preview_create_comment.outputs.created || 'N/A' }}\`
