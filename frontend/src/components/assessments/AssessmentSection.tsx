@@ -7,7 +7,6 @@ interface AssessmentSectionProps {
   title: string;
   assessments: Assessment[];
   onClick: (assessment: Assessment) => void;
-  onToggleCompleted: (assessment: Assessment) => void;
   onAddToGradebook: (assessment: Assessment) => void;
   isCollapsible?: boolean;
   defaultCollapsed?: boolean;
@@ -17,7 +16,6 @@ const AssessmentSection = ({
   title,
   assessments,
   onClick,
-  onToggleCompleted,
   onAddToGradebook,
   isCollapsible = false,
   defaultCollapsed = false,
@@ -55,7 +53,6 @@ const AssessmentSection = ({
                 key={assessment.id}
                 assessment={assessment}
                 onClick={onClick}
-                onToggleCompleted={onToggleCompleted}
                 onAddToGradebook={onAddToGradebook}
               />
             ))

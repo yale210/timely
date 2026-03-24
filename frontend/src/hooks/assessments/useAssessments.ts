@@ -31,7 +31,6 @@ interface UseAssessmentsActions {
   submitAssessment: (data: AssessmentSubmission) => Promise<void>;
   deleteAssessment: () => Promise<void>;
   setPendingDeleteId: (value: number | null) => void;
-  toggleCompleted: (assessment: Assessment) => Promise<void>;
   openGradebook: (assessment: Assessment) => void;
   closeGradebook: () => void;
   createCategory: (text: string) => Promise<Category>;
@@ -46,6 +45,15 @@ interface UseAssessmentsReturn {
   error: string | null;
   actions: UseAssessmentsActions;
 }
+
+const isAssessmentCompleted = (assessment: Assessment): boolean => {
+  if (assessment.completed) {
+    return true;
+  }
+
+  const comparisonDate = assessment.linked_event_details?.end_time ?? assessment.due_date;
+  return new Date(comparisonDate).getTime() < Date.now();
+};
 
 export const useAssessments = (): UseAssessmentsReturn => {
   const [assessments, setAssessments] = useState<Assessment[]>([]);
@@ -117,16 +125,6 @@ export const useAssessments = (): UseAssessmentsReturn => {
     setPendingDeleteId(null);
   }, [pendingDeleteId, selectedAssessment?.id]);
 
-  const toggleCompleted = useCallback(async (assessment: Assessment) => {
-    const updated = await assessmentService.updateAssessment(assessment.id, {
-      completed: !assessment.completed,
-    });
-    setAssessments((prev) => prev.map((item) => (item.id === updated.id ? updated : item)));
-    if (selectedAssessment?.id === updated.id) {
-      setSelectedAssessment(updated);
-    }
-  }, [selectedAssessment?.id]);
-
   const createCategory = useCallback(async (text: string) => {
     const created = await categoryService.createCategory(text.trim());
     setCategories((prev) => [...prev, created].sort((a, b) => a.text.localeCompare(b.text)));
@@ -185,16 +183,13 @@ export const useAssessments = (): UseAssessmentsReturn => {
   }), [assessments, search, selectedCategoryId]);
 
   const sections = useMemo<AssessmentSections>(() => {
-    const now = new Date();
     return {
-      overdue: filteredAssessments.filter((assessment) => (
-        !assessment.completed && new Date(assessment.due_date).getTime() < now.getTime()
-      )),
+      overdue: [],
       upcoming: filteredAssessments.filter((assessment) => (
-        !assessment.completed && new Date(assessment.due_date).getTime() >= now.getTime()
+        !isAssessmentCompleted(assessment)
       )),
       completed: filteredAssessments
-        .filter((assessment) => assessment.completed)
+        .filter((assessment) => isAssessmentCompleted(assessment))
         .sort((left, right) => (
           new Date(right.due_date).getTime() - new Date(left.due_date).getTime()
         )),
@@ -233,7 +228,6 @@ export const useAssessments = (): UseAssessmentsReturn => {
       submitAssessment,
       deleteAssessment,
       setPendingDeleteId,
-      toggleCompleted,
       openGradebook: setGradebookSource,
       closeGradebook: () => setGradebookSource(null),
       createCategory,

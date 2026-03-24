@@ -4,7 +4,7 @@ import AppLayout from "@/layouts/AppLayout";
 import ConfirmationModal from "@/components/modals/ConfirmationModal";
 import CreateGradeModal from "@/components/modals/CreateGradeModal";
 import AssessmentSection from "@/components/assessments/AssessmentSection";
-import AssessmentSidebar from "@/components/assessments/AssessmentSidebar";
+import AssessmentModal from "@/components/assessments/AssessmentModal";
 import { useAssessments } from "@/hooks/assessments/useAssessments";
 import type { Assessment } from "@/types";
 
@@ -53,13 +53,7 @@ const Assessments = () => {
 
   const sortedSections = {
     upcoming: sortAssessments(sections.upcoming),
-    completed: sortAssessments([
-      ...sections.completed,
-      ...sections.overdue.map((assessment) => ({
-        ...assessment,
-        completed: true,
-      })),
-    ]),
+    completed: sortAssessments(sections.completed),
   };
 
   return (
@@ -168,9 +162,6 @@ const Assessments = () => {
           title="Upcoming"
           assessments={sortedSections.upcoming}
           onClick={actions.openAssessment}
-          onToggleCompleted={(assessment) => {
-            void actions.toggleCompleted(assessment);
-          }}
           onAddToGradebook={actions.openGradebook}
         />
 
@@ -178,9 +169,6 @@ const Assessments = () => {
           title="Completed"
           assessments={sortedSections.completed}
           onClick={actions.openAssessment}
-          onToggleCompleted={(assessment) => {
-            void actions.toggleCompleted(assessment);
-          }}
           onAddToGradebook={actions.openGradebook}
           isCollapsible={true}
           defaultCollapsed={true}
@@ -188,7 +176,7 @@ const Assessments = () => {
       </div>
 
       <div key={sidebarKey}>
-        <AssessmentSidebar
+        <AssessmentModal
           isOpen={isSidebarOpen}
           onClose={actions.closeSidebar}
           assessment={selectedAssessment}

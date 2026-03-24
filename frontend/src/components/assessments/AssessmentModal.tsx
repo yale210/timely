@@ -1,9 +1,11 @@
 import { Fragment, useMemo, useState, type FormEvent } from "react";
 import { Dialog, DialogPanel, DialogTitle, Transition, TransitionChild } from "@headlessui/react";
 
+import { Tooltip } from "@/components";
+import { hexToRgba } from "@/utils/colorUtils";
 import type { Assessment, AssessmentSubmission, AssessmentType, Category } from "@/types";
 
-interface AssessmentSidebarProps {
+interface AssessmentModalProps {
   isOpen: boolean;
   onClose: () => void;
   assessment?: Assessment;
@@ -59,24 +61,21 @@ const getSubmissionErrorMessage = (error: unknown): string => {
   return "Failed to save assessment.";
 };
 
-const AssessmentSidebar = ({
+const AssessmentModal = ({
   isOpen,
   onClose,
   assessment,
   categories,
   onSubmit,
   onDelete,
-}: AssessmentSidebarProps) => {
+}: AssessmentModalProps) => {
   const [title, setTitle] = useState(assessment?.title ?? "");
   const [assessmentType] = useState<AssessmentType>(assessment?.assessment_type ?? "OTHER");
   const [dueDate, setDueDate] = useState(toDateTimeLocal(assessment?.due_date));
-  const [lengthOfAssessment, setLengthOfAssessment] = useState<number | "">(assessment?.length_of_assessment ?? "");
   const [weighting, setWeighting] = useState<number | "">(assessment?.weighting_of_assessment ?? "");
   const [notes, setNotes] = useState(assessment?.notes ?? "");
-  const [reminderOffset, setReminderOffset] = useState<number | "">(assessment?.reminder_offset ?? "");
   const [assessmentCategoryId, setAssessmentCategoryId] = useState<number | "">(assessment?.assessment_category?.id ?? "");
   const [moduleCategoryId, setModuleCategoryId] = useState<number | "">(assessment?.module_category?.id ?? "");
-  const [completed, setCompleted] = useState<boolean>(assessment?.completed ?? false);
   const [mode, setMode] = useState<AssessmentMode>(assessment?.linked_event_details ? "EVENT" : "DEADLINE");
   const [eventStart, setEventStart] = useState(toDateTimeLocal(assessment?.linked_event_details?.start_time));
   const [eventEnd, setEventEnd] = useState(toDateTimeLocal(assessment?.linked_event_details?.end_time));
@@ -86,12 +85,25 @@ const AssessmentSidebar = ({
 
   const baseInputClass = "w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-black shadow-sm focus:border-primary focus:outline-none";
   const canDelete = Boolean(assessment?.id);
+  const selectedAssessmentCategory = useMemo(
+    () => categories.find((category) => category.id === assessmentCategoryId),
+    [assessmentCategoryId, categories],
+  );
+  const selectedModuleCategory = useMemo(
+    () => categories.find((category) => category.id === moduleCategoryId),
+    [moduleCategoryId, categories],
+  );
 
-  const eventPreview = useMemo(() => (
-    mode === "EVENT"
-      ? "This assessment is treated as a scheduled event and will appear on the calendar."
-      : "This assessment is tracked as a standalone deadline without a linked calendar event."
-  ), [mode]);
+  const getCategorySelectStyle = (category?: Category) => {
+    if (!category?.colour) {
+      return undefined;
+    }
+
+    return {
+      borderColor: category.colour,
+      boxShadow: `inset 0 0 0 1px ${hexToRgba(category.colour, 0.2)}`,
+    };
+  };
 
   if (!isOpen) {
     return null;
@@ -107,10 +119,6 @@ const AssessmentSidebar = ({
     }
     if (mode === "DEADLINE" && !dueDate) {
       setError("Due date is required.");
-      return;
-    }
-    if (typeof weighting !== "number") {
-      setError("Weighting is required.");
       return;
     }
     if (mode === "EVENT") {
@@ -134,14 +142,14 @@ const AssessmentSidebar = ({
         title: title.trim(),
         assessment_type: assessmentType,
         due_date: toIsoString(mode === "EVENT" ? eventStart : dueDate),
-        length_of_assessment: typeof lengthOfAssessment === "number" ? lengthOfAssessment : null,
-        weighting_of_assessment: weighting,
+        length_of_assessment: null,
+        weighting_of_assessment: typeof weighting === "number" ? weighting : 0,
         notes: notes.trim(),
-        reminder_offset: typeof reminderOffset === "number" ? reminderOffset : null,
+        reminder_offset: null,
         assessment_category: typeof assessmentCategoryId === "number" ? assessmentCategoryId : null,
         module_category: typeof moduleCategoryId === "number" ? moduleCategoryId : null,
         categories: mergedCategories,
-        completed,
+        completed: assessment?.completed ?? false,
         event_details: mode === "EVENT"
           ? {
               start_time: toIsoString(eventStart),
@@ -259,9 +267,20 @@ const AssessmentSidebar = ({
 
                     <div className="grid gap-4 sm:grid-cols-2">
                       <div>
-                        <label htmlFor="assessment-category" className="mb-2 block text-sm font-medium text-gray-700">
-                          Assessment category
-                        </label>
+                        <div className="mb-2 flex items-center gap-2">
+                          <label htmlFor="assessment-category" className="block text-sm font-medium text-gray-700">
+                            Assessment type
+                          </label>
+                          <Tooltip content="Select from your existing categories. Create or edit categories from tasks, calendar, or settings first.">
+                            <button
+                              type="button"
+                              className="inline-flex h-5 w-5 items-center justify-center rounded-full border border-gray-300 text-xs text-gray-500 hover:bg-gray-100"
+                              aria-label="Explain assessment category"
+                            >
+                              ?
+                            </button>
+                          </Tooltip>
+                        </div>
                         <select
                           id="assessment-category"
                           value={assessmentCategoryId}
@@ -269,19 +288,35 @@ const AssessmentSidebar = ({
                             event.target.value === "" ? "" : Number(event.target.value),
                           )}
                           className={baseInputClass}
+                          style={getCategorySelectStyle(selectedAssessmentCategory)}
                         >
                           <option value="">None</option>
                           {categories.map((category) => (
-                            <option key={category.id} value={category.id}>
+                            <option
+                              key={category.id}
+                              value={category.id}
+                              style={category.colour ? { backgroundColor: hexToRgba(category.colour, 0.18) } : undefined}
+                            >
                               {category.text}
                             </option>
                           ))}
                         </select>
                       </div>
                       <div>
-                        <label htmlFor="assessment-module" className="mb-2 block text-sm font-medium text-gray-700">
-                          Subject / module
-                        </label>
+                        <div className="mb-2 flex items-center gap-2">
+                          <label htmlFor="assessment-module" className="block text-sm font-medium text-gray-700">
+                            Subject / module
+                          </label>
+                          <Tooltip content="Select from your existing categories. Use a category you already created for your subject or module.">
+                            <button
+                              type="button"
+                              className="inline-flex h-5 w-5 items-center justify-center rounded-full border border-gray-300 text-xs text-gray-500 hover:bg-gray-100"
+                              aria-label="Explain subject or module"
+                            >
+                              ?
+                            </button>
+                          </Tooltip>
+                        </div>
                         <select
                           id="assessment-module"
                           value={moduleCategoryId}
@@ -289,10 +324,15 @@ const AssessmentSidebar = ({
                             event.target.value === "" ? "" : Number(event.target.value),
                           )}
                           className={baseInputClass}
+                          style={getCategorySelectStyle(selectedModuleCategory)}
                         >
                           <option value="">None</option>
                           {categories.map((category) => (
-                            <option key={category.id} value={category.id}>
+                            <option
+                              key={category.id}
+                              value={category.id}
+                              style={category.colour ? { backgroundColor: hexToRgba(category.colour, 0.18) } : undefined}
+                            >
                               {category.text}
                             </option>
                           ))}
@@ -301,7 +341,8 @@ const AssessmentSidebar = ({
                     </div>
 
                     {mode === "DEADLINE" ? (
-                      <div>
+                      <div className="grid gap-4 sm:grid-cols-2">
+                        <div>
                         <label htmlFor="assessment-due-date" className="mb-2 block text-sm font-medium text-gray-700">
                           Due date
                         </label>
@@ -313,54 +354,24 @@ const AssessmentSidebar = ({
                           className={baseInputClass}
                           required
                         />
+                        </div>
+                        <div>
+                          <label htmlFor="assessment-weighting" className="mb-2 block text-sm font-medium text-gray-700">
+                            Weighting %
+                          </label>
+                          <input
+                            id="assessment-weighting"
+                            type="number"
+                            min="0"
+                            max="100"
+                            value={String(weighting)}
+                            onChange={(event) => setWeighting(event.target.value === "" ? "" : Number(event.target.value))}
+                            className={baseInputClass}
+                            placeholder="Optional"
+                          />
+                        </div>
                       </div>
                     ) : null}
-
-                    <div className="grid gap-4 sm:grid-cols-3">
-                      <div>
-                        <label htmlFor="assessment-weighting" className="mb-2 block text-sm font-medium text-gray-700">
-                          Weighting %
-                        </label>
-                        <input
-                          id="assessment-weighting"
-                          type="number"
-                          min="0"
-                          max="100"
-                          value={String(weighting)}
-                          onChange={(event) => setWeighting(event.target.value === "" ? "" : Number(event.target.value))}
-                          className={baseInputClass}
-                          required
-                        />
-                      </div>
-                      <div>
-                        <label htmlFor="assessment-length" className="mb-2 block text-sm font-medium text-gray-700">
-                          Duration (minutes)
-                        </label>
-                        <input
-                          id="assessment-length"
-                          type="number"
-                          min="1"
-                          value={String(lengthOfAssessment)}
-                          onChange={(event) => setLengthOfAssessment(event.target.value === "" ? "" : Number(event.target.value))}
-                          className={baseInputClass}
-                          placeholder="Optional"
-                        />
-                      </div>
-                      <div>
-                        <label htmlFor="assessment-reminder" className="mb-2 block text-sm font-medium text-gray-700">
-                          Reminder before assessment (minutes)
-                        </label>
-                        <input
-                          id="assessment-reminder"
-                          type="number"
-                          min="0"
-                          value={String(reminderOffset)}
-                          onChange={(event) => setReminderOffset(event.target.value === "" ? "" : Number(event.target.value))}
-                          className={baseInputClass}
-                          placeholder="Optional"
-                        />
-                      </div>
-                    </div>
 
                     <div>
                       <label htmlFor="assessment-notes" className="mb-2 block text-sm font-medium text-gray-700">
@@ -376,21 +387,31 @@ const AssessmentSidebar = ({
                       />
                     </div>
 
-                    <div className="rounded-xl border border-gray-200 px-4 py-3">
-                      <div className="flex items-center justify-between gap-4">
-                        <div>
-                          <p className="text-sm font-medium text-gray-900">Assessment timing</p>
-                          <p className="mt-1 text-xs text-gray-500">{eventPreview}</p>
+                    {mode === "EVENT" ? (
+                      <div className="rounded-xl border border-gray-200 px-4 py-3">
+                        <div className="flex items-center justify-between gap-4">
+                          <p className="text-sm font-medium text-gray-900">Event details</p>
+                          <span className="rounded-full bg-orange-100 px-3 py-1 text-xs font-semibold text-orange-700">
+                            Event
+                          </span>
                         </div>
-                        <span className={`rounded-full px-3 py-1 text-xs font-semibold ${
-                          mode === "EVENT" ? "bg-orange-100 text-orange-700" : "bg-slate-100 text-slate-700"
-                        }`}>
-                          {mode === "EVENT" ? "Event" : "Deadline"}
-                        </span>
-                      </div>
 
-                      {mode === "EVENT" ? (
                         <div className="mt-4 grid gap-4">
+                          <div>
+                            <label htmlFor="assessment-weighting" className="mb-2 block text-sm font-medium text-gray-700">
+                              Weighting %
+                            </label>
+                            <input
+                              id="assessment-weighting"
+                              type="number"
+                              min="0"
+                              max="100"
+                              value={String(weighting)}
+                              onChange={(event) => setWeighting(event.target.value === "" ? "" : Number(event.target.value))}
+                              className={baseInputClass}
+                              placeholder="Optional"
+                            />
+                          </div>
                           <div className="grid gap-4 sm:grid-cols-2">
                             <div>
                               <label htmlFor="assessment-event-start" className="mb-2 block text-sm font-medium text-gray-700">
@@ -432,33 +453,8 @@ const AssessmentSidebar = ({
                             />
                           </div>
                         </div>
-                      ) : null}
-                    </div>
-
-                    <div className="rounded-xl border border-gray-200 px-4 py-3">
-                      <div className="flex items-center justify-between gap-4">
-                        <div>
-                          <p className="text-sm font-medium text-gray-900">Completed</p>
-                          <p className="mt-1 text-xs text-gray-500">
-                            Completed assessments move into the finished section and can be added to gradebook.
-                          </p>
-                        </div>
-                        <button
-                          type="button"
-                          onClick={() => setCompleted((prev) => !prev)}
-                          className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                            completed ? "bg-primary" : "bg-gray-300"
-                          }`}
-                          aria-pressed={completed}
-                        >
-                          <span
-                            className={`inline-block h-5 w-5 transform rounded-full bg-white shadow-sm transition-transform ${
-                              completed ? "translate-x-5" : "translate-x-1"
-                            }`}
-                          />
-                        </button>
                       </div>
-                    </div>
+                    ) : null}
                   </div>
 
                   <div className="flex gap-3 border-t border-gray-200 bg-gray-50 px-6 py-4">
@@ -486,4 +482,4 @@ const AssessmentSidebar = ({
   );
 };
 
-export default AssessmentSidebar;
+export default AssessmentModal;

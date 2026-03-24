@@ -4,19 +4,8 @@ import type { Assessment, Category } from "@/types";
 interface AssessmentCardProps {
   assessment: Assessment;
   onClick: (assessment: Assessment) => void;
-  onToggleCompleted: (assessment: Assessment) => void;
   onAddToGradebook: (assessment: Assessment) => void;
 }
-
-const formatDateTime = (value: string): string => {
-  const date = new Date(value);
-  return date.toLocaleString([], {
-    month: "short",
-    day: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
-};
 
 const getChipStyle = (category?: Category | null) => {
   const colour = category?.colour ?? "#94a3b8";
@@ -26,42 +15,79 @@ const getChipStyle = (category?: Category | null) => {
   };
 };
 
+const formatCompactDateTime = (value: string): string => {
+  const date = new Date(value);
+  return date.toLocaleString([], {
+    month: "short",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+};
+
+const getCountdownLabel = (value: string, isCompleted: boolean): string | null => {
+  if (isCompleted) {
+    return null;
+  }
+
+  const targetTime = new Date(value).getTime();
+  const diffMs = targetTime - Date.now();
+  if (diffMs <= 0) {
+    return "Now";
+  }
+
+  const diffDays = diffMs / (1000 * 60 * 60 * 24);
+  if (diffDays < 1) {
+    const diffHours = Math.ceil(diffMs / (1000 * 60 * 60));
+    return `${diffHours}h left`;
+  }
+
+  return `${Math.ceil(diffDays)}d left`;
+};
+
+const getCountdownTone = (value: string) => {
+  const diffMs = new Date(value).getTime() - Date.now();
+  const diffDays = diffMs / (1000 * 60 * 60 * 24);
+
+  if (diffDays < 3) {
+    return "border-red-200 bg-red-50 text-red-700";
+  }
+  if (diffDays < 7) {
+    return "border-orange-200 bg-orange-50 text-orange-700";
+  }
+  if (diffDays < 30) {
+    return "border-yellow-200 bg-yellow-50 text-yellow-700";
+  }
+
+  return "border-gray-200 bg-gray-50 text-gray-700";
+};
+
 const AssessmentCard = ({
   assessment,
   onClick,
-  onToggleCompleted,
   onAddToGradebook,
 }: AssessmentCardProps) => {
-  const isOverdue = !assessment.completed && new Date(assessment.due_date).getTime() < Date.now();
+  const comparisonDate = assessment.linked_event_details?.end_time ?? assessment.due_date;
+  const countdownDate = assessment.linked_event_details?.start_time ?? assessment.due_date;
+  const isCompleted = assessment.completed || new Date(comparisonDate).getTime() < Date.now();
+  const isOverdue = !isCompleted && new Date(assessment.due_date).getTime() < Date.now();
   const primaryCategory = assessment.assessment_category ?? assessment.categories[0] ?? null;
   const supplementalCategories = assessment.categories.filter((category) => (
     category.id !== assessment.assessment_category?.id && category.id !== assessment.module_category?.id
   ));
-
-  const statItems = [
-    {
-      label: assessment.linked_event_details ? "Starts" : "Due",
-      value: assessment.linked_event_details
-        ? formatDateTime(assessment.linked_event_details.start_time)
-        : (isOverdue ? "Overdue" : formatDateTime(assessment.due_date)),
-      tone: isOverdue ? "border-red-200 bg-red-50 text-red-700" : "border-gray-200 bg-gray-50 text-gray-800",
-    },
-    {
-      label: "Weighting",
-      value: `${assessment.weighting_of_assessment}%`,
-      tone: "border-blue-200 bg-blue-50 text-blue-800",
-    },
-    {
-      label: "Duration",
-      value: typeof assessment.length_of_assessment === "number" ? `${assessment.length_of_assessment} min` : "Not set",
-      tone: "border-emerald-200 bg-emerald-50 text-emerald-800",
-    },
-    {
-      label: "Mode",
-      value: assessment.linked_event_details ? "Event" : "Deadline",
-      tone: "border-orange-200 bg-orange-50 text-orange-800",
-    },
-  ];
+  const countdownLabel = getCountdownLabel(countdownDate, isCompleted);
+  const countdownTone = getCountdownTone(countdownDate);
+  const cardColour = assessment.module_category?.colour ?? "#e5e7eb";
+  const dueItem = {
+    value: assessment.linked_event_details
+      ? `Due ${formatCompactDateTime(assessment.linked_event_details.start_time)}`
+      : (isOverdue ? "Due Overdue" : `Due ${formatCompactDateTime(assessment.due_date)}`),
+    tone: isOverdue ? "border-red-200 bg-red-50 text-red-700" : "border-gray-200 bg-gray-50 text-gray-800",
+  };
+  const weightingItem = {
+    value: `Weight ${assessment.weighting_of_assessment}%`,
+    tone: "border-gray-200 bg-gray-50 text-gray-800",
+  };
 
   return (
     <div
@@ -74,38 +100,81 @@ const AssessmentCard = ({
           onClick(assessment);
         }
       }}
-      className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-primary/20"
+      className="relative rounded-2xl border px-5 pb-5 pt-4 shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-primary/20"
+      style={{
+        borderColor: cardColour,
+        backgroundColor: hexToRgba(cardColour, 0.1),
+      }}
     >
-      <div className="flex flex-col gap-5">
-        <div className="flex items-start justify-between gap-4">
-          <div className="min-w-0 flex-1">
-            <div className="mb-3 flex flex-wrap items-center gap-2">
-              {primaryCategory ? (
-                <span
-                  className="rounded-full border px-3 py-1 text-xs font-semibold text-black"
-                  style={getChipStyle(primaryCategory)}
-                >
-                  {primaryCategory.text}
-                </span>
-              ) : null}
-              {assessment.module_category ? (
-                <span
-                  className="rounded-full border px-3 py-1 text-xs font-semibold text-black"
-                  style={getChipStyle(assessment.module_category)}
-                >
-                  {assessment.module_category.text}
-                </span>
-              ) : null}
-              <span className={`rounded-full px-3 py-1 text-xs font-semibold ${
-                assessment.completed ? "bg-emerald-100 text-emerald-700" : "bg-slate-100 text-slate-700"
-              }`}>
-                {assessment.completed ? "Completed" : "Active"}
-              </span>
+      {(countdownLabel || isCompleted) ? (
+        <div className="absolute right-5 top-4 flex flex-col items-end gap-2">
+          {countdownLabel ? (
+            <div className={`rounded-full border px-3 py-1 text-xs font-semibold ${countdownTone}`}>
+              {countdownLabel}
             </div>
+          ) : null}
+          {isCompleted ? (
+            <button
+              type="button"
+              onClick={(event) => {
+                event.stopPropagation();
+                onAddToGradebook(assessment);
+              }}
+              className="rounded-lg bg-primary px-3 py-2 text-xs font-semibold text-white transition-colors hover:bg-blue-300"
+            >
+              Add to gradebook
+            </button>
+          ) : null}
+        </div>
+      ) : null}
 
-            <h3 className={`text-lg font-semibold leading-tight ${assessment.completed ? "text-gray-500 line-through" : "text-black"}`}>
-              {assessment.title}
+      <div className="flex flex-col gap-4">
+        {isCompleted ? (
+          <div className="mb-0 flex flex-wrap items-center gap-2">
+            <span className="rounded-full bg-emerald-100 px-3 py-1 text-xs font-semibold text-emerald-700">
+              Completed
+            </span>
+          </div>
+        ) : null}
+
+        {assessment.module_category || primaryCategory ? (
+          <div className="-mb-1 flex flex-wrap gap-6">
+            {assessment.module_category ? (
+              <div>
+                <div className="text-[11px] font-semibold uppercase tracking-[0.12em] text-gray-600">
+                  Module
+                </div>
+                <div className="mt-0.5 text-base font-semibold text-black">
+                  {assessment.module_category.text}
+                </div>
+              </div>
+            ) : null}
+            {primaryCategory ? (
+              <div>
+                <div className="text-[11px] font-semibold uppercase tracking-[0.12em] text-gray-600">
+                  Type
+                </div>
+                <div className="mt-0.5 text-base font-semibold text-black">
+                  {primaryCategory.text}
+                </div>
+              </div>
+            ) : null}
+          </div>
+        ) : null}
+
+        <div className="flex items-start gap-4">
+          <div className="min-w-0 flex-1">
+            <h3 className={`min-w-0 text-lg font-semibold leading-tight ${isCompleted ? "text-gray-500 line-through" : "text-black"}`}>
+                {assessment.title}
             </h3>
+            <div className="mt-3 flex flex-wrap gap-2">
+              <div className={`rounded-lg border px-3 py-2 text-xs font-semibold ${dueItem.tone}`}>
+                {dueItem.value}
+              </div>
+              <div className={`rounded-lg border px-3 py-2 text-xs font-semibold ${weightingItem.tone}`}>
+                {weightingItem.value}
+              </div>
+            </div>
 
             {assessment.notes ? (
               <p className="mt-2 line-clamp-2 text-sm text-gray-600">
@@ -113,44 +182,6 @@ const AssessmentCard = ({
               </p>
             ) : null}
           </div>
-
-          <div className="flex shrink-0 flex-col items-end gap-2">
-            <button
-              type="button"
-              onClick={(event) => {
-                event.stopPropagation();
-                void onToggleCompleted(assessment);
-              }}
-              className="rounded-lg border border-gray-300 bg-white px-3 py-2 text-xs font-semibold text-black transition-colors hover:bg-gray-50"
-            >
-              {assessment.completed ? "Mark active" : "Mark complete"}
-            </button>
-            {assessment.completed ? (
-              <button
-                type="button"
-                onClick={(event) => {
-                  event.stopPropagation();
-                  onAddToGradebook(assessment);
-                }}
-                className="rounded-lg bg-primary px-3 py-2 text-xs font-semibold text-white transition-colors hover:bg-blue-300"
-              >
-                Add to gradebook
-              </button>
-            ) : null}
-          </div>
-        </div>
-
-        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-          {statItems.map((item) => (
-            <div key={item.label} className={`rounded-xl border px-4 py-3 ${item.tone}`}>
-              <div className="text-[11px] font-semibold uppercase tracking-[0.12em] opacity-75">
-                {item.label}
-              </div>
-              <div className="mt-2 text-sm font-semibold">
-                {item.value}
-              </div>
-            </div>
-          ))}
         </div>
 
         {supplementalCategories.length > 0 ? (
