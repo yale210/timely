@@ -5,6 +5,7 @@ from courses.models.course import Course, CourseEvent, CourseJoinCode, CourseEnr
 
 User = get_user_model()
 
+
 class CourseCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Course
@@ -58,7 +59,9 @@ class CourseJoinCodeSerializer(serializers.Serializer):
     def create(self, validated_data):
         code = validated_data["code"]
         course = Course.objects.get(join_code__code=code)
-        CourseEnrollment.objects.get_or_create(course=course, student=self.context["request"].user)
+        CourseEnrollment.objects.get_or_create(
+            course=course, student=self.context["request"].user
+        )
 
 
 class CourseStaffAddSerializer(serializers.Serializer):
