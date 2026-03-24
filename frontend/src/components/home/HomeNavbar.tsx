@@ -5,6 +5,7 @@ import { Link } from "react-router-dom"
 
 const guestNavigation = [
     { name: 'Home', href: '/' },
+    { name: 'About', href: '/about' },
     { name: 'Signup', href: '/signup' },
 ]
 

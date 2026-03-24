@@ -16,7 +16,8 @@ import {
   Friends, 
   ProfilePage, 
   Leaderboard,
-  NotFound 
+  NotFound,
+  About
 } from "@/pages"
 import { Notifications } from "@/pages/Notification/Notifications"
 import { NotificationDetail } from "@/pages/Notification/NotificationDetail"
@@ -24,7 +25,7 @@ import { AdminNotifications } from "@/pages/Admin/Notifications/AdminNotificatio
 import { AdminNotificationHistory } from "@/pages/Admin/Notifications/AdminNotificationHistory"
 import { AdminNotificationHistoryDetail } from "@/pages/Admin/Notifications/AdminNotificationHistoryDetail"
 
-const PUBLIC_ROUTES = ["/login", "/signup", "/"]
+const PUBLIC_ROUTES = ["/login", "/signup", "/", "/about"]
 
 /**
  * The root component of the application which organises the routing logic.
@@ -152,11 +153,12 @@ export default function App() {
         </RequireAuth>}
       />
 
+      <Route path="/about" element={<About />} />
+
       <Route path="*" element={
         <NotFound/>
       }>
       </Route>
-
     </Routes>
   )
 }
