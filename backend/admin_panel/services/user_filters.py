@@ -7,9 +7,7 @@ def apply_search_filter(queryset, search):
     """Apply username and email search filtering when requested."""
     if not search:
         return queryset
-    return queryset.filter(
-        Q(username__icontains=search) | Q(email__icontains=search)
-    )
+    return queryset.filter(Q(username__icontains=search) | Q(email__icontains=search))
 
 
 def apply_role_filter(queryset, role):
