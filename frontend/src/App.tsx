@@ -3,20 +3,21 @@ import { Routes, Route, useLocation } from "react-router-dom"
 import RequireAuth from "@/components/auth/RequireAuth"
 import RedirectAuth from "@/components/auth/RedirectAuth"
 import RequireAdmin from "@/components/auth/RequireAdmin"
-import { 
-  Home, 
-  Login, 
-  Signup, 
-  Logout, 
-  CalendarPage, 
-  TaskList, 
-  Gradebook, 
-  Dashboard, 
-  Settings, 
-  Friends, 
-  ProfilePage, 
+import {
+  Home,
+  Login,
+  Signup,
+  Logout,
+  CalendarPage,
+  TaskList,
+  Gradebook,
+  Dashboard,
+  Settings,
+  Friends,
+  ProfilePage,
   Leaderboard,
-  NotFound 
+  Pomodoro,
+  NotFound,
 } from "@/pages"
 import { Notifications } from "@/pages/Notification/Notifications"
 import { NotificationDetail } from "@/pages/Notification/NotificationDetail"
@@ -111,6 +112,12 @@ export default function App() {
         </RequireAuth>}
       />
 
+      <Route path="/pomodoro" element={
+        <RequireAuth>
+          <Pomodoro />
+        </RequireAuth>}
+      />
+
       <Route path="/profiles/:username" element={
         <RequireAuth>
           <ProfilePage />
@@ -154,9 +161,8 @@ export default function App() {
       />
 
       <Route path="*" element={
-        <NotFound/>
-      }>
-      </Route>
+        <NotFound />
+      } />
 
     </Routes>
   )

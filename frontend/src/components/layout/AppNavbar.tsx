@@ -16,12 +16,14 @@ const navItems = [
 ]
 
 const featureItems = [
-  { key: "leaderboard", label: "Leaderboard", to: "/leaderboard", icon: "leaderboard" },
+  { key: "pomodoro", label: "Pomodoro", to: "/pomodoro", icon: "timer" },
   { key: "gradebook", label: "Gradebook", to: "/gradebook", icon: "school" },
+  { key: "leaderboard", label: "Leaderboard", to: "/leaderboard", icon: "leaderboard" },
 ]
 
 const FEATURE_FLAGS = {
   gradebook: "feature_gradebook_enabled",
+  pomodoro: "feature_pomodoro_enabled",
   leaderboard: "feature_leaderboard_enabled",
 }
 
@@ -47,6 +49,7 @@ export default function AppNavbar() {
   const isAdminRoute = location.pathname.startsWith("/admin")
   const [featureFlags, setFeatureFlags] = useState(() => ({
     gradebook: readFeatureFlag("gradebook"),
+    pomodoro: readFeatureFlag("pomodoro"),
     leaderboard: readFeatureFlag("leaderboard"),
   }))
   const {
@@ -81,6 +84,7 @@ export default function AppNavbar() {
     const refreshFlags = () => {
       setFeatureFlags({
         gradebook: readFeatureFlag("gradebook"),
+        pomodoro: readFeatureFlag("pomodoro"),
         leaderboard: readFeatureFlag("leaderboard"),
       })
     }
@@ -125,6 +129,7 @@ export default function AppNavbar() {
 
   const visibleFeatureItems = featureItems.filter((item) => {
     if (item.key === "gradebook") return featureFlags.gradebook
+    if (item.key === "pomodoro") return featureFlags.pomodoro
     if (item.key === "leaderboard") return featureFlags.leaderboard
     return false
   })

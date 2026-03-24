@@ -34,14 +34,15 @@ const SettingsContent = ({
   const [featureFlags, setFeatureFlags] = useState(() => ({
     gradebook: localStorage.getItem("feature_gradebook_enabled") !== "false",
     leaderboard: localStorage.getItem("feature_leaderboard_enabled") !== "false",
+    pomodoro: localStorage.getItem("feature_pomodoro_enabled") !== "false",
   }));
 
   const featureRows = useMemo(() => ([
     {
-      key: "leaderboard",
-      label: "Leaderboard",
-      description: "Allows users to view how they are doing in comparison to their friends.",
-      value: featureFlags.leaderboard,
+      key: "pomodoro",
+      label: "Pomodoro",
+      description: "A focus timer that alternates work sessions with short and long breaks.",
+      value: featureFlags.pomodoro,
     },
     {
       key: "gradebook",
@@ -49,13 +50,21 @@ const SettingsContent = ({
       description: "Track and review your grades over time.",
       value: featureFlags.gradebook,
     },
+    {
+      key: "leaderboard",
+      label: "Leaderboard",
+      description: "Allows users to view how they are doing in comparison to their friends.",
+      value: featureFlags.leaderboard,
+    },
   ]), [featureFlags]);
 
-  const updateFeature = (key: "gradebook" | "leaderboard", value: boolean) => {
+  const updateFeature = (key: "gradebook" | "leaderboard" | "pomodoro", value: boolean) => {
     if (key === "gradebook") {
       localStorage.setItem("feature_gradebook_enabled", String(value));
-    } else {
+    } else if (key === "leaderboard") {
       localStorage.setItem("feature_leaderboard_enabled", String(value));
+    } else {
+      localStorage.setItem("feature_pomodoro_enabled", String(value));
     }
     setFeatureFlags((prev) => ({ ...prev, [key]: value }));
     window.dispatchEvent(new Event("feature-flags-changed"));
@@ -150,9 +159,8 @@ const SettingsContent = ({
                         className="h-4 w-4"
                         checked={feature.value}
                         onChange={(event) => {
-                          updateFeature(feature.key as "gradebook" | "leaderboard", event.target.checked);
                           updateFeature(
-                            feature.key as "gradebook" | "leaderboard",
+                            feature.key as "gradebook" | "leaderboard" | "pomodoro",
                             event.target.checked,
                           );
                         }}
