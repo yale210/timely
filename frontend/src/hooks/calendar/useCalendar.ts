@@ -17,7 +17,7 @@ import type {
   TaskSubmission,
 } from "@/types";
 import { buildCalendarEntries, type CalendarEntry } from "@/utils/calendarAdapter";
-import { hasTaskBufferRescheduleConflict } from "@/utils/apiErrors";
+import { hasTaskAllocationRescheduleConflict } from "@/utils/apiErrors";
 import completeSoundUrl from "@/assets/sounds/task-complete.mp3";
 
 interface CalendarState {
@@ -440,7 +440,13 @@ export const useCalendar = (): UseCalendarReturn => {
         await fetchTasks();
         closeSidebar();
       } catch (error) {
-        if (selectedItem && "deadline" in selectedItem && selectedItem.id !== 0 && hasTaskBufferRescheduleConflict(error)) {
+        if (
+          selectedItem
+          && "deadline" in selectedItem
+          && selectedItem.id !== 0
+          && (selectedItem.allocation?.length ?? 0) > 0
+          && hasTaskAllocationRescheduleConflict(error)
+        ) {
           await taskService.saveAndRescheduleTask(
             selectedItem.id,
             data,

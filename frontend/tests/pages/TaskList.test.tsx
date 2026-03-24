@@ -96,6 +96,7 @@ describe("TaskList Page", () => {
     categories: [],
     isSidebarOpen: false,
     selectedTask: undefined,
+    warning: null,
     search: "",
     sortBy: "date",
     filters: { category: null, completed: "all" as const, highImportance: false, quickWins: false },

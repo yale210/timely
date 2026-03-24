@@ -5,7 +5,7 @@ import AppLayout from "@/layouts/AppLayout";
 
 const TaskList = () => {
   const { state, loading, error, actions } = useTaskList();
-  const { categories, isSidebarOpen, selectedTask, search, sortBy, filters, sections } = state;
+  const { categories, isSidebarOpen, selectedTask, warning, search, sortBy, filters, sections } = state;
 
   return (
     <AppLayout>
@@ -55,6 +55,7 @@ const TaskList = () => {
 
       <div className="flex-1 overflow-y-auto px-6 py-4 bg-white">
         {error && <div className="mb-4 rounded-md bg-red-50 px-4 py-3 text-sm text-red-700">{error}</div>}
+        {warning && <div className="mb-4 rounded-md border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">{warning}</div>}
         {loading && state.tasks.length === 0 && <p className="mb-4 text-sm text-gray-500">Loading tasks...</p>}
 
         {sections.overdueTasks.length > 0 && (
