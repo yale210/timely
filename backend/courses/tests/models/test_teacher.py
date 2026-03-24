@@ -3,6 +3,7 @@ from django.contrib.auth import get_user_model
 from courses.models import Teacher
 from django.test import TestCase
 
+
 class TeacherModelTests(TestCase):
     """Tests for the Teacher model."""
 

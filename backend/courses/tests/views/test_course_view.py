@@ -1,5 +1,4 @@
 import datetime
-from unittest.mock import patch
 
 from django.contrib.auth import get_user_model
 from django.utils import timezone
@@ -7,7 +6,15 @@ from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APITestCase
 
-from courses.models import Course, CourseEnrollment, CourseEvent, CourseJoinCode, CourseStaff, Student, Teacher
+from courses.models import (
+    Course,
+    CourseEnrollment,
+    CourseEvent,
+    CourseJoinCode,
+    CourseStaff,
+    Student,
+    Teacher,
+)
 
 User = get_user_model()
 
@@ -53,7 +60,9 @@ class CourseViewTests(APITestCase):
 
         self.list_url = reverse("course-list")
         self.detail_url = reverse("course-detail", args=[self.course.id])
-        self.inactive_detail_url = reverse("course-detail", args=[self.inactive_course.id])
+        self.inactive_detail_url = reverse(
+            "course-detail", args=[self.inactive_course.id]
+        )
         self.events_url = reverse("course-events", args=[self.course.id])
         self.join_url = reverse("course-join", args=[self.course.id])
         self.leave_url = reverse("course-leave", args=[self.course.id])
@@ -69,7 +78,9 @@ class CourseViewTests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
     def test_list_returns_student_courses(self):
-        CourseEnrollment.objects.create(course=self.course, student=self.student, active=True)
+        CourseEnrollment.objects.create(
+            course=self.course, student=self.student, active=True
+        )
 
         self.client.force_authenticate(user=self.student_user)
         response = self.client.get(self.list_url)
@@ -112,7 +123,9 @@ class CourseViewTests(APITestCase):
     # -------------------------
 
     def test_create_requires_authentication(self):
-        response = self.client.post(self.list_url, {"name": "New Course"}, format="json")
+        response = self.client.post(
+            self.list_url, {"name": "New Course"}, format="json"
+        )
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
     def test_create_requires_teacher_permission(self):
@@ -156,7 +169,9 @@ class CourseViewTests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
     def test_retrieve_returns_course_data_with_cohort_and_students(self):
-        CourseEnrollment.objects.create(course=self.course, student=self.student, active=True)
+        CourseEnrollment.objects.create(
+            course=self.course, student=self.student, active=True
+        )
 
         self.client.force_authenticate(user=self.student_user)
         response = self.client.get(self.detail_url)
@@ -167,7 +182,9 @@ class CourseViewTests(APITestCase):
         self.assertEqual(list(response.data["students"]), [self.student.id])
 
     def test_retrieve_excludes_inactive_enrollments_from_cohort(self):
-        CourseEnrollment.objects.create(course=self.course, student=self.student, active=False)
+        CourseEnrollment.objects.create(
+            course=self.course, student=self.student, active=False
+        )
 
         self.client.force_authenticate(user=self.teacher_user)
         response = self.client.get(self.detail_url)
@@ -227,7 +244,9 @@ class CourseViewTests(APITestCase):
         self.assertEqual(self.course.name, "Patched Name")
 
     def test_partial_update_non_lead_cannot_change_name(self):
-        CourseStaff.objects.create(course=self.course, student=self.other_user, active=True)
+        CourseStaff.objects.create(
+            course=self.course, student=self.other_user, active=True
+        )
 
         self.client.force_authenticate(user=self.other_user)
         response = self.client.patch(
@@ -297,7 +316,9 @@ class CourseViewTests(APITestCase):
             start_time=earlier,
             end_time=earlier + datetime.timedelta(hours=1),
         )
-        CourseEnrollment.objects.get_or_create(course=self.course, student=self.student, active=True)
+        CourseEnrollment.objects.get_or_create(
+            course=self.course, student=self.student, active=True
+        )
         self.client.force_authenticate(user=self.student_user)
         response = self.client.get(self.events_url)
 
@@ -365,16 +386,22 @@ class CourseViewTests(APITestCase):
         response = self.client.post(self.join_url)
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
-
     def test_join_creates_enrollment(self):
         self.client.force_authenticate(user=self.student_user)
         response = self.client.post(self.join_url)
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(CourseEnrollment.objects.filter(course=self.course, student=self.student).count(), 1)
+        self.assertEqual(
+            CourseEnrollment.objects.filter(
+                course=self.course, student=self.student
+            ).count(),
+            1,
+        )
 
     def test_join_reactivates_inactive_enrollment(self):
-        enrollment = CourseEnrollment.objects.create(course=self.course, student=self.student, active=False)
+        enrollment = CourseEnrollment.objects.create(
+            course=self.course, student=self.student, active=False
+        )
 
         self.client.force_authenticate(user=self.student_user)
         response = self.client.post(self.join_url)
@@ -406,15 +433,23 @@ class CourseViewTests(APITestCase):
         )
 
         self.client.force_authenticate(user=self.student_user)
-        response = self.client.post(self.join_by_code_url, {"code": join_code.code}, format="json")
+        response = self.client.post(
+            self.join_by_code_url, {"code": join_code.code}, format="json"
+        )
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data["course_id"], self.course.id)
-        self.assertTrue(CourseEnrollment.objects.filter(course=self.course, student=self.student).exists())
+        self.assertTrue(
+            CourseEnrollment.objects.filter(
+                course=self.course, student=self.student
+            ).exists()
+        )
 
     def test_join_by_code_invalid_code_returns_400(self):
         self.client.force_authenticate(user=self.student_user)
-        response = self.client.post(self.join_by_code_url, {"code": "missing"}, format="json")
+        response = self.client.post(
+            self.join_by_code_url, {"code": "missing"}, format="json"
+        )
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
@@ -427,19 +462,25 @@ class CourseViewTests(APITestCase):
         )
 
         self.client.force_authenticate(user=self.student_user)
-        response = self.client.post(self.join_by_code_url, {"code": "EXPIRED"}, format="json")
+        response = self.client.post(
+            self.join_by_code_url, {"code": "EXPIRED"}, format="json"
+        )
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn("expired", response.data["detail"])
 
     def test_leave_success(self):
-        CourseEnrollment.objects.create(course=self.course, student=self.student, active=True)
+        CourseEnrollment.objects.create(
+            course=self.course, student=self.student, active=True
+        )
 
         self.client.force_authenticate(user=self.student_user)
         response = self.client.post(self.leave_url)
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        enrollment = CourseEnrollment.objects.get(course=self.course, student=self.student)
+        enrollment = CourseEnrollment.objects.get(
+            course=self.course, student=self.student
+        )
         self.assertFalse(enrollment.active)
 
     def test_leave_returns_404_when_no_student_profile(self):
@@ -470,7 +511,9 @@ class CourseViewTests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_staff_get_returns_active_staff(self):
-        CourseStaff.objects.create(course=self.course, student=self.other_user, active=True)
+        CourseStaff.objects.create(
+            course=self.course, student=self.other_user, active=True
+        )
 
         self.client.force_authenticate(user=self.teacher_user)
         response = self.client.get(self.staff_url)
@@ -481,10 +524,18 @@ class CourseViewTests(APITestCase):
 
     def test_staff_post_adds_member(self):
         self.client.force_authenticate(user=self.teacher_user)
-        response = self.client.post(self.staff_url, {"user_id": self.other_user.id}, format="json")
+        response = self.client.post(
+            self.staff_url, {"user_id": self.other_user.id}, format="json"
+        )
 
-        self.assertIn(response.status_code, (status.HTTP_201_CREATED, status.HTTP_200_OK))
-        self.assertTrue(CourseStaff.objects.filter(course=self.course, student=self.other_user, active=True).exists())
+        self.assertIn(
+            response.status_code, (status.HTTP_201_CREATED, status.HTTP_200_OK)
+        )
+        self.assertTrue(
+            CourseStaff.objects.filter(
+                course=self.course, student=self.other_user, active=True
+            ).exists()
+        )
 
     def test_staff_post_validates_user_id(self):
         self.client.force_authenticate(user=self.teacher_user)
@@ -500,24 +551,33 @@ class CourseViewTests(APITestCase):
         self.assertIn("required", response.data["detail"])
 
     def test_staff_delete_removes_staff_member(self):
-        CourseStaff.objects.create(course=self.course, student=self.other_user, active=True)
+        CourseStaff.objects.create(
+            course=self.course, student=self.other_user, active=True
+        )
 
         self.client.force_authenticate(user=self.teacher_user)
-        response = self.client.delete(self.staff_url, {"user_id": self.other_user.id}, format="json")
+        response = self.client.delete(
+            self.staff_url, {"user_id": self.other_user.id}, format="json"
+        )
 
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
-        self.assertFalse(CourseStaff.objects.filter(course=self.course, student=self.other_user).exists())
+        self.assertFalse(
+            CourseStaff.objects.filter(
+                course=self.course, student=self.other_user
+            ).exists()
+        )
 
     def test_staff_delete_returns_404_when_missing(self):
         self.client.force_authenticate(user=self.teacher_user)
-        response = self.client.delete(self.staff_url, {"user_id": self.other_user.id}, format="json")
+        response = self.client.delete(
+            self.staff_url, {"user_id": self.other_user.id}, format="json"
+        )
 
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
     # -------------------------
     # join_code
     # -------------------------
-
 
     def test_join_code_requires_permission(self):
         self.client.force_authenticate(user=self.student_user)
@@ -527,4 +587,3 @@ class CourseViewTests(APITestCase):
             format="json",
         )
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
-
