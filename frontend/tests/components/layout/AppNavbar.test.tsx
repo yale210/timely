@@ -113,7 +113,7 @@ describe("AppNavbar Component", () => {
         <AppNavbar />
       </MemoryRouter>
     );
-    expect(screen.getByAltText("Timely")).toBeDefined();
+    expect(screen.getByRole("link", { name: "Timely" })).toBeDefined();
   });
 
   it("opens and closes the navigation drawer", () => {
@@ -333,7 +333,7 @@ describe("AppNavbar Component", () => {
     );
     
     fireEvent.click(screen.getByLabelText("Open navigation"));
-    const logoLink = screen.getByAltText("Timely").parentElement!;
+    const logoLink = screen.getByRole("link", { name: "Timely" });
     fireEvent.click(logoLink);
     expect(document.body.classList.contains("menu-open")).toBe(true);
   });

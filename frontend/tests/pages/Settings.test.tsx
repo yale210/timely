@@ -35,6 +35,8 @@ describe("Settings page", () => {
     day_start: "08:00:00",
     day_end: "22:00:00",
     max_hours_study_per_day: 4,
+    max_days_ahead: 7,
+    drag_snap_minutes: 15,
     days_off: [3],
   };
 
@@ -244,10 +246,10 @@ describe("Settings page", () => {
     expect(screen.getByText("Toggle optional sections of the app.")).toBeDefined();
 
     fireEvent.click(screen.getByRole("button", { name: /appearance/i }));
-    expect(screen.getByText("Choose a theme and font for your dashboard.")).toBeDefined();
+    expect(screen.getByText("Choose the colour theme and type style used across the app.")).toBeDefined();
 
-    fireEvent.click(screen.getByRole("button", { name: "dark" }));
-    fireEvent.click(screen.getByRole("button", { name: "poppins" }));
+    fireEvent.click(screen.getByRole("button", { name: "Dark Surface" }));
+    fireEvent.click(screen.getByRole("button", { name: "Font Ag Poppins" }));
     expect(document.documentElement.dataset.theme).toBe("dark");
     expect(document.documentElement.dataset.font).toBe("poppins");
     expect(localStorage.getItem("theme")).toBe("dark");

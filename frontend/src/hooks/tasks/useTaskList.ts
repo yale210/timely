@@ -6,6 +6,7 @@ import { type Category, type Task, type TaskSubmission } from "@/types";
 import { useThemeFont } from "@/hooks/common/useThemeFont";
 import { emitXpGained } from "@/utils/xpEvents";
 import { emitLevelup } from "@/utils/levelUpEvent";
+import { hasTaskBufferRescheduleConflict } from "@/utils/apiErrors";
 
 type TaskCompletionFilter = "all" | "completed" | "pending";
 
@@ -137,9 +138,13 @@ useEffect(() => {
 
       try {
         const nextCompleted = !task.completed;
-        //await taskService.updateTask(id, { completed: nextCompleted });
-        const response = await taskService.updateTask(id, {completed: nextCompleted} )
-        console.log("task update response", JSON.stringify(response, null, 2))
+        const response = await taskService.updateTask(
+          id,
+          {
+            completed: nextCompleted,
+            completed_minutes: nextCompleted ? task.estimated_minutes : 0,
+          },
+        )
         if (nextCompleted && !task.completed) {
           const expDelta = 10 + 2 * task.importance;
           emitXpGained(expDelta);
@@ -158,14 +163,44 @@ useEffect(() => {
 const submitTask = useCallback(
   async (data: TaskSubmission) => {
     try {
+      let savedTask: Task | null = null;
       if (selectedTask) {
-        await taskService.updateTask(selectedTask.id, data);
+        const bufferBeforeChanged =
+          typeof data.buffer_before_minutes === "number" &&
+          data.buffer_before_minutes !== (selectedTask.buffer_before_minutes ?? 0);
+        const bufferAfterChanged =
+          typeof data.buffer_after_minutes === "number" &&
+          data.buffer_after_minutes !== (selectedTask.buffer_after_minutes ?? 0);
+        const completedMinutesChanged =
+          typeof data.completed_minutes === "number" &&
+          data.completed_minutes !== (selectedTask.completed_minutes ?? 0);
+        savedTask = bufferBeforeChanged || bufferAfterChanged || completedMinutesChanged
+          ? await taskService.saveAndRescheduleTask(
+              selectedTask.id,
+              data,
+              moment().format("YYYY-MM-DD"),
+            )
+          : await taskService.updateTask(selectedTask.id, data);
       } else {
-        await taskService.createTask(data);
+        savedTask = await taskService.createTask(data);
+      }
+      if (savedTask) {
+        setSelectedTask(savedTask);
       }
       await fetchTasks();
     } catch (submitError) {
+      if (selectedTask && hasTaskBufferRescheduleConflict(submitError)) {
+        const savedTask = await taskService.saveAndRescheduleTask(
+          selectedTask.id,
+          data,
+          moment().format("YYYY-MM-DD"),
+        );
+        setSelectedTask(savedTask);
+        await fetchTasks();
+        return;
+      }
       console.error(submitError);
+      throw submitError;
     }
   },
   [fetchTasks, selectedTask],
@@ -254,6 +289,7 @@ const openNewTask = useCallback(() => {
 
 const closeSidebar = useCallback(() => {
   setIsSidebarOpen(false);
+  setSelectedTask(undefined);
 }, []);
 
 const filteredTasks = useMemo(() => {

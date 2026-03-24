@@ -462,12 +462,12 @@ const EventForm = ({
     toggleReminderChannel(index, "send_push", true);
   };
 
-  const baseInputClass = "w-full rounded-lg border border-gray-300 bg-white text-black focus:ring-orange-500 focus:border-orange-500 shadow-sm p-2.5";
+  const baseInputClass = "w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-black shadow-sm focus:border-orange-500 focus:ring-orange-500";
   const errorClass = "ring-2 ring-red-500 border-red-500";
 
   return (
     <form onSubmit={handleSubmit} className="flex flex-col h-full bg-white text-black">
-      <div className="grow overflow-y-auto p-6 space-y-6">
+      <div className="grow overflow-y-auto space-y-4 p-5">
         {clockSkewWarning && (
           <div className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800">
             {clockSkewWarning}
@@ -514,68 +514,58 @@ const EventForm = ({
           />
         </div>
 
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <label htmlFor="event-start-date" className="block text-sm font-medium text-gray-700 mb-2">
-              Start Date
-            </label>
-            <input
-              id="event-start-date"
-              className={`${baseInputClass} text-[17px] ${errors.time ? errorClass : ""}`}
-              type="date"
-              value={startDate}
-              onChange={(e) => {
-                refreshValidationNow();
-                setStartDate(e.target.value);
-              }}
-              required
-            />
-          </div>
-          <div>
-            <label htmlFor="event-start-time" className="block text-sm font-medium text-gray-700 mb-2">
-              Start Time
-            </label>
-            <input
-              id="event-start-time"
-              className={`${baseInputClass} text-[17px] ${errors.time ? errorClass : ""}`}
-              type="time"
-              value={startTime}
-              onChange={(e) => {
-                refreshValidationNow();
-                setStartTime(e.target.value);
-              }}
-              required
-            />
-          </div>
+        <div className="grid grid-cols-[72px_minmax(0,1fr)_104px] items-center gap-2">
+          <label htmlFor="event-start-date" className="min-w-0 text-sm font-medium text-gray-700">
+            Start date
+          </label>
+          <input
+            id="event-start-date"
+            aria-label="Start date"
+            className={`${baseInputClass} min-w-0 text-[17px] ${errors.time ? errorClass : ""}`}
+            type="date"
+            value={startDate}
+            onChange={(e) => {
+              refreshValidationNow();
+              setStartDate(e.target.value);
+            }}
+            required
+          />
+          <input
+            id="event-start-time"
+            aria-label="Start time"
+            className={`${baseInputClass} w-full text-[17px] ${errors.time ? errorClass : ""}`}
+            type="time"
+            value={startTime}
+            onChange={(e) => {
+              refreshValidationNow();
+              setStartTime(e.target.value);
+            }}
+            required
+          />
         </div>
 
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <label htmlFor="event-end-date" className="block text-sm font-medium text-gray-700 mb-2">
-              End Date
-            </label>
-            <input
-              id="event-end-date"
-              className={`${baseInputClass} text-[17px] ${errors.time ? errorClass : ""}`}
-              type="date"
-              value={endDate}
-              onChange={(e) => setEndDate(e.target.value)}
-              required
-            />
-          </div>
-          <div>
-            <label htmlFor="event-end-time" className="block text-sm font-medium text-gray-700 mb-2">
-              End Time
-            </label>
-            <input
-              id="event-end-time"
-              className={`${baseInputClass} text-[17px] ${errors.time ? errorClass : ""}`}
-              type="time"
-              value={endTime}
-              onChange={(e) => setEndTime(e.target.value)}
-              required
-            />
-          </div>
+        <div className="grid grid-cols-[72px_minmax(0,1fr)_104px] items-center gap-2">
+          <label htmlFor="event-end-date" className="min-w-0 text-sm font-medium text-gray-700">
+            End date
+          </label>
+          <input
+            id="event-end-date"
+            aria-label="End date"
+            className={`${baseInputClass} min-w-0 text-[17px] ${errors.time ? errorClass : ""}`}
+            type="date"
+            value={endDate}
+            onChange={(e) => setEndDate(e.target.value)}
+            required
+          />
+          <input
+            id="event-end-time"
+            aria-label="End time"
+            className={`${baseInputClass} w-full text-[17px] ${errors.time ? errorClass : ""}`}
+            type="time"
+            value={endTime}
+            onChange={(e) => setEndTime(e.target.value)}
+            required
+          />
         </div>
 
         {errors.time && (
@@ -599,7 +589,7 @@ const EventForm = ({
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-3">
+          <label className="mb-2 block text-sm font-medium text-gray-700">
             Category <span className="text-gray-400">(optional)</span>
           </label>
           <CategoryMultiSelect
@@ -621,13 +611,13 @@ const EventForm = ({
             id="event-description"
             className={`${baseInputClass} resize-none`}
             placeholder=""
-            rows={3}
+            rows={2}
             value={description}
             onChange={(e) => setDescription(e.target.value)}
           />
         </div>
 
-        <div>
+        <div className="rounded-xl border border-gray-200 bg-transparent p-3">
           <div className="flex items-center justify-between gap-4">
             <label htmlFor="event-recurring" className="text-sm font-medium text-gray-700">
               Recurring
@@ -659,9 +649,9 @@ const EventForm = ({
           </div>
 
           {recurrenceEnabled && (
-            <div className="mt-4 grid grid-cols-2 gap-4">
-              <div>
-                <label htmlFor="recurrence-interval" className="block text-sm font-medium text-gray-700 mb-2">
+            <div className="mt-3 space-y-3">
+              <div className="grid grid-cols-[minmax(0,1fr)_112px] items-center gap-3">
+                <label htmlFor="recurrence-interval" className="min-w-0 text-sm font-medium text-gray-700">
                   Interval
                 </label>
                 <select
@@ -682,13 +672,13 @@ const EventForm = ({
                   <option value="yearly">Yearly</option>
                 </select>
               </div>
-              <div>
-                <label htmlFor="recurrence-end-type" className="block text-sm font-medium text-gray-700 mb-2">
-                  End Date
+              <div className="grid grid-cols-[minmax(0,1fr)_112px] items-center gap-3">
+                <label htmlFor="recurrence-end-type" className="min-w-0 text-sm font-medium text-gray-700">
+                  End date
                 </label>
                 <select
                   id="recurrence-end-type"
-                  className={`${baseInputClass} mb-2`}
+                  className={baseInputClass}
                   value={recurrenceEnd ? "date" : "never"}
                   onChange={(e) => {
                     if (e.target.value === "never") {
@@ -704,21 +694,26 @@ const EventForm = ({
                   <option value="date">On Date</option>
                 </select>
                 {recurrenceEnd && (
-                  <input
-                    id="recurrence-end"
-                    className={baseInputClass}
-                    type="date"
-                    value={recurrenceEnd}
-                    onChange={(e) => setRecurrenceEnd(e.target.value)}
-                  />
+                  <div className="col-span-2 grid grid-cols-[minmax(0,1fr)_112px] items-center gap-3">
+                    <span className="min-w-0 text-sm text-gray-500">
+                      On date
+                    </span>
+                    <input
+                      id="recurrence-end"
+                      className={baseInputClass}
+                      type="date"
+                      value={recurrenceEnd}
+                      onChange={(e) => setRecurrenceEnd(e.target.value)}
+                    />
+                  </div>
                 )}
               </div>
             </div>
           )}
         </div>
 
-        <div className="pt-2">
-          <div className="flex justify-between items-center mb-2">
+        <div className="rounded-xl border border-gray-200 bg-transparent p-3">
+          <div className={`${reminders.length > 0 ? "mb-2" : ""} flex items-center justify-between`}>
             <div className="flex items-center gap-2">
               <h3 className="text-sm font-medium text-gray-900">Reminders ({reminders.length}/{MAX_REMINDERS})</h3>
               <Tooltip content="In-app notifications are always sent. Select additional channels below.">
@@ -738,9 +733,9 @@ const EventForm = ({
           </div>
           <div className="space-y-2">
             {reminders.map((reminder, index) => (
-              <div key={index} className={`flex flex-col gap-2 rounded-lg px-3 py-2 ${pastReminderIndices.has(index) ? "bg-red-50 text-red-700" : "bg-gray-50 text-gray-700"}`}>
-                <div className="flex flex-wrap items-center gap-3">
-                  <span className="text-sm font-medium">Reminder</span>
+              <div key={index} className={`space-y-2 rounded-lg border px-3 py-2 ${pastReminderIndices.has(index) ? "border-red-200 bg-red-50 text-red-700" : "border-gray-200 bg-transparent text-gray-700"}`}>
+                <div className="flex items-center gap-3">
+                  <span className="text-sm font-medium">Reminder {index + 1}</span>
                   <label className="inline-flex items-center gap-2 text-sm text-gray-600">
                     <input
                       type="checkbox"
@@ -762,17 +757,26 @@ const EventForm = ({
                     />
                     Popup
                   </label>
+                  <button
+                    type="button"
+                    onClick={() => removeReminder(index)}
+                    className="ml-auto text-gray-400 hover:text-red-500"
+                    aria-label={`Delete reminder ${index + 1}`}
+                  >
+                    <span className="material-icons text-sm">delete</span>
+                  </button>
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="grid grid-cols-[72px_88px_minmax(0,1fr)] items-center gap-2">
+                  <span className="text-sm text-gray-500">Before</span>
                   <input
                     type="number"
-                    className="w-20 text-sm border-gray-300 rounded-md bg-white px-3 focus:ring-orange-500 focus:border-orange-500"
+                    className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm focus:border-orange-500 focus:ring-orange-500"
                     value={reminder.value}
                     onChange={(e) => updateReminder(index, "value", parseInt(e.target.value) || 1)}
                     min="1"
                   />
                   <select
-                    className="text-sm border-gray-300 rounded-md bg-white focus:ring-orange-500 focus:border-orange-500"
+                    className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm focus:border-orange-500 focus:ring-orange-500"
                     value={reminder.unit}
                     onChange={(e) => updateReminder(index, "unit", e.target.value as TimeUnit)}
                   >
@@ -780,14 +784,6 @@ const EventForm = ({
                       <option key={opt.value} value={opt.value}>{opt.label}</option>
                     ))}
                   </select>
-                  <span className="text-sm text-gray-500">before start</span>
-                  <button
-                    type="button"
-                    onClick={() => removeReminder(index)}
-                    className="ml-auto text-gray-400 hover:text-red-500"
-                  >
-                    <span className="material-icons text-sm">delete</span>
-                  </button>
                 </div>
                 {pastReminderIndices.has(index) && (
                   <p className="text-sm text-red-600">
@@ -805,7 +801,7 @@ const EventForm = ({
         </div>
       </div>
 
-      <div className="p-6 border-t border-gray-200 flex gap-3 bg-gray-50">
+      <div className="flex gap-3 border-t border-gray-200 bg-gray-50 p-4">
         <button
           type="button"
           onClick={onCancel}
@@ -859,4 +855,3 @@ const EventForm = ({
 };
 
 export default EventForm;
-

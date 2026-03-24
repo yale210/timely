@@ -1,3 +1,5 @@
+"""Models for the notifications app."""
+
 from .notification import Notification
 from .push_subscription import PushSubscription
 from .broadcast import BroadcastAuditLog, BroadcastJob, BroadcastRecipient

@@ -59,6 +59,7 @@ urlpatterns = [
     path("api/export/", ExportView.as_view()),
     path("api/import/", ImportView.as_view()),
     path("api/profiles/", include("profiles.urls")),
+    path("api/pomo/", include("pomo.urls")),
 ]
 
 if settings.DEBUG:

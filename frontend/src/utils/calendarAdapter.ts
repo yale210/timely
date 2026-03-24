@@ -9,6 +9,7 @@ export interface CalendarEntry {
   title: string;
   start: Date;
   end: Date;
+  actualEnd: Date;
   allDay: boolean;
   kind: "task" | "event";
   sourceId: number;
@@ -27,6 +28,16 @@ interface BuildCalendarEntriesOptions {
   events: Event[];
   scheduleOrder: Record<number, number>;
 }
+
+const getRenderableEnd = (startValue: string, endValue: string): Date => {
+  const start = new Date(startValue);
+  const end = new Date(endValue);
+  if (end.getTime() <= start.getTime()) {
+    return end;
+  }
+
+  return new Date(end.getTime() - 1);
+};
 
 /**
  * Maps task allocations and calendar events into react-big-calendar entries.
@@ -51,7 +62,8 @@ export const buildCalendarEntries = ({
       id: `task-${task.id}-${index}`,
       title: task.title,
       start: new Date(slot.start),
-      end: new Date(slot.end),
+      end: getRenderableEnd(slot.start, slot.end),
+      actualEnd: new Date(slot.end),
       allDay: moment(slot.end).diff(moment(slot.start), "hours") >= 24,
       kind: "task" as const,
       sourceId: task.id,
@@ -67,7 +79,8 @@ export const buildCalendarEntries = ({
     id: event.instance_id ?? `event-${event.id}-${event.start_time}`,
     title: event.title,
     start: new Date(event.start_time),
-    end: new Date(event.end_time),
+    end: getRenderableEnd(event.start_time, event.end_time),
+    actualEnd: new Date(event.end_time),
     allDay: false,
     kind: "event" as const,
     sourceId: event.id,
@@ -75,4 +88,3 @@ export const buildCalendarEntries = ({
     eventData: event,
   })),
 ];
-

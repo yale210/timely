@@ -9,4 +9,5 @@ export interface Category {
   text: string;
   colour?: string | null;
   colour_override?: boolean;
+  max_daily_study_time?: number | null;
 }
