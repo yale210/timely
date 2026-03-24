@@ -19,7 +19,7 @@ class LeaderboardAPIView(GenericAPIView):
     serializer_class = ProfileSerializer
     parser_classes = [JSONParser, FormParser, MultiPartParser]
 
-    def getProfile(self, user):
+    def get_profile(self, user):
         """Return a profile for a user, creating a default one if needed.
 
         Args:
@@ -43,7 +43,7 @@ class LeaderboardAPIView(GenericAPIView):
         Returns:
             Response: Serialized leaderboard profiles ordered by level.
         """
-        target_profile = self.getProfile(request.user)
+        target_profile = self.get_profile(request.user)
 
         target_profile_friendship_entries = Friendship.objects.filter(
             Q(sender=target_profile.user) | Q(receiver=target_profile.user),

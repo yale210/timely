@@ -21,6 +21,13 @@ User = get_user_model()
 class ProfileSerializerTests(TestCase):
     """Test validation for editable profile serializer fields."""
 
+    def test_serializer_marks_xp_and_level_read_only(self):
+        """Verify progression fields are not writable through the profile serializer."""
+        serializer = ProfileSerializer()
+
+        self.assertIn("xp", serializer.Meta.read_only_fields)
+        self.assertIn("level", serializer.Meta.read_only_fields)
+
     def test_validate_date_of_birth_past(self):
         """Verify past dates of birth pass validation."""
         serializer = ProfileSerializer()
@@ -76,7 +83,6 @@ class PublicProfileSerializerTests(TestCase):
             instance=self.profile, context={"request": request}
         )
         avatar_url = serializer.get_avatar_url(self.profile)
-        # Should be absolute URL
         self.assertIn("http://testserver", avatar_url)
         self.assertIn("/api/media/avatars/avatar", avatar_url)
 
@@ -90,5 +96,4 @@ class PublicProfileSerializerTests(TestCase):
 
         serializer = PublicProfileSerializer(instance=self.profile)
         avatar_url = serializer.get_avatar_url(self.profile)
-        # Should be relative URL
         self.assertTrue(avatar_url.startswith("/api/media/avatars/avatar2"))

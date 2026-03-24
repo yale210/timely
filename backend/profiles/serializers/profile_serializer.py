@@ -37,7 +37,7 @@ class ProfileSerializer(serializers.ModelSerializer):
             "xp",
             "level",
         ]
-        read_only_fields = ["creation_date"]
+        read_only_fields = ["creation_date", "xp", "level"]
 
 
 class PublicProfileSerializer(serializers.ModelSerializer):
