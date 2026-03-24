@@ -56,8 +56,8 @@ urlpatterns = [
     path("api/stats/weekly/", WeeklySummaryView.as_view(), name="weekly-summary"),
     path("api/django-admin/", admin.site.urls),
     path("api/authentication/", include("authentication.urls")),
-    path("api/export/", ExportView.as_view()),
-    path("api/import/", ImportView.as_view()),
+    path("api/export/", ExportView.as_view(), name="export-events"),
+    path("api/import/", ImportView.as_view(), name="import-events"),
     path("api/profiles/", include("profiles.urls")),
 ]
 
