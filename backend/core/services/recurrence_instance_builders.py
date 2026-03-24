@@ -10,6 +10,7 @@ from core.models import Event, EventOverride
 @dataclass(frozen=True)
 class ExpandedEventInstance:
     """Materialised calendar instance returned by recurrence expansion."""
+
     id: int
     title: str
     description: str

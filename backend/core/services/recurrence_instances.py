@@ -4,10 +4,14 @@ from datetime import datetime, time
 from typing import Any
 
 from dateutil.rrule import DAILY, MONTHLY, WEEKLY, YEARLY, rrule
-from django.db.models import Prefetch, Q
 from django.utils import timezone
 
 from core.models import Event, EventOverride
+from core.services.recurrence_event_query_helpers import (
+    _build_user_event_filter,
+    _expand_prefetched_events,
+    _get_events_for_user,
+)
 from core.services.recurrence_instance_builders import (
     ExpandedEventInstance,
     build_base_instance,
@@ -282,10 +286,55 @@ def expand_event_instances(
     return _build_sorted_instances(event, content)
 
 
+def _collect_sorted_instance_parts(event: Event, content):
+    (
+        range_start,
+        range_end,
+        category_cache,
+        reminder_cache,
+        duration,
+        exception_dates,
+        loaded_overrides,
+        overrides_by_original,
+    ) = content
+    instances, seen_override_ids = _collect_occurrence_instances(
+        event,
+        range_start,
+        range_end,
+        duration,
+        exception_dates,
+        overrides_by_original,
+        category_cache,
+        reminder_cache,
+    )
+    return (
+        instances,
+        seen_override_ids,
+        loaded_overrides,
+        range_start,
+        range_end,
+        reminder_cache,
+    )
+
+
 def _build_sorted_instances(event: Event, content) -> list[ExpandedEventInstance]:
-    range_start, range_end, category_cache, reminder_cache, duration, exception_dates, loaded_overrides, overrides_by_original = content
-    instances, seen_override_ids = _collect_occurrence_instances(event, range_start, range_end, duration, exception_dates, overrides_by_original, category_cache, reminder_cache)
-    _append_standalone_overrides(instances, event, loaded_overrides, seen_override_ids, range_start, range_end, reminder_cache)
+    (
+        instances,
+        seen_override_ids,
+        loaded_overrides,
+        range_start,
+        range_end,
+        reminder_cache,
+    ) = _collect_sorted_instance_parts(event, content)
+    _append_standalone_overrides(
+        instances,
+        event,
+        loaded_overrides,
+        seen_override_ids,
+        range_start,
+        range_end,
+        reminder_cache,
+    )
     return sorted(instances, key=lambda instance: instance.start_time)
 
 
@@ -310,52 +359,6 @@ def _append_standalone_overrides(
     )
 
 
-def _build_user_event_filter(range_start: datetime, range_end: datetime) -> Q:
-    return Q(
-        recurrence_interval__isnull=True,
-        start_time__lte=range_end,
-        end_time__gte=range_start,
-    ) | (
-        Q(recurrence_interval__isnull=False)
-        & Q(start_time__lte=range_end)
-        & (Q(recurrence_end__isnull=True) | Q(recurrence_end__gte=range_start.date()))
-    )
-
-
-def _get_events_for_user(user: Any, event_filter: Q):
-    return (
-        Event.objects.filter(user=user)
-        .filter(event_filter)
-        .prefetch_related(
-            "categories",
-            "reminders",
-            Prefetch(
-                "overrides",
-                queryset=EventOverride.objects.prefetch_related("categories").all(),
-            ),
-        )
-        .order_by("start_time", "id")
-    )
-
-
-def _expand_prefetched_events(
-    events,
-    range_start: datetime,
-    range_end: datetime,
-) -> list[ExpandedEventInstance]:
-    instances: list[ExpandedEventInstance] = []
-    for event in events:
-        instances.extend(
-            expand_event_instances(
-                event,
-                range_start,
-                range_end,
-                overrides=list(event.overrides.all()),
-            )
-        )
-    return instances
-
-
 def expand_user_events(
     user: Any,
     range_start: datetime,
@@ -366,5 +369,7 @@ def expand_user_events(
     range_end = _make_aware(range_end)
     event_filter = _build_user_event_filter(range_start, range_end)
     events = _get_events_for_user(user, event_filter)
-    instances = _expand_prefetched_events(events, range_start, range_end)
+    instances = _expand_prefetched_events(
+        events, range_start, range_end, expand_event_instances
+    )
     return sorted(instances, key=lambda instance: instance.start_time)

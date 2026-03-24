@@ -21,6 +21,7 @@ ReminderData = dict[str, Any]
 @dataclass(frozen=True)
 class ScopeThisFields:
     """Resolved field values for a single-occurrence override update."""
+
     title: str
     description: str
     location: str
