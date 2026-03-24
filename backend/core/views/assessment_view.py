@@ -21,13 +21,20 @@ class AssessmentViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAuthenticated]
     filter_backends = [django_filters.DjangoFilterBackend, filters.OrderingFilter]
     filterset_class = AssessmentFilter
-    ordering_fields = ["due_date", "created_at", "updated_at", "weighting_of_assessment"]
+    ordering_fields = [
+        "due_date",
+        "created_at",
+        "updated_at",
+        "weighting_of_assessment",
+    ]
 
     def get_queryset(self):
         return (
             Assessment.objects.filter(user=self.request.user)
             .select_related("assessment_category", "module_category", "linked_event")
-            .prefetch_related("categories", "linked_event__categories", "linked_event__reminders")
+            .prefetch_related(
+                "categories", "linked_event__categories", "linked_event__reminders"
+            )
             .order_by("due_date", "id")
         )
 

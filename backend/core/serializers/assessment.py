@@ -34,6 +34,7 @@ class AssessmentSerializer(serializers.ModelSerializer):
     event_details = AssessmentEventInputSerializer(
         write_only=True, required=False, allow_null=True
     )
+
     class Meta:
         model = Assessment
         fields = [

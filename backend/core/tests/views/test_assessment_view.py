@@ -74,7 +74,9 @@ class AssessmentViewTests(TestCase):
         self.assertEqual(response.status_code, 201)
         assessment = Assessment.objects.get(id=response.data["id"])
         self.assertEqual(assessment.user, self.user)
-        self.assertEqual(list(assessment.categories.values_list("id", flat=True)), [category.id])
+        self.assertEqual(
+            list(assessment.categories.values_list("id", flat=True)), [category.id]
+        )
         self.assertEqual(assessment.assessment_category, category)
         self.assertEqual(assessment.module_category, module_category)
         self.assertIsNotNone(assessment.linked_event)

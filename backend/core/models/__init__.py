@@ -12,7 +12,6 @@ from .profile import Profile
 from .grade import Grade
 from .friendship import Friendship
 from .reminder_dispatch_log import ReminderDispatchLog
-from .assessment import Assessment
 
 __all__ = [
     "Assessment",

@@ -1,8 +1,10 @@
-from django.core.exceptions import ValidationError
-from core.tests.factories import AssessmentFactory, UserFactory
-from core.models import Assessment
-from django.utils import timezone
 import datetime
+
+from django.core.exceptions import ValidationError
+from django.test import TestCase
+from core.models import Assessment
+from core.tests.factories import AssessmentFactory, UserFactory
+from django.utils import timezone
 
 
 class AssessmentModelTest(TestCase):
