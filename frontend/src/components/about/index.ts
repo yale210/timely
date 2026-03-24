@@ -1,0 +1,5 @@
+export { default as AboutHero } from "./AboutHero"
+export { default as AboutFeatureSection } from "./AboutFeatureSection"
+export { default as AboutCta } from "./AboutCta"
+export { FEATURES } from "./aboutFeatures"
+export type { Feature } from "./aboutFeatures"

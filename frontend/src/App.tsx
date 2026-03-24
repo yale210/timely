@@ -18,6 +18,7 @@ import {
   Leaderboard,
   Pomodoro,
   NotFound,
+  About
 } from "@/pages"
 import { Notifications } from "@/pages/Notification/Notifications"
 import { NotificationDetail } from "@/pages/Notification/NotificationDetail"
@@ -26,7 +27,7 @@ import { AdminNotificationHistory } from "@/pages/Admin/Notifications/AdminNotif
 import { AdminNotificationHistoryDetail } from "@/pages/Admin/Notifications/AdminNotificationHistoryDetail"
 import { setDocumentTheme } from "@/utils/themeSettings"
 
-const PUBLIC_ROUTES = ["/login", "/signup", "/"]
+const PUBLIC_ROUTES = ["/login", "/signup", "/", "/about"]
 
 /**
  * The root component of the application which organises the routing logic.
@@ -159,6 +160,8 @@ export default function App() {
           <Settings />
         </RequireAuth>}
       />
+
+      <Route path="/about" element={<About />} />
 
       <Route path="*" element={
         <NotFound />
