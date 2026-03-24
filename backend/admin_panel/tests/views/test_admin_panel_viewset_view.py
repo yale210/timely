@@ -30,7 +30,9 @@ class AdminPanelViewSetConfigurationTests(SimpleTestCase):
         """Verify the viewset is configured with the expected mixins and classes."""
         self.assertTrue(issubclass(AdminPanelViewSet, AdminNotificationActionMixin))
         self.assertTrue(issubclass(AdminPanelViewSet, AdminUsersActionMixin))
-        self.assertEqual(AdminPanelViewSet.permission_classes, [permissions.IsAdminUser])
+        self.assertEqual(
+            AdminPanelViewSet.permission_classes, [permissions.IsAdminUser]
+        )
         self.assertIs(AdminPanelViewSet.serializer_class, AdminUserListSerializer)
         self.assertIs(AdminPanelViewSet.pagination_class, AdminUserPagination)
 

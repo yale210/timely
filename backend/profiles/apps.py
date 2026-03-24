@@ -1,6 +1,6 @@
-from importlib import import_module
 """Django app configuration for the profiles package."""
 
+from importlib import import_module
 from django.apps import AppConfig
 
 
