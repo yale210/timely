@@ -1,7 +1,6 @@
 """Notification management actions for the admin panel."""
 
 from django.contrib.auth import get_user_model
-from django.db import transaction
 from django.utils import timezone
 from rest_framework import status
 from rest_framework.decorators import action
@@ -12,7 +11,14 @@ from admin_panel.serializers import (
     BroadcastJobDetailSerializer,
     BroadcastJobListSerializer,
 )
-from notifications.models import BroadcastAuditLog, BroadcastJob, BroadcastRecipient
+from admin_panel.services import (
+    build_queued_job_payload,
+    create_broadcast_job,
+    create_retry_broadcast_job,
+    get_failed_recipient_ids,
+    queue_broadcast_job,
+)
+from notifications.models import BroadcastJob
 from notifications.tasks import process_broadcast_job
 
 
@@ -57,6 +63,19 @@ class AdminNotificationActionMixin:
             payload["error"]["errors"] = errors
         return payload
 
+    def _bad_request_response(self, code, message, errors=None):
+        """Return a standard bad-request response payload."""
+        return Response(
+            self._serialize_error(code, message, errors),
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+
+    def _queued_job_response(self, broadcast_job):
+        """Return the accepted response for a queued broadcast job."""
+        task = queue_broadcast_job(broadcast_job, process_broadcast_job)
+        payload = build_queued_job_payload(broadcast_job, task.id)
+        return Response(payload, status=status.HTTP_202_ACCEPTED)
+
     @action(detail=False, methods=["post"])
     def send_notification(self, request):
         """Queue a broadcast notification for the selected audience.
@@ -69,88 +88,28 @@ class AdminNotificationActionMixin:
         """
         serializer = AdminNotificationRequestSerializer(data=request.data)
         if not serializer.is_valid():
-            return Response(
-                self._serialize_error(
-                    code="VALIDATION_FAILED",
-                    message="Invalid notification payload.",
-                    errors=serializer.errors,
-                ),
-                status=status.HTTP_400_BAD_REQUEST,
+            return self._bad_request_response(
+                "VALIDATION_FAILED", "Invalid notification payload.", serializer.errors
             )
-
         validated_data = serializer.validated_data
-        title = validated_data["title"]
-        message = validated_data["message"]
         target = validated_data.get("target", BroadcastJob.Target.ALL)
         user_ids = validated_data.get("user_ids", [])
-
-        recipients_qs = self._build_target_queryset(target, user_ids)
-        recipient_ids = list(recipients_qs.values_list("id", flat=True))
-        if not recipient_ids:
-            return Response(
-                self._serialize_error(
-                    code="ZERO_AUDIENCE",
-                    message="The selected audience has no active recipients.",
-                ),
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-
-        audience_filters = {
-            "target": target,
-            "user_ids": user_ids,
-        }
-        audience_snapshot = {
-            "recipient_ids": recipient_ids,
-            "recipient_count": len(recipient_ids),
-        }
-
-        with transaction.atomic():
-            broadcast = BroadcastJob.objects.create(
-                sender=request.user,
-                title=title,
-                message=message,
-                target=target,
-                audience_filters=audience_filters,
-                audience_snapshot=audience_snapshot,
-                recipient_count=len(recipient_ids),
-                status=BroadcastJob.Status.QUEUED,
-            )
-            BroadcastRecipient.objects.bulk_create(
-                [
-                    BroadcastRecipient(
-                        broadcast_job=broadcast,
-                        recipient_id=recipient_id,
-                    )
-                    for recipient_id in recipient_ids
-                ],
-                batch_size=1000,
-            )
-            BroadcastAuditLog.objects.create(
-                broadcast_job=broadcast,
-                actor=request.user,
-                action=BroadcastAuditLog.Action.SEND,
-                audience_snapshot=audience_snapshot,
-                payload={
-                    "title": title,
-                    "message": message,
-                    "target": target,
-                },
-            )
-
-        task = process_broadcast_job.delay(broadcast.id)
-        broadcast.task_id = task.id
-        broadcast.save(update_fields=["task_id", "updated_at"])
-
-        return Response(
-            {
-                "status": broadcast.status,
-                "broadcast_id": broadcast.id,
-                "task_id": task.id,
-                "queued_at": broadcast.queued_at.isoformat(),
-                "recipient_count": broadcast.recipient_count,
-            },
-            status=status.HTTP_202_ACCEPTED,
+        recipient_ids = list(
+            self._build_target_queryset(target, user_ids).values_list("id", flat=True)
         )
+        if not recipient_ids:
+            return self._bad_request_response(
+                "ZERO_AUDIENCE", "The selected audience has no active recipients."
+            )
+        broadcast_job = create_broadcast_job(
+            sender=request.user,
+            title=validated_data["title"],
+            message=validated_data["message"],
+            target=target,
+            user_ids=user_ids,
+            recipient_ids=recipient_ids,
+        )
+        return self._queued_job_response(broadcast_job)
 
     @action(detail=False, methods=["get"])
     def audience_counts(self, request):
@@ -312,73 +271,14 @@ class AdminNotificationActionMixin:
                 ),
                 status=status.HTTP_404_NOT_FOUND,
             )
-
-        failed_recipient_ids = list(
-            BroadcastRecipient.objects.filter(
-                broadcast_job=broadcast,
-                status=BroadcastRecipient.DeliveryStatus.FAILED,
-            ).values_list("recipient_id", flat=True)
-        )
+        failed_recipient_ids = get_failed_recipient_ids(broadcast)
         if not failed_recipient_ids:
-            return Response(
-                self._serialize_error(
-                    code="ZERO_AUDIENCE",
-                    message="No failed recipients available for retry.",
-                ),
-                status=status.HTTP_400_BAD_REQUEST,
+            return self._bad_request_response(
+                "ZERO_AUDIENCE", "No failed recipients available for retry."
             )
-
-        with transaction.atomic():
-            retry_job = BroadcastJob.objects.create(
-                sender=request.user,
-                title=broadcast.title,
-                message=broadcast.message,
-                target=BroadcastJob.Target.RETRY_FAILED,
-                audience_filters={
-                    "retry_of": broadcast.id,
-                    "recipient_ids": failed_recipient_ids,
-                },
-                audience_snapshot={
-                    "recipient_ids": failed_recipient_ids,
-                    "recipient_count": len(failed_recipient_ids),
-                },
-                recipient_count=len(failed_recipient_ids),
-                status=BroadcastJob.Status.QUEUED,
-                retry_of=broadcast,
-            )
-            BroadcastRecipient.objects.bulk_create(
-                [
-                    BroadcastRecipient(
-                        broadcast_job=retry_job,
-                        recipient_id=recipient_id,
-                    )
-                    for recipient_id in failed_recipient_ids
-                ],
-                batch_size=1000,
-            )
-            BroadcastAuditLog.objects.create(
-                broadcast_job=retry_job,
-                actor=request.user,
-                action=BroadcastAuditLog.Action.RETRY,
-                audience_snapshot=retry_job.audience_snapshot,
-                payload={
-                    "title": retry_job.title,
-                    "message": retry_job.message,
-                    "target": retry_job.target,
-                },
-            )
-
-        task = process_broadcast_job.delay(retry_job.id)
-        retry_job.task_id = task.id
-        retry_job.save(update_fields=["task_id", "updated_at"])
-
-        return Response(
-            {
-                "status": retry_job.status,
-                "broadcast_id": retry_job.id,
-                "task_id": task.id,
-                "queued_at": retry_job.queued_at.isoformat(),
-                "recipient_count": retry_job.recipient_count,
-            },
-            status=status.HTTP_202_ACCEPTED,
+        retry_job = create_retry_broadcast_job(
+            sender=request.user,
+            broadcast=broadcast,
+            failed_recipient_ids=failed_recipient_ids,
         )
+        return self._queued_job_response(retry_job)
