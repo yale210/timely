@@ -11,7 +11,7 @@ const TaskList = () => {
     <AppLayout>
       <header className="bg-white border-b border-gray-200 z-10">
         <div className="px-6 py-4 flex items-center justify-between gap-4">
-          <h2 className="text-2xl font-semibold text-black">Tasks</h2>
+          <h1 className="text-2xl font-semibold text-black">Tasks</h1>
           <div className="flex items-center gap-3">
             <div className="relative w-full sm:w-72">
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">

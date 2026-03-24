@@ -1,215 +1,310 @@
-import { useEffect, useState } from "react"
-import useCategories from "@/hooks/tasks/useCategories"
+import { Fragment, useEffect, useMemo, useState, type FormEvent } from "react";
+import { Dialog, DialogPanel, DialogTitle, Transition, TransitionChild } from "@headlessui/react";
 
-interface Category { id: number; text: string }
+import useCategories from "@/hooks/tasks/useCategories";
+import { hexToRgba } from "@/utils/colorUtils";
+import type { Category } from "@/types";
 
-/**
- * Props for CreateGradeModal component.
- * @property open Controls whether the modal is visible.
- * @property onClose Callback invoked to close the modal.
- * @property onCreated Optional callback invoked after a successful create.
- * @property onUpdated Optional callback invoked after a successful update.
- * @property initialData Optional initial values for editing an existing grade.
- */
 interface Props {
-  open: boolean
-  onClose: () => void
-  onCreated?: () => void
-  onUpdated?: () => void
+  open: boolean;
+  onClose: () => void;
+  onCreated?: () => void;
+  onUpdated?: () => void;
   initialData?: {
-    id?: number
-    name?: string
-    score?: number | ""
-    total?: number | ""
-    date?: string
-    categoryId?: number | null
-  }
+    id?: number;
+    name?: string;
+    score?: number | "";
+    total?: number | "";
+    date?: string;
+    categoryId?: number | null;
+  };
 }
 
-/**
- * CreateGradeModal renders a small modal to create or edit a grade.
- * @param props Component props.
- * @param props.open Whether the modal is open.
- * @param props.onClose Function to call to close the modal.
- * @param props.onCreated Optional callback after creation.
- * @param props.onUpdated Optional callback after update.
- * @param props.initialData Optional initial values used when editing.
- */
-export default function CreateGradeModal(props: Props) {
-  const { open, onClose, onCreated, onUpdated, initialData } = props
-  const [name, setName] = useState(initialData?.name ?? "")
-  const [score, setScore] = useState<number | "">(initialData?.score ?? "")
-  const [total, setTotal] = useState<number | "">(initialData?.total ?? "")
-  const [date, setDate] = useState(initialData?.date ?? "")
-  const [error, setError] = useState<string | null>(null)
-  const [categoryId, setCategoryId] = useState<number | null>(initialData?.categoryId ?? null)
-  const { categories } = useCategories()
+const getCookie = (name: string): string | null => {
+  const regex = new RegExp(`(^| )${name}=([^;]+)`);
+  const match = regex.exec(document.cookie);
+  return match ? decodeURIComponent(match[2]) : null;
+};
+
+const CreateGradeModal = ({
+  open,
+  onClose,
+  onCreated,
+  onUpdated,
+  initialData,
+}: Props) => {
+  const [name, setName] = useState(initialData?.name ?? "");
+  const [score, setScore] = useState<number | "">(initialData?.score ?? "");
+  const [total, setTotal] = useState<number | "">(initialData?.total ?? "");
+  const [date, setDate] = useState(initialData?.date ?? "");
+  const [error, setError] = useState<string | null>(null);
+  const [categoryId, setCategoryId] = useState<number | null>(initialData?.categoryId ?? null);
+  const { categories } = useCategories();
 
   useEffect(() => {
-    setName(initialData?.name ?? "")
-    setScore(initialData?.score ?? "")
-    setTotal(initialData?.total ?? "")
-    setDate(initialData?.date ?? "")
-    setCategoryId(initialData?.categoryId ?? null)
-    setError(null)
-  }, [initialData, open])
+    setName(initialData?.name ?? "");
+    setScore(initialData?.score ?? "");
+    setTotal(initialData?.total ?? "");
+    setDate(initialData?.date ?? "");
+    setCategoryId(initialData?.categoryId ?? null);
+    setError(null);
+  }, [initialData, open]);
 
-  if (!open) return null
+  const selectedCategory = useMemo(
+    () => categories.find((category: Category) => category.id === categoryId),
+    [categories, categoryId],
+  );
 
-  //Helper function either returns the matching cookie from the document, or null.
-  function getCookie(name: string): string | null {
-    const regex = new RegExp(`(^| )${name}=([^;]+)`);
-    const match=regex.exec(document.cookie);
-    return match ? decodeURIComponent(match[2]) : null;
+  const baseInputClass = "w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-black shadow-sm focus:border-primary focus:outline-none";
+
+  const getCategorySelectStyle = (category?: Category) => {
+    if (!category?.colour) {
+      return undefined;
+    }
+
+    return {
+      borderColor: category.colour,
+      boxShadow: `inset 0 0 0 1px ${hexToRgba(category.colour, 0.2)}`,
+    };
+  };
+
+  if (!open) {
+    return null;
   }
 
-  async function createGrade(payload: Record<string, unknown>) {
+  const createGrade = async (payload: Record<string, unknown>) => {
     const csrf = getCookie("csrftoken");
     return fetch("/api/grades/", {
       method: "POST",
       credentials: "include",
       headers: {
         "Content-Type": "application/json",
-        ...(csrf ? { "X-CSRFToken": csrf } : {})
+        ...(csrf ? { "X-CSRFToken": csrf } : {}),
       },
       body: JSON.stringify(payload),
     });
-  }
+  };
 
-  /** Create a grade record via the API. */
-
-  async function updateGrade(id: number, payload: Record<string, unknown>) {
+  const updateGrade = async (id: number, payload: Record<string, unknown>) => {
     const csrf = getCookie("csrftoken");
     return fetch(`/api/grades/${id}/`, {
       method: "PUT",
       credentials: "include",
       headers: {
         "Content-Type": "application/json",
-        ...(csrf ? { "X-CSRFToken": csrf } : {})
+        ...(csrf ? { "X-CSRFToken": csrf } : {}),
       },
       body: JSON.stringify(payload),
     });
-  }
+  };
 
-  /** Update an existing grade via the API. */
+  const submit = async (event: FormEvent) => {
+    event.preventDefault();
+    setError(null);
 
-  async function submit(e: React.FormEvent) {
-    e.preventDefault()
-    setError(null)
     if (typeof score !== "number" || typeof total !== "number") {
-      setError("Please provide numeric values for score and total.")
-      return
+      setError("Please provide numeric values for score and total.");
+      return;
     }
     if (score > total) {
-      setError("Score must be less than or equal to total.")
-      return
+      setError("Score must be less than or equal to total.");
+      return;
     }
+
     const payload = {
-      name,
+      name: name.trim(),
       category: categoryId,
       score,
       total_possible: total,
       date_achieved: date,
+    };
+
+    const response = typeof initialData?.id === "number"
+      ? await updateGrade(initialData.id, payload)
+      : await createGrade(payload);
+
+    if (response.ok) {
+      if (typeof initialData?.id === "number") {
+        void onUpdated?.();
+      } else {
+        void onCreated?.();
+      }
+      return;
     }
 
-    if (typeof initialData?.id === "number") {
-      const res = await updateGrade(initialData.id, payload)
-      if (res.ok) {
-        void onUpdated?.()
-      } else setError("Failed to update grade")
-    } else {
-      const res = await createGrade(payload)
-      if (res.ok) {
-        void onCreated?.()
-      } else setError("Failed to create grade")
+    try {
+      const data = await response.json() as Record<string, unknown>;
+      const firstMessage = Object.values(data).flat().find((value) => typeof value === "string");
+      setError(typeof firstMessage === "string" ? firstMessage : "Failed to save grade.");
+    } catch {
+      setError(typeof initialData?.id === "number" ? "Failed to update grade." : "Failed to create grade.");
     }
-  }
-  
-  /** Submit handler for the form; performs create or update. */
+  };
 
   return (
-    <div className="fixed inset-0 bg-black/30 flex items-center justify-center p-4">
-      <div className="bg-white rounded shadow p-4 w-full max-w-md">
-        <h2 className="text-lg font-semibold mb-2">{initialData ? "Edit grade" : "Create grade"}</h2>
-        <form onSubmit={(e) => void submit(e)} className="space-y-2">
-          <input
-            placeholder="Assessment name"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            className="w-full border p-2 rounded"
-            required
-          />
-          <div>
-            <label className="block text-sm text-gray-600 mb-1">Score</label>
-            <div className="grid grid-cols-2 gap-2">
-              <input
-                type="number"
-                placeholder="Score"
-                value={String(score)}
-                onChange={(e) => {
-                  setScore(e.target.value === "" ? "" : (
-                    Number(e.target.value) > 100000 ? 100000 : Number(e.target.value)
-                  ))}}
-                className="w-full border p-2 rounded"
-                required
-              />
-              <input
-                type="number"
-                placeholder="Total"
-                value={String(total)}
-                onChange={(e) => {
-                  setTotal(e.target.value === "" ? "" : (
-                    Number(e.target.value) > 100000 ? 100000 : Number(e.target.value)
-                  ))}}
-                className="w-full border p-2 rounded"
-                required
-              />
-            </div>
-          </div>
-          <div>
-            <label className="block text-sm text-gray-600 mb-1">Category</label>
-            <select
-              value={categoryId ?? ""}
-              onChange={(e) => setCategoryId(e.target.value === "" ? null : Number(e.target.value))}
-              className="w-full border p-2 rounded mb-2 cursor-pointer"
+    <Transition show={open} as={Fragment}>
+      <Dialog as="div" className="relative z-50" onClose={onClose}>
+        <TransitionChild
+          as={Fragment}
+          enter="ease-out duration-300"
+          enterFrom="opacity-0"
+          enterTo="opacity-100"
+          leave="ease-in duration-200"
+          leaveFrom="opacity-100"
+          leaveTo="opacity-0"
+        >
+          <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm transition-opacity" />
+        </TransitionChild>
+
+        <div className="fixed inset-0 z-10 overflow-y-auto">
+          <div className="flex min-h-full items-end justify-center p-0 sm:items-center sm:p-4">
+            <TransitionChild
+              as={Fragment}
+              enter="ease-out duration-300"
+              enterFrom="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
+              enterTo="opacity-100 translate-y-0 sm:scale-100"
+              leave="ease-in duration-200"
+              leaveFrom="opacity-100 translate-y-0 sm:scale-100"
+              leaveTo="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
             >
-              <option value="">None</option>
-              {categories?.map((c: Category) => (
-                  <option key={c.id} value={c.id}>
-                    {c.text}
-                  </option>
-                ))}
-            </select>
+              <DialogPanel className="w-full transform bg-white shadow-xl transition-all sm:max-w-xl sm:rounded-2xl">
+                <form onSubmit={(event) => void submit(event)} className="flex max-h-[100dvh] flex-col sm:max-h-[90vh]">
+                  <div className="flex items-center justify-between border-b border-gray-200 px-6 py-4">
+                    <DialogTitle className="text-lg font-semibold text-black">
+                      {initialData ? "Edit grade" : "Create grade"}
+                    </DialogTitle>
+                    <button
+                      type="button"
+                      onClick={onClose}
+                      className="inline-flex h-8 w-8 items-center justify-center rounded-full text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-700"
+                    >
+                      <span className="material-icons text-lg">close</span>
+                    </button>
+                  </div>
+
+                  <div className="flex-1 space-y-5 overflow-y-auto px-6 py-5">
+                    {error ? (
+                      <div className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+                        {error}
+                      </div>
+                    ) : null}
+
+                    <div>
+                      <label htmlFor="grade-name" className="mb-2 block text-sm font-medium text-gray-700">
+                        Assessment name
+                      </label>
+                      <input
+                        id="grade-name"
+                        placeholder="Assessment name"
+                        value={name}
+                        onChange={(event) => setName(event.target.value)}
+                        className={baseInputClass}
+                        required
+                      />
+                    </div>
+
+                    <div className="grid gap-4 sm:grid-cols-2">
+                      <div>
+                        <label htmlFor="grade-score" className="mb-2 block text-sm font-medium text-gray-700">
+                          Score
+                        </label>
+                        <input
+                          id="grade-score"
+                          type="number"
+                          placeholder="Score"
+                          value={String(score)}
+                          onChange={(event) => {
+                            setScore(event.target.value === "" ? "" : (
+                              Number(event.target.value) > 100000 ? 100000 : Number(event.target.value)
+                            ));
+                          }}
+                          className={baseInputClass}
+                          required
+                        />
+                      </div>
+                      <div>
+                        <label htmlFor="grade-total" className="mb-2 block text-sm font-medium text-gray-700">
+                          Total possible
+                        </label>
+                        <input
+                          id="grade-total"
+                          type="number"
+                          placeholder="Total"
+                          value={String(total)}
+                          onChange={(event) => {
+                            setTotal(event.target.value === "" ? "" : (
+                              Number(event.target.value) > 100000 ? 100000 : Number(event.target.value)
+                            ));
+                          }}
+                          className={baseInputClass}
+                          required
+                        />
+                      </div>
+                    </div>
+
+                    <div className="grid gap-4 sm:grid-cols-2">
+                      <div>
+                        <label className="mb-2 block text-sm font-medium text-gray-700" htmlFor="grade-category">
+                          Category
+                        </label>
+                        <select
+                          id="grade-category"
+                          value={categoryId ?? ""}
+                          onChange={(event) => setCategoryId(event.target.value === "" ? null : Number(event.target.value))}
+                          className={`${baseInputClass} cursor-pointer`}
+                          style={getCategorySelectStyle(selectedCategory)}
+                        >
+                          <option value="">None</option>
+                          {categories?.map((category: Category) => (
+                            <option
+                              key={category.id}
+                              value={category.id}
+                              style={category.colour ? { backgroundColor: hexToRgba(category.colour, 0.18) } : undefined}
+                            >
+                              {category.text}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                      <div>
+                        <label className="mb-2 block text-sm font-medium text-gray-700" htmlFor="grade-date-input">
+                          Date achieved
+                        </label>
+                        <input
+                          id="grade-date-input"
+                          type="date"
+                          value={date}
+                          onChange={(event) => setDate(event.target.value)}
+                          className={baseInputClass}
+                          required
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="flex gap-3 border-t border-gray-200 bg-gray-50 px-6 py-4">
+                    <button
+                      type="button"
+                      onClick={onClose}
+                      className="flex-1 rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-black transition-colors hover:bg-gray-50"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="submit"
+                      className="flex-1 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-300"
+                    >
+                      {initialData ? "Update grade" : "Create grade"}
+                    </button>
+                  </div>
+                </form>
+              </DialogPanel>
+            </TransitionChild>
           </div>
-          <div>
-            <label className="block text-sm text-gray-600 mb-1" htmlFor="grade-date-input">Date</label>
-            <input
-              id="grade-date-input"
-              type="date"
-              value={date}
-              onChange={(e) => setDate(e.target.value)}
-              className="w-full border p-2 rounded"
-              required
-            />
-          </div>
-          {error && <div className="text-red-600">{error}</div>}
-          <div className="flex justify-end gap-2">
-            <button
-              type="button"
-              onClick={onClose}
-              className="px-4 py-2 bg-gray-100 hover:bg-gray-200 active:bg-gray-300 active:scale-95 transition transform duration-150 rounded cursor-pointer"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              className="bg-indigo-600 hover:bg-indigo-700 active:scale-95 transition transform duration-150 text-white px-4 py-2 rounded cursor-pointer"
-            >
-              {initialData ? "Update" : "Create"}
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
-  )
-}
+        </div>
+      </Dialog>
+    </Transition>
+  );
+};
+
+export default CreateGradeModal;

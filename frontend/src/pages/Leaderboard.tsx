@@ -85,7 +85,7 @@ const Leaderboard = () => {
       <div className="flex flex-col">
         <header className="border-b border-gray-200 bg-white">
           <div className="px-6 py-4">
-            <h1 className="text-2xl font-bold">Leaderboard</h1>
+            <h1 className="text-2xl font-semibold text-black">Leaderboard</h1>
           </div>
         </header>
 
