@@ -5,7 +5,8 @@ export { default as Logout } from "./Authentication/Logout";
 export { default as CalendarPage } from "./Calendar"
 export { default as Dashboard } from "./Dashboard"
 export { default as TaskList } from "./TaskList"
-export { default as Gradebook } from "./Gradebook" 
+export { default as Course } from "./Course/Course.tsx"
+export { default as Gradebook } from "./Gradebook"
 export { default as Settings } from "./Settings";
 export { default as Friends } from "./Friends";
 export { default as ProfilePage } from "./Profile";
