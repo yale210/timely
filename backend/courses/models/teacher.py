@@ -3,8 +3,8 @@ from django.db import models
 
 
 class Teacher(models.Model):
-    user = models.ForeignKey(
-        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="teacher"
+    user = models.OneToOneField(
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="teacher", primary_key=True
     )
     active = models.BooleanField(default=True)
 
