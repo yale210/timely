@@ -7,10 +7,15 @@ from django.db import transaction
 from django.utils import timezone
 from django.contrib.auth import get_user_model
 
-from notifications.models import BroadcastJob, BroadcastRecipient, Notification
-from notifications.utils.unread_count import refresh_unread_count
-from notifications.utils.websocket import notify_user
-from notifications.tasks.push import _send_push_notification_sync
+from ..models import BroadcastJob, BroadcastRecipient, Notification
+from ..utils.unread_count import refresh_unread_count
+from ..utils.websocket import notify_user
+from .broadcast_delivery import (
+    build_broadcast_websocket_payload,
+    complete_broadcast_without_recipients,
+    finalise_broadcast_delivery,
+)
+from .push import _send_push_notification_sync
 
 logger = logging.getLogger(__name__)
 User = get_user_model()
@@ -76,7 +81,7 @@ def process_broadcast_job(broadcast_job_id):
         )
     )
     if not recipients:
-        _handle_empty_recipients(broadcast)
+        complete_broadcast_without_recipients(broadcast)
         return "Broadcast has no recipients"
 
     sender_username = broadcast.sender.username if broadcast.sender else None
@@ -89,7 +94,7 @@ def process_broadcast_job(broadcast_job_id):
         broadcast, recipients, notifications_by_recipient_id, sender_username
     )
 
-    _finalise_broadcast_job(broadcast, recipients, delivered, failed, errors)
+    finalise_broadcast_delivery(broadcast, recipients, delivered, failed, errors)
 
     return f"Processed broadcast #{broadcast.id} (sent={delivered}, failed={failed})"
 
@@ -191,31 +196,6 @@ def _send_single_push(recipient, broadcast):
     return False, push_result["error_code"], push_result["error_message"]
 
 
-def _handle_empty_recipients(broadcast):
-    """Handle the case where a broadcast has no recipients.
-
-    Args:
-        broadcast: The BroadcastJob instance to mark as failed.
-    """
-    broadcast.status = BroadcastJob.Status.FAILED
-    broadcast.completed_at = timezone.now()
-    broadcast.failed_count = 0
-    broadcast.delivered_count = 0
-    broadcast.provider_errors = [
-        {"code": "ZERO_AUDIENCE", "message": "Broadcast has no recipients."}
-    ]
-    broadcast.save(
-        update_fields=[
-            "status",
-            "completed_at",
-            "failed_count",
-            "delivered_count",
-            "provider_errors",
-            "updated_at",
-        ]
-    )
-
-
 def _create_broadcast_notifications(broadcast, recipients):
     """Create Notification objects for all recipients in bulk.
 
@@ -254,87 +234,10 @@ def _notify_recipient_websocket(recipient, notification, sender_username):
         sender_username: Username of the sender.
     """
     unread_count = refresh_unread_count(recipient.recipient_id)
-    if notification and notification.id and notification.timestamp:
-        notify_user(
-            recipient.recipient_id,
-            {
-                "type": "new_notification",
-                "notification": {
-                    "id": notification.id,
-                    "recipient": notification.recipient_id,
-                    "sender": notification.sender_id,
-                    "sender_username": sender_username,
-                    "title": notification.title,
-                    "message": notification.message,
-                    "is_read": notification.is_read,
-                    "timestamp": notification.timestamp.isoformat(),
-                    "notification_type": notification.notification_type,
-                },
-                "unread_count": unread_count,
-            },
-        )
-    else:
-        # Fallback if notification object isn't fully formed
-        notify_user(
-            recipient.recipient_id, {"type": "unread_count", "count": unread_count}
-        )
-
-
-def _finalise_broadcast_job(broadcast, recipients, delivered, failed, errors):
-    """Update the broadcast job and recipients after processing.
-
-    Args:
-        broadcast: The BroadcastJob instance.
-        recipients: List of updated BroadcastRecipient objects.
-        delivered: Count of successful deliveries.
-        failed: Count of failed deliveries.
-        errors: List of provider error details.
-    """
-    # Batch update recipient statuses
-    BroadcastRecipient.objects.bulk_update(
-        recipients,
-        [
-            "notification",
-            "status",
-            "error_code",
-            "error_message",
-            "last_attempt_at",
-            "updated_at",
-        ],
+    notify_user(
+        recipient.recipient_id,
+        build_broadcast_websocket_payload(notification, sender_username, unread_count),
     )
-
-    broadcast.delivered_count = delivered
-    broadcast.failed_count = failed
-    broadcast.status = _calculate_broadcast_status(delivered, failed)
-    broadcast.provider_errors = errors
-    broadcast.completed_at = timezone.now()
-    broadcast.save(
-        update_fields=[
-            "status",
-            "delivered_count",
-            "failed_count",
-            "provider_errors",
-            "completed_at",
-            "updated_at",
-        ]
-    )
-
-
-def _calculate_broadcast_status(delivered_count, failed_count):
-    """Determine the overall status of the broadcast job.
-
-    Args:
-        delivered_count: Total successful deliveries.
-        failed_count: Total failed deliveries.
-
-    Returns:
-        The appropriate Status choice for the BroadcastJob.
-    """
-    if failed_count == 0:
-        return BroadcastJob.Status.COMPLETED
-    if delivered_count == 0:
-        return BroadcastJob.Status.FAILED
-    return BroadcastJob.Status.PARTIAL
 
 
 @shared_task
