@@ -62,7 +62,7 @@ describe("GradebookFilterCategories Component", () => {
 
     expect(screen.getByText("Average Percentage")).toBeDefined();
     expect(screen.getByText("60%")).toBeDefined(); // (80 + 40) / 2
-    expect(screen.getByText(/work on consistency across topics/i)).toBeDefined();
+    expect(screen.getByText(/you’re passing - now aim higher\./i)).toBeDefined();
   });
 
   it("applies different tone classes based on average", () => {

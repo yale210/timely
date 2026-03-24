@@ -23,14 +23,14 @@ describe("GradebookHeader Component", () => {
     expect(screen.getByPlaceholderText("Search grades")).toBeDefined();
     expect(screen.getByRole("button", { name: /filter/i })).toBeDefined();
     expect(screen.getByRole("button", { name: /sort/i })).toBeDefined();
-    expect(screen.getByRole("button", { name: /add grade/i })).toBeDefined();
+    expect(screen.getByRole("button", { name: /new/i })).toBeDefined();
   });
 
   it("calls setModalOpen(true) when button is clicked", () => {
     const mockSetModalOpen = vi.fn();
     render(<GradebookHeader setModalOpen={mockSetModalOpen} {...baseProps} />);
     
-    const button = screen.getByRole("button", { name: /add grade/i });
+    const button = screen.getByRole("button", { name: /new/i });
     fireEvent.click(button);
     
     expect(mockSetModalOpen).toHaveBeenCalledWith(true);

@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from "@testing-library/react";
+import { fireEvent, render, screen, within } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import SettingsContent from "@/components/settings/SettingsContent";
 import type { Category, Preference } from "@/types";
@@ -71,7 +71,11 @@ describe("SettingsContent", () => {
     const dispatchSpy = vi.spyOn(window, "dispatchEvent");
     render(<SettingsContent {...createProps("features")} />);
 
-    const gradebookToggle = screen.getByRole("checkbox", { name: /gradebook/i });
+    const gradebookCard = screen.getByText("Gradebook").closest("label");
+    if (!gradebookCard) {
+      throw new Error("Gradebook feature card not found");
+    }
+    const gradebookToggle = within(gradebookCard).getByRole("checkbox");
     fireEvent.click(gradebookToggle);
 
     expect(localStorage.getItem("feature_gradebook_enabled")).toBe("false");
