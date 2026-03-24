@@ -2,10 +2,11 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import moment from "moment";
 import * as taskService from "@/services/taskService";
 import * as categoryService from "@/services/categoryService";
-import { type Category, type Task, type TaskSubmission } from "@/types";
+import { type Category, type Task, type TaskSubmission, type TaskUpdatedResponse } from "@/types";
 import { useThemeFont } from "@/hooks/common/useThemeFont";
 import { emitXpGained } from "@/utils/xpEvents";
 import { emitLevelup } from "@/utils/levelUpEvent";
+import { hasTaskAllocationRescheduleConflict } from "@/utils/apiErrors";
 
 type TaskCompletionFilter = "all" | "completed" | "pending";
 
@@ -24,6 +25,7 @@ interface TaskListState {
   categories: Category[];
   isSidebarOpen: boolean;
   selectedTask: Task | undefined;
+  warning: string | null;
   search: string;
   sortBy: string;
   filters: {
@@ -81,6 +83,7 @@ const [filterHighImportance, setFilterHighImportance] = useState(false);
 const [filterQuickWins, setFilterQuickWins] = useState(false);
 const [loading, setLoading] = useState(false);
 const [error, setError] = useState<string | null>(null);
+const [warning, setWarning] = useState<string | null>(null);
 
 const fetchTasks = useCallback(async () => {
   setLoading(true);
@@ -137,9 +140,13 @@ useEffect(() => {
 
       try {
         const nextCompleted = !task.completed;
-        //await taskService.updateTask(id, { completed: nextCompleted });
-        const response = await taskService.updateTask(id, {completed: nextCompleted} )
-        console.log("task update response", JSON.stringify(response, null, 2))
+        const response = await taskService.updateTask(
+          id,
+          {
+            completed: nextCompleted,
+            completed_minutes: nextCompleted ? task.estimated_minutes : 0,
+          },
+        )
         if (nextCompleted && !task.completed) {
           const expDelta = 10 + 2 * task.importance;
           emitXpGained(expDelta);
@@ -158,14 +165,54 @@ useEffect(() => {
 const submitTask = useCallback(
   async (data: TaskSubmission) => {
     try {
+      let savedTask: TaskUpdatedResponse | Task | null = null;
       if (selectedTask) {
-        await taskService.updateTask(selectedTask.id, data);
+        const bufferBeforeChanged =
+          typeof data.buffer_before_minutes === "number" &&
+          data.buffer_before_minutes !== (selectedTask.buffer_before_minutes ?? 0);
+        const bufferAfterChanged =
+          typeof data.buffer_after_minutes === "number" &&
+          data.buffer_after_minutes !== (selectedTask.buffer_after_minutes ?? 0);
+        const completedMinutesChanged =
+          typeof data.completed_minutes === "number" &&
+          data.completed_minutes !== (selectedTask.completed_minutes ?? 0);
+        savedTask = bufferBeforeChanged || bufferAfterChanged || completedMinutesChanged
+          ? await taskService.saveAndRescheduleTask(
+              selectedTask.id,
+              data,
+              moment().format("YYYY-MM-DD"),
+            )
+          : await taskService.updateTask(selectedTask.id, data);
       } else {
-        await taskService.createTask(data);
+        savedTask = await taskService.createTask(data);
+      }
+      if (savedTask) {
+        setSelectedTask(savedTask);
+        setWarning(
+          "reschedule_warning" in savedTask ? savedTask.reschedule_warning ?? null : null,
+        );
       }
       await fetchTasks();
     } catch (submitError) {
+      if (
+        selectedTask
+        && (selectedTask.allocation?.length ?? 0) > 0
+        && hasTaskAllocationRescheduleConflict(submitError)
+      ) {
+        const savedTask = await taskService.saveAndRescheduleTask(
+          selectedTask.id,
+          data,
+          moment().format("YYYY-MM-DD"),
+        );
+        setSelectedTask(savedTask);
+        setWarning(
+          "reschedule_warning" in savedTask ? savedTask.reschedule_warning ?? null : null,
+        );
+        await fetchTasks();
+        return;
+      }
       console.error(submitError);
+      throw submitError;
     }
   },
   [fetchTasks, selectedTask],
@@ -243,17 +290,20 @@ const deleteCategory = useCallback(async (id: number) => {
 }, [filterCategory]);
 
 const openTask = useCallback((task: Task) => {
+  setWarning(null);
   setSelectedTask(task);
   setIsSidebarOpen(true);
 }, []);
 
 const openNewTask = useCallback(() => {
+  setWarning(null);
   setSelectedTask(undefined);
   setIsSidebarOpen(true);
 }, []);
 
 const closeSidebar = useCallback(() => {
   setIsSidebarOpen(false);
+  setSelectedTask(undefined);
 }, []);
 
 const filteredTasks = useMemo(() => {
@@ -333,6 +383,7 @@ return {
     categories,
     isSidebarOpen,
     selectedTask,
+    warning,
     search,
     sortBy,
     filters: {

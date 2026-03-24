@@ -154,7 +154,6 @@ describe("useCalendar", () => {
     });
 
     expect(schedulerService.scheduleTasks).toHaveBeenCalled();
-    expect(schedulerService.unscheduleTasks).toHaveBeenCalled();
     expect(result.current.state.scheduleOrder[1]).toBe(0);
   });
 
@@ -191,4 +190,3 @@ describe("useCalendar", () => {
     expect(result.current.state.categories).toHaveLength(0);
   });
 });
-

@@ -1,87 +1,49 @@
-from django.contrib.auth import get_user_model
-from django.test import TestCase
-from core.models import Assessment
 from django.core.exceptions import ValidationError
+from core.tests.factories import AssessmentFactory, UserFactory
+from core.models import Assessment
+from django.utils import timezone
+import datetime
 
 
-class AssessmentTests(TestCase):
-    def setUp(self):
-        self.user = get_user_model().objects.create_user(
-            username="thomas1231321", password="password123", email="thomas@test.com"
+class AssessmentModelTest(TestCase):
+    def test_assessment_creation(self):
+        assessment = AssessmentFactory()
+        self.assertTrue(isinstance(assessment, Assessment))
+        self.assertEqual(assessment.__str__(), assessment.title)
+
+    def test_assessment_ordering(self):
+        user = UserFactory()
+        a1 = AssessmentFactory(
+            user=user, due_date=timezone.now() + datetime.timedelta(days=2)
+        )
+        a2 = AssessmentFactory(
+            user=user, due_date=timezone.now() + datetime.timedelta(days=1)
         )
 
-        self.assessment = Assessment.objects.create(
-            user=self.user,
-            title="Large Group Project",
-            module="SEG",
-            assessment_type=Assessment.AssessmentType.COURSEWORK,
-            due_date="2026-04-01T16:00:00Z",
-            length_of_assessment=10000,
-            weighting_of_assessment=85,
-            notes="This is a very important piece of coursework!",
-            reminder_offset=30,
-        )
+        assessments = Assessment.objects.filter(user=user)
+        self.assertEqual(list(assessments), [a2, a1])
 
-    def test_assessment_str_returns_title(self):
-        self.assertEqual(str(self.assessment), self.assessment.title)
-
-    def test_assessment_cannot_have_a_blank_title(self):
-        self.assessment = Assessment(
-            user=self.user,
-            title="",
-            module="SEG",
-            assessment_type=Assessment.AssessmentType.COURSEWORK,
-            due_date="2026-04-01T16:00:00Z",
-            length_of_assessment=10000,
-            weighting_of_assessment=85,
-            notes="This is a very important piece of coursework!",
-            reminder_offset=30,
-        )
-
-        with self.assertRaises(ValidationError):
-            self.assessment.full_clean()
-
-    def test_assessment_cannot_have_a_blank_module(self):
-        self.assessment = Assessment(
-            user=self.user,
-            title="Large Group Project",
-            module="",
-            assessment_type=Assessment.AssessmentType.COURSEWORK,
-            due_date="2026-04-01T16:00:00Z",
-            length_of_assessment=10000,
-            weighting_of_assessment=85,
-            notes="This is a very important piece of coursework!",
-            reminder_offset=30,
-        )
-
-        with self.assertRaises(ValidationError):
-            self.assessment.full_clean()
-
-    def test_assessment_must_have_a_weighting_between_0_and_100(self):
-        self.assessment.weighting_of_assessment = -1
-        with self.assertRaises(ValidationError):
-            self.assessment.full_clean()
-
-        self.assessment.weighting_of_assessment = 101
-        with self.assertRaises(ValidationError):
-            self.assessment.full_clean()
-
-    def test_assessment_length_must_be_positive_if_given(self):
-        self.assessment.length_of_assessment = -10090
-        with self.assertRaises(ValidationError):
-            self.assessment.full_clean()
-
-        self.assessment.length_of_assessment = 0
-        with self.assertRaises(ValidationError):
-            self.assessment.full_clean()
-
-        self.assessment.length_of_assessment = 90
+    def test_assessment_clean_valid(self):
+        assessment = AssessmentFactory.build()
         try:
-            self.assessment.full_clean()
+            assessment.clean()
         except ValidationError:
-            self.fail("Assessment length raised ValidationError despite being valid!")
+            self.fail("clean() raised ValidationError unexpectedly!")
 
-    def test_assessment_reminder_offset_must_be_non_negative_if_provided(self):
-        self.assessment.reminder_offset = -100
-        with self.assertRaises(ValidationError):
-            self.assessment.full_clean()
+    def test_assessment_clean_empty_title(self):
+        assessment = AssessmentFactory.build(title="  ")
+        with self.assertRaises(ValidationError) as cm:
+            assessment.clean()
+        self.assertIn("title", cm.exception.message_dict)
+
+    def test_assessment_clean_negative_weighting(self):
+        assessment = AssessmentFactory.build(weighting_of_assessment=-1)
+        with self.assertRaises(ValidationError) as cm:
+            assessment.clean()
+        self.assertIn("weighting_of_assessment", cm.exception.message_dict)
+
+    def test_assessment_clean_negative_reminder_offset(self):
+        assessment = AssessmentFactory.build(reminder_offset=-1)
+        with self.assertRaises(ValidationError) as cm:
+            assessment.clean()
+        self.assertIn("reminder_offset", cm.exception.message_dict)

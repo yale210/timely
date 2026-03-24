@@ -22,6 +22,7 @@ from django.conf.urls.static import static
 from rest_framework.routers import DefaultRouter
 
 from core.views import (
+    AssessmentViewSet,
     EventViewSet,
     GradeViewSet,
     CategoryViewSet,
@@ -40,6 +41,7 @@ from scheduler.views import ScheduleTasksAPIView, UnscheduleTasksAPIView
 
 router = DefaultRouter()
 router.register(r"tasks", TaskViewSet, basename="task")
+router.register(r"assessments", AssessmentViewSet, basename="assessment")
 router.register(r"grades", GradeViewSet, basename="grade")
 router.register(r"categories", CategoryViewSet, basename="category")
 router.register(r"events", EventViewSet, basename="event")

@@ -1,3 +1,5 @@
+"""API views for the notifications app."""
+
 from .notification_view import NotificationViewSet
 from .push_subscription_view import PushSubscriptionViewSet
 

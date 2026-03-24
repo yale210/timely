@@ -4,103 +4,65 @@ import api from "@/services/api";
 import { useNotificationContext } from "@/context/NotificationContext";
 import { type Notification } from "@/types";
 
-interface NotificationDetailState {
-  notification: Notification | null;
-  isDeleteOpen: boolean;
-}
+interface NotificationDetailState { notification: Notification | null; isDeleteOpen: boolean; }
+interface NotificationDetailActions { setDeleteOpen: (isOpen: boolean) => void; handleToggleRead: () => Promise<void>; handleDelete: () => Promise<void>; }
+interface UseReturn { state: NotificationDetailState; loading: boolean; error: string | null; actions: NotificationDetailActions; }
 
-interface NotificationDetailActions {
-  setDeleteOpen: (isOpen: boolean) => void;
-  handleToggleRead: () => Promise<void>;
-  handleDelete: () => Promise<void>;
-}
-
-interface UseNotificationDetailReturn {
-  state: NotificationDetailState;
-  loading: boolean;
-  error: string | null;
-  actions: NotificationDetailActions;
-}
-
-/**
- * Provides state and actions for the notification detail page.
- */
-export const useNotificationDetail = (): UseNotificationDetailReturn => {
-  const { id } = useParams<{ id: string }>();
-  const navigate = useNavigate();
-  const { markRead, markUnread, deleteNotification, fetchNotifications } = useNotificationContext();
-
+const useFetch = (id: string | undefined, markRead: (id: number) => Promise<void>) => {
   const [notification, setNotification] = useState<Notification | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [isDeleteOpen, setIsDeleteOpen] = useState(false);
-
   useEffect(() => {
-    const fetchNotification = async () => {
+    const f = async () => {
+      setLoading(true);
+      setError(null);
       try {
-        const response = await api.get<Notification>(`/api/notifications/${id}/`);
-        const data = response.data;
-        setNotification(data);
-        if (!data.is_read) {
-          await markRead(data.id);
-          setNotification({ ...data, is_read: true });
+        const res = await api.get<Notification>(`/api/notifications/${id}/`);
+        setNotification(res.data);
+        if (!res.data.is_read) {
+          try {
+            await markRead(res.data.id);
+            setNotification({ ...res.data, is_read: true });
+          } catch (markReadError) {
+            console.error("Failed to mark notification as read", markReadError);
+          }
         }
-      } catch (fetchError) {
-        setError("Failed to fetch notification details");
-        console.error(fetchError);
-      } finally {
-        setLoading(false);
-      }
+      } catch (err) { setError("Failed to fetch notification details"); console.error(err);
+      } finally { setLoading(false); }
     };
-
-    void fetchNotification();
+    void f();
   }, [id, markRead]);
-
-  const handleToggleRead = useCallback(async () => {
-    if (!notification) {
-      return;
-    }
-
-    try {
-      if (notification.is_read) {
-        await markUnread(notification.id);
-        setNotification({ ...notification, is_read: false });
-      } else {
-        await markRead(notification.id);
-        setNotification({ ...notification, is_read: true });
-      }
-      await fetchNotifications();
-    } catch (toggleError) {
-      console.error("Failed to toggle notification status", toggleError);
-    }
-  }, [fetchNotifications, markRead, markUnread, notification]);
-
-  const handleDelete = useCallback(async () => {
-    if (!notification) {
-      return;
-    }
-
-    try {
-      await deleteNotification(notification.id);
-      await fetchNotifications();
-      await navigate("/notifications");
-    } catch (deleteError) {
-      console.error("Failed to delete notification", deleteError);
-    }
-  }, [deleteNotification, fetchNotifications, navigate, notification]);
-
-  return {
-    state: {
-      notification,
-      isDeleteOpen,
-    },
-    loading,
-    error,
-    actions: {
-      setDeleteOpen: setIsDeleteOpen,
-      handleToggleRead,
-      handleDelete,
-    },
-  };
+  return { notification, setNotification, loading, error };
 };
 
+/**
+ * Hook to manage notification detail state and actions.
+ */
+export const useNotificationDetail = (): UseReturn => {
+  const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
+  const ctx = useNotificationContext();
+  const { notification, setNotification, loading, error } = useFetch(id, ctx.markRead);
+  const [isDeleteOpen, setIsDeleteOpen] = useState(false);
+
+  const handleToggleRead = useCallback(async () => {
+    if (!notification) return;
+    try {
+      const next = !notification.is_read;
+      if (next) await ctx.markRead(notification.id); else await ctx.markUnread(notification.id);
+      setNotification({ ...notification, is_read: next });
+      await ctx.fetchNotifications();
+    } catch (e) { console.error("Failed to toggle notification status", e); }
+  }, [ctx, notification, setNotification]);
+
+  const handleDelete = useCallback(async () => {
+    if (!notification) return;
+    try {
+      await ctx.deleteNotification(notification.id);
+      await ctx.fetchNotifications();
+      void navigate("/notifications");
+    } catch (e) { console.error("Failed to delete notification", e); }
+  }, [ctx, navigate, notification]);
+
+  return { state: { notification, isDeleteOpen }, loading, error, actions: { setDeleteOpen: setIsDeleteOpen, handleToggleRead, handleDelete } };
+};

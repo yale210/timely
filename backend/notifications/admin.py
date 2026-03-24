@@ -1,3 +1,5 @@
+"""Admin configuration for the notifications app."""
+
 from django.contrib import admin
 
 from notifications.models import (
@@ -11,6 +13,8 @@ from notifications.models import (
 
 @admin.register(Notification)
 class NotificationAdmin(admin.ModelAdmin):
+    """Admin interface for managing user notifications."""
+
     list_display = (
         "title",
         "recipient",
@@ -25,17 +29,28 @@ class NotificationAdmin(admin.ModelAdmin):
 
     @admin.action(description="Mark selected notifications as read")
     def mark_as_read(self, request, queryset):
+        """Mark selected notifications as read in bulk.
+
+        Args:
+            request: The current HTTP request.
+            queryset: The queryset containing selected notifications.
+        """
+        # Batch update is_read status to True for all selected items
         queryset.update(is_read=True)
 
 
 @admin.register(PushSubscription)
 class PushSubscriptionAdmin(admin.ModelAdmin):
+    """Admin interface for managing Web Push subscriptions."""
+
     list_display = ("user", "endpoint", "created_at")
     search_fields = ("user__username", "endpoint")
 
 
 @admin.register(BroadcastJob)
 class BroadcastJobAdmin(admin.ModelAdmin):
+    """Admin interface for monitoring and managing broadcast jobs."""
+
     list_display = (
         "id",
         "title",
@@ -53,6 +68,8 @@ class BroadcastJobAdmin(admin.ModelAdmin):
 
 @admin.register(BroadcastRecipient)
 class BroadcastRecipientAdmin(admin.ModelAdmin):
+    """Admin interface for tracking individual broadcast recipients."""
+
     list_display = (
         "id",
         "broadcast_job",
@@ -67,6 +84,8 @@ class BroadcastRecipientAdmin(admin.ModelAdmin):
 
 @admin.register(BroadcastAuditLog)
 class BroadcastAuditLogAdmin(admin.ModelAdmin):
+    """Admin interface for auditing broadcast-related actions."""
+
     list_display = ("id", "broadcast_job", "action", "actor", "created_at")
     list_filter = ("action", "created_at")
     search_fields = ("actor__username",)

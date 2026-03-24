@@ -6,77 +6,206 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('notifications', '0001_initial'),
+        ("notifications", "0001_initial"),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='notification',
-            name='notification_type',
-            field=models.CharField(choices=[('SYSTEM', 'System'), ('TASK', 'Task'), ('CALENDAR', 'Calendar')], default='SYSTEM', max_length=20),
+            model_name="notification",
+            name="notification_type",
+            field=models.CharField(
+                choices=[
+                    ("SYSTEM", "System"),
+                    ("TASK", "Task"),
+                    ("CALENDAR", "Calendar"),
+                ],
+                default="SYSTEM",
+                max_length=20,
+            ),
         ),
         migrations.CreateModel(
-            name='BroadcastJob',
+            name="BroadcastJob",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('title', models.CharField(max_length=60)),
-                ('message', models.CharField(max_length=240)),
-                ('target', models.CharField(choices=[('all', 'All users'), ('staff', 'Staff'), ('admin', 'Admins'), ('users', 'Specific users'), ('retry_failed', 'Retry failed recipients')], max_length=32)),
-                ('audience_filters', models.JSONField(blank=True, default=dict)),
-                ('audience_snapshot', models.JSONField(blank=True, default=dict)),
-                ('recipient_count', models.PositiveIntegerField(default=0)),
-                ('delivered_count', models.PositiveIntegerField(default=0)),
-                ('failed_count', models.PositiveIntegerField(default=0)),
-                ('status', models.CharField(choices=[('QUEUED', 'Queued'), ('IN_PROGRESS', 'In progress'), ('COMPLETED', 'Completed'), ('PARTIAL', 'Partial'), ('FAILED', 'Failed')], default='QUEUED', max_length=20)),
-                ('task_id', models.CharField(blank=True, default='', max_length=255)),
-                ('provider_errors', models.JSONField(blank=True, default=list)),
-                ('queued_at', models.DateTimeField(auto_now_add=True)),
-                ('started_at', models.DateTimeField(blank=True, null=True)),
-                ('completed_at', models.DateTimeField(blank=True, null=True)),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('updated_at', models.DateTimeField(auto_now=True)),
-                ('retry_of', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='retry_jobs', to='notifications.broadcastjob')),
-                ('sender', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='sent_broadcast_jobs', to=settings.AUTH_USER_MODEL)),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("title", models.CharField(max_length=60)),
+                ("message", models.CharField(max_length=240)),
+                (
+                    "target",
+                    models.CharField(
+                        choices=[
+                            ("all", "All users"),
+                            ("staff", "Staff"),
+                            ("admin", "Admins"),
+                            ("users", "Specific users"),
+                            ("retry_failed", "Retry failed recipients"),
+                        ],
+                        max_length=32,
+                    ),
+                ),
+                ("audience_filters", models.JSONField(blank=True, default=dict)),
+                ("audience_snapshot", models.JSONField(blank=True, default=dict)),
+                ("recipient_count", models.PositiveIntegerField(default=0)),
+                ("delivered_count", models.PositiveIntegerField(default=0)),
+                ("failed_count", models.PositiveIntegerField(default=0)),
+                (
+                    "status",
+                    models.CharField(
+                        choices=[
+                            ("QUEUED", "Queued"),
+                            ("IN_PROGRESS", "In progress"),
+                            ("COMPLETED", "Completed"),
+                            ("PARTIAL", "Partial"),
+                            ("FAILED", "Failed"),
+                        ],
+                        default="QUEUED",
+                        max_length=20,
+                    ),
+                ),
+                ("task_id", models.CharField(blank=True, default="", max_length=255)),
+                ("provider_errors", models.JSONField(blank=True, default=list)),
+                ("queued_at", models.DateTimeField(auto_now_add=True)),
+                ("started_at", models.DateTimeField(blank=True, null=True)),
+                ("completed_at", models.DateTimeField(blank=True, null=True)),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
+                ("updated_at", models.DateTimeField(auto_now=True)),
+                (
+                    "retry_of",
+                    models.ForeignKey(
+                        blank=True,
+                        null=True,
+                        on_delete=django.db.models.deletion.SET_NULL,
+                        related_name="retry_jobs",
+                        to="notifications.broadcastjob",
+                    ),
+                ),
+                (
+                    "sender",
+                    models.ForeignKey(
+                        blank=True,
+                        null=True,
+                        on_delete=django.db.models.deletion.SET_NULL,
+                        related_name="sent_broadcast_jobs",
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
             ],
             options={
-                'ordering': ['-queued_at'],
+                "ordering": ["-queued_at"],
             },
         ),
         migrations.CreateModel(
-            name='BroadcastAuditLog',
+            name="BroadcastAuditLog",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('action', models.CharField(choices=[('SEND', 'Send'), ('RETRY', 'Retry')], max_length=16)),
-                ('audience_snapshot', models.JSONField(blank=True, default=dict)),
-                ('payload', models.JSONField(blank=True, default=dict)),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('actor', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='broadcast_audit_logs', to=settings.AUTH_USER_MODEL)),
-                ('broadcast_job', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='audit_logs', to='notifications.broadcastjob')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                (
+                    "action",
+                    models.CharField(
+                        choices=[("SEND", "Send"), ("RETRY", "Retry")], max_length=16
+                    ),
+                ),
+                ("audience_snapshot", models.JSONField(blank=True, default=dict)),
+                ("payload", models.JSONField(blank=True, default=dict)),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
+                (
+                    "actor",
+                    models.ForeignKey(
+                        blank=True,
+                        null=True,
+                        on_delete=django.db.models.deletion.SET_NULL,
+                        related_name="broadcast_audit_logs",
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
+                (
+                    "broadcast_job",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="audit_logs",
+                        to="notifications.broadcastjob",
+                    ),
+                ),
             ],
             options={
-                'ordering': ['-created_at'],
+                "ordering": ["-created_at"],
             },
         ),
         migrations.CreateModel(
-            name='BroadcastRecipient',
+            name="BroadcastRecipient",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('status', models.CharField(choices=[('PENDING', 'Pending'), ('SENT', 'Sent'), ('FAILED', 'Failed')], default='PENDING', max_length=20)),
-                ('error_code', models.CharField(blank=True, default='', max_length=64)),
-                ('error_message', models.TextField(blank=True, default='')),
-                ('last_attempt_at', models.DateTimeField(blank=True, null=True)),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('updated_at', models.DateTimeField(auto_now=True)),
-                ('broadcast_job', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='recipients', to='notifications.broadcastjob')),
-                ('notification', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='broadcast_recipients', to='notifications.notification')),
-                ('recipient', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='broadcast_recipients', to=settings.AUTH_USER_MODEL)),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                (
+                    "status",
+                    models.CharField(
+                        choices=[
+                            ("PENDING", "Pending"),
+                            ("SENT", "Sent"),
+                            ("FAILED", "Failed"),
+                        ],
+                        default="PENDING",
+                        max_length=20,
+                    ),
+                ),
+                ("error_code", models.CharField(blank=True, default="", max_length=64)),
+                ("error_message", models.TextField(blank=True, default="")),
+                ("last_attempt_at", models.DateTimeField(blank=True, null=True)),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
+                ("updated_at", models.DateTimeField(auto_now=True)),
+                (
+                    "broadcast_job",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="recipients",
+                        to="notifications.broadcastjob",
+                    ),
+                ),
+                (
+                    "notification",
+                    models.ForeignKey(
+                        blank=True,
+                        null=True,
+                        on_delete=django.db.models.deletion.SET_NULL,
+                        related_name="broadcast_recipients",
+                        to="notifications.notification",
+                    ),
+                ),
+                (
+                    "recipient",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="broadcast_recipients",
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
             ],
             options={
-                'ordering': ['id'],
-                'unique_together': {('broadcast_job', 'recipient')},
+                "ordering": ["id"],
+                "unique_together": {("broadcast_job", "recipient")},
             },
         ),
     ]

@@ -42,6 +42,9 @@ vi.mock("@/components/modals/ConfirmationModal", () => ({
 describe("Gradebook Page", () => {
   const mockRefreshGrades = vi.fn();
   const mockSetModalOpen = vi.fn();
+  const mockSetSearch = vi.fn();
+  const mockSetSortBy = vi.fn();
+  const mockSetPerformanceFilter = vi.fn();
   const mockSetSelectedCategoryId = vi.fn();
   const mockSetPendingDeleteId = vi.fn();
   const mockHandleEditGrade = vi.fn();
@@ -53,10 +56,16 @@ describe("Gradebook Page", () => {
     loading: false,
     modalOpen: false,
     editInitial: null,
+    search: "",
+    sortBy: "date_desc" as const,
+    performanceFilter: "all" as const,
     selectedCategoryId: null,
     pendingDeleteId: null,
     filteredGrades: [],
     setModalOpen: mockSetModalOpen,
+    setSearch: mockSetSearch,
+    setSortBy: mockSetSortBy,
+    setPerformanceFilter: mockSetPerformanceFilter,
     setSelectedCategoryId: mockSetSelectedCategoryId,
     setPendingDeleteId: mockSetPendingDeleteId,
     refreshGrades: mockRefreshGrades,

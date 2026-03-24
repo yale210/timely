@@ -89,7 +89,7 @@ describe("useTaskList Hook", () => {
       await result.current.actions.toggleComplete(1);
     });
 
-    expect(taskService.updateTask).toHaveBeenCalledWith(1, { completed: true });
+    expect(taskService.updateTask).toHaveBeenCalledWith(1, { completed: true, completed_minutes: 20 });
   });
 
   it("handles submitTask (create)", async () => {
@@ -166,4 +166,3 @@ describe("useTaskList Hook", () => {
     expect(result.current.actions.formatDayLabel(otherDate)).toBe(moment(otherDate).format("ddd D MMM"));
   });
 });
-

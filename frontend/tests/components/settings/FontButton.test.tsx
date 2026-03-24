@@ -8,7 +8,7 @@ describe("FontButton", () => {
 
     render(<FontButton title="poppins" fontChangeFunction={onChange} />);
 
-    fireEvent.click(screen.getByRole("button", { name: "poppins" }));
+    fireEvent.click(screen.getByRole("button", { name: "Font Ag Poppins" }));
 
     expect(onChange).toHaveBeenCalledWith("poppins");
   });

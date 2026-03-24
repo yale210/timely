@@ -9,6 +9,7 @@ from django.utils import timezone
 from rest_framework import status
 from rest_framework.test import APITestCase
 
+from admin_panel.views.admin_panel_viewset import AdminPanelViewSet
 from notifications.models import BroadcastAuditLog, BroadcastJob, BroadcastRecipient
 
 User = get_user_model()
@@ -199,6 +200,135 @@ class AdminNotificationActionTests(APITestCase):
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(response.data["error"]["code"], "ZERO_AUDIENCE")
+
+    def test_send_notification_to_staff_targets_staff_users(self):
+        """Verify targeted sends to staff only include active staff users."""
+        self.client.force_authenticate(user=self.admin_user)
+
+        with patch(
+            "admin_panel.views.notification_actions.process_broadcast_job.delay"
+        ) as mock_task:
+            mock_task.return_value.id = "task-staff"
+            response = self.client.post(
+                self.send_url,
+                {
+                    "title": "Staff note",
+                    "message": "Hello staff",
+                    "target": "staff",
+                },
+                format="json",
+            )
+
+        self.assertEqual(response.status_code, status.HTTP_202_ACCEPTED)
+        broadcast = BroadcastJob.objects.get(id=response.data["broadcast_id"])
+        recipient_ids = set(
+            BroadcastRecipient.objects.filter(broadcast_job=broadcast).values_list(
+                "recipient_id", flat=True
+            )
+        )
+        self.assertEqual(broadcast.recipient_count, 2)
+        # Admin is also staff by default in create_superuser
+        self.assertEqual(recipient_ids, {self.admin_user.id, self.staff_user.id})
+
+    def test_send_notification_to_admins_targets_admin_users(self):
+        """Verify targeted sends to admins only include active superusers."""
+        self.client.force_authenticate(user=self.admin_user)
+
+        with patch(
+            "admin_panel.views.notification_actions.process_broadcast_job.delay"
+        ) as mock_task:
+            mock_task.return_value.id = "task-admin"
+            response = self.client.post(
+                self.send_url,
+                {
+                    "title": "Admin note",
+                    "message": "Hello admins",
+                    "target": "admin",
+                },
+                format="json",
+            )
+
+        self.assertEqual(response.status_code, status.HTTP_202_ACCEPTED)
+        broadcast = BroadcastJob.objects.get(id=response.data["broadcast_id"])
+        recipient_ids = set(
+            BroadcastRecipient.objects.filter(broadcast_job=broadcast).values_list(
+                "recipient_id", flat=True
+            )
+        )
+        self.assertEqual(broadcast.recipient_count, 1)
+        self.assertEqual(recipient_ids, {self.admin_user.id})
+
+    def test_audience_counts_without_user_ids(self):
+        """Verify audience counts work without providing specific user IDs."""
+        self.client.force_authenticate(user=self.admin_user)
+
+        response = self.client.get(self.audience_counts_url)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data["selected_users"], 0)
+
+    def test_broadcasts_filters_by_query_only(self):
+        """Verify broadcast list can be filtered by title query alone."""
+        self.client.force_authenticate(user=self.admin_user)
+        BroadcastJob.objects.create(
+            sender=self.admin_user,
+            title="Important alert",
+            message="Alert",
+            target="all",
+        )
+
+        response = self.client.get(f"{self.broadcasts_url}?q=Important")
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        # Assuming pagination is active and returns 'results'
+        if "results" in response.data:
+            self.assertEqual(len(response.data["results"]), 1)
+            self.assertEqual(response.data["results"][0]["title"], "Important alert")
+        else:
+            self.assertEqual(len(response.data), 1)
+            self.assertEqual(response.data[0]["title"], "Important alert")
+
+    def test_broadcast_status_returns_not_found_for_missing_broadcast(self):
+        """Verify broadcast status returns a not-found payload for invalid IDs."""
+        self.client.force_authenticate(user=self.admin_user)
+
+        response = self.client.get(self._broadcast_status_url(999999))
+
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+        self.assertEqual(response.data["error"]["code"], "NOT_FOUND")
+
+    def test_retry_failed_returns_not_found_for_missing_broadcast(self):
+        """Verify retrying failed recipients returns not-found for invalid IDs."""
+        self.client.force_authenticate(user=self.admin_user)
+
+        response = self.client.post(self._retry_failed_url(999999), format="json")
+
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+        self.assertEqual(response.data["error"]["code"], "NOT_FOUND")
+
+    def test_build_target_queryset_none_for_invalid_target(self):
+        """Verify internal queryset builder returns none for unknown targets."""
+        view = AdminPanelViewSet()
+        queryset = view._build_target_queryset("invalid", [])
+        self.assertEqual(queryset.count(), 0)
+
+    def test_broadcasts_list_without_filters(self):
+        """Verify broadcast list returns all records when no filters are provided."""
+        self.client.force_authenticate(user=self.admin_user)
+        BroadcastJob.objects.create(
+            sender=self.admin_user,
+            title="Job 1",
+            message="Msg",
+            target="all",
+        )
+
+        response = self.client.get(self.broadcasts_url)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        if "results" in response.data:
+            self.assertGreaterEqual(len(response.data["results"]), 1)
+        else:
+            self.assertGreaterEqual(len(response.data), 1)
 
     def test_audience_counts_returns_expected_active_totals(self):
         """Verify audience count data only includes active matching users."""

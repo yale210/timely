@@ -56,6 +56,8 @@ const WeeklyStatCard = ({
   </div>
 );
 
+const overviewIconClassName = "bg-cyan-100 text-cyan-700";
+
 const MAX_UPCOMING_TASKS = 4;
 const UPCOMING_TASK_ROW_HEIGHT = 52;
 const UPCOMING_TASK_ROW_GAP = 12;
@@ -473,9 +475,9 @@ const DashboardOverview = ({
 
   return (
   <main className="h-full min-h-0 w-full px-6 pt-4 pb-0 lg:px-10">
-    <header className="mb-4 mt-2 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+    <header className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
       <div className="flex flex-wrap items-center gap-3">
-        <h1 className="text-3xl font-semibold tracking-tight text-gray-900">
+        <h1 className="text-2xl font-semibold text-black">
           {periodLabel} Overview
         </h1>
       </div>
@@ -506,7 +508,7 @@ const DashboardOverview = ({
           </p>
           <span
             aria-hidden="true"
-            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-cyan-100 text-cyan-700"
+            className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl ${overviewIconClassName}`}
           >
             <span className="material-icons block text-xl leading-none">track_changes</span>
           </span>
@@ -533,14 +535,14 @@ const DashboardOverview = ({
         value={minutesPlannedText}
         subtitle={derivedStats ? "Planned this period" : undefined}
         icon="schedule"
-        iconClassName="bg-violet-100 text-violet-700"
+        iconClassName={overviewIconClassName}
       />
       <WeeklyStatCard
         title="Daily Averages"
         value={averageCompletedPerDayText}
         subtitle={averageTaskDurationText}
         icon="equalizer"
-        iconClassName="bg-emerald-100 text-emerald-700"
+        iconClassName={overviewIconClassName}
         valueClassName="text-[clamp(1.65rem,2vw,2.15rem)]"
       />
       <WeeklyStatCard
@@ -549,7 +551,7 @@ const DashboardOverview = ({
         subtitle="Past deadline"
         className={overdueToneClass}
         icon="warning_amber"
-        iconClassName="bg-amber-100 text-amber-700"
+        iconClassName={overviewIconClassName}
       />
       <WeeklyStatCard
         title="Streak"
@@ -557,7 +559,7 @@ const DashboardOverview = ({
         subtitle="Consecutive days completed"
         className={streakToneClass}
         icon="local_fire_department"
-        iconClassName="bg-rose-100 text-rose-700"
+        iconClassName={overviewIconClassName}
       />
     </section>
 

@@ -11,6 +11,8 @@
 
 
  [data-theme="light"] {
+  --primary: #3b82f6;
+  --primary-hover: #2563eb;
 
   /* Primary buttons */
   --button-primary: #3b82f6;
@@ -32,7 +34,7 @@
   --foreground: #f9fafb;
 
   --text-color: #111827;
-  --border: #5a5e65;
+  --border: #d1d5db;
 
 
   /* .rbc-time-view,

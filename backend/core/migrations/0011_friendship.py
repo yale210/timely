@@ -6,24 +6,60 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('core', '0010_merge_20260212_2338'),
+        ("core", "0010_merge_20260212_2338"),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='Friendship',
+            name="Friendship",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('state', models.CharField(choices=[('SENT', 'Sent'), ('ACCEPTED', 'Accepted'), ('DECLINED', 'Declined')], default='SENT', max_length=50)),
-                ('updated_at', models.DateTimeField(blank=True, null=True)),
-                ('receiver', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='friend_request_receiver', to=settings.AUTH_USER_MODEL)),
-                ('sender', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='friend_request_sender', to=settings.AUTH_USER_MODEL)),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                (
+                    "state",
+                    models.CharField(
+                        choices=[
+                            ("SENT", "Sent"),
+                            ("ACCEPTED", "Accepted"),
+                            ("DECLINED", "Declined"),
+                        ],
+                        default="SENT",
+                        max_length=50,
+                    ),
+                ),
+                ("updated_at", models.DateTimeField(blank=True, null=True)),
+                (
+                    "receiver",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="friend_request_receiver",
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
+                (
+                    "sender",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="friend_request_sender",
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
             ],
             options={
-                'constraints': [models.UniqueConstraint(fields=('sender', 'receiver'), name='unique_friend_request')],
+                "constraints": [
+                    models.UniqueConstraint(
+                        fields=("sender", "receiver"), name="unique_friend_request"
+                    )
+                ],
             },
         ),
     ]

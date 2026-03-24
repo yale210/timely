@@ -7,6 +7,7 @@ import { NotificationDropdown } from '@/components/notifications/NotificationDro
 import { useNotificationContext } from '@/context/NotificationContext'
 import { type Notification } from '@/types'
 import AdminSidebar from "@/components/layout/AdminSidebar"
+import { LogoMark } from "@/components/ui"
 
 const navItems = [
   { label: "Overview", to: "/dashboard", icon: "space_dashboard" },
@@ -15,13 +16,15 @@ const navItems = [
 ]
 
 const featureItems = [
-  { key: "gradebook", label: "Gradebook", to: "/gradebook", icon: "school" },
   { key: "leaderboard", label: "Leaderboard", to: "/leaderboard", icon: "leaderboard" },
-  { key: "assessments", label: "Assessments", to: "/assessments", icon: "assignment" }
+  { key: "assessments", label: "Assessments", to: "/assessments", icon: "assignment" },
+  { key: "gradebook", label: "Gradebook", to: "/gradebook", icon: "school" },
 ]
 
 const FEATURE_FLAGS = {
+  assessments: "feature_assessments_enabled",
   gradebook: "feature_gradebook_enabled",
+  leaderboard: "feature_leaderboard_enabled",
 }
 
 const readFeatureFlag = (key: keyof typeof FEATURE_FLAGS) => {
@@ -45,7 +48,9 @@ export default function AppNavbar() {
   const location = useLocation()
   const isAdminRoute = location.pathname.startsWith("/admin")
   const [featureFlags, setFeatureFlags] = useState(() => ({
+    assessments: readFeatureFlag("assessments"),
     gradebook: readFeatureFlag("gradebook"),
+    leaderboard: readFeatureFlag("leaderboard"),
   }))
   const {
     notifications,
@@ -78,7 +83,9 @@ export default function AppNavbar() {
   useEffect(() => {
     const refreshFlags = () => {
       setFeatureFlags({
+        assessments: readFeatureFlag("assessments"),
         gradebook: readFeatureFlag("gradebook"),
+        leaderboard: readFeatureFlag("leaderboard"),
       })
     }
     // Listen for both same-tab and cross-tab feature flag updates.
@@ -121,8 +128,9 @@ export default function AppNavbar() {
   }, [user?.username])
 
   const visibleFeatureItems = featureItems.filter((item) => {
+    if (item.key === "assessments") return featureFlags.assessments
     if (item.key === "gradebook") return featureFlags.gradebook
-    if (item.key === "leaderboard") return true
+    if (item.key === "leaderboard") return featureFlags.leaderboard
     return false
   })
 
@@ -246,7 +254,8 @@ export default function AppNavbar() {
       >
         <div className="flex h-10 items-center justify-between px-4 border-b border-gray-200 flex-none">
           <Link to="/dashboard" className="flex items-center">
-            <img src="/t.png" alt="Timely" className="h-6 w-6" />
+            <span className="sr-only">Timely</span>
+            <LogoMark className="h-6 w-6" />
           </Link>
           <button
             type="button"
@@ -333,6 +342,18 @@ export default function AppNavbar() {
           )}
         </div>
         <div className="mt-auto border-t border-gray-200 px-4 py-3">
+          <NavLink
+            to="/friends"
+            className={({ isActive }) =>
+              [
+                "mb-2 flex items-center gap-3 rounded-md px-3 py-2 text-sm font-semibold transition-colors",
+                isActive ? "bg-cyan-50 text-cyan-700 ring-1 ring-cyan-100" : "text-gray-800 hover:bg-gray-100",
+              ].join(" ")
+            }
+          >
+            <span aria-hidden="true" className="material-icons text-lg leading-none">group</span>
+            <span>Friends</span>
+          </NavLink>
           <NavLink
             to="/settings"
             className={({ isActive }) =>

@@ -25,7 +25,7 @@ export const createCategory = async (text: string): Promise<Category> => {
  */
 export const updateCategory = async (
   id: number,
-  patch: Partial<Pick<Category, "text" | "colour" | "colour_override">>,
+  patch: Partial<Pick<Category, "text" | "colour" | "colour_override" | "max_daily_study_time">>,
 ): Promise<Category> => {
   const response = await api.patch<Category>(`/api/categories/${id}/`, patch);
   return response.data;
@@ -38,4 +38,3 @@ export const updateCategory = async (
 export const deleteCategory = async (id: number): Promise<void> => {
   await api.delete(`/api/categories/${id}/`);
 };
-

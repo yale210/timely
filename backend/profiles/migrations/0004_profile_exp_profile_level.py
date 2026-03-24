@@ -4,20 +4,19 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('profiles', '0003_delete_preference'),
+        ("profiles", "0003_delete_preference"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='profile',
-            name='exp',
+            model_name="profile",
+            name="exp",
             field=models.PositiveBigIntegerField(default=0),
         ),
         migrations.AddField(
-            model_name='profile',
-            name='level',
+            model_name="profile",
+            name="level",
             field=models.PositiveBigIntegerField(default=1),
         ),
     ]

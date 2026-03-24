@@ -3,6 +3,7 @@ import datetime
 from django.contrib.auth import get_user_model
 from django.test import TestCase
 from django.utils import timezone
+from rest_framework.test import APIRequestFactory
 
 from core.models import Category, Task
 from core.serializers import CalendarSerializer
@@ -13,8 +14,14 @@ class CalendarSerializerTests(TestCase):
         self.user = get_user_model().objects.create_user(
             username="serializeruser", password="password123", email="test@user.com"
         )
-        self.category1 = Category.objects.create(text="Study")
-        self.category2 = Category.objects.create(text="Work")
+        self.request_factory = APIRequestFactory()
+        self.category1 = Category.objects.create(user=self.user, text="Study")
+        self.category2 = Category.objects.create(user=self.user, text="Work")
+
+    def _request_context(self):
+        request = self.request_factory.post("/api/tasks/")
+        request.user = self.user
+        return {"request": request}
 
     def test_calendar_serializer_fields(self):
         now = timezone.now()
@@ -35,7 +42,6 @@ class CalendarSerializerTests(TestCase):
         self.assertEqual(data["title"], "Read notes")
         self.assertEqual(data["description"], "Reading some notes for exam")
 
-        # Check categories nested representation
         self.assertEqual(len(data["categories"]), 2)
         cat_texts = [cat["text"] for cat in data["categories"]]
         self.assertIn("Study", cat_texts)
@@ -53,9 +59,15 @@ class CalendarSerializerTests(TestCase):
                 "deadline",
                 "importance",
                 "completed",
+                "completed_minutes",
+                "remaining_minutes",
                 "locked",
                 "allow_split",
-                "estimated_minutes",  # I should check if this was in fields before, it wasn't but model has it.
+                "min_split_minutes",
+                "max_split_minutes",
+                "buffer_before_minutes",
+                "buffer_after_minutes",
+                "estimated_minutes",
                 "parent_task",
                 "allocation",
                 "total_task_allocations",
@@ -72,14 +84,89 @@ class CalendarSerializerTests(TestCase):
             "deadline": (now + datetime.timedelta(hours=1)).isoformat(),
             "importance": 5,
             "completed": False,
+            "completed_minutes": 10,
             "categories": [self.category1.id, self.category2.id],
+            "allow_split": True,
+            "min_split_minutes": 30,
+            "max_split_minutes": 60,
+            "buffer_before_minutes": 15,
+            "buffer_after_minutes": 20,
         }
 
-        # To test creation, we usually use the serializer's save method
-        # but we need a request context usually for user, or pass it explicitly
-        serializer = CalendarSerializer(data=data)
+        serializer = CalendarSerializer(data=data, context=self._request_context())
         self.assertTrue(serializer.is_valid(), serializer.errors)
         task = serializer.save(user=self.user)
 
         self.assertEqual(task.categories.count(), 2)
         self.assertIn(self.category1, task.categories.all())
+        self.assertEqual(task.min_split_minutes, 30)
+        self.assertEqual(task.max_split_minutes, 60)
+        self.assertEqual(task.completed_minutes, 10)
+        self.assertEqual(task.buffer_before_minutes, 15)
+        self.assertEqual(task.buffer_after_minutes, 20)
+
+    def test_calendar_serializer_rejects_max_split_below_minimum(self):
+        now = timezone.now()
+        serializer = CalendarSerializer(
+            data={
+                "title": "Invalid split settings",
+                "description": "",
+                "estimated_minutes": 30,
+                "start_time": now.isoformat(),
+                "deadline": (now + datetime.timedelta(hours=1)).isoformat(),
+                "importance": 5,
+                "completed": False,
+                "allow_split": True,
+                "min_split_minutes": 60,
+                "max_split_minutes": 30,
+                "categories": [],
+            },
+            context=self._request_context(),
+        )
+
+        self.assertFalse(serializer.is_valid())
+        self.assertIn("max_split_minutes", serializer.errors)
+
+    def test_calendar_serializer_marks_task_complete_when_completed_minutes_reaches_estimate(
+        self,
+    ):
+        now = timezone.now()
+        serializer = CalendarSerializer(
+            data={
+                "title": "Finished task",
+                "description": "",
+                "estimated_minutes": 45,
+                "completed_minutes": 45,
+                "start_time": now.isoformat(),
+                "deadline": (now + datetime.timedelta(hours=2)).isoformat(),
+                "importance": 5,
+                "completed": False,
+                "categories": [],
+            },
+            context=self._request_context(),
+        )
+
+        self.assertTrue(serializer.is_valid(), serializer.errors)
+        task = serializer.save(user=self.user)
+        self.assertTrue(task.completed)
+        self.assertEqual(task.remaining_minutes, 0)
+
+    def test_calendar_serializer_rejects_completed_minutes_above_estimate(self):
+        now = timezone.now()
+        serializer = CalendarSerializer(
+            data={
+                "title": "Too much progress",
+                "description": "",
+                "estimated_minutes": 30,
+                "completed_minutes": 40,
+                "start_time": now.isoformat(),
+                "deadline": (now + datetime.timedelta(hours=1)).isoformat(),
+                "importance": 5,
+                "completed": False,
+                "categories": [],
+            },
+            context=self._request_context(),
+        )
+
+        self.assertFalse(serializer.is_valid())
+        self.assertIn("completed_minutes", serializer.errors)

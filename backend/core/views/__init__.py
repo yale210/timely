@@ -1,3 +1,4 @@
+from .assessment_view import AssessmentViewSet as AssessmentViewSet
 from .calendar_view import TaskViewSet as TaskViewSet
 from .grade_view import GradeViewSet as GradeViewSet
 from .category_view import CategoryViewSet as CategoryViewSet
@@ -9,6 +10,7 @@ from .special_dates_view import SpecialDatesViewSet as SpecialDatesViewSet
 from .assessment_view import AssessmentViewSet as AssessmentViewSet
 
 __all__ = [
+    "AssessmentViewSet",
     "TaskViewSet",
     "GradeViewSet",
     "CategoryViewSet",

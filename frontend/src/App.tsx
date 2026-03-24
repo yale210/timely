@@ -3,12 +3,28 @@ import { Routes, Route, useLocation } from "react-router-dom"
 import RequireAuth from "@/components/auth/RequireAuth"
 import RedirectAuth from "@/components/auth/RedirectAuth"
 import RequireAdmin from "@/components/auth/RequireAdmin"
-import { Home, Login, Signup, Logout, CalendarPage, TaskList, Gradebook, Dashboard, Settings, Friends, Assessment, ProfilePage, Leaderboard } from "@/pages"
+import { 
+  Home, 
+  Login, 
+  Signup, 
+  Logout, 
+  CalendarPage, 
+  TaskList, 
+  Assessments,
+  Gradebook, 
+  Dashboard, 
+  Settings, 
+  Friends, 
+  ProfilePage, 
+  Leaderboard,
+  NotFound 
+} from "@/pages"
 import { Notifications } from "@/pages/Notification/Notifications"
 import { NotificationDetail } from "@/pages/Notification/NotificationDetail"
 import { AdminNotifications } from "@/pages/Admin/Notifications/AdminNotifications"
 import { AdminNotificationHistory } from "@/pages/Admin/Notifications/AdminNotificationHistory"
 import { AdminNotificationHistoryDetail } from "@/pages/Admin/Notifications/AdminNotificationHistoryDetail"
+import { setDocumentTheme } from "@/utils/themeSettings"
 
 const PUBLIC_ROUTES = ["/login", "/signup", "/"]
 
@@ -24,7 +40,7 @@ export default function App() {
     if (!PUBLIC_ROUTES.includes(location.pathname)) {
       const savedTheme = localStorage.getItem("theme")
       if (savedTheme) {
-        document.documentElement.dataset.theme = savedTheme
+        setDocumentTheme(savedTheme)
       }
 
       const savedFont = localStorage.getItem("font")
@@ -33,7 +49,7 @@ export default function App() {
       }
     }
     else {
-      document.documentElement.dataset.theme = "light"
+      setDocumentTheme("light")
       document.documentElement.dataset.font = "poppins"
     }
   }, [location.pathname])
@@ -78,18 +94,12 @@ export default function App() {
         </RequireAuth>}
       />
 
-      <Route path="/dashboard" element={
+      <Route path="/assessments" element={
         <RequireAuth>
-          <Dashboard />
+          <Assessments />
         </RequireAuth>}
       />
 
-      <Route path="/assessments" element={
-        <RequireAuth>
-          <Dashboard />
-        </RequireAuth>}
-      />
-      
       <Route path="/friends" element={
         <RequireAuth>
           <Friends />
@@ -113,33 +123,48 @@ export default function App() {
           <Notifications />
         </RequireAuth>
       } />
+
       <Route path="/notifications/:id" element={
         <RequireAuth>
           <NotificationDetail />
         </RequireAuth>
       } />
+
       <Route path="/admin/notifications" element={
         <RequireAdmin>
           <AdminNotifications />
         </RequireAdmin>
       } />
+
       <Route path="/admin/notifications/history" element={
         <RequireAdmin>
           <AdminNotificationHistory />
         </RequireAdmin>
       } />
+
       <Route path="/admin/notifications/history/:id" element={
         <RequireAdmin>
           <AdminNotificationHistoryDetail />
         </RequireAdmin>
       } />
+
       <Route path="/settings" element={
         <RequireAuth>
           <Settings />
         </RequireAuth>}
       />
 
-   
+      <Route path="/dashboard" element={
+        <RequireAuth>
+          <Dashboard />
+        </RequireAuth>}
+      />
+
+      <Route path="*" element={
+        <NotFound/>
+      }>
+      </Route>
+
     </Routes>
   )
 }
