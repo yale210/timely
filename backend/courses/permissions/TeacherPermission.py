@@ -8,5 +8,8 @@ class IsTeacher(BasePermission):
 
     def has_permission(self, request, view):
         if request.user.is_authenticated:
-            return Teacher.objects.filter(user=request.user, active=True).exists()
+            return (
+                Teacher.objects.filter(user=request.user, active=True).exists()
+                or request.user.is_superuser
+            )
         return False
