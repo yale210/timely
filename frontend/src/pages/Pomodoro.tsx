@@ -1,6 +1,7 @@
 import { Dialog, DialogPanel, DialogTitle, Transition, TransitionChild } from "@headlessui/react";
 import { Fragment, useEffect, useMemo, useState } from "react";
 
+import { PomodoroModal } from "@/components/layout/PomodoroModal";
 import PomodoroTimerPanel from "@/components/pomodoro/PomodoroTimerPanel";
 import { usePomodoro } from "@/context/PomodoroContext";
 import AppLayout from "@/layouts/AppLayout";
@@ -157,6 +158,7 @@ const Pomodoro = () => {
 
   return (
     <AppLayout>
+      <PomodoroModal />
       <div
         className="min-h-full"
         style={{

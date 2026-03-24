@@ -211,7 +211,6 @@ export const PomodoroProvider = ({ children }: PomodoroProviderProps) => {
       setModeState("focus");
       setViewingMode("focus");
       synchroniseCountdownWithDuration("focus");
-      setIsActive(true);
     }
   }, [mode, playNotification, stopTimer, synchroniseCountdownWithDuration, timerManager]);
 

@@ -41,7 +41,7 @@ const SettingsContent = ({
     {
       key: "pomodoro",
       label: "Pomodoro",
-      description: "Use the dedicated Pomodoro timer page from Extras.",
+      description: "A focus timer that alternates work sessions with short and long breaks.",
       value: featureFlags.pomodoro,
     },
     {
