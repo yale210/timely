@@ -8,6 +8,7 @@ interface AssessmentSectionProps {
   assessments: Assessment[];
   onClick: (assessment: Assessment) => void;
   onAddToGradebook: (assessment: Assessment) => void;
+  isGradebookEnabled: boolean;
   isCollapsible?: boolean;
   defaultCollapsed?: boolean;
 }
@@ -17,6 +18,7 @@ const AssessmentSection = ({
   assessments,
   onClick,
   onAddToGradebook,
+  isGradebookEnabled,
   isCollapsible = false,
   defaultCollapsed = false,
 }: AssessmentSectionProps) => {
@@ -54,6 +56,7 @@ const AssessmentSection = ({
                 assessment={assessment}
                 onClick={onClick}
                 onAddToGradebook={onAddToGradebook}
+                isGradebookEnabled={isGradebookEnabled}
               />
             ))
           )}

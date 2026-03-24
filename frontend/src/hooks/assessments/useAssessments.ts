@@ -14,6 +14,7 @@ export interface UseAssessmentsState {
   assessments: Assessment[];
   categories: Category[];
   sections: AssessmentSections;
+  isGradebookEnabled: boolean;
   search: string;
   selectedCategoryId: number | null;
   isSidebarOpen: boolean;
@@ -55,6 +56,14 @@ const isAssessmentCompleted = (assessment: Assessment): boolean => {
   return new Date(comparisonDate).getTime() < Date.now();
 };
 
+const readGradebookFeatureFlag = (): boolean => {
+  const raw = localStorage.getItem("feature_gradebook_enabled");
+  if (raw === null) {
+    return true;
+  }
+  return raw === "true";
+};
+
 export const useAssessments = (): UseAssessmentsReturn => {
   const [assessments, setAssessments] = useState<Assessment[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
@@ -66,6 +75,7 @@ export const useAssessments = (): UseAssessmentsReturn => {
   const [selectedAssessment, setSelectedAssessment] = useState<Assessment | undefined>(undefined);
   const [pendingDeleteId, setPendingDeleteId] = useState<number | null>(null);
   const [gradebookSource, setGradebookSource] = useState<Assessment | null>(null);
+  const [isGradebookEnabled, setIsGradebookEnabled] = useState<boolean>(() => readGradebookFeatureFlag());
 
   const fetchAssessments = useCallback(async () => {
     setLoading(true);
@@ -97,6 +107,23 @@ export const useAssessments = (): UseAssessmentsReturn => {
   useEffect(() => {
     void refresh();
   }, [refresh]);
+
+  useEffect(() => {
+    const syncFeatureFlag = () => {
+      const enabled = readGradebookFeatureFlag();
+      setIsGradebookEnabled(enabled);
+      if (!enabled) {
+        setGradebookSource(null);
+      }
+    };
+
+    window.addEventListener("feature-flags-changed", syncFeatureFlag);
+    window.addEventListener("storage", syncFeatureFlag);
+    return () => {
+      window.removeEventListener("feature-flags-changed", syncFeatureFlag);
+      window.removeEventListener("storage", syncFeatureFlag);
+    };
+  }, []);
 
   const submitAssessment = useCallback(async (data: AssessmentSubmission) => {
     if (selectedAssessment) {
@@ -201,6 +228,7 @@ export const useAssessments = (): UseAssessmentsReturn => {
       assessments,
       categories,
       sections,
+      isGradebookEnabled,
       search,
       selectedCategoryId,
       isSidebarOpen,

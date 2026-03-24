@@ -20,7 +20,11 @@ interface TaskCardProps {
 const TaskCard = ({ task, onToggleComplete, onClick }: TaskCardProps) => {
   const [isHovered, setIsHovered] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
-  const isOverdue = new Date(task.deadline) < new Date() && !task.completed;
+  const now = Date.now();
+  const startTimeMs = new Date(task.start_time).getTime();
+  const deadlineMs = new Date(task.deadline).getTime();
+  const isNotStarted = !task.completed && startTimeMs > now;
+  const isOverdue = deadlineMs < now && !task.completed;
   const completeSoundRef = useRef<HTMLAudioElement | null>(
     typeof Audio === "undefined" ? null : new Audio(completeSoundUrl),
   );
@@ -64,7 +68,7 @@ const TaskCard = ({ task, onToggleComplete, onClick }: TaskCardProps) => {
 
   const importanceInfo = getImportanceInfo(task.importance);
 
-  const getCountdownLabel = (value: string): string | null => {
+  const getCountdownLabel = (value: string, prefix?: string): string | null => {
     if (task.completed) {
       return null;
     }
@@ -72,37 +76,43 @@ const TaskCard = ({ task, onToggleComplete, onClick }: TaskCardProps) => {
     const targetTime = new Date(value).getTime();
     const diffMs = targetTime - Date.now();
     if (diffMs <= 0) {
-      return "Now";
+      return prefix ? "Now" : "Overdue";
     }
 
     const diffDays = diffMs / (1000 * 60 * 60 * 24);
     if (diffDays < 1) {
       const diffHours = Math.ceil(diffMs / (1000 * 60 * 60));
-      return `${diffHours}h left`;
+      return prefix ? `${prefix} ${diffHours}h` : `${diffHours}h left`;
     }
 
-    return `${Math.ceil(diffDays)}d left`;
+    return prefix ? `${prefix} ${Math.ceil(diffDays)}d` : `${Math.ceil(diffDays)}d left`;
   };
 
   const getCountdownTone = (value: string) => {
     const diffMs = new Date(value).getTime() - Date.now();
     const diffDays = diffMs / (1000 * 60 * 60 * 24);
 
-    if (diffDays < 3) {
+    if (diffDays < 1) {
       return "border-red-200 bg-red-50 text-red-700";
     }
-    if (diffDays < 7) {
+    if (diffDays < 3) {
       return "border-orange-200 bg-orange-50 text-orange-700";
     }
-    if (diffDays < 30) {
+    if (diffDays < 7) {
       return "border-yellow-200 bg-yellow-50 text-yellow-700";
     }
 
     return "border-gray-200 bg-gray-50 text-gray-700";
   };
 
-  const countdownLabel = getCountdownLabel(task.deadline);
-  const countdownTone = getCountdownTone(task.deadline);
+  const countdownTarget = isNotStarted ? task.start_time : task.deadline;
+  const countdownLabel = getCountdownLabel(
+    countdownTarget,
+    isNotStarted ? "Starts in" : undefined,
+  );
+  const countdownTone = isNotStarted
+    ? "border-gray-200 bg-gray-50 text-gray-700"
+    : getCountdownTone(countdownTarget);
 
   const formatDue = (isoString: string) => {
     const date = new Date(isoString);

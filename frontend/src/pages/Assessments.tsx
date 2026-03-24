@@ -20,6 +20,7 @@ const Assessments = () => {
   const {
     categories,
     sections,
+    isGradebookEnabled,
     search,
     selectedCategoryId,
     isSidebarOpen,
@@ -163,6 +164,7 @@ const Assessments = () => {
           assessments={sortedSections.upcoming}
           onClick={actions.openAssessment}
           onAddToGradebook={actions.openGradebook}
+          isGradebookEnabled={isGradebookEnabled}
         />
 
         <AssessmentSection
@@ -170,6 +172,7 @@ const Assessments = () => {
           assessments={sortedSections.completed}
           onClick={actions.openAssessment}
           onAddToGradebook={actions.openGradebook}
+          isGradebookEnabled={isGradebookEnabled}
           isCollapsible={true}
           defaultCollapsed={true}
         />
@@ -206,7 +209,7 @@ const Assessments = () => {
       />
 
       <CreateGradeModal
-        open={gradebookSource !== null}
+        open={isGradebookEnabled && gradebookSource !== null}
         onClose={actions.closeGradebook}
         onCreated={actions.closeGradebook}
         onUpdated={actions.closeGradebook}

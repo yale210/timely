@@ -5,6 +5,7 @@ interface AssessmentCardProps {
   assessment: Assessment;
   onClick: (assessment: Assessment) => void;
   onAddToGradebook: (assessment: Assessment) => void;
+  isGradebookEnabled: boolean;
 }
 
 const getChipStyle = (category?: Category | null) => {
@@ -66,6 +67,7 @@ const AssessmentCard = ({
   assessment,
   onClick,
   onAddToGradebook,
+  isGradebookEnabled,
 }: AssessmentCardProps) => {
   const comparisonDate = assessment.linked_event_details?.end_time ?? assessment.due_date;
   const countdownDate = assessment.linked_event_details?.start_time ?? assessment.due_date;
@@ -113,7 +115,7 @@ const AssessmentCard = ({
               {countdownLabel}
             </div>
           ) : null}
-          {isCompleted ? (
+          {isCompleted && isGradebookEnabled ? (
             <button
               type="button"
               onClick={(event) => {
