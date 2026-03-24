@@ -1,40 +1,28 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
-from datetime import date, datetime, time
-from typing import Any, Iterable
+from datetime import datetime, time
+from typing import Any
 
 from dateutil.rrule import DAILY, MONTHLY, WEEKLY, YEARLY, rrule
 from django.db.models import Prefetch, Q
 from django.utils import timezone
 
 from core.models import Event, EventOverride
+from core.services.recurrence_instance_builders import (
+    ExpandedEventInstance,
+    build_base_instance,
+    build_override_instance,
+    normalise_reminder_snapshot as _normalise_reminder_snapshot,
+)
 
 
-@dataclass(frozen=True)
-class ExpandedEventInstance:
-    """
-    Represents a single occurrence of an event after recurrence rules
-    and overrides have been applied.
-    """
-
-    id: int
-    title: str
-    description: str
-    location: str
-    colour: str | None
-    categories: list[Any]
-    start_time: datetime
-    end_time: datetime
-    recurrence_interval: str | None
-    recurrence_end: date | None
-    reminders: list[dict[str, Any]]
-    is_override: bool
-    source_event_id: int
-    original_start_time: datetime | None
-    instance_id: str
-    is_split_series: bool
-    split_from_event_id: int | None
+__all__ = (
+    "serialise_event_reminders",
+    "is_occurrence_in_series",
+    "expand_event_instances",
+    "expand_user_events",
+    "_normalise_reminder_snapshot",
+)
 
 
 FREQ_BY_INTERVAL = {
@@ -51,26 +39,8 @@ def _make_aware(value: datetime) -> datetime:
     return timezone.make_aware(value)
 
 
-def _normalise_reminder_snapshot(
-    reminders_snapshot: Iterable[dict[str, Any]],
-) -> list[dict[str, Any]]:
-    normalised: list[dict[str, Any]] = []
-    for reminder in reminders_snapshot:
-        try:
-            minutes_before = int(reminder.get("minutes_before", 0))
-        except (TypeError, ValueError):
-            continue
-        normalised.append(
-            {
-                "send_email": bool(reminder.get("send_email", False)),
-                "send_push": bool(reminder.get("send_push", False)),
-                "minutes_before": minutes_before,
-            }
-        )
-    return normalised
-
-
 def serialise_event_reminders(event: Event) -> list[dict[str, Any]]:
+    """Serialise event reminders into stable API-style dictionaries."""
     return [
         {
             "id": reminder.id,
@@ -85,7 +55,6 @@ def serialise_event_reminders(event: Event) -> list[dict[str, Any]]:
 def _get_event_rule_until(event: Event, window_end: datetime) -> datetime:
     if not event.recurrence_end:
         return window_end
-
     series_tz = event.start_time.tzinfo or timezone.get_current_timezone()
     recurrence_end_dt = datetime.combine(event.recurrence_end, time.max)
     if timezone.is_naive(recurrence_end_dt):
@@ -102,24 +71,20 @@ def _build_event_rrule(event: Event, window_end: datetime) -> rrule | None:
     until = _get_event_rule_until(event, window_end)
     if until < event.start_time:
         return None
-    return rrule(
-        frequency,
-        dtstart=event.start_time,
-        until=until,
-    )
+    return rrule(frequency, dtstart=event.start_time, until=until)
 
 
 def _generate_occurrence_starts(
-    event: Event, range_start: datetime, range_end: datetime
+    event: Event,
+    range_start: datetime,
+    range_end: datetime,
 ) -> list[datetime]:
     if not event.recurrence_interval:
         if event.start_time <= range_end and event.end_time >= range_start:
             return [event.start_time]
         return []
-
     if event.start_time > range_end:
         return []
-
     rule = _build_event_rrule(event, range_end)
     if rule is None:
         return []
@@ -127,72 +92,19 @@ def _generate_occurrence_starts(
 
 
 def is_occurrence_in_series(event: Event, occurrence_start: datetime) -> bool:
+    """Return whether an occurrence belongs to the event's recurrence rule."""
     occurrence_start = _make_aware(occurrence_start)
-
     if not event.recurrence_interval:
         return event.start_time == occurrence_start
-
     if occurrence_start < event.start_time:
         return False
     if event.recurrence_end and occurrence_start.date() > event.recurrence_end:
         return False
-
     rule = _build_event_rrule(event, occurrence_start)
     if rule is None:
         return False
     previous = rule.before(occurrence_start, inc=True)
     return previous == occurrence_start
-
-
-def _build_instance_id(
-    source_event_id: int,
-    is_override: bool,
-    anchor_time: datetime | None,
-    start_time: datetime,
-) -> str:
-    anchor = (anchor_time or start_time).isoformat()
-    kind = "override" if is_override else "base"
-    return f"{source_event_id}:{anchor}:{kind}"
-
-
-def _build_expanded_instance(
-    *,
-    source_event: Event,
-    categories: list[Any],
-    reminders: list[dict[str, Any]],
-    start_time: datetime,
-    end_time: datetime,
-    is_override: bool,
-    original_start_time: datetime | None,
-    title: str,
-    description: str,
-    location: str,
-    colour: str | None,
-) -> ExpandedEventInstance:
-    return ExpandedEventInstance(
-        id=source_event.id,
-        title=title,
-        description=description,
-        location=location,
-        colour=colour,
-        categories=categories,
-        start_time=start_time,
-        end_time=end_time,
-        recurrence_interval=source_event.recurrence_interval,
-        recurrence_end=source_event.recurrence_end,
-        reminders=reminders,
-        is_override=is_override,
-        source_event_id=source_event.id,
-        original_start_time=original_start_time,
-        instance_id=_build_instance_id(
-            source_event.id,
-            is_override,
-            original_start_time,
-            start_time,
-        ),
-        is_split_series=source_event.split_from_event_id is not None,
-        split_from_event_id=source_event.split_from_event_id,
-    )
 
 
 def _build_expanded_content(
@@ -203,22 +115,18 @@ def _build_expanded_content(
 ):
     range_start = _make_aware(range_start)
     range_end = _make_aware(range_end)
-
     category_cache = list(event.categories.all())
     reminder_cache = serialise_event_reminders(event)
     duration = event.end_time - event.start_time
     exception_dates = set(event.exception_dates or [])
-
     loaded_overrides = (
         overrides
         if overrides is not None
         else list(event.overrides.prefetch_related("categories").all())
     )
-
     overrides_by_original = {
         override.original_start_time: override for override in loaded_overrides
     }
-
     return (
         range_start,
         range_end,
@@ -231,6 +139,137 @@ def _build_expanded_content(
     )
 
 
+def _should_include_base_occurrence(
+    event: Event,
+    occurrence_start: datetime,
+    occurrence_end: datetime,
+    range_start: datetime,
+    range_end: datetime,
+) -> bool:
+    return range_start <= occurrence_start <= range_end or (
+        not event.recurrence_interval
+        and occurrence_start <= range_end
+        and occurrence_end >= range_start
+    )
+
+
+def _build_override_occurrence(
+    override: EventOverride,
+    event: Event,
+    range_start: datetime,
+    range_end: datetime,
+    reminder_cache: list[dict[str, Any]],
+) -> tuple[ExpandedEventInstance | None, int | None]:
+    if not range_start <= override.start_time <= range_end:
+        return None, override.id
+    return build_override_instance(
+        event, override, reminder_cache=reminder_cache
+    ), override.id
+
+
+def _build_base_occurrence(
+    event: Event,
+    occurrence_start: datetime,
+    occurrence_end: datetime,
+    range_start: datetime,
+    range_end: datetime,
+    category_cache: list[Any],
+    reminder_cache: list[dict[str, Any]],
+) -> tuple[ExpandedEventInstance | None, None]:
+    if not _should_include_base_occurrence(
+        event,
+        occurrence_start,
+        occurrence_end,
+        range_start,
+        range_end,
+    ):
+        return None, None
+    return build_base_instance(
+        event,
+        categories=category_cache,
+        reminders=reminder_cache,
+        occurrence_start=occurrence_start,
+        occurrence_end=occurrence_end,
+    ), None
+
+
+def _build_occurrence_instance(
+    event: Event,
+    occurrence_start: datetime,
+    range_start: datetime,
+    range_end: datetime,
+    duration,
+    exception_dates: set[str],
+    overrides_by_original: dict[datetime, EventOverride],
+    category_cache: list[Any],
+    reminder_cache: list[dict[str, Any]],
+) -> tuple[ExpandedEventInstance | None, int | None]:
+    override = overrides_by_original.get(occurrence_start)
+    if override is not None:
+        return _build_override_occurrence(
+            override, event, range_start, range_end, reminder_cache
+        )
+    if occurrence_start.date().isoformat() in exception_dates:
+        return None, None
+    occurrence_end = occurrence_start + duration
+    return _build_base_occurrence(
+        event,
+        occurrence_start,
+        occurrence_end,
+        range_start,
+        range_end,
+        category_cache,
+        reminder_cache,
+    )
+
+
+def _build_standalone_override_instances(
+    event: Event,
+    loaded_overrides: list[EventOverride],
+    seen_override_ids: set[int],
+    range_start: datetime,
+    range_end: datetime,
+    reminder_cache: list[dict[str, Any]],
+) -> list[ExpandedEventInstance]:
+    return [
+        build_override_instance(event, override, reminder_cache=reminder_cache)
+        for override in loaded_overrides
+        if override.id not in seen_override_ids
+        and range_start <= override.start_time <= range_end
+    ]
+
+
+def _collect_occurrence_instances(
+    event: Event,
+    range_start: datetime,
+    range_end: datetime,
+    duration,
+    exception_dates: set[str],
+    overrides_by_original: dict[datetime, EventOverride],
+    category_cache: list[Any],
+    reminder_cache: list[dict[str, Any]],
+) -> tuple[list[ExpandedEventInstance], set[int]]:
+    instances: list[ExpandedEventInstance] = []
+    seen_override_ids: set[int] = set()
+    for occurrence_start in _generate_occurrence_starts(event, range_start, range_end):
+        instance, seen_override_id = _build_occurrence_instance(
+            event,
+            occurrence_start,
+            range_start,
+            range_end,
+            duration,
+            exception_dates,
+            overrides_by_original,
+            category_cache,
+            reminder_cache,
+        )
+        if seen_override_id is not None:
+            seen_override_ids.add(seen_override_id)
+        if instance is not None:
+            instances.append(instance)
+    return instances, seen_override_ids
+
+
 def expand_event_instances(
     event: Event,
     range_start: datetime,
@@ -238,116 +277,41 @@ def expand_event_instances(
     *,
     overrides: list[EventOverride] | None = None,
 ) -> list[ExpandedEventInstance]:
-    """
-    Expand a single Event into concrete event instances within the given time
-    range, applying any relevant overrides or exceptions required.
-    """
+    """Expand an event into materialised instances within the requested window."""
+    content = _build_expanded_content(event, range_start, range_end, overrides)
+    return _build_sorted_instances(event, content)
 
-    (
-        range_start,
-        range_end,
-        category_cache,
-        reminder_cache,
-        duration,
-        exception_dates,
-        loaded_overrides,
-        overrides_by_original,
-    ) = _build_expanded_content(event, range_start, range_end, overrides)
 
-    seen_override_ids: set[int] = set()
-    instances: list[ExpandedEventInstance] = []
-
-    for occurrence_start in _generate_occurrence_starts(event, range_start, range_end):
-        override = overrides_by_original.get(occurrence_start)
-        if override:
-            seen_override_ids.add(override.id)
-            if range_start <= override.start_time <= range_end:
-                instances.append(
-                    _build_expanded_instance(
-                        source_event=event,
-                        categories=list(override.categories.all()),
-                        reminders=_normalise_reminder_snapshot(
-                            override.reminders_snapshot or reminder_cache
-                        ),
-                        start_time=override.start_time,
-                        end_time=override.end_time,
-                        is_override=True,
-                        original_start_time=override.original_start_time,
-                        title=override.title,
-                        description=override.description,
-                        location=override.location,
-                        colour=override.colour or event.colour,
-                    )
-                )
-            continue
-
-        if occurrence_start.date().isoformat() in exception_dates:
-            continue
-
-        occurrence_end = occurrence_start + duration
-        if range_start <= occurrence_start <= range_end or (
-            not event.recurrence_interval
-            and occurrence_start <= range_end
-            and occurrence_end >= range_start
-        ):
-            instances.append(
-                _build_expanded_instance(
-                    source_event=event,
-                    categories=category_cache,
-                    reminders=reminder_cache,
-                    start_time=occurrence_start,
-                    end_time=occurrence_end,
-                    is_override=False,
-                    original_start_time=(
-                        occurrence_start if event.recurrence_interval else None
-                    ),
-                    title=event.title,
-                    description=event.description,
-                    location=event.location,
-                    colour=event.colour,
-                )
-            )
-
-    for override in loaded_overrides:
-        if override.id in seen_override_ids:
-            continue
-        if not (range_start <= override.start_time <= range_end):
-            continue
-        instances.append(
-            _build_expanded_instance(
-                source_event=event,
-                categories=list(override.categories.all()),
-                reminders=_normalise_reminder_snapshot(
-                    override.reminders_snapshot or reminder_cache
-                ),
-                start_time=override.start_time,
-                end_time=override.end_time,
-                is_override=True,
-                original_start_time=override.original_start_time,
-                title=override.title,
-                description=override.description,
-                location=override.location,
-                colour=override.colour or event.colour,
-            )
-        )
-
+def _build_sorted_instances(event: Event, content) -> list[ExpandedEventInstance]:
+    range_start, range_end, category_cache, reminder_cache, duration, exception_dates, loaded_overrides, overrides_by_original = content
+    instances, seen_override_ids = _collect_occurrence_instances(event, range_start, range_end, duration, exception_dates, overrides_by_original, category_cache, reminder_cache)
+    _append_standalone_overrides(instances, event, loaded_overrides, seen_override_ids, range_start, range_end, reminder_cache)
     return sorted(instances, key=lambda instance: instance.start_time)
 
 
-def expand_user_events(
-    user: Any,
+def _append_standalone_overrides(
+    instances: list[ExpandedEventInstance],
+    event: Event,
+    loaded_overrides: list[EventOverride],
+    seen_override_ids: set[int],
     range_start: datetime,
     range_end: datetime,
-) -> list[ExpandedEventInstance]:
-    """
-    Expand all events for a given user into concrete instances
-    within the specified time range.
-    """
+    reminder_cache: list[dict[str, Any]],
+) -> None:
+    instances.extend(
+        _build_standalone_override_instances(
+            event,
+            loaded_overrides,
+            seen_override_ids,
+            range_start,
+            range_end,
+            reminder_cache,
+        )
+    )
 
-    range_start = _make_aware(range_start)
-    range_end = _make_aware(range_end)
 
-    event_filter = Q(
+def _build_user_event_filter(range_start: datetime, range_end: datetime) -> Q:
+    return Q(
         recurrence_interval__isnull=True,
         start_time__lte=range_end,
         end_time__gte=range_start,
@@ -357,7 +321,9 @@ def expand_user_events(
         & (Q(recurrence_end__isnull=True) | Q(recurrence_end__gte=range_start.date()))
     )
 
-    events = (
+
+def _get_events_for_user(user: Any, event_filter: Q):
+    return (
         Event.objects.filter(user=user)
         .filter(event_filter)
         .prefetch_related(
@@ -371,6 +337,12 @@ def expand_user_events(
         .order_by("start_time", "id")
     )
 
+
+def _expand_prefetched_events(
+    events,
+    range_start: datetime,
+    range_end: datetime,
+) -> list[ExpandedEventInstance]:
     instances: list[ExpandedEventInstance] = []
     for event in events:
         instances.extend(
@@ -381,5 +353,18 @@ def expand_user_events(
                 overrides=list(event.overrides.all()),
             )
         )
+    return instances
 
+
+def expand_user_events(
+    user: Any,
+    range_start: datetime,
+    range_end: datetime,
+) -> list[ExpandedEventInstance]:
+    """Expand every visible event for a user within the requested window."""
+    range_start = _make_aware(range_start)
+    range_end = _make_aware(range_end)
+    event_filter = _build_user_event_filter(range_start, range_end)
+    events = _get_events_for_user(user, event_filter)
+    instances = _expand_prefetched_events(events, range_start, range_end)
     return sorted(instances, key=lambda instance: instance.start_time)
