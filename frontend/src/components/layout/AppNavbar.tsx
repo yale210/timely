@@ -17,9 +17,9 @@ const navItems = [
 ]
 
 const featureItems = [
-  { key: "leaderboard", label: "Leaderboard", to: "/leaderboard", icon: "leaderboard" },
   { key: "pomodoro", label: "Pomodoro", to: "/pomodoro", icon: "timer" },
   { key: "gradebook", label: "Gradebook", to: "/gradebook", icon: "school" },
+  { key: "leaderboard", label: "Leaderboard", to: "/leaderboard", icon: "leaderboard" },
 ]
 
 const FEATURE_FLAGS = {

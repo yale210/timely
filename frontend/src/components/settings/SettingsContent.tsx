@@ -39,10 +39,10 @@ const SettingsContent = ({
 
   const featureRows = useMemo(() => ([
     {
-      key: "leaderboard",
-      label: "Leaderboard",
-      description: "Allows users to view how they are doing in comparison to their friends.",
-      value: featureFlags.leaderboard,
+      key: "pomodoro",
+      label: "Pomodoro",
+      description: "Use the dedicated Pomodoro timer page from Extras.",
+      value: featureFlags.pomodoro,
     },
     {
       key: "gradebook",
@@ -51,10 +51,10 @@ const SettingsContent = ({
       value: featureFlags.gradebook,
     },
     {
-      key: "pomodoro",
-      label: "Pomodoro",
-      description: "Use the dedicated Pomodoro timer page from Extras.",
-      value: featureFlags.pomodoro,
+      key: "leaderboard",
+      label: "Leaderboard",
+      description: "Allows users to view how they are doing in comparison to their friends.",
+      value: featureFlags.leaderboard,
     },
   ]), [featureFlags]);
 
