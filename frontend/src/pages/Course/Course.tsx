@@ -6,9 +6,29 @@ import CourseCard from "@/components/course/CourseCard.tsx";
 import CoursesHeader from "@/components/course/CourseHeader.tsx";
 import CourseEventsDrawer from "@/components/course/CourseEventsDrawer.tsx";
 import { useCourses } from "@/hooks/course/useCourse.tsx";
-import * as courseService from "@/services/courseService.tsx";
+import { useCoursePermissions } from "@/hooks/course/useCoursePermissions.tsx";
+import * as courseService from "@/services/courseService";
 import type { Course } from "@/types/course.ts";
 import type { Event } from "@/types/event.ts";
+import {useTeacher} from "@/hooks/course/useTeacher.tsx";
+
+function CourseCardWithPermissions({
+  course,
+  onView,
+}: {
+  course: Course;
+  onView: (course: Course) => void;
+}) {
+  const { permissions, loading: permissionsLoading } = useCoursePermissions(course.id);
+
+  return (
+    <CourseCard
+      course={course}
+      onView={onView}
+      permission={permissionsLoading ? null : permissions}
+    />
+  );
+}
 
 /**
  * Renders the courses page.
@@ -44,11 +64,11 @@ export default function Courses() {
     void loadCourseEvents();
   }, [selectedCourse]);
 
-  const handleJoinCourse = async () => {
+ const handleJoinCourse = async () => {
     setJoinError(null);
 
-    const courseId = Number.parseInt(joinCourseId, 10);
-    if (!Number.isInteger(courseId) || courseId <= 0) {
+    const courseId = joinCourseId.trim();
+    if (!courseId) {
       setJoinError("Please enter a valid course ID.");
       return;
     }
@@ -67,6 +87,7 @@ export default function Courses() {
     }
   };
 
+
   return (
     <AppLayout>
       <CoursesHeader
@@ -81,6 +102,9 @@ export default function Courses() {
         }}
         onJoinCourse={() => void handleJoinCourse()}
         onRefresh={() => void actions.refresh()}
+        isTeacher={useTeacher().isTeacher}
+        onManageCourses={() => void navigate("/courses/manage")}
+        onCreateCourse={() => void navigate("/course/create")}
       />
 
       {joinError && (
@@ -104,7 +128,7 @@ export default function Courses() {
 
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
           {filteredCourses.map((course) => (
-            <CourseCard
+            <CourseCardWithPermissions
               key={course.id}
               course={course}
               onView={(courseToOpen) => {
