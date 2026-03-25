@@ -1,5 +1,5 @@
 /**
- *
+ * Shows empty
  */
 export default function CoursesEmptyState() {
   return (

@@ -15,7 +15,7 @@ export class CoursePeED {
     /**
      * Initializes a new instance of the class with default course permission options.
      * The permissions are set to `false` by default, indicating no access or privileges.
-     * @return {void} Does not return a value.
+     * @returns Does not return a value.
      */
     constructor() {
         this.options = {} as CoursePermissions;
