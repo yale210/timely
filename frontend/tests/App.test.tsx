@@ -15,6 +15,7 @@ vi.mock("@/pages/index", () => ({
   Dashboard: () => <div>Dashboard Page</div>,
   Settings: () => <div>Settings Page</div>,
   Friends: () => <div>Friends Page</div>,
+  Sharing: () => <div>Sharing Page</div>,
   ProfilePage: () => <div>Profile Page</div>,
   Leaderboard: () => <div>Leaderboard Page</div>,
   Pomodoro: () => <div>Pomodoro Page</div>,
@@ -125,6 +126,7 @@ describe("App Component", () => {
     expect(getByText("Logout Page")).toBeDefined();
   });
 
+  
   it("should render Calendar page", () => {
     const { getByText } = render(
       <MemoryRouter initialEntries={["/calendar"]}>

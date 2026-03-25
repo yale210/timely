@@ -42,6 +42,7 @@ const createProps = (
     preference: false,
     categories: false,
     saving: false,
+    deleting: false,
   },
   error: {
     preference: null,
@@ -56,6 +57,8 @@ const createProps = (
     saveCategoryLimits: vi.fn(),
     applyTheme: vi.fn(),
     applyFont: vi.fn(),
+    deleteEvents: vi.fn(),
+    deleteTasks: vi.fn(),
   },
 });
 

@@ -14,6 +14,7 @@ import {
   Dashboard,
   Settings,
   Friends,
+  Sharing,
   ProfilePage,
   Leaderboard,
   Pomodoro,
@@ -104,6 +105,12 @@ export default function App() {
       <Route path="/friends" element={
         <RequireAuth>
           <Friends />
+        </RequireAuth>}
+      />
+
+      <Route path="/sharing" element={
+        <RequireAuth>
+          <Sharing />
         </RequireAuth>}
       />
 
