@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { authStore } from "@/services/authService";
-import { getCurrentTeacher } from "@/services/courseService.tsx";
+import { getCurrentTeacher } from "@/services/courseService";
 import type { Teacher } from "@/types/teacher";
 
 interface UseTeacherState {
