@@ -1,3 +1,5 @@
+import { hexToRgba } from "@/utils/colorUtils"
+
 /**
  * Grade record displayed in the gradebook table.
  */
@@ -65,7 +67,12 @@ export default function GradebookTable(props: GradebookTableProps) {
         </thead>
         <tbody className="divide-y divide-gray-200 bg-white">
           {filteredGrades.map((grade) => (
-            <tr key={grade.id}>
+            <tr
+              key={grade.id}
+              style={grade.category_colour ? {
+                backgroundColor: hexToRgba(grade.category_colour, 0.12),
+              } : undefined}
+            >
               <td className="whitespace-nowrap px-6 py-4">{grade.name}</td>
               <td className="whitespace-nowrap px-6 py-4">
                 {grade.category_name ? (

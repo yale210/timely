@@ -2,15 +2,24 @@ import { useCallback, useEffect, useMemo, useState, type Dispatch, type SetState
 import type { Grade } from "@/components/gradebook/GradebookTable"
 import type { EditInitial } from "@/types"
 
+type GradePerformanceFilter = "all" | "excellent" | "good" | "needs_attention"
+type GradeSortOption = "date_desc" | "date_asc" | "percentage_desc" | "percentage_asc" | "name_asc"
+
 interface UseGradesReturn {
   grades: Grade[] | null
   loading: boolean
   modalOpen: boolean
   editInitial: EditInitial
+  search: string
+  sortBy: GradeSortOption
+  performanceFilter: GradePerformanceFilter
   selectedCategoryId: number | null
   pendingDeleteId: number | null
   filteredGrades: Grade[]
   setModalOpen: Dispatch<SetStateAction<boolean>>
+  setSearch: Dispatch<SetStateAction<string>>
+  setSortBy: Dispatch<SetStateAction<GradeSortOption>>
+  setPerformanceFilter: Dispatch<SetStateAction<GradePerformanceFilter>>
   setSelectedCategoryId: Dispatch<SetStateAction<number | null>>
   setPendingDeleteId: Dispatch<SetStateAction<number | null>>
   refreshGrades: () => Promise<void>
@@ -27,6 +36,9 @@ export default function useGrades(): UseGradesReturn {
   const [loading, setLoading] = useState<boolean>(true)
   const [modalOpen, setModalOpen] = useState<boolean>(false)
   const [editInitial, setEditInitial] = useState<EditInitial>(null)
+  const [search, setSearch] = useState<string>("")
+  const [sortBy, setSortBy] = useState<GradeSortOption>("date_desc")
+  const [performanceFilter, setPerformanceFilter] = useState<GradePerformanceFilter>("all")
   const [selectedCategoryId, setSelectedCategoryId] = useState<number | null>(null)
   const [pendingDeleteId, setPendingDeleteId] = useState<number | null>(null)
 
@@ -101,20 +113,60 @@ export default function useGrades(): UseGradesReturn {
 
   const filteredGrades = useMemo<Grade[]>(() => {
     if (!grades) return []
-    return selectedCategoryId == null
-      ? grades
-      : grades.filter((grade) => grade.category === selectedCategoryId)
-  }, [grades, selectedCategoryId])
+    const normalizedSearch = search.trim().toLowerCase()
+
+    const next = grades
+      .filter((grade) => (
+        selectedCategoryId == null ? true : grade.category === selectedCategoryId
+      ))
+      .filter((grade) => {
+        if (performanceFilter === "all") return true
+        if (performanceFilter === "excellent") return grade.percentage >= 85
+        if (performanceFilter === "good") return grade.percentage >= 55 && grade.percentage < 85
+        return grade.percentage < 55
+      })
+      .filter((grade) => {
+        if (!normalizedSearch) return true
+        return (
+          grade.name.toLowerCase().includes(normalizedSearch)
+          || (grade.category_name?.toLowerCase().includes(normalizedSearch) ?? false)
+        )
+      })
+
+    next.sort((left, right) => {
+      if (sortBy === "date_asc") {
+        return left.date_achieved.localeCompare(right.date_achieved)
+      }
+      if (sortBy === "percentage_desc") {
+        return right.percentage - left.percentage
+      }
+      if (sortBy === "percentage_asc") {
+        return left.percentage - right.percentage
+      }
+      if (sortBy === "name_asc") {
+        return left.name.localeCompare(right.name)
+      }
+      return right.date_achieved.localeCompare(left.date_achieved)
+    })
+
+    return next
+  }, [grades, performanceFilter, search, selectedCategoryId, sortBy])
 
   return {
     grades,
     loading,
     modalOpen,
     editInitial,
+    search,
+    sortBy,
+    performanceFilter,
     selectedCategoryId,
     pendingDeleteId,
     filteredGrades,
     setModalOpen,
+    setSearch,
+    setSortBy,
+    setPerformanceFilter,
     setSelectedCategoryId,
     setPendingDeleteId,
     refreshGrades,
@@ -123,4 +175,3 @@ export default function useGrades(): UseGradesReturn {
     confirmDelete,
   }
 }
-

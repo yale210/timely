@@ -33,6 +33,7 @@ const SettingsContent = ({
 }: SettingsContentProps) => {
   const dragSnapOptions = [5, 10, 15, 20, 30, 60] as const;
   const [featureFlags, setFeatureFlags] = useState(() => ({
+    assessments: localStorage.getItem("feature_assessments_enabled") !== "false",
     gradebook: localStorage.getItem("feature_gradebook_enabled") !== "false",
     leaderboard: localStorage.getItem("feature_leaderboard_enabled") !== "false",
     pomodoro: localStorage.getItem("feature_pomodoro_enabled") !== "false",
@@ -44,6 +45,12 @@ const SettingsContent = ({
       label: "Pomodoro",
       description: "A focus timer that alternates work sessions with short and long breaks.",
       value: featureFlags.pomodoro,
+    },
+    {
+      key: "assessments",
+      label: "Assessments",
+      description: "Track upcoming assessments with optional calendar events and gradebook handoff.",
+      value: featureFlags.assessments,
     },
     {
       key: "gradebook",
@@ -59,8 +66,13 @@ const SettingsContent = ({
     },
   ]), [featureFlags]);
 
-  const updateFeature = (key: "gradebook" | "leaderboard" | "pomodoro", value: boolean) => {
-    if (key === "gradebook") {
+  const updateFeature = (
+    key: "assessments" | "gradebook" | "leaderboard" | "pomodoro",
+    value: boolean,
+  ) => {
+    if (key === "assessments") {
+      localStorage.setItem("feature_assessments_enabled", String(value));
+    } else if (key === "gradebook") {
       localStorage.setItem("feature_gradebook_enabled", String(value));
     } else if (key === "leaderboard") {
       localStorage.setItem("feature_leaderboard_enabled", String(value));
@@ -169,7 +181,7 @@ const SettingsContent = ({
                         checked={feature.value}
                         onChange={(event) => {
                           updateFeature(
-                            feature.key as "gradebook" | "leaderboard" | "pomodoro",
+                            feature.key as "assessments" | "gradebook" | "leaderboard" | "pomodoro",
                             event.target.checked,
                           );
                         }}

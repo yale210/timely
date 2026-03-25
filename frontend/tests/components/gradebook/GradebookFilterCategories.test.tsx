@@ -1,18 +1,15 @@
-import { render, screen, fireEvent } from "@testing-library/react";
-import { vi, describe, it, expect } from "vitest";
+import { render, screen } from "@testing-library/react";
+import { describe, it, expect } from "vitest";
 import GradebookFilterCategories from "@/components/gradebook/GradebookFilterCategories";
 import type { Grade } from "@/components/gradebook/GradebookTable";
 
 describe("GradebookFilterCategories Component", () => {
-  const mockSetSelectedCategoryId = vi.fn();
-  const mockCategories = [
-    { id: 1, text: "Math" },
-    { id: 2, text: "Science" },
-  ];
   const mockGrades: Grade[] = [
     {
       id: 1,
       name: "G1",
+      category: 1,
+      category_name: "Math",
       percentage: 80,
       score: 80,
       total_possible: 100,
@@ -22,6 +19,8 @@ describe("GradebookFilterCategories Component", () => {
     {
       id: 2,
       name: "G2",
+      category: 2,
+      category_name: "Science",
       percentage: 40,
       score: 40,
       total_possible: 100,
@@ -36,8 +35,6 @@ describe("GradebookFilterCategories Component", () => {
         loading={true}
         grades={mockGrades}
         filteredGrades={mockGrades}
-        selectedCategoryId={null}
-        setSelectedCategoryId={mockSetSelectedCategoryId}
       />
     );
     expect(container.firstChild).toBeNull();
@@ -49,8 +46,6 @@ describe("GradebookFilterCategories Component", () => {
         loading={false}
         grades={null}
         filteredGrades={[]}
-        selectedCategoryId={null}
-        setSelectedCategoryId={mockSetSelectedCategoryId}
       />
     );
     expect(container.firstChild).toBeNull();
@@ -62,38 +57,12 @@ describe("GradebookFilterCategories Component", () => {
         loading={false}
         grades={mockGrades}
         filteredGrades={mockGrades}
-        selectedCategoryId={null}
-        setSelectedCategoryId={mockSetSelectedCategoryId}
-        categories={mockCategories}
       />
     );
 
     expect(screen.getByText("Average Percentage")).toBeDefined();
     expect(screen.getByText("60%")).toBeDefined(); // (80 + 40) / 2
-    expect(screen.getByText("Filter by Category")).toBeDefined();
-    expect(screen.getByRole("combobox")).toBeDefined();
-    expect(screen.getByRole("option", { name: "Math" })).toBeDefined();
-    expect(screen.getByRole("option", { name: "Science" })).toBeDefined();
-  });
-
-  it("calls setSelectedCategoryId when selection changes", () => {
-    render(
-      <GradebookFilterCategories
-        loading={false}
-        grades={mockGrades}
-        filteredGrades={mockGrades}
-        selectedCategoryId={null}
-        setSelectedCategoryId={mockSetSelectedCategoryId}
-        categories={mockCategories}
-      />
-    );
-
-    const select = screen.getByRole("combobox");
-    fireEvent.change(select, { target: { value: "1" } });
-    expect(mockSetSelectedCategoryId).toHaveBeenCalledWith(1);
-
-    fireEvent.change(select, { target: { value: "" } });
-    expect(mockSetSelectedCategoryId).toHaveBeenCalledWith(null);
+    expect(screen.getByText(/you’re passing - now aim higher\./i)).toBeDefined();
   });
 
   it("applies different tone classes based on average", () => {
@@ -102,32 +71,26 @@ describe("GradebookFilterCategories Component", () => {
         loading={false}
         grades={mockGrades}
         filteredGrades={[{ percentage: 40 } as Grade]}
-        selectedCategoryId={null}
-        setSelectedCategoryId={mockSetSelectedCategoryId}
       />
     );
-    expect(screen.getByText("40%").parentElement?.className).toContain("bg-red-100");
+    expect(screen.getByText("40%").parentElement?.className).toContain("bg-red-200");
 
     rerender(
       <GradebookFilterCategories
         loading={false}
         grades={mockGrades}
         filteredGrades={[{ percentage: 60 } as Grade]}
-        selectedCategoryId={null}
-        setSelectedCategoryId={mockSetSelectedCategoryId}
       />
     );
-    expect(screen.getByText("60%").parentElement?.className).toContain("bg-orange-100");
+    expect(screen.getByText("60%").parentElement?.className).toContain("bg-orange-200");
 
     rerender(
       <GradebookFilterCategories
         loading={false}
         grades={mockGrades}
         filteredGrades={[{ percentage: 90 } as Grade]}
-        selectedCategoryId={null}
-        setSelectedCategoryId={mockSetSelectedCategoryId}
       />
     );
-    expect(screen.getByText("90%").parentElement?.className).toContain("bg-green-100");
+    expect(screen.getByText("90%").parentElement?.className).toContain("bg-green-200");
   });
 });

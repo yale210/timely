@@ -1,6 +1,5 @@
 """Category Seeder"""
 
-import random
 from core.models import Category
 from django.contrib.auth import get_user_model
 from core.management.commands.seeders.base import BaseSeeder
@@ -43,7 +42,6 @@ class CategorySeeder(BaseSeeder):
                 "fields": {
                     "text": word,
                     "colour": colour,
-                    "max_daily_study_time": random.randint(0, 24),
                 },
             }
         )
@@ -54,5 +52,4 @@ class CategorySeeder(BaseSeeder):
             user_id=data["user"],
             text=data["fields"]["text"],
             colour=data["fields"].get("colour", None),
-            max_daily_study_time=data["fields"].get("max_daily_study_time", None),
         )

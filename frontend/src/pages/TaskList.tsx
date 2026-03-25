@@ -5,13 +5,13 @@ import AppLayout from "@/layouts/AppLayout";
 
 const TaskList = () => {
   const { state, loading, error, actions } = useTaskList();
-  const { categories, isSidebarOpen, selectedTask, search, sortBy, filters, sections } = state;
+  const { categories, isSidebarOpen, selectedTask, warning, search, sortBy, filters, sections } = state;
 
   return (
     <AppLayout>
       <header className="bg-white border-b border-gray-200 z-10">
         <div className="px-6 py-4 flex items-center justify-between gap-4">
-          <h2 className="text-2xl font-semibold text-black">Tasks</h2>
+          <h1 className="text-2xl font-semibold text-black">Tasks</h1>
           <div className="flex items-center gap-3">
             <div className="relative w-full sm:w-72">
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -55,6 +55,7 @@ const TaskList = () => {
 
       <div className="flex-1 overflow-y-auto px-6 py-4 bg-white">
         {error && <div className="mb-4 rounded-md bg-red-50 px-4 py-3 text-sm text-red-700">{error}</div>}
+        {warning && <div className="mb-4 rounded-md border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">{warning}</div>}
         {loading && state.tasks.length === 0 && <p className="mb-4 text-sm text-gray-500">Loading tasks...</p>}
 
         {sections.overdueTasks.length > 0 && (
