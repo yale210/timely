@@ -50,8 +50,7 @@ def snapshot_task_state(sender, instance, **kwargs):
     if instance.pk:
         try:
             instance._prev_completed = (
-                Task.objects
-                .filter(pk=instance.pk)
+                Task.objects.filter(pk=instance.pk)
                 .values_list("completed", flat=True)
                 .get()
             )
