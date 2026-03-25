@@ -305,10 +305,7 @@ const useNotificationBootstrap = (
   }, [fetchNotifications, fetchUnreadCount, handlers, hasAuthToken, refs]);
 };
 
-/** Manages notification state, unread counts, actions, and live updates. */
-export const useNotificationLogic = () => {
-  const hasAuthToken = useHasAuthToken();
-  const state = useNotificationState();
+const useNotificationDependencies = (state: ReturnType<typeof useNotificationState>) => {
   const handlers = useMemo(() => ({
     setNotifications: state.setNotifications,
     setUnreadCount: state.setUnreadCount,
@@ -320,6 +317,15 @@ export const useNotificationLogic = () => {
     notificationsRequestIdRef: state.notificationsRequestIdRef,
     unreadCountRequestIdRef: state.unreadCountRequestIdRef,
   }), [state.notificationsRef, state.notificationsRequestIdRef, state.unreadCountRequestIdRef]);
+
+  return { handlers, refs };
+};
+
+/** Manages notification state, unread counts, actions, and live updates. */
+export const useNotificationLogic = () => {
+  const hasAuthToken = useHasAuthToken();
+  const state = useNotificationState();
+  const { handlers, refs } = useNotificationDependencies(state);
   const { fetchNotifications, fetchUnreadCount } = useNotificationQueries(handlers, refs);
   const { markRead, markUnread, markAllRead } = useNotificationReadActions(refs, handlers, fetchUnreadCount);
   const { deleteNotification, deleteAllNotifications } = useNotificationDeleteActions(refs, handlers, fetchUnreadCount);
