@@ -1,2 +1,10 @@
 /** Available sections within the settings page. */
-export type SettingsSection = "profile" | "general" | "preferences" | "appearance" | "features" | "categories" | "privacy";
+export type SettingsSection =
+  | "profile"
+  | "general"
+  | "preferences"
+  | "themes"
+  | "fonts"
+  | "features"
+  | "categories"
+  | "privacy"

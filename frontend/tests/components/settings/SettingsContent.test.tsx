@@ -30,7 +30,7 @@ const preference: Preference = {
 };
 
 const createProps = (
-  activeSection: "preferences" | "features" | "appearance" | "profile",
+  activeSection: "preferences" | "features" | "themes" | "fonts" | "profile",
 ) => ({
   state: {
     activeSection,
@@ -99,7 +99,10 @@ describe("SettingsContent", () => {
     const { rerender } = render(<SettingsContent {...createProps("profile")} />);
     expect(screen.getByText("profile-section")).toBeInTheDocument();
 
-    rerender(<SettingsContent {...createProps("appearance")} />);
+    rerender(<SettingsContent {...createProps("themes")} />);
+    expect(screen.getByText("theme-section")).toBeInTheDocument();
+
+    rerender(<SettingsContent {...createProps("fonts")} />);
     expect(screen.getByText("theme-section")).toBeInTheDocument();
   });
 });
