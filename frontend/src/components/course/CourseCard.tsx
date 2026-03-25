@@ -1,13 +1,21 @@
-import type { Course } from "@/types/course";
+import type {Course, CoursePermissions} from "@/types/course";
 
 interface CourseCardProps {
   course: Course;
+  permission: CoursePermissions | null;
   onView: (course: Course) => void;
 }
 
-export default function CourseCard({ course, onView }: CourseCardProps) {
+/**
+ * Represents a card component for displaying course information and providing actions based on user permissions.
+ * @param props - The props for the CourseCard component.
+ * @param props.course - The course data to display.
+ * @param [props.permission] - The permissions object defining user capabilities.
+ * @param props.onView - Callback function executed when the course is opened or managed.
+ * @returns The rendered CourseCard component.
+ */
+export default function CourseCard({ course, permission, onView }: CourseCardProps) {
   const handleOpen = () => onView(course);
-
   return (
     <article
       role="button"
@@ -24,6 +32,8 @@ export default function CourseCard({ course, onView }: CourseCardProps) {
       <div className="flex items-start justify-between gap-3">
         <div>
           <h3 className="text-lg font-semibold text-black">{course.name}</h3>
+
+
           <p className="mt-1 text-sm text-gray-600">{course.description}</p>
         </div>
       </div>
@@ -40,17 +50,30 @@ export default function CourseCard({ course, onView }: CourseCardProps) {
       </dl>
 
       <div className="mt-4 flex gap-2">
+        {permission?.can_view_course_details && !permission?.can_manage_staff &&(
         <button
           type="button"
           onClick={(event) => {
             event.stopPropagation();
             handleOpen();
           }}
-          className="rounded-md border border-gray-300 px-3 py-1.5 text-sm text-gray-700 transition-colors hover:bg-gray-50"
+          className="rounded-md bg-primary px-3 py-2 text-sm font-medium text-white hover:bg-indigo-700"
         >
           View
         </button>
+        )}
+        {permission?.can_manage_staff && (
+          <button
+            type="button"
+            className="rounded-md bg-primary px-3 py-2 text-sm font-medium text-white hover:bg-indigo-700"
+            onClick={() => onView(course)}
+          >
+            Manage course
+          </button>
+
+        )}
       </div>
+
     </article>
   );
 }
