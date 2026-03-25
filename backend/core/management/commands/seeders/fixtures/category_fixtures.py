@@ -1,3 +1,5 @@
+"""Fixture data for seeding the database."""
+
 categories = [
     {
         "model": "core.category",

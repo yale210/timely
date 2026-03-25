@@ -1,4 +1,9 @@
-"""Task Seeder"""
+"""Seeder for Task models.
+
+This module provides the TaskSeeder class, which handles populating the
+database with both predefined fixture tasks and randomly generated tasks
+for testing and demonstration purposes.
+"""
 
 import random
 from core.models import Task, Category
@@ -10,14 +15,34 @@ from django.utils import timezone
 
 
 class TaskSeeder(BaseSeeder):
+    """Seeder class for the Task model.
+
+    This seeder ensures that the database has a mix of specific fixture-based
+    tasks and a larger set of randomized tasks associated with various users
+    and categories.
+
+    Attributes:
+        help (str): Description of the seeder's purpose.
+
+    """
+
     help = "Handles seeding of tasks into the database."
 
     def seed(self):
+        """Execute the seeding process for tasks.
+
+        First creates tasks from defined fixtures, then generates 200
+        random tasks to provide a diverse dataset.
+        """
         self._create_fixture_task()
         for i in range(200):
             self._populate_random_task()
 
     def _create_fixture_task(self):
+        """Iterate through predefined task fixtures and create them.
+
+        Logs an error message if a specific fixture fails to be created.
+        """
         for task in tasks:
             try:
                 self._create_task(task)
@@ -25,6 +50,15 @@ class TaskSeeder(BaseSeeder):
                 print(f"Error occurred while creating task: {exception}")
 
     def _create_task(self, data):
+        """Create or get a Task record from raw data.
+
+        Handles parent task relationships and category assignments.
+
+        Args:
+            data (dict): A dictionary containing task field metadata, including
+                user ID, title, timing, and category associations.
+
+        """
         user = get_user_model().objects.get(id=data["fields"]["user"])
         parent_task = None
         if data["fields"].get("parent_task") is not None:
@@ -50,6 +84,11 @@ class TaskSeeder(BaseSeeder):
             temporary_task.categories.set(categories)
 
     def _populate_random_task(self):
+        """Generate and save a single task with randomized data.
+
+        Ensures the task is associated with a user and a category, and
+        potentially sets a random parent task.
+        """
         temporary_user = self._get_or_create_random_user()
         temporary_category = self._get_or_create_random_category(temporary_user)
         self._create_task(
@@ -74,6 +113,12 @@ class TaskSeeder(BaseSeeder):
         )
 
     def _get_or_create_random_user(self):
+        """Retrieve an existing random user or create a new one if none exist.
+
+        Returns:
+            User: A Django User model instance.
+
+        """
         User = get_user_model()
         # Shuffle users and get a random user.
         temporary_user = User.objects.order_by("?").first()
@@ -87,6 +132,15 @@ class TaskSeeder(BaseSeeder):
         return temporary_user
 
     def _get_or_create_random_category(self, user):
+        """Retrieve a random category for a user or create a new one.
+
+        Args:
+            user (User): The user for whom to find or create a category.
+
+        Returns:
+            Category: A Category model instance.
+
+        """
         temporary_category = Category.objects.filter(user=user).order_by("?").first()
 
         if temporary_category is None:

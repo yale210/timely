@@ -1,3 +1,5 @@
+"""Fixture data for seeding the database."""
+
 grades = [
     {
         "model": "core.grade",

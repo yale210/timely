@@ -1,3 +1,5 @@
+"""Fixture data for seeding the database."""
+
 commutes = [
     {
         "model": "core.commute",
