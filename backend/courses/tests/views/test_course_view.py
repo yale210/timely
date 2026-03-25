@@ -428,7 +428,6 @@ class CourseViewTests(APITestCase):
         response = self.client.post(self.inactive_detail_url.replace("detail", "join"))
         self.assertEqual(response.status_code, status.HTTP_405_METHOD_NOT_ALLOWED)
 
-
     def test_join_by_code_success(self):
         join_code = CourseJoinCode.objects.create(
             course=self.course,

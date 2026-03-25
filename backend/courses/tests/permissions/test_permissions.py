@@ -129,7 +129,9 @@ class CoursePermissionTests(TestCase):
         request = self._request(self.student_user)
         view = self._view("retrieve")
 
-        self.assertTrue(self.permission.has_object_permission(request, view, self.course))
+        self.assertTrue(
+            self.permission.has_object_permission(request, view, self.course)
+        )
 
     def test_has_object_permission_retrieve_denies_unrelated_student(self):
         request = self._request(self.staff_user)
@@ -143,7 +145,9 @@ class CoursePermissionTests(TestCase):
         request = self._request(self.teacher_user)
         view = self._view("update")
 
-        self.assertTrue(self.permission.has_object_permission(request, view, self.course))
+        self.assertTrue(
+            self.permission.has_object_permission(request, view, self.course)
+        )
 
     def test_has_object_permission_update_allows_active_staff(self):
         CourseStaff.objects.create(
@@ -154,22 +158,30 @@ class CoursePermissionTests(TestCase):
         request = self._request(self.staff_user)
         view = self._view("partial_update")
 
-        self.assertTrue(self.permission.has_object_permission(request, view, self.course))
+        self.assertTrue(
+            self.permission.has_object_permission(request, view, self.course)
+        )
 
     def test_has_object_permission_destroy_denies_non_lead(self):
         request = self._request(self.student_user)
         view = self._view("destroy")
 
-        self.assertFalse(self.permission.has_object_permission(request, view, self.course))
+        self.assertFalse(
+            self.permission.has_object_permission(request, view, self.course)
+        )
 
     def test_has_object_permission_destroy_allows_admin(self):
         request = self._request(self.admin_user)
         view = self._view("destroy")
 
-        self.assertTrue(self.permission.has_object_permission(request, view, self.course))
+        self.assertTrue(
+            self.permission.has_object_permission(request, view, self.course)
+        )
 
     def test_has_object_permission_join_allows_authenticated_user(self):
         request = self._request(self.student_user)
         view = self._view("join")
 
-        self.assertTrue(self.permission.has_object_permission(request, view, self.course))
+        self.assertTrue(
+            self.permission.has_object_permission(request, view, self.course)
+        )
