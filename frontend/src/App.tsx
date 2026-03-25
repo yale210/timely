@@ -3,7 +3,6 @@ import { Routes, Route, useLocation } from "react-router-dom"
 import RequireAuth from "@/components/auth/RequireAuth"
 import RedirectAuth from "@/components/auth/RedirectAuth"
 import RequireAdmin from "@/components/auth/RequireAdmin"
-import { Home, Login, Signup, Logout, CalendarPage, TaskList, Gradebook, Dashboard, Settings, Friends, ProfilePage, Leaderboard } from "@/pages"
 import Courses from "@/pages/Course/Course.tsx"
 import CourseDetail from "@/pages/Course/CourseDetail.tsx"
 import {

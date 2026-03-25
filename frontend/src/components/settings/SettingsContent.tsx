@@ -69,7 +69,7 @@ const SettingsContent = ({
       },
   ]), [featureFlags]);
 
-  const updateFeature = (key: "gradebook" | "leaderboard" | "pomodoro" | "courses" value: boolean) => {
+  const updateFeature = (key: "gradebook" | "leaderboard" | "pomodoro" | "courses", value: boolean) => {
     if (key === "gradebook") {
       localStorage.setItem("feature_gradebook_enabled", String(value));
     } else if (key === "leaderboard") {
@@ -174,7 +174,7 @@ const SettingsContent = ({
                         checked={feature.value}
                         onChange={(event) => {
                           updateFeature(
-                            feature.key as "gradebook" | "leaderboard" | "pomodoro" | "courses"
+                            feature.key as "gradebook" | "leaderboard" | "pomodoro" | "courses",
                             event.target.checked,
                           );
                         }}
