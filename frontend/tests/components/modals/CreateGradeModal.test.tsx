@@ -45,15 +45,15 @@ describe("CreateGradeModal Component", () => {
 
   it("renders 'Create grade' title when no initialData is provided", () => {
     render(<CreateGradeModal open={true} onClose={mockOnClose} />);
-    expect(screen.getByText("Create grade")).toBeDefined();
-    expect(screen.getByRole("button", { name: "Create" })).toBeDefined();
+    expect(screen.getByRole("heading", { name: "Create grade" })).toBeDefined();
+    expect(screen.getByRole("button", { name: "Create grade" })).toBeDefined();
   });
 
   it("renders 'Edit grade' title when initialData is provided", () => {
     const initialData = { id: 1, name: "Existing Grade", score: 80, total: 100, date: "2023-01-01" };
     render(<CreateGradeModal open={true} onClose={mockOnClose} initialData={initialData} />);
     expect(screen.getByText("Edit grade")).toBeDefined();
-    expect(screen.getByRole("button", { name: "Update" })).toBeDefined();
+    expect(screen.getByRole("button", { name: "Update grade" })).toBeDefined();
     expect(screen.getByPlaceholderText("Assessment name")).toHaveValue("Existing Grade");
   });
 
@@ -80,7 +80,7 @@ describe("CreateGradeModal Component", () => {
     fireEvent.change(screen.getByPlaceholderText("Total"), { target: { value: "100" } });
     fireEvent.change(screen.getByPlaceholderText("Assessment name"), { target: { value: "Test" } });
     
-    fireEvent.submit(screen.getByRole("button", { name: "Create" }));
+    fireEvent.submit(screen.getByRole("button", { name: "Create grade" }));
     
     expect(screen.getByText("Score must be less than or equal to total.")).toBeDefined();
   });
@@ -97,7 +97,7 @@ describe("CreateGradeModal Component", () => {
     const dateInput = document.getElementById("grade-date-input");
     fireEvent.change(dateInput!, { target: { value: "2023-10-10" } });
 
-    fireEvent.submit(screen.getByRole("button", { name: "Create" }));
+    fireEvent.submit(screen.getByRole("button", { name: "Create grade" }));
 
     await waitFor(() => {
       expect(global.fetch).toHaveBeenCalledWith("/api/grades/", expect.objectContaining({
@@ -120,7 +120,7 @@ describe("CreateGradeModal Component", () => {
     render(<CreateGradeModal open={true} onClose={mockOnClose} onUpdated={mockOnUpdated} initialData={initialData} />);
     
     fireEvent.change(screen.getByPlaceholderText("Assessment name"), { target: { value: "Updated Grade" } });
-    fireEvent.submit(screen.getByRole("button", { name: "Update" }));
+    fireEvent.submit(screen.getByRole("button", { name: "Update grade" }));
 
     await waitFor(() => {
       expect(global.fetch).toHaveBeenCalledWith("/api/grades/123/", expect.objectContaining({
@@ -144,10 +144,10 @@ describe("CreateGradeModal Component", () => {
     fireEvent.change(screen.getByPlaceholderText("Assessment name"), { target: { value: "New Grade" } });
     fireEvent.change(screen.getByPlaceholderText("Score"), { target: { value: "90" } });
     fireEvent.change(screen.getByPlaceholderText("Total"), { target: { value: "100" } });
-    fireEvent.submit(screen.getByRole("button", { name: "Create" }));
+    fireEvent.submit(screen.getByRole("button", { name: "Create grade" }));
 
     await waitFor(() => {
-      expect(screen.getByText("Failed to create grade")).toBeDefined();
+      expect(screen.getByText("Failed to create grade.")).toBeDefined();
     });
   });
 
@@ -156,10 +156,10 @@ describe("CreateGradeModal Component", () => {
     vi.mocked(global.fetch).mockResolvedValueOnce({ ok: false } as Response);
     render(<CreateGradeModal open={true} onClose={mockOnClose} initialData={initialData} />);
     
-    fireEvent.submit(screen.getByRole("button", { name: "Update" }));
+    fireEvent.submit(screen.getByRole("button", { name: "Update grade" }));
 
     await waitFor(() => {
-      expect(screen.getByText("Failed to update grade")).toBeDefined();
+      expect(screen.getByText("Failed to update grade.")).toBeDefined();
     });
   });
 
@@ -176,7 +176,7 @@ describe("CreateGradeModal Component", () => {
     fireEvent.change(screen.getByPlaceholderText("Score"), { target: { value: "" } });
     fireEvent.change(screen.getByPlaceholderText("Total"), { target: { value: "" } });
     
-    fireEvent.submit(screen.getByRole("button", { name: "Create" }));
+    fireEvent.submit(screen.getByRole("button", { name: "Create grade" }));
     
     expect(screen.getByText("Please provide numeric values for score and total.")).toBeDefined();
   });

@@ -1,4 +1,5 @@
 export * from "./auth"
+export * from "./assessment"
 export * from "./category"
 export * from "./event"
 export * from "./gradebook"

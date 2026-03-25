@@ -2,11 +2,11 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import moment from "moment";
 import * as taskService from "@/services/taskService";
 import * as categoryService from "@/services/categoryService";
-import { type Category, type Task, type TaskSubmission } from "@/types";
+import { type Category, type Task, type TaskSubmission, type TaskUpdatedResponse } from "@/types";
 import { useThemeFont } from "@/hooks/common/useThemeFont";
 import { emitXpGained } from "@/utils/xpEvents";
 import { emitLevelup } from "@/utils/levelUpEvent";
-import { hasTaskBufferRescheduleConflict } from "@/utils/apiErrors";
+import { hasTaskAllocationRescheduleConflict } from "@/utils/apiErrors";
 
 type TaskCompletionFilter = "all" | "completed" | "pending";
 
@@ -25,6 +25,7 @@ interface TaskListState {
   categories: Category[];
   isSidebarOpen: boolean;
   selectedTask: Task | undefined;
+  warning: string | null;
   search: string;
   sortBy: string;
   filters: {
@@ -82,6 +83,7 @@ const [filterHighImportance, setFilterHighImportance] = useState(false);
 const [filterQuickWins, setFilterQuickWins] = useState(false);
 const [loading, setLoading] = useState(false);
 const [error, setError] = useState<string | null>(null);
+const [warning, setWarning] = useState<string | null>(null);
 
 const fetchTasks = useCallback(async () => {
   setLoading(true);
@@ -163,7 +165,7 @@ useEffect(() => {
 const submitTask = useCallback(
   async (data: TaskSubmission) => {
     try {
-      let savedTask: Task | null = null;
+      let savedTask: TaskUpdatedResponse | Task | null = null;
       if (selectedTask) {
         const bufferBeforeChanged =
           typeof data.buffer_before_minutes === "number" &&
@@ -186,16 +188,26 @@ const submitTask = useCallback(
       }
       if (savedTask) {
         setSelectedTask(savedTask);
+        setWarning(
+          "reschedule_warning" in savedTask ? savedTask.reschedule_warning ?? null : null,
+        );
       }
       await fetchTasks();
     } catch (submitError) {
-      if (selectedTask && hasTaskBufferRescheduleConflict(submitError)) {
+      if (
+        selectedTask
+        && (selectedTask.allocation?.length ?? 0) > 0
+        && hasTaskAllocationRescheduleConflict(submitError)
+      ) {
         const savedTask = await taskService.saveAndRescheduleTask(
           selectedTask.id,
           data,
           moment().format("YYYY-MM-DD"),
         );
         setSelectedTask(savedTask);
+        setWarning(
+          "reschedule_warning" in savedTask ? savedTask.reschedule_warning ?? null : null,
+        );
         await fetchTasks();
         return;
       }
@@ -278,11 +290,13 @@ const deleteCategory = useCallback(async (id: number) => {
 }, [filterCategory]);
 
 const openTask = useCallback((task: Task) => {
+  setWarning(null);
   setSelectedTask(task);
   setIsSidebarOpen(true);
 }, []);
 
 const openNewTask = useCallback(() => {
+  setWarning(null);
   setSelectedTask(undefined);
   setIsSidebarOpen(true);
 }, []);
@@ -369,6 +383,7 @@ return {
     categories,
     isSidebarOpen,
     selectedTask,
+    warning,
     search,
     sortBy,
     filters: {

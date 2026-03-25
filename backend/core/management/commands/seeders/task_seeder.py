@@ -25,22 +25,27 @@ class TaskSeeder(BaseSeeder):
                 print(f"Error occurred while creating task: {exception}")
 
     def _create_task(self, data):
+        user = get_user_model().objects.get(id=data["fields"]["user"])
+        parent_task = None
+        if data["fields"].get("parent_task") is not None:
+            parent_task = Task.objects.filter(id=data["fields"]["parent_task"]).first()
+
         temporary_task, _ = Task.objects.get_or_create(
             id=data.get("pk"),
-            user_id=data["fields"]["user"],
+            user_id=user.id,
             title=data["fields"]["title"],
             description=data["fields"]["description"],
             estimated_minutes=data["fields"]["estimated_minutes"],
             start_time=data["fields"]["start_time"],
             deadline=data["fields"]["deadline"],
             completed=data["fields"]["completed"],
-            parent_task_id=data["fields"]["parent_task"],
+            parent_task_id=parent_task.id if parent_task else None,
             total_task_allocations=data["fields"]["total_task_allocations"],
             allocation=data["fields"]["allocation"],
             importance=data["fields"]["importance"],
         )
 
-        categories = data["fields"]["categories"]
+        categories = Category.objects.filter(id__in=data["fields"]["categories"])
         if categories:
             temporary_task.categories.set(categories)
 
@@ -89,6 +94,5 @@ class TaskSeeder(BaseSeeder):
                 user=user,
                 text=self.faker.word(),
                 colour=self.faker.hex_color(),
-                max_daily_study_time=random.randint(1, 24),
             )
         return temporary_category

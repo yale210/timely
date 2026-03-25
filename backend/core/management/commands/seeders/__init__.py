@@ -9,6 +9,7 @@ from .grade_seeder import GradeSeeder
 from .preference_seeder import PreferenceSeeder
 from .special_dates_seeder import SpecialDatesSeeder
 from .task_seeder import TaskSeeder
+from .assessment_seeder import AssessmentSeeder
 
 
 __all__ = [
@@ -21,4 +22,5 @@ __all__ = [
     "PreferenceSeeder",
     "SpecialDatesSeeder",
     "TaskSeeder",
+    "AssessmentSeeder",
 ]

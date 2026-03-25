@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { type Task } from "@/types";
 import { hexToRgba } from "@/utils/colorUtils";
 import completeSoundUrl from "@/assets/sounds/task-complete.mp3";
@@ -20,10 +20,24 @@ interface TaskCardProps {
 const TaskCard = ({ task, onToggleComplete, onClick }: TaskCardProps) => {
   const [isHovered, setIsHovered] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
-  const isOverdue = new Date(task.deadline) < new Date() && !task.completed;
+  const [currentTime, setCurrentTime] = useState(() => Date.now());
+  const startTimeMs = new Date(task.start_time).getTime();
+  const deadlineMs = new Date(task.deadline).getTime();
+  const isNotStarted = !task.completed && startTimeMs > currentTime;
+  const isOverdue = deadlineMs < currentTime && !task.completed;
   const completeSoundRef = useRef<HTMLAudioElement | null>(
     typeof Audio === "undefined" ? null : new Audio(completeSoundUrl),
   );
+
+  useEffect(() => {
+    const intervalId = window.setInterval(() => {
+      setCurrentTime(Date.now());
+    }, 60_000);
+
+    return () => {
+      window.clearInterval(intervalId);
+    };
+  }, []);
 
   const playCompleteSound = () => {
     if (!completeSoundRef.current) return;
@@ -64,6 +78,53 @@ const TaskCard = ({ task, onToggleComplete, onClick }: TaskCardProps) => {
 
   const importanceInfo = getImportanceInfo(task.importance);
 
+  const getCountdownLabel = (value: string, nowMs: number, prefix?: string): string | null => {
+    if (task.completed) {
+      return null;
+    }
+
+    const targetTime = new Date(value).getTime();
+    const diffMs = targetTime - nowMs;
+    if (diffMs <= 0) {
+      return prefix ? "Now" : "Overdue";
+    }
+
+    const diffDays = diffMs / (1000 * 60 * 60 * 24);
+    if (diffDays < 1) {
+      const diffHours = Math.ceil(diffMs / (1000 * 60 * 60));
+      return prefix ? `${prefix} ${diffHours}h` : `${diffHours}h left`;
+    }
+
+    return prefix ? `${prefix} ${Math.ceil(diffDays)}d` : `${Math.ceil(diffDays)}d left`;
+  };
+
+  const getCountdownTone = (value: string, nowMs: number) => {
+    const diffMs = new Date(value).getTime() - nowMs;
+    const diffDays = diffMs / (1000 * 60 * 60 * 24);
+
+    if (diffDays < 1) {
+      return "border-red-200 bg-red-50 text-red-700";
+    }
+    if (diffDays < 3) {
+      return "border-orange-200 bg-orange-50 text-orange-700";
+    }
+    if (diffDays < 7) {
+      return "border-yellow-200 bg-yellow-50 text-yellow-700";
+    }
+
+    return "border-gray-200 bg-gray-50 text-gray-700";
+  };
+
+  const countdownTarget = isNotStarted ? task.start_time : task.deadline;
+  const countdownLabel = getCountdownLabel(
+    countdownTarget,
+    currentTime,
+    isNotStarted ? "Starts in" : undefined,
+  );
+  const countdownTone = isNotStarted
+    ? "border-gray-200 bg-gray-50 text-gray-700"
+    : getCountdownTone(countdownTarget, currentTime);
+
   const formatDue = (isoString: string) => {
     const date = new Date(isoString);
     const dateText = date.toLocaleDateString([], {
@@ -85,13 +146,21 @@ const TaskCard = ({ task, onToggleComplete, onClick }: TaskCardProps) => {
       onFocus={() => setIsHovered(true)}
       onBlur={() => setIsHovered(false)}
       tabIndex={0}
-      className={`bg-white rounded-xl border border-gray-200 p-4 hover:shadow-md transition-shadow cursor-pointer group outline-none focus:ring-2 focus:ring-primary/20 ${
+      className={`relative bg-white rounded-xl border border-gray-200 p-4 hover:shadow-md transition-shadow cursor-pointer group outline-none focus:ring-2 focus:ring-primary/20 ${
         task.completed ? "opacity-75" : ""
       }`}
     >
+      {countdownLabel ? (
+        <div className="absolute right-4 top-4">
+          <div className={`rounded-full border px-3 py-1 text-xs font-semibold ${countdownTone}`}>
+            {countdownLabel}
+          </div>
+        </div>
+      ) : null}
+
       <div className="flex items-start justify-between gap-3">
         <div className="flex flex-col flex-1 min-w-0">
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 pr-20">
             <input
               type="checkbox"
               checked={task.completed}
@@ -156,11 +225,6 @@ const TaskCard = ({ task, onToggleComplete, onClick }: TaskCardProps) => {
             </span>
           </div>
         </div>
-        <div className="flex items-center ml-4 opacity-0 group-hover:opacity-100 transition-opacity">
-          <button className="text-gray-400 hover:text-black">
-            <span className="material-icons">more_horiz</span>
-          </button>
-        </div>
       </div>
 
       {/* Task Description - Shown on hover/focus or when expanded */}
@@ -200,4 +264,3 @@ const TaskCard = ({ task, onToggleComplete, onClick }: TaskCardProps) => {
 };
 
 export default TaskCard;
-
