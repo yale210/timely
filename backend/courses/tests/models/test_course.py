@@ -203,18 +203,14 @@ class CourseEnrollmentModelTests(TestCase):
 
     def test_enrollment_ordering(self):
         """Test that enrollments are ordered by enrolled_at descending."""
-        CourseEnrollment.objects.create(
-            course=self.course, student=self.student
-        )
+        CourseEnrollment.objects.create(course=self.course, student=self.student)
 
         # Create another student for a second enrollment
         student_user2 = get_user_model().objects.create_user(
             username="student2", password="testpass123", email="student2@test.com"
         )
         student2 = Student.objects.create(user=student_user2)
-        CourseEnrollment.objects.create(
-            course=self.course, student=student2
-        )
+        CourseEnrollment.objects.create(course=self.course, student=student2)
 
         enrollments = list(CourseEnrollment.objects.all())
         self.assertEqual(enrollments[0].enrolled_at >= enrollments[1].enrolled_at, True)
