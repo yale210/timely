@@ -27,7 +27,9 @@ class EventSeeder(BaseSeeder):
 
     def _create_event(self, data):
         temporary_event, _ = Event.objects.get_or_create(
-            user=data["fields"]["user"],
+            user_id=(data["fields"]["user"].id)
+            if hasattr(data["fields"]["user"], "id")
+            else data["fields"]["user"],
             title=data["fields"]["title"],
             description=data["fields"]["description"],
             location=data["fields"]["location"],
@@ -76,7 +78,6 @@ class EventSeeder(BaseSeeder):
                 user=user,
                 text=self.faker.word(),
                 colour=self.faker.hex_color(),
-                max_daily_study_time=random.randint(1, 24),
             )
         return temporary_category
 
