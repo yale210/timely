@@ -5,6 +5,7 @@ import ThemeSection from "@/components/settings/ThemeSection";
 import ProfileSection from "@/components/settings/ProfileSection";
 import type { UseSettingsReturn } from "@/hooks/settings/useSettings";
 import { useProfileSettings } from "@/hooks/settings/useProfileSettings";
+import { makeMyTeacherProfile } from "@/services/courseService.ts";
 
 interface SettingsContentProps {
   state: UseSettingsReturn["state"];
@@ -29,27 +30,42 @@ const SettingsContent = ({
   actions,
 }: SettingsContentProps) => {
   const [featureFlags, setFeatureFlags] = useState(() => ({
+    courses: localStorage.getItem("feature_courses_enabled") !== "false",
     gradebook: localStorage.getItem("feature_gradebook_enabled") !== "false",
     weeklySummaries: localStorage.getItem("feature_weekly_summaries_enabled") !== "false",
   }));
+  const [makingTeacher, setMakingTeacher] = useState(false);
+  const [makeTeacherError, setMakeTeacherError] = useState<string | null>(null);
+  const [makeTeacherSuccess, setMakeTeacherSuccess] = useState<string | null>(null);
 
-  const featureRows = useMemo(() => ([
-    {
-      key: "gradebook",
-      label: "Gradebook",
-      description: "Track and review your grades over time.",
-      value: featureFlags.gradebook,
-    },
-    {
-      key: "weeklySummaries",
-      label: "Weekly Summaries",
-      description: "View weekly statistics about your tasks and productivity.",
-      value: featureFlags.weeklySummaries,
-    },
-  ]), [featureFlags]);
+  const featureRows = useMemo(
+    () => [
+      {
+        key: "courses",
+        label: "Courses",
+        description: "Show course browsing, management, and course details in the app.",
+        value: featureFlags.courses,
+      },
+      {
+        key: "gradebook",
+        label: "Gradebook",
+        description: "Track and review your grades over time.",
+        value: featureFlags.gradebook,
+      },
+      {
+        key: "weeklySummaries",
+        label: "Weekly Summaries",
+        description: "View weekly statistics about your tasks and productivity.",
+        value: featureFlags.weeklySummaries,
+      },
+    ],
+    [featureFlags],
+  );
 
-  const updateFeature = (key: "gradebook" | "weeklySummaries", value: boolean) => {
-    if (key === "gradebook") {
+  const updateFeature = (key: "courses" | "gradebook" | "weeklySummaries", value: boolean) => {
+    if (key === "courses") {
+      localStorage.setItem("feature_courses_enabled", String(value));
+    } else if (key === "gradebook") {
       localStorage.setItem("feature_gradebook_enabled", String(value));
     } else {
       localStorage.setItem("feature_weekly_summaries_enabled", String(value));
@@ -125,11 +141,50 @@ const SettingsContent = ({
                         className="h-4 w-4"
                         checked={feature.value}
                         onChange={(event) => {
-                          updateFeature(feature.key as "gradebook" | "weeklySummaries", event.target.checked);
+                          updateFeature(
+                            feature.key as "courses" | "gradebook" | "weeklySummaries",
+                            event.target.checked,
+                          );
                         }}
                       />
                     </label>
                   ))}
+                </div>
+                <div className="space-y-3">
+                  {makeTeacherError && (
+                    <div className="rounded-md bg-red-50 px-4 py-3 text-sm text-red-700">
+                      {makeTeacherError}
+                    </div>
+                  )}
+
+                  {makeTeacherSuccess && (
+                    <div className="rounded-md bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
+                      {makeTeacherSuccess}
+                    </div>
+                  )}
+
+                  <button
+                    type="button"
+                    onClick={async () => {
+                      setMakeTeacherError(null);
+                      setMakeTeacherSuccess(null);
+                      setMakingTeacher(true);
+
+                      try {
+                         await makeMyTeacherProfile();
+                        setMakeTeacherSuccess("You are now registered as a teacher.");
+                      } catch (teacherError) {
+                        console.error(teacherError);
+                        setMakeTeacherError("Unable to make you a teacher.");
+                      } finally {
+                        setMakingTeacher(false);
+                      }
+                    }}
+                    disabled={makingTeacher}
+                    className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    {makingTeacher ? "Making teacher..." : "Make me a teacher"}
+                  </button>
                 </div>
               </div>
             ) : null}
@@ -141,6 +196,9 @@ const SettingsContent = ({
                     Manage shared app behavior settings.
                   </p>
                 </div>
+
+
+
                 {loading.preference ? (
                   <p className="text-sm text-gray-500">Loading...</p>
                 ) : (() => {
