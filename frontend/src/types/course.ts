@@ -1,6 +1,5 @@
 /**
  * Represents a course that can be joined
- * Represents a course that can be joined
  */
 export interface Course {
   id: number;
