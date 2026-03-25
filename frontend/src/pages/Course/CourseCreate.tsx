@@ -26,6 +26,7 @@ export default function CourseCreate() {
 
   const handleCreate = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    console.log("LOLL")
     setError(null);
     setSaving(true);
 
@@ -34,7 +35,7 @@ export default function CourseCreate() {
         name: name.trim(),
         description,
       });
-      void navigate(`/courses/${course.id}`);
+      await navigate(`/courses/${course.id}`);
     } catch (createError) {
       console.error(createError);
       setError("Unable to create course.");
@@ -63,7 +64,7 @@ export default function CourseCreate() {
           </div>
         )}
 
-        <form onSubmit={void handleCreate} className="mt-6 space-y-4">
+        <form onSubmit={() =>void handleCreate} className="mt-6 space-y-4">
           <div>
             <label className="mb-1 block text-sm font-medium text-gray-700">
               Course name

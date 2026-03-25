@@ -1,3 +1,5 @@
+import type {JSX} from "react";
+
 interface CoursesHeaderProps {
   search: string;
   joinCourseId: string;

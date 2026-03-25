@@ -4,6 +4,7 @@ import AppLayout from "@/layouts/AppLayout.tsx";
 import CourseEventsCalendar from "@/components/course/CourseEventsCalendar.tsx";
 import { authStore } from "@/services/authService";
 import * as courseService from "@/services/courseService";
+import { getUsernameById } from "@/services/authService.ts";
 import type { Course } from "@/types/course.ts";
 import type { Event } from "@/types/event.ts";
 
@@ -34,6 +35,7 @@ export default function CourseDetail() {
   const currentUser = authStore.getUser();
 
   const [course, setCourse] = useState<Course | null>(null);
+  const [leadUsername, setLeadUsername] = useState<string | null>(null);
   const [events, setEvents] = useState<Event[]>([]);
   const [loading, setLoading] = useState(true);
   const [eventsLoading, setEventsLoading] = useState(false);
@@ -127,6 +129,18 @@ export default function CourseDetail() {
       try {
         const courseData = await courseService.getCourse(courseId);
         setCourse(courseData);
+
+        if (courseData.lead) {
+          try {
+            const username = await getUsernameById(Number(courseData.lead));
+            setLeadUsername(username);
+          } catch {
+            setLeadUsername(courseData.lead);
+          }
+        } else {
+          setLeadUsername("Unassigned");
+        }
+
         setEditForm({
           name: courseData.name,
           description: courseData.description,
@@ -318,7 +332,7 @@ export default function CourseDetail() {
               <dl className="mt-6 grid gap-4 sm:grid-cols-3">
                 <div>
                   <dt className="text-sm font-medium text-gray-500">Lead</dt>
-                  <dd className="mt-1 text-sm text-gray-900">{course.lead ?? "Unassigned"}</dd>
+                  <dd className="mt-1 text-sm text-gray-900">{leadUsername ?? "Loading..."}</dd>
                 </div>
                 <div>
                   <dt className="text-sm font-medium text-gray-500">Created</dt>

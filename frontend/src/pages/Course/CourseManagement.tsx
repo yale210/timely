@@ -1,26 +1,44 @@
-import {useEffect, useState} from "react";
+import { useEffect, useMemo, useState } from "react";
 import AppLayout from "@/layouts/AppLayout";
-import { useCourses } from "@/hooks/course/useCourse";
-import type {Course, CourseCreation, CourseStudent, CourseUpdate} from "@/types/course";
 import ConfirmationModal from "@/components/modals/ConfirmationModal";
-import {getCourseStudents} from "@/services/courseService.ts";
-import {useNavigate} from "react-router-dom";
+import { useCourses } from "@/hooks/course/useCourse";
+import { getCourseStudents } from "@/services/courseService";
+import type { Course, CourseCreation, CourseStudent, CourseUpdate } from "@/types/course";
 
 /**
  * Course management page for teachers and staff.
  * Allows creating, editing, and managing students in courses.
  */
-export default function CourseManagement()
-{
+export default function CourseManagement() {
   const { state, managedFilteredCourses, loading, error, actions } = useCourses();
-  const [, setShowCreateModal] = useState(false);
+
   const [editingCourse, setEditingCourse] = useState<Course | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<Course | null>(null);
   const [studentsTarget, setStudentsTarget] = useState<Course | null>(null);
   const [students, setStudents] = useState<CourseStudent[]>([]);
   const [studentsLoading, setStudentsLoading] = useState(false);
-  const navigate = useNavigate();
-  const [createCourse] = useState(() => () => navigate("/course/create"));
+
+  const [createForm, setCreateForm] = useState<CourseCreation>({
+    name: "",
+    description: "",
+  });
+  const [editForm, setEditForm] = useState<CourseUpdate>({
+    name: "",
+    description: "",
+  });
+  const [formError, setFormError] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showCreateModal, setShowCreateModal] = useState(false);
+
+  const openCreateModal = () => {
+    setFormError(null);
+    setCreateForm({ name: "", description: "" });
+    setShowCreateModal(true);
+  };
+
+  const refreshCourses = () => {
+    void actions.refresh();
+  };
 
   useEffect(() => {
     if (!studentsTarget) {
@@ -31,8 +49,8 @@ export default function CourseManagement()
     const loadStudents = async () => {
       setStudentsLoading(true);
       try {
-        const data = getCourseStudents(studentsTarget.id)
-        setStudents(await data);
+        const data = await getCourseStudents(studentsTarget.id);
+        setStudents(data);
       } catch (loadError) {
         console.error(loadError);
         setStudents([]);
@@ -44,29 +62,15 @@ export default function CourseManagement()
     void loadStudents();
   }, [studentsTarget]);
 
-
-  // Create form state
-  const [createForm, setCreateForm] = useState<CourseCreation>({
-    name: "",
-    description: "",
-  });
-
-  // Edit form state
-  const [editForm, setEditForm] = useState<CourseUpdate>({
-    name: "",
-    description: "",
-  });
-
-  const [formError, setFormError] = useState<string | null>(null);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-
   const handleCreate = async () => {
     if (!createForm.name.trim()) {
       setFormError("Course name is required.");
       return;
     }
+
     setFormError(null);
     setIsSubmitting(true);
+
     try {
       const result = await actions.createCourse(createForm);
       if (result) {
@@ -89,12 +93,15 @@ export default function CourseManagement()
 
   const handleUpdate = async () => {
     if (!editingCourse) return;
+
     if (!editForm.name?.trim()) {
       setFormError("Course name is required.");
       return;
     }
+
     setFormError(null);
     setIsSubmitting(true);
+
     try {
       const result = await actions.updateCourse(editingCourse.id, editForm);
       if (result) {
@@ -108,6 +115,7 @@ export default function CourseManagement()
 
   const handleDelete = async () => {
     if (!deleteTarget) return;
+
     setIsSubmitting(true);
     try {
       await actions.deleteCourse(deleteTarget.id);
@@ -117,10 +125,16 @@ export default function CourseManagement()
     }
   };
 
+
+
+  const courseCountText = useMemo(() => {
+    const count = managedFilteredCourses.length;
+    return count === 1 ? "1 course" : `${count} courses`;
+  }, [managedFilteredCourses.length]);
+
   return (
     <AppLayout>
       <div className="min-h-screen bg-white">
-        {/* Header */}
         <header className="border-b border-gray-200 bg-white px-6 py-4">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
@@ -130,6 +144,7 @@ export default function CourseManagement()
                 Create, edit, and manage your courses and students.
               </p>
             </div>
+
             <div className="flex items-center gap-3">
               <input
                 type="text"
@@ -140,17 +155,28 @@ export default function CourseManagement()
               />
               <button
                 type="button"
-                onClick={void createCourse}
-                className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700 transition-colors"
+                onClick={refreshCourses}
+                className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50"
+              >
+                Refresh
+              </button>
+              <button
+                type="button"
+                onClick={openCreateModal}
+                className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-indigo-700"
               >
                 + New Course
               </button>
+
             </div>
           </div>
         </header>
 
-        {/* Main Content */}
         <main className="p-6">
+          <div className="mb-4 flex items-center justify-between">
+            <p className="text-sm text-gray-500">{courseCountText}</p>
+          </div>
+
           {error && (
             <div className="mb-4 rounded-lg bg-red-50 px-4 py-3 text-sm text-red-700">
               {error}
@@ -164,15 +190,13 @@ export default function CourseManagement()
           {!loading && managedFilteredCourses.length === 0 && (
             <div className="rounded-lg border border-dashed border-gray-300 bg-gray-50 px-6 py-12 text-center">
               <span className="material-icons text-4xl text-gray-400">school</span>
-              <h3 className="mt-3 text-lg font-semibold text-gray-900">
-                No courses yet
-              </h3>
+              <h3 className="mt-3 text-lg font-semibold text-gray-900">No courses yet</h3>
               <p className="mt-1 text-sm text-gray-500">
                 Create your first course to get started.
               </p>
               <button
                 type="button"
-                onClick={void createCourse}
+                onClick={openCreateModal}
                 className="mt-4 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700"
               >
                 Create Course
@@ -180,7 +204,6 @@ export default function CourseManagement()
             </div>
           )}
 
-          {/* Courses Table */}
           {managedFilteredCourses.length > 0 && (
             <div className="overflow-hidden rounded-lg border border-gray-200 shadow-sm">
               <table className="min-w-full divide-y divide-gray-200">
@@ -205,8 +228,7 @@ export default function CourseManagement()
                 </thead>
                 <tbody className="divide-y divide-gray-200 bg-white">
                   {managedFilteredCourses.map((course) => (
-
-                    <tr key={course.id} className="hover:bg-gray-50 transition-colors">
+                    <tr key={course.id} className="transition-colors hover:bg-gray-50">
                       <td className="whitespace-nowrap px-4 py-4">
                         <div className="font-medium text-gray-900">{course.name}</div>
                         <div className="text-xs text-gray-500">ID: {course.id}</div>
@@ -235,21 +257,21 @@ export default function CourseManagement()
                           <button
                             type="button"
                             onClick={() => setStudentsTarget(course)}
-                            className="rounded-md border border-indigo-300 px-3 py-1.5 text-sm text-indigo-700 hover:bg-indigo-50 transition-colors"
+                            className="rounded-md border border-indigo-300 px-3 py-1.5 text-sm text-indigo-700 transition-colors hover:bg-indigo-50"
                           >
                             View students
                           </button>
                           <button
                             type="button"
                             onClick={() => openEditModal(course)}
-                            className="rounded-md border border-gray-300 px-3 py-1.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                            className="rounded-md border border-gray-300 px-3 py-1.5 text-sm text-gray-700 transition-colors hover:bg-gray-50"
                           >
                             Edit
                           </button>
                           <button
                             type="button"
                             onClick={() => setDeleteTarget(course)}
-                            className="rounded-md border border-red-300 px-3 py-1.5 text-sm text-red-600 hover:bg-red-50 transition-colors"
+                            className="rounded-md border border-red-300 px-3 py-1.5 text-sm text-red-600 transition-colors hover:bg-red-50"
                           >
                             Delete
                           </button>
@@ -262,224 +284,223 @@ export default function CourseManagement()
             </div>
           )}
         </main>
-      </div>
 
-      {/* ... existing code ... */}
+        {showCreateModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center">
+            <button
+              type="button"
+              aria-label="Close create modal backdrop"
+              onClick={() => setShowCreateModal(false)}
+              className="absolute inset-0 bg-black/40"
+            />
+            <div className="relative z-10 w-full max-w-md rounded-xl bg-white p-6 shadow-2xl">
+              <h2 className="text-lg font-semibold text-gray-900">Create New Course</h2>
+              <p className="mt-1 text-sm text-gray-500">
+                Fill in the details for your new course.
+              </p>
 
-      {studentsTarget && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center">
-          <button
-            type="button"
-            aria-label="Close modal backdrop"
-            onClick={() => setShowCreateModal(false)}
-            className="absolute inset-0 bg-black/40"
-          />
-          <div className="relative z-10 w-full max-w-md rounded-xl bg-white p-6 shadow-2xl">
-            <button onClick={void createCourse} className="text-lg font-semibold text-gray-900">Createee New Course</button>
-            <p className="mt-1 text-sm text-gray-500">
-              Fill in the details for your new course.
-            </p>
-
-            {formError && (
-              <div className="mt-4 rounded-md bg-red-50 px-3 py-2 text-sm text-red-700">
-                {formError}
-              </div>
-            )}
-
-            <div className="mt-6 space-y-4">
-              <div>
-                <label
-                  htmlFor="create-name"
-                  className="block text-sm font-medium text-gray-700"
-                >
-                  Course Name *
-                </label>
-                <input
-                  id="create-name"
-                  type="text"
-                  value={createForm.name}
-                  onChange={(e) =>
-                    setCreateForm((prev) => ({ ...prev, name: e.target.value }))
-                  }
-                  className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
-                  placeholder="Introduction to..."
-                />
-              </div>
-              <div>
-                <label
-                  htmlFor="create-description"
-                  className="block text-sm font-medium text-gray-700"
-                >
-                  Description
-                </label>
-                <textarea
-                  id="create-description"
-                  rows={3}
-                  value={createForm.description}
-                  onChange={(e) =>
-                    setCreateForm((prev) => ({ ...prev, description: e.target.value }))
-                  }
-                  className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
-                  placeholder="A brief overview of the course..."
-                />
-              </div>
-            </div>
-
-            <div className="mt-6 flex justify-end gap-3">
-              <button
-                type="button"
-                onClick={() => setShowCreateModal(false)}
-                className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                onClick={() => void handleCreate()}
-                disabled={isSubmitting}
-                className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-50"
-              >
-                {isSubmitting ? "Creating..." : "Create Course"}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Edit Course Modal */}
-      {editingCourse && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center">
-          <button
-            type="button"
-            aria-label="Close edit modal backdrop"
-            onClick={() => setEditingCourse(null)}
-            className="absolute inset-0 bg-black/40"
-          />
-          <div className="relative z-10 w-full max-w-md rounded-xl bg-white p-6 shadow-2xl">
-            <h2 className="text-lg font-semibold text-gray-900">Edit Course</h2>
-            <p className="mt-1 text-sm text-gray-500">
-              Update the course details.
-            </p>
-
-            {formError && (
-              <div className="mt-4 rounded-md bg-red-50 px-3 py-2 text-sm text-red-700">
-                {formError}
-              </div>
-            )}
-
-            <div className="mt-6 space-y-4">
-              <div>
-                <label
-                  htmlFor="edit-name"
-                  className="block text-sm font-medium text-gray-700"
-                >
-                  Course Name *
-                </label>
-                <input
-                  id="edit-name"
-                  type="text"
-                  value={editForm.name ?? ""}
-                  onChange={(e) =>
-                    setEditForm((prev) => ({ ...prev, name: e.target.value }))
-                  }
-                  className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
-                />
-              </div>
-              <div>
-                <label
-                  htmlFor="edit-description"
-                  className="block text-sm font-medium text-gray-700"
-                >
-                  Description
-                </label>
-                <textarea
-                  id="edit-description"
-                  rows={3}
-                  value={editForm.description ?? ""}
-                  onChange={(e) =>
-                    setEditForm((prev) => ({ ...prev, description: e.target.value }))
-                  }
-                  className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
-                />
-              </div>
-            </div>
-
-            <div className="mt-6 flex justify-end gap-3">
-              <button
-                type="button"
-                onClick={() => setEditingCourse(null)}
-                className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                onClick={() => void handleUpdate()}
-                disabled={isSubmitting}
-                className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-50"
-              >
-                {isSubmitting ? "Saving..." : "Save Changes"}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Delete Confirmation Modal */}
-      <ConfirmationModal
-        isOpen={deleteTarget !== null}
-        onClose={() => setDeleteTarget(null)}
-        onConfirm={() => void handleDelete()}
-        title="Delete Course?"
-        message={`Are you sure you want to delete "${deleteTarget?.name}"? This action cannot be undone.`}
-        confirmText="Delete"
-        cancelText="Cancel"
-      />
-      {studentsTarget && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center">
-          <button
-            type="button"
-            aria-label="Close students modal backdrop"
-            onClick={() => setStudentsTarget(null)}
-            className="absolute inset-0 bg-black/40"
-          />
-          <div className="relative z-10 w-full max-w-2xl rounded-xl bg-white p-6 shadow-2xl">
-            <div className="flex items-center justify-between gap-4">
-              <div>
-                <h2 className="text-lg font-semibold text-gray-900">
-                  Students in {studentsTarget.name}
-                </h2>
-                <p className="mt-1 text-sm text-gray-500">
-                  All students enrolled in this course.
-                </p>
-              </div>
-              <button
-                type="button"
-                onClick={() => setStudentsTarget(null)}
-                className="rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50"
-              >
-                Close
-              </button>
-            </div>
-
-            <div className="mt-6">
-              {studentsLoading ? (
-                <p className="text-sm text-gray-500">Loading students...</p>
-              ) : students.length === 0 ? (
-                <p className="text-sm text-gray-500">No students are enrolled in this course.</p>
-              ) : (
-                <ul className="divide-y divide-gray-200 rounded-lg border border-gray-200">
-                  {students.map((student) => (
-                    <li key={student.id} className="px-4 py-3">
-                      <div className="font-medium text-gray-900">{student.username}</div>
-                    </li>
-                  ))}
-                </ul>
+              {formError && (
+                <div className="mt-4 rounded-md bg-red-50 px-3 py-2 text-sm text-red-700">
+                  {formError}
+                </div>
               )}
+
+              <div className="mt-6 space-y-4">
+                <div>
+                  <label
+                    htmlFor="create-name"
+                    className="block text-sm font-medium text-gray-700"
+                  >
+                    Course Name *
+                  </label>
+                  <input
+                    id="create-name"
+                    type="text"
+                    value={createForm.name}
+                    onChange={(e) =>
+                      setCreateForm((prev) => ({ ...prev, name: e.target.value }))
+                    }
+                    className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                    placeholder="Introduction to..."
+                  />
+                </div>
+
+                <div>
+                  <label
+                    htmlFor="create-description"
+                    className="block text-sm font-medium text-gray-700"
+                  >
+                    Description
+                  </label>
+                  <textarea
+                    id="create-description"
+                    rows={3}
+                    value={createForm.description}
+                    onChange={(e) =>
+                      setCreateForm((prev) => ({ ...prev, description: e.target.value }))
+                    }
+                    className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                    placeholder="A brief overview of the course..."
+                  />
+                </div>
+              </div>
+
+              <div className="mt-6 flex justify-end gap-3">
+                <button
+                  type="button"
+                  onClick={() => setShowCreateModal(false)}
+                  className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={() => void handleCreate()}
+                  disabled={isSubmitting}
+                  className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  {isSubmitting ? "Creating..." : "Create Course"}
+                </button>
+              </div>
             </div>
           </div>
-        </div>
-      )}
+        )}
+
+        {editingCourse && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center">
+            <button
+              type="button"
+              aria-label="Close edit modal backdrop"
+              onClick={() => setEditingCourse(null)}
+              className="absolute inset-0 bg-black/40"
+            />
+            <div className="relative z-10 w-full max-w-md rounded-xl bg-white p-6 shadow-2xl">
+              <h2 className="text-lg font-semibold text-gray-900">Edit Course</h2>
+              <p className="mt-1 text-sm text-gray-500">Update the course details.</p>
+
+              {formError && (
+                <div className="mt-4 rounded-md bg-red-50 px-3 py-2 text-sm text-red-700">
+                  {formError}
+                </div>
+              )}
+
+              <div className="mt-6 space-y-4">
+                <div>
+                  <label
+                    htmlFor="edit-name"
+                    className="block text-sm font-medium text-gray-700"
+                  >
+                    Course Name *
+                  </label>
+                  <input
+                    id="edit-name"
+                    type="text"
+                    value={editForm.name ?? ""}
+                    onChange={(e) =>
+                      setEditForm((prev) => ({ ...prev, name: e.target.value }))
+                    }
+                    className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                  />
+                </div>
+
+                <div>
+                  <label
+                    htmlFor="edit-description"
+                    className="block text-sm font-medium text-gray-700"
+                  >
+                    Description
+                  </label>
+                  <textarea
+                    id="edit-description"
+                    rows={3}
+                    value={editForm.description ?? ""}
+                    onChange={(e) =>
+                      setEditForm((prev) => ({ ...prev, description: e.target.value }))
+                    }
+                    className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                  />
+                </div>
+              </div>
+
+              <div className="mt-6 flex justify-end gap-3">
+                <button
+                  type="button"
+                  onClick={() => setEditingCourse(null)}
+                  className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={() => void handleUpdate()}
+                  disabled={isSubmitting}
+                  className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  {isSubmitting ? "Saving..." : "Save Changes"}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        <ConfirmationModal
+          isOpen={deleteTarget !== null}
+          onClose={() => setDeleteTarget(null)}
+          onConfirm={() => void handleDelete()}
+          title="Delete Course?"
+          message={`Are you sure you want to inactivate "${deleteTarget?.name}"? Students will miss out`}
+          confirmText="Delete"
+          cancelText="Cancel"
+        />
+
+        {studentsTarget && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center">
+            <button
+              type="button"
+              aria-label="Close students modal backdrop"
+              onClick={() => setStudentsTarget(null)}
+              className="absolute inset-0 bg-black/40"
+            />
+            <div className="relative z-10 w-full max-w-2xl rounded-xl bg-white p-6 shadow-2xl">
+              <div className="flex items-center justify-between gap-4">
+                <div>
+                  <h2 className="text-lg font-semibold text-gray-900">
+                    Students in {studentsTarget.name}
+                  </h2>
+                  <p className="mt-1 text-sm text-gray-500">
+                    All students enrolled in this course.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setStudentsTarget(null)}
+                  className="rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50"
+                >
+                  Close
+                </button>
+              </div>
+
+              <div className="mt-6">
+                {studentsLoading ? (
+                  <p className="text-sm text-gray-500">Loading students...</p>
+                ) : students.length === 0 ? (
+                  <p className="text-sm text-gray-500">
+                    No students are enrolled in this course.
+                  </p>
+                ) : (
+                  <ul className="divide-y divide-gray-200 rounded-lg border border-gray-200">
+                    {students.map((student) => (
+                      <li key={student.id} className="px-4 py-3">
+                        <div className="font-medium text-gray-900">{student.username}</div>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
     </AppLayout>
   );
 }

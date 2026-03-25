@@ -11,7 +11,7 @@ import * as courseService from "@/services/courseService";
 import type { Course } from "@/types/course.ts";
 import type { Event } from "@/types/event.ts";
 import { useTeacher } from "@/hooks/course/useTeacher.tsx";
-
+import {CoursePeED} from "@/types/coursePermissions.ts";
 function CourseCardWithPermissions({
   course,
   onView,
@@ -25,7 +25,7 @@ function CourseCardWithPermissions({
     <CourseCard
       course={course}
       onView={onView}
-      permission={permissionsLoading ? null : permissions}
+      permission={permissionsLoading ? new CoursePeED().options : permissions}
     />
   );
 }
@@ -76,15 +76,15 @@ export default function Courses() {
     const courseId = joinCourseId.trim();
     if (!courseId) {
       setJoinError("Please enter a valid course ID.");
-      return;
-    }
+        return;
+      }
 
-    try {
+          try {
       const joinedCourse = await actions.joinCourse(courseId);
       if (!joinedCourse) {
         setJoinError("Unable to join that course.");
         return;
-      }
+          }
 
       setJoinCourseId("");
       await actions.refresh();
@@ -92,7 +92,7 @@ export default function Courses() {
       console.error(joinCourseError);
       setJoinError("Unable to join that course.");
     }
-  };
+    };
 
   return (
     <AppLayout>
@@ -118,7 +118,7 @@ export default function Courses() {
           <div className="rounded-md bg-red-50 px-4 py-3 text-sm text-red-700">
             {joinError}
           </div>
-        </div>
+              </div>
       )}
 
       <main className="flex-1 overflow-y-auto bg-white px-6 py-4">
