@@ -80,3 +80,29 @@ class TeacherView(ViewSet):
             TeacherSerializer(teacher).data,
             status=status.HTTP_201_CREATED if created else status.HTTP_200_OK,
         )
+
+    @action(
+        detail=False,
+        methods=["post"],
+        url_path="unregister_teacher",
+        permission_classes=[IsAuthenticated],
+    )
+    def unregister_teacher(self, request):
+        teacher = Teacher.objects.filter(user=request.user).first()
+
+        if teacher is None:
+            return Response(
+                {"detail": "You are not registered as a teacher."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        if not teacher.active:
+            return Response(
+                TeacherSerializer(teacher).data,
+                status=status.HTTP_200_OK,
+            )
+
+        teacher.active = False
+        teacher.save(update_fields=["active"])
+
+        return Response(TeacherSerializer(teacher).data, status=status.HTTP_200_OK)
