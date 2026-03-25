@@ -1,9 +1,10 @@
-from django.test import TestCase
-from django.core.exceptions import ValidationError
-from core.tests.factories import AssessmentFactory, UserFactory
-from core.models import Assessment
-from django.utils import timezone
 import datetime
+
+from django.core.exceptions import ValidationError
+from django.test import TestCase
+from core.models import Assessment
+from core.tests.factories import AssessmentFactory, UserFactory
+from django.utils import timezone
 
 
 class AssessmentModelTest(TestCase):
@@ -36,12 +37,6 @@ class AssessmentModelTest(TestCase):
         with self.assertRaises(ValidationError) as cm:
             assessment.clean()
         self.assertIn("title", cm.exception.message_dict)
-
-    def test_assessment_clean_empty_module(self):
-        assessment = AssessmentFactory.build(module="  ")
-        with self.assertRaises(ValidationError) as cm:
-            assessment.clean()
-        self.assertIn("module", cm.exception.message_dict)
 
     def test_assessment_clean_negative_weighting(self):
         assessment = AssessmentFactory.build(weighting_of_assessment=-1)

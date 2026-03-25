@@ -16,8 +16,8 @@ class ProfileSeeder(BaseSeeder):
         """Seed the configured profile fixtures into the database."""
         self._create_fixture_profile()
 
-        # for i in range(200):
-        #    self._populate_random_profile()
+        for i in range(200):
+            self._populate_random_profile()
 
     def _create_fixture_profile(self):
         """Insert the static profile fixtures, skipping missing users."""

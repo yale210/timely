@@ -7,6 +7,7 @@ from django.urls import include, path
 from rest_framework.routers import DefaultRouter
 
 from core.views import (
+    AssessmentViewSet,
     EventViewSet,
     GradeViewSet,
     CategoryViewSet,
@@ -31,13 +32,13 @@ from scheduler.views import ScheduleTasksAPIView, UnscheduleTasksAPIView
 # Register the core REST resources under the shared ``/api/`` prefix.
 router = DefaultRouter()
 router.register(r"tasks", TaskViewSet, basename="task")
+router.register(r"assessments", AssessmentViewSet, basename="assessment")
 router.register(r"grades", GradeViewSet, basename="grade")
 router.register(r"categories", CategoryViewSet, basename="category")
 router.register(r"events", EventViewSet, basename="event")
 router.register(r"preferences", PreferenceViewSet, basename="preference")
 router.register(r"friendships", FriendshipViewSet, basename="friendship")
 router.register(r"special-dates", SpecialDatesViewSet, basename="special-dates")
-
 
 urlpatterns = [
     path("api/admin/", include("admin_panel.urls")),

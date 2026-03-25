@@ -193,6 +193,10 @@ class EventViewSet(viewsets.ModelViewSet):
     def partial_update(self, request, *args, **kwargs):
         return self._handle_update(request, partial=True, *args, **kwargs)
 
+    """
+    Handles update logic for events, including validation and updating of recurring events.
+    """
+
     def _handle_update(self, request, partial, *args, **kwargs):
         """
         Handles update logic for events, including validation and updating of recurring events.

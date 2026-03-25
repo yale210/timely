@@ -108,6 +108,7 @@ class TaskViewSet(viewsets.ModelViewSet):
         profile = request.user.user_profile
         user_profile_level_before = profile.level
         task = self.get_object()
+        reschedule_warning = None
 
         payload = request.data.copy()
         payload["allocation"] = []
@@ -130,6 +131,8 @@ class TaskViewSet(viewsets.ModelViewSet):
 
         with transaction.atomic():
             task = serializer.save()
+
+        with transaction.atomic():
             Task.objects.filter(user=request.user).exclude(allocation=[]).filter(
                 completed=False
             ).filter(Q(locked=False) | Q(id=task.id)).update(
@@ -154,19 +157,11 @@ class TaskViewSet(viewsets.ModelViewSet):
                 None,
             )
             if not result or not result.success or not result.segments:
-                message = (
+                reschedule_warning = (
                     result.reason
                     if result and result.reason
-                    else "Could not reschedule the task with the requested buffer."
+                    else "Could not reschedule the task."
                 )
-                field_errors = {}
-                if "buffer_before_minutes" in request.data:
-                    field_errors["buffer_before_minutes"] = [message]
-                if "buffer_after_minutes" in request.data:
-                    field_errors["buffer_after_minutes"] = [message]
-                if not field_errors:
-                    field_errors["non_field_errors"] = [message]
-                raise serializers.ValidationError(field_errors)
 
             for schedule_result in results:
                 segments = schedule_result.segments or []
@@ -194,6 +189,8 @@ class TaskViewSet(viewsets.ModelViewSet):
             CalendarResponseSerializer(task).data,
             status=status.HTTP_200_OK,
         )
+        if reschedule_warning:
+            response.data["reschedule_warning"] = reschedule_warning
         return self._append_profile_metadata(
             response, profile, user_profile_level_before
         )

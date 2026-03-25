@@ -1,3 +1,7 @@
+/**
+ * Displays a compact gradebook preview for the About page.
+ * @returns The rendered gradebook mockup.
+ */
 function GradebookMockup() {
   const entries = [
     { module: "Algorithms & Data Structures", grade: 78 },
@@ -48,4 +52,4 @@ function GradebookMockup() {
   )
 }
 
-export default GradebookMockup;
+export default GradebookMockup

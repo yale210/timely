@@ -5,6 +5,9 @@ import GradebookMockup from "./GradebookMock"
 import XPMockup from "./XPMock"
 import SocialMockup from "./SocialMock"
 
+/**
+ * Describes a feature section shown on the About page.
+ */
 export interface Feature {
   id: string
   subtitle: string

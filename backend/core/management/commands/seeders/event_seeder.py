@@ -39,11 +39,14 @@ class EventSeeder(BaseSeeder):
             end_time=data["fields"]["end_time"],
             recurrence_interval=data["fields"]["recurrence_interval"],
             recurrence_end=data["fields"]["recurrence_end"],
+            colour=data["fields"].get("colour"),
+            exception_dates=data["fields"].get("exception_dates", []),
+            split_from_event=data["fields"].get("split_from_event"),
         )
 
-        categories = data["fields"]["categories"]
+        categories = data["fields"].get("categories", [])
         if categories:
-            temporary_event.categories.set(categories)
+            temporary_event.categories.set(Category.objects.filter(id__in=categories))
 
     """
     If an event is recurring
@@ -54,20 +57,20 @@ class EventSeeder(BaseSeeder):
         temporary_category = self._get_or_create_random_category(temporary_user)
 
         if random.randint(0, 1) == 1:
-            self._create_recurring_event(
+            self._create_random_event_type(
                 {
                     "fields": {
-                        "user": temporary_user,
-                        "categories": [temporary_category],
+                        "user": temporary_user.id,
+                        "categories": [temporary_category.id],
                     }
                 }
             )
         else:
-            self._create_non_recurring_event(
+            self._create_random_event_type(
                 {
                     "fields": {
-                        "user": temporary_user,
-                        "categories": [temporary_category],
+                        "user": temporary_user.id,
+                        "categories": [temporary_category.id],
                     }
                 }
             )
@@ -118,25 +121,66 @@ class EventSeeder(BaseSeeder):
             }
         )
 
-    def _create_non_recurring_event(self, data):
+    def _create_random_event_type(self, data):
         start = timezone.make_aware(self.faker.date_time())
         end = start + timedelta(random.randint(0, 60))
 
-        self._create_event(
-            {
-                "fields": {
-                    "user": data["fields"]["user"],
-                    "categories": data["fields"]["categories"],
-                    "title": self.faker.sentence(),
-                    "description": self.faker.sentence(),
-                    "location": self.faker.word(),
-                    "start_time": start,
-                    "end_time": end,
-                    "recurrence_interval": None,
-                    "recurrence_end": None,
+        recurring = random.randint(0, 1) == 1
+
+        if recurring:
+            start = timezone.make_aware(self.faker.date_time())
+            self._create_event(
+                {
+                    "fields": {
+                        "user": self._get_or_create_random_user().id,
+                        "categories": [
+                            self._get_or_create_random_category(
+                                self._get_or_create_random_user()
+                            ).id
+                        ],
+                        "title": self.faker.sentence(),
+                        "description": self.faker.sentence(),
+                        "location": self.faker.word(),
+                        "start_time": start,
+                        "end_time": start + timedelta(random.randint(0, 100)),
+                        "recurrence_interval": random.choice(
+                            ["daily", "weekly", "monthly", "yearly"]
+                        ),
+                        "recurrence_end": (
+                            start + timedelta(random.randint(0, 100))
+                        ).date(),
+                        "exception_dates": [],
+                        "split_from_event": None,
+                        "colour": self.faker.hex_color(),
+                    }
                 }
-            }
-        )
+            )
+        else:
+            start = timezone.make_aware(self.faker.date_time())
+            end = start + timedelta(random.randint(0, 60))
+
+            self._create_event(
+                {
+                    "fields": {
+                        "user": self._get_or_create_random_user().id,
+                        "categories": [
+                            self._get_or_create_random_category(
+                                self._get_or_create_random_user()
+                            ).id
+                        ],
+                        "title": self.faker.sentence(),
+                        "description": self.faker.sentence(),
+                        "location": self.faker.word(),
+                        "start_time": start,
+                        "end_time": end,
+                        "recurrence_interval": None,
+                        "recurrence_end": None,
+                        "exception_dates": [],
+                        "split_from_event": None,
+                        "colour": self.faker.hex_color(),
+                    }
+                }
+            )
 
     def _random_time(self):
         hours = random.randint(0, 23)

@@ -53,7 +53,7 @@ class GradeSeeder(BaseSeeder):
                     "category": Category.objects.order_by("?").first().id,
                     "score": random.randint(0, 100),
                     "total_possible": 100,
-                    "date_achieved": self.faker.date_time(),
+                    "date_achieved": self.faker.date(),
                 }
             }
         )
