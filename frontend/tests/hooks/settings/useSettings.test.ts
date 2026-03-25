@@ -85,7 +85,7 @@ describe("useSettings", () => {
     });
 
     act(() => {
-      result.current.actions.selectSection("appearance");
+      result.current.actions.selectSection("themes");
     });
 
     expect(result.current.state.activeSection).toBe("preferences");
