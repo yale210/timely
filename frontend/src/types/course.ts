@@ -56,14 +56,11 @@ export interface CourseEventCreation {
  * Represents a student enrolled in a course.
  *
  * This interface includes information about the student's identification,
- * user account details, and enrollment timestamp.
+ * user account details
  *
  * Properties:
  * - `id`: A unique identifier for the course student.
- * - `user_id`: A unique identifier linking the student to their user account.
  * - `username`: The username of the student.
- * - `email`: The email address of the student.
- * - `enrolled_at`: The timestamp indicating when the student was enrolled in the course.
  */
 export interface CourseStudent {
   id: number,
