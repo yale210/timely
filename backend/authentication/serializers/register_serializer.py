@@ -40,5 +40,6 @@ class RegisterSerializer(serializers.ModelSerializer):
         Returns:
             User: The created user instance.
         """
+        validated_data["username"] = validated_data["username"].strip().lower()
         user = User.objects.create_user(**validated_data)
         return user
