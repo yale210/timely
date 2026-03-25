@@ -1,1 +1,1 @@
-"""Authentication serializer tests."""
+"""Authentication package."""

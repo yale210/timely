@@ -1,3 +1,4 @@
+"""Authentication views."""
 from drf_spectacular.utils import (
     extend_schema,
     inline_serializer,

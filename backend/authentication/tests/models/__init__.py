@@ -1,1 +1,1 @@
-"""Authentication model tests."""
+"""Authentication package."""

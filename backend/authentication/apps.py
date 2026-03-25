@@ -1,3 +1,4 @@
+"""Authentication app components."""
 from django.apps import AppConfig
 
 
