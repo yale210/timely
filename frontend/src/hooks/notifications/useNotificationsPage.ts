@@ -60,15 +60,15 @@ const useRefreshOnContextChange = (
   }, [fetchPage, notifications, prevRef]);
 };
 
-const usePageClickAction = (ctx: ReturnType<typeof useNotificationContext>, nav: ReturnType<typeof useNavigate>) => (notification: Notification) => {
+const usePageClickAction = (ctx: ReturnType<typeof useNotificationContext>, nav: ReturnType<typeof useNavigate>) => async (notification: Notification) => {
   const navigateTo = (path: string) => { void nav(path); };
-  void handleNotificationClickAction(notification, ctx, navigateTo).catch((error: unknown) => {
+  await handleNotificationClickAction(notification, ctx, navigateTo).catch((error: unknown) => {
     console.error(error);
   });
 };
 
-const usePageToggleAction = (ctx: ReturnType<typeof useNotificationContext>, fetchPage: () => Promise<void>) => (notification: Notification) => {
-  void handleToggleReadAction(notification, ctx, fetchPage).catch((error: unknown) => {
+const usePageToggleAction = (ctx: ReturnType<typeof useNotificationContext>, fetchPage: () => Promise<void>) => async (notification: Notification) => {
+  await handleToggleReadAction(notification, ctx, fetchPage).catch((error: unknown) => {
     console.error(error);
   });
 };

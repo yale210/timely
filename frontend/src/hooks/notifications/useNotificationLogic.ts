@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import {
   deleteAllNotifications as apiDeleteAllNotifications,
   deleteNotification as apiDeleteNotification,
@@ -309,8 +309,17 @@ const useNotificationBootstrap = (
 export const useNotificationLogic = () => {
   const hasAuthToken = useHasAuthToken();
   const state = useNotificationState();
-  const handlers = { setNotifications: state.setNotifications, setUnreadCount: state.setUnreadCount, setLoading: state.setLoading, setError: state.setError };
-  const refs = { notificationsRef: state.notificationsRef, notificationsRequestIdRef: state.notificationsRequestIdRef, unreadCountRequestIdRef: state.unreadCountRequestIdRef };
+  const handlers = useMemo(() => ({
+    setNotifications: state.setNotifications,
+    setUnreadCount: state.setUnreadCount,
+    setLoading: state.setLoading,
+    setError: state.setError,
+  }), [state.setError, state.setLoading, state.setNotifications, state.setUnreadCount]);
+  const refs = useMemo(() => ({
+    notificationsRef: state.notificationsRef,
+    notificationsRequestIdRef: state.notificationsRequestIdRef,
+    unreadCountRequestIdRef: state.unreadCountRequestIdRef,
+  }), [state.notificationsRef, state.notificationsRequestIdRef, state.unreadCountRequestIdRef]);
   const { fetchNotifications, fetchUnreadCount } = useNotificationQueries(handlers, refs);
   const { markRead, markUnread, markAllRead } = useNotificationReadActions(refs, handlers, fetchUnreadCount);
   const { deleteNotification, deleteAllNotifications } = useNotificationDeleteActions(refs, handlers, fetchUnreadCount);
