@@ -5,6 +5,9 @@ interface CoursesHeaderProps {
   onJoinCourseIdChange: (value: string) => void;
   onJoinCourse: () => void;
   onRefresh: () => void;
+  isTeacher: boolean;
+  onCreateCourse: () => void;
+  onManageCourses: () => void;
 }
 
 export default function CoursesHeader({
@@ -14,6 +17,9 @@ export default function CoursesHeader({
   onJoinCourseIdChange,
   onJoinCourse,
   onRefresh,
+    onCreateCourse,
+    onManageCourses,
+                                        isTeacher,
 }: CoursesHeaderProps) {
   return (
     <header className="bg-white border-b border-gray-200">
@@ -34,7 +40,7 @@ export default function CoursesHeader({
 
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
             <input
-              type="number"
+              type="text"
               value={joinCourseId}
               onChange={(event) => onJoinCourseIdChange(event.target.value)}
               className="block w-full sm:w-40 px-3 py-2 border border-gray-300 rounded-md bg-white text-black placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary text-sm"
@@ -55,6 +61,24 @@ export default function CoursesHeader({
             >
               Refresh
             </button>
+            {isTeacher && (
+                <button
+              type="button"
+              onClick={onCreateCourse}
+              className="rounded-md  px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700 bg-primary"
+            >
+              Create course
+            </button>
+            )}
+            {isTeacher && (
+              <button
+                type="button"
+                onClick={onManageCourses}
+                className="rounded-md bg-indigo-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-indigo-700"
+              >
+                Manage
+              </button>
+            )}
           </div>
         </div>
       </div>
