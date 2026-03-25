@@ -1,3 +1,5 @@
+"""Assessment model definitions"""
+
 from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.core.validators import MaxValueValidator, MinValueValidator
@@ -13,6 +15,10 @@ class Assessment(models.Model):
     """
 
     class AssessmentType(models.TextChoices):
+        """
+        Supported assessment type values.
+        """
+
         COURSEWORK = "COURSEWORK", "Coursework"
         EXAM = "EXAM", "Exam"
         QUIZ = "QUIZ", "Quiz"
@@ -86,11 +92,22 @@ class Assessment(models.Model):
     class Meta:
         ordering = ["due_date"]
 
-    # Return the assessment.
     def __str__(self):
+        """
+        Return the assessment title.
+
+        Returns:
+            str: The title of the assessment.
+        """
         return self.title
 
     def clean(self):
+        """
+        Validate the assessment fields to ensure they meet the required criteria.
+
+        Raises:
+            ValidationError: If any of the fields fail validation checks.
+        """
         super().clean()
         errors = {}
 

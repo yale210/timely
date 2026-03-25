@@ -1,3 +1,5 @@
+"""Reccuring events override model definitions."""
+
 from django.db import models
 
 from .base_event import BaseEventModel
@@ -32,5 +34,13 @@ class EventOverride(BaseEventModel):
         ]
 
     def save(self, *args, **kwargs):
+        """
+        Run validation for the model before saving.
+        Args:
+            *args: Variable length argument list.
+            **kwargs: Arbitrary keyword arguments.
+        Returns:
+            EventOverride: The saved event's override instance.
+        """
         self.full_clean()
         return super().save(*args, **kwargs)

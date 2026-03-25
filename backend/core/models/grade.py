@@ -1,3 +1,5 @@
+"""Grade model definition."""
+
 from datetime import datetime, time
 
 from django.db import models
@@ -33,11 +35,20 @@ class Grade(models.Model):
     date_achieved = models.DateField()
 
     def __str__(self):
+        """
+        Return a string representation of the grade.
+        Returns:
+            str: A string representation of the grade.
+        """
         return f"{self.name} ({self.user})"
 
     @property
     def percentage(self):
-        """Return percentage score as a float (0-100)."""
+        """
+        Return percentage score as a float (0-100).
+        Returns:
+            float: The percentage score.
+        """
         if not self.total_possible:
             return 0.0
         return (self.score / self.total_possible) * 100.0

@@ -1,3 +1,5 @@
+"""Pending event share model definitions."""
+
 from django.conf import settings
 from django.db import models
 from .event import Event

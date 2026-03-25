@@ -1,10 +1,12 @@
+"""Lego profile model definitions."""
+
 from django.db import models
 from django.conf import settings
 
 
 class Profile(models.Model):
     """
-    This model is used to add additional functionality to Django's built in User feature.
+    Store legacy profile data linked to a user.
     """
 
     user = models.OneToOneField(
@@ -16,6 +18,10 @@ class Profile(models.Model):
     date_of_birth = models.DateField(null=True, blank=True)
     creation_date = models.DateTimeField(auto_now_add=True)
 
-    # Retrieve the user's username.
     def __str__(self):
+        """
+        Return a string representation of the profile.
+        Returns:
+            str: A string representation of the profile.
+        """
         return str(self.user)

@@ -1,3 +1,5 @@
+"""Preference model definitions."""
+
 from django.db import models
 from django.conf import settings
 
@@ -139,14 +141,22 @@ class Preference(models.Model):
                     }
                 )
 
-    # Get the sleep length of the user.
     def get_break_time(self):
+        """
+        Return the configured daily break time window as a string.
+        Returns:
+            str: The break time window.
+        """
         return f"{self.day_start} - {self.day_end}"
 
     def get_day_window(self, target_date):
         """
         Get the available time frame for the user on a given date.
         Helps to determine when the user can be scheduled for tasks.
+        Args:
+            target_date (date): The date to get the time window for.
+        Returns:
+            tuple: A tuple containing the start and end time for the provided day.
         """
         day_key = target_date.weekday() + 1
         schedule = {}
