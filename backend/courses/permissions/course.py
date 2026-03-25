@@ -77,6 +77,8 @@ class CoursePermission(BasePermission):
         )
 
     def has_permission(self, request, view):
+        if self._get_action(view) in ["permissions"]:
+            return True
         if not request.user.is_authenticated:
             return False
 
@@ -113,6 +115,8 @@ class CoursePermission(BasePermission):
     def has_object_permission(self, request, view, obj):
         if not request.user.is_authenticated:
             return False
+        if self._get_action(view) in ["permissions"]:
+            return True
 
         action = self._get_action(view)
 

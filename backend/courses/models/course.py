@@ -11,7 +11,7 @@ class Course(models.Model):
     description = models.TextField(blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     active = models.BooleanField(default=True)
-    lead = models.ForeignKey(Teacher, on_delete=models.CASCADE, null=True, blank=True, related_name="courses")
+    lead = models.ForeignKey(Teacher, on_delete=models.SET_NULL, null=True, blank=True, related_name="courses")
 
     def __str__(self):
         return self.name
