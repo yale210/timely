@@ -28,8 +28,8 @@ users = [
             "username": "tommy",
             "password": "pbkdf2_sha256$1000000$x7OkUUpZ0jz1bkch9G2uXN$6HNY4kQaCjyiH4hc+765D1MYlAXsECbVP1G9VM0Bpg8=",
             "email": "test@example.com",
-            "first_name": "Test",
-            "last_name": "User",
+            "first_name": "Tommy",
+            "last_name": "Hoang",
         },
     },
     {
@@ -39,8 +39,8 @@ users = [
             "username": "mark",
             "password": "pbkdf2_sha256$1000000$x7OkUUpZ0jz1bkch9G2uXN$6HNY4kQaCjyiH4hc+765D1MYlAXsECbVP1G9VM0Bpg8=",
             "email": "bob@example.com",
-            "first_name": "Bob",
-            "last_name": "Bob",
+            "first_name": "Mark",
+            "last_name": "Bual",
         },
     },
     {
@@ -50,8 +50,8 @@ users = [
             "username": "patrick",
             "password": "pbkdf2_sha256$1000000$x7OkUUpZ0jz1bkch9G2uXN$6HNY4kQaCjyiH4hc+765D1MYlAXsECbVP1G9VM0Bpg8=",
             "email": "simon@example.com",
-            "first_name": "Simon",
-            "last_name": "Smith",
+            "first_name": "Patrick",
+            "last_name": "Beckwith",
         },
     },
 ]
