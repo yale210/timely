@@ -84,7 +84,7 @@ const SettingsContent = ({
   };
 
   const profileState = useProfileSettings(state.activeSection === "profile");
-  const isWideSection = state.activeSection === "appearance";
+  const isWideSection = state.activeSection === "themes" || state.activeSection === "fonts";
   const categoryLimitMaxMinutes = useMemo(
     () => getSchedulingDayMaxMinutes(state.preference),
     [state.preference],
@@ -130,10 +130,18 @@ const SettingsContent = ({
                 }}
               />
             ) : null}
-            {state.activeSection === "appearance" ? (
+            {state.activeSection === "themes" ? (
               <ThemeSection
                 onThemeChange={actions.applyTheme}
                 onFontChange={actions.applyFont}
+                mode="themes"
+              />
+            ) : null}
+            {state.activeSection === "fonts" ? (
+              <ThemeSection
+                onThemeChange={actions.applyTheme}
+                onFontChange={actions.applyFont}
+                mode="fonts"
               />
             ) : null}
             {state.activeSection === "categories" ? (
@@ -152,7 +160,7 @@ const SettingsContent = ({
             {state.activeSection === "features" ? (
               <div className="space-y-6">
                 <div>
-                  <h2 className="text-lg font-semibold text-gray-900">Features</h2>
+                  <h2 className="text-lg font-semibold text-gray-900">Extras</h2>
                   <p className="mt-1 text-sm text-gray-500">
                     Toggle optional sections of the app.
                   </p>

@@ -94,14 +94,8 @@ export const useSettings = (): UseSettingsReturn => {
 
   const deleteEvents = useCallback(async () => {
     setIsDeleting(true);
-    console.log("Delete Events hook run")
     try {
-      const result = await deleteEventsAPI();
-      return result;
-    } catch (error){
-      console.log(error);
-      throw error;
-      
+      return await deleteEventsAPI();
     } finally {
       setIsDeleting(false);
     }
@@ -110,12 +104,7 @@ export const useSettings = (): UseSettingsReturn => {
   const deleteTasks = useCallback(async () => {
     setIsDeleting(true);
     try {
-      const result = await deleteTasksAPI();
-      return result;
-    } catch (error){
-      console.log(error);
-      throw error;
-      
+      return await deleteTasksAPI();
     } finally {
       setIsDeleting(false);
     }

@@ -1,87 +1,120 @@
-import { useState } from "react";
+import { useState } from "react"
 
 interface PrivacySectionProps {
-  deleting: boolean;
-  onDeleteTasks: () => Promise<string>;
-  onDeleteEvents: () => Promise<string>;
+  deleting: boolean
+  onDeleteTasks: () => Promise<string>
+  onDeleteEvents: () => Promise<string>
 }
 
+interface PrivacyActionCardProps {
+  description: string
+  deleting: boolean
+  icon: string
+  onClick: () => void
+  title: string
+}
+
+const PrivacyActionCard = ({
+  description,
+  deleting,
+  icon,
+  onClick,
+  title,
+}: PrivacyActionCardProps) => (
+  <div className="rounded-lg border border-gray-200 bg-white px-4 py-4 shadow-sm">
+    <div className="flex items-start justify-between gap-4">
+      <div>
+        <h3 className="text-sm font-semibold text-gray-900">{title}</h3>
+        <p className="mt-1 text-sm text-gray-500">{description}</p>
+      </div>
+      <button
+        type="button"
+        onClick={onClick}
+        disabled={deleting}
+        className={`inline-flex shrink-0 items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
+          deleting
+            ? "cursor-not-allowed bg-gray-200 text-gray-500"
+            : "bg-red-50 text-red-700 hover:bg-red-100"
+        }`}
+      >
+        <span className="material-icons text-lg">{icon}</span>
+        {deleting ? "Deleting..." : title}
+      </button>
+    </div>
+  </div>
+)
 
 const PrivacySection = ({
   deleting,
   onDeleteTasks,
   onDeleteEvents,
 }: PrivacySectionProps) => {
-  const [message, setMessage] = useState<string | null>(null);
-  
+  const [message, setMessage] = useState<string | null>(null)
+  const [error, setError] = useState<string | null>(null)
+
+  const handleDeleteEvents = () => {
+    setMessage(null)
+    setError(null)
+    onDeleteEvents()
+      .then((result) => {
+        setMessage(result)
+      })
+      .catch(() => {
+        setError("Failed to delete events.")
+      })
+  }
+
+  const handleDeleteTasks = () => {
+    setMessage(null)
+    setError(null)
+    onDeleteTasks()
+      .then((result) => {
+        setMessage(result)
+      })
+      .catch(() => {
+        setError("Failed to delete tasks.")
+      })
+  }
+
   return (
-
     <div className="space-y-6">
-                <div>
-                  <h2 className="text-lg font-semibold text-gray-900">Privacy</h2>
-                  <p className="mt-1 text-sm text-gray-500">
-                    Delete your user data in the application.
-                  </p>
+      <div>
+        <h2 className="text-lg font-semibold text-gray-900">Privacy</h2>
+        <p className="mt-1 text-sm text-gray-500">
+          Manage destructive actions for your personal data in the app.
+        </p>
+      </div>
 
-                    <div className="flex flex-col gap-3 w-48 h-40">
-                        
+      {message ? (
+        <div className="rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
+          {message}
+        </div>
+      ) : null}
 
+      {error ? (
+        <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+          {error}
+        </div>
+      ) : null}
 
-                        <button onClick={() => {
-                            console.log("Button test click")
-                            onDeleteEvents().then((res) => {
-                              console.log(res);
-                              setMessage(res);
-                            }).catch((error) => {
-                              console.error(error);
-                              setMessage("Failed to delete events");
-                            });
-                        }}
-                        disabled={deleting}
-                        className="px-3 py-3 rounded-lg text-lg flex items-center shadow-sm transition-colors">
-                        <span className="material-icons mr-2 text-xl">delete_forever</span>
-                        { deleting ? "Deleting": "Delete Events"}
-                        </button>
-
-                        <button
-                        onClick={() => {
-                            console.log("Button test click")
-                            onDeleteTasks().then((res) => {
-                              console.log(res);
-                              setMessage(res);
-                            }).catch((error) => {
-                              console.error(error);
-                              setMessage("Failed to delete tasks");
-                            });
-                        }}
-                        disabled={deleting}
-                        className="px-3 py-3 rounded-lg text-lg flex items-center shadow-sm transition-colors">
-                        <span className="material-icons mr-2 text-xl">delete_forever</span>
-                        { deleting ? "Deleting": "Delete Tasks"}
-                        
-                        </button>
-
-
-                        {message && (
-                          <div className="text-sm text-green-600 mt-2">
-                        {message}
-                        </div>
-
-                        )}
-                    </div>
-
-
-
-                </div>
+      <div className="space-y-3">
+        <PrivacyActionCard
+          title="Delete Events"
+          description="Remove all calendar events from your account. This cannot be undone."
+          icon="event_busy"
+          deleting={deleting}
+          onClick={handleDeleteEvents}
+        />
+        <PrivacyActionCard
+          title="Delete Tasks"
+          description="Remove all tasks from your account. This cannot be undone."
+          icon="delete_forever"
+          deleting={deleting}
+          onClick={handleDeleteTasks}
+        />
+      </div>
     </div>
-
-
-  );
-};
-
-
-
-
-
+  )
+}
 
 export default PrivacySection

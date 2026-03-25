@@ -15,6 +15,11 @@ describe("SettingsSidebar", () => {
       />,
     );
 
+    expect(screen.getByText("Planning")).toBeInTheDocument();
+    expect(screen.getByText("Appearance")).toBeInTheDocument();
+    expect(screen.getByText("App")).toBeInTheDocument();
+    expect(screen.getByText("Account")).toBeInTheDocument();
+
     fireEvent.click(screen.getByRole("button", { name: /profile/i }));
     expect(selectSection).toHaveBeenCalledWith("profile");
 

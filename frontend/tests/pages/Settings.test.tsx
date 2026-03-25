@@ -242,13 +242,15 @@ describe("Settings page", () => {
     fireEvent.click(screen.getByRole("button", { name: /general/i }));
     expect(screen.getByRole("heading", { name: /general/i })).toBeDefined();
 
-    fireEvent.click(screen.getByRole("button", { name: /features/i }));
+    fireEvent.click(screen.getByRole("button", { name: /extras/i }));
     expect(screen.getByText("Toggle optional sections of the app.")).toBeDefined();
 
-    fireEvent.click(screen.getByRole("button", { name: /appearance/i }));
-    expect(screen.getByText("Choose the colour theme and type style used across the app.")).toBeDefined();
+    fireEvent.click(screen.getByRole("button", { name: /themes/i }));
+    expect(screen.getByText("Choose the colour theme used across the app.")).toBeDefined();
 
     fireEvent.click(screen.getByRole("button", { name: "Dark Surface" }));
+    fireEvent.click(screen.getByRole("button", { name: /fonts/i }));
+    expect(screen.getByText("Choose the type style used across the app.")).toBeDefined();
     fireEvent.click(screen.getByRole("button", { name: "Font Ag Poppins" }));
     expect(document.documentElement.dataset.theme).toBe("dark");
     expect(document.documentElement.dataset.font).toBe("poppins");
