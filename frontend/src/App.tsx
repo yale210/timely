@@ -13,6 +13,7 @@ import { AdminNotificationHistory } from "@/pages/Admin/Notifications/AdminNotif
 import { AdminNotificationHistoryDetail } from "@/pages/Admin/Notifications/AdminNotificationHistoryDetail"
 import CourseManagement from "@/pages/Course/CourseManagement.tsx";
 import RequireTeacher from "@/context/auth/RequireTeacher.tsx";
+import CourseCreate from "@/pages/Course/CourseCreate.tsx";
 
 const PUBLIC_ROUTES = ["/login", "/signup", "/"]
 
@@ -61,7 +62,11 @@ export default function App() {
           <Signup />
         </RedirectAuth>
       }/>
+        <Route path="/course/create" element={
 
+                <CourseCreate />
+
+        }/>
       <Route path="/logout" element={<Logout />} />
 
       <Route path="/calendar" element={
@@ -89,9 +94,11 @@ export default function App() {
       />
 
       <Route path="/courses/manage" element={
+          <RequireAuth>
         <RequireTeacher>
           <CourseManagement />
-        </RequireTeacher>}
+        </RequireTeacher>
+          </RequireAuth>}
       />
 
       <Route path="/gradebook" element={
