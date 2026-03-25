@@ -16,8 +16,6 @@ describe("AdminSidebar Component", () => {
     expect(screen.getByText("Back to Overview")).toBeDefined();
     expect(screen.getByText("Notifications")).toBeDefined();
     expect(screen.getByText("Notification History")).toBeDefined();
-    expect(screen.getByText("Settings")).toBeDefined();
-    expect(screen.getByText("Log out")).toBeDefined();
   });
 
   it("calls onClose when a link is clicked", () => {
@@ -52,15 +50,19 @@ describe("AdminSidebar Component", () => {
     expect(inactiveLink.className).toContain("text-gray-800");
   });
 
-  it("applies logout specific classes", () => {
+  it("keeps notification history as the only active item on its route", () => {
     render(
-      <MemoryRouter>
+      <MemoryRouter initialEntries={["/admin/notifications/history"]}>
         <AdminSidebar onClose={mockOnClose} />
       </MemoryRouter>
     );
 
-    const logoutLink = screen.getByRole("link", { name: "Log out" });
-    expect(logoutLink.className).toContain("text-red-500");
-    expect(logoutLink.className).toContain("hover:bg-red-50");
+    const notificationsLink = screen.getByRole("link", { name: "Notifications" });
+    const historyLink = screen.getByRole("link", { name: "Notification History" });
+
+    expect(historyLink.className).toContain("bg-cyan-50");
+    expect(historyLink.className).toContain("text-cyan-700");
+    expect(notificationsLink.className).not.toContain("bg-cyan-50");
+    expect(notificationsLink.className).toContain("text-gray-800");
   });
 });
