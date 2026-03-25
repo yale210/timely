@@ -52,7 +52,6 @@ class AssessmentSeeder(BaseSeeder):
                 "fields": {
                     "user": temporary_user.id,
                     "title": self.faker.sentence(),
-                    "module": self.faker.word(),
                     "assessment_type": random.choice(
                         [
                             "EXAM",
@@ -119,7 +118,7 @@ class AssessmentSeeder(BaseSeeder):
             start_time=data["fields"]["start_time"],
             end_time=data["fields"]["end_time"],
             title=data["fields"]["title"],
-            module=data["fields"]["module"],
+            
             assessment_type=data["fields"]["assessment_type"],
             due_date=data["fields"]["due_date"],
             length_of_assessment=data["fields"]["length_of_assessment"],

@@ -86,24 +86,17 @@ class Assessment(models.Model):
     class Meta:
         ordering = ["due_date"]
 
-    # Return the assessment title.
+    # Return the assessment.
     def __str__(self):
         return self.title
 
     def clean(self):
-        """
-        Validate the assessment data before saving.
-        Ensures that the title and module cannot be empty, the weighting is between 0 and 100 (if provided),
-        and the reminder offset is not negative (if provided).
-        """
         super().clean()
         errors = {}
 
+        # Ensure title is not empty.
         if not self.title.strip():
             errors["title"] = "Assessment must have a title."
-
-        if not self.module.strip():
-            errors["module"] = "Assessment must have a module."
 
         # Ensure the weighting is between 0 and 100 if provided.
         if (
