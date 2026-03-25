@@ -3,7 +3,6 @@ import type {
   CachedPermissionsEntry,
   Course,
   CourseCreation, CourseJoinCode,
-  CoursePermissions,
   CourseStaff,
   CourseStudent,
   CourseUpdate
@@ -11,6 +10,7 @@ import type {
 import type {Event} from "@/types/event";
 import type {Teacher} from "@/types/teacher.ts";
 import {authStore} from "@/services/authService.ts";
+import type {CoursePermissions} from "@/types/course.ts";
 
 
 const COURSE_PERMISSIONS_TTL_MS = 5 * 60 * 1000;
@@ -287,7 +287,7 @@ export const createJoinCode = async (id: number, data: { expires_at: string | nu
   const response = await api.post<string>(`/api/courses/${id}/join-code/`, data);
   const currentUserId = getCurrentUserId();
   if (currentUserId !== null) clearCoursePermissionsCache(id, currentUserId);
-  return response.data;
+  return response.data as unknown as CourseJoinCode;
 };
 
 
