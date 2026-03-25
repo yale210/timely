@@ -91,7 +91,6 @@ class ShareSendViewTests(TestCase):
         )
 
     def test_recipient_does_not_exist(self):
-
         self.client.login(username="testuser", password="password")
 
         get_user_model().objects.create_user(
