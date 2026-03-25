@@ -10,8 +10,9 @@ interface AboutFeatureSectionProps {
 /**
  * Renders a single feature section with an alternating image-left / image-right layout.
  * Both panels animate in from opposite sides as they scroll into view.
- * @param props.feature - The feature data to display.
- * @param props.index - The position in the features list, used to determine layout direction.
+ * @param root0 - Component props.
+ * @param root0.feature - The feature data to display.
+ * @param root0.index - The position in the features list, used to determine layout direction.
  * @returns The rendered feature section.
  */
 export default function AboutFeatureSection({ feature, index }: AboutFeatureSectionProps) {
