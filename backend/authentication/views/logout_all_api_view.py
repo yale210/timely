@@ -1,4 +1,5 @@
 """Authentication views."""
+
 from drf_spectacular.utils import (
     OpenApiResponse,
     extend_schema,

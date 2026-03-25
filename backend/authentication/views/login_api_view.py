@@ -1,4 +1,5 @@
 """Authentication views."""
+
 from django.contrib.auth import login
 from django.utils import timezone
 from knox.views import (

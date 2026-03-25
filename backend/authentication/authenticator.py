@@ -1,4 +1,5 @@
 """Authentication app components."""
+
 from django.contrib.auth.backends import BaseBackend
 
 from .models import User
