@@ -1,4 +1,4 @@
-"""Authentication app components."""
+"""Database models for user accounts and authentication."""
 
 from django.contrib.auth.base_user import AbstractBaseUser, BaseUserManager
 from django.contrib.auth.models import PermissionsMixin

@@ -1,4 +1,4 @@
-"""Authentication views."""
+"""API view for logging out of all active user sessions."""
 
 from drf_spectacular.utils import (
     OpenApiResponse,

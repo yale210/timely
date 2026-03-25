@@ -1,4 +1,4 @@
-"""Authentication views."""
+"""API view for verifying user authentication status."""
 
 from drf_spectacular.utils import (
     extend_schema,
