@@ -27,7 +27,7 @@ class EventSeeder(BaseSeeder):
 
     def _create_event(self, data):
         temporary_event, _ = Event.objects.get_or_create(
-            user_id=data["fields"]["user"],
+            user=data["fields"]["user"],
             title=data["fields"]["title"],
             description=data["fields"]["description"],
             location=data["fields"]["location"],
@@ -41,6 +41,9 @@ class EventSeeder(BaseSeeder):
         if categories:
             temporary_event.categories.set(categories)
 
+    """
+    If an event is recurring
+    """
     def _populate_random_event(self):
         temporary_user = self._get_or_create_random_user()
         temporary_category = self._get_or_create_random_category(temporary_user)
@@ -49,8 +52,9 @@ class EventSeeder(BaseSeeder):
             self._create_recurring_event(
                 {
                     "fields": {
-                        "user": temporary_user.id,
+                        "user": temporary_user,
                         "categories": [temporary_category],
+                        
                     }
                 }
             )
@@ -58,7 +62,7 @@ class EventSeeder(BaseSeeder):
             self._create_non_recurring_event(
                 {
                     "fields": {
-                        "user": temporary_user.id,
+                        "user": temporary_user,
                         "categories": [temporary_category],
                     }
                 }
@@ -72,6 +76,7 @@ class EventSeeder(BaseSeeder):
                 user=user,
                 text=self.faker.word(),
                 colour=self.faker.hex_color(),
+                max_daily_study_time=random.randint(1, 24),
             )
         return temporary_category
 
