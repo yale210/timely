@@ -1,4 +1,3 @@
-
 from django.contrib.auth import get_user_model
 from rest_framework import status
 from rest_framework.decorators import action
@@ -12,7 +11,6 @@ User = get_user_model()
 
 
 class CourseStaffMixin(CourseViewSetBase):
-
     @action(detail=True, methods=["get", "post", "delete"], url_path="staff")
     def staff(self, request, pk=None):
         course = self.get_course(pk)

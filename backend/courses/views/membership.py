@@ -1,4 +1,3 @@
-from celery.worker.state import active_requests
 from django.utils import timezone
 from rest_framework import status
 from rest_framework.decorators import action
@@ -36,6 +35,7 @@ class CourseMembershipMixin(CourseViewSetBase):
             {"message": "Course enrollment successful.", "created": created},
             status=status.HTTP_200_OK,
         )
+
     @action(detail=True, methods=["post"], url_path="leave")
     def leave(self, request, pk=None):
         course = self.get_course(pk)
@@ -50,7 +50,9 @@ class CourseMembershipMixin(CourseViewSetBase):
         try:
             enrollment = CourseEnrollment.objects.get(course=course, student=student)
         except CourseEnrollment.DoesNotExist:
-            return Response({"detail": "You are not enrolled in this course."}, status=404)
+            return Response(
+                {"detail": "You are not enrolled in this course."}, status=404
+            )
 
         enrollment.active = False
         enrollment.save(update_fields=["active"])
@@ -59,6 +61,7 @@ class CourseMembershipMixin(CourseViewSetBase):
             {"message": "Successfully left the course."},
             status=status.HTTP_200_OK,
         )
+
     @action(detail=False, methods=["post"], url_path="join-by-code")
     def join_by_code(self, request):
         serializer = CourseJoinCodeSerializer(data=request.data)
@@ -103,6 +106,7 @@ class CourseMembershipMixin(CourseViewSetBase):
             },
             status=status.HTTP_200_OK,
         )
+
     @action(detail=True, methods=["post"], url_path="join-code")
     def join_code(self, request, pk=None):
         course = self.get_course(pk)

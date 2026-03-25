@@ -11,6 +11,7 @@ from courses.serializers.teacher import TeacherCreateSerializer, TeacherSerializ
 
 User = get_user_model()
 
+
 class TeacherView(ViewSet):
     permission_classes = [IsAuthenticated, IsTeacher]
 
@@ -47,15 +48,30 @@ class TeacherView(ViewSet):
 
         return Response(data, status=status.HTTP_200_OK)
 
-    @action(detail=False, methods=["post"], url_path="", permission_classes=[IsAuthenticated])
+    @action(
+        detail=False,
+        methods=["post"],
+        url_path="",
+        permission_classes=[IsAuthenticated],
+    )
     def create_teacher(self, request):
         serializer = TeacherCreateSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
         user = User.objects.get(id=serializer.validated_data["user_id"])
-        print(serializer.validated_data["user_id"], request.user.id, request.user.is_superuser)
-        if serializer.validated_data["user_id"] != request.user.id and not request.user.is_superuser:
-            return Response({"detail": "You are not authorized to create a teacher."}, status=status.HTTP_403_FORBIDDEN)
+        print(
+            serializer.validated_data["user_id"],
+            request.user.id,
+            request.user.is_superuser,
+        )
+        if (
+            serializer.validated_data["user_id"] != request.user.id
+            and not request.user.is_superuser
+        ):
+            return Response(
+                {"detail": "You are not authorized to create a teacher."},
+                status=status.HTTP_403_FORBIDDEN,
+            )
         teacher, created = Teacher.objects.get_or_create(
             user=user,
             defaults={"active": True},

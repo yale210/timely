@@ -1,4 +1,3 @@
-from rest_framework.decorators import action
 """Views for managing private and public profile data."""
 
 from django.contrib.auth import get_user_model
@@ -81,7 +80,6 @@ class ProfileAPIView(GenericAPIView):
         serializer.is_valid(raise_exception=True)
         serializer.save()
         return Response(serializer.data, status=status.HTTP_200_OK)
-
 
 
 class PublicProfileAPIView(RetrieveAPIView):

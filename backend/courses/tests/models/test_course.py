@@ -203,7 +203,7 @@ class CourseEnrollmentModelTests(TestCase):
 
     def test_enrollment_ordering(self):
         """Test that enrollments are ordered by enrolled_at descending."""
-        enrollment1 = CourseEnrollment.objects.create(
+        CourseEnrollment.objects.create(
             course=self.course, student=self.student
         )
 
@@ -212,7 +212,7 @@ class CourseEnrollmentModelTests(TestCase):
             username="student2", password="testpass123", email="student2@test.com"
         )
         student2 = Student.objects.create(user=student_user2)
-        enrollment2 = CourseEnrollment.objects.create(
+        CourseEnrollment.objects.create(
             course=self.course, student=student2
         )
 

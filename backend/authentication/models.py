@@ -63,7 +63,10 @@ class UserManager(BaseUserManager):
 
 class User(AbstractBaseUser, PermissionsMixin):
     """Custom user model that uses username as the login field."""
-    alphanumeric = RegexValidator(r'^[0-9a-zA-Z]*$', 'Only alphanumeric characters are allowed.')
+
+    alphanumeric = RegexValidator(
+        r"^[0-9a-zA-Z]*$", "Only alphanumeric characters are allowed."
+    )
 
     username = models.CharField(max_length=255, unique=True, validators=[alphanumeric])
     email = models.EmailField(max_length=255, unique=True)

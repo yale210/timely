@@ -5,6 +5,7 @@ __all__ = [
     "CourseEvent",
     "Student",
     "CourseStaff",
+    "CourseJoinCode",
 ]
 
 from courses.models.student import Student

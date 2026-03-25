@@ -5,6 +5,7 @@ from courses.permissions.course import CoursePermission
 
 User = get_user_model()
 
+
 class PermissionsSerializer(serializers.Serializer):
     can_view_course_details = serializers.BooleanField(read_only=True)
     can_view_events = serializers.BooleanField(read_only=True)
@@ -28,10 +29,10 @@ class PermissionsSerializer(serializers.Serializer):
             "can_change_name": perm.can_change_name(request, course),
             "can_change_description": perm.can_change_description(request, course),
             "can_update_course": perm.can_update_course(request, course),
-            "can_destroy_course": perm._is_admin(request) or perm._is_lead(request, course),
-            "can_manage_staff": perm._is_admin(request) or perm._is_lead(request, course),
+            "can_destroy_course": perm._is_admin(request)
+            or perm._is_lead(request, course),
+            "can_manage_staff": perm._is_admin(request)
+            or perm._is_lead(request, course),
             "can_join": True,
             "can_leave": True,
         }
-
-

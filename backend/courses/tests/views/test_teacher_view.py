@@ -1,7 +1,4 @@
-import datetime
-
 from django.contrib.auth import get_user_model
-from django.utils import timezone
 from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APITestCase
@@ -61,7 +58,9 @@ class CourseViewTests(APITestCase):
             format="json",
         )
 
-        self.assertIn(response.status_code, (status.HTTP_200_OK, status.HTTP_201_CREATED))
+        self.assertIn(
+            response.status_code, (status.HTTP_200_OK, status.HTTP_201_CREATED)
+        )
         self.assertTrue(Teacher.objects.filter(user=new_user, active=True).exists())
         self.assertEqual(response.data["user_id"], new_user.id)
         self.assertEqual(response.data["username"], new_user.username)
@@ -77,7 +76,9 @@ class CourseViewTests(APITestCase):
             format="json",
         )
 
-        self.assertIn(response.status_code, (status.HTTP_200_OK, status.HTTP_201_CREATED))
+        self.assertIn(
+            response.status_code, (status.HTTP_200_OK, status.HTTP_201_CREATED)
+        )
         teacher.refresh_from_db()
         self.assertTrue(teacher.active)
         self.assertEqual(response.data["user_id"], teacher_user.id)

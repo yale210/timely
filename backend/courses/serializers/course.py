@@ -47,6 +47,7 @@ class CourseDescriptionSerializer(serializers.ModelSerializer):
         model = Course
         fields = ("description",)
 
+
 class CourseJoinCodeSerializer(serializers.Serializer):
     code = serializers.CharField(max_length=64)
 
@@ -62,6 +63,7 @@ class CourseJoinCodeSerializer(serializers.Serializer):
             course=course, student=self.context["request"].user
         )
 
+
 class CourseJoinCodeCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = CourseJoinCode
@@ -71,7 +73,6 @@ class CourseJoinCodeCreateSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         course = self.context["course"]
         return CourseJoinCode.objects.create(course=course, **validated_data)
-
 
 
 class CourseStaffAddSerializer(serializers.Serializer):

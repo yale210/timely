@@ -8,7 +8,6 @@ from courses.views import CourseViewSetBase
 
 
 class CourseStudentMixin(CourseViewSetBase):
-
     @action(detail=True, methods=["get"], url_path="students")
     def students(self, request, pk=None):
         course = get_object_or_404(Course, pk=pk)
