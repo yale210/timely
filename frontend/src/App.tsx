@@ -10,14 +10,17 @@ import {
   Logout,
   CalendarPage,
   TaskList,
+  Assessments,
   Gradebook,
   Dashboard,
   Settings,
   Friends,
+  Sharing,
   ProfilePage,
   Leaderboard,
   Pomodoro,
   NotFound,
+  About
 } from "@/pages"
 import { Notifications } from "@/pages/Notification/Notifications"
 import { NotificationDetail } from "@/pages/Notification/NotificationDetail"
@@ -26,7 +29,7 @@ import { AdminNotificationHistory } from "@/pages/Admin/Notifications/AdminNotif
 import { AdminNotificationHistoryDetail } from "@/pages/Admin/Notifications/AdminNotificationHistoryDetail"
 import { setDocumentTheme } from "@/utils/themeSettings"
 
-const PUBLIC_ROUTES = ["/login", "/signup", "/"]
+const PUBLIC_ROUTES = ["/login", "/signup", "/", "/about"]
 
 /**
  * The root component of the application which organises the routing logic.
@@ -94,15 +97,21 @@ export default function App() {
         </RequireAuth>}
       />
 
-      <Route path="/dashboard" element={
+      <Route path="/assessments" element={
         <RequireAuth>
-          <Dashboard />
+          <Assessments />
         </RequireAuth>}
       />
-      
+
       <Route path="/friends" element={
         <RequireAuth>
           <Friends />
+        </RequireAuth>}
+      />
+
+      <Route path="/sharing" element={
+        <RequireAuth>
+          <Sharing />
         </RequireAuth>}
       />
 
@@ -159,6 +168,14 @@ export default function App() {
           <Settings />
         </RequireAuth>}
       />
+
+      <Route path="/dashboard" element={
+        <RequireAuth>
+          <Dashboard />
+        </RequireAuth>}
+      />
+
+      <Route path="/about" element={<About />} />
 
       <Route path="*" element={
         <NotFound />

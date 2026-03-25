@@ -1,16 +1,16 @@
+"""Celery application bootstrap for Timely background workers."""
+
 import os
+
 from celery import Celery
 
-# Set the default Django settings module for the 'celery' program.
+# Share the Django settings module between the web app and Celery workers.
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "source.settings")
 
 app = Celery("source")
 
-# Using a string here means the worker doesn't have to serialize
-# the configuration object to child processes.
-# - namespace='CELERY' means all celery-related configuration keys
-#   should have a `CELERY_` prefix.
+# Load Celery settings from Django using the ``CELERY_`` prefix convention.
 app.config_from_object("django.conf:settings", namespace="CELERY")
 
-# Load task modules from all registered Django apps.
+# Autodiscover task modules from installed Django apps.
 app.autodiscover_tasks()

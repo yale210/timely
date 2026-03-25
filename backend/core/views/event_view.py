@@ -113,6 +113,9 @@ class EventViewSet(viewsets.ModelViewSet):
         return Event.objects.filter(user=self.request.user).order_by("id")
 
     def _parse_list_window(self, request):
+        """
+        Parse and validate the expansion window used for recurring events.
+        """
         start_date_raw = request.query_params.get("start_date")
         end_date_raw = request.query_params.get("end_date")
 
@@ -190,7 +193,14 @@ class EventViewSet(viewsets.ModelViewSet):
     def partial_update(self, request, *args, **kwargs):
         return self._handle_update(request, partial=True, *args, **kwargs)
 
+    """
+    Handles update logic for events, including validation and updating of recurring events.
+    """
+
     def _handle_update(self, request, partial, *args, **kwargs):
+        """
+        Handles update logic for events, including validation and updating of recurring events.
+        """
         event = self.get_object()
         scope, original_start_time = self._parse_scope_context(request)
 

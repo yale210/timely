@@ -79,13 +79,17 @@ export const formatDjangoFormError = (
  * @param error - The caught API error.
  * @returns Whether the error is the task-buffer reschedule conflict case.
  */
-export const hasTaskBufferRescheduleConflict = (error: unknown): boolean => {
+export const hasTaskAllocationRescheduleConflict = (error: unknown): boolean => {
   const { fieldErrors } = formatDjangoFormError(error);
   const messages = [
+    ...(fieldErrors.allocation ?? []),
     ...(fieldErrors.buffer_before_minutes ?? []),
     ...(fieldErrors.buffer_after_minutes ?? []),
   ];
   return messages.some((message) =>
-    message.includes("Reschedule or unschedule the task first."),
+    message.includes("Reschedule or unschedule the task first.")
+    || message.includes("Allocation slots cannot"),
   );
 };
+
+export const hasTaskBufferRescheduleConflict = hasTaskAllocationRescheduleConflict;

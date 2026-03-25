@@ -443,3 +443,39 @@ class TaskViewSetTests(TestCase):
             self.task1.allocation[0]["start"],
             allocation_start.isoformat(),
         )
+
+    def test_save_and_reschedule_keeps_task_changes_when_rescheduling_fails(self):
+        self.client.force_authenticate(user=self.user)
+        allocation_start = self.now + datetime.timedelta(days=1, hours=1)
+        allocation_end = allocation_start + datetime.timedelta(minutes=30)
+        self.task1.allocation = [
+            {
+                "start": allocation_start.isoformat(),
+                "end": allocation_end.isoformat(),
+            }
+        ]
+        self.task1.total_task_allocations = 1
+        self.task1.save(update_fields=["allocation", "total_task_allocations"])
+
+        updated_start_time = self.now + datetime.timedelta(days=9, hours=23)
+        updated_deadline = updated_start_time + datetime.timedelta(minutes=30)
+        response = self.client.post(
+            f"/api/tasks/{self.task1.id}/save-and-reschedule/",
+            {
+                "start_time": updated_start_time.isoformat(),
+                "deadline": updated_deadline.isoformat(),
+                "estimated_minutes": 60,
+                "start_date": self.now.date().isoformat(),
+            },
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            response.data["reschedule_warning"],
+            "No single slot available within horizon",
+        )
+        self.task1.refresh_from_db()
+        self.assertEqual(self.task1.start_time, updated_start_time)
+        self.assertEqual(self.task1.allocation, [])
+        self.assertEqual(self.task1.total_task_allocations, 0)

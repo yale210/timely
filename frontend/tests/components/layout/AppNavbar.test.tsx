@@ -1,6 +1,6 @@
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { vi, describe, it, expect, beforeEach, afterEach } from "vitest";
-import { MemoryRouter, useNavigate, useLocation } from "react-router-dom";
+import { MemoryRouter, useNavigate } from "react-router-dom";
 import AppNavbar from "@/components/layout/AppNavbar";
 import { useNotificationContext } from "@/context/NotificationContext";
 import { authStore } from "@/services/authService";
@@ -11,7 +11,6 @@ vi.mock("react-router-dom", async () => {
   return {
     ...actual,
     useNavigate: vi.fn(),
-    useLocation: vi.fn(),
   };
 });
 
@@ -72,17 +71,15 @@ describe("AppNavbar Component", () => {
   const mockDeleteNotification = vi.fn();
   const mockDeleteAllNotifications = vi.fn();
 
+  const renderNavbar = (route = "/dashboard") => render(
+    <MemoryRouter initialEntries={[route]}>
+      <AppNavbar />
+    </MemoryRouter>
+  );
+
   beforeEach(() => {
     vi.clearAllMocks();
     vi.mocked(useNavigate).mockReturnValue(mockNavigate);
-    vi.mocked(useLocation).mockReturnValue({
-      pathname: "/dashboard",
-      search: "",
-      hash: "",
-      state: null,
-      key: "default",
-      unstable_mask: undefined,
-    });
     vi.mocked(useNotificationContext).mockReturnValue({
       notifications: [],
       unreadCount: 0,
@@ -117,11 +114,7 @@ describe("AppNavbar Component", () => {
   });
 
   it("opens and closes the navigation drawer", () => {
-    render(
-      <MemoryRouter>
-        <AppNavbar />
-      </MemoryRouter>
-    );
+    renderNavbar();
     
     const openBtn = screen.getByLabelText("Open navigation");
     fireEvent.click(openBtn);
@@ -138,19 +131,7 @@ describe("AppNavbar Component", () => {
   });
 
   it("renders AdminSidebar when on an admin route", () => {
-    vi.mocked(useLocation).mockReturnValue({
-      pathname: "/admin/notifications",
-      search: "",
-      hash: "",
-      state: null,
-      key: "default",
-      unstable_mask: undefined,
-    });
-    render(
-      <MemoryRouter>
-        <AppNavbar />
-      </MemoryRouter>
-    );
+    renderNavbar("/admin/notifications");
     
     // Open drawer to see sidebar
     fireEvent.click(screen.getByLabelText("Open navigation"));
@@ -158,11 +139,7 @@ describe("AppNavbar Component", () => {
   });
 
   it("renders main sidebar items when not on an admin route", () => {
-    render(
-      <MemoryRouter>
-        <AppNavbar />
-      </MemoryRouter>
-    );
+    renderNavbar();
     
     fireEvent.click(screen.getByLabelText("Open navigation"));
     expect(screen.getByText("Overview")).toBeDefined();
@@ -185,21 +162,13 @@ describe("AppNavbar Component", () => {
       deleteAllNotifications: mockDeleteAllNotifications,
     });
     
-    render(
-      <MemoryRouter>
-        <AppNavbar />
-      </MemoryRouter>
-    );
+    renderNavbar();
     
     expect(screen.getByText(/Unread:\s*5/)).toBeDefined();
   });
 
   it("renders Admin Panel link only for staff users", () => {
-    const { rerender } = render(
-      <MemoryRouter>
-        <AppNavbar />
-      </MemoryRouter>
-    );
+    const { rerender } = renderNavbar();
     
     fireEvent.click(screen.getByLabelText("Open navigation"));
     expect(screen.queryByText("Admin Panel")).toBeNull();
@@ -210,7 +179,7 @@ describe("AppNavbar Component", () => {
       is_staff: true,
     });
     rerender(
-      <MemoryRouter>
+      <MemoryRouter initialEntries={["/dashboard"]}>
         <AppNavbar />
       </MemoryRouter>
     );
@@ -219,11 +188,7 @@ describe("AppNavbar Component", () => {
   });
 
   it("handles notification dropdown actions", () => {
-    render(
-      <MemoryRouter>
-        <AppNavbar />
-      </MemoryRouter>
-    );
+    renderNavbar();
 
     fireEvent.click(screen.getByText("Item Click"));
     expect(mockMarkRead).toHaveBeenCalledWith(1);
@@ -240,11 +205,7 @@ describe("AppNavbar Component", () => {
   });
 
   it("toggles body classes on mount and unmount via effect", () => {
-    const { unmount } = render(
-      <MemoryRouter>
-        <AppNavbar />
-      </MemoryRouter>
-    );
+    const { unmount } = renderNavbar();
     
     expect(document.body.style.getPropertyValue("--drawer-width")).toBe("224px");
     
@@ -253,11 +214,7 @@ describe("AppNavbar Component", () => {
   });
 
   it("renders account menu items when account button is clicked", async () => {
-    render(
-      <MemoryRouter>
-        <AppNavbar />
-      </MemoryRouter>
-    );
+    renderNavbar();
     
     const accountBtn = screen.getByRole("button", { name: /testuser/i });
     fireEvent.click(accountBtn);
@@ -277,11 +234,7 @@ describe("AppNavbar Component", () => {
   });
 
   it("applies active classes to NavLinks", () => {
-    render(
-      <MemoryRouter initialEntries={["/dashboard"]}>
-        <AppNavbar />
-      </MemoryRouter>
-    );
+    renderNavbar();
     
     fireEvent.click(screen.getByLabelText("Open navigation"));
     const dashboardLink = screen.getByRole("link", { name: "Overview" });
@@ -300,11 +253,7 @@ describe("AppNavbar Component", () => {
       email: "admin@example.com",
       is_staff: true,
     });
-    render(
-      <MemoryRouter>
-        <AppNavbar />
-      </MemoryRouter>
-    );
+    renderNavbar();
     
     fireEvent.click(screen.getByLabelText("Open navigation"));
     const adminLink = screen.getByText("Admin Panel");
@@ -313,11 +262,7 @@ describe("AppNavbar Component", () => {
   });
 
   it("handles settings link in sidebar click", () => {
-    render(
-      <MemoryRouter>
-        <AppNavbar />
-      </MemoryRouter>
-    );
+    renderNavbar();
     
     fireEvent.click(screen.getByLabelText("Open navigation"));
     const settingsSidebarLink = screen.getByRole("link", { name: "Settings" });
@@ -326,11 +271,7 @@ describe("AppNavbar Component", () => {
   });
 
   it("handles logo link in drawer click", () => {
-    render(
-      <MemoryRouter>
-        <AppNavbar />
-      </MemoryRouter>
-    );
+    renderNavbar();
     
     fireEvent.click(screen.getByLabelText("Open navigation"));
     const logoLink = screen.getByRole("link", { name: "Timely" });

@@ -6,6 +6,7 @@ import { LogoMark } from "@/components/ui"
 
 const guestNavigation = [
     { name: 'Home', href: '/' },
+    { name: 'About', href: '/about' },
     { name: 'Signup', href: '/signup' },
 ]
 
