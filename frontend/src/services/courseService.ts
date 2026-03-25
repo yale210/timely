@@ -285,8 +285,8 @@ export const getCurrentTeacher = async (): Promise<Teacher> => {
  */
 export const createJoinCode = async (id: number, data: { expires_at: string | null }): Promise<CourseJoinCode> => {
   const response = await api.post<string>(`/api/courses/${id}/join-code/`, data);
-  const currentUserId = getCurrentUserId();
-  if (currentUserId !== null) clearCoursePermissionsCache(id, currentUserId);
+  const currentUserId = authStore.getUser()?.id;
+  clearCoursePermissionsCache(id, currentUserId);
   return response.data as unknown as CourseJoinCode;
 };
 
