@@ -4,19 +4,23 @@ from .event import Event
 
 
 class PendingShareEvent(models.Model):
-    # The person that sent the event
+    """
+    Model to store pending event shares between users.
+    Allows for the tracking of event shares, enabling collaboration and sharing of events between users.
+    """
+
     sender = models.ForeignKey(
         settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="sent"
     )
-    # This user can accept or reject this event
+    
     receiver = models.ForeignKey(
         settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="received"
     )
-    # The actual event being shared
+    
     event = models.ForeignKey(
         Event, on_delete=models.CASCADE, related_name="shared_Events"
     )
 
-    # Ensures that only 1 of the same event can be shared to each user (you can't send 100x events to someone etc)
+    # Ensures only 1 of the same event can be shared to each user.
     class Meta:
         unique_together = ("sender", "receiver", "event")

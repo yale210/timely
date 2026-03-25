@@ -51,7 +51,9 @@ class Friendship(models.Model):
     @classmethod
     def send_request(cls, sender, receiver):
         """
-        Send a friend request from a sender
+        Send a friend request from a sender to a receiver.
+        If a request already exists, it becomes SENT if it was previously declined.
+        Otherwise, an error is raised if the users are already friends or a request is pending.
         """
         if sender == receiver:
             raise ValidationError("A user cannot friend themselves.")
