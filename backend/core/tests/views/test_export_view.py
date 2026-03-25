@@ -51,6 +51,7 @@ class ExportViewTests(TestCase):
             location="Location Event 1",
             start_time=timezone.make_aware(datetime(2026, 3, 25, 20, 0)),
             end_time=timezone.make_aware(datetime(2026, 3, 25, 21, 0)),
+            last_edited=timezone.make_aware(datetime(2026, 2, 5, 12, 5, 48)),
         )
 
         response = self.client.get("/api/export/")
@@ -88,6 +89,7 @@ class ExportViewTests(TestCase):
             location="Location Event 1",
             start_time=timezone.make_aware(datetime(2026, 3, 25, 20, 0)),
             end_time=timezone.make_aware(datetime(2026, 3, 25, 21, 0)),
+            last_edited=timezone.make_aware(datetime(2026, 2, 5, 12, 5, 48)),
         )
 
         Event.objects.create(
@@ -97,6 +99,7 @@ class ExportViewTests(TestCase):
             location="Location Event 2",
             start_time=timezone.make_aware(datetime(2026, 4, 25, 20, 0)),
             end_time=timezone.make_aware(datetime(2026, 4, 25, 21, 0)),
+            last_edited=timezone.make_aware(datetime(2026, 2, 5, 12, 5, 48)),
         )
 
         response = self.client.get("/api/export/")
@@ -144,6 +147,7 @@ class ExportViewTests(TestCase):
             location="Location Event 1",
             start_time=timezone.make_aware(datetime(2026, 3, 25, 20, 0)),
             end_time=timezone.make_aware(datetime(2026, 3, 25, 21, 0)),
+            last_edited=timezone.make_aware(datetime(2026, 2, 5, 12, 5, 48)),
             recurrence_interval=Event.RecurrenceInterval.DAILY,
             recurrence_end=None,
         )
