@@ -2,6 +2,12 @@ import { useEffect, useState } from "react";
 import { getBroadcastHistory } from "@/api/notifications";
 import { type BroadcastJobSummary } from "@/types";
 
+const getHistoryFilters = (search: string, statusFilter: string, targetFilter: string) => ({
+  q: search || undefined,
+  status: statusFilter || undefined,
+  target: targetFilter || undefined,
+});
+
 /**
  * Hook to fetch admin notification broadcast history.
  * @param page - Current page.
@@ -22,27 +28,19 @@ export const useAdminHistoryFetch = (
   const [count, setCount] = useState(0);
 
   useEffect(() => {
-    const loadHistory = async () => {
-      try {
-        setLoading(true);
-        const data = await getBroadcastHistory({
-          page,
-          q: search || undefined,
-          status: statusFilter || undefined,
-          target: targetFilter || undefined,
-        });
+    void getBroadcastHistory({ page, ...getHistoryFilters(search, statusFilter, targetFilter) })
+      .then((data) => {
         setItems(data.results);
         setCount(data.count);
         setError(null);
-      } catch (err) {
-        console.error("Failed to load broadcast history", err);
+      })
+      .catch((error: unknown) => {
+        console.error("Failed to load broadcast history", error);
         setError("Failed to load broadcast history.");
-      } finally {
+      })
+      .finally(() => {
         setLoading(false);
-      }
-    };
-
-    void loadHistory();
+      });
   }, [page, search, statusFilter, targetFilter]);
 
   return { items, count, loading, error };
