@@ -152,6 +152,7 @@ def _update_scope_this(
     payload, final_reminders, final_category_ids = _scope_this_update_data(
         event, existing_override, validated_data, original_start_time
     )
+    # If the update results in no changes, remove any existing override.
     if scope_this_is_noop(
         event,
         payload,
@@ -198,6 +199,7 @@ def _update_scope_following(
         parent_reminders,
     )
     move_future_overrides(event, child, original_date)
+    # End the original series the day before the first edited occurrence.
     cutoff = original_date - timedelta(days=1)
     truncate_or_delete_parent_series(event, cutoff, past_exception_dates)
     return child

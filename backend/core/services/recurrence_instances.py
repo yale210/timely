@@ -208,6 +208,9 @@ def _build_occurrence_instance(
     category_cache: list[Any],
     reminder_cache: list[dict[str, Any]],
 ) -> tuple[ExpandedEventInstance | None, int | None]:
+    """
+    Show the override instance if an override exists for the occurrence.
+    """
     override = overrides_by_original.get(occurrence_start)
     if override is not None:
         return _build_override_occurrence(
@@ -253,6 +256,9 @@ def _collect_occurrence_instances(
     category_cache: list[Any],
     reminder_cache: list[dict[str, Any]],
 ) -> tuple[list[ExpandedEventInstance], set[int]]:
+    """
+    Keep track of overrides so that they are not readded later.
+    """
     instances: list[ExpandedEventInstance] = []
     seen_override_ids: set[int] = set()
     for occurrence_start in _generate_occurrence_starts(event, range_start, range_end):
