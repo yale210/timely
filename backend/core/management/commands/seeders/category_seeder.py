@@ -1,6 +1,5 @@
 """Category Seeder"""
 
-import random
 from core.models import Category
 from django.contrib.auth import get_user_model
 from core.management.commands.seeders.base import BaseSeeder
@@ -23,8 +22,6 @@ class CategorySeeder(BaseSeeder):
                 pass
 
     def _populate_random_category(self):
-        word = self.faker.word()
-        colour = self.faker.hex_color()
         User = get_user_model()
         # Shuffle users and get a random user.
         temporary_user = User.objects.order_by("?").first()
@@ -41,9 +38,8 @@ class CategorySeeder(BaseSeeder):
                 "pk": None,
                 "user": temporary_user,
                 "fields": {
-                    "text": word,
-                    "colour": colour,
-                    
+                    "text": self.faker.word(),
+                    "colour": self.faker.hex_color(),
                 },
             }
         )
@@ -54,5 +50,4 @@ class CategorySeeder(BaseSeeder):
             user=data["user"],
             text=data["fields"]["text"],
             colour=data["fields"].get("colour", None),
-            
         )

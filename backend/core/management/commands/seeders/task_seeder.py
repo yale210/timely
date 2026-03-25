@@ -88,6 +88,5 @@ class TaskSeeder(BaseSeeder):
                 user=user,
                 text=self.faker.word(),
                 colour=self.faker.hex_color(),
-            
             )
         return temporary_category

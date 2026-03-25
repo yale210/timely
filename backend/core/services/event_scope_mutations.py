@@ -225,7 +225,7 @@ def _normalise_all_scope_datetimes(
     Normalise updated start and end times for an event when applying changes across all occurrences.
     Adjusts the base event's start time according to the shift between the original occurence
     and the submitted occurrence, and preserves the event duration.
-    """ 
+    """
 
     if "start_time" not in validated_data and "end_time" not in validated_data:
         return validated_data
@@ -321,7 +321,7 @@ def _update_scope_all(
 ) -> Event:
     """
     Update an event by applying changes across all occurrences.
-    Recurring events normalise submitted start and end times, 
+    Recurring events normalise submitted start and end times,
     updates fields, and synchronises related overrides.
     """
     normalised_data = validated_data

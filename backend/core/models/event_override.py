@@ -9,6 +9,7 @@ class EventOverride(BaseEventModel):
     """
     Stores an override for a specific occurrence of a recurring event.
     """
+
     parent_event = models.ForeignKey(
         Event,
         on_delete=models.CASCADE,
