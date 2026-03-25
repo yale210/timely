@@ -17,6 +17,5 @@ urlpatterns = [
     path("logout/", LogoutAPIView.as_view(), name="logout"),
     path("logoutall/", LogoutAllAPIView.as_view(), name="logoutall"),
     path("test/", TestPermissionView.as_view(), name="test"),
-
     path("username/<int:user_id>/", UsernameView.as_view(), name="username-view"),
 ]

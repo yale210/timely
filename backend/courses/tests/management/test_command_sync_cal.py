@@ -20,7 +20,9 @@ class SyncCalCommandTests(TestCase):
             email="other@example.com",
         )
 
-    @patch("courses.management.commands.sync_cal.CourseEventSyncService.sync_user_course_events")
+    @patch(
+        "courses.management.commands.sync_cal.CourseEventSyncService.sync_user_course_events"
+    )
     def test_sync_cal_command_syncs_specific_user(self, mock_sync):
         mock_sync.return_value = {"created": 2, "updated": 1, "errors": []}
         out = StringIO()
@@ -32,7 +34,9 @@ class SyncCalCommandTests(TestCase):
         self.assertIn("Created=2", out.getvalue())
         self.assertIn("Updated=1", out.getvalue())
 
-    @patch("courses.management.commands.sync_cal.CourseEventSyncService.sync_user_course_events")
+    @patch(
+        "courses.management.commands.sync_cal.CourseEventSyncService.sync_user_course_events"
+    )
     def test_sync_cal_command_syncs_all_users_when_no_user_is_provided(self, mock_sync):
         mock_sync.side_effect = [
             {"created": 1, "updated": 0, "errors": []},

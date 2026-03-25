@@ -156,7 +156,10 @@ class CourseEventSyncServiceTests(TestCase):
         self.assertEqual(stats["errors"], [])
 
         existing_event.refresh_from_db()
-        self.assertEqual(existing_event.description, "Python Basics - Lesson 1'\nIntro lesson\nBy teacher")
+        self.assertEqual(
+            existing_event.description,
+            "Python Basics - Lesson 1'\nIntro lesson\nBy teacher",
+        )
         self.assertEqual(existing_event.end_time, self.course_event.end_time)
 
     def test_sync_user_course_events_skips_users_without_enrollments(self):
@@ -173,9 +176,7 @@ class CourseEventSyncServiceTests(TestCase):
             course=self.course, student=self.student, active=True
         )
 
-        with patch.object(
-            Event.objects, "get", side_effect=Exception("boom")
-        ):
+        with patch.object(Event.objects, "get", side_effect=Exception("boom")):
             stats = CourseEventSyncService.sync_course_event_to_core(self.course_event)
 
         self.assertEqual(stats["created"], 0)

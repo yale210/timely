@@ -98,7 +98,9 @@ class SyncCalendarTests(TestCase):
         self.assertEqual(stats["errors"], [])
 
         self.provider.update_event.assert_called_once()
-        called_user, called_event_id, called_data = self.provider.update_event.call_args.args
+        called_user, called_event_id, called_data = (
+            self.provider.update_event.call_args.args
+        )
         self.assertEqual(called_user, self.student_user)
         self.assertEqual(called_event_id, "external-1")
         self.assertEqual(called_data["title"], "Lesson 1")
@@ -207,7 +209,9 @@ class SyncCalendarTests(TestCase):
         )
 
         self.assertTrue(result)
-        self.provider.delete_event.assert_called_once_with(self.student_user, "external-1")
+        self.provider.delete_event.assert_called_once_with(
+            self.student_user, "external-1"
+        )
 
     def test_remove_calendar_event_returns_false_when_not_found(self):
         self.provider.get_events.return_value = []

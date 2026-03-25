@@ -3,7 +3,6 @@ from django.contrib.auth import get_user_model
 from django.core.management.base import BaseCommand
 from authentication.models import User
 
-import authentication
 from courses.services.event import CourseEventSyncService
 
 

@@ -56,7 +56,12 @@ class CalendarEventMapper:
         """
         return {
             "title": f"{course_event.title}",
-            "description": f"{course_event.course.name} + {course_event.title}" + "'\n" + (course_event.description or "") + "\n" + "By " + course_event.created_by.user.username,
+            "description": f"{course_event.course.name} + {course_event.title}"
+            + "'\n"
+            + (course_event.description or "")
+            + "\n"
+            + "By "
+            + course_event.created_by.user.username,
             "location": getattr(course_event, "location", ""),
         }
 
@@ -444,7 +449,14 @@ class CourseEventSyncService:
             for course_event in course_events:
                 try:
                     event_title = f"{course_event.course.name} - {course_event.title}"
-                    event_description = f"{course_event.course.name} - {course_event.title}" + "'\n" + (course_event.description or "") + "\n" + "By " + course_event.created_by.user.username
+                    event_description = (
+                        f"{course_event.course.name} - {course_event.title}"
+                        + "'\n"
+                        + (course_event.description or "")
+                        + "\n"
+                        + "By "
+                        + course_event.created_by.user.username
+                    )
                     # Check if event already exists
                     try:
                         core_event = Event.objects.get(
