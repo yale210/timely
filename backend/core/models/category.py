@@ -1,4 +1,4 @@
-from django.core.validators import RegexValidator
+from django.core.validators import RegexValidator, MinValueValidator, MaxValueValidator
 from django.db import models
 from django.conf import settings
 
@@ -27,6 +27,11 @@ class Category(models.Model):
                 message="Colour must be a hex code in the format #RRGGBB.",
             )
         ],
+    )
+    max_daily_study_time = models.PositiveSmallIntegerField(
+        validators=[MinValueValidator(0), MaxValueValidator(1440)],
+        null=True,
+        blank=True,
     )
     colour_override = models.BooleanField(default=False)
 
