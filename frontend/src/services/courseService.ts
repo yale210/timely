@@ -313,7 +313,7 @@ export const makeMyTeacherProfile = async (): Promise<void> => {
  * This asynchronous function sends a POST request to the server to remove
  * the teacher's profile. It does not take any arguments and returns a Promise
  * that resolves once the operation is complete.
- * @returns {Promise<void>} A Promise that resolves when the teacher profile has been successfully unregistered.
+ * @returns A Promise that resolves when the teacher profile has been successfully unregistered.
  */
 export const unregisterMyTeacherProfile = async (): Promise<void> => {
   await api.post("/api/teachers/unregister_teacher/");

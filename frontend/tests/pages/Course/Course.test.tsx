@@ -2,7 +2,7 @@ import { beforeEach, afterEach, describe, expect, it, vi } from "vitest";
 import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import Courses from "@/pages/Course/Course";
-import * as courseService from "@/services/courseService";
+import type * as courseService from "@/services/courseService";
 
 const mockNavigate = vi.fn();
 const mockSetSearch = vi.fn();

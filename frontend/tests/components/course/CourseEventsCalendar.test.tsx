@@ -3,7 +3,7 @@ import { render, screen } from "@testing-library/react";
 import CourseEventsCalendar from "@/components/course/CourseEventsCalendar";
 
 vi.mock("react-big-calendar", () => ({
-  Calendar: ({ events }: { events: Array<{ title: string }> }) => (
+  Calendar: ({ events }: { events: { title: string }[] }) => (
     <div data-testid="calendar-mock">
       {events.map((event) => (
         <span key={event.title}>{event.title}</span>

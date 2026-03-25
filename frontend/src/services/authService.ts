@@ -101,7 +101,6 @@ export const authService = {
  * This function sends an asynchronous request to fetch the username of a user
  * based on the provided user ID. It communicates with an API endpoint to
  * obtain the username and returns it as a promise.
- *
  * @param userId - The unique identifier for the user whose username
  * is to be retrieved.
  * @returns A promise that resolves to the username of the
