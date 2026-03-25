@@ -11,13 +11,17 @@ vi.mock("@/pages/index", () => ({
   Logout: () => <div>Logout Page</div>,
   CalendarPage: () => <div>Calendar Page</div>,
   TaskList: () => <div>Task List Page</div>,
+  Assessments: () => <div>Assessments Page</div>,
   Gradebook: () => <div>Gradebook Page</div>,
   Dashboard: () => <div>Dashboard Page</div>,
   Settings: () => <div>Settings Page</div>,
   Friends: () => <div>Friends Page</div>,
+  Sharing: () => <div>Sharing Page</div>,
   ProfilePage: () => <div>Profile Page</div>,
   Leaderboard: () => <div>Leaderboard Page</div>,
+  Pomodoro: () => <div>Pomodoro Page</div>,
   NotFound: () => <div>Page not found</div>,
+  About: () => <div>About Page</div>,
 }));
 
 vi.mock("@/pages/Notification/Notifications", () => ({
@@ -123,6 +127,7 @@ describe("App Component", () => {
     expect(getByText("Logout Page")).toBeDefined();
   });
 
+  
   it("should render Calendar page", () => {
     const { getByText } = render(
       <MemoryRouter initialEntries={["/calendar"]}>
@@ -148,6 +153,33 @@ describe("App Component", () => {
       </MemoryRouter>
     );
     expect(getByText("Gradebook Page")).toBeDefined();
+  });
+
+  it("should render Assessments page", () => {
+    const { getByText } = render(
+      <MemoryRouter initialEntries={["/assessments"]}>
+        <App />
+      </MemoryRouter>
+    );
+    expect(getByText("Assessments Page")).toBeDefined();
+  });
+
+  it("should render Pomodoro page", () => {
+    const { getByText } = render(
+      <MemoryRouter initialEntries={["/pomodoro"]}>
+        <App />
+      </MemoryRouter>
+    );
+    expect(getByText("Pomodoro Page")).toBeDefined();
+  });
+
+  it("should render Sharing page", () => {
+    const { getByText } = render(
+      <MemoryRouter initialEntries={["/sharing"]}>
+        <App />
+      </MemoryRouter>
+    );
+    expect(getByText("Sharing Page")).toBeDefined();
   });
 
   it("should render Dashboard page", () => {
@@ -211,6 +243,15 @@ describe("App Component", () => {
       </MemoryRouter>
     );
     expect(getByText("Settings Page")).toBeDefined();
+  });
+
+  it("should render About page", () => {
+    const { getByText } = render(
+      <MemoryRouter initialEntries={["/about"]}>
+        <App />
+      </MemoryRouter>
+    );
+    expect(getByText("About Page")).toBeDefined();
   });
 
   it("should render 404 page for unknown routes", () => {

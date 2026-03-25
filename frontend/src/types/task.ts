@@ -45,6 +45,7 @@ export interface TaskUpdatedResponse extends Task {
   level_up?: boolean;
   new_level?: number;
   xp?: number;
+  reschedule_warning?: string;
 }
 
 /**

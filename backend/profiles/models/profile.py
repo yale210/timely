@@ -1,9 +1,12 @@
-from django.db import models
+"""Profile model definitions for user-facing profile data."""
 
 from django.conf import settings
+from django.db import models
 
 
 class Profile(models.Model):
+    """Store editable profile information and progression stats for a user."""
+
     user = models.OneToOneField(
         settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="user_profile"
     )
