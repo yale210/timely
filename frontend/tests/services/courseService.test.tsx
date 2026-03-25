@@ -1,16 +1,17 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { authStore } from "@/services/authService";
 
 const {
   mockGet,
   mockPost,
   mockPut,
   mockDelete,
+  mockGetUser,
 } = vi.hoisted(() => ({
   mockGet: vi.fn(),
   mockPost: vi.fn(),
   mockPut: vi.fn(),
   mockDelete: vi.fn(),
+  mockGetUser: vi.fn(),
 }));
 
 vi.mock("@/services/api", () => ({
@@ -24,7 +25,7 @@ vi.mock("@/services/api", () => ({
 
 vi.mock("@/services/authService", () => ({
   authStore: {
-    getUser: vi.fn(),
+    getUser: mockGetUser,
   },
 }));
 
@@ -35,7 +36,7 @@ describe("courseService", () => {
     vi.clearAllMocks();
     courseService.clearCoursePermissionsCache();
     vi.spyOn(Date, "now").mockReturnValue(1_000_000);
-    vi.mocked(authStore.getUser).mockReturnValue({ id: 7 } as never);
+    mockGetUser.mockReturnValue({ id: 7 } as never);
   });
 
   it("getCourses calls the courses list endpoint with params", async () => {

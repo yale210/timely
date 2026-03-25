@@ -45,6 +45,7 @@ describe("useCourses", () => {
   beforeEach(() => {
     vi.clearAllMocks();
 
+    // eslint-disable-next-line @typescript-eslint/unbound-method
     vi.mocked(authStore.getUser).mockReturnValue({
       id: 10,
       is_staff: false,

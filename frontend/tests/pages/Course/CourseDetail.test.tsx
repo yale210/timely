@@ -1,3 +1,6 @@
+import type * as ReactRouterDom from "react-router-dom";
+import type * as CourseService from "@/services/courseService";
+
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
@@ -17,8 +20,14 @@ const mockCourse = {
   students: [],
 };
 
+const {
+  mockGetUser,
+} = vi.hoisted(() => ({
+  mockGetUser: vi.fn(),
+}));
+
 vi.mock("react-router-dom", async () => {
-  const actual = await vi.importActual<typeof import("react-router-dom")>("react-router-dom");
+  const actual = await vi.importActual<typeof ReactRouterDom>("react-router-dom");
   return {
     ...actual,
     useNavigate: () => mockNavigate,
@@ -49,12 +58,12 @@ vi.mock("@/components/course/CourseEventsCalendar.tsx", () => ({
 
 vi.mock("@/services/authService", () => ({
   authStore: {
-    getUser: vi.fn(),
+    getUser: mockGetUser,
   },
 }));
 
 vi.mock("@/services/courseService", async () => {
-  const actual = await vi.importActual<typeof courseService>("@/services/courseService");
+  const actual = await vi.importActual<typeof CourseService>("@/services/courseService");
   return {
     ...actual,
     getCourse: vi.fn(),
@@ -71,7 +80,7 @@ describe("CourseDetail page", () => {
     vi.clearAllMocks();
     cleanup();
 
-    vi.mocked(authStore.getUser).mockReturnValue({
+    mockGetUser.mockReturnValue({
       id: 10,
       is_admin: false,
     } as never);
@@ -101,6 +110,7 @@ describe("CourseDetail page", () => {
   });
 
   it("shows the leave button for non-lead non-admin users", async () => {
+    // eslint-disable-next-line @typescript-eslint/unbound-method
     vi.mocked(authStore.getUser).mockReturnValue({
       id: 99,
       is_admin: false,
@@ -130,7 +140,8 @@ describe("CourseDetail page", () => {
     );
 
     expect(await screen.findByText("Invalid course.")).toBeTruthy();
-    expect(courseService.getCourse).not.toHaveBeenCalled();
+     
+    expect(vi.mocked(courseService.getCourse)).not.toHaveBeenCalled();
   });
 
   it("shows course not found when loading fails", async () => {
@@ -148,6 +159,7 @@ describe("CourseDetail page", () => {
   });
 
   it("navigates back when leaving the course succeeds", async () => {
+    // eslint-disable-next-line @typescript-eslint/unbound-method
     vi.mocked(authStore.getUser).mockReturnValue({
       id: 99,
       is_admin: false,
@@ -167,7 +179,8 @@ describe("CourseDetail page", () => {
     fireEvent.click(screen.getByRole("button", { name: "Leave course" }));
 
     await waitFor(() => {
-      expect(courseService.leaveCourse).toHaveBeenCalledWith(1);
+       
+      expect(vi.mocked(courseService.leaveCourse)).toHaveBeenCalledWith(1);
       expect(mockNavigate).toHaveBeenCalledWith("/courses", { replace: true });
     });
   });
