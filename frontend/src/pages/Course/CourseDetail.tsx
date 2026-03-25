@@ -3,7 +3,7 @@ import { Link, useParams } from "react-router-dom";
 import AppLayout from "@/layouts/AppLayout.tsx";
 import CourseEventsCalendar from "@/components/course/CourseEventsCalendar.tsx";
 import { authStore } from "@/services/authService";
-import * as courseService from "@/services/courseService.tsx";
+import * as courseService from "@/services/courseService";
 import type { Course } from "@/types/course.ts";
 import type { Event } from "@/types/event.ts";
 
@@ -66,12 +66,14 @@ export default function CourseDetail() {
     expires_at: "",
   });
 
+   const [leaveLoading, setLeaveLoading] = useState(false);
+  const [leaveError, setLeaveError] = useState<string | null>(null);
   const canEditCourse = useMemo(() => {
     if (!course) {
       return false;
     }
 
-    return course.lead === currentUser?.id || currentUser?.is_admin === true;
+    return course.lead == currentUser?.id?.toString() || currentUser?.is_admin === true;
   }, [course, currentUser?.is_admin, currentUser?.id]);
 
   const canAddCourseEvent = useMemo(() => {
@@ -79,7 +81,7 @@ export default function CourseDetail() {
       return false;
     }
 
-    return course.lead === currentUser?.id || currentUser?.is_admin === true;
+    return course.lead == currentUser?.id?.toString() || currentUser?.is_admin === true;
   }, [course, currentUser?.is_admin, currentUser?.id]);
 
   const canCreateJoinCode = useMemo(() => {
@@ -87,7 +89,7 @@ export default function CourseDetail() {
       return false;
     }
 
-    return course.lead === currentUser?.id || currentUser?.is_admin === true;
+    return course.lead == currentUser?.id?.toString() || currentUser?.is_admin === true;
   }, [course, currentUser?.is_admin, currentUser?.id]);
 
   const refreshEvents = async (courseId: number) => {
@@ -218,6 +220,23 @@ export default function CourseDetail() {
     }
   };
 
+   const handleLeaveCourse = async () => {
+    if (!course) return;
+
+    setLeaveError(null);
+    setLeaveLoading(true);
+
+    try {
+      await courseService.leaveCourse(course.id);
+      void navigate("/courses", { replace: true });
+    } catch (leaveCourseError) {
+      console.error(leaveCourseError);
+      setLeaveError("Unable to leave the course.");
+    } finally {
+      setLeaveLoading(false);
+    }
+  };
+
   return (
     <AppLayout>
       <main className="mx-auto w-full max-w-5xl px-6 py-6">
@@ -278,6 +297,17 @@ export default function CourseDetail() {
                       Edit course
                     </button>
                   )}
+                  {currentUser && (!canEditCourse && !currentUser.is_admin) && (
+                  <button
+                    type="button"
+                    onClick={() => void handleLeaveCourse()}
+                    disabled={leaveLoading}
+                    className="rounded-md border border-red-600 px-3 py-2 text-sm text-red-700 hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    {leaveLoading ? "Leaving..." : "Leave course"}
+                  </button>
+
+                    )}
                 </div>
               </div>
 
