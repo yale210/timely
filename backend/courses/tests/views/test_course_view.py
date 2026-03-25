@@ -423,6 +423,12 @@ class CourseViewTests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertTrue(Student.objects.filter(user=new_user).exists())
 
+    def test_join_rejects_inactive_course(self):
+        self.client.force_authenticate(user=self.student_user)
+        response = self.client.post(self.inactive_detail_url.replace("detail", "join"))
+        self.assertEqual(response.status_code, status.HTTP_405_METHOD_NOT_ALLOWED)
+
+
     def test_join_by_code_success(self):
         join_code = CourseJoinCode.objects.create(
             course=self.course,
@@ -443,6 +449,54 @@ class CourseViewTests(APITestCase):
                 course=self.course, student=self.student
             ).exists()
         )
+
+    def test_join_by_code_creates_student_profile_if_missing(self):
+        new_user = User.objects.create_user(
+            username="codejoiner",
+            password="password123",
+            email="codejoiner@example.com",
+        )
+        self.assertFalse(Student.objects.filter(user=new_user).exists())
+
+        CourseJoinCode.objects.create(
+            course=self.course,
+            code="CODEJOIN",
+            active=True,
+            expires_at=timezone.now() + datetime.timedelta(days=1),
+        )
+
+        self.client.force_authenticate(user=new_user)
+        response = self.client.post(
+            self.join_by_code_url, {"code": "CODEJOIN"}, format="json"
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertTrue(Student.objects.filter(user=new_user).exists())
+        self.assertTrue(
+            CourseEnrollment.objects.filter(
+                course=self.course, student__user=new_user, active=True
+            ).exists()
+        )
+
+    def test_join_by_code_reactivates_inactive_enrollment(self):
+        CourseJoinCode.objects.create(
+            course=self.course,
+            code="REJOIN",
+            active=True,
+            expires_at=timezone.now() + datetime.timedelta(days=1),
+        )
+        enrollment = CourseEnrollment.objects.create(
+            course=self.course, student=self.student, active=False
+        )
+
+        self.client.force_authenticate(user=self.student_user)
+        response = self.client.post(
+            self.join_by_code_url, {"code": "REJOIN"}, format="json"
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        enrollment.refresh_from_db()
+        self.assertTrue(enrollment.active)
 
     def test_join_by_code_invalid_code_returns_400(self):
         self.client.force_authenticate(user=self.student_user)

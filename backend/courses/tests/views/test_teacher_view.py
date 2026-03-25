@@ -41,6 +41,7 @@ class CourseViewTests(APITestCase):
 
         self.url = reverse("teacher-list")
         self.create_url = reverse("teacher-create-teacher")
+        self.unregister_url = reverse("teacher-unregister-teacher")
 
     # ... existing tests ...
 
@@ -133,3 +134,34 @@ class CourseViewTests(APITestCase):
         self.assertIn("user_id", item)
         self.assertIn("username", item)
         self.assertIn("active", item)
+
+    def test_unregister_teacher_requires_authentication(self):
+        response = self.client.post(self.unregister_url)
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+    def test_unregister_teacher_returns_404_for_non_teacher_user(self):
+        self.client.force_authenticate(user=self.regular_user)
+        response = self.client.post(self.unregister_url)
+
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+        self.assertIn("not registered", response.data["detail"])
+
+    def test_unregister_teacher_deactivates_active_teacher(self):
+        self.client.force_authenticate(user=self.teacher_user)
+        response = self.client.post(self.unregister_url)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.teacher.refresh_from_db()
+        self.assertFalse(self.teacher.active)
+        self.assertFalse(response.data["active"])
+        self.assertEqual(response.data["user_id"], self.teacher_user.id)
+
+    def test_unregister_teacher_returns_200_when_already_inactive(self):
+        self.client.force_authenticate(user=self.inactive_teacher_user)
+        response = self.client.post(self.unregister_url)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.inactive_teacher.refresh_from_db()
+        self.assertFalse(self.inactive_teacher.active)
+        self.assertFalse(response.data["active"])
+        self.assertEqual(response.data["user_id"], self.inactive_teacher_user.id)
