@@ -95,3 +95,23 @@ export const authService = {
     }
   },
 }
+/**
+ * Retrieves the username associated with a specific user ID.
+ *
+ * This function sends an asynchronous request to fetch the username of a user
+ * based on the provided user ID. It communicates with an API endpoint to
+ * obtain the username and returns it as a promise.
+ *
+ * @param userId - The unique identifier for the user whose username
+ * is to be retrieved.
+ * @returns A promise that resolves to the username of the
+ * specified user.
+ * @throws {Error} error if the API request fails or if the user ID is invalid.
+ */
+export const getUsernameById = async (userId: number): Promise<string> => {
+  const response = await api.get<{ id: number; username: string }>(
+    `/api/authentication/username/${userId}/`,
+  );
+
+  return response.data.username;
+};
