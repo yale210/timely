@@ -10,18 +10,21 @@ interface CoursesHeaderProps {
   onManageCourses: () => void;
 }
 
+
 /**
- *
- * @param root0
- * @param root0.search
- * @param root0.joinCourseId
- * @param root0.onSearchChange
- * @param root0.onJoinCourseIdChange
- * @param root0.onJoinCourse
- * @param root0.onRefresh
- * @param root0.onCreateCourse
- * @param root0.onManageCourses
- * @param root0.isTeacher
+ * Renders the header component for the courses page, providing UI elements for search, course joining,
+ * and other course management functionalities.
+ * @param props - The properties object.
+ * @param props.search - The current value of the search input.
+ * @param props.joinCourseId - The current value of the course ID input for joining a course.
+ * @param props.onSearchChange - Callback triggered when the search input value changes.
+ * @param props.onJoinCourseIdChange - Callback triggered when the course ID input value changes.
+ * @param props.onJoinCourse - Callback triggered when the user attempts to join a course.
+ * @param props.onRefresh - Callback triggered when the user refreshes the course list.
+ * @param props.onCreateCourse - Callback triggered when the user clicks to create a new course (only visible for teachers).
+ * @param props.onManageCourses - Callback triggered when the user manages courses (only visible for teachers).
+ * @param props.isTeacher - Indicates whether the current user is a teacher, affecting which actions are available.
+ * @returns The rendered CoursesHeader component.
  */
 export default function CoursesHeader({
   search,
@@ -33,7 +36,7 @@ export default function CoursesHeader({
     onCreateCourse,
     onManageCourses,
                                         isTeacher,
-}: CoursesHeaderProps) {
+}: CoursesHeaderProps): JSX.Element {
   return (
     <header className="bg-white border-b border-gray-200">
       <div className="px-6 py-4 flex flex-col gap-4">

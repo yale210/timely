@@ -59,11 +59,6 @@ class TeacherView(ViewSet):
         serializer.is_valid(raise_exception=True)
 
         user = User.objects.get(id=serializer.validated_data["user_id"])
-        print(
-            serializer.validated_data["user_id"],
-            request.user.id,
-            request.user.is_superuser,
-        )
         if (
             serializer.validated_data["user_id"] != request.user.id
             and not request.user.is_superuser

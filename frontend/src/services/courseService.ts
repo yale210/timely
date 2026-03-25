@@ -2,7 +2,7 @@ import api from "@/services/api";
 import type {
   CachedPermissionsEntry,
   Course,
-  CourseCreation,
+  CourseCreation, CourseJoinCode,
   CoursePermissions,
   CourseStaff,
   CourseStudent,
@@ -110,7 +110,7 @@ export const createCourse = async (data: CourseCreation): Promise<Course> => {
  * @param [options] - Optional configuration for the request.
  * @param  [options.forceRefresh] - If true, bypasses the cache and fetches fresh permissions.
  * @returns } A promise that resolves to the permissions data for the specified course.
- * @throws  If no authenticated user is available or if an error occurs during the fetch operation.
+ * @throws {Error} If no authenticated user is available or if an error occurs during the fetch operation.
  */
 export const getCoursePermissions = async (
     id: number | null | undefined,
@@ -177,10 +177,9 @@ export const deleteCourse = async (id: number): Promise<void> => {
 
 /**
  * Joins the course with the specified code by making an API call and updates relevant permissions cache.
- * @param id - The unique join code of the course to join.
- * @param code
+ * @param code - The unique join code of the course to join.
  * @returns A promise that resolves to the joined course data.
- * @throws {Erorr} If the API call fails or the response data is invalid.
+ * @throws {Error} If the API call fails or the response data is invalid.
  */
 export const joinCourse = async (code: string): Promise<Course> => {
   const response = await api.post<Course>(`/api/courses/join-by-code/`, {"code": code});
@@ -227,12 +226,15 @@ export const getCourseEvents = async (id: number): Promise<Event[]> => {
  * @returns A promise that resolves to the response data from the server.
  * @throws {Error} - Throws an error if the request fails.
  */
-export const createCourseEvent = async (id: number, data: unknown) => {
-  const response = await api.post(`/api/courses/${id}/events/`, data);
-  const currentUserId = getCurrentUserId();
-  if (currentUserId !== null) clearCoursePermissionsCache(id, currentUserId);
-  return response.data;
-};
+    export const createCourseEvent = async (id: number, data: unknown): Promise<Event> => {
+      const response = await api.post<Event>(`/api/courses/${id}/events/`, data);
+      const currentUserId = getCurrentUserId();
+      if (currentUserId !== null) {
+        clearCoursePermissionsCache(id, currentUserId);
+      }
+      return response.data;
+    };
+
 
 /**
  * Fetches the list of students enrolled in a specific course.
@@ -281,20 +283,25 @@ export const getCurrentTeacher = async (): Promise<Teacher> => {
  * - The join code is created by making a POST request to the API endpoint associated with the specified course ID.
  * - If a user is currently logged in, the course permission cache for the current user will be cleared to ensure permissions remain consistent.
  */
-export const createJoinCode = async (id: number, data: { expires_at: string | null }): Promise<string> => {
+export const createJoinCode = async (id: number, data: { expires_at: string | null }): Promise<CourseJoinCode> => {
   const response = await api.post<string>(`/api/courses/${id}/join-code/`, data);
   const currentUserId = getCurrentUserId();
   if (currentUserId !== null) clearCoursePermissionsCache(id, currentUserId);
   return response.data;
 };
 
+
 /**
+ * Asynchronously creates a teacher profile for the currently authenticated user.
  *
+ * This function sends a POST request to the server to create a teacher profile
+ * associated with the logged-in user's ID. It utilizes the `api.post` method
+ * to communicate with the backend and retrieve a response after the profile is created.
+ * @function
+ * @returns A promise that resolves once the teacher profile creation request is completed.
+ * @throws {Error} Throws an error if the API call fails or the server responds with an error.
  */
-export const /**
-              *
-              */
-makeMyTeacherProfile = async (): Promise<void> => {
+export const makeMyTeacherProfile = async (): Promise<void> => {
   await api.post("/api/teachers/create_teacher/", {
     "user_id": getCurrentUserId()
   });

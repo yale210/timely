@@ -1,12 +1,14 @@
 import {useCallback, useEffect, useMemo, useState} from "react";
 import * as courseService from "@/services/courseService";
-import type {Course, CourseCreation, CourseUpdate} from "@/types/course";
+import type {Course, CourseCreation, CourseStaff, CourseUpdate} from "@/types/course";
 import {authStore} from "@/services/authService.ts";
+import {createCourse, deleteCourse, getStaff, joinCourse, leaveCourse, updateCourse} from "@/services/courseService";
 
 interface UseCoursesState {
   courses: Course[];
   selectedCourse: Course | null;
   search: string;
+  staff:  CourseStaff[] | null;
 }
 
 interface UseCoursesActions {
@@ -18,6 +20,7 @@ interface UseCoursesActions {
   deleteCourse: (id: number) => Promise<void>;
   joinCourse: (id: string) => Promise<Course | null>;
   leaveCourse: (id: number) => Promise<Course | null>;
+  getStaff: (courseId: number) => Promise<CourseStaff[]>;
 }
 
 interface UseCoursesReturn {
@@ -26,6 +29,7 @@ interface UseCoursesReturn {
   loading: boolean;
   error: string | null;
   actions: UseCoursesActions;
+  managedFilteredCourses: Course[];
 }
 
 /**
@@ -37,7 +41,7 @@ export const useCourses = (): UseCoursesReturn => {
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [staff, setStaff] = useState<string | null>(null);
+  const [staff, setStaff] = useState<CourseStaff[] | null>(null);
   const refresh = useCallback(async () => {
     setLoading(true);
     try {
@@ -105,9 +109,10 @@ export const useCourses = (): UseCoursesReturn => {
     }
   }, []);
 
-  const joinCourse = useCallback(async (id: number) => {
+  const joinCourse = useCallback(async (joinCode: string) => {
     try {
-      const updated = await courseService.joinCourse(id);
+      const updated = await courseService.joinCourse(joinCode);
+      const id = updated.id;
       setCourses((prev) => prev.map((course) => (course.id === id ? updated : course)));
       setSelectedCourse((prev) => (prev?.id === id ? updated : prev));
       return updated;
@@ -156,7 +161,7 @@ export const useCourses = (): UseCoursesReturn => {
   }, [courses,search]);
 
  return {
-    state: {
+   state: {
       courses,
       selectedCourse,
       search,
@@ -176,6 +181,6 @@ export const useCourses = (): UseCoursesReturn => {
       joinCourse,
       leaveCourse,
       getStaff,
-    },
-  };
+    }
+ };
 };

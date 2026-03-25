@@ -140,7 +140,7 @@ export default function CourseManagement()
               />
               <button
                 type="button"
-                onClick={createCourse}
+                onClick={void createCourse}
                 className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700 transition-colors"
               >
                 + New Course
@@ -172,7 +172,7 @@ export default function CourseManagement()
               </p>
               <button
                 type="button"
-                onClick={createCourse}
+                onClick={void createCourse}
                 className="mt-4 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700"
               >
                 Create Course
@@ -275,7 +275,7 @@ export default function CourseManagement()
             className="absolute inset-0 bg-black/40"
           />
           <div className="relative z-10 w-full max-w-md rounded-xl bg-white p-6 shadow-2xl">
-            <button onClick={createCourse} className="text-lg font-semibold text-gray-900">Createee New Course</button>
+            <button onClick={void createCourse} className="text-lg font-semibold text-gray-900">Createee New Course</button>
             <p className="mt-1 text-sm text-gray-500">
               Fill in the details for your new course.
             </p>
@@ -472,7 +472,6 @@ export default function CourseManagement()
                   {students.map((student) => (
                     <li key={student.id} className="px-4 py-3">
                       <div className="font-medium text-gray-900">{student.username}</div>
-                      <div className="text-sm text-gray-500">{student.email || "No email"}</div>
                     </li>
                   ))}
                 </ul>

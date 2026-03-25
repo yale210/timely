@@ -14,12 +14,13 @@ interface CourseEventsDrawerProps {
 }
 
 /**
- *
- * @param root0
- * @param root0.courseName
- * @param root0.events
- * @param root0.loading
- * @param root0.onClose
+ * Renders a drawer component that displays calendar events for a course.
+ * @param props - Properties passed to the component.
+ * @param props.courseName - The name of the course.
+ * @param props.events - An array of event objects to be displayed on the calendar. Each event object should include details such as title, start_time, and end_time.
+ * @param props.loading - Indicates whether the event data is currently being loaded.
+ * @param props.onClose - A callback function invoked when the drawer or its backdrop is closed.
+ * @returns The rendered component for the course events drawer.
  */
 export default function CourseEventsDrawer({
   courseName,

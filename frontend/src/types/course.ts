@@ -13,6 +13,17 @@ export interface Course {
 }
 
 /**
+ *
+ */
+export interface CourseJoinCode{
+  id: number;
+  code: string;
+  expires_at: string | null;
+  active: boolean;
+  created_at: string;
+}
+
+/**
  * Data required to create a course
  */
 export interface CourseCreation {

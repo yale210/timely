@@ -10,8 +10,10 @@ interface UseCoursePermissionsResult {
 };
 
 /**
- *
- * @param courseId
+ * Fetches and manages the permissions associated with a specific course. Provides state for permissions, loading status,
+ * error messages, and a method to refresh the permissions data.
+ * @param courseId - The ID of the course for which permissions are being fetched. If null or undefined, no permissions data is fetched.
+ * @returns An object containing the course permissions, loading state, error message, and a method to refresh the data.
  */
 export function useCoursePermissions(courseId?: number | null): UseCoursePermissionsResult {
   const [permissions, setPermissions] = useState<CoursePermissions | null>(null);

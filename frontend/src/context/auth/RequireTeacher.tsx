@@ -7,8 +7,8 @@ import {authStore} from "@/services/authService.ts";
  * Route guard that restricts access to teachers.
  * Unauthenticated visitors are sent to /login.
  * Non-teachers are redirected to /courses.
- * @param props
- * @param props.children
+ * @param props props
+ * @param props.children children components to render if user is a teacher
  */
 export default function RequireTeacher(props: { children: ReactNode }) {
   const { children } = props;

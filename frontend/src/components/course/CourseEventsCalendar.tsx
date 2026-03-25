@@ -26,13 +26,15 @@ function getEventStyle(event: Event) {
   };
 }
 
+
 /**
- *
- * @param root0
- * @param root0.courseName
- * @param root0.events
- * @param root0.onClose
- * @param root0.inline
+ * Renders a course events calendar either inline or in a modal depending on the `inline` flag.
+ * @param props - The properties passed to the component.
+ * @param props.courseName - The name of the course displayed in the calendar header.
+ * @param props.events - The list of events to display. Each event object should contain `title`, `start_time`, and `end_time`.
+ * @param [props.onClose] - An optional callback function invoked when the modal is closed (only applicable when `inline` is false).
+ * @param [props.inline] - A flag indicating whether the calendar should be rendered inline or as a modal.
+ * @returns The rendered calendar component.
  */
 export default function CourseEventsCalendar({
   courseName,

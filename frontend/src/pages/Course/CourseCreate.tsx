@@ -1,28 +1,28 @@
-import { useEffect, useState } from "react";
-import {Navigate, useNavigate} from "react-router-dom";
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import AppLayout from "@/layouts/AppLayout.tsx";
 import * as courseService from "@/services/courseService.ts";
 import { useTeacher } from "@/hooks/course/useTeacher.tsx";
-import {authStore} from "@/services/authService.ts";
 
 /**
- *
+ * Component for creating a new course. It includes form fields for the course name
+ * and description and handles course creation functionality by interacting with
+ * a course service.
+ * @returns The rendered CourseCreate component containing a form for
+ * creating courses and user feedback/error handling.
  */
 export default function CourseCreate() {
   const navigate = useNavigate();
-  const { teacher, loading: teacherLoading, error: teacherError } = useTeacher();
+  const { loading: teacherLoading, error: teacherError } = useTeacher();
+
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
 
-
-  const canAccess = true;
-  useEffect(() => {
-    if (!teacherLoading && !canAccess) {
-         navigate("/courses", { replace: true });
-    }
-  }, [canAccess, teacherLoading, navigate]);
+  const handleCancel = () => {
+    void navigate("/courses");
+  };
 
   const handleCreate = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -30,7 +30,10 @@ export default function CourseCreate() {
     setSaving(true);
 
     try {
-      const course = await courseService.createCourse({ name, description });
+      const course = await courseService.createCourse({
+        name: name.trim(),
+        description,
+      });
       void navigate(`/courses/${course.id}`);
     } catch (createError) {
       console.error(createError);
@@ -39,8 +42,6 @@ export default function CourseCreate() {
       setSaving(false);
     }
   };
-
-
 
   return (
     <AppLayout>
@@ -62,7 +63,7 @@ export default function CourseCreate() {
           </div>
         )}
 
-        <form onSubmit={ handleCreate} className="mt-6 space-y-4">
+        <form onSubmit={void handleCreate} className="mt-6 space-y-4">
           <div>
             <label className="mb-1 block text-sm font-medium text-gray-700">
               Course name
@@ -74,6 +75,7 @@ export default function CourseCreate() {
               className="w-full rounded-md border border-gray-300 px-3 py-2 outline-none focus:border-indigo-500"
               placeholder="e.g. Introduction to Python"
               required
+              disabled={teacherLoading || saving}
             />
           </div>
 
@@ -86,13 +88,14 @@ export default function CourseCreate() {
               onChange={(e) => setDescription(e.target.value)}
               className="min-h-32 w-full rounded-md border border-gray-300 px-3 py-2 outline-none focus:border-indigo-500"
               placeholder="Write a short course description..."
+              disabled={teacherLoading || saving}
             />
           </div>
 
           <div className="flex items-center gap-3">
             <button
               type="submit"
-              disabled={saving}
+              disabled={teacherLoading || saving}
               className="rounded-md bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-60"
             >
               {saving ? "Creating..." : "Create course"}
@@ -100,8 +103,9 @@ export default function CourseCreate() {
 
             <button
               type="button"
-              onClick={() =>  navigate("/courses")}
-              className="rounded-md border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+              onClick={handleCancel}
+              disabled={saving}
+              className="rounded-md border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-60"
             >
               Cancel
             </button>

@@ -84,6 +84,24 @@ const SettingsContent = ({
     window.dispatchEvent(new Event("feature-flags-changed"));
   };
 
+  const makeTeacher= async ()=> {
+                      if (makingTeacher) return;
+
+                      setMakeTeacherError(null);
+                      setMakeTeacherSuccess(null);
+                      setMakingTeacher(true);
+
+                      try {
+                        await makeMyTeacherProfile();
+                        setMakeTeacherSuccess("You are now registered as a teacher.");
+                      } catch (error: unknown) {
+                        console.error("Failed to create teacher profile:", error);
+                        setMakeTeacherError("Unable to make you a teacher.");
+                      } finally {
+                        setMakingTeacher(false);
+                      }
+                    }
+
   const profileState = useProfileSettings(state.activeSection === "profile");
   const isWideSection = state.activeSection === "appearance";
   const categoryLimitMaxMinutes = useMemo(
@@ -197,21 +215,7 @@ const SettingsContent = ({
 
                   <button
                     type="button"
-                    onClick={async () => {
-                      setMakeTeacherError(null);
-                      setMakeTeacherSuccess(null);
-                      setMakingTeacher(true);
-
-                      try {
-                         await makeMyTeacherProfile();
-                        setMakeTeacherSuccess("You are now registered as a teacher.");
-                      } catch (teacherError) {
-                        console.error(teacherError);
-                        setMakeTeacherError("Unable to make you a teacher.");
-                      } finally {
-                        setMakingTeacher(false);
-                      }
-                    }}
+                    onClick={void makeTeacher()}
                     disabled={makingTeacher}
                     className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-50"
                   >

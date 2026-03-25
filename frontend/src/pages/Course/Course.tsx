@@ -10,7 +10,7 @@ import { useCoursePermissions } from "@/hooks/course/useCoursePermissions.tsx";
 import * as courseService from "@/services/courseService";
 import type { Course } from "@/types/course.ts";
 import type { Event } from "@/types/event.ts";
-import {useTeacher} from "@/hooks/course/useTeacher.tsx";
+import { useTeacher } from "@/hooks/course/useTeacher.tsx";
 
 function CourseCardWithPermissions({
   course,
@@ -35,7 +35,9 @@ function CourseCardWithPermissions({
  */
 export default function Courses() {
   const navigate = useNavigate();
+  const { isTeacher } = useTeacher();
   const { state, filteredCourses, loading, error, actions } = useCourses();
+
   const [selectedCourse, setSelectedCourse] = useState<Course | null>(null);
   const [courseEvents, setCourseEvents] = useState<Event[]>([]);
   const [eventsLoading, setEventsLoading] = useState(false);
@@ -64,8 +66,12 @@ export default function Courses() {
     void loadCourseEvents();
   }, [selectedCourse]);
 
- const handleJoinCourse = async () => {
+  const clearJoinError = () => {
     setJoinError(null);
+  };
+
+  const handleJoinCourse = async () => {
+    clearJoinError();
 
     const courseId = joinCourseId.trim();
     if (!courseId) {
@@ -75,18 +81,18 @@ export default function Courses() {
 
     try {
       const joinedCourse = await actions.joinCourse(courseId);
-      if (joinedCourse) {
-        setJoinCourseId("");
-        await actions.refresh();
-      } else {
+      if (!joinedCourse) {
         setJoinError("Unable to join that course.");
+        return;
       }
+
+      setJoinCourseId("");
+      await actions.refresh();
     } catch (joinCourseError) {
       console.error(joinCourseError);
       setJoinError("Unable to join that course.");
     }
   };
-
 
   return (
     <AppLayout>
@@ -97,12 +103,12 @@ export default function Courses() {
         onJoinCourseIdChange={(value) => {
           setJoinCourseId(value);
           if (joinError) {
-            setJoinError(null);
+            clearJoinError();
           }
         }}
         onJoinCourse={() => void handleJoinCourse()}
         onRefresh={() => void actions.refresh()}
-        isTeacher={useTeacher().isTeacher}
+        isTeacher={isTeacher}
         onManageCourses={() => void navigate("/courses/manage")}
         onCreateCourse={() => void navigate("/course/create")}
       />
@@ -133,7 +139,7 @@ export default function Courses() {
               course={course}
               onView={(courseToOpen) => {
                 setSelectedCourse(courseToOpen);
-                navigate(`/courses/${courseToOpen.id}`);
+                void navigate(`/courses/${courseToOpen.id}`);
               }}
             />
           ))}

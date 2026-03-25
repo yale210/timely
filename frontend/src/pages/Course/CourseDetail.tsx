@@ -67,25 +67,10 @@ export default function CourseDetail() {
     expires_at: "",
   });
 
-   const [leaveLoading, setLeaveLoading] = useState(false);
+  const [leaveLoading, setLeaveLoading] = useState(false);
   const [leaveError, setLeaveError] = useState<string | null>(null);
-  const canEditCourse = useMemo(() => {
-    if (!course) {
-      return false;
-    }
 
-    return course.lead == currentUser?.id?.toString() || currentUser?.is_admin === true;
-  }, [course, currentUser?.is_admin, currentUser?.id]);
-
-  const canAddCourseEvent = useMemo(() => {
-    if (!course) {
-      return false;
-    }
-
-    return course.lead == currentUser?.id?.toString() || currentUser?.is_admin === true;
-  }, [course, currentUser?.is_admin, currentUser?.id]);
-
-  const canCreateJoinCode = useMemo(() => {
+  const canManageCourse = useMemo(() => {
     if (!course) {
       return false;
     }
@@ -111,8 +96,24 @@ export default function CourseDetail() {
     return Number.isNaN(parsed.getTime()) ? value : parsed.toISOString();
   };
 
+  const openEditModal = () => {
+    setEditError(null);
+    setEditOpen(true);
+  };
+
+  const openEventModal = () => {
+    setEventError(null);
+    setEventOpen(true);
+  };
+
+  const openJoinCodeModal = () => {
+    setJoinCodeError(null);
+    setJoinCodeOpen(true);
+  };
+
   useEffect(() => {
     const courseId = Number(id);
+
     if (!Number.isInteger(courseId) || courseId <= 0) {
       setError("Invalid course.");
       setLoading(false);
@@ -210,6 +211,7 @@ export default function CourseDetail() {
       const result = await courseService.createJoinCode(course.id, {
         expires_at: joinCodeForm.expires_at ? toIsoString(joinCodeForm.expires_at) : null,
       });
+
       setJoinCodeResult(result.code);
       setJoinCodeOpen(false);
       setJoinCodeForm({ expires_at: "" });
@@ -221,7 +223,7 @@ export default function CourseDetail() {
     }
   };
 
-   const handleLeaveCourse = async () => {
+  const handleLeaveCourse = async () => {
     if (!course) return;
 
     setLeaveError(null);
@@ -249,6 +251,11 @@ export default function CourseDetail() {
 
         {loading && <p className="text-sm text-gray-500">Loading course...</p>}
         {error && <div className="rounded-md bg-red-50 px-4 py-3 text-sm text-red-700">{error}</div>}
+        {leaveError && (
+          <div className="mt-4 rounded-md bg-red-50 px-4 py-3 text-sm text-red-700">
+            {leaveError}
+          </div>
+        )}
 
         {course && !error && (
           <div className="space-y-6">
@@ -260,55 +267,45 @@ export default function CourseDetail() {
                 </div>
 
                 <div className="flex flex-wrap gap-3">
-                  {canCreateJoinCode && (
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setJoinCodeError(null);
-                        setJoinCodeOpen(true);
-                      }}
-                      className="rounded-md border border-emerald-600 px-3 py-2 text-sm text-emerald-700 hover:bg-emerald-50"
-                    >
-                      Create join code
-                    </button>
-                  )}
+                  {canManageCourse ? (
+                    <>
+                      <button
+                        type="button"
+                        onClick={openJoinCodeModal}
+                        className="rounded-md border border-emerald-600 px-3 py-2 text-sm text-emerald-700 hover:bg-emerald-50"
+                      >
+                        Create join code
+                      </button>
 
-                  {canAddCourseEvent && (
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setEventError(null);
-                        setEventOpen(true);
-                      }}
-                      className="rounded-md border border-indigo-600 px-3 py-2 text-sm text-indigo-700 hover:bg-indigo-50"
-                    >
-                      Add event
-                    </button>
-                  )}
+                      <button
+                        type="button"
+                        onClick={openEventModal}
+                        className="rounded-md border border-indigo-600 px-3 py-2 text-sm text-indigo-700 hover:bg-indigo-50"
+                      >
+                        Add event
+                      </button>
 
-                  {canEditCourse && (
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setEditError(null);
-                        setEditOpen(true);
-                      }}
-                      className="rounded-md border border-gray-300 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50"
-                    >
-                      Edit course
-                    </button>
+                      <button
+                        type="button"
+                        onClick={openEditModal}
+                        className="rounded-md border border-gray-300 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50"
+                      >
+                        Edit course
+                      </button>
+                    </>
+                  ) : (
+                    currentUser &&
+                    !currentUser.is_admin && (
+                      <button
+                        type="button"
+                        onClick={() => void handleLeaveCourse()}
+                        disabled={leaveLoading}
+                        className="rounded-md border border-red-600 px-3 py-2 text-sm text-red-700 hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-50"
+                      >
+                        {leaveLoading ? "Leaving..." : "Leave course"}
+                      </button>
+                    )
                   )}
-                  {currentUser && (!canEditCourse && !currentUser.is_admin) && (
-                  <button
-                    type="button"
-                    onClick={() => void handleLeaveCourse()}
-                    disabled={leaveLoading}
-                    className="rounded-md border border-red-600 px-3 py-2 text-sm text-red-700 hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-50"
-                  >
-                    {leaveLoading ? "Leaving..." : "Leave course"}
-                  </button>
-
-                    )}
                 </div>
               </div>
 

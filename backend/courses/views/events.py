@@ -9,7 +9,7 @@ from courses.views.base import CourseViewSetBase
 
 
 class CourseEventsMixin(CourseViewSetBase):
-    @action(detail=True, methods=["get", "post"], url_path="")
+    @action(detail=True, methods=["get", "post"])
     def events(self, request, pk=None):
         course = self.get_course(pk)
         self.check_object_permissions(request, course)
