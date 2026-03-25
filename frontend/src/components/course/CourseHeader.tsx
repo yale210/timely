@@ -47,15 +47,7 @@ export default function CoursesHeader({
           <p className="text-sm text-gray-500">Browse and manage available courses.</p>
         </div>
 
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-          <input
-            type="text"
-            value={search}
-            onChange={(event) => onSearchChange(event.target.value)}
-            className="block w-full sm:w-80 px-3 py-2 border border-gray-300 rounded-md bg-white text-black placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary text-sm"
-            placeholder="Search courses"
-          />
-
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
             <input
               type="text"
@@ -80,13 +72,13 @@ export default function CoursesHeader({
               Refresh
             </button>
             {isTeacher && (
-                <button
-              type="button"
-              onClick={onCreateCourse}
-              className="rounded-md  px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700 bg-primary"
-            >
-              Create course
-            </button>
+              <button
+                type="button"
+                onClick={onCreateCourse}
+                className="rounded-md  px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700 bg-primary"
+              >
+                Create course
+              </button>
             )}
             {isTeacher && (
               <button
@@ -98,6 +90,14 @@ export default function CoursesHeader({
               </button>
             )}
           </div>
+
+          <input
+            type="text"
+            value={search}
+            onChange={(event) => onSearchChange(event.target.value)}
+            className="block w-full sm:w-80 px-3 py-2 border border-gray-300 rounded-md bg-white text-black placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary text-sm"
+            placeholder="Search courses"
+          />
         </div>
       </div>
     </header>
