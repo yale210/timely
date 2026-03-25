@@ -392,6 +392,12 @@ const TaskForm = ({
   return (
     <form onSubmit={handleSubmit} className="flex flex-col h-full bg-white text-black">
       <div className="grow overflow-y-auto space-y-4 p-5">
+        {submitError ? (
+          <div className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+            {submitError}
+          </div>
+        ) : null}
+
         <div>
           <div className="flex items-center justify-between gap-4 mb-2">
             <label htmlFor="task-title" className="block text-sm font-medium text-gray-700">
@@ -806,12 +812,6 @@ const TaskForm = ({
             </p>
           ) : null}
         </div>
-
-        {submitError ? (
-          <div className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
-            {submitError}
-          </div>
-        ) : null}
 
       </div>
 

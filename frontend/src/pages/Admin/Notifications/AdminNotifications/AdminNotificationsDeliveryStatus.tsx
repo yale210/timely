@@ -13,6 +13,20 @@ interface AdminNotificationsDeliveryStatusProps {
   };
 }
 
+const renderDeliverySummary = (
+  deliveryStatus: BroadcastJobStatusResponse,
+  statusTone: string,
+  statusLabel: string,
+) => (
+  <div className="mt-4 space-y-2 text-sm">
+    <p className="text-gray-600">Broadcast ID: <span className="font-medium text-gray-800">{deliveryStatus.id}</span></p>
+    <p className={statusTone}>Status: <span className="font-semibold">{statusLabel}</span></p>
+    <p className="text-gray-600">Delivered: {deliveryStatus.delivered_count}/{deliveryStatus.recipient_count}</p>
+    <p className="text-gray-600">Failed: {deliveryStatus.failed_count}</p>
+    <p className="text-xs text-gray-500">Task ID: {deliveryStatus.task_id}</p>
+  </div>
+);
+
 /**
  * Renders the current broadcast delivery status panel.
  * @param props - Delivery state data.
@@ -25,33 +39,11 @@ export const AdminNotificationsDeliveryStatus = (props: AdminNotificationsDelive
     <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
       <div className="flex items-center justify-between">
         <h2 className="text-sm font-semibold text-gray-900">Delivery status</h2>
-        <Link
-          to="/admin/notifications/history"
-          className="inline-flex h-8 w-8 items-center justify-center rounded-md border border-gray-200 text-gray-500 hover:bg-gray-50 hover:text-indigo-600 transition-colors"
-          title="Notification history"
-          aria-label="Notification history"
-        >
+        <Link to="/admin/notifications/history" className="inline-flex h-8 w-8 items-center justify-center rounded-md border border-gray-200 text-gray-500 transition-colors hover:bg-gray-50 hover:text-indigo-600" title="Notification history" aria-label="Notification history">
           <ClockIcon className="h-5 w-5" />
         </Link>
       </div>
-      {deliveryStatus ? (
-        <div className="mt-4 space-y-2 text-sm">
-          <p className="text-gray-600">
-            Broadcast ID:{" "}
-            <span className="font-medium text-gray-800">{deliveryStatus.id}</span>
-          </p>
-          <p className={statusTone}>
-            Status: <span className="font-semibold">{statusLabel}</span>
-          </p>
-          <p className="text-gray-600">
-            Delivered: {deliveryStatus.delivered_count}/{deliveryStatus.recipient_count}
-          </p>
-          <p className="text-gray-600">Failed: {deliveryStatus.failed_count}</p>
-          <p className="text-xs text-gray-500">Task ID: {deliveryStatus.task_id}</p>
-        </div>
-      ) : (
-        <p className="mt-4 text-sm text-gray-500">No broadcasts queued yet.</p>
-      )}
+      {deliveryStatus ? renderDeliverySummary(deliveryStatus, statusTone, statusLabel) : <p className="mt-4 text-sm text-gray-500">No broadcasts queued yet.</p>}
     </div>
   );
 };

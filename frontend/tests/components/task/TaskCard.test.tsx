@@ -158,7 +158,7 @@ describe('TaskCard', () => {
             completed: false 
         }
         render(<TaskCard task={pastTask} onToggleComplete={vi.fn()} onClick={vi.fn()} />)
-        expect(screen.getByText(/Overdue/i)).toBeDefined()
+        expect(screen.getAllByText(/Overdue/i)).toHaveLength(2)
     })
 
     it('should show completed task with strikethrough', () => {

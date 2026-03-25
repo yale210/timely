@@ -10,6 +10,8 @@ class AdminUserListSerializer(serializers.ModelSerializer):
     """Serialize user data for the admin panel user list."""
 
     class Meta:
+        """Metadata for the AdminUserListSerializer."""
+
         model = User
         fields = [
             "id",

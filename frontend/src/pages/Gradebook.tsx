@@ -6,7 +6,6 @@ import AppLayout from "@/layouts/AppLayout"
 import {
   GradebookFilterCategories,
   GradebookHeader,
-  GradebookLayout,
   GradebookStatus,
   GradebookTable,
 } from "@/components"
@@ -20,10 +19,16 @@ export default function Gradebook() {
     loading,
     modalOpen,
     editInitial,
+    search,
+    sortBy,
+    performanceFilter,
     selectedCategoryId,
     pendingDeleteId,
     filteredGrades,
     setModalOpen,
+    setSearch,
+    setSortBy,
+    setPerformanceFilter,
     setSelectedCategoryId,
     setPendingDeleteId,
     refreshGrades,
@@ -32,19 +37,30 @@ export default function Gradebook() {
     confirmDelete,
   } = useGrades()
   const { categories } = useCategories()
+  const filterCategories = categories.filter((category) => (
+    (grades ?? []).some((grade) => grade.category === category.id)
+  ))
 
   return (
     <AppLayout>
-      <GradebookLayout>
-        <GradebookHeader setModalOpen={setModalOpen} />
+      <GradebookHeader
+        setModalOpen={setModalOpen}
+        search={search}
+        sortBy={sortBy}
+        performanceFilter={performanceFilter}
+        selectedCategoryId={selectedCategoryId}
+        categories={filterCategories}
+        onSearchChange={setSearch}
+        onSortChange={setSortBy}
+        onPerformanceFilterChange={setPerformanceFilter}
+        onCategoryChange={setSelectedCategoryId}
+      />
 
+      <div className="flex-1 overflow-y-auto bg-white px-6 py-4">
         <GradebookFilterCategories
           loading={loading}
           grades={grades}
           filteredGrades={filteredGrades}
-          selectedCategoryId={selectedCategoryId}
-          setSelectedCategoryId={setSelectedCategoryId}
-          categories={categories}
         />
 
         <GradebookStatus
@@ -59,33 +75,33 @@ export default function Gradebook() {
           onEdit={handleEditGrade}
           onDelete={setPendingDeleteId}
         />
+      </div>
 
-        <CreateGradeModal
-          open={modalOpen}
-          onClose={closeModal}
-          initialData={editInitial ?? undefined}
-          onCreated={() => {
-            closeModal()
-            void refreshGrades()
-          }}
-          onUpdated={() => {
-            closeModal()
-            void refreshGrades()
-          }}
-        />
+      <CreateGradeModal
+        open={modalOpen}
+        onClose={closeModal}
+        initialData={editInitial ?? undefined}
+        onCreated={() => {
+          closeModal()
+          void refreshGrades()
+        }}
+        onUpdated={() => {
+          closeModal()
+          void refreshGrades()
+        }}
+      />
 
-        <ConfirmationModal
-          isOpen={pendingDeleteId !== null}
-          title="Delete grade?"
-          message="This action cannot be undone."
-          confirmText="Delete"
-          cancelText="Cancel"
-          onClose={() => setPendingDeleteId(null)}
-          onConfirm={() => {
-            void confirmDelete()
-          }}
-        />
-      </GradebookLayout>
+      <ConfirmationModal
+        isOpen={pendingDeleteId !== null}
+        title="Delete grade?"
+        message="This action cannot be undone."
+        confirmText="Delete"
+        cancelText="Cancel"
+        onClose={() => setPendingDeleteId(null)}
+        onConfirm={() => {
+          void confirmDelete()
+        }}
+      />
     </AppLayout>
   )
 }

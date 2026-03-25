@@ -1,4 +1,7 @@
-
+/**
+ * Displays a task list preview for the About page.
+ * @returns The rendered tasks mockup.
+ */
 function TasksMockup() {
   const items = [
     { title: "Algorithms Assignment", due: "Today, 5:00 PM", color: "#3b82f6", done: true },
@@ -47,4 +50,4 @@ function TasksMockup() {
   )
 }
 
-export default TasksMockup;
+export default TasksMockup

@@ -7,12 +7,67 @@ import {
   type ApiErrorResponse,
 } from "@/types";
 
+interface BroadcastDeliveryHook {
+  setCurrentBroadcastId: (id: number) => void;
+  setDeliveryStatus: (status: BroadcastJobStatusResponse) => void;
+}
+
 const parseApiError = (error: unknown): string => {
   const maybeError = error as { response?: { data?: ApiErrorResponse } };
   return (
     maybeError.response?.data?.error?.message ?? "Failed to send admin notification."
   );
 };
+
+const createNotificationPayload = (
+  validation: { trimmedTitle: string; trimmedMessage: string },
+  target: AdminNotificationTarget,
+  selectedIds: number[],
+): AdminNotificationPayload => ({
+  title: validation.trimmedTitle,
+  message: validation.trimmedMessage,
+  target,
+  user_ids: target === "users" ? selectedIds : undefined,
+});
+
+const createQueuedStatus = (
+  response: Awaited<ReturnType<typeof sendAdminNotification>>,
+): BroadcastJobStatusResponse => ({
+  id: response.broadcast_id,
+  status: response.status,
+  recipient_count: response.recipient_count,
+  delivered_count: 0,
+  failed_count: 0,
+  queued_at: response.queued_at,
+  started_at: null,
+  completed_at: null,
+  task_id: response.task_id,
+  updated_at: response.queued_at,
+});
+
+const useConfirmSendHandler = (
+  deliveryHook: BroadcastDeliveryHook,
+  setError: (value: string | null) => void,
+  setIsSubmitting: (value: boolean) => void,
+) => useCallback(async (
+  validation: { trimmedTitle: string; trimmedMessage: string },
+  target: AdminNotificationTarget,
+  selectedIds: number[],
+) => {
+  try {
+    setIsSubmitting(true);
+    setError(null);
+    const response = await sendAdminNotification(createNotificationPayload(validation, target, selectedIds));
+    deliveryHook.setCurrentBroadcastId(response.broadcast_id);
+    deliveryHook.setDeliveryStatus(createQueuedStatus(response));
+    deliveryHook.setDeliveryStatus(await getBroadcastStatus(response.broadcast_id));
+  } catch (error) {
+    console.error("Failed to send admin notification", error);
+    setError(parseApiError(error));
+  } finally {
+    setIsSubmitting(false);
+  }
+}, [deliveryHook, setError, setIsSubmitting]);
 
 /**
  * Hook to manage the submission process of a broadcast.
@@ -27,49 +82,7 @@ export const useBroadcastSubmission = (deliveryHook: {
 }) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
-  const handleConfirmSend = useCallback(
-    async (
-      validation: { trimmedTitle: string; trimmedMessage: string },
-      target: AdminNotificationTarget,
-      selectedIds: number[]
-    ) => {
-      const payload: AdminNotificationPayload = {
-        title: validation.trimmedTitle,
-        message: validation.trimmedMessage,
-        target,
-        user_ids: target === "users" ? selectedIds : undefined,
-      };
-
-      try {
-        setIsSubmitting(true);
-        setError(null);
-        const res = await sendAdminNotification(payload);
-        deliveryHook.setCurrentBroadcastId(res.broadcast_id);
-        const queued: BroadcastJobStatusResponse = {
-          id: res.broadcast_id,
-          status: res.status,
-          recipient_count: res.recipient_count,
-          delivered_count: 0,
-          failed_count: 0,
-          queued_at: res.queued_at,
-          started_at: null,
-          completed_at: null,
-          task_id: res.task_id,
-          updated_at: res.queued_at,
-        };
-        deliveryHook.setDeliveryStatus(queued);
-        const status = await getBroadcastStatus(res.broadcast_id);
-        deliveryHook.setDeliveryStatus(status);
-      } catch (err) {
-        console.error("Failed to send admin notification", err);
-        setError(parseApiError(err));
-      } finally {
-        setIsSubmitting(false);
-      }
-    },
-    [deliveryHook]
-  );
+  const handleConfirmSend = useConfirmSendHandler(deliveryHook, setError, setIsSubmitting);
 
   return { isSubmitting, error, setError, handleConfirmSend };
 };

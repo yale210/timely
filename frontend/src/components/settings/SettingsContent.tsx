@@ -4,6 +4,7 @@ import SettingsSidebar from "@/components/settings/SettingsSidebar";
 import ThemeSection from "@/components/settings/ThemeSection";
 import ProfileSection from "@/components/settings/ProfileSection";
 import CategoryLimitsSection from "@/components/settings/CategoryLimitsSection";
+import PrivacySection from "@/components/settings/PrivacySection";
 import type { UseSettingsReturn } from "@/hooks/settings/useSettings";
 import { useProfileSettings } from "@/hooks/settings/useProfileSettings";
 import { getSchedulingDayMaxMinutes } from "@/utils/schedulingLimits";
@@ -32,6 +33,7 @@ const SettingsContent = ({
 }: SettingsContentProps) => {
   const dragSnapOptions = [5, 10, 15, 20, 30, 60] as const;
   const [featureFlags, setFeatureFlags] = useState(() => ({
+    assessments: localStorage.getItem("feature_assessments_enabled") !== "false",
     gradebook: localStorage.getItem("feature_gradebook_enabled") !== "false",
     leaderboard: localStorage.getItem("feature_leaderboard_enabled") !== "false",
     pomodoro: localStorage.getItem("feature_pomodoro_enabled") !== "false",
@@ -43,6 +45,12 @@ const SettingsContent = ({
       label: "Pomodoro",
       description: "A focus timer that alternates work sessions with short and long breaks.",
       value: featureFlags.pomodoro,
+    },
+    {
+      key: "assessments",
+      label: "Assessments",
+      description: "Track upcoming assessments with optional calendar events and gradebook handoff.",
+      value: featureFlags.assessments,
     },
     {
       key: "gradebook",
@@ -58,8 +66,13 @@ const SettingsContent = ({
     },
   ]), [featureFlags]);
 
-  const updateFeature = (key: "gradebook" | "leaderboard" | "pomodoro", value: boolean) => {
-    if (key === "gradebook") {
+  const updateFeature = (
+    key: "assessments" | "gradebook" | "leaderboard" | "pomodoro",
+    value: boolean,
+  ) => {
+    if (key === "assessments") {
+      localStorage.setItem("feature_assessments_enabled", String(value));
+    } else if (key === "gradebook") {
       localStorage.setItem("feature_gradebook_enabled", String(value));
     } else if (key === "leaderboard") {
       localStorage.setItem("feature_leaderboard_enabled", String(value));
@@ -71,7 +84,7 @@ const SettingsContent = ({
   };
 
   const profileState = useProfileSettings(state.activeSection === "profile");
-  const isWideSection = state.activeSection === "appearance";
+  const isWideSection = state.activeSection === "themes" || state.activeSection === "fonts";
   const categoryLimitMaxMinutes = useMemo(
     () => getSchedulingDayMaxMinutes(state.preference),
     [state.preference],
@@ -117,10 +130,18 @@ const SettingsContent = ({
                 }}
               />
             ) : null}
-            {state.activeSection === "appearance" ? (
+            {state.activeSection === "themes" ? (
               <ThemeSection
                 onThemeChange={actions.applyTheme}
                 onFontChange={actions.applyFont}
+                mode="themes"
+              />
+            ) : null}
+            {state.activeSection === "fonts" ? (
+              <ThemeSection
+                onThemeChange={actions.applyTheme}
+                onFontChange={actions.applyFont}
+                mode="fonts"
               />
             ) : null}
             {state.activeSection === "categories" ? (
@@ -139,7 +160,7 @@ const SettingsContent = ({
             {state.activeSection === "features" ? (
               <div className="space-y-6">
                 <div>
-                  <h2 className="text-lg font-semibold text-gray-900">Features</h2>
+                  <h2 className="text-lg font-semibold text-gray-900">Extras</h2>
                   <p className="mt-1 text-sm text-gray-500">
                     Toggle optional sections of the app.
                   </p>
@@ -160,7 +181,7 @@ const SettingsContent = ({
                         checked={feature.value}
                         onChange={(event) => {
                           updateFeature(
-                            feature.key as "gradebook" | "leaderboard" | "pomodoro",
+                            feature.key as "assessments" | "gradebook" | "leaderboard" | "pomodoro",
                             event.target.checked,
                           );
                         }}
@@ -275,6 +296,19 @@ const SettingsContent = ({
                 onAvatarChange={profileState.actions.setAvatarFile}
                 onSave={() => {
                   void profileState.actions.saveProfile();
+                }}
+              />
+            ) : null}
+            {state.activeSection === "privacy" ? (
+              <PrivacySection
+                deleting={false}
+                onDeleteEvents={() => {
+                  console.log("Delete Log Test")
+                  return actions.deleteEvents()
+                }}
+                onDeleteTasks={() => {
+                  console.log("Delete Log Test")
+                  return actions.deleteTasks();
                 }}
               />
             ) : null}

@@ -10,10 +10,12 @@ import {
   Logout,
   CalendarPage,
   TaskList,
+  Assessments,
   Gradebook,
   Dashboard,
   Settings,
   Friends,
+  Sharing,
   ProfilePage,
   Leaderboard,
   Pomodoro,
@@ -95,15 +97,21 @@ export default function App() {
         </RequireAuth>}
       />
 
-      <Route path="/dashboard" element={
+      <Route path="/assessments" element={
         <RequireAuth>
-          <Dashboard />
+          <Assessments />
         </RequireAuth>}
       />
-      
+
       <Route path="/friends" element={
         <RequireAuth>
           <Friends />
+        </RequireAuth>}
+      />
+
+      <Route path="/sharing" element={
+        <RequireAuth>
+          <Sharing />
         </RequireAuth>}
       />
 
@@ -158,6 +166,12 @@ export default function App() {
       <Route path="/settings" element={
         <RequireAuth>
           <Settings />
+        </RequireAuth>}
+      />
+
+      <Route path="/dashboard" element={
+        <RequireAuth>
+          <Dashboard />
         </RequireAuth>}
       />
 
