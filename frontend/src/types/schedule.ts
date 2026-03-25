@@ -19,6 +19,9 @@ export interface ScheduleResponse {
   results: ScheduleResult[];
 }
 
+/**
+ * Represents the response from the event export API.
+ */
 export interface ExportResponse {
   file_name: string;
   content_type: string;

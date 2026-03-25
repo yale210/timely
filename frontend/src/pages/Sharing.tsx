@@ -7,7 +7,9 @@ import AppLayout from "@/layouts/AppLayout";
 
 
 
-
+/**
+ * Renders the Sharing page.
+ */
 export default function Sharing() {
   const user = authStore.getUser();
   const currentUserId = user?.id ?? null;

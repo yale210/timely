@@ -1,3 +1,7 @@
+/**
+ * Represents the response from the event sharing API.
+ * @interface Share
+ */
 export interface Share {
   id: number,
   sender: number,

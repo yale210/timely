@@ -1,9 +1,8 @@
 import api from "@/services/api";
 
 /**
- * Retrieves the weekly task summary for a given week.
- * @param date - Optional date (YYYY-MM-DD) within the desired week.
- * @returns A promise resolving to the weekly statistics.
+ * Exports events from the backend API.
+ * @returns Promise<string> - Exported Event Data Response.
  */
 export const exportEvents = async (): Promise<string> => {
   
@@ -12,7 +11,6 @@ export const exportEvents = async (): Promise<string> => {
         'Authorization': `Token ${localStorage.getItem('auth_token')}`
     }
   });
-
 
   if (response.status !== 200) {
     throw new Error("Error Exporting Events")

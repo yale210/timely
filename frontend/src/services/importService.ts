@@ -5,9 +5,9 @@ interface ImportResponse {
 }
 
 /**
- * Retrieves the weekly task summary for a given week.
- * @param date - Optional date (YYYY-MM-DD) within the desired week.
- * @returns A promise resolving to the weekly statistics.
+ * Imports the user's event data file.
+ * @param file - The file the user uploads.
+ * @returns A response containing how many events were imported.
  */
 export const importEvents = async (file: File): Promise<string> => {
     const data = new FormData()
