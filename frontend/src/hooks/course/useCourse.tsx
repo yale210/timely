@@ -2,7 +2,6 @@ import {useCallback, useEffect, useMemo, useState} from "react";
 import * as courseService from "@/services/courseService";
 import type {Course, CourseCreation, CourseStaff, CourseUpdate} from "@/types/course";
 import {authStore} from "@/services/authService.ts";
-import {createCourse, deleteCourse, getStaff, joinCourse, leaveCourse, updateCourse} from "@/services/courseService";
 
 interface UseCoursesState {
   courses: Course[];

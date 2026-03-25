@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
 import { getCoursePermissions,  } from "@/services/courseService";
-import type {CoursePermissions} from "@/types/course.ts";
+
+import {CoursePeED} from "@/types/coursePermissions.ts";
+import type { CoursePermissions } from "@/types/course";
 
 interface UseCoursePermissionsResult {
   permissions: CoursePermissions;
@@ -16,7 +18,9 @@ interface UseCoursePermissionsResult {
  * @returns An object containing the course permissions, loading state, error message, and a method to refresh the data.
  */
 export function useCoursePermissions(courseId?: number | null): UseCoursePermissionsResult {
-  const [permissions, setPermissions] = useState<CoursePermissions | null>(null);
+    const defaultPermissions = new CoursePeED().options;
+
+  const [permissions, setPermissions] = useState<CoursePermissions>(defaultPermissions);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -36,7 +40,7 @@ export function useCoursePermissions(courseId?: number | null): UseCoursePermiss
       setPermissions(data);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to load course permissions.");
-      setPermissions(null);
+      setPermissions(defaultPermissions);
     } finally {
       setLoading(false);
     }
@@ -44,7 +48,7 @@ export function useCoursePermissions(courseId?: number | null): UseCoursePermiss
 
   useEffect(() => {
     if (!hasCourseId) {
-      setPermissions(null);
+      setPermissions(defaultPermissions);
       return;
     }
 

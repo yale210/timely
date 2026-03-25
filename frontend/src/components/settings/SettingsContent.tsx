@@ -7,7 +7,7 @@ import CategoryLimitsSection from "@/components/settings/CategoryLimitsSection";
 import PrivacySection from "@/components/settings/PrivacySection";
 import type { UseSettingsReturn } from "@/hooks/settings/useSettings";
 import { useProfileSettings } from "@/hooks/settings/useProfileSettings";
-import { makeMyTeacherProfile } from "@/services/courseService.ts";
+import { makeMyTeacherProfile, unregisterMyTeacherProfile } from "@/services/courseService.ts";
 import { getSchedulingDayMaxMinutes } from "@/utils/schedulingLimits";
 
 interface SettingsContentProps {
@@ -41,6 +41,7 @@ const SettingsContent = ({
     pomodoro: localStorage.getItem("feature_pomodoro_enabled") !== "false",
   }));
   const [makingTeacher, setMakingTeacher] = useState(false);
+  const [unregisteringTeacher, setUnregisteringTeacher] = useState(false);
   const [makeTeacherError, setMakeTeacherError] = useState<string | null>(null);
   const [makeTeacherSuccess, setMakeTeacherSuccess] = useState<string | null>(null);
 
@@ -97,23 +98,41 @@ const SettingsContent = ({
     window.dispatchEvent(new Event("feature-flags-changed"));
   };
 
-  const makeTeacher= async ()=> {
-                      if (makingTeacher) return;
+  const makeTeacher = async () => {
+    if (makingTeacher) return;
 
-                      setMakeTeacherError(null);
-                      setMakeTeacherSuccess(null);
-                      setMakingTeacher(true);
+    setMakeTeacherError(null);
+    setMakeTeacherSuccess(null);
+    setMakingTeacher(true);
 
-                      try {
-                        await makeMyTeacherProfile();
-                        setMakeTeacherSuccess("You are now registered as a teacher.");
-                      } catch (error: unknown) {
-                        console.error("Failed to create teacher profile:", error);
-                        setMakeTeacherError("Unable to make you a teacher.");
-                      } finally {
-                        setMakingTeacher(false);
-                      }
-                    }
+    try {
+      await makeMyTeacherProfile();
+      setMakeTeacherSuccess("You are now registered as a teacher.");
+    } catch (error: unknown) {
+      console.error("Failed to create teacher profile:", error);
+      setMakeTeacherError("Unable to make you a teacher.");
+    } finally {
+      setMakingTeacher(false);
+    }
+  };
+
+  const unregisterTeacher = async () => {
+    if (unregisteringTeacher) return;
+
+    setMakeTeacherError(null);
+    setMakeTeacherSuccess(null);
+    setUnregisteringTeacher(true);
+
+    try {
+      await unregisterMyTeacherProfile();
+      setMakeTeacherSuccess("You are no longer registered as a teacher.");
+    } catch (error: unknown) {
+      console.error("Failed to unregister teacher profile:", error);
+      setMakeTeacherError("Unable to unregister you as a teacher.");
+    } finally {
+      setUnregisteringTeacher(false);
+    }
+  };
 
   const profileState = useProfileSettings(state.activeSection === "profile");
   const isWideSection = state.activeSection === "themes" || state.activeSection === "fonts";
@@ -234,14 +253,29 @@ const SettingsContent = ({
                     </div>
                   )}
 
-                  <button
-                    type="button"
-                    onClick={void makeTeacher()}
-                    disabled={makingTeacher}
-                    className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-50"
-                  >
-                    {makingTeacher ? "Making teacher..." : "Make me a teacher"}
-                  </button>
+                  <div className="flex flex-wrap gap-3">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        void makeTeacher();
+                      }}
+                      disabled={makingTeacher}
+                      className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-50"
+                    >
+                      {makingTeacher ? "Making teacher..." : "Make me a teacher"}
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        void unregisterTeacher();
+                      }}
+                      disabled={unregisteringTeacher}
+                      className="rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-50"
+                    >
+                      {unregisteringTeacher ? "Unregistering..." : "Unregister as teacher"}
+                    </button>
+                  </div>
                 </div>
               </div>
             ) : null}
