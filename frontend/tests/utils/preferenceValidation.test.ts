@@ -11,6 +11,8 @@ const buildPreference = (overrides: Partial<Preference> = {}): Preference => ({
     { day: 2, start: "08:00", end: "18:00" },
   ],
   max_hours_study_per_day: 8,
+  max_days_ahead: 7,
+  drag_snap_minutes: 15,
   limit_max_hours: true,
   disable_sound_effects: false,
   days_off: [],

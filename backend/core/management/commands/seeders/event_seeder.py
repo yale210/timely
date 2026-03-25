@@ -22,12 +22,12 @@ class EventSeeder(BaseSeeder):
         for event in events:
             try:
                 self._create_event(event)
-            except Exception:
-                pass
+            except Exception as exception:
+                print(f"Error occurred while creating event: {exception}")
 
     def _create_event(self, data):
         temporary_event, _ = Event.objects.get_or_create(
-            user=data["fields"]["user"],
+            user_id=data["fields"]["user"],
             title=data["fields"]["title"],
             description=data["fields"]["description"],
             location=data["fields"]["location"],
@@ -49,7 +49,7 @@ class EventSeeder(BaseSeeder):
             self._create_recurring_event(
                 {
                     "fields": {
-                        "user": temporary_user,
+                        "user": temporary_user.id,
                         "categories": [temporary_category],
                     }
                 }
@@ -58,7 +58,7 @@ class EventSeeder(BaseSeeder):
             self._create_non_recurring_event(
                 {
                     "fields": {
-                        "user": temporary_user,
+                        "user": temporary_user.id,
                         "categories": [temporary_category],
                     }
                 }

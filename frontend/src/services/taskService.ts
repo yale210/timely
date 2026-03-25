@@ -2,6 +2,10 @@ import api from "@/services/api";
 
 import { type Category, type Task, type TaskUpdatedResponse,  type TaskSubmission } from "@/types";
 
+interface DeleteResponse {
+  message: string;
+}
+
 /**
  * Retrieves a list of tasks from the server, optionally filtered by the provided criteria.
  * @param filters - An optional object containing filtration criteria.
@@ -34,6 +38,25 @@ export const updateTask = async (id: number, data: TaskSubmission): Promise<Task
 };
 
 /**
+ * Saves task changes and immediately reschedules that task into a compatible slot.
+ * @param id - The unique identifier of the task to update and reschedule.
+ * @param data - The updated task information.
+ * @param startDate - The date from which rescheduling should begin.
+ * @returns A promise that resolves to the updated task object.
+ */
+export const saveAndRescheduleTask = async (
+  id: number,
+  data: TaskSubmission,
+  startDate: string,
+): Promise<TaskUpdatedResponse> => {
+  const response = await api.post<TaskUpdatedResponse>(`/api/tasks/${id}/save-and-reschedule/`, {
+    ...data,
+    start_date: startDate,
+  });
+  return response.data;
+};
+
+/**
  * Removes a task from the server.
  * @param id - The unique identifier of the task to be deleted.
  * @returns A promise that resolves once the task has been successfully removed.
@@ -51,3 +74,18 @@ export const getCategories = async (): Promise<Category[]> => {
   return response.data;
 };
 
+/**
+ * Deletes all of the user's events
+ */
+export const deleteEvents = async (): Promise<string> => {
+  const response = await api.delete<DeleteResponse>("/api/delete_events/");
+  return response.data.message;
+};
+
+/**
+ * Deletes all of the user's tasks
+ */
+export const deleteTasks = async (): Promise<string> => {
+  const response = await api.delete<DeleteResponse>("/api/delete_tasks/");
+  return response.data.message;
+};

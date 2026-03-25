@@ -130,3 +130,17 @@ class TaskTests(TestCase):
 
         with self.assertRaises(ValidationError):
             task.full_clean()
+
+    def test_task_clean_valid_dates(self):
+        """Verify that clean does not raise when dates are valid."""
+        now = timezone.now()
+        task = Task.objects.create(
+            user=self.user,
+            title="Clean test valid",
+            estimated_minutes=60,
+            start_time=now,
+            deadline=now + datetime.timedelta(days=1),
+            importance=7,
+        )
+        # Should not raise
+        task.full_clean()

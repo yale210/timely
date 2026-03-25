@@ -1,0 +1,9 @@
+[data-theme="ivy"] {
+  --primary: #2ea44f;
+  --primary-hover: #2f6b3f;
+
+  --background: #eef4ec;
+  --text-color: #223127;
+
+  --border: #70836f;
+}

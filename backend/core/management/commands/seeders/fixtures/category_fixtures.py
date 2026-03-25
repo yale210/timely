@@ -145,6 +145,12 @@ categories = [
     },
     {
         "model": "core.category",
+        "pk": 25,
+        "user": 4,
+        "fields": {"text": "Stuff", "colour": "#123456", "max_daily_study_time": 1},
+    },
+    {
+        "model": "core.category",
         "pk": 26,
         "user": 4,
         "fields": {"text": "Family", "colour": "#000000"},

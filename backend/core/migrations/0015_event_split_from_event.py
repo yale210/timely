@@ -5,15 +5,20 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('core', '0014_event_exception_dates_eventoverride_and_more'),
+        ("core", "0014_event_exception_dates_eventoverride_and_more"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='event',
-            name='split_from_event',
-            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='split_child_events', to='core.event'),
+            model_name="event",
+            name="split_from_event",
+            field=models.ForeignKey(
+                blank=True,
+                null=True,
+                on_delete=django.db.models.deletion.SET_NULL,
+                related_name="split_child_events",
+                to="core.event",
+            ),
         ),
     ]

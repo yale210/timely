@@ -21,19 +21,20 @@ class TaskSeeder(BaseSeeder):
         for task in tasks:
             try:
                 self._create_task(task)
-            except Exception:
-                pass
+            except Exception as exception:
+                print(f"Error occurred while creating task: {exception}")
 
     def _create_task(self, data):
         temporary_task, _ = Task.objects.get_or_create(
-            user=data["fields"]["user"],
+            id=data.get("pk"),
+            user_id=data["fields"]["user"],
             title=data["fields"]["title"],
             description=data["fields"]["description"],
             estimated_minutes=data["fields"]["estimated_minutes"],
             start_time=data["fields"]["start_time"],
             deadline=data["fields"]["deadline"],
             completed=data["fields"]["completed"],
-            parent_task=data["fields"]["parent_task"],
+            parent_task_id=data["fields"]["parent_task"],
             total_task_allocations=data["fields"]["total_task_allocations"],
             allocation=data["fields"]["allocation"],
             importance=data["fields"]["importance"],
@@ -49,15 +50,15 @@ class TaskSeeder(BaseSeeder):
         self._create_task(
             {
                 "fields": {
-                    "user": temporary_user,
+                    "user": temporary_user.id,
                     "title": self.faker.sentence(),
                     "description": self.faker.sentence(),
-                    "categories": [temporary_category],
+                    "categories": [temporary_category.id],
                     "estimated_minutes": random.randint(1, 60 * 24),
                     "start_time": timezone.make_aware(self.faker.date_time()),
                     "deadline": timezone.make_aware(self.faker.date_time()),
                     "completed": random.randint(0, 1) == 1,
-                    "parent_task": Task.objects.order_by("?").first()
+                    "parent_task": Task.objects.order_by("?").first().id
                     if Task.objects.exists() and random.randint(0, 3) == 1
                     else None,
                     "total_task_allocations": random.randint(0, 24),

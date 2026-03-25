@@ -1,0 +1,9 @@
+[data-theme="arctic"] {
+  --primary: #5ca9d6;
+  --primary-hover: #88c4e6;
+
+  --background: #edf4f8;
+  --text-color: #28404d;
+
+  --border: #afc7d4;
+}

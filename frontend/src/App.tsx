@@ -3,14 +3,32 @@ import { Routes, Route, useLocation } from "react-router-dom"
 import RequireAuth from "@/components/auth/RequireAuth"
 import RedirectAuth from "@/components/auth/RedirectAuth"
 import RequireAdmin from "@/components/auth/RequireAdmin"
-import { Home, Login, Signup, Logout, CalendarPage, TaskList, Gradebook, Dashboard, Settings, Friends, ProfilePage, Leaderboard } from "@/pages"
+import {
+  Home,
+  Login,
+  Signup,
+  Logout,
+  CalendarPage,
+  TaskList,
+  Gradebook,
+  Dashboard,
+  Settings,
+  Friends,
+  Sharing,
+  ProfilePage,
+  Leaderboard,
+  Pomodoro,
+  NotFound,
+  About
+} from "@/pages"
 import { Notifications } from "@/pages/Notification/Notifications"
 import { NotificationDetail } from "@/pages/Notification/NotificationDetail"
 import { AdminNotifications } from "@/pages/Admin/Notifications/AdminNotifications"
 import { AdminNotificationHistory } from "@/pages/Admin/Notifications/AdminNotificationHistory"
 import { AdminNotificationHistoryDetail } from "@/pages/Admin/Notifications/AdminNotificationHistoryDetail"
+import { setDocumentTheme } from "@/utils/themeSettings"
 
-const PUBLIC_ROUTES = ["/login", "/signup", "/"]
+const PUBLIC_ROUTES = ["/login", "/signup", "/", "/about"]
 
 /**
  * The root component of the application which organises the routing logic.
@@ -24,7 +42,7 @@ export default function App() {
     if (!PUBLIC_ROUTES.includes(location.pathname)) {
       const savedTheme = localStorage.getItem("theme")
       if (savedTheme) {
-        document.documentElement.dataset.theme = savedTheme
+        setDocumentTheme(savedTheme)
       }
 
       const savedFont = localStorage.getItem("font")
@@ -33,7 +51,7 @@ export default function App() {
       }
     }
     else {
-      document.documentElement.dataset.theme = "light"
+      setDocumentTheme("light")
       document.documentElement.dataset.font = "poppins"
     }
   }, [location.pathname])
@@ -90,9 +108,21 @@ export default function App() {
         </RequireAuth>}
       />
 
+      <Route path="/sharing" element={
+        <RequireAuth>
+          <Sharing />
+        </RequireAuth>}
+      />
+
       <Route path="/leaderboard" element={
         <RequireAuth>
           <Leaderboard />
+        </RequireAuth>}
+      />
+
+      <Route path="/pomodoro" element={
+        <RequireAuth>
+          <Pomodoro />
         </RequireAuth>}
       />
 
@@ -107,33 +137,43 @@ export default function App() {
           <Notifications />
         </RequireAuth>
       } />
+
       <Route path="/notifications/:id" element={
         <RequireAuth>
           <NotificationDetail />
         </RequireAuth>
       } />
+
       <Route path="/admin/notifications" element={
         <RequireAdmin>
           <AdminNotifications />
         </RequireAdmin>
       } />
+
       <Route path="/admin/notifications/history" element={
         <RequireAdmin>
           <AdminNotificationHistory />
         </RequireAdmin>
       } />
+
       <Route path="/admin/notifications/history/:id" element={
         <RequireAdmin>
           <AdminNotificationHistoryDetail />
         </RequireAdmin>
       } />
+
       <Route path="/settings" element={
         <RequireAuth>
           <Settings />
         </RequireAuth>}
       />
 
-   
+      <Route path="/about" element={<About />} />
+
+      <Route path="*" element={
+        <NotFound />
+      } />
+
     </Routes>
   )
 }

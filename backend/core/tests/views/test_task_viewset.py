@@ -5,7 +5,8 @@ from django.test import TestCase
 from django.utils import timezone
 from rest_framework.test import APIClient
 
-from core.models import Task, Category
+from core.models import Category, Event, Task
+from profiles.models.profile import Profile
 
 
 class TaskViewSetTests(TestCase):
@@ -17,8 +18,10 @@ class TaskViewSetTests(TestCase):
         self.other_user = get_user_model().objects.create_user(
             username="otheruser", password="password123", email="other@user.com"
         )
-        self.category1 = Category.objects.create(text="Work")
-        self.category2 = Category.objects.create(text="Home")
+        Profile.objects.create(user=self.user, name="View User")
+        Profile.objects.create(user=self.other_user, name="Other User")
+        self.category1 = Category.objects.create(user=self.user, text="Work")
+        self.category2 = Category.objects.create(user=self.user, text="Home")
 
         self.now = timezone.now()
 
@@ -26,7 +29,7 @@ class TaskViewSetTests(TestCase):
         self.task1 = Task.objects.create(
             user=self.user,
             title="Task 1",
-            estimated_minutes=30,
+            estimated_minutes=60,
             start_time=self.now + datetime.timedelta(days=1),
             completed=False,
             deadline=self.now + datetime.timedelta(days=10),
@@ -126,3 +129,317 @@ class TaskViewSetTests(TestCase):
         new_task = Task.objects.get(title="New API Task")
         self.assertEqual(new_task.user, self.user)
         self.assertEqual(new_task.importance, 7)
+
+    def test_patch_task_allocation_rejects_overlap_with_event(self):
+        self.client.force_authenticate(user=self.user)
+        event_start = self.now + datetime.timedelta(hours=2)
+        event_end = event_start + datetime.timedelta(hours=1)
+
+        Event.objects.create(
+            user=self.user,
+            title="Busy slot",
+            start_time=event_start,
+            end_time=event_end,
+        )
+
+        response = self.client.patch(
+            f"/api/tasks/{self.task1.id}/",
+            {
+                "allocation": [
+                    {
+                        "start": event_start.isoformat(),
+                        "end": event_end.isoformat(),
+                    }
+                ]
+            },
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, 400)
+        self.assertIn("allocation", response.data)
+
+    def test_patch_task_allocation_rejects_buffer_overlap_with_event(self):
+        self.client.force_authenticate(user=self.user)
+        event_start = self.now + datetime.timedelta(hours=3)
+        event_end = event_start + datetime.timedelta(hours=1)
+
+        Event.objects.create(
+            user=self.user,
+            title="Busy slot",
+            start_time=event_start,
+            end_time=event_end,
+        )
+
+        allocation_end = event_start - datetime.timedelta(minutes=5)
+        allocation_start = allocation_end - datetime.timedelta(minutes=30)
+
+        response = self.client.patch(
+            f"/api/tasks/{self.task1.id}/",
+            {
+                "buffer_after_minutes": 15,
+                "allocation": [
+                    {
+                        "start": allocation_start.isoformat(),
+                        "end": allocation_end.isoformat(),
+                    }
+                ],
+            },
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, 400)
+        self.assertIn("allocation", response.data)
+
+    def test_patch_task_allocation_syncs_total_task_allocations(self):
+        self.client.force_authenticate(user=self.user)
+        allocation_start = self.now + datetime.timedelta(days=1, hours=2)
+        allocation_middle = allocation_start + datetime.timedelta(minutes=30)
+        allocation_end = allocation_middle + datetime.timedelta(minutes=30)
+
+        response = self.client.patch(
+            f"/api/tasks/{self.task1.id}/",
+            {
+                "allow_split": True,
+                "allocation": [
+                    {
+                        "start": allocation_start.isoformat(),
+                        "end": allocation_middle.isoformat(),
+                    },
+                    {
+                        "start": allocation_middle.isoformat(),
+                        "end": allocation_end.isoformat(),
+                    },
+                ],
+                "total_task_allocations": 999,
+            },
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.task1.refresh_from_db()
+        self.assertEqual(self.task1.total_task_allocations, 2)
+
+    def test_patch_task_allocation_rejects_category_daily_limit_overrun(self):
+        self.client.force_authenticate(user=self.user)
+        self.category1.max_daily_study_time = 60
+        self.category1.save(update_fields=["max_daily_study_time"])
+
+        day_start = self.now.replace(
+            hour=0, minute=0, second=0, microsecond=0
+        ) + datetime.timedelta(days=1)
+        existing_start = day_start + datetime.timedelta(hours=8)
+        existing_end = existing_start + datetime.timedelta(minutes=45)
+        other_task = Task.objects.create(
+            user=self.user,
+            title="Existing study task",
+            estimated_minutes=45,
+            start_time=self.now + datetime.timedelta(days=1),
+            completed=False,
+            deadline=self.now + datetime.timedelta(days=2),
+            importance=4,
+            allocation=[
+                {
+                    "start": existing_start.isoformat(),
+                    "end": existing_end.isoformat(),
+                }
+            ],
+            total_task_allocations=1,
+        )
+        other_task.categories.add(self.category1)
+
+        response = self.client.patch(
+            f"/api/tasks/{self.task1.id}/",
+            {
+                "allocation": [
+                    {
+                        "start": (
+                            existing_end + datetime.timedelta(minutes=15)
+                        ).isoformat(),
+                        "end": (
+                            existing_end + datetime.timedelta(minutes=45)
+                        ).isoformat(),
+                    }
+                ]
+            },
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, 400)
+        self.assertIn("allocation", response.data)
+
+    def test_patch_task_allocation_rejects_buffer_overlap_with_other_task(self):
+        self.client.force_authenticate(user=self.user)
+        other_start = self.now + datetime.timedelta(days=1, hours=4)
+        other_end = other_start + datetime.timedelta(minutes=30)
+
+        Task.objects.create(
+            user=self.user,
+            title="Buffered task",
+            estimated_minutes=30,
+            start_time=self.now + datetime.timedelta(days=1),
+            completed=False,
+            deadline=self.now + datetime.timedelta(days=2),
+            importance=4,
+            buffer_before_minutes=20,
+            allocation=[
+                {
+                    "start": other_start.isoformat(),
+                    "end": other_end.isoformat(),
+                }
+            ],
+            total_task_allocations=1,
+        )
+
+        requested_end = other_start - datetime.timedelta(minutes=10)
+        requested_start = requested_end - datetime.timedelta(minutes=30)
+
+        response = self.client.patch(
+            f"/api/tasks/{self.task1.id}/",
+            {
+                "allocation": [
+                    {
+                        "start": requested_start.isoformat(),
+                        "end": requested_end.isoformat(),
+                    }
+                ]
+            },
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, 400)
+        self.assertIn("allocation", response.data)
+
+    def test_patch_task_buffer_fields_persist(self):
+        self.client.force_authenticate(user=self.user)
+
+        response = self.client.patch(
+            f"/api/tasks/{self.task1.id}/",
+            {
+                "buffer_before_minutes": 25,
+                "buffer_after_minutes": 35,
+            },
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.task1.refresh_from_db()
+        self.assertEqual(self.task1.buffer_before_minutes, 25)
+        self.assertEqual(self.task1.buffer_after_minutes, 35)
+
+    def test_patch_task_completed_minutes_persist(self):
+        self.client.force_authenticate(user=self.user)
+
+        response = self.client.patch(
+            f"/api/tasks/{self.task1.id}/",
+            {
+                "completed_minutes": 20,
+            },
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.task1.refresh_from_db()
+        self.assertEqual(self.task1.completed_minutes, 20)
+        self.assertFalse(self.task1.completed)
+
+    def test_patch_task_buffer_only_shows_reschedule_message_when_existing_schedule_conflicts(
+        self,
+    ):
+        self.client.force_authenticate(user=self.user)
+        allocation_start = self.now + datetime.timedelta(days=1, hours=1)
+        allocation_end = allocation_start + datetime.timedelta(minutes=30)
+        self.task1.allocation = [
+            {
+                "start": allocation_start.isoformat(),
+                "end": allocation_end.isoformat(),
+            }
+        ]
+        self.task1.total_task_allocations = 1
+        self.task1.save(update_fields=["allocation", "total_task_allocations"])
+
+        Task.objects.create(
+            user=self.user,
+            title="Adjacent scheduled task",
+            estimated_minutes=30,
+            start_time=self.now + datetime.timedelta(days=1),
+            completed=False,
+            deadline=self.now + datetime.timedelta(days=2),
+            importance=4,
+            allocation=[
+                {
+                    "start": allocation_end.isoformat(),
+                    "end": (
+                        allocation_end + datetime.timedelta(minutes=30)
+                    ).isoformat(),
+                }
+            ],
+            total_task_allocations=1,
+        )
+
+        response = self.client.patch(
+            f"/api/tasks/{self.task1.id}/",
+            {
+                "buffer_after_minutes": 10,
+            },
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(
+            response.data["buffer_after_minutes"][0],
+            "This buffer conflicts with the task's current scheduled time because it would overlap another scheduled task. Reschedule or unschedule the task first.",
+        )
+
+    def test_save_and_reschedule_reoptimizes_all_tasks_for_new_buffer(self):
+        self.client.force_authenticate(user=self.user)
+        allocation_start = self.now + datetime.timedelta(days=1, hours=1)
+        allocation_end = allocation_start + datetime.timedelta(minutes=30)
+        self.task1.allocation = [
+            {
+                "start": allocation_start.isoformat(),
+                "end": allocation_end.isoformat(),
+            }
+        ]
+        self.task1.total_task_allocations = 1
+        self.task1.save(update_fields=["allocation", "total_task_allocations"])
+
+        other_task = Task.objects.create(
+            user=self.user,
+            title="Adjacent scheduled task",
+            estimated_minutes=30,
+            start_time=self.now + datetime.timedelta(days=1),
+            completed=False,
+            deadline=self.now + datetime.timedelta(days=2),
+            importance=4,
+            allocation=[
+                {
+                    "start": allocation_end.isoformat(),
+                    "end": (
+                        allocation_end + datetime.timedelta(minutes=30)
+                    ).isoformat(),
+                }
+            ],
+            total_task_allocations=1,
+        )
+
+        response = self.client.post(
+            f"/api/tasks/{self.task1.id}/save-and-reschedule/",
+            {
+                "buffer_after_minutes": 10,
+                "start_date": (self.now + datetime.timedelta(days=1))
+                .date()
+                .isoformat(),
+            },
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.task1.refresh_from_db()
+        other_task.refresh_from_db()
+        self.assertEqual(self.task1.buffer_after_minutes, 10)
+        self.assertEqual(self.task1.total_task_allocations, 1)
+        self.assertEqual(other_task.total_task_allocations, 1)
+        self.assertNotEqual(
+            self.task1.allocation[0]["start"],
+            allocation_start.isoformat(),
+        )

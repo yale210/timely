@@ -728,3 +728,4 @@ frontend/src/components/SkinnedPage.tsx
 frontend/src/components/Stack.tsx
 frontend/src/styles/Home.css
 frontend/src/pages/Test.tsx
+backend/.python-version

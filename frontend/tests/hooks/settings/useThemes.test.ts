@@ -12,8 +12,34 @@ describe("useThemes", () => {
   it("exposes theme and font options", () => {
     const { result } = renderHook(() => useThemes());
 
-    expect(result.current.state.themeOptions).toEqual(["dark", "light", "retro", "bento", "taro"]);
-    expect(result.current.state.fontOptions).toEqual(["poppins", "pacifico", "comic-sans", "bitcount", "bebas-neue"]);
+    expect(result.current.state.themeOptions).toEqual([
+      "light",
+      "dark",
+      "midnight",
+      "retro",
+      "bento",
+      "taro",
+      "paper",
+      "terminal",
+      "sea-glass",
+      "coral",
+      "forest-night",
+      "plum-ink",
+      "neon-noir",
+      "ivy",
+      "arctic",
+      "signal",
+    ]);
+    expect(result.current.state.fontOptions).toEqual([
+      "poppins",
+      "comfortaa",
+      "righteous",
+      "fira-code",
+      "kalam",
+      "gloria-hallelujah",
+      "bitcount",
+      "bebas-neue",
+    ]);
     expect(result.current.error.theme).toBeNull();
     expect(result.current.error.font).toBeNull();
   });

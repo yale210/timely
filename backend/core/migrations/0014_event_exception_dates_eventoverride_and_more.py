@@ -6,46 +6,94 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('core', '0013_extract_notifications_models'),
+        ("core", "0013_extract_notifications_models"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='event',
-            name='exception_dates',
+            model_name="event",
+            name="exception_dates",
             field=models.JSONField(blank=True, default=list),
         ),
         migrations.CreateModel(
-            name='EventOverride',
+            name="EventOverride",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('title', models.CharField(default='Untitled Event', max_length=500)),
-                ('description', models.TextField(blank=True)),
-                ('location', models.CharField(blank=True, max_length=255)),
-                ('start_time', models.DateTimeField(default=django.utils.timezone.now)),
-                ('end_time', models.DateTimeField(default=django.utils.timezone.now)),
-                ('original_start_time', models.DateTimeField(db_index=True)),
-                ('reminders_snapshot', models.JSONField(blank=True, default=list)),
-                ('categories', models.ManyToManyField(blank=True, related_name='event_overrides', to='core.category')),
-                ('parent_event', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='overrides', to='core.event')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("title", models.CharField(default="Untitled Event", max_length=500)),
+                ("description", models.TextField(blank=True)),
+                ("location", models.CharField(blank=True, max_length=255)),
+                ("start_time", models.DateTimeField(default=django.utils.timezone.now)),
+                ("end_time", models.DateTimeField(default=django.utils.timezone.now)),
+                ("original_start_time", models.DateTimeField(db_index=True)),
+                ("reminders_snapshot", models.JSONField(blank=True, default=list)),
+                (
+                    "categories",
+                    models.ManyToManyField(
+                        blank=True, related_name="event_overrides", to="core.category"
+                    ),
+                ),
+                (
+                    "parent_event",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="overrides",
+                        to="core.event",
+                    ),
+                ),
             ],
             options={
-                'constraints': [models.UniqueConstraint(fields=('parent_event', 'original_start_time'), name='unique_event_override_anchor')],
+                "constraints": [
+                    models.UniqueConstraint(
+                        fields=("parent_event", "original_start_time"),
+                        name="unique_event_override_anchor",
+                    )
+                ],
             },
         ),
         migrations.CreateModel(
-            name='ReminderDispatchLog',
+            name="ReminderDispatchLog",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('original_start_time', models.DateTimeField()),
-                ('reminder_signature', models.CharField(max_length=64)),
-                ('dispatched_at', models.DateTimeField(auto_now_add=True)),
-                ('source_event', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='reminder_dispatches', to='core.event')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("original_start_time", models.DateTimeField()),
+                ("reminder_signature", models.CharField(max_length=64)),
+                ("dispatched_at", models.DateTimeField(auto_now_add=True)),
+                (
+                    "source_event",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="reminder_dispatches",
+                        to="core.event",
+                    ),
+                ),
             ],
             options={
-                'constraints': [models.UniqueConstraint(fields=('source_event', 'original_start_time', 'reminder_signature'), name='unique_reminder_dispatch_for_occurrence')],
+                "constraints": [
+                    models.UniqueConstraint(
+                        fields=(
+                            "source_event",
+                            "original_start_time",
+                            "reminder_signature",
+                        ),
+                        name="unique_reminder_dispatch_for_occurrence",
+                    )
+                ],
             },
         ),
     ]

@@ -4,15 +4,14 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('core', '0008_category_user'),
+        ("core", "0008_category_user"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='task',
-            name='allocation',
+            model_name="task",
+            name="allocation",
             field=models.JSONField(blank=True, default=list, null=True),
         ),
     ]

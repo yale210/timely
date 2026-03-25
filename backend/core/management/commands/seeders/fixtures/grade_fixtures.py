@@ -5,9 +5,10 @@ grades = [
         "fields": {
             "user": 1,
             "name": "CS1",
+            "category": 1,
             "score": 85,
-            "weight": 15,
-            "date_awarded": "2025-01-01",
+            "total_possible": 150,
+            "date_achieved": "2025-01-01",
         },
     },
     {
@@ -16,9 +17,10 @@ grades = [
         "fields": {
             "user": 2,
             "name": "ELA",
+            "category": 10,
             "score": 85,
-            "weight": 100,
-            "date_awarded": "2025-01-01",
+            "total_possible": 100,
+            "date_achieved": "2025-01-01",
         },
     },
     {
@@ -27,9 +29,10 @@ grades = [
         "fields": {
             "user": 1,
             "name": "ELA",
+            "category": 2,
             "score": 60,
-            "weight": 100,
-            "date_awarded": "2025-01-01",
+            "total_possible": 100,
+            "date_achieved": "2025-01-01",
         },
     },
     {
@@ -38,9 +41,10 @@ grades = [
         "fields": {
             "user": 2,
             "name": "DBS",
+            "category": 13,
             "score": 100,
-            "weight": 100,
-            "date_awarded": "2025-01-01",
+            "total_possible": 100,
+            "date_achieved": "2025-01-01",
         },
     },
     {
@@ -49,9 +53,10 @@ grades = [
         "fields": {
             "user": 3,
             "name": "IPP",
+            "category": 20,
             "score": 75,
-            "weight": 100,
-            "date_awarded": "2025-01-01",
+            "total_possible": 100,
+            "date_achieved": "2025-01-01",
         },
     },
     {
@@ -61,8 +66,9 @@ grades = [
             "user": 1,
             "name": "FC1",
             "score": 44,
-            "weight": 100,
-            "date_awarded": "2025-01-01",
+            "category": 3,
+            "total_possible": 100,
+            "date_achieved": "2025-01-01",
         },
     },
     {
@@ -72,8 +78,9 @@ grades = [
             "user": 1,
             "name": "AKC",
             "score": 100,
-            "weight": 100,
-            "date_awarded": "2025-01-01",
+            "category": 6,
+            "total_possible": 100,
+            "date_achieved": "2025-01-01",
         },
     },
     {
@@ -83,8 +90,9 @@ grades = [
             "user": 4,
             "name": "CS1",
             "score": 85,
-            "weight": 15,
-            "date_awarded": "2025-01-01",
+            "category": 25,
+            "total_possible": 100,
+            "date_achieved": "2025-01-01",
         },
     },
 ]

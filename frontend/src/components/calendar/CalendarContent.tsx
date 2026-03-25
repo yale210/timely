@@ -70,6 +70,7 @@ const CalendarContent = ({
           dateStripDays: state.dateStripDays,
           timeGutterWidth: state.timeGutterWidth,
           isRescheduling: state.isRescheduling,
+          rescheduleWarnings: state.rescheduleWarnings,
         }}
         actions={{
           setView: actions.setView,
@@ -77,6 +78,8 @@ const CalendarContent = ({
           goToPrevious: actions.goToPrevious,
           goToNext: actions.goToNext,
           rescheduleTasks: actions.rescheduleTasks,
+          exportEvents: actions.exportEvents,
+          importEvents: actions.importEvents,
         }}
       />
       <CalendarView

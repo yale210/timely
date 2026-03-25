@@ -1,3 +1,5 @@
+"""URL routing for the notifications app API."""
+
 from django.urls import include, path
 from rest_framework.routers import SimpleRouter
 

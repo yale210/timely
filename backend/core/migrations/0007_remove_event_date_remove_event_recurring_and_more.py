@@ -6,80 +6,111 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('core', '0006_merge_20260129_1738'),
+        ("core", "0006_merge_20260129_1738"),
     ]
 
     operations = [
         migrations.RemoveField(
-            model_name='event',
-            name='date',
+            model_name="event",
+            name="date",
         ),
         migrations.RemoveField(
-            model_name='event',
-            name='recurring',
+            model_name="event",
+            name="recurring",
         ),
         migrations.RemoveField(
-            model_name='event',
-            name='recurring_end',
+            model_name="event",
+            name="recurring_end",
         ),
         migrations.RemoveField(
-            model_name='event',
-            name='recurring_interval',
+            model_name="event",
+            name="recurring_interval",
         ),
         migrations.RemoveField(
-            model_name='event',
-            name='recurring_start',
+            model_name="event",
+            name="recurring_start",
         ),
         migrations.RemoveField(
-            model_name='event',
-            name='time',
+            model_name="event",
+            name="time",
         ),
         migrations.AddField(
-            model_name='event',
-            name='description',
+            model_name="event",
+            name="description",
             field=models.TextField(blank=True),
         ),
         migrations.AddField(
-            model_name='event',
-            name='end_time',
+            model_name="event",
+            name="end_time",
             field=models.DateTimeField(default=django.utils.timezone.now),
         ),
         migrations.AddField(
-            model_name='event',
-            name='location',
+            model_name="event",
+            name="location",
             field=models.CharField(blank=True, max_length=255),
         ),
         migrations.AddField(
-            model_name='event',
-            name='recurrence_end',
+            model_name="event",
+            name="recurrence_end",
             field=models.DateField(blank=True, null=True),
         ),
         migrations.AddField(
-            model_name='event',
-            name='recurrence_interval',
-            field=models.CharField(blank=True, choices=[('daily', 'Daily'), ('weekly', 'Weekly'), ('monthly', 'Monthly'), ('yearly', 'Yearly')], max_length=20, null=True),
+            model_name="event",
+            name="recurrence_interval",
+            field=models.CharField(
+                blank=True,
+                choices=[
+                    ("daily", "Daily"),
+                    ("weekly", "Weekly"),
+                    ("monthly", "Monthly"),
+                    ("yearly", "Yearly"),
+                ],
+                max_length=20,
+                null=True,
+            ),
         ),
         migrations.AddField(
-            model_name='event',
-            name='start_time',
+            model_name="event",
+            name="start_time",
             field=models.DateTimeField(default=django.utils.timezone.now),
         ),
         migrations.AddField(
-            model_name='event',
-            name='title',
-            field=models.CharField(default='Untitled Event', max_length=500),
+            model_name="event",
+            name="title",
+            field=models.CharField(default="Untitled Event", max_length=500),
         ),
         migrations.CreateModel(
-            name='EventReminder',
+            name="EventReminder",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('type', models.CharField(choices=[('email', 'Email'), ('popup', 'Popup')], default='popup', max_length=10)),
-                ('minutes_before', models.PositiveIntegerField()),
-                ('trigger_at', models.DateTimeField(editable=False)),
-                ('processed', models.BooleanField(default=False)),
-                ('event', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='reminders', to='core.event')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                (
+                    "type",
+                    models.CharField(
+                        choices=[("email", "Email"), ("popup", "Popup")],
+                        default="popup",
+                        max_length=10,
+                    ),
+                ),
+                ("minutes_before", models.PositiveIntegerField()),
+                ("trigger_at", models.DateTimeField(editable=False)),
+                ("processed", models.BooleanField(default=False)),
+                (
+                    "event",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="reminders",
+                        to="core.event",
+                    ),
+                ),
             ],
         ),
     ]

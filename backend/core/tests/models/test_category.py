@@ -31,6 +31,7 @@ class CategoryTests(TestCase):
             self.category.text = ""
             self.category.full_clean()
 
+    
     def test_category_colour_accepts_hex_code(self):
         self.category.colour = "#A1B2C3"
         self.category.full_clean()

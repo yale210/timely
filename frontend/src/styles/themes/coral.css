@@ -1,0 +1,9 @@
+[data-theme="coral"] {
+  --primary: #ef6f6c;
+  --primary-hover: #e35b57;
+
+  --background: #fff6f4;
+  --text-color: #4a2f2d;
+
+  --border: #f1c8c2;
+}

@@ -28,7 +28,6 @@ class Category(models.Model):
             )
         ],
     )
-
     colour_override = models.BooleanField(default=False)
 
     # Return the category.

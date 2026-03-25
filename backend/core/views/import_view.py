@@ -10,6 +10,13 @@ from django.utils import timezone
 class ImportView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
+    @staticmethod
+    def _parse_ical_datetime(value: str) -> datetime:
+        parsed = datetime.strptime(value, "%Y%m%dT%H%M%S")
+        if timezone.is_naive(parsed):
+            return timezone.make_aware(parsed)
+        return parsed
+
     def post(self, request):
         """
         Handle the import of events from a .txt file in iCalendar format.
@@ -34,22 +41,15 @@ class ImportView(APIView):
         # Lines of the file are put into a list
         lines = content.splitlines()
 
-        # A list of all the events, this is what is actually being imported
-        # The idea is that every event that is not a duplicate will be put into this list,
-        # at the very end, all events in this list will be added
+        # A list of all the events to be imported, updated as the file is read
         events = []
 
-        # Tracks the current event being added, events will be added one-by-one,
-        # as they need to be checked for validity e.g. contains required fields
+        # Tracks the current event being added, events will be added one-by-one
         current_event = None
 
         # Not all files submitted are valid -> there is a standard iCalendar, other files are invalid
-        # This will only be the case if the user manually modifies the file and makes errors
-        # Any file uploaded that was generated from a website should generally work fine
         try:
-            # Every event is uploaded to the DB, or none of them are
-            # For example, an error here will cause no changes to be made to the DB
-            # An example of an error is: invalid syntax
+            # Every event is uploaded to the DB, or none of them are -> Atomicity
             with transaction.atomic():
                 # Empty .txt file -> nothing to import
                 if len(lines) == 0:
@@ -63,13 +63,11 @@ class ImportView(APIView):
                 elif lines[-1] != "END:VCALENDAR":
                     raise ValueError("File requires: END:VCALENDAR")
 
-                # Line number tracker, returned to the user in case of errors
+                # Line number tracker
                 count = 0
 
                 # Each lines is read one-by-one
                 for line in lines:
-                    # Line count is tracked
-                    #
                     count = count + 1
 
                     # This signifies that every line below it is information about the event
@@ -79,7 +77,6 @@ class ImportView(APIView):
                             # A dictionary is used here as this is what iCalendar uses
                             current_event = {}
                         # This error means that a new event was started before the previous one was ended
-                        # This is an error with how the file is formatted
                         else:
                             raise ValueError("Event indentation error")
 
@@ -104,11 +101,6 @@ class ImportView(APIView):
                                     "One or more events don't have a summary"
                                 )
 
-                            # The start & end dates are unique as they have a timezone attached to them e.g. DTSTART;TZID=Europe/London
-                            # As many timezones are supported by the application it means that the process for finding this in the
-                            # file is slightly more complex, each key needs to be searched to see if it contains "DTSTART" or "DTEND",
-                            # if yes, then proceed as normal
-
                             # Assume that the event is invalid
                             start_date_time_exists = False
                             # Search every key
@@ -116,8 +108,6 @@ class ImportView(APIView):
                                 if "DTSTART" in key:
                                     # The actual date/time of the event
                                     dt_start = current_event[key]
-                                    # The name of the timezone e.g. TZID=Europe/London
-                                    # dt_start_timezone = 1
 
                                     # Date/time has been found
                                     start_date_time_exists = True
@@ -137,8 +127,6 @@ class ImportView(APIView):
                                 if "DTEND" in key:
                                     # The actual date/time of the event
                                     dt_end = current_event[key]
-                                    # The name of the timezone e.g. TZID=Europe/London
-                                    # dt_end_timezone = 1
 
                                     # Date/time has been found
                                     end_date_time_exists = True
@@ -150,10 +138,6 @@ class ImportView(APIView):
                                 raise ValueError(
                                     "One or more events don't have a DTEND"
                                 )
-
-                            # UID will not be checked for because the DJango database will create an ID anyway for the event,
-                            # it also serves no practical purpose for the user, essentially UID is only useful as a primary key
-                            # for DB related queries etc, but the user will never see this value and it is purely used by DJango
 
                             # A description is optional, no error for it not existing
                             if "DESCRIPTION" in current_event:
@@ -168,9 +152,6 @@ class ImportView(APIView):
                                 location = None
 
                             # A DTSTAMP is optional, no error for it not existing,
-                            # But, the applicaiton will manually create one this is because a DTSTAMP is the
-                            # "last edited" date/time of an event, importing events that don't have this detail
-                            # will be assumed to have been last edited at time of uploading -> timezone.now()
                             if "DTSTAMP" in current_event:
                                 dt_stamp = current_event["DTSTAMP"]
                             else:
@@ -187,28 +168,22 @@ class ImportView(APIView):
                                 dt_stamp = current_date_time
 
                             # A location is optional, no error for it not existing
-                            # This is because not all events repeat
-                            # In the iCalendar format, if an event is a one time event, it will not have an RRule,
-                            # If it does have this line, then it does repeat
-                            # There are different types of repetitions, this will be managed during object creation
+
                             if "RRULE" in current_event:
                                 r_rule = current_event["RRULE"]
 
-                                a, b = r_rule.split(";")
+                                left, right = r_rule.split(";")
 
-                                c, frequency_interval = a.split("=")
+                                _, frequency_interval = left.split("=")
 
-                                d, until_date = b.split("=")
+                                _, until_date = right.split("=")
 
                                 # E.g. DAILY
                                 frequency_interval_final = Event.RecurrenceInterval[
                                     frequency_interval
                                 ]
 
-                                # Useless
-                                c = c
-                                d = d
-
+                                # None means repeat indefinitely, else a date will be specified
                                 if until_date == "None":
                                     until_date_final = None
                                 else:
@@ -221,26 +196,22 @@ class ImportView(APIView):
                                 frequency_interval_final = None
                                 until_date_final = None
 
-                            # At this stage all the details about the event have been collected, and the required details,
-                            # are definitely provided also
-
-                            # In order to not have duplicate events (this may occur if the user continously imports the same file),
-                            # it needs to be checked if this event already exists,
-                            # as event IDS, (UID) are useless for this due to them being managed by DJango,
-                            # an event will be considered identical if it has the same name and occurs at the same exact time
-                            # e.g. if the user has an event "Interview" from 12:00 to 12:30, and tries to import an event with these details,
-                            # the event will not be added, however, this is not an error that causes the program to stop,
-                            # as the user may be importing other events that are unqique, so it is necessary to check all events
-
                             # The DB stores date/time using the DJango format, but iCalendar uses a different format so conversion is necessary
-                            start_date_time_django_format = datetime.strptime(
-                                dt_start, "%Y%m%dT%H%M%S"
+                            start_date_time_django_format = timezone.make_aware(
+                                datetime.strptime(dt_start, "%Y%m%dT%H%M%S")
                             )
-                            end_date_time_django_format = datetime.strptime(
-                                dt_end, "%Y%m%dT%H%M%S"
+                            end_date_time_django_format = timezone.make_aware(
+                                datetime.strptime(dt_end, "%Y%m%dT%H%M%S")
                             )
 
                             # True / False, does this event already exist?
+                            start_date_time_django_format = self._parse_ical_datetime(
+                                dt_start
+                            )
+                            end_date_time_django_format = self._parse_ical_datetime(
+                                dt_end
+                            )
+
                             event_exists_pre_import = Event.objects.filter(
                                 user=request.user,
                                 title=summary,
@@ -252,23 +223,15 @@ class ImportView(APIView):
                             # This approach ensures that if the file is broken halfway through, there will not be a scenario where half
                             # of the events are imported but the other half are not
                             if not event_exists_pre_import:
-                                # The DB stores date/time using the DJango format, but iCalendar uses a different format so conversion is necessary
-                                start_date_time_django_format = datetime.strptime(
-                                    dt_start, "%Y%m%dT%H%M%S"
-                                )
-                                end_date_time_django_format = datetime.strptime(
-                                    dt_end, "%Y%m%dT%H%M%S"
-                                )
-
-                                # Event Data
+                                # Event data to add
                                 new_event_to_import_data = [
                                     {
                                         "title": f"{summary}",
                                         "description": f"{description}",
                                         "location": f"{location}",
                                         "dt_stamp": f"{dt_stamp}",
-                                        "start_time": f"{start_date_time_django_format}",
-                                        "end_time": f"{end_date_time_django_format}",
+                                        "start_time": start_date_time_django_format,
+                                        "end_time": end_date_time_django_format,
                                         "r_rule_freq": f"{frequency_interval_final}",
                                         "r_rule_until": f"{until_date_final}",
                                     }
@@ -287,12 +250,12 @@ class ImportView(APIView):
                         current_event[key] = value
 
             # At this stage the file format is correct and all duplicate events have been ignored
-            # All new events to import are in the events list
             events = events
 
             # Every event is added to the DB
             for e in events:
                 for event in e:
+                    # Recurring eent
                     if ("r_rule_freq" in event) and (
                         event["r_rule_freq"] and event["r_rule_freq"] != "None"
                     ):
@@ -310,6 +273,7 @@ class ImportView(APIView):
                             recurrence_end=event["r_rule_until"],
                         )
 
+                    # One-time event
                     else:
                         Event.objects.create(
                             user=request.user,

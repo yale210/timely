@@ -1,3 +1,4 @@
+from .assessment import Assessment
 from .commute import Commute
 from .day_of_week import DayOfWeek
 from .event import Event
@@ -11,8 +12,10 @@ from .profile import Profile
 from .grade import Grade
 from .friendship import Friendship
 from .reminder_dispatch_log import ReminderDispatchLog
+from .pending_share_event import PendingShareEvent
 
 __all__ = [
+    "Assessment",
     "Commute",
     "DayOfWeek",
     "Event",
@@ -26,4 +29,5 @@ __all__ = [
     "Grade",
     "Friendship",
     "ReminderDispatchLog",
+    "PendingShareEvent",
 ]
