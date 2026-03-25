@@ -3,20 +3,24 @@ import AppLayout from "@/layouts/AppLayout";
 import { useCourses } from "@/hooks/course/useCourse";
 import type {Course, CourseCreation, CourseStudent, CourseUpdate} from "@/types/course";
 import ConfirmationModal from "@/components/modals/ConfirmationModal";
-import {getCourseStudents} from "@/services/courseService.tsx";
+import {getCourseStudents} from "@/services/courseService.ts";
+import {useNavigate} from "react-router-dom";
 
 /**
  * Course management page for teachers and staff.
  * Allows creating, editing, and managing students in courses.
  */
-export default function CourseManagement() {
-  const { state, filteredCourses, loading, error, actions } = useCourses();
-  const [showCreateModal, setShowCreateModal] = useState(false);
+export default function CourseManagement()
+{
+  const { state, managedFilteredCourses, loading, error, actions } = useCourses();
+  const [, setShowCreateModal] = useState(false);
   const [editingCourse, setEditingCourse] = useState<Course | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<Course | null>(null);
   const [studentsTarget, setStudentsTarget] = useState<Course | null>(null);
   const [students, setStudents] = useState<CourseStudent[]>([]);
   const [studentsLoading, setStudentsLoading] = useState(false);
+  const navigate = useNavigate();
+  const [createCourse] = useState(() => () => navigate("/course/create"));
 
   useEffect(() => {
     if (!studentsTarget) {
@@ -28,7 +32,7 @@ export default function CourseManagement() {
       setStudentsLoading(true);
       try {
         const data = getCourseStudents(studentsTarget.id)
-        setStudents(data);
+        setStudents(await data);
       } catch (loadError) {
         console.error(loadError);
         setStudents([]);
@@ -136,10 +140,7 @@ export default function CourseManagement() {
               />
               <button
                 type="button"
-                onClick={() => {
-                  setShowCreateModal(true);
-                  setFormError(null);
-                }}
+                onClick={createCourse}
                 className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700 transition-colors"
               >
                 + New Course
@@ -156,11 +157,11 @@ export default function CourseManagement() {
             </div>
           )}
 
-          {loading && filteredCourses.length === 0 && (
+          {loading && managedFilteredCourses.length === 0 && (
             <p className="text-sm text-gray-500">Loading courses...</p>
           )}
 
-          {!loading && filteredCourses.length === 0 && (
+          {!loading && managedFilteredCourses.length === 0 && (
             <div className="rounded-lg border border-dashed border-gray-300 bg-gray-50 px-6 py-12 text-center">
               <span className="material-icons text-4xl text-gray-400">school</span>
               <h3 className="mt-3 text-lg font-semibold text-gray-900">
@@ -171,7 +172,7 @@ export default function CourseManagement() {
               </p>
               <button
                 type="button"
-                onClick={() => setShowCreateModal(true)}
+                onClick={createCourse}
                 className="mt-4 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700"
               >
                 Create Course
@@ -180,7 +181,7 @@ export default function CourseManagement() {
           )}
 
           {/* Courses Table */}
-          {filteredCourses.length > 0 && (
+          {managedFilteredCourses.length > 0 && (
             <div className="overflow-hidden rounded-lg border border-gray-200 shadow-sm">
               <table className="min-w-full divide-y divide-gray-200">
                 <thead className="bg-gray-50">
@@ -203,7 +204,8 @@ export default function CourseManagement() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-200 bg-white">
-                  {filteredCourses.map((course) => (
+                  {managedFilteredCourses.map((course) => (
+
                     <tr key={course.id} className="hover:bg-gray-50 transition-colors">
                       <td className="whitespace-nowrap px-4 py-4">
                         <div className="font-medium text-gray-900">{course.name}</div>
@@ -232,6 +234,13 @@ export default function CourseManagement() {
                         <div className="flex justify-end gap-2">
                           <button
                             type="button"
+                            onClick={() => setStudentsTarget(course)}
+                            className="rounded-md border border-indigo-300 px-3 py-1.5 text-sm text-indigo-700 hover:bg-indigo-50 transition-colors"
+                          >
+                            View students
+                          </button>
+                          <button
+                            type="button"
                             onClick={() => openEditModal(course)}
                             className="rounded-md border border-gray-300 px-3 py-1.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
                           >
@@ -255,8 +264,9 @@ export default function CourseManagement() {
         </main>
       </div>
 
-      {/* Create Course Modal */}
-      {showCreateModal && (
+      {/* ... existing code ... */}
+
+      {studentsTarget && (
         <div className="fixed inset-0 z-50 flex items-center justify-center">
           <button
             type="button"
@@ -265,7 +275,7 @@ export default function CourseManagement() {
             className="absolute inset-0 bg-black/40"
           />
           <div className="relative z-10 w-full max-w-md rounded-xl bg-white p-6 shadow-2xl">
-            <h2 className="text-lg font-semibold text-gray-900">Create New Course</h2>
+            <button onClick={createCourse} className="text-lg font-semibold text-gray-900">Createee New Course</button>
             <p className="mt-1 text-sm text-gray-500">
               Fill in the details for your new course.
             </p>
@@ -392,20 +402,6 @@ export default function CourseManagement() {
                   className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
                 />
               </div>
-              <div className="flex items-center gap-3">
-                <input
-                  id="edit-active"
-                  type="checkbox"
-                  checked={editForm.active !== false}
-                  onChange={(e) =>
-                    setEditForm((prev) => ({ ...prev, active: e.target.checked }))
-                  }
-                  className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
-                />
-                <label htmlFor="edit-active" className="text-sm text-gray-700">
-                  Course is active
-                </label>
-              </div>
             </div>
 
             <div className="mt-6 flex justify-end gap-3">
@@ -453,8 +449,8 @@ export default function CourseManagement() {
                 <h2 className="text-lg font-semibold text-gray-900">
                   Students in {studentsTarget.name}
                 </h2>
-                <p className="text-sm text-gray-500">
-                  {studentsTarget.cohort ?? students.length} enrolled student(s)
+                <p className="mt-1 text-sm text-gray-500">
+                  All students enrolled in this course.
                 </p>
               </div>
               <button
