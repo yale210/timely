@@ -1,9 +1,10 @@
 import { useState, useEffect, useRef, useCallback } from "react";
+import { buildWebSocketUrl, getReconnectDelay, handleWebSocketMessage } from "@/hooks/common/webSocketUtils";
 
-/** The current state of the WebSocket connection. */
+/** The supported WebSocket connection states. */
 export type ConnectionStatus = "CONNECTING" | "OPEN" | "CLOSING" | "CLOSED";
 
-/** The possible values for ConnectionStatus. */
+/** Available WebSocket connection status values. */
 export const ConnectionStatusValues = {
   CONNECTING: "CONNECTING" as ConnectionStatus,
   OPEN: "OPEN" as ConnectionStatus,
@@ -11,21 +12,44 @@ export const ConnectionStatusValues = {
   CLOSED: "CLOSED" as ConnectionStatus,
 } as const;
 
-/**
- * Constructs a full WebSocket URL from a relative path or partial URL.
- * @param u - The URL or path to convert.
- * @returns A fully qualified WebSocket URL.
- */
-const buildUrl = (u: string) => {
-  const p = window.location.protocol === "https:" ? "wss:" : "ws:";
-  return u.startsWith("ws") ? u : `${p}//${window.location.host}${u}`;
+const attachSocketListeners = (
+  socket: WebSocket,
+  onMessage: (data: unknown) => void,
+  disposedRef: React.MutableRefObject<boolean>,
+  socketRef: React.MutableRefObject<WebSocket | null>,
+  attemptsRef: React.MutableRefObject<number>,
+  setStatus: React.Dispatch<React.SetStateAction<ConnectionStatus>>,
+  scheduleReconnect: () => void,
+) => {
+  socket.onopen = () => {
+    if (!disposedRef.current) {
+      setStatus(ConnectionStatusValues.OPEN);
+      attemptsRef.current = 0;
+    }
+  };
+  socket.onmessage = (event) => { handleWebSocketMessage(event.data as string, onMessage); };
+  socket.onerror = () => { socket.close(); };
+  socket.onclose = (event) => {
+    if (disposedRef.current) return;
+    setStatus(ConnectionStatusValues.CLOSED);
+    socketRef.current = null;
+    if (event.code !== 1000) scheduleReconnect();
+  };
+};
+
+const closeSocket = (socketRef: React.MutableRefObject<WebSocket | null>, timeoutRef: React.MutableRefObject<number | null>) => {
+  socketRef.current?.close(1000, "Component unmounting");
+  if (timeoutRef.current) clearTimeout(timeoutRef.current);
+};
+
+const sendJsonMessage = (socketRef: React.MutableRefObject<WebSocket | null>, data: unknown) => {
+  if (socketRef.current?.readyState === WebSocket.OPEN) socketRef.current.send(JSON.stringify(data));
 };
 
 /**
- * A custom hook to manage a WebSocket connection.
- * @param url - The URL of the WebSocket endpoint, or null if no connection should be made.
- * @param onMessage - Callback function invoked when a message is received from the server.
- * @returns An object containing the current connection status and a function to send messages.
+ * Manages a WebSocket connection with reconnection and JSON message parsing.
+ * @param url - The WebSocket endpoint or null when disconnected.
+ * @param onMessage - Called with parsed message payloads.
  */
 export const useWebSocket = (url: string | null, onMessage: (data: unknown) => void) => {
   const [status, setStatus] = useState<ConnectionStatus>(ConnectionStatusValues.CLOSED);
@@ -33,42 +57,19 @@ export const useWebSocket = (url: string | null, onMessage: (data: unknown) => v
   const timeoutRef = useRef<number | null>(null);
   const attemptsRef = useRef(0);
   const disposedRef = useRef(false);
-  const connectRef = useRef<() => void>(() => {
-    // Initialised as a no-op to be populated by useEffect
-  });
+  const connectRef = useRef<() => void>(() => undefined);
+
+  const scheduleReconnect = useCallback(() => {
+    timeoutRef.current = window.setTimeout(() => { attemptsRef.current += 1; connectRef.current(); }, getReconnectDelay(attemptsRef.current));
+  }, []);
 
   const connect = useCallback(() => {
     if (!url || disposedRef.current) return;
     setStatus(ConnectionStatusValues.CONNECTING);
-    const s = new WebSocket(buildUrl(url));
-    socketRef.current = s;
-    s.onopen = () => {
-      if (!disposedRef.current) {
-        setStatus(ConnectionStatusValues.OPEN);
-        attemptsRef.current = 0;
-      }
-    };
-    s.onmessage = (e) => {
-      try {
-        onMessage(JSON.parse(e.data as string));
-      } catch {
-        /* ignore parsing errors */
-      }
-    };
-    s.onerror = () => s.close();
-    s.onclose = (e) => {
-      if (disposedRef.current) return;
-      setStatus(ConnectionStatusValues.CLOSED);
-      socketRef.current = null;
-      if (e.code !== 1000) {
-        const t = Math.min(1000 * Math.pow(2, attemptsRef.current), 30000);
-        timeoutRef.current = window.setTimeout(() => {
-          attemptsRef.current += 1;
-          connectRef.current();
-        }, t);
-      }
-    };
-  }, [url, onMessage]);
+    const socket = new WebSocket(buildWebSocketUrl(url));
+    socketRef.current = socket;
+    attachSocketListeners(socket, onMessage, disposedRef, socketRef, attemptsRef, setStatus, scheduleReconnect);
+  }, [onMessage, scheduleReconnect, url]);
 
   useEffect(() => {
     connectRef.current = connect;
@@ -77,16 +78,9 @@ export const useWebSocket = (url: string | null, onMessage: (data: unknown) => v
     return () => {
       disposedRef.current = true;
       clearTimeout(tId);
-      socketRef.current?.close(1000, "Component unmounting");
-      if (timeoutRef.current) clearTimeout(timeoutRef.current);
+      closeSocket(socketRef, timeoutRef);
     };
   }, [connect]);
 
-  const send = useCallback((d: unknown) => {
-    if (socketRef.current?.readyState === WebSocket.OPEN) {
-      socketRef.current.send(JSON.stringify(d));
-    }
-  }, []);
-
-  return { status, sendMessage: send };
+  return { status, sendMessage: useCallback((data: unknown) => { sendJsonMessage(socketRef, data); }, []) };
 };
