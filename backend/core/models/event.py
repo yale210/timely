@@ -1,3 +1,5 @@
+import math
+
 from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.db import models
@@ -66,25 +68,28 @@ class Event(BaseEventModel):
         return super().save(*args, **kwargs)
 
     def calculate_time_left(self):
-        """
-        Calculate the time left of the event.
+        """Calculate the time left of the event.
+
         If event is recurring, return days between now and recurrence end date.
         If event is a one off, return days between start_time and now.
-        """
 
-        # If user doesn't  have a preference, we don't know their timezone so return 0
+        Returns:
+            int: The number of days remaining.
+
+        """
+        # If user doesn't have a preference, we don't know their timezone so return 0
         if not hasattr(self.user, "preference") or not self.user.preference.timezone:
             return 0
 
         user_timezone = ZoneInfo(self.user.preference.timezone)
-        today = timezone.now().astimezone(user_timezone).date()
+        now = timezone.now().astimezone(user_timezone)
+        today = now.date()
 
         if self.recurrence_interval and self.recurrence_end:
             return max((self.recurrence_end - today).days, 0)
 
-        # DB uses UTC, convert to correct timezone first.
         if self.start_time:
-            start_time = self.start_time.astimezone(user_timezone).date()
-            return max((start_time - today).days, 0)
+            diff = self.start_time - now
+            return max(math.ceil(diff.total_seconds() / 86400), 0)
 
         return 0
