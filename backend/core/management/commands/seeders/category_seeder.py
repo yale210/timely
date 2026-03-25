@@ -38,8 +38,8 @@ class CategorySeeder(BaseSeeder):
                 "pk": None,
                 "user": temporary_user.id,
                 "fields": {
-                    "text": word,
-                    "colour": colour,
+                    "text": self.faker.word(),
+                    "colour": self.faker.hex_color(),
                 },
             }
         )
