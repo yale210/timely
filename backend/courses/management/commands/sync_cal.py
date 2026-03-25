@@ -1,4 +1,5 @@
 # backend/courses/management/commands/sync_calendar.py
+from django.contrib.auth import get_user_model
 from django.core.management.base import BaseCommand
 from authentication.models import User
 
@@ -16,7 +17,7 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         if options["user"]:
-            user = authentication.models.Users.objects.get(username=options["user"])
+            user = get_user_model().objects.get(username=options["user"])
             stats = CourseEventSyncService.sync_user_course_events(user)
             self.stdout.write(
                 self.style.SUCCESS(
