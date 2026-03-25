@@ -6,7 +6,6 @@ from .fixtures.assessment_fixtures import assessments, assessment_events
 from django.contrib.auth import get_user_model
 from core.management.commands.seeders.base import BaseSeeder
 from django.utils import timezone
-from datetime import timedelta
 
 
 class AssessmentSeeder(BaseSeeder):
@@ -65,7 +64,6 @@ class AssessmentSeeder(BaseSeeder):
                         ]
                     ),
                     "due_date": timezone.make_aware(self.faker.date_time()),
-                    
                     "length_of_assessment": random.randint(1, 300),
                     "weighting_of_assessment": random.randint(1, 100),
                     "notes": self.faker.sentence(),
@@ -80,9 +78,6 @@ class AssessmentSeeder(BaseSeeder):
         )
 
     def _populate_random_assessment_event(self):
-        start = timezone.make_aware(self.faker.date_time())
-        end = start + timedelta(minutes=random.randint(1, 60))
-
         self._create_event(
             {
                 "fields": {
@@ -95,7 +90,6 @@ class AssessmentSeeder(BaseSeeder):
                     "title": self.faker.sentence(),
                     "description": self.faker.sentence(),
                     "location": self.faker.word(),
-                    
                     "recurrence_interval": None,
                     "recurrence_end": None,
                     "exception_dates": [],
@@ -113,9 +107,7 @@ class AssessmentSeeder(BaseSeeder):
 
         Assessment.objects.get_or_create(
             user=user,
-            
             title=data["fields"]["title"],
-            
             assessment_type=data["fields"]["assessment_type"],
             due_date=data["fields"]["due_date"],
             length_of_assessment=data["fields"]["length_of_assessment"],
@@ -133,7 +125,6 @@ class AssessmentSeeder(BaseSeeder):
             description=data["fields"]["description"],
             location=data["fields"]["location"],
             colour=data["fields"]["colour"],
-            
             recurrence_interval=data["fields"]["recurrence_interval"],
             recurrence_end=data["fields"]["recurrence_end"],
             exception_dates=data["fields"]["exception_dates"],
