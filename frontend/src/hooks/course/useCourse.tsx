@@ -1,6 +1,7 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import {useCallback, useEffect, useMemo, useState} from "react";
 import * as courseService from "@/services/courseService";
-import type { Course, CourseCreation, CourseUpdate } from "@/types/course";
+import type {Course, CourseCreation, CourseUpdate} from "@/types/course";
+import {authStore} from "@/services/authService.ts";
 
 interface UseCoursesState {
   courses: Course[];
@@ -15,7 +16,7 @@ interface UseCoursesActions {
   createCourse: (data: CourseCreation) => Promise<Course | null>;
   updateCourse: (id: number, data: CourseUpdate) => Promise<Course | null>;
   deleteCourse: (id: number) => Promise<void>;
-  joinCourse: (id: number) => Promise<Course | null>;
+  joinCourse: (id: string) => Promise<Course | null>;
   leaveCourse: (id: number) => Promise<Course | null>;
 }
 
@@ -142,6 +143,18 @@ export const useCourses = (): UseCoursesReturn => {
     });
   }, [courses, search]);
 
+
+  const managedFilteredCourses = useMemo(()=>{
+    const query = search.trim().toLowerCase();
+    if(!query) return courses.filter(course =>{return course.lead == authStore.getUser()?.id?.toString() || authStore.getUser()?.is_staff;});
+    return courses.filter((course) => {
+      const nameMatch = course.name.toLowerCase().includes(query);
+      const descriptionMatch = course.description.toLowerCase().includes(query);
+      const isLead = (course.lead == authStore.getUser()?.id?.toString()) || authStore.getUser()?.is_staff;
+      return isLead && (nameMatch || descriptionMatch);
+    });
+  }, [courses,search]);
+
  return {
     state: {
       courses,
@@ -150,6 +163,7 @@ export const useCourses = (): UseCoursesReturn => {
       staff,
     },
     filteredCourses,
+    managedFilteredCourses,
     loading,
     error,
     actions: {
