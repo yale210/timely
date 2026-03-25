@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import AppLayout from "@/layouts/AppLayout.tsx";
 import CourseEventsCalendar from "@/components/course/CourseEventsCalendar.tsx";
 import { authStore } from "@/services/authService";
@@ -30,6 +30,7 @@ interface CourseJoinCodeForm {
  */
 export default function CourseDetail() {
   const { id } = useParams();
+  const navigate = useNavigate();
   const currentUser = authStore.getUser();
 
   const [course, setCourse] = useState<Course | null>(null);
