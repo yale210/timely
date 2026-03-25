@@ -65,8 +65,7 @@ class AssessmentSeeder(BaseSeeder):
                         ]
                     ),
                     "due_date": timezone.make_aware(self.faker.date_time()),
-                    "start_time": timezone.make_aware(self.faker.date_time()),
-                    "end_time": timezone.make_aware(self.faker.date_time()),
+                    
                     "length_of_assessment": random.randint(1, 300),
                     "weighting_of_assessment": random.randint(1, 100),
                     "notes": self.faker.sentence(),
@@ -96,8 +95,7 @@ class AssessmentSeeder(BaseSeeder):
                     "title": self.faker.sentence(),
                     "description": self.faker.sentence(),
                     "location": self.faker.word(),
-                    "start_time": start,
-                    "end_time": end,
+                    
                     "recurrence_interval": None,
                     "recurrence_end": None,
                     "exception_dates": [],
@@ -115,8 +113,7 @@ class AssessmentSeeder(BaseSeeder):
 
         Assessment.objects.get_or_create(
             user=user,
-            start_time=data["fields"]["start_time"],
-            end_time=data["fields"]["end_time"],
+            
             title=data["fields"]["title"],
             
             assessment_type=data["fields"]["assessment_type"],
@@ -136,8 +133,7 @@ class AssessmentSeeder(BaseSeeder):
             description=data["fields"]["description"],
             location=data["fields"]["location"],
             colour=data["fields"]["colour"],
-            start_time=data["fields"]["start_time"],
-            end_time=data["fields"]["end_time"],
+            
             recurrence_interval=data["fields"]["recurrence_interval"],
             recurrence_end=data["fields"]["recurrence_end"],
             exception_dates=data["fields"]["exception_dates"],
