@@ -11,6 +11,8 @@ class BroadcastRecipientSerializer(serializers.ModelSerializer):
     email = serializers.ReadOnlyField(source="recipient.email")
 
     class Meta:
+        """Metadata for the BroadcastRecipientSerializer."""
+
         model = BroadcastRecipient
         fields = [
             "id",
