@@ -1,4 +1,4 @@
-"""Seeders for easier database seeding"""
+"""Seeders for easier database seeding."""
 
 from .profile_seeder import ProfileSeeder
 
