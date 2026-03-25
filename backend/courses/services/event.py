@@ -55,8 +55,8 @@ class CalendarEventMapper:
             Dictionary with calendar event data
         """
         return {
-            "title": f"{course_event.course.name} - {course_event.title}",
-            "description": course_event.description or "",
+            "title": f"{course_event.title}",
+            "description": f"{course_event.course.name} + {course_event.title}" + "'\n" + (course_event.description or "") + "\n" + "By " + course_event.created_by.user.username,
             "location": getattr(course_event, "location", ""),
         }
 
@@ -444,7 +444,7 @@ class CourseEventSyncService:
             for course_event in course_events:
                 try:
                     event_title = f"{course_event.course.name} - {course_event.title}"
-
+                    event_description = f"{course_event.course.name} - {course_event.title}" + "'\n" + (course_event.description or "") + "\n" + "By " + course_event.created_by.user.username
                     # Check if event already exists
                     try:
                         core_event = Event.objects.get(
@@ -455,7 +455,7 @@ class CourseEventSyncService:
                         # Update if needed
                         updated = False
                         if core_event.description != (course_event.description or ""):
-                            core_event.description = course_event.description or ""
+                            core_event.description = event_description
                             updated = True
                         if core_event.end_time != course_event.end_time:
                             core_event.end_time = course_event.end_time
@@ -469,7 +469,7 @@ class CourseEventSyncService:
                         core_event = Event(
                             user=user,
                             title=event_title,
-                            description=course_event.description or "",
+                            description=event_description,
                             location=course_event.location or "",
                             colour=course_event.colour,
                             start_time=course_event.start_time,
