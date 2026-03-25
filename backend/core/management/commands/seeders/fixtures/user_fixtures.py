@@ -14,7 +14,7 @@ users = [
         "model": "auth.user",
         "pk": 2,
         "fields": {
-            "username": "dudun",
+            "username": "david",
             "password": "pbkdf2_sha256$1000000$x7OkUUpZ0jz1bkch9G2uXN$6HNY4kQaCjyiH4hc+765D1MYlAXsECbVP1G9VM0Bpg8=",
             "email": "david@example.com",
             "first_name": "David",
