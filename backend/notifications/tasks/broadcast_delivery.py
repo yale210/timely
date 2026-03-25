@@ -5,6 +5,15 @@ from ..models import BroadcastJob, BroadcastRecipient
 
 
 def determine_broadcast_status(delivered_count, failed_count):
+    """Determine the status of a broadcast job based on delivery results.
+
+    Args:
+        delivered_count (int): Number of successfully delivered notifications.
+        failed_count (int): Number of notifications that failed to deliver.
+
+    Returns:
+        str: The status code representing completion, failure, or partial success.
+    """
     if failed_count == 0:
         return BroadcastJob.Status.COMPLETED
     if delivered_count == 0:
@@ -13,6 +22,11 @@ def determine_broadcast_status(delivered_count, failed_count):
 
 
 def complete_broadcast_without_recipients(broadcast):
+    """Mark a broadcast as failed when no recipients are identified.
+
+    Args:
+        broadcast (BroadcastJob): The broadcast job instance to update.
+    """
     broadcast.status = BroadcastJob.Status.FAILED
     broadcast.completed_at = timezone.now()
     broadcast.failed_count = 0
@@ -33,6 +47,16 @@ def complete_broadcast_without_recipients(broadcast):
 
 
 def build_broadcast_websocket_payload(notification, sender_username, unread_count):
+    """Construct a payload for WebSocket notification broadcasts.
+
+    Args:
+        notification (Notification, optional): The notification instance.
+        sender_username (str): Username of the notification sender.
+        unread_count (int): Updated unread count for the recipient.
+
+    Returns:
+        dict: Payload containing notification details or just unread count.
+    """
     if notification and notification.id and notification.timestamp:
         return {
             "type": "new_notification",
@@ -54,6 +78,15 @@ def build_broadcast_websocket_payload(notification, sender_username, unread_coun
 
 
 def finalise_broadcast_delivery(broadcast, recipients, delivered, failed, errors):
+    """Update database with final results of a broadcast delivery attempt.
+
+    Args:
+        broadcast (BroadcastJob): The broadcast job being finalised.
+        recipients (list): List of BroadcastRecipient objects to update.
+        delivered (int): Total number of successful deliveries.
+        failed (int): Total number of delivery failures.
+        errors (list): List of error details encountered during delivery.
+    """
     with transaction.atomic():
         BroadcastRecipient.objects.bulk_update(
             recipients,
