@@ -1,3 +1,7 @@
+/**
+ * Displays an XP progress preview for the About page.
+ * @returns The rendered XP mockup.
+ */
 function XPMockup() {
   return (
     <div className="flex flex-col gap-4 rounded-xl bg-white p-5 shadow-md ring-1 ring-gray-900/8">
@@ -43,5 +47,4 @@ function XPMockup() {
   )
 }
 
-
-export default XPMockup;
+export default XPMockup

@@ -1,3 +1,7 @@
+/**
+ * Displays a leaderboard preview for the About page.
+ * @returns The rendered social mockup.
+ */
 function SocialMockup() {
   const users = [
     { rank: 1, initials: "AK", name: "Alex K.", xp: "8,920", isYou: false },
