@@ -26,13 +26,10 @@ class UserSeeder(BaseSeeder):
         username = data["fields"]["username"]
         email = data["fields"]["email"]
 
-        if User.objects.filter(username=username).exists():
-            return None
-        if User.objects.filter(email=email).exists():
+        if User.objects.filter(email=email).exclude(username=username).exists():
             return None
 
-        User.objects.get_or_create(
-            id=data.get("pk"),
+        User.objects.update_or_create(
             username=username,
             defaults={
                 "email": email,

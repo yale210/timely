@@ -1,5 +1,7 @@
 """Seed profile records for local development and test data."""
 
+from django.utils import timezone
+from django.utils.dateparse import parse_datetime
 from profiles.models import Profile
 
 from .fixtures.profile_fixtures import profiles
@@ -29,18 +31,22 @@ class ProfileSeeder(BaseSeeder):
 
     def _create_profile(self, data):
         """Create a profile record for an existing user fixture entry."""
-        User = get_user_model()
-        user_id = data["fields"]["user"]
-        temporary_user = User.objects.filter(id=user_id).first()
+        temporary_user = self.resolve_user(data["fields"]["user"])
         if temporary_user is None:
             return
 
-        Profile.objects.get_or_create(
-            user_id=user_id,
+        creation_date = data["fields"]["creation_date"]
+        if isinstance(creation_date, str):
+            creation_date = parse_datetime(creation_date)
+            if creation_date is not None and timezone.is_naive(creation_date):
+                creation_date = timezone.make_aware(creation_date)
+
+        Profile.objects.update_or_create(
+            user=temporary_user,
             defaults={
-                "name": temporary_user.username,
+                "name": data["fields"].get("name", temporary_user.username),
                 "date_of_birth": data["fields"]["date_of_birth"],
-                "creation_date": data["fields"]["creation_date"],
+                "creation_date": creation_date,
             },
         )
 
