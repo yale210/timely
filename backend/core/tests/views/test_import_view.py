@@ -4,6 +4,7 @@ from rest_framework.test import APIClient
 from django.core.files.uploadedfile import SimpleUploadedFile
 
 
+#
 class ImportViewTests(TestCase):
     def setUp(self):
         self.client = APIClient()
@@ -70,6 +71,77 @@ class ImportViewTests(TestCase):
         response = self.client.post("/api/import/", {"file": importing_file})
 
         self.assertEqual(response.status_code, 200)
+
+    def test_success_if_logged_in_r2(self):
+        self.client.login(username="testuser", password="password")
+
+        importing_file_content = (
+            b"BEGIN:VCALENDAR\n"
+            b"VERSION:2.0\n"
+            b"PRODID:TIMELY v1.0\n"
+            b"CALSCALE:GREGORIAN\n"
+            b"METHOD:PUBLISH\n"
+            b"BEGIN:VEVENT\n"
+            b"UID:e1\n"
+            b"DTSTART;TZID=Europe/London:20260325T200000\n"
+            b"DTEND;TZID=Europe/London:20260325T210000\n"
+            b"SUMMARY:Title Event 1\n"
+            b"RRULE:FREQ=DAILY;UNTIL=20270417T000000\n"
+            b"END:VEVENT\n"
+            b"END:VCALENDAR\n"
+        ).strip()
+
+        importing_file = SimpleUploadedFile(
+            name="importFile.txt",
+            content=importing_file_content,
+            content_type="text/plain",
+        )
+
+        response = self.client.post("/api/import/", {"file": importing_file})
+
+        self.assertEqual(response.status_code, 200)
+
+    def test_success_x2_no_change(self):
+        self.client.login(username="testuser", password="password")
+
+        importing_file_content = (
+            b"BEGIN:VCALENDAR\n"
+            b"VERSION:2.0\n"
+            b"PRODID:TIMELY v1.0\n"
+            b"CALSCALE:GREGORIAN\n"
+            b"METHOD:PUBLISH\n"
+            b"BEGIN:VEVENT\n"
+            b"UID:e1\n"
+            b"DTSTART;TZID=Europe/London:20260325T200000\n"
+            b"DTEND;TZID=Europe/London:20260325T210000\n"
+            b"SUMMARY:Title Event 1\n"
+            b"RRULE:FREQ=DAILY;UNTIL=20270417T000000\n"
+            b"END:VEVENT\n"
+            b"END:VCALENDAR\n"
+        ).strip()
+
+        importing_file = SimpleUploadedFile(
+            name="importFile.txt",
+            content=importing_file_content,
+            content_type="text/plain",
+        )
+
+        importing_file_2 = SimpleUploadedFile(
+            name="importFile.txt",
+            content=importing_file_content,
+            content_type="text/plain",
+        )
+
+        response = self.client.post("/api/import/", {"file": importing_file})
+
+        self.assertEqual(response.status_code, 200)
+
+        response = self.client.post("/api/import/", {"file": importing_file_2})
+
+        self.assertContains(
+            response,
+            "0 Events were imported, but the file is correctly formatted. Check for duplicates?",
+        )
 
     def test_failure_if_no_file(self):
         self.client.login(username="testuser", password="password")

@@ -3,21 +3,24 @@ import { Routes, Route, useLocation } from "react-router-dom"
 import RequireAuth from "@/components/auth/RequireAuth"
 import RedirectAuth from "@/components/auth/RedirectAuth"
 import RequireAdmin from "@/components/auth/RequireAdmin"
-import { 
-  Home, 
-  Login, 
-  Signup, 
-  Logout, 
-  CalendarPage, 
-  TaskList, 
+import {
+  Home,
+  Login,
+  Signup,
+  Logout,
+  CalendarPage,
+  TaskList,
   Assessments,
-  Gradebook, 
-  Dashboard, 
-  Settings, 
-  Friends, 
-  ProfilePage, 
+  Gradebook,
+  Dashboard,
+  Settings,
+  Friends,
+  Sharing,
+  ProfilePage,
   Leaderboard,
-  NotFound 
+  Pomodoro,
+  NotFound,
+  About
 } from "@/pages"
 import { Notifications } from "@/pages/Notification/Notifications"
 import { NotificationDetail } from "@/pages/Notification/NotificationDetail"
@@ -26,7 +29,7 @@ import { AdminNotificationHistory } from "@/pages/Admin/Notifications/AdminNotif
 import { AdminNotificationHistoryDetail } from "@/pages/Admin/Notifications/AdminNotificationHistoryDetail"
 import { setDocumentTheme } from "@/utils/themeSettings"
 
-const PUBLIC_ROUTES = ["/login", "/signup", "/"]
+const PUBLIC_ROUTES = ["/login", "/signup", "/", "/about"]
 
 /**
  * The root component of the application which organises the routing logic.
@@ -106,9 +109,21 @@ export default function App() {
         </RequireAuth>}
       />
 
+      <Route path="/sharing" element={
+        <RequireAuth>
+          <Sharing />
+        </RequireAuth>}
+      />
+
       <Route path="/leaderboard" element={
         <RequireAuth>
           <Leaderboard />
+        </RequireAuth>}
+      />
+
+      <Route path="/pomodoro" element={
+        <RequireAuth>
+          <Pomodoro />
         </RequireAuth>}
       />
 
@@ -160,7 +175,11 @@ export default function App() {
         </RequireAuth>}
       />
 
-      <Route path="*" element={<NotFound />} />
+      <Route path="/about" element={<About />} />
+
+      <Route path="*" element={
+        <NotFound />
+      } />
 
     </Routes>
   )

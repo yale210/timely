@@ -42,6 +42,7 @@ const createProps = (
     preference: false,
     categories: false,
     saving: false,
+    deleting: false,
   },
   error: {
     preference: null,
@@ -56,6 +57,8 @@ const createProps = (
     saveCategoryLimits: vi.fn(),
     applyTheme: vi.fn(),
     applyFont: vi.fn(),
+    deleteEvents: vi.fn(),
+    deleteTasks: vi.fn(),
   },
 });
 
@@ -79,6 +82,11 @@ describe("SettingsContent", () => {
     fireEvent.click(gradebookToggle);
 
     expect(localStorage.getItem("feature_gradebook_enabled")).toBe("false");
+
+    const pomodoroToggle = screen.getByRole("checkbox", { name: /pomodoro/i });
+    fireEvent.click(pomodoroToggle);
+
+    expect(localStorage.getItem("feature_pomodoro_enabled")).toBe("false");
     expect(dispatchSpy).toHaveBeenCalledWith(expect.any(Event));
   });
 

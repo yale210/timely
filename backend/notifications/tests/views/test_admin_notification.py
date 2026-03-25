@@ -22,7 +22,7 @@ class AdminSendNotificationViewTests(APITestCase):
         self.client.force_authenticate(user=self.admin_user)
         data = {"title": "Admin Note", "message": "Hello everyone", "target": "all"}
         with patch(
-            "admin_panel.views.notification_actions.process_broadcast_job.delay"
+            "admin_panel.views.notification_actions_view.process_broadcast_job.delay"
         ) as mock_task:
             mock_task.return_value.id = "task-123"
             response = self.client.post(self.url, data)
@@ -80,7 +80,7 @@ class AdminSendNotificationViewTests(APITestCase):
     def test_broadcast_history_and_status_endpoints(self):
         self.client.force_authenticate(user=self.admin_user)
         with patch(
-            "admin_panel.views.notification_actions.process_broadcast_job.delay"
+            "admin_panel.views.notification_actions_view.process_broadcast_job.delay"
         ) as mock_task:
             mock_task.return_value.id = "task-456"
             response = self.client.post(
@@ -128,7 +128,7 @@ class AdminSendNotificationViewTests(APITestCase):
         )
 
         with patch(
-            "admin_panel.views.notification_actions.process_broadcast_job.delay"
+            "admin_panel.views.notification_actions_view.process_broadcast_job.delay"
         ) as mock_task:
             mock_task.return_value.id = "task-retry"
             response = self.client.post(

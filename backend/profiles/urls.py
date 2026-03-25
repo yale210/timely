@@ -1,3 +1,5 @@
+"""URL routes for profile-related API endpoints."""
+
 from django.urls import path
 
 from profiles.views.leaderboard_view import LeaderboardAPIView

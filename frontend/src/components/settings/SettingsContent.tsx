@@ -4,6 +4,7 @@ import SettingsSidebar from "@/components/settings/SettingsSidebar";
 import ThemeSection from "@/components/settings/ThemeSection";
 import ProfileSection from "@/components/settings/ProfileSection";
 import CategoryLimitsSection from "@/components/settings/CategoryLimitsSection";
+import PrivacySection from "@/components/settings/PrivacySection";
 import type { UseSettingsReturn } from "@/hooks/settings/useSettings";
 import { useProfileSettings } from "@/hooks/settings/useProfileSettings";
 import { getSchedulingDayMaxMinutes } from "@/utils/schedulingLimits";
@@ -35,14 +36,15 @@ const SettingsContent = ({
     assessments: localStorage.getItem("feature_assessments_enabled") !== "false",
     gradebook: localStorage.getItem("feature_gradebook_enabled") !== "false",
     leaderboard: localStorage.getItem("feature_leaderboard_enabled") !== "false",
+    pomodoro: localStorage.getItem("feature_pomodoro_enabled") !== "false",
   }));
 
   const featureRows = useMemo(() => ([
     {
-      key: "leaderboard",
-      label: "Leaderboard",
-      description: "Allows users to view how they are doing in comparison to their friends.",
-      value: featureFlags.leaderboard,
+      key: "pomodoro",
+      label: "Pomodoro",
+      description: "A focus timer that alternates work sessions with short and long breaks.",
+      value: featureFlags.pomodoro,
     },
     {
       key: "assessments",
@@ -56,15 +58,26 @@ const SettingsContent = ({
       description: "Track and review your grades over time.",
       value: featureFlags.gradebook,
     },
+    {
+      key: "leaderboard",
+      label: "Leaderboard",
+      description: "Allows users to view how they are doing in comparison to their friends.",
+      value: featureFlags.leaderboard,
+    },
   ]), [featureFlags]);
 
-  const updateFeature = (key: "assessments" | "gradebook" | "leaderboard", value: boolean) => {
+  const updateFeature = (
+    key: "assessments" | "gradebook" | "leaderboard" | "pomodoro",
+    value: boolean,
+  ) => {
     if (key === "assessments") {
       localStorage.setItem("feature_assessments_enabled", String(value));
     } else if (key === "gradebook") {
       localStorage.setItem("feature_gradebook_enabled", String(value));
-    } else {
+    } else if (key === "leaderboard") {
       localStorage.setItem("feature_leaderboard_enabled", String(value));
+    } else {
+      localStorage.setItem("feature_pomodoro_enabled", String(value));
     }
     setFeatureFlags((prev) => ({ ...prev, [key]: value }));
     window.dispatchEvent(new Event("feature-flags-changed"));
@@ -160,7 +173,7 @@ const SettingsContent = ({
                         checked={feature.value}
                         onChange={(event) => {
                           updateFeature(
-                            feature.key as "assessments" | "gradebook" | "leaderboard",
+                            feature.key as "assessments" | "gradebook" | "leaderboard" | "pomodoro",
                             event.target.checked,
                           );
                         }}
@@ -275,6 +288,19 @@ const SettingsContent = ({
                 onAvatarChange={profileState.actions.setAvatarFile}
                 onSave={() => {
                   void profileState.actions.saveProfile();
+                }}
+              />
+            ) : null}
+            {state.activeSection === "privacy" ? (
+              <PrivacySection
+                deleting={false}
+                onDeleteEvents={() => {
+                  console.log("Delete Log Test")
+                  return actions.deleteEvents()
+                }}
+                onDeleteTasks={() => {
+                  console.log("Delete Log Test")
+                  return actions.deleteTasks();
                 }}
               />
             ) : null}

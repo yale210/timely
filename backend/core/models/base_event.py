@@ -10,6 +10,7 @@ class BaseEventModel(models.Model):
     colour = models.CharField(max_length=7, blank=True, null=True)
     start_time = models.DateTimeField(default=now)
     end_time = models.DateTimeField(default=now)
+    last_edited = models.DateTimeField(default=now)
 
     class Meta:
         abstract = True

@@ -28,6 +28,27 @@ Object.defineProperty(globalThis.HTMLMediaElement.prototype, "play", {
   value: playMock,
 });
 
+vi.mock("@/context/PomodoroContext", () => ({
+  usePomodoro: vi.fn(() => ({
+    timeLeft: 1500,
+    initialDuration: 25,
+    isActive: false,
+    mode: "focus",
+    viewingMode: "focus",
+    showModal: false,
+    modalMessage: "",
+    setInitialDuration: vi.fn(),
+    startTimer: vi.fn(),
+    stopTimer: vi.fn(),
+    resetTimer: vi.fn(),
+    adjustTime: vi.fn(),
+    setMode: vi.fn(),
+    setViewingMode: vi.fn(),
+    closeModal: vi.fn(),
+  })),
+  PomodoroProvider: ({ children }: { children: React.ReactNode }) => children,
+}));
+
 vi.mock("recharts", async () => {
   const original = await vi.importActual("recharts");
   const ResponsiveContainer: React.FC<RechartsProps> = ({ children }) =>
