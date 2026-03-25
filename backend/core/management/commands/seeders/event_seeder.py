@@ -27,9 +27,11 @@ class EventSeeder(BaseSeeder):
 
     def _create_event(self, data):
         temporary_event, _ = Event.objects.get_or_create(
-            user_id=(data["fields"]["user"].id)
-            if hasattr(data["fields"]["user"], "id")
-            else data["fields"]["user"],
+            user_id=(
+                data["fields"]["user"].id
+                if hasattr(data["fields"]["user"], "id")
+                else data["fields"]["user"]
+            ),
             title=data["fields"]["title"],
             description=data["fields"]["description"],
             location=data["fields"]["location"],
