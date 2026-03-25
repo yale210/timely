@@ -2222,3 +2222,4 @@ frontend/src/pages/Test.tsx
 /data/postgres/postgresql.conf
 /data/postgres/postmaster.opts
 /data/postgres/postmaster.pid
+backend/.python-version

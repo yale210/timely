@@ -28,7 +28,7 @@ class RegisterSerializer(serializers.ModelSerializer):
         """
         username = attrs.get("username").strip().lower()
         if User.objects.filter(username=username).exists():
-            raise serializers.ValidationError("User with this username already exist.")
+            raise serializers.ValidationError("User with this username already exists.")
         return attrs
 
     def create(self, validated_data):

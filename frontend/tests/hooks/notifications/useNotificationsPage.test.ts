@@ -115,6 +115,23 @@ describe("useNotificationsPage Hook", () => {
     expect(getNotifications).toHaveBeenLastCalledWith(2, {});
   });
 
+  it("clamps the page when the total page count shrinks", async () => {
+    vi.mocked(getNotifications)
+      .mockResolvedValueOnce({ results: mockResponse.results, count: 25, next: null, previous: null })
+      .mockResolvedValueOnce({ results: mockResponse.results, count: 5, next: null, previous: null });
+
+    const { result } = renderHook(() => useNotificationsPage());
+
+    await waitFor(() => expect(result.current.state.totalPages).toBe(3));
+
+    act(() => {
+      result.current.actions.setPage(3);
+    });
+
+    await waitFor(() => expect(result.current.state.page).toBe(1));
+    expect(result.current.state.totalPages).toBe(1);
+  });
+
   it("handles handleNotificationClick", async () => {
     const { result } = renderHook(() => useNotificationsPage());
     await waitFor(() => expect(result.current.state.loading).toBe(false));
@@ -239,5 +256,3 @@ describe("useNotificationsPage Hook", () => {
     });
   });
 });
-
-

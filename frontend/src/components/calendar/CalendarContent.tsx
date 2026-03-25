@@ -70,6 +70,7 @@ const CalendarContent = ({
           dateStripDays: state.dateStripDays,
           timeGutterWidth: state.timeGutterWidth,
           isRescheduling: state.isRescheduling,
+          rescheduleWarnings: state.rescheduleWarnings,
         }}
         actions={{
           setView: actions.setView,

@@ -16,7 +16,10 @@ vi.mock("@/pages/index", () => ({
   Settings: () => <div>Settings Page</div>,
   Friends: () => <div>Friends Page</div>,
   ProfilePage: () => <div>Profile Page</div>,
-  Leaderboard: () => <div>Leaderboard Page</div>
+  Leaderboard: () => <div>Leaderboard Page</div>,
+  Pomodoro: () => <div>Pomodoro Page</div>,
+  NotFound: () => <div>Page not found</div>,
+  About: () => <div>About Page</div>,
 }));
 
 vi.mock("@/pages/Notification/Notifications", () => ({
@@ -149,6 +152,15 @@ describe("App Component", () => {
     expect(getByText("Gradebook Page")).toBeDefined();
   });
 
+  it("should render Pomodoro page", () => {
+    const { getByText } = render(
+      <MemoryRouter initialEntries={["/pomodoro"]}>
+        <App />
+      </MemoryRouter>
+    );
+    expect(getByText("Pomodoro Page")).toBeDefined();
+  });
+
   it("should render Dashboard page", () => {
     const { getByText } = render(
       <MemoryRouter initialEntries={["/dashboard"]}>
@@ -212,4 +224,22 @@ describe("App Component", () => {
     expect(getByText("Settings Page")).toBeDefined();
   });
 
+  it("should render About page", () => {
+    const { getByText } = render(
+      <MemoryRouter initialEntries={["/about"]}>
+        <App />
+      </MemoryRouter>
+    );
+    expect(getByText("About Page")).toBeDefined();
+  });
+
+  it("should render 404 page for unknown routes", () => {
+    const { getByText } = render(
+      <MemoryRouter initialEntries={["/does-not-exist"]}>
+        <App />
+      </MemoryRouter>
+    );
+
+    expect(getByText("Page not found")).toBeDefined();
+  });
 });

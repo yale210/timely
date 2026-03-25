@@ -1,0 +1,9 @@
+[data-theme="sea-glass"] {
+  --primary: #2f9c95;
+  --primary-hover: #57b8b1;
+
+  --background: #eef6f4;
+  --text-color: #31454a;
+
+  --border: #9fc8c4;
+}

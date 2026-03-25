@@ -124,6 +124,7 @@ INSTALLED_APPS = [
     "scheduler",
     "profiles.apps.ProfilesConfig",
     "courses.apps.CoursesConfig",
+    "pomo.apps.PomoConfig",
 ]
 
 

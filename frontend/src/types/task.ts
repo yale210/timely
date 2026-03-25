@@ -23,8 +23,14 @@ export interface Task {
   colour?: string | null;
   importance: number;
   completed: boolean;
+  completed_minutes?: number;
+  remaining_minutes?: number;
   locked?: boolean;
   allow_split?: boolean;
+  min_split_minutes?: number;
+  max_split_minutes?: number | null;
+  buffer_before_minutes?: number;
+  buffer_after_minutes?: number;
   categories: Category[];
   estimated_minutes: number;
   parent_task?: number | null;

@@ -8,7 +8,7 @@ describe("ThemeButton", () => {
 
     render(<ThemeButton title="dark" themeChangeFunction={onChange} />);
 
-    fireEvent.click(screen.getByRole("button", { name: "dark" }));
+    fireEvent.click(screen.getByRole("button", { name: "Dark Surface" }));
 
     expect(onChange).toHaveBeenCalledWith("dark");
   });

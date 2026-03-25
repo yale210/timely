@@ -1,6 +1,7 @@
 import { createPortal } from "react-dom";
 import type { Category } from "@/types";
 import { hexToRgba } from "@/utils/colorUtils";
+import type { DropdownPosition } from "./CategoryMultiSelect.types";
 
 /**
  * Props for the category dropdown list.
@@ -25,7 +26,7 @@ import { hexToRgba } from "@/utils/colorUtils";
  */
 interface CategoryDropdownProps {
   isOpen: boolean;
-  dropdownPosition: { top: number; left: number; width: number } | null;
+  dropdownPosition: DropdownPosition | null;
   dropdownMaxHeight: number;
   filtered: Category[];
   selectedIds: number[];
@@ -175,4 +176,3 @@ export const CategoryDropdown = ({
     document.body,
   );
 };
-

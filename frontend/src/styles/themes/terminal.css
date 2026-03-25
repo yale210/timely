@@ -1,0 +1,9 @@
+[data-theme="terminal"] {
+  --primary: #3cff8f;
+  --primary-hover: #72ffb0;
+
+  --background: #0b0f0d;
+  --text-color: #d7e2d9;
+
+  --border: #24513a;
+}

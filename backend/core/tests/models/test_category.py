@@ -35,7 +35,7 @@ class CategoryTests(TestCase):
         self.category.max_daily_study_time = 0
         self.category.full_clean()
 
-        self.category.max_daily_study_time = 24
+        self.category.max_daily_study_time = 1440
         self.category.full_clean()
 
     def test_category_max_daily_study_time_rejects_out_of_bounds(self):
@@ -43,7 +43,7 @@ class CategoryTests(TestCase):
         with self.assertRaises(ValidationError):
             self.category.full_clean()
 
-        self.category.max_daily_study_time = 25
+        self.category.max_daily_study_time = 1441
         with self.assertRaises(ValidationError):
             self.category.full_clean()
 

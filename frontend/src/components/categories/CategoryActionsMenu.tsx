@@ -2,6 +2,10 @@ import { useRef, type RefObject } from "react";
 import { createPortal } from "react-dom";
 import type { Category } from "@/types";
 import { Tooltip } from "@/components";
+import type {
+  CategoryUpdatePatch,
+  FloatingPosition,
+} from "./CategoryMultiSelect.types";
 
 /**
  * Props for the category actions menu.
@@ -18,12 +22,12 @@ import { Tooltip } from "@/components";
  */
 interface CategoryActionsMenuProps {
   openMenuId: number | null;
-  menuPosition: { top: number; left: number } | null;
+  menuPosition: FloatingPosition | null;
   menuRef: RefObject<HTMLDivElement | null>;
   menuCategory?: Category;
   presetColours: string[];
   onDelete: (id: number) => void;
-  onUpdate: (id: number, patch: { colour?: string | null; colour_override?: boolean }) => void;
+  onUpdate: (id: number, patch: CategoryUpdatePatch) => void;
   onClose: () => void;
   onTogglePicker: (rect: DOMRect) => void;
 }
@@ -130,4 +134,3 @@ export const CategoryActionsMenu = ({
     document.body,
   );
 };
-
