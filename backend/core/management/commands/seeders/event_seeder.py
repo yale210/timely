@@ -48,6 +48,7 @@ class EventSeeder(BaseSeeder):
     """
     If an event is recurring
     """
+
     def _populate_random_event(self):
         temporary_user = self._get_or_create_random_user()
         temporary_category = self._get_or_create_random_category(temporary_user)
@@ -58,7 +59,6 @@ class EventSeeder(BaseSeeder):
                     "fields": {
                         "user": temporary_user,
                         "categories": [temporary_category],
-                        
                     }
                 }
             )

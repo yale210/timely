@@ -12,11 +12,11 @@ class PendingShareEvent(models.Model):
     sender = models.ForeignKey(
         settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="sent"
     )
-    
+
     receiver = models.ForeignKey(
         settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="received"
     )
-    
+
     event = models.ForeignKey(
         Event, on_delete=models.CASCADE, related_name="shared_Events"
     )

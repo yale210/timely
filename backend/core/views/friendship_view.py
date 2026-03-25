@@ -15,6 +15,7 @@ class FriendshipViewSet(viewsets.ModelViewSet):
     Manage friendship requests for the authenticated user.
     Users can send, accept, and decline friend requests.
     """
+
     serializer_class = FriendshipSerializer
     permission_classes = [IsAuthenticated]
 
@@ -38,7 +39,6 @@ class FriendshipViewSet(viewsets.ModelViewSet):
 
         serializer.instance = friendship
 
-    
     @action(detail=True, methods=["post"], url_path="accept")
     def accept_request(self, request, pk=None):
         """
@@ -51,7 +51,6 @@ class FriendshipViewSet(viewsets.ModelViewSet):
         else:
             friend_request.accept_friend_request()
             return Response(status=status.HTTP_204_NO_CONTENT)
-
 
     @action(detail=True, methods=["post"], url_path="decline")
     def decline_request(self, request, pk=None):
