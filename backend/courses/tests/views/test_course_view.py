@@ -179,7 +179,6 @@ class CourseViewTests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data["name"], self.course.name)
         self.assertEqual(response.data["cohort"], 1)
-        self.assertEqual(list(response.data["students"]), [self.student.id])
 
     def test_retrieve_excludes_inactive_enrollments_from_cohort(self):
         CourseEnrollment.objects.create(

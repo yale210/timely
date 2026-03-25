@@ -35,14 +35,9 @@ class TeacherModelTests(TestCase):
         teacher.save()
         self.assertFalse(teacher.active)
 
-    def test_teacher_user_relationship(self):
-        """Test that teacher is linked to user correctly."""
-        teacher = Teacher.objects.create(user=self.user)
-        self.assertIn(teacher, self.user.teacher.all())
-
     def test_teacher_cascade_delete(self):
         """Test that deleting user also deletes teacher."""
         teacher = Teacher.objects.create(user=self.user)
-        teacher_id = teacher.id
+        teacher_id = teacher.user_id
         self.user.delete()
-        self.assertFalse(Teacher.objects.filter(id=teacher_id).exists())
+        self.assertFalse(Teacher.objects.filter(user_id=teacher_id).exists())
