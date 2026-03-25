@@ -5,6 +5,9 @@ import * as courseService from "@/services/courseService.ts";
 import { useTeacher } from "@/hooks/course/useTeacher.tsx";
 import {authStore} from "@/services/authService.ts";
 
+/**
+ *
+ */
 export default function CourseCreate() {
   const navigate = useNavigate();
   const { teacher, loading: teacherLoading, error: teacherError } = useTeacher();

@@ -9,6 +9,10 @@ interface UseCoursePermissionsResult {
   refresh: () => Promise<void>;
 };
 
+/**
+ *
+ * @param courseId
+ */
 export function useCoursePermissions(courseId?: number | null): UseCoursePermissionsResult {
   const [permissions, setPermissions] = useState<CoursePermissions | null>(null);
   const [loading, setLoading] = useState(false);

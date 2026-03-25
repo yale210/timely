@@ -1,4 +1,7 @@
 
+/**
+ *
+ */
 function TasksMockup() {
   const items = [
     { title: "Algorithms Assignment", due: "Today, 5:00 PM", color: "#3b82f6", done: true },

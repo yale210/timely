@@ -1,3 +1,6 @@
+/**
+ *
+ */
 function SocialMockup() {
   const users = [
     { rank: 1, initials: "AK", name: "Alex K.", xp: "8,920", isYou: false },

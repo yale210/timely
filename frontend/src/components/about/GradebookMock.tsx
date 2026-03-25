@@ -1,3 +1,6 @@
+/**
+ *
+ */
 function GradebookMockup() {
   const entries = [
     { module: "Algorithms & Data Structures", grade: 78 },

@@ -1,3 +1,6 @@
+/**
+ *
+ */
 export interface TeacherInfo {
   id: number;
   user_id: number;
@@ -12,6 +15,9 @@ export interface TeacherInfo {
   }[];
 }
 
+/**
+ *
+ */
 export interface TeacherCourse {
   id: number;
   name: string;
@@ -20,6 +26,9 @@ export interface TeacherCourse {
   active: boolean;
 }
 
+/**
+ *
+ */
 export interface Teacher {
   id: number;
   user_id: number;

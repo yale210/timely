@@ -5,6 +5,9 @@ import GradebookMockup from "./GradebookMock"
 import XPMockup from "./XPMock"
 import SocialMockup from "./SocialMock"
 
+/**
+ *
+ */
 export interface Feature {
   id: string
   subtitle: string

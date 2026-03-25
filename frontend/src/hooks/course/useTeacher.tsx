@@ -10,6 +10,9 @@ interface UseTeacherState {
   error: string | null;
 }
 
+/**
+ *
+ */
 export function useTeacher() {
   const [state, setState] = useState<UseTeacherState>({
     teacher: null,

@@ -13,6 +13,14 @@ interface CourseEventsDrawerProps {
   onClose: () => void;
 }
 
+/**
+ *
+ * @param root0
+ * @param root0.courseName
+ * @param root0.events
+ * @param root0.loading
+ * @param root0.onClose
+ */
 export default function CourseEventsDrawer({
   courseName,
   events,

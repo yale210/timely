@@ -26,6 +26,14 @@ function getEventStyle(event: Event) {
   };
 }
 
+/**
+ *
+ * @param root0
+ * @param root0.courseName
+ * @param root0.events
+ * @param root0.onClose
+ * @param root0.inline
+ */
 export default function CourseEventsCalendar({
   courseName,
   events,

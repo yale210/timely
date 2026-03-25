@@ -10,6 +10,19 @@ interface CoursesHeaderProps {
   onManageCourses: () => void;
 }
 
+/**
+ *
+ * @param root0
+ * @param root0.search
+ * @param root0.joinCourseId
+ * @param root0.onSearchChange
+ * @param root0.onJoinCourseIdChange
+ * @param root0.onJoinCourse
+ * @param root0.onRefresh
+ * @param root0.onCreateCourse
+ * @param root0.onManageCourses
+ * @param root0.isTeacher
+ */
 export default function CoursesHeader({
   search,
   joinCourseId,

@@ -21,9 +21,7 @@ export default function AboutHero() {
         }}
         className="mx-auto max-w-3xl text-center"
       >
-        <div className="mb-8 flex justify-center">
-        
-        </div>
+        <div className="mb-8 flex justify-center" />
         <h1 className="text-5xl font-semibold tracking-tight text-balance text-gray-900 sm:text-6xl lg:text-7xl">
           Everything you need to{" "}
           <span className="bg-linear-to-r from-indigo-600 to-emerald-500 bg-clip-text text-transparent">

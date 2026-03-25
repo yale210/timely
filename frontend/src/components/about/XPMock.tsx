@@ -1,3 +1,6 @@
+/**
+ *
+ */
 function XPMockup() {
   return (
     <div className="flex flex-col gap-4 rounded-xl bg-white p-5 shadow-md ring-1 ring-gray-900/8">

@@ -178,6 +178,7 @@ export const deleteCourse = async (id: number): Promise<void> => {
 /**
  * Joins the course with the specified code by making an API call and updates relevant permissions cache.
  * @param id - The unique join code of the course to join.
+ * @param code
  * @returns A promise that resolves to the joined course data.
  * @throws {Erorr} If the API call fails or the response data is invalid.
  */
@@ -287,7 +288,13 @@ export const createJoinCode = async (id: number, data: { expires_at: string | nu
   return response.data;
 };
 
-export const makeMyTeacherProfile = async (): Promise<void> => {
+/**
+ *
+ */
+export const /**
+              *
+              */
+makeMyTeacherProfile = async (): Promise<void> => {
   await api.post("/api/teachers/create_teacher/", {
     "user_id": getCurrentUserId()
   });
