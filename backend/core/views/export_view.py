@@ -5,6 +5,9 @@ from core.models import Event
 
 
 class ExportView(APIView):
+    """
+    Export the authenticated user's events in a .txt file in iCalendar format.
+    """
     permission_classes = [permissions.IsAuthenticated]
 
     def get(self, request):

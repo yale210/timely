@@ -11,6 +11,10 @@ from .day_of_week import DayOfWeek
 
 
 def default_day_schedule():
+    """
+    Return the weekly available time slots for the user. 
+    The user is by default available from 8am to 10pm.
+    """
     return [
         {"day": 1, "start": "08:00", "end": "22:00"},
         {"day": 2, "start": "08:00", "end": "22:00"},
@@ -52,6 +56,10 @@ class Preference(models.Model):
     # Store as IANA timezone. Enables us to use timezone aware features (like adjusting for the clocks going forward or back).
     timezone = models.CharField(max_length=100, default="Europe/London")
 
+    """
+    Validate the timezone and weekly schedule to ensure they are in the correct format,
+    and that the max hours per day does not exceed the available time in the schedule.
+    """
     def clean(self):
         super().clean()
         if self.timezone not in available_timezones():
@@ -119,6 +127,11 @@ class Preference(models.Model):
     def get_break_time(self):
         return f"{self.day_start} - {self.day_end}"
 
+
+    """
+    Get the available time frame for the user on a given date.
+    Helps to determine when the user can be scheduled for tasks.
+    """
     def get_day_window(self, target_date):
         day_key = target_date.weekday() + 1
         schedule = {}

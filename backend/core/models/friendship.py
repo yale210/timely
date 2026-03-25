@@ -50,6 +50,9 @@ class Friendship(models.Model):
 
     @classmethod
     def send_request(cls, sender, receiver):
+        """
+        Send a friend request from a sender
+        """
         if sender == receiver:
             raise ValidationError("A user cannot friend themselves.")
 
