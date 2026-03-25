@@ -1,9 +1,15 @@
+""" "Reminder dispatch log model definitions."""
+
 from django.db import models
 
 from .event import Event
 
 
 class ReminderDispatchLog(models.Model):
+    """
+    Record reminder dispatches to make sure no duplicates are sent for the same event.
+    """
+
     source_event = models.ForeignKey(
         Event,
         on_delete=models.CASCADE,

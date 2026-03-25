@@ -1,3 +1,5 @@
+"""Task model definitions."""
+
 from django.db import models
 from django.utils.timezone import now
 from django.conf import settings
@@ -10,11 +12,9 @@ from .importance_choices import ImportanceChoices
 
 class Task(models.Model):
     """
-    This model allows for the creation of tasks.
-    Tasks are one-off events. Anything recurring should be an event.
-    Tasks may have sub-tasks.
-    Examples of tasks may be "Maths coursework" due on the 12th February which will take 4 hours 32 minutes to complete.
-    This could have 3 sub-tasks: read textbook; read brief; complete answers.
+    Task model representing a task that a user needs to complete.
+    Tasks can be one-off or be part of a larger parent task.
+
     """
 
     user = models.ForeignKey(
@@ -73,8 +73,12 @@ class Task(models.Model):
         validators=[MinValueValidator(1), MaxValueValidator(10)],
     )
 
-    # Return the time left between now and the deadline.
     def calculate_time_left(self):
+        """
+        Calculate the number of days left until the task's deadline.
+        Returns:
+            int: Number of days left until the deadline, or 0 if the deadline has passed.
+        """
         current_time = now().date()
         if not self.deadline:
             return 0
@@ -85,6 +89,11 @@ class Task(models.Model):
 
     @property
     def remaining_minutes(self):
+        """
+        Calculate the remaining minutes for the task based on estimated minutes and completed minutes.
+        Returns:
+            int: The remaining minutes for the task.
+        """
         return max(0, self.estimated_minutes - self.completed_minutes)
 
     def clean(self):

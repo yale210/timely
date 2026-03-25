@@ -1,3 +1,5 @@
+"""Friendship model definition."""
+
 from django.conf import settings
 from django.db import models
 from django.db.models import Q
@@ -6,19 +8,26 @@ from django.utils import timezone
 
 
 class Friendship(models.Model):
+    """
+    Model used to allow for users to send friend requests and create friendships.
+    A friendship is represented by a single record with a state of SENT, ACCEPTED or DECLINED.
+    """
+
     class State(models.TextChoices):
+        """
+        Supported friendship values.
+        """
+
         SENT = "SENT", "Sent"
         ACCEPTED = "ACCEPTED", "Accepted"
         DECLINED = "DECLINED", "Declined"
 
-    # User who sent request
     sender = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
         related_name="friend_request_sender",
     )
 
-    # User who received request
     receiver = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
@@ -42,9 +51,21 @@ class Friendship(models.Model):
         ]
 
     def __str__(self):
+        """
+        Return a string representation of the friendship.
+
+        Returns:
+            str: A string representation of the friendship.
+        """
         return f"User: {self.sender} sent a friend request to {self.receiver}. State: {self.state}"
 
     def clean(self):
+        """
+        Prevent invalid friendship states.
+        Raises:
+            ValidationError: If the sender and receiver are the same user.
+        """
+
         if self.sender == self.receiver:
             raise ValidationError("A user cannot friend themselves.")
 
@@ -54,6 +75,10 @@ class Friendship(models.Model):
         Send a friend request from a sender to a receiver.
         If a request already exists, it becomes SENT if it was previously declined.
         Otherwise, an error is raised if the users are already friends or a request is pending.
+
+        Args:
+            sender (User): The user sending the friend request.
+            receiver (User): The user receiving the friend request.
         """
         if sender == receiver:
             raise ValidationError("A user cannot friend themselves.")
@@ -90,11 +115,19 @@ class Friendship(models.Model):
             )
 
     def accept_friend_request(self):
+        """
+        Accept a friend request.
+        The state of the friendship is changed to ACCEPTED.
+        """
         self.state = self.State.ACCEPTED
         self.updated_at = timezone.now()
         self.save()
 
     def decline_friend_request(self):
+        """
+        Decline a friend request.
+        The state of the friendship is changed to DECLINED.
+        """
         self.state = self.State.DECLINED
         self.updated_at = timezone.now()
         self.save()

@@ -1,3 +1,5 @@
+""" "Model for user commutes."""
+
 from django.db import models
 from django.conf import settings
 
@@ -15,4 +17,11 @@ class Commute(models.Model):
     commute_end = models.TimeField()
 
     def __str__(self):
+        """
+        Return the commute window.
+
+        Returns:
+            str: The commute start and end time.
+
+        """
         return f"{self.commute_start} - {self.commute_end}"

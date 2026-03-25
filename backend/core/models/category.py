@@ -1,3 +1,5 @@
+"""Category model definitions"""
+
 from django.core.validators import RegexValidator, MinValueValidator, MaxValueValidator
 from django.db import models
 from django.conf import settings
@@ -35,6 +37,11 @@ class Category(models.Model):
     )
     colour_override = models.BooleanField(default=False)
 
-    # Return the category.
     def __str__(self):
+        """
+        Return the category text as a string representation of the category.
+
+        Returns:
+            str: The text of the category.
+        """
         return self.text
