@@ -18,3 +18,12 @@ export interface ScheduleResponse {
   failed_count: number;
   results: ScheduleResult[];
 }
+
+/**
+ * Represents the response from the event export API.
+ */
+export interface ExportResponse {
+  file_name: string;
+  content_type: string;
+  data: string;
+}

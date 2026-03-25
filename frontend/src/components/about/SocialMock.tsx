@@ -1,5 +1,6 @@
 /**
- *
+ * Displays a leaderboard preview for the About page.
+ * @returns The rendered social mockup.
  */
 function SocialMockup() {
   const users = [

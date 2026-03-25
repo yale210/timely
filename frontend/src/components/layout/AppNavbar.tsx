@@ -17,12 +17,14 @@ const navItems = [
 
 const featureItems = [
   { key: "pomodoro", label: "Pomodoro", to: "/pomodoro", icon: "timer" },
+  { key: "assessments", label: "Assessments", to: "/assessments", icon: "assignment" },
   { key: "gradebook", label: "Gradebook", to: "/gradebook", icon: "school" },
   { key: "leaderboard", label: "Leaderboard", to: "/leaderboard", icon: "leaderboard" },
   { key: "courses", label: "Courses", to: "/courses", icon: "school" },
 ]
 
 const FEATURE_FLAGS = {
+  assessments: "feature_assessments_enabled",
   gradebook: "feature_gradebook_enabled",
   courses: "feature_courses_enabled",
   pomodoro: "feature_pomodoro_enabled",
@@ -50,6 +52,7 @@ export default function AppNavbar() {
   const location = useLocation()
   const isAdminRoute = location.pathname.startsWith("/admin")
   const [featureFlags, setFeatureFlags] = useState(() => ({
+    assessments: readFeatureFlag("assessments"),
     gradebook: readFeatureFlag("gradebook"),
     courses: readFeatureFlag("courses"),
     pomodoro: readFeatureFlag("pomodoro"),
@@ -86,6 +89,7 @@ export default function AppNavbar() {
   useEffect(() => {
     const refreshFlags = () => {
       setFeatureFlags({
+        assessments: readFeatureFlag("assessments"),
         gradebook: readFeatureFlag("gradebook"),
         courses: readFeatureFlag("courses"),
         pomodoro: readFeatureFlag("pomodoro"),
@@ -131,6 +135,7 @@ export default function AppNavbar() {
   }, [user?.username])
 
   const visibleFeatureItems = featureItems.filter((item) => {
+    if (item.key === "assessments") return featureFlags.assessments
     if (item.key === "gradebook") return featureFlags.gradebook
     if (item.key === "courses") return featureFlags.courses
    
@@ -217,6 +222,18 @@ export default function AppNavbar() {
                       }`}
                     >
                       Friends
+                    </Link>
+                  )}
+                </MenuItem>
+                <MenuItem>
+                  {({ focus }) => (
+                    <Link
+                      to="/sharing"
+                      className={`block px-4 py-2 text-sm ${
+                        focus ? "bg-gray-50 text-gray-900" : "text-gray-700"
+                      }`}
+                    >
+                      Event Sharing
                     </Link>
                   )}
                 </MenuItem>

@@ -1,10 +1,5 @@
 import { useState } from "react";
-import type {
-  Event,
-  EventMutationContext,
-  EventSubmission,
-  RecurrenceScope,
-} from "@/types";
+import type { Event, EventMutationContext, EventSubmission, RecurrenceScope } from "@/types";
 
 interface UseRecurrenceScopeActionsParams {
   selectedEvent: Event | undefined;
@@ -14,205 +9,113 @@ interface UseRecurrenceScopeActionsParams {
   onClose: () => void;
 }
 
-/**
- * Hook to manage state and actions for recurring event scope modals.
- * @param params - The parameters for the hook.
- * @param params.selectedEvent - The selected event.
- * @param params.onSubmitEvent - The callback function to handle event submission.
- * @param params.onDelete - An optional callback function to handle event deletion.
- * @param params.onRevertToSeries - Optional callback to revert an overridden instance.
- * @param params.onClose - The callback function to close the sidebar.
- * @returns The state and actions for recurring event scope modals.
- */
-export const useRecurrenceScopeActions = ({
-  selectedEvent,
-  onSubmitEvent,
-  onDelete,
-  onRevertToSeries,
-  onClose,
-}: UseRecurrenceScopeActionsParams) => {
-  const [isScopeModalOpen, setIsScopeModalOpen] = useState(false);
-  const [isAdvancedScopeModalOpen, setIsAdvancedScopeModalOpen] = useState(false);
-  const [scopeModalAction, setScopeModalAction] = useState<"save" | "delete" | null>(null);
-  const [pendingSubmission, setPendingSubmission] = useState<EventSubmission | null>(null);
-  const [pendingAdvancedScope, setPendingAdvancedScope] = useState<
-    Exclude<RecurrenceScope, "this"> | null
-  >(null);
-  const [isRevertModalOpen, setIsRevertModalOpen] = useState(false);
+interface RecurrenceScopeState {
+  isScopeModalOpen: boolean;
+  isAdvancedScopeModalOpen: boolean;
+  scopeModalAction: "save" | "delete" | null;
+  pendingSubmission: EventSubmission | null;
+  pendingAdvancedScope: Exclude<RecurrenceScope, "this"> | null;
+  isRevertModalOpen: boolean;
+}
 
-  const isEditingRecurringEvent = Boolean(
-    selectedEvent?.id && selectedEvent.recurrence_interval,
-  );
-
-  const hasRecurrencePatternChanged = (
-    submission: EventSubmission | null,
-  ): boolean => {
-    if (!submission || !selectedEvent?.recurrence_interval) {
-      return false;
-    }
-    const currentInterval = selectedEvent.recurrence_interval ?? null;
-    const currentEnd = selectedEvent.recurrence_end ?? null;
-    const submittedInterval = submission.recurrence_interval ?? currentInterval;
-    const submittedEnd = submission.recurrence_end ?? currentEnd;
-    return submittedInterval !== currentInterval || submittedEnd !== currentEnd;
-  };
-
-  const buildContext = (scope: RecurrenceScope): EventMutationContext | undefined => {
-    const anchor = selectedEvent?.original_start_time ?? selectedEvent?.start_time;
-    if (!anchor) {
-      return { scope };
-    }
-    return {
-      scope,
-      original_start_time: anchor,
-    };
-  };
-
-  const closeScopeModal = () => {
-    setIsScopeModalOpen(false);
-    setScopeModalAction(null);
-    setPendingSubmission(null);
-  };
-
-  const closeAdvancedScopeModal = (reopenScopeSelection = false) => {
-    setIsAdvancedScopeModalOpen(false);
-    setPendingAdvancedScope(null);
-    if (reopenScopeSelection) {
-      setIsScopeModalOpen(true);
-    }
-  };
-
-  const applyScopedAction = (scope: RecurrenceScope) => {
-    const context = buildContext(scope);
-    if (scopeModalAction === "save" && pendingSubmission) {
-      onSubmitEvent(pendingSubmission, context);
-      closeScopeModal();
-      closeAdvancedScopeModal();
-      onClose();
-      return;
-    }
-    if (scopeModalAction === "delete" && onDelete) {
-      onDelete(context);
-      closeScopeModal();
-      closeAdvancedScopeModal();
-      onClose();
-    }
-  };
-
-  const handleScopeSelect = (scope: RecurrenceScope) => {
-    if (
-      scope === "this" &&
-      scopeModalAction === "save" &&
-      hasRecurrencePatternChanged(pendingSubmission)
-    ) {
-      try {
-        window.alert(
-          "Recurrence pattern changes require This and following or All events.",
-        );
-      } catch {
-        // Ignore environments without alert (e.g. tests).
-      }
-      return;
-    }
-
-    if (scope === "this") {
-      applyScopedAction(scope);
-      return;
-    }
-    setPendingAdvancedScope(scope);
-    setIsScopeModalOpen(false);
-    setIsAdvancedScopeModalOpen(true);
-  };
-
-  const openSaveScope = (submission: EventSubmission) => {
-    setPendingSubmission(submission);
-    setScopeModalAction("save");
-    setIsScopeModalOpen(true);
-  };
-
-  const openDeleteScope = () => {
-    setScopeModalAction("delete");
-    setIsScopeModalOpen(true);
-  };
-
-  const openRevertModal = () => {
-    setIsRevertModalOpen(true);
-  };
-
-  const closeRevertModal = () => {
-    setIsRevertModalOpen(false);
-  };
-
-  const performRevert = () => {
-    if (!onRevertToSeries) {
-      return;
-    }
-    const originalAnchor =
-      selectedEvent?.original_start_time ?? selectedEvent?.start_time;
-    if (!originalAnchor) {
-      return;
-    }
-    onRevertToSeries({
-      scope: "this",
-      original_start_time: originalAnchor,
-    });
-    onClose();
-  };
-
-  const recurrenceScopeModalProps = {
-    isOpen: isScopeModalOpen,
-    action: scopeModalAction ?? "save",
-    disableThisOption:
-      scopeModalAction === "save" && hasRecurrencePatternChanged(pendingSubmission),
-    onClose: closeScopeModal,
-    onSelect: handleScopeSelect,
-  };
-
-  const scopeActionModalProps = {
-    isOpen: isAdvancedScopeModalOpen,
-    action: scopeModalAction ?? "save",
-    scope: pendingAdvancedScope,
-    onClose: () => closeAdvancedScopeModal(true),
-    onConfirm: () => {
-      if (!pendingAdvancedScope) {
-        return;
-      }
-      applyScopedAction(pendingAdvancedScope);
-    },
-  };
-
-  const revertModalProps = {
-    isOpen: isRevertModalOpen,
-    onClose: closeRevertModal,
-    onConfirm: performRevert,
-    title: "Revert To Series",
-    message:
-      "This will remove this instance override and restore it to follow the recurring series.",
-    confirmText: "Revert",
-  };
-
-  return {
-    isScopeModalOpen,
-    isAdvancedScopeModalOpen,
-    scopeModalAction,
-    pendingSubmission,
-    pendingAdvancedScope,
-    isRevertModalOpen,
-    isEditingRecurringEvent,
-    hasRecurrencePatternChanged,
-    buildContext,
-    closeScopeModal,
-    closeAdvancedScopeModal,
-    applyScopedAction,
-    handleScopeSelect,
-    openSaveScope,
-    openDeleteScope,
-    openRevertModal,
-    closeRevertModal,
-    performRevert,
-    recurrenceScopeModalProps,
-    scopeActionModalProps,
-    revertModalProps,
-  };
+const initialState: RecurrenceScopeState = {
+  isScopeModalOpen: false,
+  isAdvancedScopeModalOpen: false,
+  scopeModalAction: null,
+  pendingSubmission: null,
+  pendingAdvancedScope: null,
+  isRevertModalOpen: false,
 };
 
+const useRecurrenceScopeState = () => {
+  const [state, setState] = useState(initialState);
+  const mergeState = (patch: Partial<RecurrenceScopeState>) => setState((current) => ({ ...current, ...patch }));
+  const closeScopeModal = () => mergeState({ isScopeModalOpen: false, scopeModalAction: null, pendingSubmission: null });
+  const closeAdvancedScopeModal = (reopenScopeSelection = false) => mergeState({ isAdvancedScopeModalOpen: false, pendingAdvancedScope: null, isScopeModalOpen: reopenScopeSelection });
+  return { ...state, mergeState, closeScopeModal, closeAdvancedScopeModal, openRevertModal: () => mergeState({ isRevertModalOpen: true }), closeRevertModal: () => mergeState({ isRevertModalOpen: false }) };
+};
+
+/**
+ * Compares a submission against the selected recurring event.
+ * @param selectedEvent - The currently selected event.
+ * @param submission - The pending submission payload.
+ * @returns Whether the recurrence pattern changed.
+ */
+export const hasRecurrencePatternChangedForEvent = (selectedEvent: Event | undefined, submission: EventSubmission | null): boolean => {
+  if (!submission || !selectedEvent?.recurrence_interval) return false;
+  const currentInterval = selectedEvent.recurrence_interval ?? null;
+  const currentEnd = selectedEvent.recurrence_end ?? null;
+  return (submission.recurrence_interval ?? currentInterval) !== currentInterval || (submission.recurrence_end ?? currentEnd) !== currentEnd;
+};
+
+/**
+ * Builds the scoped mutation context for a recurring event action.
+ * @param selectedEvent - The currently selected event.
+ * @param scope - The requested recurrence scope.
+ * @returns A recurrence mutation context.
+ */
+export const buildRecurrenceContext = (selectedEvent: Event | undefined, scope: RecurrenceScope): EventMutationContext => {
+  const anchor = selectedEvent?.original_start_time ?? selectedEvent?.start_time;
+  return anchor ? { scope, original_start_time: anchor } : { scope };
+};
+
+/**
+ * Builds the revert context for an overridden instance.
+ * @param selectedEvent - The currently selected event.
+ * @returns A revert context when an anchor exists.
+ */
+export const buildRevertContext = (selectedEvent: Event | undefined): EventMutationContext | undefined => {
+  const originalAnchor = selectedEvent?.original_start_time ?? selectedEvent?.start_time;
+  return originalAnchor ? { scope: "this", original_start_time: originalAnchor } : undefined;
+};
+
+const applyScopedMutation = ({
+  scope,
+  selectedEvent,
+  scopeModalAction,
+  pendingSubmission,
+  onSubmitEvent,
+  onDelete,
+  onClose,
+  closeScopeModal,
+  closeAdvancedScopeModal,
+}: UseRecurrenceScopeActionsParams & Pick<ReturnType<typeof useRecurrenceScopeState>, "scopeModalAction" | "pendingSubmission" | "closeScopeModal" | "closeAdvancedScopeModal"> & { scope: RecurrenceScope }) => {
+  const context = buildRecurrenceContext(selectedEvent, scope);
+  if (scopeModalAction === "save" && pendingSubmission) { onSubmitEvent(pendingSubmission, context); closeScopeModal(); closeAdvancedScopeModal(); onClose(); return; }
+  if (scopeModalAction === "delete" && onDelete) { onDelete(context); closeScopeModal(); closeAdvancedScopeModal(); onClose(); }
+};
+
+const getRevertModalProps = (state: ReturnType<typeof useRecurrenceScopeState>, performRevert: () => void) => ({
+  isOpen: state.isRevertModalOpen,
+  onClose: state.closeRevertModal,
+  onConfirm: performRevert,
+  title: "Revert To Series",
+  message: "This will remove this instance override and restore it to follow the recurring series.",
+  confirmText: "Revert",
+});
+
+/**
+ * Manages scope selection state for recurring event save, delete, and revert flows.
+ * @param params - The scope action callbacks and selected event.
+ * @param params.selectedEvent - The currently selected event.
+ * @param params.onSubmitEvent - Submits a scoped event change.
+ * @param params.onDelete - Deletes an event with optional scope.
+ * @param params.onRevertToSeries - Reverts an override to the series value.
+ * @param params.onClose - Closes the surrounding sidebar.
+ * @returns State, handlers, and modal props for recurrence scope actions.
+ */
+export const useRecurrenceScopeActions = ({ selectedEvent, onSubmitEvent, onDelete, onRevertToSeries, onClose }: UseRecurrenceScopeActionsParams) => {
+  const state = useRecurrenceScopeState();
+  const hasRecurrencePatternChanged = (submission: EventSubmission | null) => hasRecurrencePatternChangedForEvent(selectedEvent, submission);
+  const buildContext = (scope: RecurrenceScope) => buildRecurrenceContext(selectedEvent, scope);
+  const applyScopedAction = (scope: RecurrenceScope) => applyScopedMutation({ scope, selectedEvent, scopeModalAction: state.scopeModalAction, pendingSubmission: state.pendingSubmission, onSubmitEvent, onDelete, onRevertToSeries, onClose, closeScopeModal: state.closeScopeModal, closeAdvancedScopeModal: state.closeAdvancedScopeModal });
+  const handleScopeSelect = (scope: RecurrenceScope) => {
+    if (scope === "this" && state.scopeModalAction === "save" && hasRecurrencePatternChanged(state.pendingSubmission)) { if (typeof window.alert === "function") window.alert("Recurrence pattern changes require This and following or All events."); return; }
+    if (scope === "this") { applyScopedAction(scope); return; }
+    state.mergeState({ pendingAdvancedScope: scope, isScopeModalOpen: false, isAdvancedScopeModalOpen: true });
+  };
+  const performRevert = () => { const context = buildRevertContext(selectedEvent); if (!onRevertToSeries || !context) return; onRevertToSeries(context); onClose(); };
+  const recurrenceScopeModalProps = { isOpen: state.isScopeModalOpen, action: state.scopeModalAction ?? "save", disableThisOption: state.scopeModalAction === "save" && hasRecurrencePatternChanged(state.pendingSubmission), onClose: state.closeScopeModal, onSelect: handleScopeSelect };
+  const scopeActionModalProps = { isOpen: state.isAdvancedScopeModalOpen, action: state.scopeModalAction ?? "save", scope: state.pendingAdvancedScope, onClose: () => state.closeAdvancedScopeModal(true), onConfirm: () => state.pendingAdvancedScope && applyScopedAction(state.pendingAdvancedScope) };
+  return { ...state, isEditingRecurringEvent: Boolean(selectedEvent?.id && selectedEvent.recurrence_interval), hasRecurrencePatternChanged, buildContext, applyScopedAction, handleScopeSelect, openSaveScope: (submission: EventSubmission) => state.mergeState({ pendingSubmission: submission, scopeModalAction: "save", isScopeModalOpen: true }), openDeleteScope: () => state.mergeState({ scopeModalAction: "delete", isScopeModalOpen: true }), openRevertModal: state.openRevertModal, closeRevertModal: state.closeRevertModal, performRevert, recurrenceScopeModalProps, scopeActionModalProps, revertModalProps: getRevertModalProps(state, performRevert) };
+};

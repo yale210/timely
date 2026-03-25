@@ -29,12 +29,12 @@ class AssessmentFactory(factory.django.DjangoModelFactory):
 
     user = factory.SubFactory(UserFactory)
     title = factory.Sequence(lambda n: f"Assessment {n}")
-    module = factory.Sequence(lambda n: f"Module {n}")
     assessment_type = "SUMMATIVE"
     due_date = factory.LazyFunction(lambda: timezone.now() + datetime.timedelta(days=7))
     weighting_of_assessment = 10
     length_of_assessment = 120
     reminder_offset = 60
+    completed = False
 
 
 class CategoryFactory(factory.django.DjangoModelFactory):

@@ -1,6 +1,6 @@
-
 /**
- *
+ * Displays a task list preview for the About page.
+ * @returns The rendered tasks mockup.
  */
 function TasksMockup() {
   const items = [
@@ -50,4 +50,4 @@ function TasksMockup() {
   )
 }
 
-export default TasksMockup;
+export default TasksMockup

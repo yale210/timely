@@ -1,5 +1,6 @@
 /**
- *
+ * Displays a compact gradebook preview for the About page.
+ * @returns The rendered gradebook mockup.
  */
 function GradebookMockup() {
   const entries = [
@@ -51,4 +52,4 @@ function GradebookMockup() {
   )
 }
 
-export default GradebookMockup;
+export default GradebookMockup

@@ -1,40 +1,99 @@
-import type { Dispatch, SetStateAction } from "react"
 import type { Grade } from "@/components/gradebook/GradebookTable"
-
-interface CategoryOption {
-  id: number
-  text: string
-}
 
 interface GradeBookFilterCategoriesProps {
   loading: boolean
   grades: Grade[] | null
   filteredGrades: Grade[]
-  selectedCategoryId: number | null
-  setSelectedCategoryId: Dispatch<SetStateAction<number | null>>
-  categories?: CategoryOption[]
 }
 
+const MESSAGE_BANDS = [
+  {
+    min: 95,
+    messages: [
+      "Outstanding work! You’re setting the standard.",
+      "Top-tier performance.",
+      "You've mastered this!",
+    ],
+  },
+  {
+    min: 85,
+    messages: [
+      "Excellent performance",
+      "Strong work",
+      "Great job",
+    ],
+  },
+  {
+    min: 75,
+    messages: [
+      "You're doing well",
+      "Good progress",
+    ],
+  },
+  {
+    min: 65,
+    messages: [
+      "Solid work",
+      "A good foundation",
+    ],
+  },
+  {
+    min: 55,
+    messages: [
+      "You’re passing - now aim higher.",
+      "Good start - identify areas to strengthen.",
+      "There’s room to improve - review feedback carefully",
+      "Work on consistency across topics.",
+    ],
+  },
+  {
+    min: 45,
+    messages: [
+      "Focus on key concepts to improve quickly.",
+      "Small improvements could make a big difference.",
+      "Review mistakes carefully - they show where to improve.",
+    ],
+  },
+  {
+    min: 35,
+    messages: [
+      "Regular practice will improve confidence.",
+      "Seek feedback early and often.",
+      "Time to adjust your study strategy.",
+    ],
+  },
+  {
+    min: 0,
+    messages: [
+      "Start small and rebuild confidence.",
+      "Every improvement counts.",
+      "Create a simple study plan and stick to it.",
+    ],
+  },
+] as const
+
 /**
- * Render the average summary and category filter controls for the gradebook.
- * @param props - Filter state and handlers.
- * @returns The filter controls section, or null when nothing should be shown.
+ * Displays the average percentage summary card and motivational message for the gradebook.
+ * @param props - Gradebook summary inputs.
+ * @returns The rendered average percentage summary card.
  */
 export default function GradebookFilterCategories(props: GradeBookFilterCategoriesProps) {
   const {
     loading,
     grades,
     filteredGrades,
-    selectedCategoryId,
-    setSelectedCategoryId,
-    categories,
   } = props
 
+  /**
+   * Returns the colour treatment for the average summary card.
+   * @param p - Current average percentage or null when unavailable.
+   * @returns Tailwind classes for the card tone.
+   */
   function averageToneClass(p: number | null): string {
-    if (p === null) return "bg-gray-100 text-gray-700"
-    if (p < 50) return "bg-red-100 text-red-900"
-    if (p < 70) return "bg-orange-100 text-orange-900"
-    return "bg-green-100 text-green-900"
+    if (p === null) return "bg-gray-200 text-gray-900"
+    if (p < 50) return "bg-red-200 text-red-950"
+    if (p < 70) return "bg-orange-200 text-orange-950"
+    return "bg-green-200 text-green-950"
   }
 
   const average = (): number | null => {
@@ -45,32 +104,22 @@ export default function GradebookFilterCategories(props: GradeBookFilterCategori
 
   const avgValue = average()
   const avgLabel = avgValue === null ? "-%" : `${avgValue}%`
+  const avgMessage = avgValue === null
+    ? "No grades yet."
+    : (() => {
+        const band = MESSAGE_BANDS.find((entry) => avgValue >= entry.min) ?? MESSAGE_BANDS[MESSAGE_BANDS.length - 1]
+        const messageIndex = Math.abs(Math.round(avgValue * 10)) % band.messages.length
+        return band.messages[messageIndex]
+      })()
 
   if (loading || !grades) return null
 
   return (
-    <div className="mb-6 grid grid-cols-1 gap-4 md:grid-cols-5">
+    <div className="mb-6">
       <div className={`rounded-lg p-4 shadow-sm text-center flex flex-col items-center ${averageToneClass(avgValue)}`}>
         <div className="text-sm">Average Percentage</div>
         <div className="mt-2 text-2xl font-semibold">{avgLabel}</div>
-      </div>
-
-      <div className="hidden md:block md:col-span-3" />
-
-      <div className="rounded-lg bg-white p-4">
-        <label className="block text-sm text-gray-600 mb-2">Filter by Category</label>
-        <select
-          value={selectedCategoryId ?? ""}
-          onChange={(e) => setSelectedCategoryId(e.target.value === "" ? null : Number(e.target.value))}
-          className="w-full rounded-lg border border-gray-300 p-2 text-sm cursor-pointer bg-white"
-        >
-          <option value="">All Categories</option>
-          {categories?.map((c) => (
-            <option key={c.id} value={c.id}>
-              {c.text}
-            </option>
-          ))}
-        </select>
+        <div className="mt-2 text-sm">{avgMessage}</div>
       </div>
     </div>
   )

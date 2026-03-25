@@ -31,6 +31,7 @@ export const AdminSidebarNavLink = (props: AdminSidebarNavLinkProps) => {
     <li>
       <NavLink
         to={to}
+        end
         onClick={onClose}
         className={({ isActive }) =>
           [

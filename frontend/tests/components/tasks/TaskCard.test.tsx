@@ -51,7 +51,7 @@ describe("TaskCard Component", () => {
   it("shows overdue state", () => {
     const overdueTask = { ...mockTask, deadline: "2020-01-01T10:00:00Z" };
     render(<TaskCard {...defaultProps} task={overdueTask} />);
-    expect(screen.getByText("Overdue")).toBeDefined();
+    expect(screen.getAllByText("Overdue")).toHaveLength(2);
   });
 
   it("shows completed state", () => {
@@ -109,4 +109,3 @@ describe("TaskCard Component", () => {
     expect(screen.queryByText(/^\d+m$/)).toBeNull();
   });
 });
-

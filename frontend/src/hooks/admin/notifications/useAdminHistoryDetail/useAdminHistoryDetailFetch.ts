@@ -2,6 +2,12 @@ import { useEffect, useState } from "react";
 import { getBroadcastDetail, getBroadcastStatus } from "@/api/notifications";
 import { type BroadcastJobDetail, type BroadcastJobStatusResponse } from "@/types";
 
+const isInvalidBroadcastId = (broadcastId: number) =>
+  !Number.isFinite(broadcastId) || broadcastId <= 0;
+
+const loadBroadcastHistoryDetailData = (broadcastId: number) =>
+  Promise.all([getBroadcastDetail(broadcastId), getBroadcastStatus(broadcastId)]);
+
 /**
  * Hook to fetch broadcast job detail and status.
  * @param broadcastId - The ID of the broadcast job.
@@ -14,7 +20,7 @@ export const useAdminHistoryDetailFetch = (broadcastId: number) => {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!Number.isFinite(broadcastId) || broadcastId <= 0) {
+    if (isInvalidBroadcastId(broadcastId)) {
       setError("Invalid broadcast ID.");
       setLoading(false);
       return;
@@ -23,10 +29,7 @@ export const useAdminHistoryDetailFetch = (broadcastId: number) => {
     const loadData = async () => {
       try {
         setLoading(true);
-        const [d, s] = await Promise.all([
-          getBroadcastDetail(broadcastId),
-          getBroadcastStatus(broadcastId),
-        ]);
+        const [d, s] = await loadBroadcastHistoryDetailData(broadcastId);
         setDetail(d);
         setStatus(s);
         setError(null);

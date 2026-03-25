@@ -265,11 +265,11 @@ CELERY_RESULT_BACKEND = REDIS_URL
 CELERY_TIMEZONE = "UTC"
 CELERY_BEAT_SCHEDULE = {
     "check_reminders": {
-        "task": "notifications.tasks.check_reminders",
+        "task": "notifications.tasks.reminders.check_reminders",
         "schedule": 60.0,
     },
     "cleanup_old_notifications": {
-        "task": "notifications.tasks.cleanup_old_notifications",
+        "task": "notifications.tasks.maintenance.cleanup_old_notifications",
         "schedule": crontab(hour=3, minute=0),
     },
 }

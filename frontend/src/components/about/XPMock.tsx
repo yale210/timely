@@ -1,5 +1,6 @@
 /**
- *
+ * Displays an XP progress preview for the About page.
+ * @returns The rendered XP mockup.
  */
 function XPMockup() {
   return (
@@ -46,5 +47,4 @@ function XPMockup() {
   )
 }
 
-
-export default XPMockup;
+export default XPMockup

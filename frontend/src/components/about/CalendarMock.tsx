@@ -1,5 +1,6 @@
 /**
- *
+ * Displays a compact calendar preview for the About page.
+ * @returns The rendered calendar mockup.
  */
 function CalendarMockup() {
   const days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
@@ -50,5 +51,4 @@ function CalendarMockup() {
   )
 }
 
-
-export default CalendarMockup;
+export default CalendarMockup
