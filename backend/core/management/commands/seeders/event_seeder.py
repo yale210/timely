@@ -27,7 +27,11 @@ class EventSeeder(BaseSeeder):
 
     def _create_event(self, data):
         temporary_event, _ = Event.objects.get_or_create(
-            user_id=data["fields"]["user"],
+            user_id=(
+                data["fields"]["user"].id
+                if hasattr(data["fields"]["user"], "id")
+                else data["fields"]["user"]
+            ),
             title=data["fields"]["title"],
             description=data["fields"]["description"],
             location=data["fields"]["location"],
@@ -43,6 +47,10 @@ class EventSeeder(BaseSeeder):
         categories = data["fields"].get("categories", [])
         if categories:
             temporary_event.categories.set(Category.objects.filter(id__in=categories))
+
+    """
+    If an event is recurring
+    """
 
     def _populate_random_event(self):
         temporary_user = self._get_or_create_random_user()

@@ -4,6 +4,10 @@ from django.utils.timezone import now
 
 
 class BaseEventModel(models.Model):
+    """
+    BaseEventModel is an abstract model that provides common fields for event related models.
+    """
+
     title = models.CharField(max_length=500, default="Untitled Event")
     description = models.TextField(blank=True)
     location = models.CharField(max_length=255, blank=True)

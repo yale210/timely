@@ -22,8 +22,6 @@ class CategorySeeder(BaseSeeder):
                 print(f"Error occurred while creating category: {exception}")
 
     def _populate_random_category(self):
-        word = self.faker.word()
-        colour = self.faker.hex_color()
         User = get_user_model()
         # Shuffle users and get a random user.
         temporary_user = User.objects.order_by("?").first()
@@ -40,8 +38,8 @@ class CategorySeeder(BaseSeeder):
                 "pk": None,
                 "user": temporary_user.id,
                 "fields": {
-                    "text": word,
-                    "colour": colour,
+                    "text": self.faker.word(),
+                    "colour": self.faker.hex_color(),
                 },
             }
         )

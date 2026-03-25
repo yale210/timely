@@ -11,6 +11,10 @@ from .day_of_week import DayOfWeek
 
 
 def default_day_schedule():
+    """
+    Return the weekly available time slots for the user.
+    The user is by default available from 8am to 10pm.
+    """
     return [
         {"day": 1, "start": "08:00", "end": "22:00"},
         {"day": 2, "start": "08:00", "end": "22:00"},
@@ -57,6 +61,13 @@ class Preference(models.Model):
     timezone = models.CharField(max_length=100, default="Europe/London")
 
     def clean(self):
+        """
+        Validate the timezone and weekly schedule to ensure they are in the correct format,
+        and that the max hours per day does not exceed the available time in the schedule.
+
+        Raises:
+            ValidationError: If the timezone, schedule format, or the max study hours are invalid.
+        """
         super().clean()
         allowed_drag_snap_minutes = {5, 10, 15, 20, 30, 60}
         if self.drag_snap_minutes not in allowed_drag_snap_minutes:
@@ -133,6 +144,10 @@ class Preference(models.Model):
         return f"{self.day_start} - {self.day_end}"
 
     def get_day_window(self, target_date):
+        """
+        Get the available time frame for the user on a given date.
+        Helps to determine when the user can be scheduled for tasks.
+        """
         day_key = target_date.weekday() + 1
         schedule = {}
         for entry in self.day_schedule or []:

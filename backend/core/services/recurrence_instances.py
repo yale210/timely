@@ -71,6 +71,9 @@ def _normalise_reminder_snapshot(
 
 
 def serialise_event_reminders(event: Event) -> list[dict[str, Any]]:
+    """
+    Serialise the reminders into a consistent format to be used for event overrides.
+    """
     return [
         {
             "id": reminder.id,
@@ -127,6 +130,9 @@ def _generate_occurrence_starts(
 
 
 def is_occurrence_in_series(event: Event, occurrence_start: datetime) -> bool:
+    """
+    Check if a datetime corresponds to a valid event occurence based on recurrence rules.
+    """
     occurrence_start = _make_aware(occurrence_start)
 
     if not event.recurrence_interval:
