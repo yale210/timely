@@ -1,3 +1,9 @@
+"""Views for managing teacher profiles and their associated courses.
+
+Provides endpoints for listing active teachers, registering new teacher profiles,
+and unregistering (deactivating) teacher accounts.
+"""
+
 from django.contrib.auth import get_user_model
 from rest_framework import status
 from rest_framework.decorators import action
@@ -13,9 +19,23 @@ User = get_user_model()
 
 
 class TeacherView(ViewSet):
+    """ViewSet for handling teacher-related operations.
+
+    Manages teacher registration, deactivation, and retrieval of teacher
+    profiles including their associated course leads.
+    """
+
     permission_classes = [IsAuthenticated, IsTeacher]
 
     def list(self, request):
+        """Lists all active teachers and their managed courses.
+
+        Args:
+            request: The current HttpRequest.
+
+        Returns:
+            A Response containing a list of teacher profiles and their courses.
+        """
         teachers = (
             Teacher.objects.select_related("user")
             .filter(active=True)
@@ -55,6 +75,14 @@ class TeacherView(ViewSet):
         permission_classes=[IsAuthenticated],
     )
     def create_teacher(self, request):
+        """Registers a new teacher profile for the current or specified user.
+
+        Args:
+            request: The current HttpRequest containing 'user_id'.
+
+        Returns:
+            A Response containing the serialized teacher profile.
+        """
         serializer = TeacherCreateSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
@@ -88,6 +116,14 @@ class TeacherView(ViewSet):
         permission_classes=[IsAuthenticated],
     )
     def unregister_teacher(self, request):
+        """Deactivates the teacher profile for the current user.
+
+        Args:
+            request: The current HttpRequest.
+
+        Returns:
+            A Response containing the updated teacher profile state.
+        """
         teacher = Teacher.objects.filter(user=request.user).first()
 
         if teacher is None:
