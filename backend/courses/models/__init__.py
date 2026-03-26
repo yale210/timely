@@ -1,3 +1,9 @@
+"""Database models for the courses application.
+
+This package defines the core entities for course management, including
+Course details, Teacher and Student profiles, Enrollments, and Join Codes.
+"""
+
 __all__ = [
     "Course",
     "Teacher",
