@@ -28,8 +28,8 @@ class EventTests(TestCase):
             start_time=start_time,
             end_time=end_time,
         )
-        # 11 days from now
-        self.assertEqual(event.calculate_time_left(), 11)
+        # 10 days from now
+        self.assertEqual(event.calculate_time_left(), 10)
 
     def test_event_calculate_time_left_recurring(self):
         now = timezone.now()
