@@ -67,6 +67,8 @@ class CourseViewTests(APITestCase):
         self.join_url = reverse("course-join", args=[self.course.id])
         self.leave_url = reverse("course-leave", args=[self.course.id])
         self.staff_url = reverse("course-staff", args=[self.course.id])
+        self.students_url = reverse("course-students", args=[self.course.id])
+        self.permissions_url = reverse("course-permissions", args=[self.course.id])
         self.join_by_code_url = reverse("course-join-by-code")
 
     # -------------------------
@@ -626,6 +628,48 @@ class CourseViewTests(APITestCase):
         )
 
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+    # -------------------------
+    # students / permissions
+    # -------------------------
+
+    def test_students_get_returns_only_active_enrollments(self):
+        older = CourseEnrollment.objects.create(
+            course=self.course,
+            student=self.student,
+            active=True,
+        )
+        older.enrolled_at = timezone.now() - datetime.timedelta(days=1)
+        older.save(update_fields=["enrolled_at"])
+        CourseEnrollment.objects.create(
+            course=self.course,
+            student=self.other_student,
+            active=False,
+        )
+
+        self.client.force_authenticate(user=self.admin_user)
+        response = self.client.get(self.students_url)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 1)
+        self.assertEqual(response.data[0]["user_id"], self.student_user.id)
+        self.assertEqual(response.data[0]["username"], self.student_user.username)
+        self.assertEqual(response.data[0]["email"], self.student_user.email)
+
+    def test_permissions_get_returns_course_permission_flags(self):
+        self.client.force_authenticate(user=self.teacher_user)
+        response = self.client.get(self.permissions_url)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertTrue(response.data["can_view_course_details"])
+        self.assertTrue(response.data["can_view_events"])
+        self.assertTrue(response.data["can_change_name"])
+        self.assertTrue(response.data["can_change_description"])
+        self.assertTrue(response.data["can_update_course"])
+        self.assertTrue(response.data["can_destroy_course"])
+        self.assertTrue(response.data["can_manage_staff"])
+        self.assertTrue(response.data["can_join"])
+        self.assertTrue(response.data["can_leave"])
 
     # -------------------------
     # join_code
