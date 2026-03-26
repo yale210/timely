@@ -2,8 +2,7 @@ from core.models import Assessment, Event
 
 
 def create_assessment_event(assessment: Assessment) -> Event:
-    """Creates an event for a given assessment.
-    """
+    """Creates an event for a given assessment."""
     event = Event.objects.create(
         user=assessment.user,
         title=assessment.title,
@@ -20,8 +19,7 @@ def create_assessment_event(assessment: Assessment) -> Event:
 
 
 def delete_assessment_event(assessment: Assessment) -> None:
-    """Deletes the event linked to a given assessment.
-    """
+    """Deletes the event linked to a given assessment."""
     if assessment.linked_event:
         assessment.linked_event.delete()
         assessment.linked_event = None
@@ -29,8 +27,7 @@ def delete_assessment_event(assessment: Assessment) -> None:
 
 
 def update_assessment_event(assessment: Assessment) -> Event:
-    """Updates the event linked to an assessment.
-    """
+    """Updates the event linked to an assessment."""
     if assessment.linked_event:
         event = assessment.linked_event
         event.title = assessment.title

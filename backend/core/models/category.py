@@ -7,7 +7,7 @@ from django.conf import settings
 
 class Category(models.Model):
     """Model used to allow for both tasks and events to have assigned categories.
-    
+
     This allows for easy filtering and sorting.
     """
 
