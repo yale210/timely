@@ -1,9 +1,11 @@
 """A single scenario test for the import view, simulating a realistic import file"""
+
 from django.test import TestCase
 from django.contrib.auth import get_user_model
 from rest_framework.test import APIClient
 from django.core.files.uploadedfile import SimpleUploadedFile
 from core.models import Event
+
 
 # This will aim to create a "realistic" file import with varying data and event types
 # This file will also be larger than other tests
@@ -23,7 +25,6 @@ class RealisitcImportViewTests(TestCase):
             b"PRODID:TIMELY v1.0\n"
             b"CALSCALE:GREGORIAN\n"
             b"METHOD:PUBLISH\n"
-
             b"BEGIN:VEVENT\n"
             b"UID:e1\n"
             b"DTSTAMP:20250830T090000\n"
@@ -34,7 +35,6 @@ class RealisitcImportViewTests(TestCase):
             b"LOCATION:London University\n"
             b"RRULE:FREQ=WEEKLY;UNTIL=20260430T000000\n"
             b"END:VEVENT\n"
-
             b"BEGIN:VEVENT\n"
             b"UID:e2\n"
             b"DTSTAMP:20250830T090000\n"
@@ -45,7 +45,6 @@ class RealisitcImportViewTests(TestCase):
             b"LOCATION:London University\n"
             b"RRULE:FREQ=WEEKLY;UNTIL=20260430T000000\n"
             b"END:VEVENT\n"
-
             b"BEGIN:VEVENT\n"
             b"UID:e3\n"
             b"DTSTAMP:20250830T090000\n"
@@ -56,7 +55,6 @@ class RealisitcImportViewTests(TestCase):
             b"LOCATION:London University\n"
             b"RRULE:FREQ=WEEKLY;UNTIL=20260430T000000\n"
             b"END:VEVENT\n"
-
             b"BEGIN:VEVENT\n"
             b"UID:e4\n"
             b"DTSTAMP:20250830T090000\n"
@@ -67,7 +65,6 @@ class RealisitcImportViewTests(TestCase):
             b"LOCATION:London University\n"
             b"RRULE:FREQ=WEEKLY;UNTIL=20260430T000000\n"
             b"END:VEVENT\n"
-
             b"BEGIN:VEVENT\n"
             b"UID:e5\n"
             b"DTSTAMP:20250830T090000\n"
@@ -77,7 +74,6 @@ class RealisitcImportViewTests(TestCase):
             b"LOCATION:London University Building 2\n"
             b"RRULE:FREQ=WEEKLY;UNTIL=20260430T000000\n"
             b"END:VEVENT\n"
-
             b"BEGIN:VEVENT\n"
             b"UID:e6\n"
             b"DTSTAMP:20250830T090000\n"
@@ -86,7 +82,6 @@ class RealisitcImportViewTests(TestCase):
             b"SUMMARY:Hackathon\n"
             b"LOCATION:In a different place\n"
             b"END:VEVENT\n"
-
             b"BEGIN:VEVENT\n"
             b"UID:e7\n"
             b"DTSTAMP:20250830T090000\n"
@@ -95,7 +90,6 @@ class RealisitcImportViewTests(TestCase):
             b"SUMMARY:Overlapping time 1\n"
             b"LOCATION:overlap1\n"
             b"END:VEVENT\n"
-
             b"BEGIN:VEVENT\n"
             b"UID:e8\n"
             b"DTSTAMP:20250830T090000\n"
@@ -104,7 +98,6 @@ class RealisitcImportViewTests(TestCase):
             b"SUMMARY:Overlapping time 2\n"
             b"LOCATION:overlap2\n"
             b"END:VEVENT\n"
-
             b"BEGIN:VEVENT\n"
             b"UID:e9\n"
             b"DTSTAMP:20250830T090000\n"
@@ -113,7 +106,6 @@ class RealisitcImportViewTests(TestCase):
             b"SUMMARY:Same Name Diff Time\n"
             b"LOCATION:1\n"
             b"END:VEVENT\n"
-
             b"BEGIN:VEVENT\n"
             b"UID:e8\n"
             b"DTSTAMP:20250830T090000\n"
@@ -122,10 +114,7 @@ class RealisitcImportViewTests(TestCase):
             b"SUMMARY:Same Name Diff Time\n"
             b"LOCATION:1\n"
             b"END:VEVENT\n"
-
-
             b"END:VCALENDAR\n"
-
         ).strip()
 
         importing_file = SimpleUploadedFile(

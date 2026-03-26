@@ -1,4 +1,5 @@
 """View for getting all the pending share event objects"""
+
 from rest_framework import permissions
 from rest_framework.views import APIView
 from rest_framework.response import Response
