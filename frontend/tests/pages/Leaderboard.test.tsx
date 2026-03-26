@@ -79,4 +79,14 @@ describe("Leaderboard page", () => {
       ),
     ).toBeDefined();
   });
+
+  it("shows the empty standings state when the leaderboard has no entries", async () => {
+    mockGetMyProfile.mockResolvedValue(buildProfile());
+    mockApiGet.mockResolvedValue({ data: [] });
+
+    render(<Leaderboard />);
+
+    expect(await screen.findByText("No friends yet.")).toBeDefined();
+    expect(screen.getByText("0 ranked friends")).toBeDefined();
+  });
 });

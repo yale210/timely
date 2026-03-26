@@ -33,7 +33,7 @@ const LeaderboardProfileText = ({bio, name, slogan}: LeaderboardProfileTextProps
     <p className="text-sm font-semibold uppercase tracking-[0.24em] text-cyan-700">
       My Progress
     </p>
-    <h2 className="mt-1 text-3xl font-semibold tracking-[-0.04em] text-(--text-color">
+    <h2 className="mt-1 text-3xl font-semibold tracking-[-0.04em] text-(--text-color)">
       {name}
     </h2>
     <p className="mt-2 max-w-2xl text-sm leading-6 text-gray-600">
