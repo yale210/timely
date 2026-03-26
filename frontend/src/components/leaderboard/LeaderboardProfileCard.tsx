@@ -1,37 +1,14 @@
 import type { Profile } from "@/types";
+import type {
+  LeaderboardProfileAvatarProps,
+  LeaderboardProfileCardProps,
+  LeaderboardProfileIdentityProps,
+  LeaderboardProfileProgressProps,
+  LeaderboardProfileTextProps,
+} from "@/types/leaderboard";
 import type { LeaderboardProfileStats } from "@/utils/leaderboardUtils";
 import { getProfileProgressStyle } from "@/utils/leaderboardUtils";
 import LeaderboardStatCard from "./LeaderboardStatCard";
-
-interface LeaderboardProfileCardProps {
-  profile: Profile | null;
-  profileStats: LeaderboardProfileStats | null;
-}
-
-interface LeaderboardProfileAvatarProps {
-  avatar: string | null;
-  avatarFallback: string;
-  name: string;
-}
-
-interface LeaderboardProfileTextProps {
-  bio?: string | null;
-  name: string;
-  slogan: string | null;
-}
-
-interface LeaderboardProfileIdentityProps {
-  profile: Profile;
-  avatarFallback: string;
-  slogan: string | null;
-}
-
-interface LeaderboardProfileProgressProps {
-  level: number;
-  progress: number;
-  requiredExp: number;
-  xp: number;
-}
 
 const EMPTY_BIO_TEXT = "Add a bio to make your profile card feel more personal.";
 
