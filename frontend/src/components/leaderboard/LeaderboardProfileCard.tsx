@@ -33,6 +33,8 @@ interface LeaderboardProfileProgressProps {
   xp: number;
 }
 
+const EMPTY_BIO_TEXT = "Add a bio to make your profile card feel more personal.";
+
 const LeaderboardProfileEmptyState = () => (
   <section className="rounded-[2rem] border border-gray-200 bg-linear-to-br from-white via-cyan-50/60 to-white px-5 py-6 shadow-sm sm:px-7">
     <p className="text-sm text-gray-500">No profile data available.</p>
@@ -58,7 +60,7 @@ const LeaderboardProfileText = ({bio, name, slogan}: LeaderboardProfileTextProps
       {name}
     </h2>
     <p className="mt-2 max-w-2xl text-sm leading-6 text-gray-600">
-      {bio?.trim() ?? "Add a bio to make your profile card feel more personal."}
+      {bio?.trim() ? bio.trim() : EMPTY_BIO_TEXT}
     </p>
     {slogan && (
       <p className="mt-3 text-sm font-medium text-gray-500">
@@ -92,11 +94,12 @@ const LeaderboardProfileProgressBar = ({ progressStyle }: {
 
 const LeaderboardProfileProgress = ({ level, progress, requiredExp, xp }: LeaderboardProfileProgressProps ) => {
   const progressStyle = getProfileProgressStyle(progress);
+  const roundedProgress = Math.round(progress);
   return (
     <div className="rounded-3xl border border-cyan-100 bg-white/80 p-4">
       <div className="flex items-center justify-between gap-4 text-[11px] font-semibold uppercase tracking-[0.22em] text-gray-400">
         <span>Level {level}</span>
-        <span>{progress}%</span>
+        <span>{roundedProgress}%</span>
       </div>
       <div className="mt-2.5">
         <LeaderboardProfileProgressBar progressStyle={progressStyle} />

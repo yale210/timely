@@ -66,4 +66,17 @@ describe("Leaderboard page", () => {
 
     expect(await screen.findByText("Failed to load leaderboard")).toBeDefined();
   });
+
+  it("shows the fallback bio text when the profile bio is blank", async () => {
+    mockGetMyProfile.mockResolvedValue(buildProfile({ bio: "   " }));
+    mockApiGet.mockResolvedValue({ data: [buildProfile({ bio: "   " })] });
+
+    render(<Leaderboard />);
+
+    expect(
+      await screen.findByText(
+        "Add a bio to make your profile card feel more personal.",
+      ),
+    ).toBeDefined();
+  });
 });
