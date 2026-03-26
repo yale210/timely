@@ -134,29 +134,49 @@ class SchedulerCategoryMixin:
         """
         window = self._day_window(target_date)
         minutes_used = {category_id: 0 for category_id in category_limits}
-        task_category_ids = self._task_category_ids(task)
         limited_ids = set(category_limits)
+        self._add_scheduled_task_category_minutes(minutes_used, limited_ids, window)
+        self._add_in_memory_category_minutes(minutes_used, window)
+        self._add_current_task_category_minutes(
+            minutes_used,
+            self._task_category_ids(task),
+            current_segments,
+            window,
+        )
+        return minutes_used
+
+    def _add_scheduled_task_category_minutes(
+        self,
+        minutes_used: dict[int, int],
+        limited_ids: set[int],
+        window: tuple[datetime, datetime],
+    ) -> None:
         for scheduled_task in self.scheduled_tasks:
             category_ids = self._task_category_ids(scheduled_task)
             if not category_ids & limited_ids:
                 continue
             for start, end in self._task_allocation_segments(scheduled_task):
                 self._add_category_overlap(
-                    minutes_used,
-                    category_ids,
-                    start,
-                    end,
-                    window,
+                    minutes_used, category_ids, start, end, window
                 )
+
+    def _add_in_memory_category_minutes(
+        self,
+        minutes_used: dict[int, int],
+        window: tuple[datetime, datetime],
+    ) -> None:
         for scheduled_task, start, end in self._scheduled_task_segments:
             category_ids = self._task_category_ids(scheduled_task)
             self._add_category_overlap(minutes_used, category_ids, start, end, window)
+
+    def _add_current_task_category_minutes(
+        self,
+        minutes_used: dict[int, int],
+        task_category_ids: set[int],
+        current_segments: list[tuple[datetime, datetime]],
+        window: tuple[datetime, datetime],
+    ) -> None:
         for start, end in current_segments:
             self._add_category_overlap(
-                minutes_used,
-                task_category_ids,
-                start,
-                end,
-                window,
+                minutes_used, task_category_ids, start, end, window
             )
-        return minutes_used

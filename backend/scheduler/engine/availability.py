@@ -77,10 +77,25 @@ class SchedulerAvailabilityMixin:
         """
         occupied: list[tuple[datetime, datetime]] = []
         for task in self.scheduled_tasks:
-            for start, end in self._task_allocation_segments(task):
-                if start < day_end and end > day_start:
-                    occupied.append(self._expand_task_segment(task, start, end))
+            occupied.extend(
+                self._expanded_scheduled_task_slots(task, day_start, day_end)
+            )
         return occupied
+
+    def _expanded_scheduled_task_slots(
+        self,
+        task,
+        day_start: datetime,
+        day_end: datetime,
+    ) -> list[tuple[datetime, datetime]]:
+        overlapping = [
+            (start, end)
+            for start, end in self._task_allocation_segments(task)
+            if start < day_end and end > day_start
+        ]
+        return [
+            self._expand_task_segment(task, start, end) for start, end in overlapping
+        ]
 
     def _scheduled_block_slots(
         self,
