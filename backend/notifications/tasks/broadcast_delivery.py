@@ -1,3 +1,10 @@
+"""Logic for finalizing broadcast notification delivery and status updates.
+
+This module provides utility functions to transition broadcast jobs from an
+'IN_PROGRESS' state to a terminal state (COMPLETED, FAILED, or PARTIAL) based
+on the results of individual recipient delivery attempts.
+"""
+
 from django.db import transaction
 from django.utils import timezone
 
