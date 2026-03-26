@@ -10,10 +10,23 @@ from scheduler.services import Scheduler
 
 
 class ScheduleTasksAPIView(APIView):
+
+    """API view to trigger the task scheduling process."""
+
     permission_classes = [permissions.IsAuthenticated]
 
     def post(self, request):
+        """
+        Handle POST request to schedule tasks for the authenticated user.
+
+        Args:
+            request (Request): The HTTP request object.
+
+        Returns:
+            Response: A response containing the summary of scheduled and failed tasks.
+        """
         serializer = ScheduleRequestSerializer(data=request.data)
+
         serializer.is_valid(raise_exception=True)
         payload = serializer.validated_data
 
@@ -80,10 +93,23 @@ class ScheduleTasksAPIView(APIView):
 
 
 class UnscheduleTasksAPIView(APIView):
+
+    """API view to unschedule all unlocked and uncompleted tasks."""
+
     permission_classes = [permissions.IsAuthenticated]
 
     def post(self, request):
+        """
+        Handle POST request to unschedule tasks for the authenticated user.
+
+        Args:
+            request (Request): The HTTP request object.
+
+        Returns:
+            Response: A response indicating the number of tasks unscheduled.
+        """
         updated = (
+
             Task.objects.filter(user=request.user)
             .exclude(allocation=[])
             .filter(completed=False, locked=False)
