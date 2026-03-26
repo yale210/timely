@@ -8,21 +8,38 @@ interface LeaderboardProfileCardProps {
   profileStats: LeaderboardProfileStats | null;
 }
 
+interface LeaderboardProfileAvatarProps {
+  avatar: string | null;
+  avatarFallback: string;
+  name: string;
+}
+
+interface LeaderboardProfileTextProps {
+  bio?: string | null;
+  name: string;
+  slogan: string | null;
+}
+
+interface LeaderboardProfileIdentityProps {
+  profile: Profile;
+  avatarFallback: string;
+  slogan: string | null;
+}
+
+interface LeaderboardProfileProgressProps {
+  level: number;
+  progress: number;
+  requiredExp: number;
+  xp: number;
+}
+
 const LeaderboardProfileEmptyState = () => (
   <section className="rounded-[2rem] border border-gray-200 bg-linear-to-br from-white via-cyan-50/60 to-white px-5 py-6 shadow-sm sm:px-7">
     <p className="text-sm text-gray-500">No profile data available.</p>
   </section>
 );
 
-const LeaderboardProfileAvatar = ({
-  avatar,
-  avatarFallback,
-  name,
-}: {
-  avatar: string | null;
-  avatarFallback: string;
-  name: string;
-}) => (
+const LeaderboardProfileAvatar = ({ avatar, avatarFallback, name}: LeaderboardProfileAvatarProps) => (
   <div className="flex h-20 w-20 items-center justify-center overflow-hidden rounded-3xl border border-white/70 bg-cyan-600 text-2xl font-bold text-white shadow-sm">
     {avatar ? (
       <img src={avatar} alt={name} className="h-full w-full object-cover" />
@@ -32,15 +49,7 @@ const LeaderboardProfileAvatar = ({
   </div>
 );
 
-const LeaderboardProfileText = ({
-  bio,
-  name,
-  slogan,
-}: {
-  bio?: string | null;
-  name: string;
-  slogan: string | null;
-}) => (
+const LeaderboardProfileText = ({bio, name, slogan}: LeaderboardProfileTextProps) => (
   <div>
     <p className="text-sm font-semibold uppercase tracking-[0.24em] text-cyan-700">
       My Progress
@@ -59,15 +68,7 @@ const LeaderboardProfileText = ({
   </div>
 );
 
-const LeaderboardProfileIdentity = ({
-  profile,
-  avatarFallback,
-  slogan,
-}: {
-  profile: Profile;
-  avatarFallback: string;
-  slogan: string | null;
-}) => (
+const LeaderboardProfileIdentity = ({ profile, avatarFallback, slogan }: LeaderboardProfileIdentityProps) => (
   <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
     <LeaderboardProfileAvatar
       avatar={profile.avatar}
@@ -78,9 +79,7 @@ const LeaderboardProfileIdentity = ({
   </div>
 );
 
-const LeaderboardProfileProgressBar = ({
-  progressStyle,
-}: {
+const LeaderboardProfileProgressBar = ({ progressStyle }: {
   progressStyle: ReturnType<typeof getProfileProgressStyle>;
 }) => (
   <div className="mt-2 h-3 w-full rounded-full bg-white ring-1 ring-cyan-100">
@@ -91,17 +90,7 @@ const LeaderboardProfileProgressBar = ({
   </div>
 );
 
-const LeaderboardProfileProgress = ({
-  level,
-  progress,
-  requiredExp,
-  xp,
-}: {
-  level: number;
-  progress: number;
-  requiredExp: number;
-  xp: number;
-}) => {
+const LeaderboardProfileProgress = ({ level, progress, requiredExp, xp }: LeaderboardProfileProgressProps ) => {
   const progressStyle = getProfileProgressStyle(progress);
   return (
     <div className="rounded-3xl border border-cyan-100 bg-white/80 p-4">
@@ -135,13 +124,7 @@ const LeaderboardProfileStatsGrid = ({
   </div>
 );
 
-const LeaderboardProfileCardContent = ({
-  profile,
-  profileStats,
-}: {
-  profile: Profile;
-  profileStats: LeaderboardProfileStats;
-}) => (
+const LeaderboardProfileCardContent = ({ profile, profileStats }: { profile: Profile; profileStats: LeaderboardProfileStats;}) => (
   <section className="rounded-[2rem] border border-gray-200 bg-linear-to-br from-white via-cyan-50/60 to-white px-5 py-6 shadow-sm sm:px-7">
     <div className="flex flex-col gap-5">
       <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
@@ -166,10 +149,7 @@ const LeaderboardProfileCardContent = ({
   </section>
 );
 
-const LeaderboardProfileCard = ({
-  profile,
-  profileStats,
-}: LeaderboardProfileCardProps) => {
+const LeaderboardProfileCard = ({ profile, profileStats }: LeaderboardProfileCardProps) => {
   if (!profile || !profileStats) {
     return <LeaderboardProfileEmptyState />;
   }

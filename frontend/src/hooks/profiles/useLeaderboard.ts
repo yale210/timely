@@ -36,12 +36,7 @@ const useLeaderboardState = () => {
   };
 };
 
-const useLeaderboardLoader = ({
-  setError,
-  setIsLoading,
-  setLeaderboard,
-  setProfile,
-}: Pick<
+const useLeaderboardLoader = ({ setError, setIsLoading, setLeaderboard, setProfile }: Pick<
   ReturnType<typeof useLeaderboardState>,
   "setError" | "setIsLoading" | "setLeaderboard" | "setProfile"
 >) => {
