@@ -1,7 +1,7 @@
-import { useCallback, useEffect, useState } from "react";
 import type { Friendship } from "@/types";
 import * as friendshipService from "@/services/friendshipService";
 import { formatDjangoFormError } from "@/utils/apiErrors";
+import { useState, useEffect, useCallback } from "react";
 
 const FRIENDSHIP_EVENT = "friendships-changed";
 
