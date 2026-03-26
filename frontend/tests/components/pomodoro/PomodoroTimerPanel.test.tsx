@@ -1,5 +1,4 @@
-import { render, screen } from "@testing-library/react";
-import userEvent from "@testing-library/user-event";
+import { fireEvent, render, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import PomodoroTimerPanel from "@/components/pomodoro/PomodoroTimerPanel";
 import { usePomodoro } from "@/context/PomodoroContext";
@@ -62,7 +61,7 @@ describe("PomodoroTimerPanel", () => {
     expect(screen.getByText("20 min")).toBeInTheDocument();
   });
 
-  it("calls setMode for focus, short break and long break buttons", async () => {
+  it("calls setMode for focus, short break and long break buttons", () => {
     const setMode = vi.fn();
     mockedUsePomodoro.mockReturnValue({
       ...baseContext,
@@ -71,27 +70,27 @@ describe("PomodoroTimerPanel", () => {
 
     render(<PomodoroTimerPanel onOpenSettings={vi.fn()} />);
 
-    await userEvent.click(screen.getByRole("button", { name: "Focus period" }));
-    await userEvent.click(screen.getByRole("button", { name: "Short break" }));
-    await userEvent.click(screen.getByRole("button", { name: "Long break" }));
+    fireEvent.click(screen.getByRole("button", { name: "Focus period" }));
+    fireEvent.click(screen.getByRole("button", { name: "Short break" }));
+    fireEvent.click(screen.getByRole("button", { name: "Long break" }));
 
     expect(setMode).toHaveBeenNthCalledWith(1, "focus");
     expect(setMode).toHaveBeenNthCalledWith(2, "shortBreak");
     expect(setMode).toHaveBeenNthCalledWith(3, "longBreak");
   });
 
-  it("calls onOpenSettings from the settings button", async () => {
+  it("calls onOpenSettings from the settings button", () => {
     mockedUsePomodoro.mockReturnValue(baseContext);
     const onOpenSettings = vi.fn();
 
     render(<PomodoroTimerPanel onOpenSettings={onOpenSettings} />);
 
-    await userEvent.click(screen.getByRole("button", { name: "Timer settings" }));
+    fireEvent.click(screen.getByRole("button", { name: "Timer settings" }));
 
     expect(onOpenSettings).toHaveBeenCalledTimes(1);
   });
 
-  it("calls adjustTime with -300 and +300", async () => {
+  it("calls adjustTime with -300 and +300", () => {
     const adjustTime = vi.fn();
     mockedUsePomodoro.mockReturnValue({
       ...baseContext,
@@ -100,14 +99,14 @@ describe("PomodoroTimerPanel", () => {
 
     render(<PomodoroTimerPanel onOpenSettings={vi.fn()} />);
 
-    await userEvent.click(screen.getByTitle("-5 mins"));
-    await userEvent.click(screen.getByTitle("+5 mins"));
+    fireEvent.click(screen.getByTitle("-5 mins"));
+    fireEvent.click(screen.getByTitle("+5 mins"));
 
     expect(adjustTime).toHaveBeenNthCalledWith(1, -300);
     expect(adjustTime).toHaveBeenNthCalledWith(2, 300);
   });
 
-  it("calls startTimer when inactive", async () => {
+  it("calls startTimer when inactive", () => {
     const startTimer = vi.fn();
     mockedUsePomodoro.mockReturnValue({
       ...baseContext,
@@ -124,12 +123,12 @@ describe("PomodoroTimerPanel", () => {
 
     expect(startStopButton).toBeTruthy();
 
-    await userEvent.click(startStopButton!);
+    fireEvent.click(startStopButton!);
 
     expect(startTimer).toHaveBeenCalledTimes(1);
   });
 
-  it("calls stopTimer when active and viewing the active mode", async () => {
+  it("calls stopTimer when active and viewing the active mode", () => {
     const stopTimer = vi.fn();
     mockedUsePomodoro.mockReturnValue({
       ...baseContext,
@@ -147,12 +146,12 @@ describe("PomodoroTimerPanel", () => {
 
     expect(stopButton).toBeTruthy();
 
-    await userEvent.click(stopButton!);
+    fireEvent.click(stopButton!);
 
     expect(stopTimer).toHaveBeenCalledTimes(1);
   });
 
-  it("calls startTimer instead of stopTimer when active but viewing a different mode", async () => {
+  it("calls startTimer instead of stopTimer when active but viewing a different mode", () => {
     const startTimer = vi.fn();
     const stopTimer = vi.fn();
 
@@ -173,13 +172,13 @@ describe("PomodoroTimerPanel", () => {
 
     expect(switchButton).toBeTruthy();
 
-    await userEvent.click(switchButton!);
+    fireEvent.click(switchButton!);
 
     expect(startTimer).toHaveBeenCalledTimes(1);
     expect(stopTimer).not.toHaveBeenCalled();
   });
 
-  it("calls resetTimer from the restart button", async () => {
+  it("calls resetTimer from the restart button", () => {
     const resetTimer = vi.fn();
     mockedUsePomodoro.mockReturnValue({
       ...baseContext,
@@ -188,12 +187,12 @@ describe("PomodoroTimerPanel", () => {
 
     render(<PomodoroTimerPanel onOpenSettings={vi.fn()} />);
 
-    await userEvent.click(screen.getByRole("button", { name: /Restart/i }));
+    fireEvent.click(screen.getByRole("button", { name: /Restart/i }));
 
     expect(resetTimer).toHaveBeenCalledTimes(1);
   });
 
-  it("does not try to play sound when sound effects are disabled", async () => {
+  it("does not try to play sound when sound effects are disabled", () => {
     localStorage.setItem("disable_sound_effects", "true");
     const startTimer = vi.fn();
 
@@ -208,7 +207,7 @@ describe("PomodoroTimerPanel", () => {
       (button) => button.getAttribute("title") === "Start",
     );
 
-    await userEvent.click(startButton!);
+    fireEvent.click(startButton!);
 
     expect(startTimer).toHaveBeenCalledTimes(1);
   });

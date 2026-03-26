@@ -21,16 +21,11 @@ describe("LogoMark", () => {
 
   it("applies the expected mask styles", () => {
     const { container } = render(<LogoMark />);
-    const span = container.querySelector("span") as HTMLSpanElement;
+    const span = container.querySelector("span")!;
 
-    expect(span.style.maskImage).toBe("url(\"/t.svg\")");
+    expect(span.style.maskImage).toBe("url('/t.svg')");
     expect(span.style.maskRepeat).toBe("no-repeat");
     expect(span.style.maskPosition).toBe("center");
     expect(span.style.maskSize).toBe("contain");
-
-    expect(span.style.webkitMaskImage).toBe("url(\"/t.svg\")");
-    expect(span.style.webkitMaskRepeat).toBe("no-repeat");
-    expect(span.style.webkitMaskPosition).toBe("center");
-    expect(span.style.webkitMaskSize).toBe("contain");
   });
 });

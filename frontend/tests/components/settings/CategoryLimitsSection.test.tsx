@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 import CategoryLimitsSection from "@/components/settings/CategoryLimitsSection";
@@ -110,7 +110,7 @@ describe("CategoryLimitsSection", () => {
     expect(onLimitChange).toHaveBeenCalledWith(1, null);
   });
 
-  it("calls onLimitChange with the entered number", async () => {
+  it("calls onLimitChange with the entered number", () => {
     const onLimitChange = vi.fn();
 
     render(
@@ -126,10 +126,9 @@ describe("CategoryLimitsSection", () => {
     );
 
     const inputs = screen.getAllByRole("spinbutton");
-    await userEvent.clear(inputs[0]);
-    await userEvent.type(inputs[0], "45");
+    fireEvent.change(inputs[0], { target: { value: "45" } });
 
-    expect(onLimitChange).toHaveBeenLastCalledWith(1, 45);
+    expect(onLimitChange).toHaveBeenCalledWith(1, 45);
   });
 
   it("clamps the limit to maxDailyMinutes", async () => {

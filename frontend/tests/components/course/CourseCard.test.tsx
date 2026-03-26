@@ -6,7 +6,7 @@ import { getUsernameById } from "@/services/authService";
 import type { Course, CoursePermissions } from "@/types/course";
 
 vi.mock("@/services/authService", async () => {
-  const actual = await vi.importActual<typeof import("@/services/authService")>(
+  const actual = await vi.importActual(
     "@/services/authService",
   );
 
@@ -127,7 +127,7 @@ describe("CourseCard", () => {
       />,
     );
 
-    await userEvent.click(screen.getByRole("button"));
+    await userEvent.click(screen.getAllByRole("button")[0]);
     expect(onView).toHaveBeenCalledWith(baseCourse);
   });
 
@@ -143,7 +143,7 @@ describe("CourseCard", () => {
       />,
     );
 
-    const card = screen.getByRole("button");
+    const card = screen.getAllByRole("button")[0];
     card.focus();
 
     await userEvent.keyboard("{Enter}");
@@ -163,7 +163,7 @@ describe("CourseCard", () => {
       />,
     );
 
-    const card = screen.getByRole("button");
+    const card = screen.getAllByRole("button")[0];
     card.focus();
 
     await userEvent.keyboard(" ");
