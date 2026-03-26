@@ -1,4 +1,4 @@
-"""View for getting all the pending share event objects"""
+"""View for retrieving all the pending share event objects for a user."""
 
 from rest_framework import permissions
 from rest_framework.views import APIView
@@ -12,7 +12,9 @@ class ShareEventsView(APIView):
 
     def get(self, request):
         """
-        Gets all the share event view objects for a particular user.
+        Handle POST requests for sending a share request to another user.
+
+        Creates a pending share event object.
         """
         # All share requests that the user sent or received
         shared_events = PendingShareEvent.objects.filter(

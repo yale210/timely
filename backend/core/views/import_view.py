@@ -10,6 +10,8 @@ from django.utils import timezone
 
 
 class ImportView(APIView):
+    """Import the authenticated user's file by creating Event objects from it."""
+
     permission_classes = [permissions.IsAuthenticated]
 
     @staticmethod
@@ -22,6 +24,7 @@ class ImportView(APIView):
     def post(self, request):
         """
         Handle the import of events from a .txt file in iCalendar format.
+
         The file must follow the iCalendar format, with events defined between BEGIN:VEVENT and END:VEVENT.
         """
         # The file that the user uploaded

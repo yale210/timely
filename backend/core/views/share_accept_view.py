@@ -1,4 +1,4 @@
-"""View for replying to share event requests"""
+"""View for replying to share event requests."""
 
 from rest_framework import permissions
 from rest_framework.views import APIView
@@ -8,12 +8,15 @@ from core.models import PendingShareEvent
 
 
 class ShareAcceptView(APIView):
+    """API view for responding to share event requests."""
+
     permission_classes = [permissions.IsAuthenticated]
 
     def post(self, request):
         """
-        Handle part of the sharing of an event between users.
-        Specifically accepting or rejecting an event share request.
+        Handle POST requests for responding to a shared event.
+
+        Share requests can be accepted or rejected.
         """
         # "accept" or "reject"
         decision = request.data.get("Decision")
