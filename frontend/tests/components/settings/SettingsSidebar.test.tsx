@@ -2,6 +2,27 @@ import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import SettingsSidebar from "@/components/settings/SettingsSidebar";
 
+vi.mock("@/components/modals/ConfirmationModal", () => ({
+  default: ({
+    isOpen,
+    onConfirm,
+    title,
+    confirmText = "Confirm",
+  }: {
+    isOpen: boolean;
+    onConfirm: () => void;
+    title: string;
+    confirmText?: string;
+  }) =>
+    isOpen ? (
+      <div role="dialog" aria-label={title}>
+        <button type="button" onClick={onConfirm}>
+          {confirmText}
+        </button>
+      </div>
+    ) : null,
+}));
+
 describe("SettingsSidebar", () => {
   it("switches sections and confirms logout", () => {
     const selectSection = vi.fn();

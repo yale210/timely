@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
+import type { ReactNode } from "react";
 import { NotificationProvider } from "@/context/NotificationContext";
 
 import { AdminNotifications } from "@/pages/Admin/Notifications/AdminNotifications";
@@ -10,6 +11,10 @@ import {
   getAudienceCounts,
   getBroadcastStatus,
 } from "@/api/notifications";
+
+vi.mock("@/layouts/AppLayout", () => ({
+  default: ({ children }: { children: ReactNode }) => <div>{children}</div>,
+}));
 
 vi.mock("@/api/notifications", () => ({
   getAdminUsers: vi.fn(),

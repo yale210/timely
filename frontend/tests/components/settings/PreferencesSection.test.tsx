@@ -1,8 +1,18 @@
 import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import type { ReactNode } from "react";
 import PreferencesSection from "@/components/settings/PreferencesSection";
 import * as specialDatesService from "@/services/specialDatesService";
 import type { Preference } from "@/types";
+
+vi.mock("@headlessui/react", () => ({
+  Dialog: ({ children }: { children: ReactNode }) => <div>{children}</div>,
+  DialogPanel: ({ children }: { children: ReactNode }) => <div>{children}</div>,
+  DialogTitle: ({ children }: { children: ReactNode }) => <div>{children}</div>,
+  Transition: ({ show, children }: { show: boolean; children: ReactNode }) =>
+    show ? <>{children}</> : null,
+  TransitionChild: ({ children }: { children: ReactNode }) => <>{children}</>,
+}));
 
 vi.mock("@/services/specialDatesService", () => ({
   getSpecialDates: vi.fn(),

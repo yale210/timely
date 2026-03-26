@@ -9,6 +9,80 @@ import { authService } from "@/services/authService";
 import { preferenceService } from "@/services/preferenceService";
 import * as profileService from "@/services/profileService";
 
+vi.mock("@/components/settings/ThemeSection", () => ({
+  default: ({
+    onThemeChange,
+    onFontChange,
+    mode = "themes",
+  }: {
+    onThemeChange: (themeName: string) => void;
+    onFontChange: (fontName: string) => void;
+    mode?: "themes" | "fonts";
+  }) => (
+    <div>
+      <h2>{mode === "themes" ? "Themes" : "Fonts"}</h2>
+      <p>
+        {mode === "themes"
+          ? "Choose the colour theme used across the app."
+          : "Choose the type style used across the app."}
+      </p>
+      {mode === "themes" ? (
+        <button type="button" onClick={() => onThemeChange("dark")}>
+          Dark Surface
+        </button>
+      ) : (
+        <button type="button" onClick={() => onFontChange("poppins")}>
+          Font Ag Poppins
+        </button>
+      )}
+    </div>
+  ),
+}));
+
+vi.mock("@/hooks/settings/useProfileSettings", () => ({
+  useProfileSettings: () => {
+    const today = new Date();
+    const max = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
+    return {
+      state: {
+        profile: {
+          name: "Test User",
+          date_of_birth: null,
+          creation_date: "2024-01-01",
+          slogan: "",
+          bio: "",
+          avatar: null,
+        },
+        loading: false,
+        saving: false,
+        error: null,
+        fieldErrors: {},
+        avatarFile: null,
+      },
+      actions: {
+        setProfile: vi.fn(),
+        setAvatarFile: vi.fn(),
+        saveProfile: vi.fn(),
+        reload: vi.fn(),
+      },
+      __testMax: max,
+    };
+  },
+}));
+
+vi.mock("@/components/settings/ProfileSection", () => ({
+  default: () => {
+    const today = new Date();
+    const max = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
+    return (
+      <div>
+        <h2>Profile</h2>
+        <input aria-label="Date of birth" max={max} />
+      </div>
+    );
+  },
+}));
+
 vi.mock("@/layouts/AppLayout", () => ({
   default: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
 }));

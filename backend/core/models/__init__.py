@@ -8,7 +8,6 @@ from .preference import Preference
 from .special_dates import SpecialDates
 from .category import Category
 from .task import Task
-from .profile import Profile
 from .grade import Grade
 from .friendship import Friendship
 from .reminder_dispatch_log import ReminderDispatchLog
@@ -25,7 +24,6 @@ __all__ = [
     "SpecialDates",
     "Category",
     "Task",
-    "Profile",
     "Grade",
     "Friendship",
     "ReminderDispatchLog",
