@@ -87,4 +87,41 @@ describe("SignupForm", () => {
     );
     expect(navigateMock).toHaveBeenCalledWith("/login");
   });
+
+  it("renders backend validation errors as field-labelled lines", async () => {
+    registerMock.mockRejectedValue({
+      response: {
+        data: {
+          email: ["This email is already registered."],
+          username: "This username is unavailable.",
+        },
+      },
+    } as never);
+
+    render(
+      <MemoryRouter>
+        <SignupForm />
+      </MemoryRouter>,
+    );
+
+    fireEvent.change(screen.getByLabelText("Username"), {
+      target: { value: "alice" },
+    });
+    fireEvent.change(screen.getByLabelText("Email address"), {
+      target: { value: "alice@example.com" },
+    });
+    fireEvent.change(screen.getByLabelText("Password"), {
+      target: { value: "secret" },
+    });
+    fireEvent.change(screen.getByLabelText("Confirm password"), {
+      target: { value: "secret" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: /sign up/i }));
+
+    expect(
+      await screen.findByText(
+        /email: This email is already registered\.\s+username: This username is unavailable\./,
+      ),
+    ).toBeInTheDocument();
+  });
 });
