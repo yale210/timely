@@ -8,6 +8,8 @@ from .category import CategorySerializer
 
 
 class CalendarSerializer(serializers.ModelSerializer):
+    """Serializer for the calendar ."""
+
     BUFFER_CONFLICT_MESSAGES = {
         "Allocation slots and their task buffers cannot overlap calendar events.": (
             "This buffer conflicts with the task's current scheduled time because it would overlap a calendar event. Reschedule or unschedule the task first."
@@ -50,6 +52,14 @@ class CalendarSerializer(serializers.ModelSerializer):
         read_only_fields = ["total_task_allocations"]
 
     def to_representation(self, instance):
+        """Convert the Task instance into dictionary.
+
+        Args:
+            instance (Task): The Task instance to be converted to a dictionary.
+
+        Returns:
+            dict: The representation of the Task instance.
+        """
         representation = super().to_representation(instance)
         representation["categories"] = CategorySerializer(
             instance.categories.all(), many=True
@@ -57,9 +67,23 @@ class CalendarSerializer(serializers.ModelSerializer):
         return representation
 
     def get_remaining_minutes(self, instance):
+        """Calculate the remaining minutes for a task.
+
+        Args:
+            instance (Task): The task instance.
+
+        Returns:
+            int: The remaining minutes after calculation.
+        """
         return max(0, instance.estimated_minutes - instance.completed_minutes)
 
     def __init__(self, *args, **kwargs):
+        """Enable filtering of categories based on the user.
+
+        Args:
+            *args: Variable length argument list.
+            **kwargs: Arbitrary keyword arguments.
+        """
         super().__init__(*args, **kwargs)
         request = self.context.get("request")
         if request and request.user and request.user.is_authenticated:
@@ -363,6 +387,14 @@ class CalendarSerializer(serializers.ModelSerializer):
         return serializers.ValidationError(field_errors)
 
     def validate(self, attrs):
+        """Validate the calendar's data.
+
+        Returns:
+            dict: The validated data for the calendar.
+
+        Raises:
+            ValidationError: If there is invalid data.
+        """
         attrs = super().validate(attrs)
         min_split_minutes = attrs.get(
             "min_split_minutes",
@@ -469,6 +501,14 @@ class CalendarSerializer(serializers.ModelSerializer):
         return attrs
 
     def create(self, validated_data):
+        """Create a task instance.
+
+        Args:
+            validated_data (dict): The validated data for the task to be created.
+
+        Returns:
+            Task: The created task instance.
+        """
         if validated_data.get("completed"):
             validated_data["allocation"] = []
         allocation = validated_data.get("allocation") or []
@@ -476,6 +516,15 @@ class CalendarSerializer(serializers.ModelSerializer):
         return super().create(validated_data)
 
     def update(self, instance, validated_data):
+        """Update a Task instance with the provided data.
+
+        Args:
+            instance (Task): The Task instance to be updated.
+            validated_data (dict): The validated data to enable updating the Task.
+
+        Returns:
+            Task: The updated Task instance.
+        """
         if validated_data.get("completed"):
             validated_data["allocation"] = []
         allocation = validated_data.get("allocation", instance.allocation or [])
@@ -484,6 +533,8 @@ class CalendarSerializer(serializers.ModelSerializer):
 
 
 class CalendarResponseSerializer(serializers.ModelSerializer):
+    """Serializer for the Calendar Responses."""
+
     categories = CategorySerializer(many=True, read_only=True)
     remaining_minutes = serializers.SerializerMethodField(read_only=True)
 
@@ -512,9 +563,25 @@ class CalendarResponseSerializer(serializers.ModelSerializer):
         ]
 
     def get_remaining_minutes(self, instance):
+        """Calculate the remaining minutes for a task by subtracting the completed minutes and estimated minutes.
+
+        Returns:
+            int: The number of remaining minutes for the task.
+        """
         return max(0, instance.estimated_minutes - instance.completed_minutes)
 
     def validate(self, attrs):
+        """Validate the calendar's data.
+
+        Args:
+            attrs (dict): The data which is to be validated.
+
+        Returns:
+            dict: The validated data for the calendar.
+
+        Raises:
+            ValidationError: If the data is invalid.
+        """
         attrs = super().validate(attrs)
         min_split_minutes = attrs.get(
             "min_split_minutes",

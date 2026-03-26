@@ -1,4 +1,9 @@
-"""Assessment Seeder"""
+"""Assessment Seeder.
+
+This module provides the `AssessmentSeeder` class, which handles the generation
+of assessment-related data in the database. It includes logic for creating
+fixtures and randomly generated assessments and associated events.
+"""
 
 import random
 from core.models import Assessment, Event, Category
@@ -9,19 +14,43 @@ from django.utils import timezone
 
 
 class AssessmentSeeder(BaseSeeder):
+    """Seeder for the Assessment model.
+
+    This class orchestrates the seeding of assessments by loading predefined
+    fixtures and generating a large set of random assessments linked to users
+     and events.
+
+    Attributes:
+        help (str): Description of the seeder's purpose.
+
+    """
+
     help = "Handles seeding of assessments into the database."
 
     def seed(self):
+        """Execute the seeding logic for assessments.
+
+        This method sequentially creates fixture-based assessment events,
+        fixture-based assessments, and then populates a large number of
+        randomly generated assessment events and assessments.
+        """
         self._create_fixture_assessment_event()
         self._create_fixture_assessment()
 
-        for i in range(200):
+        # Generate a baseline of random events that can be linked to assessments
+        for _ in range(200):
             self._populate_random_assessment_event()
 
-        for i in range(200):
+        # Generate random assessments and link them to existing events where possible
+        for _ in range(200):
             self._populate_random_assessment()
 
     def _create_fixture_assessment(self):
+        """Load and create assessment instances from predefined fixtures.
+
+        Iterates through the `assessments` list imported from fixtures and
+        attempts to create each record in the database.
+        """
         for assessment in assessments:
             try:
                 self._create_assessment(assessment)
@@ -29,6 +58,11 @@ class AssessmentSeeder(BaseSeeder):
                 print(f"Error creating assessment: {exception}")
 
     def _create_fixture_assessment_event(self):
+        """Load and create event instances intended for assessments from fixtures.
+
+        Iterates through the `assessment_events` list imported from fixtures and
+        attempts to create each event record in the database.
+        """
         for event in assessment_events:
             try:
                 self._create_event(event)
@@ -36,16 +70,25 @@ class AssessmentSeeder(BaseSeeder):
                 print(f"Error creating assessment event: {exception}")
 
     def _populate_random_assessment(self):
+        """Generate a single random assessment and persist it.
+
+        This method selects a random user, creates one if none exist, and then
+        constructs an assessment with randomized attributes (title, type,
+        due date, weighting, etc.) and attempts to link it to an available
+        event for that user.
+        """
         User = get_user_model()
-        # Shuffle users and get a random user.
+        # Randomly select a user to own this assessment
         temporary_user = User.objects.order_by("?").first()
         if temporary_user is None:
+            # Fallback: create a new user if the database is empty
             temporary_user = User.objects.create_user(
                 username=self.faker.user_name(),
                 email=self.faker.email(),
                 password="thomas123",
             )
 
+        # Build assessment data with randomized fields
         self._create_assessment(
             {
                 "fields": {
@@ -68,6 +111,7 @@ class AssessmentSeeder(BaseSeeder):
                     "weighting_of_assessment": random.randint(1, 100),
                     "notes": self.faker.sentence(),
                     "reminder_offset": random.randint(1, 100),
+                    # Link to a random event owned by the user that isn't already linked
                     "linked_event": Event.objects.filter(
                         user=temporary_user, assessment__isnull=True
                     )
@@ -78,6 +122,11 @@ class AssessmentSeeder(BaseSeeder):
         )
 
     def _populate_random_assessment_event(self):
+        """Generate a single random event record to be used for assessments.
+
+        Creates an event with a random user, random category, and randomized
+        metadata such as title, description, and color.
+        """
         start = timezone.make_aware(self.faker.date_time())
         self._create_event(
             {
@@ -103,6 +152,15 @@ class AssessmentSeeder(BaseSeeder):
         )
 
     def _create_assessment(self, data):
+        """Create or get an Assessment record from data.
+
+        Handles resolving the User and Event relationships before persisting
+         the record.
+
+        Args:
+            data (dict): A dictionary containing assessment field data.
+
+        """
         user = self.resolve_user(data["fields"]["user"])
         linked_event = self.resolve_event(data["fields"].get("linked_event"), user)
 
@@ -121,6 +179,14 @@ class AssessmentSeeder(BaseSeeder):
         )
 
     def _create_event(self, data):
+        """Create or get an Event record from data.
+
+        Handles basic field mapping and category relation assignment.
+
+        Args:
+            data (dict): A dictionary containing event field data.
+
+        """
         user = self.resolve_user(data["fields"]["user"])
         split_from_event = self.resolve_event(
             data["fields"].get("split_from_event"),
@@ -148,9 +214,19 @@ class AssessmentSeeder(BaseSeeder):
         )
 
     def _get_or_create_random_category(self, user):
+        """Retrieve an existing random category or create one for the user.
+
+        Args:
+            user (User): The user for whom the category should be retrieved/created.
+
+        Returns:
+            Category: The resolved Category instance.
+
+        """
         temporary_category = Category.objects.filter(user=user).order_by("?").first()
 
         if temporary_category is None:
+            # Create a new category if the user doesn't have any
             temporary_category = Category.objects.create(
                 user=user,
                 text=self.faker.word(),
@@ -159,11 +235,18 @@ class AssessmentSeeder(BaseSeeder):
         return temporary_category
 
     def _get_or_create_random_user(self):
+        """Retrieve an existing random user or create a new one.
+
+        Returns:
+            User: The resolved User instance.
+
+        """
         User = get_user_model()
-        # Shuffle users and get a random user.
+        # Fetch a random user from the database
         temporary_user = User.objects.order_by("?").first()
 
         if temporary_user is None:
+            # Create a default user if none exist
             temporary_user = User.objects.create_user(
                 username=self.faker.user_name(),
                 email=self.faker.email(),

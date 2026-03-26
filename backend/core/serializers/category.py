@@ -4,6 +4,8 @@ from core.models import Category
 
 
 class CategorySerializer(serializers.ModelSerializer):
+    """Serializer for the Category model."""
+
     user = serializers.HiddenField(default=serializers.CurrentUserDefault())
 
     class Meta:
