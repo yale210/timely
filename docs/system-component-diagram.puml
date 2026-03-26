@@ -1,0 +1,104 @@
+@startuml
+title Timely System Component Diagram
+skinparam componentStyle rectangle
+skinparam shadowing false
+skinparam packageStyle rectangle
+skinparam linetype ortho
+left to right direction
+
+actor "Student / Teacher /\nAdmin User" as User
+
+node "Browser" as Browser {
+  component "React + Vite Frontend" as Frontend
+  component "Pages / Components /\nHooks / Services" as FrontendUi
+}
+
+cloud "Static Hosting\n(Nginx in deployment)" as StaticHost
+
+node "Timely Backend" as BackendNode {
+  component "Daphne + Django + DRF\nHTTP API" as DjangoApi
+  component "Channels\nWebSocket Endpoint" as ChannelsWs
+
+  package "Backend Apps" as Apps {
+    component "authentication" as Authentication
+    component "core" as Core
+    component "profiles" as Profiles
+    component "courses" as Courses
+    component "scheduler" as Scheduler
+    component "notifications" as Notifications
+    component "pomo" as Pomo
+    component "admin_panel" as AdminPanel
+  }
+}
+
+database "Relational Database\nSQLite locally / PostgreSQL in deployment" as Database
+queue "Redis\nBroker / Channel Layer" as Redis
+component "Celery Worker" as CeleryWorker
+component "Celery Beat" as CeleryBeat
+storage "Media Storage\n(profile avatars / uploads)" as MediaStorage
+
+User --> Browser : uses application
+Browser --> Frontend
+Frontend --> FrontendUi
+FrontendUi --> StaticHost : loads built assets
+FrontendUi --> DjangoApi : REST / JSON over HTTP
+FrontendUi --> ChannelsWs : WebSocket notifications
+
+StaticHost --> Frontend : serves SPA bundle
+
+DjangoApi --> Authentication
+DjangoApi --> Core
+DjangoApi --> Profiles
+DjangoApi --> Courses
+DjangoApi --> Scheduler
+DjangoApi --> Notifications
+DjangoApi --> Pomo
+DjangoApi --> AdminPanel
+
+ChannelsWs --> Notifications
+
+Authentication --> Database
+Core --> Database
+Profiles --> Database
+Courses --> Database
+Scheduler --> Database
+Notifications --> Database
+Pomo --> Database
+AdminPanel --> Database
+
+Profiles --> MediaStorage : avatar files
+
+Scheduler --> Redis : queue background work
+Notifications --> Redis : queue broadcasts / reminders
+AdminPanel --> Redis : queue admin broadcasts
+
+CeleryWorker --> Redis : consumes tasks
+CeleryWorker --> Database : updates application data
+CeleryWorker --> Notifications : executes reminder /\nbroadcast tasks
+
+CeleryBeat --> Redis : schedules periodic jobs
+CeleryBeat --> Notifications : periodic notifications
+CeleryBeat --> Scheduler : periodic scheduling-related jobs
+
+Redis --> ChannelsWs : websocket message fan-out
+
+note right of Frontend
+  Main user-facing areas include:
+  - tasks and calendar
+  - assessments and gradebook
+  - courses
+  - notifications
+  - profiles / leaderboard
+  - pomodoro
+  - settings / sharing
+end note
+
+note bottom of BackendNode
+  This component diagram reflects the implemented
+  full-stack architecture in the repository.
+  Legend:
+  - boxes = deployable/runtime components or backend apps
+  - arrows = primary communication or dependency paths
+end note
+
+@enduml
