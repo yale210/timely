@@ -211,8 +211,12 @@ class SchedulerTest(TestCase):
             self.user, max_days_ahead=7, allow_split=True, min_block_minutes=30
         )
         mocked_now = timezone.make_aware(datetime.combine(start_date, time(0, 0)))
-        with patch("scheduler.engine.availability.timezone.localdate", return_value=start_date):
-            with patch("scheduler.engine.availability.timezone.now", return_value=mocked_now):
+        with patch(
+            "scheduler.engine.availability.timezone.localdate", return_value=start_date
+        ):
+            with patch(
+                "scheduler.engine.availability.timezone.now", return_value=mocked_now
+            ):
                 results = scheduler.schedule_tasks(start_date=start_date)
 
         self.assertTrue(results[0].success)
