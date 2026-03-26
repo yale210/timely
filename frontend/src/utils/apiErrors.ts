@@ -7,36 +7,42 @@ interface ApiError {
   response?: ApiErrorResponse;
 }
 
+type FieldErrors = Record<string, string[]> & { non_field_errors?: string[] };
+interface FormErrorResult {
+  message: string;
+  fieldErrors: Record<string, string[]>;
+}
+
 const isApiError = (error: unknown): error is ApiError =>
   typeof error === "object" && error !== null && "response" in error;
 
-/**
- * Parses a Django REST Framework error response into a user-friendly message and field-level errors.
- * @param error - The caught error, typically from an Axios request.
- * @returns An object containing a summary message and per-field error arrays.
- */
-export const formatDjangoFormError = (
+const getFallbackError = (): FormErrorResult => ({
+  message: "Something went wrong",
+  fieldErrors: {},
+});
+
+const getResponseDataRecord = (
   error: unknown,
-): { message: string; fieldErrors: Record<string, string[]> } => {
-  const fallback = {
-    message: "Something went wrong",
-    fieldErrors: {} as Record<string, string[]>,
-  };
+): { status?: number; dataRecord: Record<string, unknown> | null } => {
   const response = isApiError(error) ? error.response : undefined;
+  const data = response?.data;
+  return {
+    status: response?.status,
+    dataRecord:
+      data && typeof data === "object"
+        ? (data as Record<string, unknown>)
+        : null,
+  };
+};
 
-  const status: number | undefined = response?.status;
-  const data: unknown = response?.data;
-  const dataRecord =
-    data && typeof data === "object"
-      ? (data as Record<string, unknown>)
-      : null;
-
+const getTopLevelError = (
+  status: number | undefined,
+  dataRecord: Record<string, unknown> | null,
+): FormErrorResult | null => {
+  // Prefer DRF's top-level `detail` message over field parsing when present.
   const detail = dataRecord?.detail;
   if (typeof detail === "string") {
-    return {
-      message: detail,
-      fieldErrors: {},
-    };
+    return { message: detail, fieldErrors: {} };
   }
 
   if (status === 401) {
@@ -46,30 +52,59 @@ export const formatDjangoFormError = (
     };
   }
 
-  if (!dataRecord) {
-    return fallback;
-  }
+  return null;
+};
 
-  const field: Record<string, string[]> & { non_field_errors?: string[] } = {};
+const getFieldErrors = (dataRecord: Record<string, unknown>): FieldErrors => {
+  const fieldErrors: FieldErrors = {};
   for (const [key, potentialArray] of Object.entries(dataRecord)) {
+    // Ignore non-array payload entries so the result stays compatible with form UIs.
     if (Array.isArray(potentialArray)) {
-      field[key] = potentialArray.filter((x): x is string => typeof x === "string");
+      fieldErrors[key] = potentialArray.filter(
+        (value): value is string => typeof value === "string",
+      );
     }
   }
+  return fieldErrors;
+};
 
-  const nonField = field.non_field_errors?.join(" ").trim();
-  const firstFieldMessage = Object.entries(field)
+const getFieldErrorMessage = (fieldErrors: FieldErrors): string => {
+  // Non-field errors already describe whole-form failures, so surface them first.
+  const nonFieldMessage = fieldErrors.non_field_errors?.join(" ").trim();
+  if (nonFieldMessage) {
+    return nonFieldMessage;
+  }
+
+  const firstFieldMessage = Object.entries(fieldErrors)
     .filter(([key]) => key !== "non_field_errors")
-    .flatMap(([, msgs]) => msgs)
-    .find(Boolean) ?? "";
-  const message = nonField?.length
-    ? nonField
-    : firstFieldMessage?.length
-      ? firstFieldMessage
-      : "Please fix the highlighted fields.";
+    .flatMap(([, messages]) => messages)
+    .find(Boolean);
+
+  return firstFieldMessage ?? "Please fix the highlighted fields.";
+};
+
+/**
+ * Parses a Django REST Framework error response into a user-friendly message and field-level errors.
+ * @param error - The caught error, typically from an Axios request.
+ * @returns An object containing a summary message and per-field error arrays.
+ */
+export const formatDjangoFormError = (
+  error: unknown,
+): FormErrorResult => {
+  const { status, dataRecord } = getResponseDataRecord(error);
+  const topLevelError = getTopLevelError(status, dataRecord);
+  if (topLevelError) {
+    return topLevelError;
+  }
+
+  if (!dataRecord) {
+    return getFallbackError();
+  }
+
+  const fieldErrors = getFieldErrors(dataRecord);
   return {
-    message,
-    fieldErrors: field,
+    message: getFieldErrorMessage(fieldErrors),
+    fieldErrors,
   };
 };
 
