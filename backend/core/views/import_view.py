@@ -70,7 +70,6 @@ class ImportView(APIView):
                     # This signifies that every line below it is information about the event
                     if line == "BEGIN:VEVENT":
                         if current_event is None:
-                            # A dictionary is used here as this is what iCalendar uses
                             current_event = {}
                         # This error means that a new event was started before the previous one was ended
                         else:
@@ -82,7 +81,6 @@ class ImportView(APIView):
                         if current_event is None:
                             raise ValueError("No event to end")
 
-                        # If everything is correct so far, the event itself needs to be checked
                         else:
                             # Every event must have a name, start date/time and end date/time
 
@@ -96,16 +94,14 @@ class ImportView(APIView):
                                 )
 
                             start_date_time_exists = False
-                            # Search every key
+
                             for key in current_event:
                                 if "DTSTART" in key:
                                     # The actual date/time of the event
                                     dt_start = current_event[key]
-
-                                    # Date/time has been found
                                     start_date_time_exists = True
 
-                            # Start date/time is required
+                            # Start start date/time is required
                             if start_date_time_exists:
                                 dt_start = dt_start
                             else:
@@ -114,16 +110,13 @@ class ImportView(APIView):
                                 )
 
                             end_date_time_exists = False
-                            # Search every key
                             for key in current_event:
                                 if "DTEND" in key:
                                     # The actual date/time of the event
                                     dt_end = current_event[key]
-
-                                    # Date/time has been found
                                     end_date_time_exists = True
 
-                            # End date/time is required
+                            # End end date/time is required
                             if end_date_time_exists:
                                 dt_end = dt_end
                             else:
