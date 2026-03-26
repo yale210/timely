@@ -151,6 +151,20 @@ class SchedulerCategoryMixin:
         limited_ids: set[int],
         window: tuple[datetime, datetime],
     ) -> None:
+        """Add minutes from already scheduled tasks to category usage.
+
+        This method iterates through all tasks that have already been persisted
+        to the database, checks if they belong to any of the categories being
+        limited, and adds their overlapping time for the current day to the
+        usage tally.
+
+        Args:
+            minutes_used: Dictionary mapping category IDs to their current
+                minute usage for the day.
+            limited_ids: Set of category IDs that have daily time limits.
+            window: The datetime range (usually the current day) for which
+                to calculate overlapping time.
+        """
         for scheduled_task in self.scheduled_tasks:
             category_ids = self._task_category_ids(scheduled_task)
             if not category_ids & limited_ids:
@@ -165,6 +179,18 @@ class SchedulerCategoryMixin:
         minutes_used: dict[int, int],
         window: tuple[datetime, datetime],
     ) -> None:
+        """Add minutes from tasks scheduled in this session to category usage.
+
+        This tracks tasks that have been allocated during the current run of
+        the scheduler but not yet persisted to the database, ensuring that
+        category limits are respected across all tasks in a single scheduling
+        request.
+
+        Args:
+            minutes_used: Dictionary mapping category IDs to their current
+                minute usage.
+            window: The datetime range representing the day window.
+        """
         for scheduled_task, start, end in self._scheduled_task_segments:
             category_ids = self._task_category_ids(scheduled_task)
             self._add_category_overlap(minutes_used, category_ids, start, end, window)
@@ -176,6 +202,19 @@ class SchedulerCategoryMixin:
         current_segments: list[tuple[datetime, datetime]],
         window: tuple[datetime, datetime],
     ) -> None:
+        """Add previously allocated segments of the current task to category usage.
+
+        When scheduling a task (especially in split mode), this ensures that
+        segments already assigned to the task on the same day are counted
+        towards its category's daily limit for subsequent segments.
+
+        Args:
+            minutes_used: Dictionary mapping category IDs to their current
+                minute usage.
+            task_category_ids: Set of category IDs for the task being scheduled.
+            current_segments: List of segments already allocated to this task.
+            window: The datetime range representing the day window.
+        """
         for start, end in current_segments:
             self._add_category_overlap(
                 minutes_used, task_category_ids, start, end, window

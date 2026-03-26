@@ -88,6 +88,22 @@ class SchedulerAvailabilityMixin:
         day_start: datetime,
         day_end: datetime,
     ) -> list[tuple[datetime, datetime]]:
+        """Calculate expanded occupied slots for a task including its buffers.
+
+        This method retrieves the raw allocation segments for a task and expands
+        each one by applying the user's preferred buffer times (before/after).
+        This ensures that scheduling new tasks respects the necessary transitions
+        between activities.
+
+        Args:
+            task: The Task object whose allocated segments are being expanded.
+            day_start: The start of the temporal window for filtering segments.
+            day_end: The end of the temporal window for filtering segments.
+
+        Returns:
+            A list of datetime tuples representing the expanded time slots that
+            the task effectively occupies on this day.
+        """
         overlapping = [
             (start, end)
             for start, end in self._task_allocation_segments(task)

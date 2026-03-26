@@ -215,6 +215,23 @@ class SchedulerSchedulingMixin(_SchedulerSplitSchedulingMixin):
         deadline: datetime,
         remaining: int,
     ) -> tuple[datetime, datetime] | None:
+        """Search for a single contiguous time slot across multiple days.
+
+        This method iterates through dates from the search start until the
+        task's deadline, attempting to find a single slot that satisfies
+        all task constraints on each day.
+
+        Args:
+            task: The Task object to be scheduled.
+            search_start: The date to begin the search.
+            task_start: The earliest allowed start time for the task.
+            deadline: The latest allowed end time for the task.
+            remaining: The required duration in minutes.
+
+        Returns:
+            The first valid datetime tuple representing a single slot, or None
+            if no such slot exists within the search horizon.
+        """
         for current_date in self._iter_search_dates(search_start, deadline):
             candidate = self._find_single_slot_for_date(
                 task,
@@ -235,6 +252,19 @@ class SchedulerSchedulingMixin(_SchedulerSplitSchedulingMixin):
         deadline: datetime,
         remaining: int,
     ) -> tuple[datetime, datetime] | None:
+        """Find a valid scheduling slot for a specific date.
+
+        Args:
+            task: The Task object being scheduled.
+            current_date: The specific date to inspect.
+            task_start: Boundary for task's earliest start.
+            deadline: Boundary for task's latest end.
+            remaining: Required duration in minutes.
+
+        Returns:
+            A valid datetime tuple for the date, or None if the date has
+            no available capacity or valid slots.
+        """
         if not self._is_day_available(current_date):
             return None
         slots = self._task_slots_for_date(
@@ -256,13 +286,28 @@ class SchedulerSchedulingMixin(_SchedulerSplitSchedulingMixin):
         deadline: datetime,
         remaining: int,
     ) -> tuple[datetime, datetime] | None:
+        """Evaluate and prepare a candidate slot for single-slot scheduling.
+
+        Applies clipping and task-specific constraints (like category limits)
+        to a raw available slot to determine if it can accommodate the task.
+
+        Args:
+            task: The Task being scheduled.
+            slot: A raw available datetime range.
+            task_start: Task's earliest start boundary.
+            deadline: Task's latest end boundary.
+            remaining: Required duration in minutes.
+
+        Returns:
+            A clipped and validated datetime tuple, or None if invalid.
+        """
         candidate = self._clip_slot(self._task_slot(task, slot), task_start, deadline)
         if not candidate or not self._can_use_single_slot(task, candidate, remaining):
             return None
         return candidate
 
     def schedule_tasks(self, start_date: date) -> list[ScheduleResult]:
-        """Iteratively schedule all tasks for the user.
+        """Schedule all pending tasks for the user iteratively.
 
         Args:
             start_date: The date to begin scheduling from.
