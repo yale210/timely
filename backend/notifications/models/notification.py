@@ -43,5 +43,9 @@ class Notification(models.Model):
         db_table = "core_notification"
 
     def __str__(self):
-        """String representation of a Notification."""
+        """Generates a human-readable identifier for the notification.
+
+        Returns:
+            str: A truncated version of the notification title (up to 50 characters).
+        """
         return self.title[:50]

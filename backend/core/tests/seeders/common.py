@@ -28,7 +28,19 @@ from profiles.management.commands.seeders.profile_seeder import ProfileSeeder
 from profiles.models import Profile
 
 
-class SeederTests(TestCase):
+class SeederTestCase(TestCase):
+    def assert_seed_calls(self, seeder, fixture_method, random_method, random_calls):
+        from unittest.mock import patch
+
+        with (
+            patch.object(seeder, fixture_method) as fixture_mock,
+            patch.object(seeder, random_method) as random_mock,
+        ):
+            seeder.seed()
+
+        fixture_mock.assert_called_once_with()
+        self.assertEqual(random_mock.call_count, random_calls)
+
     def seed_fixture_data(self):
         UserSeeder()._create_fixture_user()
         CategorySeeder()._create_fixture_category()
@@ -44,25 +56,7 @@ class SeederTests(TestCase):
         AssessmentSeeder()._create_fixture_assessment_event()
         AssessmentSeeder()._create_fixture_assessment()
 
-    def test_fixture_seeders_are_idempotent(self):
-        self.seed_fixture_data()
-        initial_counts = {
-            "users": get_user_model().objects.count(),
-            "categories": Category.objects.count(),
-            "commutes": Commute.objects.count(),
-            "days": DayOfWeek.objects.count(),
-            "events": Event.objects.count(),
-            "grades": Grade.objects.count(),
-            "preferences": Preference.objects.count(),
-            "profiles": Profile.objects.count(),
-            "special_dates": SpecialDates.objects.count(),
-            "tasks": Task.objects.count(),
-            "friendships": Friendship.objects.count(),
-            "assessments": Assessment.objects.count(),
-        }
-
-        self.seed_fixture_data()
-
+    def assert_fixture_counts_unchanged(self, initial_counts):
         self.assertEqual(get_user_model().objects.count(), initial_counts["users"])
         self.assertEqual(Category.objects.count(), initial_counts["categories"])
         self.assertEqual(Commute.objects.count(), initial_counts["commutes"])
@@ -75,31 +69,3 @@ class SeederTests(TestCase):
         self.assertEqual(Task.objects.count(), initial_counts["tasks"])
         self.assertEqual(Friendship.objects.count(), initial_counts["friendships"])
         self.assertEqual(Assessment.objects.count(), initial_counts["assessments"])
-
-    def test_fixture_relations_resolve_by_same_user_natural_keys(self):
-        self.seed_fixture_data()
-
-        task = Task.objects.get(user__username="david", title="AKC Weeks 2-5")
-        self.assertEqual(list(task.categories.values_list("text", flat=True)), ["Uni"])
-        self.assertEqual(task.categories.get().user.username, "david")
-
-        grade = Grade.objects.get(user__username="david", name="DBS")
-        self.assertEqual(grade.category.text, "Uni")
-        self.assertEqual(grade.category.user.username, "david")
-
-    def test_fixture_seeders_preserve_profile_preference_and_assessment_values(self):
-        self.seed_fixture_data()
-
-        preference = Preference.objects.get(user__username="thomas")
-        self.assertEqual(preference.timezone, "Europe/London")
-        self.assertEqual(
-            set(preference.days_off.values_list("day", flat=True)), {1, 2, 3}
-        )
-
-        profile = Profile.objects.get(user__username="thomas")
-        self.assertEqual(profile.name, "Thomas Doe")
-
-        assessment = Assessment.objects.get(user__username="thomas", title="PPA Exam")
-        self.assertIsNotNone(assessment.linked_event)
-        self.assertEqual(assessment.linked_event.user.username, "thomas")
-        self.assertEqual(assessment.linked_event.title, "PPA Exam")

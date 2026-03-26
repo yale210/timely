@@ -7,6 +7,7 @@ interface AboutFeatureSectionProps {
   index: number
 }
 
+
 /**
  * Renders a single feature section with an alternating image-left / image-right layout.
  * Both panels animate in from opposite sides as they scroll into view.

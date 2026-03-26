@@ -20,11 +20,13 @@ const featureItems = [
   { key: "assessments", label: "Assessments", to: "/assessments", icon: "assignment" },
   { key: "gradebook", label: "Gradebook", to: "/gradebook", icon: "school" },
   { key: "leaderboard", label: "Leaderboard", to: "/leaderboard", icon: "leaderboard" },
+  { key: "courses", label: "Courses", to: "/courses", icon: "school" },
 ]
 
 const FEATURE_FLAGS = {
   assessments: "feature_assessments_enabled",
   gradebook: "feature_gradebook_enabled",
+  courses: "feature_courses_enabled",
   pomodoro: "feature_pomodoro_enabled",
   leaderboard: "feature_leaderboard_enabled",
 }
@@ -52,6 +54,7 @@ export default function AppNavbar() {
   const [featureFlags, setFeatureFlags] = useState(() => ({
     assessments: readFeatureFlag("assessments"),
     gradebook: readFeatureFlag("gradebook"),
+    courses: readFeatureFlag("courses"),
     pomodoro: readFeatureFlag("pomodoro"),
     leaderboard: readFeatureFlag("leaderboard"),
   }))
@@ -88,11 +91,11 @@ export default function AppNavbar() {
       setFeatureFlags({
         assessments: readFeatureFlag("assessments"),
         gradebook: readFeatureFlag("gradebook"),
+        courses: readFeatureFlag("courses"),
         pomodoro: readFeatureFlag("pomodoro"),
         leaderboard: readFeatureFlag("leaderboard"),
       })
     }
-    // Listen for both same-tab and cross-tab feature flag updates.
     window.addEventListener("feature-flags-changed", refreshFlags)
     window.addEventListener("storage", refreshFlags)
     return () => {
@@ -134,6 +137,8 @@ export default function AppNavbar() {
   const visibleFeatureItems = featureItems.filter((item) => {
     if (item.key === "assessments") return featureFlags.assessments
     if (item.key === "gradebook") return featureFlags.gradebook
+    if (item.key === "courses") return featureFlags.courses
+   
     if (item.key === "pomodoro") return featureFlags.pomodoro
     if (item.key === "leaderboard") return featureFlags.leaderboard
     return false
