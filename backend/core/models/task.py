@@ -12,7 +12,7 @@ from .importance_choices import ImportanceChoices
 
 class Task(models.Model):
     """Task model representing a task that a user needs to complete.
-    
+
     Tasks can be one-off or be part of a larger parent task.
 
     """

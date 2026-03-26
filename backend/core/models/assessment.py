@@ -10,7 +10,7 @@ from .category import Category
 
 class Assessment(models.Model):
     """Model used to allow for users to create assessments.
-    
+
     These enable them to keep on top of their upcoming assessments and deadlines.
     """
 

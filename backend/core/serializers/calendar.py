@@ -9,6 +9,7 @@ from .category import CategorySerializer
 
 class CalendarSerializer(serializers.ModelSerializer):
     """Serializer for the calendar ."""
+
     BUFFER_CONFLICT_MESSAGES = {
         "Allocation slots and their task buffers cannot overlap calendar events.": (
             "This buffer conflicts with the task's current scheduled time because it would overlap a calendar event. Reschedule or unschedule the task first."
@@ -78,7 +79,7 @@ class CalendarSerializer(serializers.ModelSerializer):
 
     def __init__(self, *args, **kwargs):
         """Enable filtering of categories based on the user.
-    
+
         Args:
             *args: Variable length argument list.
             **kwargs: Arbitrary keyword arguments.
@@ -520,7 +521,7 @@ class CalendarSerializer(serializers.ModelSerializer):
         Args:
             instance (Task): The Task instance to be updated.
             validated_data (dict): The validated data to enable updating the Task.
-        
+
         Returns:
             Task: The updated Task instance.
         """
@@ -533,6 +534,7 @@ class CalendarSerializer(serializers.ModelSerializer):
 
 class CalendarResponseSerializer(serializers.ModelSerializer):
     """Serializer for the Calendar Responses."""
+
     categories = CategorySerializer(many=True, read_only=True)
     remaining_minutes = serializers.SerializerMethodField(read_only=True)
 

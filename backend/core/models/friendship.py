@@ -9,7 +9,7 @@ from django.utils import timezone
 
 class Friendship(models.Model):
     """Model used to allow for users to send friend requests and create friendships.
-    
+
     A friendship is represented by a single record with a state of SENT, ACCEPTED or DECLINED.
     """
 

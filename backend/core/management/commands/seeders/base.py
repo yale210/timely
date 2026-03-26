@@ -40,7 +40,14 @@ class BaseSeeder:
         raise NotImplementedError("Subclass is not implementing the seed method.")
 
     def resolve_user(self, user_reference):
-        """Resolve a user by model instance, username, or legacy ID."""
+        """Resolve a user by model instance, username, or legacy ID.
+
+        Args:
+            user_reference: A reference to a user.
+
+        Returns:
+            User: The resolved User instance or None.
+        """
         if user_reference is None:
             return None
         if hasattr(user_reference, "pk"):
@@ -52,7 +59,16 @@ class BaseSeeder:
         return User.objects.get(username=user_reference)
 
     def resolve_category(self, category_reference, user_reference=None):
-        """Resolve a category by model instance, text, or legacy ID."""
+        """Resolve a category by model instance, text, or legacy ID.
+
+        Args:
+            category_reference: A reference to a category.
+            user_reference: Optional user reference for resolving categories.
+
+        Returns:
+            Category: The resolved Category instance or None.
+
+        """
         from core.models import Category
 
         if category_reference is None:
@@ -72,14 +88,26 @@ class BaseSeeder:
         return Category.objects.get(user=user, text=category_text)
 
     def resolve_categories(self, category_references, user_reference=None):
-        """Resolve category references into model instances."""
+        """Resolve category references into model instances.
+
+        Args:
+            category_references (list): A list of category references.
+            user_reference: Optional user reference for resolving categories.
+
+        Returns:
+            list: A list of resolved Category instances.
+        """
         return [
             self.resolve_category(category_reference, user_reference)
             for category_reference in category_references
         ]
 
     def resolve_task(self, task_reference, user_reference=None):
-        """Resolve a task by model instance, natural key, or legacy ID."""
+        """Resolve a task by model instance, natural key, or legacy ID.
+
+        Returns:
+            Task: The resolved Task instance or None.
+        """
         from core.models import Task
 
         if task_reference is None:
@@ -99,7 +127,11 @@ class BaseSeeder:
         return Task.objects.filter(user=user, title=task_title).order_by("id").first()
 
     def resolve_event(self, event_reference, user_reference=None):
-        """Resolve an event by model instance, natural key, or legacy ID."""
+        """Resolve an event by model instance, natural key, or legacy ID.
+
+        Returns:
+            Event: The resolved Event instance or None if not found.
+        """
         from core.models import Event
 
         if event_reference is None:
@@ -121,7 +153,12 @@ class BaseSeeder:
         return Event.objects.filter(user=user, **lookup).order_by("id").first()
 
     def resolve_days_of_week(self, day_references):
-        """Resolve day-of-week references by day number or model instance."""
+        """Resolve day-of-week references by day number or model instance.
+
+        Returns:
+            list: A list of resolved DayOfWeek instances.
+
+        """
         from core.models import DayOfWeek
 
         resolved_days = []

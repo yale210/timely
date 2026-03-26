@@ -14,7 +14,7 @@ from .day_of_week import DayOfWeek
 
 def default_day_schedule():
     """Return the weekly available time slots for the user.
-    
+
     The user is by default available from 8am to 10pm.
     """
     return [

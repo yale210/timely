@@ -5,7 +5,7 @@ from django.db import models
 
 class DayOfWeek(models.Model):
     """Model used to represent a day of the week.
-    
+
     This is used to allow users to select days of the week for preferences such as days off.
     """
 
