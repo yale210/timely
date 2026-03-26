@@ -11,6 +11,7 @@ import { emitXpGained } from "@/utils/xpEvents";
 import completeSoundUrl from "@/assets/sounds/task-complete.mp3";
 import { XP_GAINED_EVENT } from "@/utils/xpEvents";
 import { emitLevelup } from "@/utils/levelUpEvent";
+import { formatDateTimeInTimezone, useUserTimezone } from "@/utils/userTimezone";
 
 interface DashboardOverviewProps {
   tasks: Task[];
@@ -70,16 +71,12 @@ const getImportanceLabel = (importance: number) => {
 };
 
 const formatDueDate = (isoString: string) => {
-  const date = new Date(isoString);
-  const dateText = date.toLocaleDateString([], {
+  return formatDateTimeInTimezone(isoString, {
     month: "short",
     day: "numeric",
-  });
-  const timeText = date.toLocaleTimeString([], {
     hour: "2-digit",
     minute: "2-digit",
   });
-  return `${dateText} ${timeText}`;
 };
 
 const getRequiredExp = (level: number) => {
@@ -221,6 +218,7 @@ const DashboardOverview = ({
   events,
   weeklyStats,
 }: DashboardOverviewProps) => {
+  useUserTimezone();
   const completeSoundRef = useRef<HTMLAudioElement | null>(
     typeof Audio === "undefined" ? null : new Audio(completeSoundUrl),
   );

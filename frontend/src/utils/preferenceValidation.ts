@@ -10,6 +10,10 @@ export const validatePreference = (preference: Preference): Record<string, strin
   const max = preference.max_hours_study_per_day;
   const limitMax = preference.limit_max_hours ?? true;
 
+  if (!preference.timezone) {
+    errors.timezone = ["Required."];
+  }
+
   if (limitMax && Number.isNaN(max)) {
     errors.max_hours_study_per_day = ["Must be a number."];
   } else if (limitMax && max < 0) {

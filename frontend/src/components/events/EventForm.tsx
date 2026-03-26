@@ -4,13 +4,12 @@ import { getOverrideColour } from "@/utils/colorUtils";
 import { type Category, type Event, type EventSubmission } from "@/types";
 import { usePushSubscription } from "@/hooks/notifications/usePushSubscription";
 import { getServerTime } from "@/services/eventService";
-/**
- * Safely convert a Date to ISO string, returning "" for invalid dates.
- * @param d - The date object to convert.
- */
-const safeToISOString = (d: Date): string =>
-  Number.isNaN(d.getTime()) ? "" : d.toISOString();
-
+import {
+  combineTimezoneDateAndTimeToIso,
+  getStoredUserTimezone,
+  toTimezoneDateInputValue,
+  toTimezoneTimeInputValue,
+} from "@/utils/userTimezone";
 type TimeUnit = "minutes" | "hours" | "days" | "weeks" | "months" | "years";
 
 interface ReminderFormState {
@@ -65,13 +64,6 @@ const withTime = (base: Date, hour: number, minute: number): Date => {
   const value = new Date(base);
   value.setHours(hour, minute, 0, 0);
   return value;
-};
-
-const toLocalDateInputValue = (value: Date): string => {
-  const year = value.getFullYear();
-  const month = String(value.getMonth() + 1).padStart(2, "0");
-  const day = String(value.getDate()).padStart(2, "0");
-  return `${year}-${month}-${day}`;
 };
 
 const toMinutesBefore = (val: number, unit: TimeUnit): number =>
@@ -156,6 +148,7 @@ const EventForm = ({
   onCancel,
   onDataChange,
 }: EventFormProps) => {
+  const userTimezone = getStoredUserTimezone();
   const { isSubscribed, permission, subscribe, loading: pushLoading } = usePushSubscription();
 
   const fallbackStartDateTime = withTime(new Date(), 10, 0);
@@ -175,36 +168,27 @@ const EventForm = ({
   const [location, setLocation] = useState(initialData?.location ?? "");
   
   const [startDate, setStartDate] = useState(
-    hasInitialStart ? toLocalDateInputValue(initialStartDateTime) : ""
+    hasInitialStart ? toTimezoneDateInputValue(initialStartDateTime, userTimezone) : ""
   );
   const [startTime, setStartTime] = useState(
-    initialStartDateTime.toLocaleTimeString([], {
-      hour: "2-digit",
-      minute: "2-digit",
-      hour12: false,
-    })
+    toTimezoneTimeInputValue(initialStartDateTime, userTimezone)
   );
 
   useEffect(() => {
     if (onDataChange) {
-      const startDateTime = new Date(`${startDate}T${startTime}`);
       onDataChange({
         title,
         description,
-        start_time: safeToISOString(startDateTime),
+        start_time: combineTimezoneDateAndTimeToIso(startDate, startTime, userTimezone),
       });
     }
-  }, [title, description, startDate, startTime, onDataChange]);
+  }, [title, description, startDate, startTime, onDataChange, userTimezone]);
   
   const [endDate, setEndDate] = useState(
-    hasInitialEnd ? toLocalDateInputValue(initialEndDateTime) : ""
+    hasInitialEnd ? toTimezoneDateInputValue(initialEndDateTime, userTimezone) : ""
   );
   const [endTime, setEndTime] = useState(
-    initialEndDateTime.toLocaleTimeString([], {
-      hour: "2-digit",
-      minute: "2-digit",
-      hour12: false,
-    })
+    toTimezoneTimeInputValue(initialEndDateTime, userTimezone)
   );
 
   const [selectedCategories, setSelectedCategories] = useState<number[]>(
@@ -302,8 +286,8 @@ const EventForm = ({
   }, []);
 
   // Derived Validation
-  const startDateTime = new Date(`${startDate}T${startTime}`);
-  const endDateTime = new Date(`${endDate}T${endTime}`);
+  const startDateTime = new Date(combineTimezoneDateAndTimeToIso(startDate, startTime, userTimezone));
+  const endDateTime = new Date(combineTimezoneDateAndTimeToIso(endDate, endTime, userTimezone));
   const isStartInvalid = Number.isNaN(startDateTime.getTime());
   const isEndInvalid = Number.isNaN(endDateTime.getTime());
   const isTimeInvalid = isStartInvalid || isEndInvalid || startDateTime >= endDateTime;
@@ -339,8 +323,8 @@ const EventForm = ({
     title,
     description,
     location,
-    start_time: safeToISOString(startDateTime),
-    end_time: safeToISOString(endDateTime),
+    start_time: combineTimezoneDateAndTimeToIso(startDate, startTime, userTimezone),
+    end_time: combineTimezoneDateAndTimeToIso(endDate, endTime, userTimezone),
     colour,
     categories: selectedCategories,
     recurrence_interval: (recurrenceInterval as Event["recurrence_interval"]) ?? null,

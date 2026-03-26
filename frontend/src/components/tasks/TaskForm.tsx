@@ -3,6 +3,12 @@ import { CategoryColourPicker, CategoryMultiSelect, Tooltip } from "@/components
 import { getOverrideColour } from "@/utils/colorUtils";
 import { type Category, type Task, type TaskSubmission } from "@/types";
 import { formatDjangoFormError } from "@/utils/apiErrors";
+import {
+  combineTimezoneDateAndTimeToIso,
+  getStoredUserTimezone,
+  toTimezoneDateInputValue,
+  toTimezoneTimeInputValue,
+} from "@/utils/userTimezone";
 
 /**
  * Safely convert a Date to ISO string, returning "" for invalid dates.
@@ -94,47 +100,39 @@ const TaskForm = ({
   onCancel,
   onDataChange,
 }: TaskFormProps) => {
+  const userTimezone = getStoredUserTimezone();
   const [title, setTitle] = useState(initialData?.title ?? "");
   const [description, setDescription] = useState(initialData?.description ?? "");
   const [date, setDate] = useState(
     initialData?.start_time
-      ? new Date(initialData.start_time).toISOString().split("T")[0]
-      : new Date().toISOString().split("T")[0]
+      ? toTimezoneDateInputValue(initialData.start_time, userTimezone)
+      : toTimezoneDateInputValue(new Date(), userTimezone)
   );
   const [startTime, setStartTime] = useState(
     initialData?.start_time
-      ? new Date(initialData.start_time).toLocaleTimeString([], {
-          hour: "2-digit",
-          minute: "2-digit",
-          hour12: false,
-        })
+      ? toTimezoneTimeInputValue(initialData.start_time, userTimezone)
       : "10:00"
   );
-  const toIsoOrEmpty = (value: Date): string =>
-    Number.isNaN(value.getTime()) ? "" : value.toISOString();
+  const toIsoOrEmpty = (nextDate: string, nextTime: string): string =>
+    combineTimezoneDateAndTimeToIso(nextDate, nextTime, userTimezone);
 
   useEffect(() => {
     if (onDataChange) {
-      const startDateTime = new Date(`${date}T${startTime}`);
       onDataChange({
         title,
         description,
-        start_time: toIsoOrEmpty(startDateTime),
+        start_time: combineTimezoneDateAndTimeToIso(date, startTime, userTimezone),
       });
     }
-  }, [title, description, date, startTime, onDataChange]);
+  }, [title, description, date, startTime, onDataChange, userTimezone]);
   const [deadline, setDeadline] = useState(
     initialData?.deadline
-      ? new Date(initialData.deadline).toISOString().split("T")[0]
+      ? toTimezoneDateInputValue(initialData.deadline, userTimezone)
       : ""
   );
   const [deadlineTime, setDeadlineTime] = useState(
     initialData?.deadline
-      ? new Date(initialData.deadline).toLocaleTimeString([], {
-          hour: "2-digit",
-          minute: "2-digit",
-          hour12: false,
-        })
+      ? toTimezoneTimeInputValue(initialData.deadline, userTimezone)
       : ""
   );
   const [hasSubmitted, setHasSubmitted] = useState(false);
@@ -205,8 +203,8 @@ const TaskForm = ({
   };
 
   // Derived Validation
-  const startDateTime = new Date(`${date}T${startTime}`);
-  const endDateTime = new Date(`${deadline}T${deadlineTime}`);
+  const startDateTime = new Date(toIsoOrEmpty(date, startTime));
+  const endDateTime = new Date(toIsoOrEmpty(deadline, deadlineTime));
   const isStartInvalid = Number.isNaN(startDateTime.getTime());
   const isEndInvalid = Number.isNaN(endDateTime.getTime());
   const isTimeInvalid = isStartInvalid || isEndInvalid || startDateTime >= endDateTime;
@@ -287,8 +285,8 @@ const TaskForm = ({
   const buildSubmission = (): TaskSubmission => ({
     title,
     description,
-    start_time: toIsoOrEmpty(startDateTime),
-    deadline: toIsoOrEmpty(endDateTime),
+    start_time: toIsoOrEmpty(date, startTime),
+    deadline: toIsoOrEmpty(deadline, deadlineTime),
     categories: selectedCategories,
     importance,
     estimated_minutes: normalizedEstimatedMinutes,

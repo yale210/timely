@@ -6,6 +6,7 @@ const buildPreference = (overrides: Partial<Preference> = {}): Preference => ({
   id: 1,
   day_start: "08:00",
   day_end: "18:00",
+  timezone: "Europe/London",
   day_schedule: [
     { day: 1, start: "08:00", end: "18:00" },
     { day: 2, start: "08:00", end: "18:00" },

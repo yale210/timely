@@ -8,6 +8,7 @@ import {
   EnvelopeIcon,
   TrashIcon,
 } from "@heroicons/react/24/outline";
+import { formatDateTimeInTimezone, useUserTimezone } from "@/utils/userTimezone";
 
 interface NotificationCardProps {
   notification: Notification;
@@ -44,13 +45,14 @@ const NotificationContent: React.FC<{
   notification: Notification;
   unreadIndicatorPlacement: "right" | "left";
 }> = ({ notification, unreadIndicatorPlacement }) => {
+  useUserTimezone();
   const isRead = notification.is_read;
   const titleClasses = `truncate text-sm ${isRead ? "font-medium text-gray-700" : "font-semibold text-gray-900"}`;
   const messageClasses = `mt-1 line-clamp-2 text-sm ${isRead ? "text-gray-500" : "text-gray-700"}`;
   return (
     <div className="min-w-0 flex-1">
       <div className="flex items-start justify-between gap-3">
-        <div className="min-w-0"><p className={titleClasses}>{notification.title}</p><p className="mt-0.5 text-xs text-gray-500">{new Date(notification.timestamp).toLocaleString()}</p></div>
+        <div className="min-w-0"><p className={titleClasses}>{notification.title}</p><p className="mt-0.5 text-xs text-gray-500">{formatDateTimeInTimezone(notification.timestamp)}</p></div>
         {unreadIndicatorPlacement === "right" && !isRead && <span className="mt-1 h-2 w-2 rounded-full bg-indigo-500" />}
       </div>
       <p className={messageClasses}>{notification.message}</p>

@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { type Task } from "@/types";
 import { hexToRgba } from "@/utils/colorUtils";
 import completeSoundUrl from "@/assets/sounds/task-complete.mp3";
+import { formatDateTimeInTimezone, useUserTimezone } from "@/utils/userTimezone";
 
 interface TaskCardProps {
   task: Task;
@@ -18,6 +19,7 @@ interface TaskCardProps {
  * @returns The rendered task card component.
  */
 const TaskCard = ({ task, onToggleComplete, onClick }: TaskCardProps) => {
+  useUserTimezone();
   const [isHovered, setIsHovered] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
   const [currentTime, setCurrentTime] = useState(() => Date.now());
@@ -126,16 +128,12 @@ const TaskCard = ({ task, onToggleComplete, onClick }: TaskCardProps) => {
     : getCountdownTone(countdownTarget, currentTime);
 
   const formatDue = (isoString: string) => {
-    const date = new Date(isoString);
-    const dateText = date.toLocaleDateString([], {
+    return formatDateTimeInTimezone(isoString, {
       month: "short",
       day: "numeric",
-    });
-    const timeText = date.toLocaleTimeString([], {
       hour: "2-digit",
       minute: "2-digit",
     });
-    return `${dateText} ${timeText}`;
   };
 
   return (

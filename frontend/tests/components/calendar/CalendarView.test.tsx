@@ -146,6 +146,7 @@ describe("CalendarView", () => {
           date: new Date("2026-03-15T00:00:00.000Z"),
           preference: {
             id: 1,
+            timezone: "Europe/London",
             day_start: "08:00:00",
             day_end: "22:00:00",
             max_hours_study_per_day: 4,

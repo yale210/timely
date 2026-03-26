@@ -1,6 +1,7 @@
 import type React from "react";
 import { EnvelopeIcon, EnvelopeOpenIcon, TrashIcon } from "@heroicons/react/24/outline";
 import { type Notification } from "@/types";
+import { formatDateTimeInTimezone, useUserTimezone } from "@/utils/userTimezone";
 
 interface NotificationDetailHeaderProps {
   notification: Notification;
@@ -13,17 +14,21 @@ interface NotificationDetailHeaderProps {
  * @param root0 - The component props.
  * @param root0.notification - The notification data.
  */
-const NotificationDetailMeta: React.FC<{ notification: Notification }> = ({ notification }) => (
-  <div className="min-w-0">
-    <h1 className="truncate text-xl font-semibold text-gray-900">{notification.title}</h1>
-    <p className="mt-1 text-sm text-gray-500">{new Date(notification.timestamp).toLocaleString()}</p>
-    {notification.sender_username && (
-      <p className="mt-1 text-xs text-gray-500">
-        Sent by <span className="font-medium text-gray-700">{notification.sender_username}</span>
-      </p>
-    )}
-  </div>
-);
+const NotificationDetailMeta: React.FC<{ notification: Notification }> = ({ notification }) => {
+  useUserTimezone();
+
+  return (
+    <div className="min-w-0">
+      <h1 className="truncate text-xl font-semibold text-gray-900">{notification.title}</h1>
+      <p className="mt-1 text-sm text-gray-500">{formatDateTimeInTimezone(notification.timestamp)}</p>
+      {notification.sender_username && (
+        <p className="mt-1 text-xs text-gray-500">
+          Sent by <span className="font-medium text-gray-700">{notification.sender_username}</span>
+        </p>
+      )}
+    </div>
+  );
+};
 
 /**
  * Renders the action buttons for a notification in the detail view.
