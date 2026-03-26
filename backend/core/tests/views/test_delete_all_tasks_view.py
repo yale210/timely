@@ -1,3 +1,4 @@
+"""Test cases for the delete all tasks view"""
 from django.test import TestCase
 from django.contrib.auth import get_user_model
 from rest_framework.test import APIClient

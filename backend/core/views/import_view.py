@@ -1,3 +1,4 @@
+"""View for importing events."""
 from rest_framework import permissions
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -38,18 +39,14 @@ class ImportView(APIView):
         # Reading the file
         content = uploaded_file.read().decode("utf-8")
 
-        # Lines of the file are put into a list
         lines = content.splitlines()
 
-        # A list of all the events to be imported, updated as the file is read
         events = []
 
         # Tracks the current event being added, events will be added one-by-one
         current_event = None
 
-        # Not all files submitted are valid -> there is a standard iCalendar, other files are invalid
         try:
-            # Every event is uploaded to the DB, or none of them are -> Atomicity
             with transaction.atomic():
                 # Empty .txt file -> nothing to import
                 if len(lines) == 0:
@@ -66,13 +63,11 @@ class ImportView(APIView):
                 # Line number tracker
                 count = 0
 
-                # Each lines is read one-by-one
                 for line in lines:
                     count = count + 1
 
                     # This signifies that every line below it is information about the event
                     if line == "BEGIN:VEVENT":
-                        # No event being worked on currently, so create a new one
                         if current_event is None:
                             # A dictionary is used here as this is what iCalendar uses
                             current_event = {}
@@ -83,14 +78,12 @@ class ImportView(APIView):
                     # This signifies that all the information about the event has been provided
                     elif line == "END:VEVENT":
                         # No event being worked on currently, so ending an event is an error
-                        # (It is impossible to end an event if no event has started -> nothing to end)
                         if current_event is None:
                             raise ValueError("No event to end")
 
                         # If everything is correct so far, the event itself needs to be checked
                         else:
                             # Every event must have a name, start date/time and end date/time
-                            # Everything else is optional e.g. "description", these will be checked and added seperatelty
 
                             # Summary is the name of the event, this is required
                             if "SUMMARY" in current_event:
@@ -101,7 +94,6 @@ class ImportView(APIView):
                                     "One or more events don't have a summary"
                                 )
 
-                            # Assume that the event is invalid
                             start_date_time_exists = False
                             # Search every key
                             for key in current_event:
@@ -120,7 +112,6 @@ class ImportView(APIView):
                                     "One or more events don't have a DTSTART"
                                 )
 
-                            # Assume that the event is invalid
                             end_date_time_exists = False
                             # Search every key
                             for key in current_event:
@@ -151,7 +142,7 @@ class ImportView(APIView):
                             else:
                                 location = None
 
-                            # A DTSTAMP is optional, no error for it not existing,
+                            # A DTSTAMP is optional, no error for it not existing, but the app will create one if empty
                             if "DTSTAMP" in current_event:
                                 dt_stamp = current_event["DTSTAMP"]
                             else:
@@ -219,9 +210,7 @@ class ImportView(APIView):
                                 end_time=end_date_time_django_format,
                             ).exists()
 
-                            # This event is a new event, so it will be added to the DB, this event will be added to the list
-                            # This approach ensures that if the file is broken halfway through, there will not be a scenario where half
-                            # of the events are imported but the other half are not
+                            # This event is a new and unique event
                             if not event_exists_pre_import:
                                 # Event data to add
                                 new_event_to_import_data = [
@@ -244,7 +233,6 @@ class ImportView(APIView):
 
                     # Every line that is not a begin or end event contains information about the event
                     # All these lines follow the format of "variable:detail", e.g. LOCATION:London
-                    # This can be represented as key:value pairs in a dictionary
                     elif current_event is not None:
                         key, value = line.split(":", 1)
                         current_event[key] = value
@@ -255,7 +243,7 @@ class ImportView(APIView):
             # Every event is added to the DB
             for e in events:
                 for event in e:
-                    # Recurring eent
+                    # Recurring event
                     if ("r_rule_freq" in event) and (
                         event["r_rule_freq"] and event["r_rule_freq"] != "None"
                     ):
@@ -286,6 +274,7 @@ class ImportView(APIView):
 
             # Response letting the user know that the import was successful
             if len(events) == 0:
+                # 0 events is not strictly an error, as an error is wrong file type
                 response = {
                     "message": "0 Events were imported, but the file is correctly formatted. Check for duplicates?"
                 }

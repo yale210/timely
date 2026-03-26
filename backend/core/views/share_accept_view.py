@@ -1,3 +1,4 @@
+"""View for replying to share event requests"""
 from rest_framework import permissions
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -9,6 +10,10 @@ class ShareAcceptView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def post(self, request):
+        """
+        Handle part of the sharing of an event between users.
+        Specifically accepting or rejecting an event share request.
+        """
         # "accept" or "reject"
         decision = request.data.get("Decision")
         event_id = request.data.get("Event-ID")
@@ -43,13 +48,13 @@ class ShareAcceptView(APIView):
                 exception_dates=pending_event.event.exception_dates,
             )
 
-            # The share request is deleted
+            # The share request is deleted as accepted
             pending_event.delete()
             response = {"message": "This event has been accepted"}
             return Response(response)
 
         else:
-            # The share request is deleted
+            # The share request is deleted as rejected
             pending_event.delete()
             response = {"message": "This event has been rejected"}
             return Response(response)

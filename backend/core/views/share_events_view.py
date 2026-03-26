@@ -1,3 +1,4 @@
+"""View for getting all the pending share event objects"""
 from rest_framework import permissions
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -9,10 +10,15 @@ class ShareEventsView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def get(self, request):
+        """
+        Gets all the share event view objects for a particular user.
+        """
+        # All share requests that the user sent or received
         shared_events = PendingShareEvent.objects.filter(
             Q(sender=request.user) | Q(receiver=request.user)
         )
 
+        # Only the data about the event to display will be sent as the rest is purposeless for the GUI
         response = [
             {
                 "id": s.id,
