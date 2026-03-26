@@ -66,7 +66,12 @@ class BroadcastJob(models.Model):
         ordering = ["-queued_at"]
 
     def __str__(self):
-        """String representation of a BroadcastJob."""
+        """Generates a human-readable identifier for the broadcast job.
+
+        Returns:
+            str: A formatted string containing the job's primary key and current status
+                (e.g., 'BroadcastJob#42 IN_PROGRESS').
+        """
         return f"BroadcastJob#{self.pk} {self.status}"
 
 
@@ -115,7 +120,12 @@ class BroadcastRecipient(models.Model):
         ordering = ["id"]
 
     def __str__(self):
-        """String representation of a BroadcastRecipient."""
+        """Generates a human-readable identifier for the broadcast recipient.
+
+        Returns:
+            str: A formatted string containing the recipient's primary key and current
+                delivery status (e.g., 'BroadcastRecipient#123 SENT').
+        """
         return f"BroadcastRecipient#{self.pk} {self.status}"
 
 
@@ -151,5 +161,10 @@ class BroadcastAuditLog(models.Model):
         ordering = ["-created_at"]
 
     def __str__(self):
-        """String representation of a BroadcastAuditLog."""
+        """Generates a human-readable identifier for the broadcast audit log.
+
+        Returns:
+            str: A formatted string containing the audit log's primary key and the action
+                performed (e.g., 'BroadcastAuditLog#99 RETRY').
+        """
         return f"BroadcastAuditLog#{self.pk} {self.action}"
