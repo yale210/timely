@@ -1,3 +1,5 @@
+"""Functions for manipulating time intervals and slots."""
+
 from __future__ import annotations
 
 from datetime import datetime, timedelta
@@ -6,15 +8,14 @@ TimeRange = tuple[datetime, datetime]
 
 
 def minutes_between(start: datetime, end: datetime) -> int:
-    """
-    Calculate the number of minutes between two datetimes.
+    """Calculate the number of minutes between two datetimes.
 
     Args:
-        start (datetime): The starting datetime.
-        end (datetime): The ending datetime.
+        start: The starting datetime.
+        end: The ending datetime.
 
     Returns:
-        int: The number of minutes between start and end.
+        The number of minutes between start and end.
     """
     return int((end - start).total_seconds() // 60)
 
@@ -25,17 +26,16 @@ def overlap_minutes(
     window_start: datetime,
     window_end: datetime,
 ) -> int:
-    """
-    Calculate the number of overlapping minutes between two time intervals.
+    """Calculate the number of overlapping minutes between two time intervals.
 
     Args:
-        start (datetime): Start of the first interval.
-        end (datetime): End of the first interval.
-        window_start (datetime): Start of the second interval (window).
-        window_end (datetime): End of the second interval (window).
+        start: Start of the first interval.
+        end: End of the first interval.
+        window_start: Start of the second interval (window).
+        window_end: End of the second interval (window).
 
     Returns:
-        int: The number of minutes of overlap between the two intervals.
+        The number of minutes of overlap between the two intervals.
     """
     overlap_start = max(start, window_start)
     overlap_end = min(end, window_end)
@@ -45,14 +45,13 @@ def overlap_minutes(
 
 
 def merge_intervals(intervals: list[TimeRange]) -> list[TimeRange]:
-    """
-    Merge overlapping or adjacent time intervals.
+    """Merge overlapping or adjacent time intervals.
 
     Args:
-        intervals (list[TimeRange]): A list of time intervals.
+        intervals: A list of time intervals.
 
     Returns:
-        list[TimeRange]: A list of merged time intervals, sorted by start time.
+        A list of merged time intervals, sorted by start time.
     """
     merged: list[TimeRange] = []
     for start, end in sorted(intervals, key=lambda interval: interval[0]):
@@ -65,15 +64,14 @@ def merge_intervals(intervals: list[TimeRange]) -> list[TimeRange]:
 
 
 def subtract_intervals(window: TimeRange, occupied: list[TimeRange]) -> list[TimeRange]:
-    """
-    Subtract occupied intervals from a window to find free time intervals.
+    """Subtract occupied intervals from a window to find free time intervals.
 
     Args:
-        window (TimeRange): The total time window.
-        occupied (list[TimeRange]): A list of occupied time intervals.
+        window: The total time window.
+        occupied: A list of occupied time intervals.
 
     Returns:
-        list[TimeRange]: A list of free time intervals within the window.
+        A list of free time intervals within the window.
     """
     start, end = window
     free: list[TimeRange] = []
@@ -97,16 +95,15 @@ def clamp_slots(
     not_before: datetime | None = None,
     not_after: datetime | None = None,
 ) -> list[TimeRange]:
-    """
-    Clamp a list of time slots within specified boundaries.
+    """Clamp a list of time slots within specified boundaries.
 
     Args:
-        slots (list[TimeRange]): A list of time slots.
-        not_before (datetime | None): Optional boundary; slots starting before this will be truncated.
-        not_after (datetime | None): Optional boundary; slots ending after this will be truncated.
+        slots: A list of time slots.
+        not_before: Optional boundary; slots starting before this will be truncated.
+        not_after: Optional boundary; slots ending after this will be truncated.
 
     Returns:
-        list[TimeRange]: A list of clamped time slots.
+        A list of clamped time slots.
     """
     clamped: list[TimeRange] = []
     for start, end in slots:
@@ -118,15 +115,14 @@ def clamp_slots(
 
 
 def trim_slots_to_minutes(slots: list[TimeRange], minutes: int) -> list[TimeRange]:
-    """
-    Trim a list of time slots so their total duration does not exceed a limit.
+    """Trim a list of time slots so their total duration does not exceed a limit.
 
     Args:
-        slots (list[TimeRange]): A list of time slots.
-        minutes (int): The maximum total duration in minutes.
+        slots: A list of time slots.
+        minutes: The maximum total duration in minutes.
 
     Returns:
-        list[TimeRange]: A list of trimmed time slots.
+        A list of trimmed time slots.
     """
     trimmed: list[TimeRange] = []
     minutes_left = minutes
@@ -146,15 +142,14 @@ def trim_slots_to_minutes(slots: list[TimeRange], minutes: int) -> list[TimeRang
 def filter_slots_by_minutes(
     slots: list[TimeRange], min_minutes: int
 ) -> list[TimeRange]:
-    """
-    Filter time slots that are shorter than a minimum duration.
+    """Filter time slots that are shorter than a minimum duration.
 
     Args:
-        slots (list[TimeRange]): A list of time slots.
-        min_minutes (int): The minimum required duration in minutes.
+        slots: A list of time slots.
+        min_minutes: The minimum required duration in minutes.
 
     Returns:
-        list[TimeRange]: A list of time slots that meet the minimum duration.
+        A list of time slots that meet the minimum duration.
     """
     return [
         (start, end)
