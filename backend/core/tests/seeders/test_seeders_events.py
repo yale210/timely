@@ -14,7 +14,9 @@ from .common import SeederTestCase
 
 
 class SeederEventTests(SeederTestCase):
-    def test_event_seeder_create_random_event_type_covers_recurring_and_nonrecurring_paths(self):
+    def test_event_seeder_create_random_event_type_covers_recurring_and_nonrecurring_paths(
+        self,
+    ):
         user = get_user_model().objects.create_user(
             username="event-owner",
             email="event-owner@example.com",
@@ -26,8 +28,12 @@ class SeederEventTests(SeederTestCase):
 
         with (
             patch.object(seeder, "_get_or_create_random_user", return_value=user),
-            patch.object(seeder, "_get_or_create_random_category", return_value=category),
-            patch.object(seeder.faker, "date_time", side_effect=[base_start, base_start]),
+            patch.object(
+                seeder, "_get_or_create_random_category", return_value=category
+            ),
+            patch.object(
+                seeder.faker, "date_time", side_effect=[base_start, base_start]
+            ),
             patch(
                 "core.management.commands.seeders.event_seeder.random.randint",
                 side_effect=[30, 1, 45, 10],
@@ -48,8 +54,12 @@ class SeederEventTests(SeederTestCase):
         Event.objects.all().delete()
         with (
             patch.object(seeder, "_get_or_create_random_user", return_value=user),
-            patch.object(seeder, "_get_or_create_random_category", return_value=category),
-            patch.object(seeder.faker, "date_time", side_effect=[base_start, base_start]),
+            patch.object(
+                seeder, "_get_or_create_random_category", return_value=category
+            ),
+            patch.object(
+                seeder.faker, "date_time", side_effect=[base_start, base_start]
+            ),
             patch(
                 "core.management.commands.seeders.event_seeder.random.randint",
                 side_effect=[15, 0, 25],
@@ -69,7 +79,9 @@ class SeederEventTests(SeederTestCase):
             email="event-recurring@example.com",
             password="password123",
         )
-        category = Category.objects.create(user=user, text="Repeating", colour="#123456")
+        category = Category.objects.create(
+            user=user, text="Repeating", colour="#123456"
+        )
         seeder = EventSeeder()
         base_start = datetime(2026, 1, 2, 10, 0)
 
@@ -109,7 +121,9 @@ class SeederEventTests(SeederTestCase):
 
         with (
             patch.object(seeder, "_get_or_create_random_user", return_value=user),
-            patch.object(seeder, "_get_or_create_random_category", return_value=category),
+            patch.object(
+                seeder, "_get_or_create_random_category", return_value=category
+            ),
             patch.object(seeder, "_create_random_event_type") as create_mock,
             patch(
                 "core.management.commands.seeders.event_seeder.random.randint",
@@ -185,7 +199,9 @@ class SeederEventTests(SeederTestCase):
         assessment = Assessment.objects.get(user=user, linked_event=event)
         self.assertEqual(assessment.assessment_type, "EXAM")
 
-    def test_assessment_seeder_populate_random_assessment_event_creates_event_with_category(self):
+    def test_assessment_seeder_populate_random_assessment_event_creates_event_with_category(
+        self,
+    ):
         user = get_user_model().objects.create_user(
             username="assessment-event-owner",
             email="assessment-event@example.com",
@@ -197,7 +213,9 @@ class SeederEventTests(SeederTestCase):
 
         with (
             patch.object(seeder, "_get_or_create_random_user", return_value=user),
-            patch.object(seeder, "_get_or_create_random_category", return_value=category),
+            patch.object(
+                seeder, "_get_or_create_random_category", return_value=category
+            ),
             patch.object(seeder.faker, "date_time", return_value=start),
             patch.object(
                 seeder.faker,
@@ -238,9 +256,13 @@ class SeederEventTests(SeederTestCase):
 
         with (
             patch.object(seeder, "_get_or_create_random_user", return_value=user),
-            patch.object(seeder, "_get_or_create_random_category", return_value=category),
             patch.object(
-                seeder.faker, "sentence", side_effect=["Child task", "Child description"]
+                seeder, "_get_or_create_random_category", return_value=category
+            ),
+            patch.object(
+                seeder.faker,
+                "sentence",
+                side_effect=["Child task", "Child description"],
             ),
             patch.object(seeder.faker, "date_time", side_effect=[start_time, deadline]),
             patch(
@@ -269,7 +291,9 @@ class SeederEventTests(SeederTestCase):
         self.assertEqual(user.username, "task-fallback-user")
         self.assertEqual(category.user, user)
 
-    def test_friendship_seeder_updates_existing_friendship_and_creates_users_if_missing(self):
+    def test_friendship_seeder_updates_existing_friendship_and_creates_users_if_missing(
+        self,
+    ):
         sender = get_user_model().objects.create_user(
             username="sender",
             email="sender@example.com",

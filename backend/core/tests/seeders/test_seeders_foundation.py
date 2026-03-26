@@ -96,7 +96,10 @@ class SeederFoundationTests(SeederTestCase):
 
     def test_seed_methods_call_fixture_and_random_helpers(self):
         self.assert_seed_calls(
-            CategorySeeder(), "_create_fixture_category", "_populate_random_category", 200
+            CategorySeeder(),
+            "_create_fixture_category",
+            "_populate_random_category",
+            200,
         )
         self.assert_seed_calls(
             CommuteSeeder(), "_create_fixture_commute", "_populate_random_commute", 200
@@ -137,8 +140,12 @@ class SeederFoundationTests(SeederTestCase):
 
         seeder = AssessmentSeeder()
         with (
-            patch.object(seeder, "_create_fixture_assessment_event") as event_fixture_mock,
-            patch.object(seeder, "_create_fixture_assessment") as assessment_fixture_mock,
+            patch.object(
+                seeder, "_create_fixture_assessment_event"
+            ) as event_fixture_mock,
+            patch.object(
+                seeder, "_create_fixture_assessment"
+            ) as assessment_fixture_mock,
             patch.object(
                 seeder, "_populate_random_assessment_event"
             ) as event_populate_mock,
@@ -229,7 +236,14 @@ class SeederFoundationTests(SeederTestCase):
             ),
         ]
 
-        for seeder, fixture_method, create_method, module, fixture_name, message in cases:
+        for (
+            seeder,
+            fixture_method,
+            create_method,
+            module,
+            fixture_name,
+            message,
+        ) in cases:
             with self.subTest(fixture_method=fixture_method):
                 with (
                     patch.object(module, fixture_name, [{}]),
@@ -258,7 +272,14 @@ class SeederFoundationTests(SeederTestCase):
             ),
         ]
 
-        for seeder, fixture_method, create_method, module, fixture_name, message in assessment_cases:
+        for (
+            seeder,
+            fixture_method,
+            create_method,
+            module,
+            fixture_name,
+            message,
+        ) in assessment_cases:
             with self.subTest(fixture_method=fixture_method):
                 with (
                     patch.object(module, fixture_name, [{}]),
@@ -276,7 +297,9 @@ class SeederFoundationTests(SeederTestCase):
         ):
             seeder._create_fixture_profile()
 
-        print_mock.assert_called_once_with("Error occurred while creating profile: boom")
+        print_mock.assert_called_once_with(
+            "Error occurred while creating profile: boom"
+        )
 
     def test_category_and_preference_seeders_cover_update_and_defaults(self):
         user = get_user_model().objects.create_user(

@@ -17,7 +17,9 @@ from .common import SeederTestCase
 
 
 class SeederMiscTests(SeederTestCase):
-    def test_grade_special_dates_user_and_profile_seeders_cover_fallback_and_updates(self):
+    def test_grade_special_dates_user_and_profile_seeders_cover_fallback_and_updates(
+        self,
+    ):
         user = get_user_model().objects.create_user(
             username="mixed-owner",
             email="mixed-owner@example.com",
@@ -73,7 +75,9 @@ class SeederMiscTests(SeederTestCase):
             faker.password.return_value = "secret"
             user_seeder_instance._populate_random_user()
 
-        self.assertTrue(get_user_model().objects.filter(username="random-user").exists())
+        self.assertTrue(
+            get_user_model().objects.filter(username="random-user").exists()
+        )
 
         profile_seeder_instance = ProfileSeeder()
         creation_date = "2026-06-01T08:30:00"
@@ -89,7 +93,9 @@ class SeederMiscTests(SeederTestCase):
         profile = Profile.objects.get(user=user)
         self.assertTrue(timezone.is_aware(profile.creation_date))
 
-    def test_preference_day_of_week_and_profile_seeders_cover_remaining_helper_paths(self):
+    def test_preference_day_of_week_and_profile_seeders_cover_remaining_helper_paths(
+        self,
+    ):
         preference_seeder_instance = PreferenceSeeder()
         with patch.object(preference_seeder_instance, "faker") as faker:
             faker.user_name.return_value = "preference-fallback-user"
@@ -98,7 +104,9 @@ class SeederMiscTests(SeederTestCase):
 
         self.assertTrue(created)
         self.assertTrue(
-            Preference.objects.filter(user__username="preference-fallback-user").exists()
+            Preference.objects.filter(
+                user__username="preference-fallback-user"
+            ).exists()
         )
 
         with patch(
@@ -109,7 +117,9 @@ class SeederMiscTests(SeederTestCase):
 
         day_seeder = DayOfWeekSeeder()
         with (
-            patch.object(day_seeder, "_create_day_of_week", side_effect=Exception("boom")),
+            patch.object(
+                day_seeder, "_create_day_of_week", side_effect=Exception("boom")
+            ),
             patch("builtins.print") as print_mock,
         ):
             day_seeder.seed()
