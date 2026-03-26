@@ -9,6 +9,7 @@ from .views import (
     RegisterView,
     TestPermissionView,
 )
+from .views.username_view import UsernameView
 
 urlpatterns = [
     path("register/", RegisterView.as_view(), name="register"),
@@ -16,4 +17,5 @@ urlpatterns = [
     path("logout/", LogoutAPIView.as_view(), name="logout"),
     path("logoutall/", LogoutAllAPIView.as_view(), name="logoutall"),
     path("test/", TestPermissionView.as_view(), name="test"),
+    path("username/<int:user_id>/", UsernameView.as_view(), name="username-view"),
 ]
