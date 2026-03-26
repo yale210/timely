@@ -3,6 +3,7 @@ from django.test import TestCase
 
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
+from django.utils import timezone
 
 from courses.models import CourseEvent, Teacher, Course, Student, CourseEnrollment
 
@@ -225,7 +226,7 @@ class CourseEventModelTests(TestCase):
         )
         self.teacher = Teacher.objects.create(user=self.teacher_user)
         self.course = Course.objects.create(name="Python Basics", lead=self.teacher)
-        self.now = datetime.datetime.now()
+        self.now = timezone.now()
 
     def test_course_event_creation(self):
         """Test basic course event creation."""
