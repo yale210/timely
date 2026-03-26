@@ -181,6 +181,7 @@ class SchedulerTest(TestCase):
     def test_schedule_includes_deadline_day_within_horizon(self):
         start_date = date(2026, 3, 19)
         deadline_dt = timezone.make_aware(datetime(2026, 3, 26, 10, 0))
+        mocked_now = timezone.make_aware(datetime(2026, 3, 19, 6, 0))
 
         for offset in range(7):
             blocked_day = start_date + timedelta(days=offset)

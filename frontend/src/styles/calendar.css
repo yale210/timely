@@ -128,34 +128,34 @@
 }
 
 .calendar-grid-shell .rbc-time-content > .rbc-day-slot {
-  border-left: 1px solid color-mix(in srgb, var(--text-color) 20%, var(--background)) !important;
+  border-left: 1px solid var(--border) !important;
 }
 
 .calendar-grid-shell .rbc-timeslot-group {
-  border-bottom: 1px solid color-mix(in srgb, var(--text-color) 20%, var(--background)) !important;
+  border-bottom: 1px solid var(--border) !important;
 }
 
 .calendar-grid-shell .rbc-time-gutter,
 .calendar-grid-shell .rbc-time-header-gutter {
-  border-right: 1px solid color-mix(in srgb, var(--text-color) 20%, var(--background)) !important;
+  border-right: 1px solid var(--border) !important;
 }
 
 .mini-calendar-preview .rbc-day-slot .rbc-time-slot,
 .mini-calendar-preview .rbc-time-slot {
-  border-top: 1px solid color-mix(in srgb, var(--text-color) 20%, var(--background)) !important;
+  border-top: 1px solid var(--border) !important;
 }
 
 .mini-calendar-preview .rbc-time-content > .rbc-day-slot {
-  border-left: 1px solid color-mix(in srgb, var(--text-color) 20%, var(--background)) !important;
+  border-left: 1px solid var(--border) !important;
 }
 
 .mini-calendar-preview .rbc-timeslot-group {
-  border-bottom: 1px solid color-mix(in srgb, var(--text-color) 20%, var(--background)) !important;
+  border-bottom: 1px solid var(--border) !important;
 }
 
 .mini-calendar-preview .rbc-time-gutter,
 .mini-calendar-preview .rbc-time-header-gutter {
-  border-right: 1px solid color-mix(in srgb, var(--text-color) 20%, var(--background)) !important;
+  border-right: 1px solid var(--border) !important;
 }
 
 .calendar-grid-shell .rbc-time-view,

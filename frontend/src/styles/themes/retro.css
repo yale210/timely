@@ -1,9 +1,9 @@
 [data-theme="retro"] {
-  --primary: #ff6ec7;       /* neon pink */
-  --primary-hover: #ffdc5e; /* neon yellow */
+  --primary: #ff6ec7;       
+  --primary-hover: #ffdc5e; 
   
-  --background: #1a1a1a;    /* dark background for contrast */
-  --text-color: #f0f0f0;          /* off-white text */
+  --background: #1a1a1a;    
+  --text-color: #f0f0f0;         
   
-  --border: #7e6676;        /* subdued mauve border to further soften contrast */
+  --border: #7e6676;
 }

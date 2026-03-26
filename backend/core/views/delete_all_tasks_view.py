@@ -1,3 +1,5 @@
+"""View for deleting user tasks."""
+
 from rest_framework import permissions
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -5,9 +7,12 @@ from core.models import Task
 
 
 class DeleteAllTasksView(APIView):
+    """API view for deleting user tasks."""
+
     permission_classes = [permissions.IsAuthenticated]
 
     def delete(self, request):
+        """Delete the authenticated user's Task objects."""
         all_tasks_count = Task.objects.filter(user=request.user).count()
 
         all_tasks = Task.objects.filter(user=request.user)
