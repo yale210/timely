@@ -57,7 +57,6 @@ class GradeSeeder(BaseSeeder):
             data (dict): A dictionary containing grade field metadata.
 
         """
-
         user = self.resolve_user(data["fields"]["user"])
         category = self.resolve_category(data["fields"].get("category"), user)
 

@@ -4,8 +4,7 @@ from django.db import models
 
 
 class DayOfWeek(models.Model):
-    """
-    Model used to represent a day of the week.
+    """Model used to represent a day of the week.
     This is used to allow users to select days of the week for preferences such as days off.
     """
 
@@ -23,8 +22,7 @@ class DayOfWeek(models.Model):
     day = models.PositiveSmallIntegerField(choices=Day.choices, unique=True)
 
     def __str__(self):
-        """
-        Return the day of the week as a string.
+        """Return the day of the week as a string.
 
         Returns:
             str: The day of the week.

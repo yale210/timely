@@ -8,8 +8,7 @@ from .event import Event
 
 
 class EventOverride(BaseEventModel):
-    """
-    Stores an override for a specific occurrence of a recurring event.
+    """Stores an override for a specific occurrence of a recurring event.
     """
 
     parent_event = models.ForeignKey(
@@ -34,11 +33,12 @@ class EventOverride(BaseEventModel):
         ]
 
     def save(self, *args, **kwargs):
-        """
-        Run validation for the model before saving.
+        """Run validation for the model before saving.
+
         Args:
             *args: Variable length argument list.
             **kwargs: Arbitrary keyword arguments.
+
         Returns:
             EventOverride: The saved event's override instance.
         """

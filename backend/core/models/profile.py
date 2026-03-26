@@ -5,8 +5,7 @@ from django.conf import settings
 
 
 class Profile(models.Model):
-    """
-    Store legacy profile data linked to a user.
+    """Store legacy profile data linked to a user.
     """
 
     user = models.OneToOneField(
@@ -19,8 +18,8 @@ class Profile(models.Model):
     creation_date = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        """
-        Return a string representation of the profile.
+        """Return a string representation of the profile.
+
         Returns:
             str: A string representation of the profile.
         """

@@ -9,14 +9,12 @@ from .category import Category
 
 
 class Assessment(models.Model):
-    """
-    Model used to allow for users to create assessments,
+    """Model used to allow for users to create assessments,
     which enable them to keep on top of their upcoming assessments and deadlines.
     """
 
     class AssessmentType(models.TextChoices):
-        """
-        Supported assessment type values.
+        """Supported assessment type values.
         """
 
         COURSEWORK = "COURSEWORK", "Coursework"
@@ -93,8 +91,7 @@ class Assessment(models.Model):
         ordering = ["due_date"]
 
     def __str__(self):
-        """
-        Return the assessment title.
+        """Return the assessment title.
 
         Returns:
             str: The title of the assessment.
@@ -102,8 +99,7 @@ class Assessment(models.Model):
         return self.title
 
     def clean(self):
-        """
-        Validate the assessment fields to ensure they meet the required criteria.
+        """Validate the assessment fields to ensure they meet the required criteria.
 
         Raises:
             ValidationError: If any of the fields fail validation checks.

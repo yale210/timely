@@ -127,7 +127,6 @@ class AssessmentSeeder(BaseSeeder):
         Creates an event with a random user, random category, and randomized
         metadata such as title, description, and color.
         """
-
         start = timezone.make_aware(self.faker.date_time())
         self._create_event(
             {
@@ -162,7 +161,6 @@ class AssessmentSeeder(BaseSeeder):
             data (dict): A dictionary containing assessment field data.
 
         """
-
         user = self.resolve_user(data["fields"]["user"])
         linked_event = self.resolve_event(data["fields"].get("linked_event"), user)
 
@@ -189,7 +187,6 @@ class AssessmentSeeder(BaseSeeder):
             data (dict): A dictionary containing event field data.
 
         """
-
         user = self.resolve_user(data["fields"]["user"])
         split_from_event = self.resolve_event(
             data["fields"].get("split_from_event"),

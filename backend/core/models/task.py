@@ -11,8 +11,7 @@ from .importance_choices import ImportanceChoices
 
 
 class Task(models.Model):
-    """
-    Task model representing a task that a user needs to complete.
+    """Task model representing a task that a user needs to complete.
     Tasks can be one-off or be part of a larger parent task.
 
     """
@@ -74,8 +73,8 @@ class Task(models.Model):
     )
 
     def calculate_time_left(self):
-        """
-        Calculate the number of days left until the task's deadline.
+        """Calculate the number of days left until the task's deadline.
+
         Returns:
             int: Number of days left until the deadline, or 0 if the deadline has passed.
         """
@@ -89,8 +88,8 @@ class Task(models.Model):
 
     @property
     def remaining_minutes(self):
-        """
-        Calculate the remaining minutes for the task based on estimated minutes and completed minutes.
+        """Calculate the remaining minutes for the task based on estimated minutes and completed minutes.
+
         Returns:
             int: The remaining minutes for the task.
         """

@@ -56,7 +56,6 @@ class SpecialDatesSeeder(BaseSeeder):
             data (dict): A dictionary containing special date field metadata.
 
         """
-
         user = self.resolve_user(data["fields"]["user"])
         SpecialDates.objects.get_or_create(
             user=user,

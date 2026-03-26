@@ -86,7 +86,6 @@ class CategorySeeder(BaseSeeder):
                 and field metadata.
 
         """
-
         user = self.resolve_user(data["fields"]["user"])
         Category.objects.update_or_create(
             user=user,

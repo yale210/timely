@@ -5,8 +5,7 @@ from django.conf import settings
 
 
 class Commute(models.Model):
-    """
-    Model used to allow for user commutes to be stored.
+    """Model used to allow for user commutes to be stored.
     It is assumed a user may have multiple commutes a day.
     """
 
@@ -17,8 +16,7 @@ class Commute(models.Model):
     commute_end = models.TimeField()
 
     def __str__(self):
-        """
-        Return the commute window.
+        """Return the commute window.
 
         Returns:
             str: The commute start and end time.

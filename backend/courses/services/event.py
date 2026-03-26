@@ -45,8 +45,7 @@ class CalendarEventMapper:
 
     @staticmethod
     def to_calendar_event(course_event) -> Dict[str, Any]:
-        """
-        Convert a CourseEvent to a generic calendar event format.
+        """Convert a CourseEvent to a generic calendar event format.
 
         Args:
             course_event: CourseEvent model instance
@@ -67,14 +66,12 @@ class CalendarEventMapper:
 
 
 class SyncCalendar:
-    """
-    Service to synchronize course events with user calendar events.
+    """Service to synchronize course events with user calendar events.
     Handles one-way sync from CourseEvent to user's calendar.
     """
 
     def __init__(self, provider: CalendarProvider):
-        """
-        Initialize the sync service with a calendar provider.
+        """Initialize the sync service with a calendar provider.
 
         Args:
             provider: CalendarProvider instance (e.g., GoogleCalendarProvider)
@@ -88,8 +85,7 @@ class SyncCalendar:
         start_date: Optional[datetime] = None,
         end_date: Optional[datetime] = None,
     ) -> Dict[str, Any]:
-        """
-        Sync all course events for enrolled courses to user's calendar.
+        """Sync all course events for enrolled courses to user's calendar.
 
         Args:
             user: User instance to sync calendar for
@@ -190,8 +186,7 @@ class SyncCalendar:
     def sync_course_event(
         self, course_event, user: Optional[User] = None
     ) -> Dict[str, Any]:
-        """
-        Sync a single course event to all enrolled users' calendars.
+        """Sync a single course event to all enrolled users' calendars.
 
         Args:
             course_event: CourseEvent instance to sync
@@ -241,8 +236,7 @@ class SyncCalendar:
 
     @staticmethod
     def _event_needs_update(course_event, calendar_event: Dict[str, Any]) -> bool:
-        """
-        Determine if a calendar event needs updating based on course event changes.
+        """Determine if a calendar event needs updating based on course event changes.
 
         Args:
             course_event: CourseEvent instance
@@ -264,8 +258,7 @@ class SyncCalendar:
         return not (title_match and start_match and end_match and description_match)
 
     def remove_calendar_event(self, user: User, course_event_id: int) -> bool:
-        """
-        Remove a course event from user's calendar.
+        """Remove a course event from user's calendar.
 
         Args:
             user: User instance
@@ -293,15 +286,13 @@ class SyncCalendar:
 
 
 class CourseEventSyncService:
-    """
-    Service to sync CourseEvent objects to core.models.Event
+    """Service to sync CourseEvent objects to core.models.Event
     for all enrolled students.
     """
 
     @staticmethod
     def sync_course_event_to_core(course_event) -> Dict[str, Any]:
-        """
-        Sync a single CourseEvent to core.models.Event for all enrolled students.
+        """Sync a single CourseEvent to core.models.Event for all enrolled students.
 
         Args:
             course_event: CourseEvent instance to sync
@@ -411,8 +402,7 @@ class CourseEventSyncService:
 
     @staticmethod
     def sync_user_course_events(user: User) -> Dict[str, Any]:
-        """
-        Sync all CourseEvents for a user's enrolled courses to core.models.Event.
+        """Sync all CourseEvents for a user's enrolled courses to core.models.Event.
 
         Args:
             user: User instance to sync events for

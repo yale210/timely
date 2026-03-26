@@ -12,8 +12,7 @@ from .task import Task
 
 
 class Grade(models.Model):
-    """
-    Grade model representing an assessment result for a user.
+    """Grade model representing an assessment result for a user.
     """
 
     user = models.ForeignKey(
@@ -35,8 +34,8 @@ class Grade(models.Model):
     date_achieved = models.DateField()
 
     def __str__(self):
-        """
-        Return a string representation of the grade.
+        """Return a string representation of the grade.
+
         Returns:
             str: A string representation of the grade.
         """
@@ -44,8 +43,8 @@ class Grade(models.Model):
 
     @property
     def percentage(self):
-        """
-        Return percentage score as a float (0-100).
+        """Return percentage score as a float (0-100).
+
         Returns:
             float: The percentage score.
         """

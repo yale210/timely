@@ -5,8 +5,7 @@ from django.db import models
 
 
 class EventReminder(models.Model):
-    """
-    Store a reminder for an event.
+    """Store a reminder for an event.
     """
 
     event = models.ForeignKey(
@@ -20,11 +19,12 @@ class EventReminder(models.Model):
     processed = models.BooleanField(default=False)
 
     def save(self, *args, **kwargs):
-        """
-        Run validation for the model before saving.
+        """Run validation for the model before saving.
+
         Args:
             *args: Variable length argument list.
             **kwargs: Arbitrary keyword arguments.
+
         Returns:
             EventReminder: The saved event reminder instance.
         """
