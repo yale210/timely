@@ -1,3 +1,9 @@
+"""URL configuration for the courses application.
+
+Defines the API endpoints for course management and teacher administration
+using Django REST Framework routers.
+"""
+
 from rest_framework.routers import DefaultRouter
 
 import courses.views.courses
