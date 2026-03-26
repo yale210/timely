@@ -170,7 +170,7 @@ class SchedulerAvailabilityMixin:
             free_slots,
             not_before=not_before,
             not_after=not_after,
-            )
+        )
         free_slots = self._apply_daily_capacity(window, free_slots)
         return filter_slots_by_minutes(free_slots, min_minutes)
 
