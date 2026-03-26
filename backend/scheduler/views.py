@@ -1,3 +1,5 @@
+"""Views for the scheduler application."""
+
 from django.db import transaction
 from django.utils import timezone
 from rest_framework import permissions, status
@@ -10,22 +12,24 @@ from scheduler.services import Scheduler
 
 
 class ScheduleTasksAPIView(APIView):
-    """API view to trigger the task scheduling process."""
+    """API view for scheduling tasks.
+
+    This view handles POST requests to initiate the task scheduling process
+    for the authenticated user based on their preferences and request data.
+    """
 
     permission_classes = [permissions.IsAuthenticated]
 
     def post(self, request):
-        """
-        Handle POST request to schedule tasks for the authenticated user.
+        """Handle task scheduling request.
 
         Args:
-            request (Request): The HTTP request object.
+            request: The DRF request object containing scheduling parameters.
 
         Returns:
-            Response: A response containing the summary of scheduled and failed tasks.
+            A Response object with the results of the scheduling process.
         """
         serializer = ScheduleRequestSerializer(data=request.data)
-
         serializer.is_valid(raise_exception=True)
         payload = serializer.validated_data
 
@@ -92,19 +96,22 @@ class ScheduleTasksAPIView(APIView):
 
 
 class UnscheduleTasksAPIView(APIView):
-    """API view to unschedule all unlocked and uncompleted tasks."""
+    """API view for unscheduling tasks.
+
+    This view handles POST requests to clear scheduling allocations for
+    tasks that are not completed or locked.
+    """
 
     permission_classes = [permissions.IsAuthenticated]
 
     def post(self, request):
-        """
-        Handle POST request to unschedule tasks for the authenticated user.
+        """Handle task unscheduling request.
 
         Args:
-            request (Request): The HTTP request object.
+            request: The DRF request object.
 
         Returns:
-            Response: A response indicating the number of tasks unscheduled.
+            A Response object with the count of unscheduled tasks.
         """
         updated = (
             Task.objects.filter(user=request.user)
