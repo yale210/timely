@@ -57,13 +57,19 @@ class GradeSeeder(BaseSeeder):
             data (dict): A dictionary containing grade field metadata.
 
         """
-        Grade.objects.get_or_create(
-            user_id=data["fields"]["user"],
+        
+        user = self.resolve_user(data["fields"]["user"])
+        category = self.resolve_category(data["fields"].get("category"), user)
+
+        Grade.objects.update_or_create(
+            user=user,
             name=data["fields"]["name"],
-            category_id=data["fields"]["category"],
-            score=data["fields"]["score"],
-            total_possible=data["fields"]["total_possible"],
             date_achieved=data["fields"]["date_achieved"],
+            defaults={
+                "category": category,
+                "score": data["fields"]["score"],
+                "total_possible": data["fields"]["total_possible"],
+            },
         )
 
     def _populate_random_grade(self):

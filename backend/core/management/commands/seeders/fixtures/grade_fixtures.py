@@ -3,11 +3,10 @@
 grades = [
     {
         "model": "core.grade",
-        "pk": 1,
         "fields": {
-            "user": 1,
+            "user": "thomas",
             "name": "CS1",
-            "category": 1,
+            "category": "Work",
             "score": 85,
             "total_possible": 150,
             "date_achieved": "2025-01-01",
@@ -15,11 +14,10 @@ grades = [
     },
     {
         "model": "core.grade",
-        "pk": 2,
         "fields": {
-            "user": 2,
+            "user": "david",
             "name": "ELA",
-            "category": 10,
+            "category": "Important",
             "score": 85,
             "total_possible": 100,
             "date_achieved": "2025-01-01",
@@ -27,11 +25,10 @@ grades = [
     },
     {
         "model": "core.grade",
-        "pk": 3,
         "fields": {
-            "user": 1,
+            "user": "thomas",
             "name": "ELA",
-            "category": 2,
+            "category": "Personal",
             "score": 60,
             "total_possible": 100,
             "date_achieved": "2025-01-01",
@@ -39,11 +36,10 @@ grades = [
     },
     {
         "model": "core.grade",
-        "pk": 4,
         "fields": {
-            "user": 2,
+            "user": "david",
             "name": "DBS",
-            "category": 13,
+            "category": "Uni",
             "score": 100,
             "total_possible": 100,
             "date_achieved": "2025-01-01",
@@ -51,11 +47,10 @@ grades = [
     },
     {
         "model": "core.grade",
-        "pk": 5,
         "fields": {
-            "user": 3,
+            "user": "tommy",
             "name": "IPP",
-            "category": 20,
+            "category": "Uni",
             "score": 75,
             "total_possible": 100,
             "date_achieved": "2025-01-01",
@@ -63,35 +58,32 @@ grades = [
     },
     {
         "model": "core.grade",
-        "pk": 6,
         "fields": {
-            "user": 1,
+            "user": "thomas",
             "name": "FC1",
+            "category": "Important",
             "score": 44,
-            "category": 3,
             "total_possible": 100,
             "date_achieved": "2025-01-01",
         },
     },
     {
         "model": "core.grade",
-        "pk": 7,
         "fields": {
-            "user": 1,
+            "user": "thomas",
             "name": "AKC",
+            "category": "Uni",
             "score": 100,
-            "category": 6,
             "total_possible": 100,
             "date_achieved": "2025-01-01",
         },
     },
     {
         "model": "core.grade",
-        "pk": 8,
         "fields": {
-            "user": 4,
+            "user": "mark",
             "name": "CS1",
-            "category": 25,
+            "category": "Stuff",
             "score": 85,
             "total_possible": 100,
             "date_achieved": "2025-01-01",

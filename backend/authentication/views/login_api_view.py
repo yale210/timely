@@ -1,3 +1,5 @@
+"""API view for user login and token generation."""
+
 from django.contrib.auth import login
 from django.utils import timezone
 from knox.views import (

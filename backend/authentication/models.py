@@ -1,5 +1,8 @@
+"""Database models for user accounts and authentication."""
+
 from django.contrib.auth.base_user import AbstractBaseUser, BaseUserManager
 from django.contrib.auth.models import PermissionsMixin
+from django.core.validators import RegexValidator
 from django.db import models
 
 
@@ -63,7 +66,11 @@ class UserManager(BaseUserManager):
 class User(AbstractBaseUser, PermissionsMixin):
     """Custom user model that uses username as the login field."""
 
-    username = models.CharField(max_length=255, unique=True)
+    alphanumeric = RegexValidator(
+        r"^[0-9a-zA-Z]*$", "Only alphanumeric characters are allowed."
+    )
+
+    username = models.CharField(max_length=255, unique=True, validators=[alphanumeric])
     email = models.EmailField(max_length=255, unique=True)
     date_of_birth = models.DateField(null=True, blank=True)
     is_active = models.BooleanField(

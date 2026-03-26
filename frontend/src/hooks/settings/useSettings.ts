@@ -42,6 +42,8 @@ interface SettingsActions {
   applyFont: (fontName: string) => void;
   deleteEvents: () => Promise<string>;
   deleteTasks: () => Promise<string>;
+  makeTeacher: () => Promise<void>;
+  unregisterTeacher: () => Promise<void>;
 }
 
 /**
@@ -109,7 +111,7 @@ export const useSettings = (): UseSettingsReturn => {
       setIsDeleting(false);
     }
   }, []);
-  
+
 
   const loadPreference = useCallback(async () => {
     setIsPreferenceLoading(true);
@@ -245,6 +247,14 @@ export const useSettings = (): UseSettingsReturn => {
     }
   }, [categories, preference]);
 
+  const makeTeacher = useCallback(async () => {
+    // keep your existing create-teacher logic here
+  }, []);
+
+  const unregisterTeacher = useCallback(async () => {
+    // keep your existing cleanup/refresh logic here if needed
+  }, []);
+
   return {
     state: {
       activeSection,
@@ -273,6 +283,8 @@ export const useSettings = (): UseSettingsReturn => {
       applyFont,
       deleteTasks,
       deleteEvents,
+      makeTeacher,
+      unregisterTeacher,
     },
   };
 };

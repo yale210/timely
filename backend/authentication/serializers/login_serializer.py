@@ -1,3 +1,5 @@
+"""Authentication serializers."""
+
 from django.contrib.auth import authenticate
 from rest_framework import serializers
 
@@ -25,7 +27,7 @@ class LoginSerializer(serializers.Serializer):
             serializers.ValidationError: If required fields are missing or
                 credentials are invalid.
         """
-        username = attrs.get("username")
+        username = attrs.get("username").strip().lower()
         password = attrs.get("password")
 
         if not username:

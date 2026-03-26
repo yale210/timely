@@ -62,31 +62,30 @@ class EventSeeder(BaseSeeder):
             data (dict): A dictionary containing event field metadata.
 
         """
-        # Resolve user ID from model instance or raw ID
-        user_id = (
-            data["fields"]["user"].id
-            if hasattr(data["fields"]["user"], "id")
-            else data["fields"]["user"]
+        user = self.resolve_user(data["fields"]["user"])
+        split_from_event = self.resolve_event(
+            data["fields"].get("split_from_event"),
+            user,
         )
 
-        temporary_event, _ = Event.objects.get_or_create(
-            user_id=user_id,
+        temporary_event, _ = Event.objects.update_or_create(
+            user=user,
             title=data["fields"]["title"],
-            description=data["fields"]["description"],
-            location=data["fields"]["location"],
             start_time=data["fields"]["start_time"],
-            end_time=data["fields"]["end_time"],
-            recurrence_interval=data["fields"]["recurrence_interval"],
-            recurrence_end=data["fields"]["recurrence_end"],
-            colour=data["fields"].get("colour"),
-            exception_dates=data["fields"].get("exception_dates", []),
-            split_from_event=data["fields"].get("split_from_event"),
+            defaults={
+                "description": data["fields"]["description"],
+                "location": data["fields"]["location"],
+                "end_time": data["fields"]["end_time"],
+                "recurrence_interval": data["fields"]["recurrence_interval"],
+                "recurrence_end": data["fields"]["recurrence_end"],
+                "colour": data["fields"].get("colour"),
+                "exception_dates": data["fields"].get("exception_dates", []),
+                "split_from_event": split_from_event,
+            },
         )
 
-        # Assign many-to-many category relationships
-        categories = data["fields"].get("categories", [])
-        if categories:
-            temporary_event.categories.set(Category.objects.filter(id__in=categories))
+        categories = self.resolve_categories(data["fields"].get("categories", []), user)
+        temporary_event.categories.set(categories)
 
     def _populate_random_event(self):
         """Generate a single random event and assign it to a random user.

@@ -3,6 +3,8 @@ import { Routes, Route, useLocation } from "react-router-dom"
 import RequireAuth from "@/components/auth/RequireAuth"
 import RedirectAuth from "@/components/auth/RedirectAuth"
 import RequireAdmin from "@/components/auth/RequireAdmin"
+import Courses from "@/pages/Course/Course.tsx"
+import CourseDetail from "@/pages/Course/CourseDetail.tsx"
 import {
   Home,
   Login,
@@ -27,6 +29,9 @@ import { NotificationDetail } from "@/pages/Notification/NotificationDetail"
 import { AdminNotifications } from "@/pages/Admin/Notifications/AdminNotifications"
 import { AdminNotificationHistory } from "@/pages/Admin/Notifications/AdminNotificationHistory"
 import { AdminNotificationHistoryDetail } from "@/pages/Admin/Notifications/AdminNotificationHistoryDetail"
+import CourseManagement from "@/pages/Course/CourseManagement.tsx";
+import RequireTeacher from "@/context/auth/RequireTeacher.tsx";
+import CourseCreate from "@/pages/Course/CourseCreate.tsx";
 import { setDocumentTheme } from "@/utils/themeSettings"
 
 const PUBLIC_ROUTES = ["/login", "/signup", "/", "/about"]
@@ -76,7 +81,11 @@ export default function App() {
           <Signup />
         </RedirectAuth>
       }/>
-      
+        <Route path="/course/create" element={
+
+                <CourseCreate />
+
+        }/>
       <Route path="/logout" element={<Logout />} />
 
       <Route path="/calendar" element={
@@ -89,6 +98,26 @@ export default function App() {
         <RequireAuth>
           <TaskList />
         </RequireAuth>}
+      />
+
+      <Route path="/courses" element={
+        <RequireAuth>
+          <Courses />
+        </RequireAuth>}
+      />
+
+      <Route path="/courses/:id" element={
+        <RequireAuth>
+          <CourseDetail />
+        </RequireAuth>}
+      />
+
+      <Route path="/courses/manage" element={
+          <RequireAuth>
+        <RequireTeacher>
+          <CourseManagement />
+        </RequireTeacher>
+          </RequireAuth>}
       />
 
       <Route path="/gradebook" element={

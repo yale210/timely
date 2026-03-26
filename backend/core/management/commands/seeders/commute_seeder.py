@@ -104,8 +104,9 @@ class CommuteSeeder(BaseSeeder):
             data (dict): A dictionary containing commute field metadata.
 
         """
+        user = self.resolve_user(data["fields"]["user"])
         Commute.objects.get_or_create(
-            user_id=data["fields"]["user"],
+            user=user,
             commute_start=data["fields"]["commute_start"],
             commute_end=data["fields"]["commute_end"],
         )

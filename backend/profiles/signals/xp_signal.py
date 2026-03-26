@@ -16,7 +16,6 @@ def exp_required_for_level_up(user):
     Returns:
         bool: ``True`` when the profile meets the threshold for the next level.
     """
-
     next_level = user.level + 1
     required_xp = 100 * next_level**1.5
     return user.xp >= required_xp
@@ -31,7 +30,6 @@ def exp_required_for_level_down(user):
     Returns:
         bool: ``True`` when the profile falls below the current level threshold.
     """
-
     next_level = user.level - 1
     required_xp = 100 * next_level**1.5
     return user.xp < required_xp
@@ -41,15 +39,15 @@ def exp_required_for_level_down(user):
 def snapshot_task_state(sender, instance, **kwargs):
     """Capture a task's previous completion state before saving.
 
+    This snapshot is stored as an internal attribute on the instance, allowing
+    the post_save signal to determine if a transition occurred (e.g., from
+    incomplete to complete) and award XP accordingly.
+
     Args:
-        sender: The model class that emitted the signal.
-        instance: The task instance being saved.
-        **kwargs: Additional Django signal metadata.
-
-    Returns:
-        None
+        sender: The Task model class.
+        instance: The Task instance currently being saved.
+        **kwargs: Additional context passed by the Django signal dispatcher.
     """
-
     if instance.pk:
         try:
             instance._prev_completed = (
@@ -65,15 +63,15 @@ def snapshot_task_state(sender, instance, **kwargs):
 def award_exp(sender, instance, **kwargs):
     """Adjust profile XP and level after a task completion change.
 
+    This signal handler evaluates if a task's 'completed' status has changed
+    compared to the snapshot taken in pre_save. If so, it awards or deducts XP
+    based on the task's importance and adjusts the user's level accordingly.
+
     Args:
-        sender: The model class that emitted the signal.
-        instance: The task instance that was saved.
-        **kwargs: Additional Django signal metadata.
-
-    Returns:
-        None
+        sender: The Task model class.
+        instance: The Task instance that was just saved.
+        **kwargs: Additional context passed by the Django signal dispatcher.
     """
-
     prev = getattr(instance, "_prev_completed", False)
     now = instance.completed
 

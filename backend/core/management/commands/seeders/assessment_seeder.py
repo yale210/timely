@@ -127,15 +127,18 @@ class AssessmentSeeder(BaseSeeder):
         Creates an event with a random user, random category, and randomized
         metadata such as title, description, and color.
         """
-        random_user = self._get_or_create_random_user()
+        
+        start = timezone.make_aware(self.faker.date_time())
         self._create_event(
             {
                 "fields": {
-                    "user": random_user.id,
-                    "categories": [self._get_or_create_random_category(random_user).id],
+                    "user": self._get_or_create_random_user().id,
+                    "categories": [self._get_or_create_random_category(self._get_or_create_random_user()).id],
                     "title": self.faker.sentence(),
                     "description": self.faker.sentence(),
                     "location": self.faker.word(),
+                    "start_time": start,
+                    "end_time": start,
                     "recurrence_interval": None,
                     "recurrence_end": None,
                     "exception_dates": [],
@@ -155,22 +158,22 @@ class AssessmentSeeder(BaseSeeder):
             data (dict): A dictionary containing assessment field data.
 
         """
-        user = get_user_model().objects.get(id=data["fields"]["user"])
-        linked_event = data["fields"].get("linked_event")
-        # Ensure linked_event is a valid model instance or ID
-        if linked_event is not None and not hasattr(linked_event, "id"):
-            linked_event = Event.objects.filter(id=linked_event).first()
+        
+        user = self.resolve_user(data["fields"]["user"])
+        linked_event = self.resolve_event(data["fields"].get("linked_event"), user)
 
-        Assessment.objects.get_or_create(
+        Assessment.objects.update_or_create(
             user=user,
             title=data["fields"]["title"],
-            assessment_type=data["fields"]["assessment_type"],
             due_date=data["fields"]["due_date"],
-            length_of_assessment=data["fields"]["length_of_assessment"],
-            weighting_of_assessment=data["fields"]["weighting_of_assessment"],
-            notes=data["fields"]["notes"],
-            reminder_offset=data["fields"]["reminder_offset"],
-            linked_event=linked_event,
+            defaults={
+                "assessment_type": data["fields"]["assessment_type"],
+                "length_of_assessment": data["fields"]["length_of_assessment"],
+                "weighting_of_assessment": data["fields"]["weighting_of_assessment"],
+                "notes": data["fields"]["notes"],
+                "reminder_offset": data["fields"]["reminder_offset"],
+                "linked_event": linked_event,
+            },
         )
 
     def _create_event(self, data):
@@ -182,22 +185,31 @@ class AssessmentSeeder(BaseSeeder):
             data (dict): A dictionary containing event field data.
 
         """
-        user = get_user_model().objects.get(id=data["fields"]["user"])
-        event, _ = Event.objects.get_or_create(
+        
+        user = self.resolve_user(data["fields"]["user"])
+        split_from_event = self.resolve_event(
+            data["fields"].get("split_from_event"),
+            user,
+        )
+        event, _ = Event.objects.update_or_create(
             user=user,
             title=data["fields"]["title"],
-            description=data["fields"]["description"],
-            location=data["fields"]["location"],
-            colour=data["fields"]["colour"],
-            recurrence_interval=data["fields"]["recurrence_interval"],
-            recurrence_end=data["fields"]["recurrence_end"],
-            exception_dates=data["fields"]["exception_dates"],
-            split_from_event=data["fields"]["split_from_event"],
+            start_time=data["fields"].get("start_time"),
+            defaults={
+                "description": data["fields"]["description"],
+                "location": data["fields"]["location"],
+                "colour": data["fields"]["colour"],
+                "start_time": data["fields"].get("start_time"),
+                "end_time": data["fields"].get("end_time"),
+                "recurrence_interval": data["fields"]["recurrence_interval"],
+                "recurrence_end": data["fields"]["recurrence_end"],
+                "exception_dates": data["fields"]["exception_dates"],
+                "split_from_event": split_from_event,
+            },
         )
 
-        # Assign many-to-many category relationships
         event.categories.set(
-            Category.objects.filter(id__in=data["fields"].get("categories", []))
+            self.resolve_categories(data["fields"].get("categories", []), user)
         )
 
     def _get_or_create_random_category(self, user):

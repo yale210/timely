@@ -65,10 +65,9 @@ class FriendshipSeeder(BaseSeeder):
             Friendship: The created or existing Friendship instance.
 
         """
-        User = get_user_model()
-
-        sender = User.objects.get(id=data["fields"]["sender"])
-        receiver = User.objects.get(id=data["fields"]["receiver"])
+        
+        sender = self.resolve_user(data["fields"]["sender"])
+        receiver = self.resolve_user(data["fields"]["receiver"])
 
         # Check for existing friendship in either direction to maintain integrity
         request_exists = (
@@ -79,15 +78,17 @@ class FriendshipSeeder(BaseSeeder):
         ).first()
 
         if request_exists:
+            if request_exists.sender == sender and request_exists.receiver == receiver:
+                request_exists.state = data["fields"]["state"]
+                request_exists.save(update_fields=["state"])
             return request_exists
-
-        # Persist a new friendship request if none exists
-        return Friendship.objects.create(
-            id=data.get("pk"),
-            sender=sender,
-            receiver=receiver,
-            state=data["fields"]["state"],
-        )
+        else:
+            # No request existed so make one.
+            return Friendship.objects.create(
+                sender=sender,
+                receiver=receiver,
+                state=data["fields"]["state"],
+            )
 
     def _populate_random_friendship(self):
         """Generate a single random friendship connection.

@@ -1,3 +1,5 @@
+"""Custom authentication backend for the authentication module."""
+
 from django.contrib.auth.backends import BaseBackend
 
 from .models import User

@@ -7,7 +7,8 @@ It facilitates testing user-specific configuration and scheduling constraints.
 
 import random
 import datetime
-from core.models import Preference, DayOfWeek
+from core.models import Preference
+from core.models.preference import default_day_schedule
 from .fixtures.preference_fixtures import preferences
 from django.contrib.auth import get_user_model
 from core.management.commands.seeders.base import BaseSeeder
@@ -64,20 +65,25 @@ class PreferenceSeeder(BaseSeeder):
             bool: True if a new record was created, False otherwise.
 
         """
-        temporary_preference, created = Preference.objects.get_or_create(
-            user_id=data["fields"]["user"],
+        
+        user = self.resolve_user(data["fields"]["user"])
+        temporary_preference, created = Preference.objects.update_or_create(
+            user=user,
             defaults={
                 "day_start": data["fields"]["day_start"],
                 "day_end": data["fields"]["day_end"],
+                "timezone": data["fields"].get("timezone", "Europe/London"),
+                "day_schedule": data["fields"].get(
+                    "day_schedule", default_day_schedule()
+                ),
             },
         )
 
-        # Randomly assign a subset of days as days off for the user
-        chosen_days = random.sample([1, 2, 3, 4, 5, 6, 7], random.randint(0, 7))
-        days = DayOfWeek.objects.filter(day__in=chosen_days)
+        chosen_days = data["fields"].get("days_off")
+        if chosen_days is None:
+            chosen_days = random.sample([1, 2, 3, 4, 5, 6, 7], random.randint(0, 7))
 
-        for day in days:
-            temporary_preference.days_off.add(day)
+        temporary_preference.days_off.set(self.resolve_days_of_week(chosen_days))
 
         return created
 

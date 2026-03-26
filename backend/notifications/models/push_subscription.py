@@ -24,5 +24,10 @@ class PushSubscription(models.Model):
         db_table = "core_pushsubscription"
 
     def __str__(self):
-        """String representation of a PushSubscription."""
+        """Generates a human-readable identifier for the push subscription.
+
+        Returns:
+            str: A string indicating the subscription's owner (e.g.,
+                'PushSubscription for jane_doe').
+        """
         return f"PushSubscription for {self.user.username}"

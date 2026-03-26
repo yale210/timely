@@ -3,12 +3,11 @@
 tasks = [
     {
         "model": "core.tasks",
-        "pk": 1,
         "fields": {
-            "user": 1,
+            "user": "thomas",
             "title": "OSC Coursework",
             "description": "Needs to be done ASAP....",
-            "categories": [6],
+            "categories": ["Uni"],
             "estimated_minutes": 1000,
             "start_time": "2026-02-09T19:30:00Z",
             "deadline": "2026-04-01T16:00:00Z",
@@ -21,12 +20,11 @@ tasks = [
     },
     {
         "model": "core.tasks",
-        "pk": 2,
         "fields": {
-            "user": 1,
+            "user": "thomas",
             "title": "workout",
             "description": "50 pullups, 50 pushups, 50 situps, 5km running",
-            "categories": [2],
+            "categories": ["Personal"],
             "estimated_minutes": 120,
             "start_time": "2020-02-10T00:30:00Z",
             "deadline": "2030-02-10T01:30:00Z",
@@ -39,12 +37,11 @@ tasks = [
     },
     {
         "model": "core.tasks",
-        "pk": 3,
         "fields": {
-            "user": 2,
+            "user": "david",
             "title": "AKC Weeks 2-5",
             "description": "TO FINISH ASAP!",
-            "categories": [6],
+            "categories": ["Uni"],
             "estimated_minutes": 100,
             "start_time": "2026-02-09T19:36:00Z",
             "deadline": "2027-02-09T19:36:00Z",
@@ -57,12 +54,11 @@ tasks = [
     },
     {
         "model": "core.tasks",
-        "pk": 4,
         "fields": {
-            "user": 2,
+            "user": "david",
             "title": "Robotics project",
             "description": "Build a robot that can climb walls",
-            "categories": [1],
+            "categories": ["Work"],
             "estimated_minutes": 500,
             "start_time": "2026-02-09T19:30:00Z",
             "deadline": "2026-05-20T19:30:00Z",
@@ -75,17 +71,16 @@ tasks = [
     },
     {
         "model": "core.tasks",
-        "pk": 5,
         "fields": {
-            "user": 2,
+            "user": "david",
             "title": "Assemble robot",
             "description": "Put components onto breadboard",
-            "categories": [1],
+            "categories": ["Work"],
             "estimated_minutes": 400,
             "start_time": "2026-03-22T19:30:00Z",
             "deadline": "2027-02-10T19:30:00Z",
             "completed": False,
-            "parent_task": 4,
+            "parent_task": "Robotics project",
             "total_task_allocations": 0,
             "allocation": [],
             "importance": 7,
@@ -93,9 +88,8 @@ tasks = [
     },
     {
         "model": "core.tasks",
-        "pk": 6,
         "fields": {
-            "user": 2,
+            "user": "david",
             "title": "Code robot",
             "description": "Code the robot so the motors move",
             "categories": [],
@@ -103,7 +97,7 @@ tasks = [
             "start_time": "2026-02-09T19:30:00Z",
             "deadline": "2026-02-15T16:30:00Z",
             "completed": False,
-            "parent_task": 4,
+            "parent_task": "Robotics project",
             "total_task_allocations": 0,
             "allocation": [],
             "importance": 10,
@@ -111,9 +105,8 @@ tasks = [
     },
     {
         "model": "core.tasks",
-        "pk": 7,
         "fields": {
-            "user": 4,
+            "user": "mark",
             "title": "Complete a wordle",
             "description": "",
             "categories": [],
@@ -129,9 +122,8 @@ tasks = [
     },
     {
         "model": "core.tasks",
-        "pk": 8,
         "fields": {
-            "user": 4,
+            "user": "mark",
             "title": "Cancel phone subscription",
             "description": "",
             "categories": [],
