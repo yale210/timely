@@ -1,9 +1,9 @@
 [data-theme="taro"] {
-  --primary: #a286f5;        /* Taro purple */
-  --primary-hover: #c3b0f7;  /* Lighter lavender hover */
+  --primary: #a286f5;        
+  --primary-hover: #c3b0f7;  
   
-  --background: #f6f3ff;     /* Very light pastel purple background */
-  --text-color: #3b3053;           /* Dark purple-gray for readability */
+  --background: #f6f3ff;     
+  --text-color: #3b3053;           
   
-  --border: #c6b8eb;         /* softer lavender border */
+  --border: #c6b8eb;         
 }
