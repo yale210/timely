@@ -1,7 +1,7 @@
 [run]
 branch = True
 concurrency = multiprocessing
-paralell = True
+parallel = True
 source = .
 omit =
     */venv/*
