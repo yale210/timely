@@ -134,9 +134,6 @@ class CourseJoinCodeSerializer(serializers.Serializer):
 
         Args:
             validated_data: Dictionary containing the validated 'code'.
-
-        Returns:
-            The created or retrieved CourseEnrollment instance.
         """
         code = validated_data["code"]
         course = Course.objects.get(join_code__code=code)
