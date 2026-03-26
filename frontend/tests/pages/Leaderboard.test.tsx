@@ -66,4 +66,27 @@ describe("Leaderboard page", () => {
 
     expect(await screen.findByText("Failed to load leaderboard")).toBeDefined();
   });
+
+  it("shows the fallback bio text when the profile bio is blank", async () => {
+    mockGetMyProfile.mockResolvedValue(buildProfile({ bio: "   " }));
+    mockApiGet.mockResolvedValue({ data: [buildProfile({ bio: "   " })] });
+
+    render(<Leaderboard />);
+
+    expect(
+      await screen.findByText(
+        "Add a bio to make your profile card feel more personal.",
+      ),
+    ).toBeDefined();
+  });
+
+  it("shows the empty standings state when the leaderboard has no entries", async () => {
+    mockGetMyProfile.mockResolvedValue(buildProfile());
+    mockApiGet.mockResolvedValue({ data: [] });
+
+    render(<Leaderboard />);
+
+    expect(await screen.findByText("No friends yet.")).toBeDefined();
+    expect(screen.getByText("0 ranked friends")).toBeDefined();
+  });
 });
