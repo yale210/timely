@@ -5,8 +5,7 @@ from django.conf import settings
 
 
 class Profile(models.Model):
-    """Store legacy profile data linked to a user.
-    """
+    """Store legacy profile data linked to a user."""
 
     user = models.OneToOneField(
         settings.AUTH_USER_MODEL,

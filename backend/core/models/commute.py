@@ -1,4 +1,4 @@
-""" "Model for user commutes."""
+"""Model for user commutes."""
 
 from django.db import models
 from django.conf import settings
@@ -6,6 +6,7 @@ from django.conf import settings
 
 class Commute(models.Model):
     """Model used to allow for user commutes to be stored.
+
     It is assumed a user may have multiple commutes a day.
     """
 

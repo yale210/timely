@@ -12,6 +12,7 @@ from .importance_choices import ImportanceChoices
 
 class Task(models.Model):
     """Task model representing a task that a user needs to complete.
+    
     Tasks can be one-off or be part of a larger parent task.
 
     """
@@ -96,6 +97,11 @@ class Task(models.Model):
         return max(0, self.estimated_minutes - self.completed_minutes)
 
     def clean(self):
+        """Perform validation on the Task model's fields.
+
+        Raises:
+            ValidationError: If any of the checks fail.
+        """
         if self.start_time and self.deadline and self.start_time > self.deadline:
             raise ValidationError("Start time must be before or on the deadline.")
         if self.completed_minutes > self.estimated_minutes:

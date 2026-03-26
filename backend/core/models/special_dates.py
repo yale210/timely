@@ -7,6 +7,7 @@ from holidays.countries.united_kingdom import UnitedKingdom
 
 class SpecialDates(models.Model):
     """This model allows users to create special dates which can be used to help customise scheduling.
+    
     An example could be a birthday, wedding, or any other special occasion.
     """
 
@@ -30,6 +31,7 @@ class SpecialDates(models.Model):
 
     def get_holidays_for_year(self, input_year):
         """Get the public holidays for the provided year.
+
         We use United Kingdom holidays as a default due to the userbase being UK based.
 
         Args:

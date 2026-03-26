@@ -12,8 +12,7 @@ from .task import Task
 
 
 class Grade(models.Model):
-    """Grade model representing an assessment result for a user.
-    """
+    """Grade model representing an assessment result for a user."""
 
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="grades"
@@ -55,7 +54,8 @@ class Grade(models.Model):
     def get_time_spent_minutes(self):
         """Sum estimated minutes of completed tasks in this category up to the grade date.
 
-        Returns an int number of minutes.
+        Returns:
+            int: Total estimated minutes spent on tasks inside the category up to the given date.
         """
         if not self.category:
             return 0

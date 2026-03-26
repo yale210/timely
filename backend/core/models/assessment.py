@@ -1,4 +1,4 @@
-"""Assessment model definitions"""
+"""Assessment model definitions."""
 
 from django.conf import settings
 from django.core.exceptions import ValidationError
@@ -9,13 +9,13 @@ from .category import Category
 
 
 class Assessment(models.Model):
-    """Model used to allow for users to create assessments,
-    which enable them to keep on top of their upcoming assessments and deadlines.
+    """Model used to allow for users to create assessments.
+    
+    These enable them to keep on top of their upcoming assessments and deadlines.
     """
 
     class AssessmentType(models.TextChoices):
-        """Supported assessment type values.
-        """
+        """Supported assessment type values."""
 
         COURSEWORK = "COURSEWORK", "Coursework"
         EXAM = "EXAM", "Exam"
