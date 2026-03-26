@@ -9,7 +9,7 @@ on:
 
 jobs:
     build:
-        runs-on: ubuntu-latest
+        runs-on: self-hosted
         steps:
             - uses: actions/checkout@v4
             - name: Log in to DOCR
@@ -27,7 +27,7 @@ jobs:
                   docker push registry.digitalocean.com/segmajor/backend:latest
                   docker push registry.digitalocean.com/segmajor/frontend:latest
     deploy:
-        runs-on: ubuntu-latest
+        runs-on: self-hosted
         needs: [build]
         steps:
             - name: SSH and deploy

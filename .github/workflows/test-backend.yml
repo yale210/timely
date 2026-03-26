@@ -16,7 +16,7 @@ on:
 jobs:
     lint:
         name: Run Ruff linter
-        runs-on: ubuntu-latest
+        runs-on: self-hosted
         steps:
             - name: Checkout repository
               uses: actions/checkout@v6
@@ -32,7 +32,7 @@ jobs:
                   ruff format --check backend
     test:
         name: Run Tests
-        runs-on: ubuntu-latest
+        runs-on: self-hosted
         needs: [lint]
         steps:
             - name: Checkout repository
@@ -85,7 +85,7 @@ jobs:
     docker-build-test:
         name: Test if backend docker build will work
         needs: [lint, test]
-        runs-on: ubuntu-latest
+        runs-on: self-hosted
         steps:
             - uses: actions/checkout@v6
             - name: Build image
