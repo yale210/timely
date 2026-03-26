@@ -11,18 +11,9 @@ from .importance_choices import ImportanceChoices
 
 
 class Task(models.Model):
-<<<<<<< HEAD
-    """This model allows for the creation of tasks.
-    Tasks are one-off events. Anything recurring should be an event.
-    Tasks may have sub-tasks.
-    Examples of tasks may be "Maths coursework" due on the 12th February which will take 4 hours 32 minutes to complete.
-    This could have 3 sub-tasks: read textbook; read brief; complete answers.
-=======
     """Task model representing a task that a user needs to complete.
 
     Tasks can be one-off or be part of a larger parent task.
-
->>>>>>> 5ded433200bfe3694b6104f0db9d21c3d5fd874f
     """
 
     user = models.ForeignKey(

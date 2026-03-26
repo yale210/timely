@@ -1,19 +1,13 @@
 """Reccuring events override model definitions."""
 
 from django.db import models
-
 from .base_event import BaseEventModel
 from .category import Category
 from .event import Event
 
 
 class EventOverride(BaseEventModel):
-<<<<<<< HEAD
-    """Stores an override for a specific occurrence of a recurring event.
-    """
-=======
     """Stores an override for a specific occurrence of a recurring event."""
->>>>>>> 5ded433200bfe3694b6104f0db9d21c3d5fd874f
 
     parent_event = models.ForeignKey(
         Event,

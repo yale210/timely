@@ -12,12 +12,7 @@ from .task import Task
 
 
 class Grade(models.Model):
-<<<<<<< HEAD
-    """Grade model representing an assessment result for a user.
-    """
-=======
     """Grade model representing an assessment result for a user."""
->>>>>>> 5ded433200bfe3694b6104f0db9d21c3d5fd874f
 
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="grades"

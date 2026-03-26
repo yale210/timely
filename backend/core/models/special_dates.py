@@ -7,10 +7,6 @@ from holidays.countries.united_kingdom import UnitedKingdom
 
 class SpecialDates(models.Model):
     """This model allows users to create special dates which can be used to help customise scheduling.
-<<<<<<< HEAD
-=======
-
->>>>>>> 5ded433200bfe3694b6104f0db9d21c3d5fd874f
     An example could be a birthday, wedding, or any other special occasion.
     """
 

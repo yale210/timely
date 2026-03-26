@@ -68,10 +68,6 @@ class Friendship(models.Model):
     @classmethod
     def send_request(cls, sender, receiver):
         """Send a friend request from a sender to a receiver.
-<<<<<<< HEAD
-=======
-
->>>>>>> 5ded433200bfe3694b6104f0db9d21c3d5fd874f
         If a request already exists, it becomes SENT if it was previously declined.
 
         Otherwise, an error is raised if the users are already friends or a request is pending.

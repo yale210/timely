@@ -152,10 +152,6 @@ def _update_scope_all(
     original_start_time: datetime | None = None,
 ) -> Event:
     """Update an event by applying changes across all occurrences.
-<<<<<<< HEAD
-=======
-
->>>>>>> 5ded433200bfe3694b6104f0db9d21c3d5fd874f
     Recurring events normalise submitted start and end times,
     updates fields, and synchronises related overrides.
 
