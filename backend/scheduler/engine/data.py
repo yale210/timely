@@ -10,7 +10,6 @@ from core.services import expand_user_events
 
 
 class SchedulerDataMixin:
-
     """Mixin providing data retrieval and utility methods for the scheduler."""
 
     def __init__(
@@ -72,7 +71,6 @@ class SchedulerDataMixin:
             list[Task]: A list of unscheduled Task instances.
         """
         queryset = Task.objects.filter(
-
             user=self.user,
             completed=False,
             allocation=[],
@@ -124,7 +122,6 @@ class SchedulerDataMixin:
         """
         return list(Event.objects.filter(user=self.user).order_by("start_time"))
 
-
     def _get_commutes(self) -> list[Commute]:
         """
         Retrieve all commute settings for the user.
@@ -133,7 +130,6 @@ class SchedulerDataMixin:
             list[Commute]: A list of user commutes.
         """
         return list(Commute.objects.filter(user=self.user))
-
 
     def _get_special_dates(self):
         """
@@ -158,7 +154,6 @@ class SchedulerDataMixin:
             datetime: The aware datetime object.
         """
         if timezone.is_naive(dt):
-
             return timezone.make_aware(dt)
         return dt
 
@@ -174,7 +169,6 @@ class SchedulerDataMixin:
             datetime: The ceiled datetime object.
         """
         if dt.second == 0 and dt.microsecond == 0:
-
             return dt
         return dt.replace(second=0, microsecond=0) + timedelta(minutes=1)
 
@@ -190,7 +184,6 @@ class SchedulerDataMixin:
             tuple[int, int]: A tuple of (buffer_before, buffer_after) in minutes.
         """
         return (
-
             int(getattr(task, "buffer_before_minutes", 0) or 0),
             int(getattr(task, "buffer_after_minutes", 0) or 0),
         )
@@ -254,7 +247,6 @@ class SchedulerDataMixin:
             bool: True if the day is not a day off or special date.
         """
         if self.preference:
-
             days_off = set(
                 self.preference.days_off.values_list("day", flat=True)  # type: ignore[attr-defined]
             )
@@ -273,7 +265,6 @@ class SchedulerDataMixin:
             tuple[datetime, datetime]: Start and end datetimes of the working window.
         """
         if self.preference:
-
             start_time, end_time = self.preference.get_day_window(target_date)  # type: ignore[attr-defined]
             day_start = self._aware(datetime.combine(target_date, start_time))
             day_end = self._aware(datetime.combine(target_date, end_time))
@@ -364,7 +355,6 @@ class SchedulerDataMixin:
             list[tuple[datetime, datetime]]: A list of available time slots.
         """
         not_before, not_after = self._task_date_bounds(
-
             task_start,
             deadline,
             current_date,

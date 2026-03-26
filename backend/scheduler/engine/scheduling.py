@@ -8,7 +8,6 @@ from scheduler.scheduler_types import ScheduleResult
 
 
 class SchedulerSchedulingMixin:
-
     """Mixin providing the core scheduling logic for tasks."""
 
     def _clip_to_deadline(
@@ -68,7 +67,6 @@ class SchedulerSchedulingMixin:
             ScheduleResult: A result indicating success but with no segments.
         """
         return ScheduleResult(
-
             task_id=task.id,  # type: ignore[arg-type]
             success=True,
             scheduled_start=None,
@@ -90,7 +88,6 @@ class SchedulerSchedulingMixin:
         """
         return max(start_date, task_start.date())
 
-
     def _task_slot(
         self,
         task: Task,
@@ -107,7 +104,6 @@ class SchedulerSchedulingMixin:
             tuple[datetime, datetime] | None: The shrunk slot.
         """
         return self._shrink_slot_for_task(task, slot)
-
 
     def _clip_slot(
         self,
@@ -127,7 +123,6 @@ class SchedulerSchedulingMixin:
             tuple[datetime, datetime] | None: The fully clipped slot or None.
         """
         if not slot:
-
             return None
         clipped = self._clip_to_deadline(slot, deadline)
         if not clipped:
@@ -314,7 +309,6 @@ class SchedulerSchedulingMixin:
             tuple[list[tuple[datetime, datetime]], int]: New segments and remaining minutes.
         """
         category_minutes = self._get_remaining_category_minutes(
-
             task,
             current_date,
             current_segments=segments,
@@ -356,7 +350,6 @@ class SchedulerSchedulingMixin:
         """
         return category_minutes is not None and category_minutes < min_block
 
-
     @staticmethod
     def _has_invalid_split_remainder(day_remaining: int, min_block: int) -> bool:
         """
@@ -370,7 +363,6 @@ class SchedulerSchedulingMixin:
             bool: True if remaining amount is unusable.
         """
         return 0 < day_remaining < min_block
-
 
     def _split_segments_for_slots(
         self,
@@ -532,7 +524,6 @@ class SchedulerSchedulingMixin:
         """
         return sorted(self.tasks, key=lambda task: (-task.importance, task.deadline))
 
-
     def _schedule_task(self, task: Task, start_date: date) -> ScheduleResult:
         """
         Attempt to schedule a task.
@@ -568,7 +559,6 @@ class SchedulerSchedulingMixin:
             None: This method modifies internal state.
         """
         if not self._should_store_result(result):
-
             return
         segments = result.segments or [
             (result.scheduled_start, result.scheduled_end)  # type: ignore[list-item]
@@ -592,7 +582,6 @@ class SchedulerSchedulingMixin:
             bool: True if result is successful and has times.
         """
         return (
-
             result.success
             and result.scheduled_start is not None
             and result.scheduled_end is not None

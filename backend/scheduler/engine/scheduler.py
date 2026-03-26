@@ -10,6 +10,4 @@ class Scheduler(
     SchedulerCategoryMixin,
     SchedulerDataMixin,
 ):
-
     """Schedules tasks within user availability and existing constraints."""
-

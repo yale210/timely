@@ -2,7 +2,6 @@ from rest_framework import serializers
 
 
 class ScheduleRequestSerializer(serializers.Serializer):
-
     """Serializer for scheduling requests."""
 
     start_date = serializers.DateField(required=False)
@@ -16,7 +15,6 @@ class ScheduleRequestSerializer(serializers.Serializer):
 
 
 class ScheduleResultSerializer(serializers.Serializer):
-
     """Serializer for scheduling results."""
 
     task_id = serializers.IntegerField()

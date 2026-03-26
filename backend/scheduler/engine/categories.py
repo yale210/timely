@@ -6,7 +6,6 @@ from scheduler.intervals import overlap_minutes
 
 
 class SchedulerCategoryMixin:
-
     """Mixin providing category-related quota calculations for the scheduler."""
 
     def _get_remaining_category_minutes(
@@ -71,7 +70,6 @@ class SchedulerCategoryMixin:
             set[int]: A set of category IDs.
         """
         return set(task.categories.values_list("id", flat=True))
-
 
     def _task_allocation_segments(self, task) -> list[tuple[datetime, datetime]]:
         """

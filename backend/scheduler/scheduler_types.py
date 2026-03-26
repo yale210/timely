@@ -4,7 +4,6 @@ import dataclasses
 
 @dataclasses.dataclass
 class TimeSlot:
-
     """Represents a time slot with a start and end time."""
 
     start: datetime
@@ -13,7 +12,6 @@ class TimeSlot:
 
 @dataclasses.dataclass
 class ScheduleResult:
-
     """Represents the result of scheduling a task."""
 
     task_id: int
@@ -22,4 +20,3 @@ class ScheduleResult:
     scheduled_end: datetime | None = None
     segments: list[tuple[datetime, datetime]] | None = None
     reason: str | None = None
-

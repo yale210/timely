@@ -10,7 +10,6 @@ from scheduler.services import Scheduler
 
 
 class ScheduleTasksAPIView(APIView):
-
     """API view to trigger the task scheduling process."""
 
     permission_classes = [permissions.IsAuthenticated]
@@ -93,7 +92,6 @@ class ScheduleTasksAPIView(APIView):
 
 
 class UnscheduleTasksAPIView(APIView):
-
     """API view to unschedule all unlocked and uncompleted tasks."""
 
     permission_classes = [permissions.IsAuthenticated]
@@ -109,7 +107,6 @@ class UnscheduleTasksAPIView(APIView):
             Response: A response indicating the number of tasks unscheduled.
         """
         updated = (
-
             Task.objects.filter(user=request.user)
             .exclude(allocation=[])
             .filter(completed=False, locked=False)

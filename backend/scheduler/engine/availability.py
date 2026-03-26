@@ -14,7 +14,6 @@ from scheduler.intervals import (
 
 
 class SchedulerAvailabilityMixin:
-
     """Mixin providing availability-related calculations for the scheduler."""
 
     def _get_occupied_slots(self, target_date: date) -> list[tuple[datetime, datetime]]:
@@ -54,7 +53,6 @@ class SchedulerAvailabilityMixin:
             list[tuple[datetime, datetime]]: A list of event time slots within the day window.
         """
         return [
-
             (start, end)
             for start, end in self._get_expanded_event_slots(target_date)
             if start < day_end and end > day_start
@@ -99,7 +97,6 @@ class SchedulerAvailabilityMixin:
             list[tuple[datetime, datetime]]: A list of newly scheduled block segments within the day window.
         """
         return [
-
             (start, end)
             for start, end in self._scheduled_blocks
             if start < day_end and end > day_start
@@ -205,7 +202,6 @@ class SchedulerAvailabilityMixin:
             list[tuple[datetime, datetime]]: A list of free slots starting from the current time or specified boundary.
         """
         if target_date != timezone.localdate():
-
             return free_slots
         now = timezone.now()
         if now <= window[0]:
@@ -231,7 +227,6 @@ class SchedulerAvailabilityMixin:
             list[tuple[datetime, datetime]]: A list of slots truncated to stay within daily hourly capacity.
         """
         if not self.preference:
-
             return free_slots
         if not getattr(self.preference, "limit_max_hours", True):
             return free_slots
