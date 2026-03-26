@@ -11,8 +11,7 @@ from rest_framework.exceptions import ValidationError as DRFValidationError
 
 
 class FriendshipViewSet(viewsets.ModelViewSet):
-    """
-    Manage friendship requests for the authenticated user.
+    """Manage friendship requests for the authenticated user.
     Users can send, accept, and decline friend requests.
     """
 
@@ -24,8 +23,7 @@ class FriendshipViewSet(viewsets.ModelViewSet):
         return Friendship.objects.filter(Q(sender=user) | Q(receiver=user))
 
     def perform_create(self, serializer):
-        """
-        Create a new friend request using the authenticated user as the sender,
+        """Create a new friend request using the authenticated user as the sender,
         and using the provided receiver.
         """
         receiver = serializer.validated_data["receiver"]
@@ -41,8 +39,7 @@ class FriendshipViewSet(viewsets.ModelViewSet):
 
     @action(detail=True, methods=["post"], url_path="accept")
     def accept_request(self, request, pk=None):
-        """
-        Accept a friend request if the authenticated user is the receiver.
+        """Accept a friend request if the authenticated user is the receiver.
         """
         friend_request = self.get_object()
         # Validate user is the one request was sent to.
@@ -54,8 +51,7 @@ class FriendshipViewSet(viewsets.ModelViewSet):
 
     @action(detail=True, methods=["post"], url_path="decline")
     def decline_request(self, request, pk=None):
-        """
-        Decline a friend request if the authenticated user is the receiver.
+        """Decline a friend request if the authenticated user is the receiver.
         """
         friend_request = self.get_object()
         # Validate user is the one request was sent to.

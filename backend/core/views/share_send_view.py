@@ -12,11 +12,9 @@ class ShareSendView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def post(self, request):
-        """
-        Handle part of the sharing of an event between users.
+        """Handle part of the sharing of an event between users.
         Specifically sending an event share request to another user.
         """
-
         # Who the event is being shared with and what event ID it is
         username = request.data.get("Receiver")
         event_id = request.data.get("Event-ID")

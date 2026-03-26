@@ -107,8 +107,7 @@ def _update_scope_all(
     validated_data: dict[str, Any],
     original_start_time: datetime | None = None,
 ) -> Event:
-    """
-    Update an event by applying changes across all occurrences.
+    """Update an event by applying changes across all occurrences.
     Recurring events normalise submitted start and end times,
     updates fields, and synchronises related overrides.
     """

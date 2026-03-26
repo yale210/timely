@@ -6,8 +6,7 @@ from .event import Event
 
 
 class EventOverride(BaseEventModel):
-    """
-    Stores an override for a specific occurrence of a recurring event.
+    """Stores an override for a specific occurrence of a recurring event.
     """
 
     parent_event = models.ForeignKey(

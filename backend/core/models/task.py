@@ -9,8 +9,7 @@ from .importance_choices import ImportanceChoices
 
 
 class Task(models.Model):
-    """
-    This model allows for the creation of tasks.
+    """This model allows for the creation of tasks.
     Tasks are one-off events. Anything recurring should be an event.
     Tasks may have sub-tasks.
     Examples of tasks may be "Maths coursework" due on the 12th February which will take 4 hours 32 minutes to complete.

@@ -22,8 +22,7 @@ class ImportView(APIView):
         return parsed
 
     def post(self, request):
-        """
-        Handle the import of events from a .txt file in iCalendar format.
+        """Handle the import of events from a .txt file in iCalendar format.
 
         The file must follow the iCalendar format, with events defined between BEGIN:VEVENT and END:VEVENT.
         """

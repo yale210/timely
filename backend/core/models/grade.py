@@ -10,8 +10,7 @@ from .task import Task
 
 
 class Grade(models.Model):
-    """
-    Grade model representing an assessment result for a user.
+    """Grade model representing an assessment result for a user.
     """
 
     user = models.ForeignKey(

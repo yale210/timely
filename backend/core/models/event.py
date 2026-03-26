@@ -9,8 +9,7 @@ from django.utils import timezone
 
 
 class Event(BaseEventModel):
-    """
-    Model used to allow for events to be created.
+    """Model used to allow for events to be created.
     Events can be one-off, or recurring and with set intervals.
     """
 
@@ -66,12 +65,10 @@ class Event(BaseEventModel):
         return super().save(*args, **kwargs)
 
     def calculate_time_left(self):
-        """
-        Calculate the time left of the event.
+        """Calculate the time left of the event.
         If event is recurring, return days between now and recurrence end date.
         If event is a one off, return days between start_time and now.
         """
-
         # If user doesn't  have a preference, we don't know their timezone so return 0
         if not hasattr(self.user, "preference") or not self.user.preference.timezone:
             return 0

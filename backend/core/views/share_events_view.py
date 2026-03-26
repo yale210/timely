@@ -11,8 +11,7 @@ class ShareEventsView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def get(self, request):
-        """
-        Handle POST requests for sending a share request to another user.
+        """Handle POST requests for sending a share request to another user.
 
         Creates a pending share event object.
         """

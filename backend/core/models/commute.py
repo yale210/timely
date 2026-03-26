@@ -3,8 +3,7 @@ from django.conf import settings
 
 
 class Commute(models.Model):
-    """
-    Model used to allow for user commutes to be stored.
+    """Model used to allow for user commutes to be stored.
     It is assumed a user may have multiple commutes a day.
     """
 

@@ -13,8 +13,7 @@ class ShareAcceptView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def post(self, request):
-        """
-        Handle POST requests for responding to a shared event.
+        """Handle POST requests for responding to a shared event.
 
         Share requests can be accepted or rejected.
         """

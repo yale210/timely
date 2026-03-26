@@ -1,5 +1,4 @@
-"""
-Management command to unseed the database with initial data.
+"""Management command to unseed the database with initial data.
 This calls the smaller individual seeder files.
 python manage.py unseed
 """
@@ -26,10 +25,8 @@ class Command(BaseCommand):
     help = "Unseeds the database. This allows for a clean state for seeding."
 
     def handle(self, *args, **kwargs):
+        """Deletes all objects from the database, unseeding it and allowing for a fresh seed.
         """
-        Deletes all objects from the database, unseeding it and allowing for a fresh seed.
-        """
-
         self._delete_objects()
 
     def _delete_objects(self):

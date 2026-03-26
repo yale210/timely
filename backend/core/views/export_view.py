@@ -12,8 +12,7 @@ class ExportView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def get(self, request):
-        """
-        Handle requests for exporting a user's events.
+        """Handle requests for exporting a user's events.
 
         Generates a .txt file.
         """
