@@ -1,3 +1,5 @@
+"""Mixin for category-based constraints in the scheduler engine."""
+
 from __future__ import annotations
 
 from datetime import date, datetime
@@ -6,12 +8,28 @@ from scheduler.intervals import overlap_minutes
 
 
 class SchedulerCategoryMixin:
+    """Mixin for managing category-specific scheduling constraints.
+
+    This class provides methods to calculate and enforce daily time limits
+    associated with different task categories.
+    """
+
     def _get_remaining_category_minutes(
         self,
         task,
         target_date: date,
         current_segments: list[tuple[datetime, datetime]] | None = None,
     ) -> int | None:
+        """Calculate remaining allowed study time for a task's categories.
+
+        Args:
+            task: The task to check.
+            target_date: The date to calculate for.
+            current_segments: Optional list of already scheduled segments for the task.
+
+        Returns:
+            The minimum remaining minutes across all task categories, or None if no limits.
+        """
         category_limits = self._category_limits(task)
         if not category_limits:
             return None
@@ -28,6 +46,14 @@ class SchedulerCategoryMixin:
         return min(remaining)
 
     def _category_limits(self, task) -> dict[int, int]:
+        """Retrieve the daily study time limits for a task's categories.
+
+        Args:
+            task: The task whose categories should be checked.
+
+        Returns:
+            A dictionary mapping category IDs to their daily minute limits.
+        """
         limits: dict[int, int] = {}
         for category in task.categories.all():
             if category.id is None or category.max_daily_study_time is None:
@@ -36,9 +62,25 @@ class SchedulerCategoryMixin:
         return limits
 
     def _task_category_ids(self, task) -> set[int]:
+        """Get the set of category IDs associated with a task.
+
+        Args:
+            task: The task to check.
+
+        Returns:
+            A set of integer category IDs.
+        """
         return set(task.categories.values_list("id", flat=True))
 
     def _task_allocation_segments(self, task) -> list[tuple[datetime, datetime]]:
+        """Extract time segments from a task's allocation field.
+
+        Args:
+            task: The task with allocation data.
+
+        Returns:
+            A list of tuples representing allocated time ranges.
+        """
         segments: list[tuple[datetime, datetime]] = []
         for slot in task.allocation or []:
             try:
@@ -57,6 +99,15 @@ class SchedulerCategoryMixin:
         end: datetime,
         window: tuple[datetime, datetime],
     ) -> None:
+        """Add overlapping minutes to category usage tracking.
+
+        Args:
+            minutes_used: Dictionary tracking minutes used per category.
+            category_ids: Set of category IDs to update.
+            start: Start of the time segment.
+            end: End of the time segment.
+            window: The time window (usually a day) to check for overlap.
+        """
         overlap = overlap_minutes(start, end, *window)
         if overlap <= 0:
             return
@@ -70,6 +121,17 @@ class SchedulerCategoryMixin:
         category_limits: dict[int, int],
         current_segments: list[tuple[datetime, datetime]],
     ) -> dict[int, int]:
+        """Calculate the total minutes used per category for a given day.
+
+        Args:
+            task: The current task being scheduled.
+            target_date: The date to calculate usage for.
+            category_limits: Dictionary of categories with time limits.
+            current_segments: Segments already assigned to the current task.
+
+        Returns:
+            A dictionary mapping category IDs to total minutes used.
+        """
         window = self._day_window(target_date)
         minutes_used = {category_id: 0 for category_id in category_limits}
         task_category_ids = self._task_category_ids(task)

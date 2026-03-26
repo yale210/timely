@@ -1,3 +1,5 @@
+"""Views for the scheduler application."""
+
 from django.db import transaction
 from django.utils import timezone
 from rest_framework import permissions, status
@@ -10,9 +12,23 @@ from scheduler.services import Scheduler
 
 
 class ScheduleTasksAPIView(APIView):
+    """API view for scheduling tasks.
+
+    This view handles POST requests to initiate the task scheduling process
+    for the authenticated user based on their preferences and request data.
+    """
+
     permission_classes = [permissions.IsAuthenticated]
 
     def post(self, request):
+        """Handle task scheduling request.
+
+        Args:
+            request: The DRF request object containing scheduling parameters.
+
+        Returns:
+            A Response object with the results of the scheduling process.
+        """
         serializer = ScheduleRequestSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         payload = serializer.validated_data
@@ -80,9 +96,23 @@ class ScheduleTasksAPIView(APIView):
 
 
 class UnscheduleTasksAPIView(APIView):
+    """API view for unscheduling tasks.
+
+    This view handles POST requests to clear scheduling allocations for
+    tasks that are not completed or locked.
+    """
+
     permission_classes = [permissions.IsAuthenticated]
 
     def post(self, request):
+        """Handle task unscheduling request.
+
+        Args:
+            request: The DRF request object.
+
+        Returns:
+            A Response object with the count of unscheduled tasks.
+        """
         updated = (
             Task.objects.filter(user=request.user)
             .exclude(allocation=[])
