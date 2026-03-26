@@ -12,17 +12,22 @@ vi.mock("@/services/api", () => ({
   },
 }));
 
+let reloadMock: ReturnType<typeof vi.fn>
+
 describe("importService", () => {
   beforeEach(() => {
     vi.clearAllMocks();
 
     vi.spyOn(Storage.prototype, "getItem").mockReturnValue("mock-token");
 
-    vi.spyOn(window, "alert").mockImplementation(() => {});
+    vi.spyOn(window, "alert").mockImplementation(() => undefined);
+
+    reloadMock = vi.fn(() => undefined);
 
     
 
-    Object.defineProperty(window, "location", { value: { ...window.location, reload: vi.fn(), }, writable:true});
+    Object.defineProperty(window, "location", { value: { ...window.location, reload: reloadMock, }, writable:true});
+    
   });
 
 
@@ -35,7 +40,7 @@ describe("importService", () => {
     const result = await importEvents(mockFile);
 
     expect(window.alert).toHaveBeenCalledWith("Import");
-    expect(window.location.reload).toHaveBeenCalled();
+    expect(reloadMock).toHaveBeenCalled();
     expect(result).toBe("Import")
   });
 
