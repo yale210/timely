@@ -1,3 +1,9 @@
+"""View layer for the courses application.
+
+This package provides DRF viewsets and mixins for handling course operations,
+including enrollment, scheduling, permission management, and staff interactions.
+"""
+
 from courses.views.base import CourseViewSetBase
 from courses.views.courses import CourseCrudMixin
 from courses.views.events import CourseEventsMixin
@@ -16,4 +22,10 @@ class CourseViewSet(
     CourseCrudMixin,
     CourseViewSetBase,
 ):
+    """Unified ViewSet for all Course-related operations.
+
+    Inherits from multiple mixins to provide a complete API for course
+    management, including enrollment, scheduling, and permissions.
+    """
+
     pass
