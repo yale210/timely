@@ -191,7 +191,9 @@ class CalendarSerializerTests(TestCase):
         self.assertFalse(serializer.is_valid())
         self.assertIn("completed_minutes", serializer.errors)
 
-    def test_parse_allocation_slots_collects_errors_and_normalizes_valid_datetimes(self):
+    def test_parse_allocation_slots_collects_errors_and_normalizes_valid_datetimes(
+        self,
+    ):
         serializer = CalendarSerializer(context=self._request_context())
 
         normalized, errors = serializer._parse_allocation_slots(
@@ -270,7 +272,9 @@ class CalendarSerializerTests(TestCase):
                 completed_minutes=0,
             )
 
-    def test_validate_allocation_slots_rejects_start_deadline_and_remaining_limit_errors(self):
+    def test_validate_allocation_slots_rejects_start_deadline_and_remaining_limit_errors(
+        self,
+    ):
         serializer = CalendarSerializer(context=self._request_context())
         now = timezone.now() + datetime.timedelta(days=1)
 
@@ -410,7 +414,9 @@ class CalendarSerializerTests(TestCase):
                 completed_minutes=0,
             )
 
-    def test_validate_allocation_slots_rejects_overlap_with_events_other_tasks_and_category_limits(self):
+    def test_validate_allocation_slots_rejects_overlap_with_events_other_tasks_and_category_limits(
+        self,
+    ):
         serializer = CalendarSerializer(context=self._request_context())
         now = timezone.now() + datetime.timedelta(days=1)
         category = Category.objects.create(
@@ -507,7 +513,9 @@ class CalendarSerializerTests(TestCase):
                 allocation=[
                     {
                         "start": (now + datetime.timedelta(hours=1)).isoformat(),
-                        "end": (now + datetime.timedelta(hours=1, minutes=30)).isoformat(),
+                        "end": (
+                            now + datetime.timedelta(hours=1, minutes=30)
+                        ).isoformat(),
                     }
                 ],
                 allow_split=True,

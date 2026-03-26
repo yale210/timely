@@ -122,12 +122,18 @@ class AssessmentSerializerTests(TestCase):
         self.assertTrue(serializer.is_valid(), serializer.errors)
         assessment = serializer.save()
 
-        data = AssessmentSerializer(instance=assessment, context={"request": self.request}).data
+        data = AssessmentSerializer(
+            instance=assessment, context={"request": self.request}
+        ).data
 
         self.assertIsNone(data["assessment_category"])
         self.assertIsNone(data["module_category"])
         self.assertEqual(data["categories"], [])
-        self.assertIsNone(AssessmentSerializer(context={"request": self.request}).get_linked_event_details(assessment))
+        self.assertIsNone(
+            AssessmentSerializer(
+                context={"request": self.request}
+            ).get_linked_event_details(assessment)
+        )
 
     def test_serializer_rejects_event_start_after_due_date(self):
         due_date = timezone.now() + datetime.timedelta(days=7)
@@ -149,7 +155,9 @@ class AssessmentSerializerTests(TestCase):
         self.assertFalse(serializer.is_valid())
         self.assertIn("event_details", serializer.errors)
 
-    def test_update_without_event_details_syncs_existing_linked_event_and_reminders(self):
+    def test_update_without_event_details_syncs_existing_linked_event_and_reminders(
+        self,
+    ):
         category = Category.objects.create(user=self.user, text="Exam")
         due_date = timezone.now() + datetime.timedelta(days=10)
         serializer = AssessmentSerializer(
@@ -238,5 +246,9 @@ class AssessmentSerializerTests(TestCase):
         updated_assessment.refresh_from_db()
         self.assertEqual(updated_assessment.linked_event_id, original_event_id)
         self.assertEqual(updated_assessment.linked_event.location, "Lab 2")
-        self.assertEqual(updated_assessment.linked_event.description, "Updated event payload")
-        self.assertEqual(updated_assessment.linked_event.categories.first(), update_category)
+        self.assertEqual(
+            updated_assessment.linked_event.description, "Updated event payload"
+        )
+        self.assertEqual(
+            updated_assessment.linked_event.categories.first(), update_category
+        )

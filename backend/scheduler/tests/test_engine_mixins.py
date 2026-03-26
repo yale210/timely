@@ -279,12 +279,16 @@ class SchedulerEngineMixinTests(TestCase):
         self.assertEqual(len(occupied), 2)
         self.assertTrue(
             self.scheduler._commute_applies(
-                SimpleNamespace(day_of_week=SimpleNamespace(all=lambda: [matching_day])),
+                SimpleNamespace(
+                    day_of_week=SimpleNamespace(all=lambda: [matching_day])
+                ),
                 self.target_date,
             )
         )
         self.assertTrue(
-            self.scheduler._commute_applies(SimpleNamespace(day_of_week=None), self.target_date)
+            self.scheduler._commute_applies(
+                SimpleNamespace(day_of_week=None), self.target_date
+            )
         )
 
     def test_get_available_slots_applies_trimming_blocks_and_capacity(self):
@@ -327,12 +331,15 @@ class SchedulerEngineMixinTests(TestCase):
         self.preference.max_hours_study_per_day = 0
         self.preference.save(update_fields=["max_hours_study_per_day"])
         mocked_now = make_aware(datetime.combine(self.target_date, time(8, 14, 10)))
-        with patch(
-            "scheduler.engine.availability.timezone.localdate",
-            return_value=self.target_date,
-        ), patch(
-            "scheduler.engine.availability.timezone.now",
-            return_value=mocked_now,
+        with (
+            patch(
+                "scheduler.engine.availability.timezone.localdate",
+                return_value=self.target_date,
+            ),
+            patch(
+                "scheduler.engine.availability.timezone.now",
+                return_value=mocked_now,
+            ),
         ):
             slots = self.scheduler.get_available_slots(self.target_date, 15)
         self.assertEqual(slots, [])
@@ -391,7 +398,9 @@ class SchedulerSchedulingMixinTests(TestCase):
             estimated_minutes=120,
             completed_minutes=0,
             start_time=make_aware(datetime.combine(self.start_date, time(9, 0))),
-            deadline=make_aware(datetime.combine(self.start_date + timedelta(days=1), time(18, 0))),
+            deadline=make_aware(
+                datetime.combine(self.start_date + timedelta(days=1), time(18, 0))
+            ),
             importance=5,
             allow_split=allow_split,
             buffer_before_minutes=buffer_before,
@@ -406,9 +415,13 @@ class SchedulerSchedulingMixinTests(TestCase):
         deadline = make_aware(datetime.combine(self.start_date, time(10, 0)))
         task_start = make_aware(datetime.combine(self.start_date, time(10, 30)))
 
-        self.assertEqual(self.scheduler._clip_to_deadline(slot, deadline), (slot[0], deadline))
+        self.assertEqual(
+            self.scheduler._clip_to_deadline(slot, deadline), (slot[0], deadline)
+        )
         self.assertIsNone(self.scheduler._clip_to_deadline(slot, slot[0]))
-        self.assertEqual(self.scheduler._clip_to_task_start(slot, task_start), (task_start, slot[1]))
+        self.assertEqual(
+            self.scheduler._clip_to_task_start(slot, task_start), (task_start, slot[1])
+        )
         self.assertIsNone(self.scheduler._clip_to_task_start(slot, slot[1]))
         self.assertEqual(
             self.scheduler._task_search_start(task_start, self.start_date),
@@ -495,7 +508,9 @@ class SchedulerSchedulingMixinTests(TestCase):
         failure_result = self.scheduler._schedule_task_no_split(task, self.start_date)
         self.assertFalse(failure_result.success)
 
-    def test_schedule_task_split_covers_success_remainder_and_insufficient_category(self):
+    def test_schedule_task_split_covers_success_remainder_and_insufficient_category(
+        self,
+    ):
         task = self._task(
             "Split task",
             allow_split=True,
@@ -503,7 +518,10 @@ class SchedulerSchedulingMixinTests(TestCase):
             buffer_after=0,
         )
         self.scheduler.remaining_minutes[task.id] = 60
-        self.scheduler.available_days = {self.start_date, self.start_date + timedelta(days=1)}
+        self.scheduler.available_days = {
+            self.start_date,
+            self.start_date + timedelta(days=1),
+        }
         self.scheduler.slot_map[(task.id, self.start_date)] = [
             (
                 make_aware(datetime.combine(self.start_date, time(9, 0))),
@@ -552,17 +570,21 @@ class SchedulerSchedulingMixinTests(TestCase):
             scheduled_end=task.start_time + timedelta(minutes=30),
             segments=[(task.start_time, task.start_time + timedelta(minutes=30))],
         )
-        self.scheduler._schedule_task_no_split = lambda task, start_date: ScheduleResult(
-            task_id=task.id,
-            success=True,
-            scheduled_start=task.start_time,
-            scheduled_end=task.start_time + timedelta(minutes=45),
-            segments=[],
+        self.scheduler._schedule_task_no_split = (
+            lambda task, start_date: ScheduleResult(
+                task_id=task.id,
+                success=True,
+                scheduled_start=task.start_time,
+                scheduled_end=task.start_time + timedelta(minutes=45),
+                segments=[],
+            )
         )
 
         results = self.scheduler.schedule_tasks(self.start_date)
 
-        self.assertEqual([result.task_id for result in results], [no_split_task.id, split_task.id])
+        self.assertEqual(
+            [result.task_id for result in results], [no_split_task.id, split_task.id]
+        )
         self.assertEqual(len(self.scheduler._scheduled_blocks), 2)
         self.assertEqual(len(self.scheduler._scheduled_task_segments), 2)
 
@@ -576,4 +598,8 @@ class SchedulerSchedulingMixinTests(TestCase):
                 self.start_date,
             ).success
         )
-        self.assertFalse(self.scheduler._should_store_result(ScheduleResult(task_id=1, success=False)))
+        self.assertFalse(
+            self.scheduler._should_store_result(
+                ScheduleResult(task_id=1, success=False)
+            )
+        )
