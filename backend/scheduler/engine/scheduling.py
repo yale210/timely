@@ -1,3 +1,5 @@
+"""Mixin for scheduling logic in the scheduler engine."""
+
 from __future__ import annotations
 
 from datetime import date, datetime, timedelta
@@ -8,25 +10,27 @@ from scheduler.scheduler_types import ScheduleResult
 
 
 class SchedulerSchedulingMixin:
-    """Mixin providing the core scheduling logic for tasks."""
+    """Mixin providing core scheduling algorithms for the scheduler.
+
+    This class contains methods for finding available slots, handling
+    task splitting, and managing overall task allocation.
+    """
 
     def _clip_to_deadline(
         self,
         slot: tuple[datetime, datetime],
         deadline: datetime,
     ) -> tuple[datetime, datetime] | None:
-        """
-        Truncate a time slot so it does not exceed a task's deadline.
+        """Clip a time slot so it does not exceed the task's deadline.
 
         Args:
-            slot (tuple[datetime, datetime]): The time slot to clip.
-            deadline (datetime): The task's deadline.
+            slot: The time slot to clip.
+            deadline: The deadline for the task.
 
         Returns:
-            tuple[datetime, datetime] | None: The clipped slot or None if the slot starts after deadline.
+            The clipped time slot, or None if the slot starts after the deadline.
         """
         start, end = slot
-
         if end <= deadline:
             return slot
         if start >= deadline:
@@ -38,18 +42,16 @@ class SchedulerSchedulingMixin:
         slot: tuple[datetime, datetime],
         task_start: datetime,
     ) -> tuple[datetime, datetime] | None:
-        """
-        Truncate a time slot so it does not start before allowed.
+        """Clip a time slot so it does not start before the task's start time.
 
         Args:
-            slot (tuple[datetime, datetime]): The time slot to clip.
-            task_start (datetime): The task's earliest allowed start time.
+            slot: The time slot to clip.
+            task_start: The earliest start time allowed for the task.
 
         Returns:
-            tuple[datetime, datetime] | None: The clipped slot or None if it ends before start.
+            The clipped time slot, or None if the slot ends before the task start.
         """
         start, end = slot
-
         if end <= task_start:
             return None
         if start < task_start:
@@ -57,14 +59,13 @@ class SchedulerSchedulingMixin:
         return slot
 
     def _empty_success(self, task: Task) -> ScheduleResult:
-        """
-        Create a dummy successful result for zero-minute tasks.
+        """Create a ScheduleResult indicating successful but empty allocation.
 
         Args:
-            task (Task): The task instance.
+            task: The task with no remaining minutes.
 
         Returns:
-            ScheduleResult: A result indicating success but with no segments.
+            A ScheduleResult object.
         """
         return ScheduleResult(
             task_id=task.id,  # type: ignore[arg-type]
@@ -76,15 +77,14 @@ class SchedulerSchedulingMixin:
 
     @staticmethod
     def _task_search_start(task_start: datetime, start_date: date) -> date:
-        """
-        Determine the date from which to start searching for slots.
+        """Determine the date to start searching for available slots.
 
         Args:
-            task_start (datetime): Task's earliest start time.
-            start_date (date): Initial search date.
+            task_start: The task's earliest start time.
+            start_date: The proposed scheduling start date.
 
         Returns:
-            date: The maximum of the two dates.
+            The starting date for the search.
         """
         return max(start_date, task_start.date())
 
@@ -93,15 +93,14 @@ class SchedulerSchedulingMixin:
         task: Task,
         slot: tuple[datetime, datetime],
     ) -> tuple[datetime, datetime] | None:
-        """
-        Proxy method to shrink a slot for task buffers.
+        """Adjust an available slot based on a task's buffer requirements.
 
         Args:
-            task (Task): The task instance.
-            slot (tuple[datetime, datetime]): The time slot.
+            task: The task to be scheduled.
+            slot: The candidate time slot.
 
         Returns:
-            tuple[datetime, datetime] | None: The shrunk slot.
+            The adjusted time slot, or None if it cannot accommodate the task.
         """
         return self._shrink_slot_for_task(task, slot)
 
@@ -111,16 +110,15 @@ class SchedulerSchedulingMixin:
         task_start: datetime,
         deadline: datetime,
     ) -> tuple[datetime, datetime] | None:
-        """
-        Clip a slot to both task start and deadline boundaries.
+        """Apply task start and deadline boundaries to a time slot.
 
         Args:
-            slot (tuple[datetime, datetime] | None): The optional time slot.
-            task_start (datetime): Task's earliest start.
-            deadline (datetime): Task's deadline.
+            slot: The time slot to clip.
+            task_start: The task's earliest start time.
+            deadline: The task's deadline.
 
         Returns:
-            tuple[datetime, datetime] | None: The fully clipped slot or None.
+            The clipped time slot, or None if no valid range remains.
         """
         if not slot:
             return None
@@ -135,19 +133,17 @@ class SchedulerSchedulingMixin:
         slot: tuple[datetime, datetime],
         remaining_minutes: int,
     ) -> ScheduleResult:
-        """
-        Create a ScheduleResult for a single contiguous block.
+        """Construct a successful ScheduleResult using a single slot.
 
         Args:
-            task (Task): The task instance.
-            slot (tuple[datetime, datetime]): The available slot.
-            remaining_minutes (int): Number of minutes to schedule.
+            task: The scheduled task.
+            slot: The selected time slot.
+            remaining_minutes: The task duration to allocate.
 
         Returns:
-            ScheduleResult: A successful scheduling result.
+            A ScheduleResult object.
         """
         start, _ = slot
-
         end = start + timedelta(minutes=remaining_minutes)
         return ScheduleResult(
             task_id=task.id,  # type: ignore[arg-type]
@@ -163,36 +159,32 @@ class SchedulerSchedulingMixin:
         slot: tuple[datetime, datetime],
         remaining_minutes: int,
     ) -> bool:
-        """
-        Verify if a single slot is sufficient for a task.
+        """Check if a single slot can accommodate a task's remaining time.
 
         Args:
-            task (Task): The task instance.
-            slot (tuple[datetime, datetime]): The candidate slot.
-            remaining_minutes (int): Minutes required.
+            task: The task to check.
+            slot: The candidate time slot.
+            remaining_minutes: The number of minutes to allocate.
 
         Returns:
-            bool: True if the slot is large enough and within limits.
+            True if the slot can be used, False otherwise.
         """
         category_minutes = self._get_remaining_category_minutes(task, slot[0].date())
-
         if category_minutes is not None and remaining_minutes > category_minutes:
             return False
         return minutes_between(*slot) >= remaining_minutes
 
     def _schedule_task_no_split(self, task: Task, start_date: date) -> ScheduleResult:
-        """
-        Attempt to schedule a task in one contiguous block.
+        """Attempt to schedule a task without splitting it.
 
         Args:
-            task (Task): The task to schedule.
-            start_date (date): Initial date to start searching.
+            task: The task to schedule.
+            start_date: The date to start searching from.
 
         Returns:
-            ScheduleResult: The result of the scheduling attempt.
+            A ScheduleResult object.
         """
         task_start = self._aware(task.start_time)
-
         deadline = self._aware(task.deadline)
         remaining = self._get_task_remaining_minutes(task)
         if remaining <= 0:
@@ -226,18 +218,16 @@ class SchedulerSchedulingMixin:
         )
 
     def _schedule_task_split(self, task: Task, start_date: date) -> ScheduleResult:
-        """
-        Attempt to schedule a task by splitting it.
+        """Attempt to schedule a task by splitting it into multiple segments.
 
         Args:
-            task (Task): The task to schedule.
-            start_date (date): Initial date to start searching.
+            task: The task to schedule.
+            start_date: The date to start searching from.
 
         Returns:
-            ScheduleResult: The result of the scheduling attempt.
+            A ScheduleResult object.
         """
         remaining = self._get_task_remaining_minutes(task)
-
         task_start = self._aware(task.start_time)
         deadline = self._aware(task.deadline)
         segments: list[tuple[datetime, datetime]] = []
@@ -292,21 +282,20 @@ class SchedulerSchedulingMixin:
         min_block: int,
         max_block: int | None,
     ) -> tuple[list[tuple[datetime, datetime]], int]:
-        """
-        Schedule split task work on a given date.
+        """Schedule segments for a single day as part of a split task.
 
         Args:
-            task (Task): The task instance.
-            current_date (date): The date to schedule for.
-            task_start (datetime): Task's earliest start.
-            deadline (datetime): Task's deadline.
-            segments (list[tuple[datetime, datetime]]): Already scheduled.
-            remaining (int): Minutes left to schedule.
-            min_block (int): Min minutes per block.
-            max_block (int | None): Max minutes per block.
+            task: The task to schedule.
+            current_date: The date being processed.
+            task_start: Task start boundary.
+            deadline: Task deadline boundary.
+            segments: Current list of scheduled segments.
+            remaining: Minutes still required for the task.
+            min_block: Minimum allow split duration.
+            max_block: Maximum allow split duration.
 
         Returns:
-            tuple[list[tuple[datetime, datetime]], int]: New segments and remaining minutes.
+            A tuple of (day_segments, remaining_minutes).
         """
         category_minutes = self._get_remaining_category_minutes(
             task,
@@ -338,29 +327,27 @@ class SchedulerSchedulingMixin:
         category_minutes: int | None,
         min_block: int,
     ) -> bool:
-        """
-        Check if quota is high enough for a minimum block.
+        """Check if category limit prevents scheduling even a minimum block.
 
         Args:
-            category_minutes (int | None): Available quota.
-            min_block (int): Minimum required block size.
+            category_minutes: Remaining allowed category minutes.
+            min_block: Minimum required minutes for a block.
 
         Returns:
-            bool: True if quota is insufficient.
+            True if invalid, False otherwise.
         """
         return category_minutes is not None and category_minutes < min_block
 
     @staticmethod
     def _has_invalid_split_remainder(day_remaining: int, min_block: int) -> bool:
-        """
-        Check if remaining duration is too small.
+        """Check if the remaining time for a task is too small to schedule separately.
 
         Args:
-            day_remaining (int): Remaining minutes.
-            min_block (int): Minimum block size.
+            day_remaining: Remaining minutes needed for task.
+            min_block: Minimum allowed split duration.
 
         Returns:
-            bool: True if remaining amount is unusable.
+            True if remainder is invalid, False otherwise.
         """
         return 0 < day_remaining < min_block
 
@@ -375,24 +362,22 @@ class SchedulerSchedulingMixin:
         max_block: int | None,
         category_minutes: int | None,
     ) -> tuple[list[tuple[datetime, datetime]], int]:
-        """
-        Apply available slots on a day to a task.
+        """Iterate over available slots and split them for task allocation.
 
         Args:
-            task (Task): The task instance.
-            slots (list[tuple[datetime, datetime]]): Available free slots.
-            task_start (datetime): Task's earliest start.
-            deadline (datetime): Task's deadline.
-            remaining (int): Overall minutes left.
-            min_block (int): Min block size.
-            max_block (int | None): Max block size.
-            category_minutes (int | None): Daily quota.
+            task: The task being scheduled.
+            slots: Available time slots.
+            task_start: Task start boundary.
+            deadline: Task deadline boundary.
+            remaining: Total minutes remaining to schedule.
+            min_block: Minimum block duration.
+            max_block: Maximum block duration.
+            category_minutes: Daily category limit.
 
         Returns:
-            tuple[list[tuple[datetime, datetime]], int]: New segments and remaining minutes.
+            A tuple of (newly_scheduled_segments, total_remaining_minutes).
         """
         day_remaining = remaining
-
         day_segments: list[tuple[datetime, datetime]] = []
         for slot in slots:
             candidate = self._clip_slot(
@@ -422,22 +407,20 @@ class SchedulerSchedulingMixin:
         max_block: int | None,
         category_minutes: int | None,
     ) -> tuple[list[tuple[datetime, datetime]], int, int | None]:
-        """
-        Break a free slot into one or more sessions.
+        """Split a single available slot into usable task segments.
 
         Args:
-            task (Task): The task instance.
-            slot (tuple[datetime, datetime]): The free slot.
-            remaining (int): Minutes left to schedule.
-            min_block (int): Min session duration.
-            max_block (int | None): Max session duration.
-            category_minutes (int | None): Daily quota.
+            task: The task being scheduled.
+            slot: The available time slot.
+            remaining: Minutes still needed for the task.
+            min_block: Minimum block duration.
+            max_block: Maximum block duration.
+            category_minutes: Daily category limit.
 
         Returns:
-            tuple[list[tuple[datetime, datetime]], int, int | None]: Segments, new remaining, and new quota.
+            A tuple of (segments, updated_remaining, updated_category_minutes).
         """
         segments: list[tuple[datetime, datetime]] = []
-
         buffer_gap = sum(self._get_task_buffer_minutes(task))
         cursor, end = slot
         while remaining > 0 and cursor < end:
@@ -470,22 +453,20 @@ class SchedulerSchedulingMixin:
         max_block: int | None,
         category_minutes: int | None,
     ) -> int | None:
-        """
-        Calculate the duration of the next task chunk.
+        """Calculate the duration of the next task segment.
 
         Args:
-            start (datetime): Start of free block.
-            end (datetime): End of free block.
-            remaining (int): Overall time left.
-            min_block (int): Min chunk size.
-            max_block (int | None): Max chunk size.
-            category_minutes (int | None): Daily quota limit.
+            start: Segment start time.
+            end: Candidate segment end time.
+            remaining: Minutes needed for the task.
+            min_block: Minimum block duration.
+            max_block: Maximum block duration.
+            category_minutes: Remaining category limit.
 
         Returns:
-            int | None: The number of minutes for the chunk.
+            Duration in minutes, or None if no valid chunk can be formed.
         """
         free_minutes = minutes_between(start, end)
-
         if free_minutes < min_block and remaining > min_block:
             return None
         chunk = min(remaining, free_minutes)
@@ -498,17 +479,15 @@ class SchedulerSchedulingMixin:
         return chunk
 
     def schedule_tasks(self, start_date: date) -> list[ScheduleResult]:
-        """
-        Schedule all unscheduled tasks.
+        """Iteratively schedule all tasks for the user.
 
         Args:
-            start_date (date): Initial date to begin scheduling from.
+            start_date: The date to begin scheduling from.
 
         Returns:
-            list[ScheduleResult]: Results for each task scheduling attempt.
+            A list of ScheduleResult objects for each task.
         """
         results: list[ScheduleResult] = []
-
         for task in self._sorted_tasks():
             result = self._schedule_task(task, start_date)
             results.append(result)
@@ -516,27 +495,24 @@ class SchedulerSchedulingMixin:
         return results
 
     def _sorted_tasks(self) -> list[Task]:
-        """
-        Sort tasks by priority.
+        """Get the user's tasks sorted by importance and deadline.
 
         Returns:
-            list[Task]: The sorted list of tasks.
+            A sorted list of Task objects.
         """
         return sorted(self.tasks, key=lambda task: (-task.importance, task.deadline))
 
     def _schedule_task(self, task: Task, start_date: date) -> ScheduleResult:
-        """
-        Attempt to schedule a task.
+        """Execute scheduling for an individual task.
 
         Args:
-            task (Task): The task instance.
-            start_date (date): Search start date.
+            task: The task to schedule.
+            start_date: The starting date for search.
 
         Returns:
-            ScheduleResult: The result of scheduling.
+            A ScheduleResult object.
         """
         deadline = self._aware(task.deadline)
-
         if deadline.date() < start_date:
             return ScheduleResult(
                 task_id=task.id,  # type: ignore[arg-type]
@@ -548,15 +524,11 @@ class SchedulerSchedulingMixin:
         return self._schedule_task_no_split(task, start_date)
 
     def _store_result(self, task: Task, result: ScheduleResult) -> None:
-        """
-        Record a successful scheduling result.
+        """Save a task's scheduling result to internal state.
 
         Args:
-            task (Task): The scheduled task.
-            result (ScheduleResult): The successful scheduling result.
-
-        Returns:
-            None: This method modifies internal state.
+            task: The task that was scheduled.
+            result: The result of the scheduling process.
         """
         if not self._should_store_result(result):
             return
@@ -572,14 +544,13 @@ class SchedulerSchedulingMixin:
 
     @staticmethod
     def _should_store_result(result: ScheduleResult) -> bool:
-        """
-        Validate if a result should block time.
+        """Determine if a scheduling result should be saved.
 
         Args:
-            result (ScheduleResult): The result to check.
+            result: The result to check.
 
         Returns:
-            bool: True if result is successful and has times.
+            True if the result represents a successful allocation, False otherwise.
         """
         return (
             result.success
