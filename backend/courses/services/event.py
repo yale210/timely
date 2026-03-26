@@ -1,3 +1,10 @@
+"""Services for synchronizing course events with external and internal calendars.
+
+This module provides logic for mapping course events to calendar provider formats
+and reconciling them with user personal calendars (e.g., Google Calendar) or
+the internal core Event model.
+"""
+
 from abc import ABC, abstractmethod
 from datetime import datetime
 from typing import List, Optional, Dict, Any
@@ -13,7 +20,7 @@ logger = logging.getLogger(__name__)
 
 
 class CalendarProvider(ABC):
-    """Abstract base class for calendar providers (Google Calendar, Outlook, etc.)"""
+    """Abstract base class for calendar providers (Google Calendar, Outlook, etc.)."""
 
     @abstractmethod
     def create_event(self, user: User, event_data: Dict[str, Any]) -> str:
@@ -41,18 +48,17 @@ class CalendarProvider(ABC):
 
 
 class CalendarEventMapper:
-    """Maps CourseEvent objects to calendar provider format"""
+    """Maps CourseEvent objects to calendar provider format."""
 
     @staticmethod
     def to_calendar_event(course_event) -> Dict[str, Any]:
-        """
-        Convert a CourseEvent to a generic calendar event format.
+        """Converts a CourseEvent to a generic calendar event format.
 
         Args:
-            course_event: CourseEvent model instance
+            course_event: CourseEvent model instance.
 
         Returns:
-            Dictionary with calendar event data
+            Dictionary with calendar event data.
         """
         return {
             "title": f"{course_event.title}",
@@ -67,17 +73,16 @@ class CalendarEventMapper:
 
 
 class SyncCalendar:
-    """
-    Service to synchronize course events with user calendar events.
+    """Service to synchronize course events with user calendar events.
+
     Handles one-way sync from CourseEvent to user's calendar.
     """
 
     def __init__(self, provider: CalendarProvider):
-        """
-        Initialize the sync service with a calendar provider.
+        """Initializes the sync service with a calendar provider.
 
         Args:
-            provider: CalendarProvider instance (e.g., GoogleCalendarProvider)
+            provider: CalendarProvider instance (e.g., GoogleCalendarProvider).
         """
         self.provider = provider
         self.mapper = CalendarEventMapper()
@@ -88,16 +93,15 @@ class SyncCalendar:
         start_date: Optional[datetime] = None,
         end_date: Optional[datetime] = None,
     ) -> Dict[str, Any]:
-        """
-        Sync all course events for enrolled courses to user's calendar.
+        """Syncs all course events for enrolled courses to user's calendar.
 
         Args:
-            user: User instance to sync calendar for
-            start_date: Filter events from this date (optional)
-            end_date: Filter events until this date (optional)
+            user: User instance to sync calendar for.
+            start_date: Filter events from this date (optional).
+            end_date: Filter events until this date (optional).
 
         Returns:
-            Dictionary with sync statistics (created, updated, deleted, errors)
+            Dictionary with sync statistics (created, updated, deleted, errors).
         """
         from courses.models import CourseEnrollment, CourseEvent
 
@@ -190,15 +194,14 @@ class SyncCalendar:
     def sync_course_event(
         self, course_event, user: Optional[User] = None
     ) -> Dict[str, Any]:
-        """
-        Sync a single course event to all enrolled users' calendars.
+        """Syncs a single course event to all enrolled users' calendars.
 
         Args:
-            course_event: CourseEvent instance to sync
-            user: Optional specific user to sync for (if None, syncs for all)
+            course_event: CourseEvent instance to sync.
+            user: Optional specific user to sync for (if None, syncs for all).
 
         Returns:
-            Dictionary with sync statistics
+            Dictionary with sync statistics.
         """
         from courses.models import CourseEnrollment
 
@@ -241,15 +244,14 @@ class SyncCalendar:
 
     @staticmethod
     def _event_needs_update(course_event, calendar_event: Dict[str, Any]) -> bool:
-        """
-        Determine if a calendar event needs updating based on course event changes.
+        """Determines if a calendar event needs updating based on course event changes.
 
         Args:
-            course_event: CourseEvent instance
-            calendar_event: Calendar event dictionary
+            course_event: CourseEvent instance.
+            calendar_event: Calendar event dictionary.
 
         Returns:
-            True if the event should be updated
+            True if the event should be updated.
         """
         # Compare key fields
         title_match = calendar_event.get("title") == (
@@ -264,15 +266,14 @@ class SyncCalendar:
         return not (title_match and start_match and end_match and description_match)
 
     def remove_calendar_event(self, user: User, course_event_id: int) -> bool:
-        """
-        Remove a course event from user's calendar.
+        """Removes a course event from user's calendar.
 
         Args:
-            user: User instance
-            course_event_id: ID of the course event to remove
+            user: User instance.
+            course_event_id: ID of the course event to remove.
 
         Returns:
-            True if successful
+            True if successful.
         """
         try:
             calendar_events = self.provider.get_events(
@@ -293,21 +294,20 @@ class SyncCalendar:
 
 
 class CourseEventSyncService:
-    """
-    Service to sync CourseEvent objects to core.models.Event
-    for all enrolled students.
+    """Service to sync CourseEvent objects to core.models.Event.
+
+    Handles synchronization for all enrolled students.
     """
 
     @staticmethod
     def sync_course_event_to_core(course_event) -> Dict[str, Any]:
-        """
-        Sync a single CourseEvent to core.models.Event for all enrolled students.
+        """Syncs a single CourseEvent to core.models.Event for all enrolled students.
 
         Args:
-            course_event: CourseEvent instance to sync
+            course_event: CourseEvent instance to sync.
 
         Returns:
-            Dictionary with sync statistics (created, updated, errors)
+            Dictionary with sync statistics (created, updated, errors).
         """
         from courses.models import CourseEnrollment
 
@@ -411,14 +411,13 @@ class CourseEventSyncService:
 
     @staticmethod
     def sync_user_course_events(user: User) -> Dict[str, Any]:
-        """
-        Sync all CourseEvents for a user's enrolled courses to core.models.Event.
+        """Syncs all CourseEvents for user's enrolled courses to core.models.Event.
 
         Args:
-            user: User instance to sync events for
+            user: User instance to sync events for.
 
         Returns:
-            Dictionary with sync statistics
+            Dictionary with sync statistics.
         """
         from courses.models import CourseEnrollment, CourseEvent
 
