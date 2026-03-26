@@ -1,3 +1,9 @@
+"""Serializers for course-specific permission data.
+
+This module provides a serializer that calculates and represents the set of
+actions a specific user is permitted to perform on a given course instance.
+"""
+
 from django.contrib.auth import get_user_model
 from rest_framework import serializers
 
@@ -7,6 +13,12 @@ User = get_user_model()
 
 
 class PermissionsSerializer(serializers.Serializer):
+    """Serializer that maps course-specific permission checks to boolean flags.
+
+    Used to communicate to the frontend which UI elements or actions should be
+    available to the current user for a particular course.
+    """
+
     can_view_course_details = serializers.BooleanField(read_only=True)
     can_view_events = serializers.BooleanField(read_only=True)
     can_create_join_code = serializers.BooleanField(read_only=True)
@@ -19,6 +31,14 @@ class PermissionsSerializer(serializers.Serializer):
     can_leave = serializers.BooleanField(read_only=True)
 
     def to_representation(self, course):
+        """Converts the course instance into a set of permission flags.
+
+        Args:
+            course: The Course model instance being queried.
+
+        Returns:
+            A dictionary where each key is a permission type and the value is a boolean.
+        """
         request = self.context["request"]
         perm = CoursePermission()
 
