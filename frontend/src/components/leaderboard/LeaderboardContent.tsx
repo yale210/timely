@@ -18,7 +18,7 @@ const LeaderboardContent = ({
   profile,
   profileStats,
 }: LeaderboardContentProps) => (
-  <main className="px-4 py-6 text-[color:var(--text-color)] sm:px-6">
+  <main className="px-4 py-6 text-(--text-color) sm:px-6">
     <div className="flex w-full flex-col gap-6">
       {isLoading && <p className="text-sm text-gray-500">Loading leaderboard...</p>}
       {error && <p className="text-sm text-red-600">{error}</p>}
