@@ -95,6 +95,20 @@ describe("Notifications Page", () => {
       state: mockState as UseNotificationsPageReturn["state"],
       actions: mockActions as UseNotificationsPageReturn["actions"],
     });
+    vi.mock("@/hooks/friends/useFriendships", () => ({
+      useFriendships: () => ({
+        friendships: [],
+        loading: false,
+        error: null,
+        sending: false,
+        actingIds: new Set<number>(),
+        refresh: vi.fn(),
+        sendRequest: vi.fn(),
+        acceptRequest: vi.fn(),
+        declineRequest: vi.fn(),
+        removeFriend: vi.fn(),
+      }),
+    }));
   });
 
   it("renders the main components", () => {

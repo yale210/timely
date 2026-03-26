@@ -1,5 +1,5 @@
 import { act, fireEvent, render, screen } from "@testing-library/react";
-import { beforeEach, describe, expect, it, vi, afterEach } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 vi.unmock("@/context/PomodoroContext");
 
@@ -30,12 +30,25 @@ import { AUTH_CHANGE_EVENT, authStore } from "@/services/authService";
 import { pomoService } from "@/services/pomoService";
 
 const mockedGetToken = vi.spyOn(authStore, "getToken");
-
 const mockedPomoService = pomoService as {
   recordSession: ReturnType<typeof vi.fn>;
 };
 
-const Consumer = () => {
+const renderWithProvider = (ui: React.ReactNode) =>
+  render(<PomodoroProvider>{ui}</PomodoroProvider>);
+
+const getText = (testId: string) => screen.getByTestId(testId).textContent;
+
+const click = (name: string) =>
+  fireEvent.click(screen.getByRole("button", { name }));
+
+const advance = (ms: number) => {
+  act(() => {
+    vi.advanceTimersByTime(ms);
+  });
+};
+
+const StateConsumer = () => {
   const ctx = usePomodoro();
 
   return (
@@ -90,6 +103,69 @@ const Consumer = () => {
   );
 };
 
+const ClampConsumer = () => {
+  const ctx = usePomodoro();
+
+  return (
+    <div>
+      <div data-testid="initialDuration">{ctx.initialDuration}</div>
+      <button type="button" onClick={() => ctx.setInitialDuration(0)}>
+        setZero
+      </button>
+      <button type="button" onClick={() => ctx.setInitialDuration(999)}>
+        setHuge
+      </button>
+    </div>
+  );
+};
+
+const AdjustConsumer = () => {
+  const ctx = usePomodoro();
+
+  return (
+    <div>
+      <div data-testid="timeLeft">{ctx.timeLeft}</div>
+      <button type="button" onClick={() => ctx.adjustTime(-999999)}>
+        drop
+      </button>
+      <button type="button" onClick={() => ctx.adjustTime(999999)}>
+        raise
+      </button>
+    </div>
+  );
+};
+
+const CompletionConsumer = ({ breakMode = false }: { breakMode?: boolean }) => {
+  const ctx = usePomodoro();
+
+  return (
+    <div>
+      <div data-testid="mode">{ctx.mode}</div>
+      <div data-testid="viewingMode">{ctx.viewingMode}</div>
+      <div data-testid="timeLeft">{ctx.timeLeft}</div>
+      <div data-testid="showModal">{String(ctx.showModal)}</div>
+      <div data-testid="modalMessage">{ctx.modalMessage}</div>
+      <div data-testid="isActive">{String(ctx.isActive)}</div>
+
+      {breakMode ? (
+        <button type="button" onClick={() => ctx.setMode("shortBreak")}>
+          shortMode
+        </button>
+      ) : null}
+
+      <button type="button" onClick={() => ctx.adjustTime(-(ctx.timeLeft - 1))}>
+        setToOneSecond
+      </button>
+      <button type="button" onClick={() => ctx.startTimer()}>
+        start
+      </button>
+      <button type="button" onClick={() => ctx.closeModal()}>
+        closeModal
+      </button>
+    </div>
+  );
+};
+
 describe("PomodoroContext", () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -115,20 +191,16 @@ describe("PomodoroContext", () => {
   });
 
   it("provides default state values", () => {
-    render(
-      <PomodoroProvider>
-        <Consumer />
-      </PomodoroProvider>,
-    );
+    renderWithProvider(<StateConsumer />);
 
-    expect(screen.getByTestId("initialDuration")).toHaveTextContent("25");
-    expect(screen.getByTestId("shortBreakDuration")).toHaveTextContent("5");
-    expect(screen.getByTestId("longBreakDuration")).toHaveTextContent("15");
-    expect(screen.getByTestId("timeLeft")).toHaveTextContent("1500");
-    expect(screen.getByTestId("isActive")).toHaveTextContent("false");
-    expect(screen.getByTestId("mode")).toHaveTextContent("focus");
-    expect(screen.getByTestId("viewingMode")).toHaveTextContent("focus");
-    expect(screen.getByTestId("showModal")).toHaveTextContent("false");
+    expect(getText("initialDuration")).toBe("25");
+    expect(getText("shortBreakDuration")).toBe("5");
+    expect(getText("longBreakDuration")).toBe("15");
+    expect(getText("timeLeft")).toBe("1500");
+    expect(getText("isActive")).toBe("false");
+    expect(getText("mode")).toBe("focus");
+    expect(getText("viewingMode")).toBe("focus");
+    expect(getText("showModal")).toBe("false");
   });
 
   it("reads stored durations from localStorage", () => {
@@ -136,16 +208,12 @@ describe("PomodoroContext", () => {
     localStorage.setItem("pomo_short_break_duration", "8");
     localStorage.setItem("pomo_long_break_duration", "18");
 
-    render(
-      <PomodoroProvider>
-        <Consumer />
-      </PomodoroProvider>,
-    );
+    renderWithProvider(<StateConsumer />);
 
-    expect(screen.getByTestId("initialDuration")).toHaveTextContent("40");
-    expect(screen.getByTestId("shortBreakDuration")).toHaveTextContent("8");
-    expect(screen.getByTestId("longBreakDuration")).toHaveTextContent("18");
-    expect(screen.getByTestId("timeLeft")).toHaveTextContent("2400");
+    expect(getText("initialDuration")).toBe("40");
+    expect(getText("shortBreakDuration")).toBe("8");
+    expect(getText("longBreakDuration")).toBe("18");
+    expect(getText("timeLeft")).toBe("2400");
   });
 
   it("falls back to defaults for invalid stored durations", () => {
@@ -153,200 +221,120 @@ describe("PomodoroContext", () => {
     localStorage.setItem("pomo_short_break_duration", "-1");
     localStorage.setItem("pomo_long_break_duration", "not-a-number");
 
-    render(
-      <PomodoroProvider>
-        <Consumer />
-      </PomodoroProvider>,
-    );
+    renderWithProvider(<StateConsumer />);
 
-    expect(screen.getByTestId("initialDuration")).toHaveTextContent("25");
-    expect(screen.getByTestId("shortBreakDuration")).toHaveTextContent("5");
-    expect(screen.getByTestId("longBreakDuration")).toHaveTextContent("15");
+    expect(getText("initialDuration")).toBe("25");
+    expect(getText("shortBreakDuration")).toBe("5");
+    expect(getText("longBreakDuration")).toBe("15");
   });
 
   it("updates and persists initial duration", () => {
-    render(
-      <PomodoroProvider>
-        <Consumer />
-      </PomodoroProvider>,
-    );
+    renderWithProvider(<StateConsumer />);
 
-    fireEvent.click(screen.getByRole("button", { name: "setInitial30" }));
+    click("setInitial30");
 
-    expect(screen.getByTestId("initialDuration")).toHaveTextContent("30");
-    expect(screen.getByTestId("timeLeft")).toHaveTextContent("1800");
+    expect(getText("initialDuration")).toBe("30");
+    expect(getText("timeLeft")).toBe("1800");
     expect(localStorage.getItem("pomo_initial_duration")).toBe("30");
   });
 
   it("clamps duration setters between 1 and 600", () => {
-    const ClampConsumer = () => {
-      const ctx = usePomodoro();
-      return (
-        <div>
-          <div data-testid="initialDuration">{ctx.initialDuration}</div>
-          <button type="button" onClick={() => ctx.setInitialDuration(0)}>
-            setZero
-          </button>
-          <button type="button" onClick={() => ctx.setInitialDuration(999)}>
-            setHuge
-          </button>
-        </div>
-      );
-    };
+    renderWithProvider(<ClampConsumer />);
 
-    render(
-      <PomodoroProvider>
-        <ClampConsumer />
-      </PomodoroProvider>,
-    );
+    click("setZero");
+    expect(getText("initialDuration")).toBe("1");
 
-    fireEvent.click(screen.getByRole("button", { name: "setZero" }));
-    expect(screen.getByTestId("initialDuration")).toHaveTextContent("1");
-
-    fireEvent.click(screen.getByRole("button", { name: "setHuge" }));
-    expect(screen.getByTestId("initialDuration")).toHaveTextContent("600");
+    click("setHuge");
+    expect(getText("initialDuration")).toBe("600");
   });
 
   it("updates short and long break durations", () => {
-    render(
-      <PomodoroProvider>
-        <Consumer />
-      </PomodoroProvider>,
-    );
+    renderWithProvider(<StateConsumer />);
 
-    fireEvent.click(screen.getByRole("button", { name: "modeShort" }));
-    fireEvent.click(screen.getByRole("button", { name: "setShort7" }));
-
-    expect(screen.getByTestId("shortBreakDuration")).toHaveTextContent("7");
-    expect(screen.getByTestId("timeLeft")).toHaveTextContent("420");
+    click("modeShort");
+    click("setShort7");
+    expect(getText("shortBreakDuration")).toBe("7");
+    expect(getText("timeLeft")).toBe("420");
     expect(localStorage.getItem("pomo_short_break_duration")).toBe("7");
 
-    fireEvent.click(screen.getByRole("button", { name: "modeLong" }));
-    fireEvent.click(screen.getByRole("button", { name: "setLong20" }));
-
-    expect(screen.getByTestId("longBreakDuration")).toHaveTextContent("20");
-    expect(screen.getByTestId("timeLeft")).toHaveTextContent("1200");
+    click("modeLong");
+    click("setLong20");
+    expect(getText("longBreakDuration")).toBe("20");
+    expect(getText("timeLeft")).toBe("1200");
     expect(localStorage.getItem("pomo_long_break_duration")).toBe("20");
   });
 
   it("setMode changes viewingMode and active mode when timer is not active", () => {
-    render(
-      <PomodoroProvider>
-        <Consumer />
-      </PomodoroProvider>,
-    );
+    renderWithProvider(<StateConsumer />);
 
-    fireEvent.click(screen.getByRole("button", { name: "modeShort" }));
+    click("modeShort");
 
-    expect(screen.getByTestId("mode")).toHaveTextContent("shortBreak");
-    expect(screen.getByTestId("viewingMode")).toHaveTextContent("shortBreak");
-    expect(screen.getByTestId("timeLeft")).toHaveTextContent("300");
+    expect(getText("mode")).toBe("shortBreak");
+    expect(getText("viewingMode")).toBe("shortBreak");
+    expect(getText("timeLeft")).toBe("300");
   });
 
   it("startTimer does nothing when not authenticated", () => {
     mockedGetToken.mockReturnValue(null);
 
-    render(
-      <PomodoroProvider>
-        <Consumer />
-      </PomodoroProvider>,
-    );
+    renderWithProvider(<StateConsumer />);
 
-    fireEvent.click(screen.getByRole("button", { name: "start" }));
+    click("start");
 
-    expect(screen.getByTestId("isActive")).toHaveTextContent("false");
+    expect(getText("isActive")).toBe("false");
   });
 
   it("starts and stops the timer when authenticated", () => {
-    render(
-      <PomodoroProvider>
-        <Consumer />
-      </PomodoroProvider>,
-    );
+    renderWithProvider(<StateConsumer />);
 
-    fireEvent.click(screen.getByRole("button", { name: "start" }));
-    expect(screen.getByTestId("isActive")).toHaveTextContent("true");
+    click("start");
+    expect(getText("isActive")).toBe("true");
 
-    act(() => {
-      vi.advanceTimersByTime(2000);
-    });
+    advance(2000);
+    expect(getText("timeLeft")).toBe("1498");
 
-    expect(screen.getByTestId("timeLeft")).toHaveTextContent("1498");
-
-    fireEvent.click(screen.getByRole("button", { name: "stop" }));
-    expect(screen.getByTestId("isActive")).toHaveTextContent("false");
+    click("stop");
+    expect(getText("isActive")).toBe("false");
   });
 
   it("resets the timer to the current viewing mode duration", () => {
-    render(
-      <PomodoroProvider>
-        <Consumer />
-      </PomodoroProvider>,
-    );
+    renderWithProvider(<StateConsumer />);
 
-    fireEvent.click(screen.getByRole("button", { name: "modeShort" }));
-    fireEvent.click(screen.getByRole("button", { name: "minus300" }));
+    click("modeShort");
+    click("minus300");
+    expect(getText("timeLeft")).toBe("0");
 
-    expect(screen.getByTestId("timeLeft")).toHaveTextContent("0");
-
-    fireEvent.click(screen.getByRole("button", { name: "reset" }));
-    expect(screen.getByTestId("timeLeft")).toHaveTextContent("300");
+    click("reset");
+    expect(getText("timeLeft")).toBe("300");
   });
 
   it("adjustTime clamps at zero and max minutes", () => {
-    const AdjustConsumer = () => {
-      const ctx = usePomodoro();
-      return (
-        <div>
-          <div data-testid="timeLeft">{ctx.timeLeft}</div>
-          <button type="button" onClick={() => ctx.adjustTime(-999999)}>
-            drop
-          </button>
-          <button type="button" onClick={() => ctx.adjustTime(999999)}>
-            raise
-          </button>
-        </div>
-      );
-    };
+    renderWithProvider(<AdjustConsumer />);
 
-    render(
-      <PomodoroProvider>
-        <AdjustConsumer />
-      </PomodoroProvider>,
-    );
+    click("drop");
+    expect(getText("timeLeft")).toBe("0");
 
-    fireEvent.click(screen.getByRole("button", { name: "drop" }));
-    expect(screen.getByTestId("timeLeft")).toHaveTextContent("0");
-
-    fireEvent.click(screen.getByRole("button", { name: "raise" }));
-    expect(screen.getByTestId("timeLeft")).toHaveTextContent(String(600 * 60));
+    click("raise");
+    expect(getText("timeLeft")).toBe(String(600 * 60));
   });
 
   it("handles explicit mode handover when starting from a different viewing mode", () => {
-    render(
-      <PomodoroProvider>
-        <Consumer />
-      </PomodoroProvider>,
-    );
+    renderWithProvider(<StateConsumer />);
 
-    fireEvent.click(screen.getByRole("button", { name: "viewLong" }));
-    fireEvent.click(screen.getByRole("button", { name: "start" }));
+    click("viewLong");
+    click("start");
 
-    expect(screen.getByTestId("mode")).toHaveTextContent("longBreak");
-    expect(screen.getByTestId("viewingMode")).toHaveTextContent("longBreak");
-    expect(screen.getByTestId("timeLeft")).toHaveTextContent("900");
-    expect(screen.getByTestId("isActive")).toHaveTextContent("true");
+    expect(getText("mode")).toBe("longBreak");
+    expect(getText("viewingMode")).toBe("longBreak");
+    expect(getText("timeLeft")).toBe("900");
+    expect(getText("isActive")).toBe("true");
   });
 
   it("stops the timer when auth is removed via auth-change event", () => {
-    render(
-      <PomodoroProvider>
-        <Consumer />
-      </PomodoroProvider>,
-    );
+    renderWithProvider(<StateConsumer />);
 
-    fireEvent.click(screen.getByRole("button", { name: "start" }));
-    expect(screen.getByTestId("isActive")).toHaveTextContent("true");
+    click("start");
+    expect(getText("isActive")).toBe("true");
 
     mockedGetToken.mockReturnValue(null);
 
@@ -354,128 +342,48 @@ describe("PomodoroContext", () => {
       window.dispatchEvent(new Event(AUTH_CHANGE_EVENT));
     });
 
-    expect(screen.getByTestId("isActive")).toHaveTextContent("false");
+    expect(getText("isActive")).toBe("false");
   });
 
   it("shows a focus-complete modal, records the session, and stops the timer", () => {
-    const FocusCompleteConsumer = () => {
-      const ctx = usePomodoro();
-      return (
-        <div>
-          <div data-testid="showModal">{String(ctx.showModal)}</div>
-          <div data-testid="modalMessage">{ctx.modalMessage}</div>
-          <div data-testid="isActive">{String(ctx.isActive)}</div>
-          <button type="button" onClick={() => ctx.adjustTime(-(ctx.timeLeft - 1))}>
-            setToOneSecond
-          </button>
-          <button type="button" onClick={() => ctx.startTimer()}>
-            start
-          </button>
-        </div>
-      );
-    };
+    renderWithProvider(<CompletionConsumer />);
 
-    render(
-      <PomodoroProvider>
-        <FocusCompleteConsumer />
-      </PomodoroProvider>,
-    );
+    click("setToOneSecond");
+    click("start");
+    advance(1000);
 
-    fireEvent.click(screen.getByRole("button", { name: "setToOneSecond" }));
-    fireEvent.click(screen.getByRole("button", { name: "start" }));
-
-    act(() => {
-      vi.advanceTimersByTime(1000);
-    });
-
-    expect(screen.getByTestId("showModal")).toHaveTextContent("true");
-    expect(screen.getByTestId("modalMessage")).toHaveTextContent(
-      "Focus period complete. Time for a break.",
-    );
-    expect(screen.getByTestId("isActive")).toHaveTextContent("false");
+    expect(getText("showModal")).toBe("true");
+    expect(getText("modalMessage")).toBe("Focus period complete. Time for a break.");
+    expect(getText("isActive")).toBe("false");
     expect(mockedPomoService.recordSession).toHaveBeenCalledWith(25);
   });
 
   it("handles break completion by returning to focus mode", () => {
-    const BreakCompleteConsumer = () => {
-      const ctx = usePomodoro();
-      return (
-        <div>
-          <div data-testid="mode">{ctx.mode}</div>
-          <div data-testid="viewingMode">{ctx.viewingMode}</div>
-          <div data-testid="timeLeft">{ctx.timeLeft}</div>
-          <div data-testid="showModal">{String(ctx.showModal)}</div>
-          <div data-testid="modalMessage">{ctx.modalMessage}</div>
-          <button type="button" onClick={() => ctx.setMode("shortBreak")}>
-            shortMode
-          </button>
-          <button type="button" onClick={() => ctx.adjustTime(-(ctx.timeLeft - 1))}>
-            setToOneSecond
-          </button>
-          <button type="button" onClick={() => ctx.startTimer()}>
-            start
-          </button>
-        </div>
-      );
-    };
+    renderWithProvider(<CompletionConsumer breakMode />);
 
-    render(
-      <PomodoroProvider>
-        <BreakCompleteConsumer />
-      </PomodoroProvider>,
-    );
+    click("shortMode");
+    click("setToOneSecond");
+    click("start");
+    advance(1000);
 
-    fireEvent.click(screen.getByRole("button", { name: "shortMode" }));
-    fireEvent.click(screen.getByRole("button", { name: "setToOneSecond" }));
-    fireEvent.click(screen.getByRole("button", { name: "start" }));
-
-    act(() => {
-      vi.advanceTimersByTime(1000);
-    });
-
-    expect(screen.getByTestId("showModal")).toHaveTextContent("true");
-    expect(screen.getByTestId("modalMessage")).toHaveTextContent("Break finished. Back to focus.");
-    expect(screen.getByTestId("mode")).toHaveTextContent("focus");
-    expect(screen.getByTestId("viewingMode")).toHaveTextContent("focus");
-    expect(screen.getByTestId("timeLeft")).toHaveTextContent("1500");
+    expect(getText("showModal")).toBe("true");
+    expect(getText("modalMessage")).toBe("Break finished. Back to focus.");
+    expect(getText("mode")).toBe("focus");
+    expect(getText("viewingMode")).toBe("focus");
+    expect(getText("timeLeft")).toBe("1500");
   });
 
   it("closeModal hides the modal", () => {
-    const ModalConsumer = () => {
-      const ctx = usePomodoro();
-      return (
-        <div>
-          <div data-testid="showModal">{String(ctx.showModal)}</div>
-          <button type="button" onClick={() => ctx.adjustTime(-(ctx.timeLeft - 1))}>
-            setToOneSecond
-          </button>
-          <button type="button" onClick={() => ctx.startTimer()}>
-            start
-          </button>
-          <button type="button" onClick={() => ctx.closeModal()}>
-            closeModal
-          </button>
-        </div>
-      );
-    };
+    renderWithProvider(<CompletionConsumer />);
 
-    render(
-      <PomodoroProvider>
-        <ModalConsumer />
-      </PomodoroProvider>,
-    );
+    click("setToOneSecond");
+    click("start");
+    advance(1000);
 
-    fireEvent.click(screen.getByRole("button", { name: "setToOneSecond" }));
-    fireEvent.click(screen.getByRole("button", { name: "start" }));
+    expect(getText("showModal")).toBe("true");
 
-    act(() => {
-      vi.advanceTimersByTime(1000);
-    });
+    click("closeModal");
 
-    expect(screen.getByTestId("showModal")).toHaveTextContent("true");
-
-    fireEvent.click(screen.getByRole("button", { name: "closeModal" }));
-
-    expect(screen.getByTestId("showModal")).toHaveTextContent("false");
+    expect(getText("showModal")).toBe("false");
   });
 });
