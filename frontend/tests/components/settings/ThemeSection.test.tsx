@@ -2,6 +2,31 @@ import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import ThemeSection from "@/components/settings/ThemeSection";
 
+vi.mock("@/components", () => ({
+  ThemeButton: ({
+    title,
+    themeChangeFunction,
+  }: {
+    title: string;
+    themeChangeFunction: (themeName: string) => void;
+  }) => (
+    <button type="button" onClick={() => themeChangeFunction(title)}>
+      {title === "dark" ? "Dark Surface" : title}
+    </button>
+  ),
+  FontButton: ({
+    title,
+    fontChangeFunction,
+  }: {
+    title: string;
+    fontChangeFunction: (fontName: string) => void;
+  }) => (
+    <button type="button" onClick={() => fontChangeFunction(title)}>
+      {title === "poppins" ? "Font Ag Poppins" : title}
+    </button>
+  ),
+}));
+
 describe("ThemeSection", () => {
   it("renders theme buttons and forwards theme selections", () => {
     const onThemeChange = vi.fn();
