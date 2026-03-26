@@ -8,6 +8,7 @@ from core.serializers.event import EventResponseSerializer
 
 class AssessmentEventInputSerializer(serializers.Serializer):
     """Serializer for inputting event details when creating or updating an assessment."""
+
     start_time = serializers.DateTimeField()
     end_time = serializers.DateTimeField()
     location = serializers.CharField(required=False, allow_blank=True, max_length=255)
@@ -30,6 +31,7 @@ class AssessmentEventInputSerializer(serializers.Serializer):
 
 class AssessmentSerializer(serializers.ModelSerializer):
     """Serializer for the Assessment model."""
+
     user = serializers.HiddenField(default=serializers.CurrentUserDefault())
     categories = serializers.PrimaryKeyRelatedField(
         many=True, queryset=Category.objects.all(), required=False
@@ -118,7 +120,7 @@ class AssessmentSerializer(serializers.ModelSerializer):
 
     def get_linked_event_details(self, obj):
         """Get the details of the linked event.
-        
+
         Returns:
             dict | None: The details of the linked event, or None.
         """
@@ -128,9 +130,12 @@ class AssessmentSerializer(serializers.ModelSerializer):
 
     def validate(self, attrs):
         """Validate the assessment data.
-        
+
         Returns:
             dict: The validated data.
+
+        Raises:
+            ValidationError: If the data is invalid.
         """
         attrs = super().validate(attrs)
         due_date = attrs.get("due_date", getattr(self.instance, "due_date", None))
@@ -197,6 +202,14 @@ class AssessmentSerializer(serializers.ModelSerializer):
 
     @transaction.atomic
     def create(self, validated_data):
+        """Create an assessment and its linked event.
+
+        Args:
+            validated_data (dict): The validated data for the assessment and the linked event.
+
+        Returns:
+            Assessment: The created assessment instance.
+        """
         categories = validated_data.pop("categories", [])
         event_details = validated_data.pop("event_details", serializers.empty)
         assessment = Assessment.objects.create(**validated_data)
@@ -207,6 +220,15 @@ class AssessmentSerializer(serializers.ModelSerializer):
 
     @transaction.atomic
     def update(self, instance, validated_data):
+        """Update an assessment and its linked event.
+
+        Args:
+            instance (Assessment): The assessment instance which is to be updated.
+            validated_data (dict): The validated data for the assessment and its linked event.
+
+        Returns:
+            Assessment: The updated assessment instance.
+        """
         categories = validated_data.pop("categories", None)
         event_details = validated_data.pop("event_details", serializers.empty)
 

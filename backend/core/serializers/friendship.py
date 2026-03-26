@@ -9,6 +9,7 @@ User = get_user_model()
 
 class FriendshipSerializer(serializers.ModelSerializer):
     """Serializer for the Friendship model."""
+
     receiver = serializers.PrimaryKeyRelatedField(
         queryset=User.objects.all(), required=False
     )
@@ -45,7 +46,7 @@ class FriendshipSerializer(serializers.ModelSerializer):
 
         Returns:
             dict: The validated attributes for the Friendship instance.
-            
+
         Raises:
             ValidationError: If the data is invalid.
         """
@@ -98,7 +99,7 @@ class FriendshipSerializer(serializers.ModelSerializer):
 
     def get_receiver_name(self, obj):
         """Get the display name of the receiver.
-        
+
         Returns:
             str: The receiver's name, or their username.
         """

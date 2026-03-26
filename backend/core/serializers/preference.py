@@ -5,6 +5,7 @@ from core.models import Preference
 
 class PreferenceSerializer(serializers.ModelSerializer):
     """Serializer for the Preference model."""
+
     user = serializers.HiddenField(default=serializers.CurrentUserDefault())
 
     class Meta:

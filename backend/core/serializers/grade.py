@@ -8,6 +8,7 @@ from core.models import Grade
 
 class GradeSerializer(serializers.ModelSerializer):
     """Serializer for the Grade model."""
+
     category_name = serializers.SerializerMethodField()
     category_colour = serializers.SerializerMethodField()
     percentage = serializers.FloatField(read_only=True)
