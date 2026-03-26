@@ -2,8 +2,12 @@ import type { ReactNode } from "react";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen } from "@testing-library/react";
 import Leaderboard from "@/pages/Leaderboard";
-import api from "@/services/api";
-import { getMyProfile } from "@/services/profileService";
+import type { Profile } from "@/types";
+
+const { mockApiGet, mockGetMyProfile } = vi.hoisted(() => ({
+  mockApiGet: vi.fn(),
+  mockGetMyProfile: vi.fn(),
+}));
 
 vi.mock("@/layouts/AppLayout", () => ({
   default: ({ children }: { children: ReactNode }) => <div>{children}</div>,
@@ -11,33 +15,37 @@ vi.mock("@/layouts/AppLayout", () => ({
 
 vi.mock("@/services/api", () => ({
   default: {
-    get: vi.fn(),
+    get: mockApiGet,
   },
 }));
 
 vi.mock("@/services/profileService", () => ({
-  getMyProfile: vi.fn(),
+  getMyProfile: mockGetMyProfile,
 }));
 
 describe("Leaderboard page", () => {
+  const buildProfile = (overrides: Partial<Profile> = {}): Profile => ({
+    name: "Alice Example",
+    date_of_birth: null,
+    creation_date: "2024-01-01T00:00:00Z",
+    slogan: "Keep going",
+    bio: "Focus first.",
+    avatar: null,
+    xp: 120,
+    level: 2,
+    ...overrides,
+  });
+
   beforeEach(() => {
     vi.clearAllMocks();
   });
 
   it("loads and renders leaderboard data", async () => {
-    vi.mocked(getMyProfile).mockResolvedValue({
-      name: "Alice Example",
-      bio: "Focus first.",
-      slogan: "Keep going",
-      creation_date: "2024-01-01T00:00:00Z",
-      avatar: null,
-      xp: 120,
-      level: 2,
-    } as any);
-    vi.mocked(api.get).mockResolvedValue({
+    mockGetMyProfile.mockResolvedValue(buildProfile());
+    mockApiGet.mockResolvedValue({
       data: [
-        { name: "Alice Example", xp: 120, level: 2 },
-        { name: "Bob Example", xp: 90, level: 1 },
+        buildProfile(),
+        buildProfile({ name: "Bob Example", xp: 90, level: 1 }),
       ],
     });
 
@@ -47,12 +55,12 @@ describe("Leaderboard page", () => {
     expect(await screen.findByText("2 ranked friends")).toBeDefined();
     expect(screen.getAllByText("Alice Example")).toHaveLength(2);
     expect(screen.getByText("Full standings")).toBeDefined();
-    expect(api.get).toHaveBeenCalledWith("/api/profiles/leaderboard/");
+    expect(mockApiGet).toHaveBeenCalledWith("/api/profiles/leaderboard/");
   });
 
   it("shows an error message when loading fails", async () => {
-    vi.mocked(getMyProfile).mockRejectedValue(new Error("Failed to load leaderboard"));
-    vi.mocked(api.get).mockResolvedValue({ data: [] });
+    mockGetMyProfile.mockRejectedValue(new Error("Failed to load leaderboard"));
+    mockApiGet.mockResolvedValue({ data: [] });
 
     render(<Leaderboard />);
 

@@ -3,6 +3,7 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { fireEvent, render, screen } from "@testing-library/react";
 import Assessments from "@/pages/Assessments";
 import { useAssessments } from "@/hooks/assessments/useAssessments";
+import type { Assessment, Category } from "@/types";
 
 vi.mock("@/layouts/AppLayout", () => ({
   default: ({ children }: { children: ReactNode }) => <div>{children}</div>,
@@ -67,63 +68,86 @@ vi.mock("@/components/modals/CreateGradeModal", () => ({
 }));
 
 describe("Assessments page", () => {
-  const mockActions = {
+  type UseAssessmentsResult = ReturnType<typeof useAssessments>;
+
+  const mockActions: UseAssessmentsResult["actions"] = {
     setSearch: vi.fn(),
     setSelectedCategoryId: vi.fn(),
     openNewAssessment: vi.fn(),
     openAssessment: vi.fn(),
     closeSidebar: vi.fn(),
-    submitAssessment: vi.fn(),
-    deleteAssessment: vi.fn(),
+    submitAssessment: vi.fn(async () => undefined),
+    deleteAssessment: vi.fn(async () => undefined),
     setPendingDeleteId: vi.fn(),
     openGradebook: vi.fn(),
     closeGradebook: vi.fn(),
-    createCategory: vi.fn(),
-    updateCategory: vi.fn(),
-    deleteCategory: vi.fn(),
-    refresh: vi.fn(),
+    createCategory: vi.fn(async (text: string) => ({ id: 99, text })),
+    updateCategory: vi.fn(async (id: number, patch: { colour?: string | null; colour_override?: boolean }) => ({
+      id,
+      text: "Updated category",
+      colour: patch.colour ?? null,
+      colour_override: patch.colour_override,
+    })),
+    deleteCategory: vi.fn(async () => undefined),
+    refresh: vi.fn(async () => undefined),
   };
 
-  const upcomingAssessment = {
+  const buildAssessment = (overrides: Partial<Assessment> = {}): Assessment => ({
     id: 1,
     title: "Essay",
+    assessment_type: "OTHER",
     due_date: "2099-01-01T10:00:00Z",
-    updated_at: "2099-01-01T00:00:00Z",
+    length_of_assessment: null,
     weighting_of_assessment: 40,
-    completed: false,
+    notes: "",
+    reminder_offset: null,
+    assessment_category: null,
+    module_category: null,
     categories: [],
-  } as any;
+    completed: false,
+    linked_event: null,
+    linked_event_details: null,
+    created_at: "2098-12-01T00:00:00Z",
+    updated_at: "2099-01-01T00:00:00Z",
+    ...overrides,
+  });
 
-  const completedAssessment = {
-    ...upcomingAssessment,
+  const upcomingAssessment = buildAssessment();
+  const completedAssessment = buildAssessment({
     id: 2,
     title: "Quiz",
     completed: true,
-  } as any;
+  });
+  const categories: Category[] = [{ id: 1, text: "Coursework" }];
+
+  const buildHookState = (
+    overrides: Partial<UseAssessmentsResult["state"]> = {},
+  ): UseAssessmentsResult => ({
+    state: {
+      assessments: [upcomingAssessment, completedAssessment],
+      categories,
+      sections: {
+        overdue: [],
+        upcoming: [upcomingAssessment],
+        completed: [completedAssessment],
+      },
+      isGradebookEnabled: true,
+      search: "",
+      selectedCategoryId: null,
+      isSidebarOpen: false,
+      selectedAssessment: undefined,
+      pendingDeleteId: null,
+      gradebookSource: null,
+      ...overrides,
+    },
+    loading: false,
+    error: null,
+    actions: mockActions,
+  });
 
   beforeEach(() => {
     vi.clearAllMocks();
-    vi.mocked(useAssessments).mockReturnValue({
-      state: {
-        assessments: [upcomingAssessment, completedAssessment],
-        categories: [{ id: 1, text: "Coursework" }],
-        sections: {
-          overdue: [],
-          upcoming: [upcomingAssessment],
-          completed: [completedAssessment],
-        },
-        isGradebookEnabled: true,
-        search: "",
-        selectedCategoryId: null,
-        isSidebarOpen: false,
-        selectedAssessment: undefined,
-        pendingDeleteId: null,
-        gradebookSource: null,
-      },
-      loading: false,
-      error: null,
-      actions: mockActions,
-    } as any);
+    vi.mocked(useAssessments).mockReturnValue(buildHookState());
   });
 
   it("renders sections and forwards page actions", () => {
@@ -152,23 +176,15 @@ describe("Assessments page", () => {
   });
 
   it("renders open modal states from hook state", () => {
-    vi.mocked(useAssessments).mockReturnValue({
-      state: {
-        assessments: [upcomingAssessment],
-        categories: [],
-        sections: { overdue: [], upcoming: [upcomingAssessment], completed: [] },
-        isGradebookEnabled: true,
-        search: "",
-        selectedCategoryId: null,
-        isSidebarOpen: true,
-        selectedAssessment: upcomingAssessment,
-        pendingDeleteId: upcomingAssessment.id,
-        gradebookSource: upcomingAssessment,
-      },
-      loading: false,
-      error: null,
-      actions: mockActions,
-    } as any);
+    vi.mocked(useAssessments).mockReturnValue(buildHookState({
+      assessments: [upcomingAssessment],
+      categories: [],
+      sections: { overdue: [], upcoming: [upcomingAssessment], completed: [] },
+      isSidebarOpen: true,
+      selectedAssessment: upcomingAssessment,
+      pendingDeleteId: upcomingAssessment.id,
+      gradebookSource: upcomingAssessment,
+    }));
 
     render(<Assessments />);
 

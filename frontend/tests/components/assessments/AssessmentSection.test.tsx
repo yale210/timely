@@ -1,4 +1,3 @@
-import type { ReactNode } from "react";
 import { fireEvent, render, screen } from "@testing-library/react";
 import "@testing-library/jest-dom/vitest";
 import { describe, expect, it, vi } from "vitest";
@@ -102,10 +101,10 @@ describe("AssessmentSection", () => {
 
     expect(screen.queryByText("Project demo")).not.toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole("heading", { name: "Overdue" }).parentElement as HTMLElement);
+    fireEvent.click(screen.getByRole("heading", { name: "Overdue" }).parentElement!);
     expect(screen.getByText("Project demo")).toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole("heading", { name: "Overdue" }).parentElement as HTMLElement);
+    fireEvent.click(screen.getByRole("heading", { name: "Overdue" }).parentElement!);
     expect(screen.queryByText("Project demo")).not.toBeInTheDocument();
   });
 });

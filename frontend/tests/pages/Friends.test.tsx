@@ -4,7 +4,11 @@ import { fireEvent, render, screen } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import Friends from "@/pages/Friends";
 import { useFriendships } from "@/hooks/friends/useFriendships";
-import { authStore } from "@/services/authService";
+import type { Friendship, User } from "@/types";
+
+const { mockGetUser } = vi.hoisted(() => ({
+  mockGetUser: vi.fn(),
+}));
 
 vi.mock("@/layouts/AppLayout", () => ({
   default: ({ children }: { children: ReactNode }) => <div>{children}</div>,
@@ -16,7 +20,7 @@ vi.mock("@/hooks/friends/useFriendships", () => ({
 
 vi.mock("@/services/authService", () => ({
   authStore: {
-    getUser: vi.fn(),
+    getUser: mockGetUser,
   },
 }));
 
@@ -41,12 +45,14 @@ vi.mock("@/components/modals/ConfirmationModal", () => ({
 }));
 
 describe("Friends page", () => {
+  type UseFriendshipsResult = ReturnType<typeof useFriendships>;
+
   const mockSendRequest = vi.fn();
   const mockAcceptRequest = vi.fn();
   const mockDeclineRequest = vi.fn();
   const mockRemoveFriend = vi.fn();
 
-  const acceptedFriendship = {
+  const acceptedFriendship: Friendship = {
     id: 1,
     state: "ACCEPTED",
     sender: 1,
@@ -57,9 +63,9 @@ describe("Friends page", () => {
     receiver_username_display: "bob",
     receiver_name: "Bob Example",
     receiver_avatar: null,
-  } as any;
+  };
 
-  const incomingFriendship = {
+  const incomingFriendship: Friendship = {
     id: 2,
     state: "SENT",
     sender: 3,
@@ -70,9 +76,9 @@ describe("Friends page", () => {
     receiver_username_display: "alice",
     receiver_name: "Alice Example",
     receiver_avatar: null,
-  } as any;
+  };
 
-  const outgoingFriendship = {
+  const outgoingFriendship: Friendship = {
     id: 3,
     state: "SENT",
     sender: 1,
@@ -83,23 +89,27 @@ describe("Friends page", () => {
     receiver_username_display: "dana",
     receiver_name: "Dana Example",
     receiver_avatar: null,
-  } as any;
+  };
 
   beforeEach(() => {
     vi.clearAllMocks();
-    vi.mocked(authStore.getUser).mockReturnValue({ id: 1, username: "alice" } as any);
-    vi.mocked(useFriendships).mockReturnValue({
+    const currentUser: User = { id: 1, username: "alice", email: "alice@example.com" };
+    mockGetUser.mockReturnValue(currentUser);
+
+    const hookResult: UseFriendshipsResult = {
       friendships: [acceptedFriendship, incomingFriendship, outgoingFriendship],
       loading: false,
       error: null,
       sending: false,
-      actingIds: new Set(),
-      refresh: vi.fn(),
+      actingIds: new Set<number>(),
+      refresh: vi.fn(async () => undefined),
       sendRequest: mockSendRequest,
       acceptRequest: mockAcceptRequest,
       declineRequest: mockDeclineRequest,
       removeFriend: mockRemoveFriend,
-    });
+    };
+
+    vi.mocked(useFriendships).mockReturnValue(hookResult);
   });
 
   it("sends friend requests and handles request actions", () => {

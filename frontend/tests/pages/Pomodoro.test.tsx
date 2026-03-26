@@ -4,6 +4,7 @@ import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import Pomodoro from "@/pages/Pomodoro";
 import { usePomodoro } from "@/context/PomodoroContext";
 import { getTasks, updateTask } from "@/services/taskService";
+import type { Task, TaskUpdatedResponse } from "@/types";
 
 vi.mock("@/layouts/AppLayout", () => ({
   default: ({ children }: { children: ReactNode }) => <div>{children}</div>,
@@ -39,37 +40,57 @@ vi.mock("@/services/taskService", () => ({
 }));
 
 describe("Pomodoro page", () => {
+  type PomodoroValue = ReturnType<typeof usePomodoro>;
+
   const setInitialDuration = vi.fn();
   const setShortBreakDuration = vi.fn();
   const setLongBreakDuration = vi.fn();
 
+  const buildTask = (overrides: Partial<Task> = {}): Task => ({
+    id: 1,
+    title: "Essay block",
+    start_time: "2099-01-01T10:00:00Z",
+    deadline: "2099-01-01T12:00:00Z",
+    importance: 3,
+    completed: false,
+    categories: [],
+    estimated_minutes: 30,
+    allocation: [
+      {
+        start: "2099-01-01T10:00:00Z",
+        end: "2099-01-01T10:30:00Z",
+      },
+    ],
+    ...overrides,
+  });
+
   beforeEach(() => {
     vi.clearAllMocks();
-    vi.mocked(usePomodoro).mockReturnValue({
-      mode: "focus",
-      isActive: false,
+    const pomodoroValue: PomodoroValue = {
+      timeLeft: 1500,
       initialDuration: 25,
       shortBreakDuration: 5,
       longBreakDuration: 15,
+      isActive: false,
+      mode: "focus",
+      viewingMode: "focus",
+      showModal: false,
+      modalMessage: "",
       setInitialDuration,
       setShortBreakDuration,
       setLongBreakDuration,
-    } as any);
-    vi.mocked(getTasks).mockResolvedValue([
-      {
-        id: 1,
-        title: "Essay block",
-        completed: false,
-        estimated_minutes: 30,
-        allocation: [
-          {
-            start: "2099-01-01T10:00:00Z",
-            end: "2099-01-01T10:30:00Z",
-          },
-        ],
-      },
-    ] as any);
-    vi.mocked(updateTask).mockResolvedValue({} as any);
+      startTimer: vi.fn(),
+      stopTimer: vi.fn(),
+      resetTimer: vi.fn(),
+      adjustTime: vi.fn(),
+      setMode: vi.fn(),
+      setViewingMode: vi.fn(),
+      closeModal: vi.fn(),
+    };
+    vi.mocked(usePomodoro).mockReturnValue(pomodoroValue);
+    vi.mocked(getTasks).mockResolvedValue([buildTask()]);
+    const updatedTask: TaskUpdatedResponse = { ...buildTask({ completed: true }) };
+    vi.mocked(updateTask).mockResolvedValue(updatedTask);
   });
 
   it("renders scheduled tasks and toggles completion", async () => {
@@ -85,7 +106,7 @@ describe("Pomodoro page", () => {
     });
   });
 
-  it("opens timer settings and saves updated durations", async () => {
+  it("opens timer settings and saves updated durations", () => {
     render(<Pomodoro />);
 
     fireEvent.click(screen.getByRole("button", { name: "Open timer settings" }));

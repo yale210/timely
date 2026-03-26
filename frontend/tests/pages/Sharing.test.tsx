@@ -3,9 +3,13 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import Sharing from "@/pages/Sharing";
 import { MemoryRouter } from "react-router-dom";
-import { authStore } from "@/services/authService";
 import { useSharing } from "@/hooks/sharing/useSharing";
 import { getEvents } from "@/services/eventService";
+import type { Event, Share, User } from "@/types";
+
+const { mockGetUser } = vi.hoisted(() => ({
+  mockGetUser: vi.fn(),
+}));
 
 vi.mock("@/layouts/AppLayout", () => ({
   default: ({ children }: { children: ReactNode }) => <div>{children}</div>,
@@ -13,7 +17,7 @@ vi.mock("@/layouts/AppLayout", () => ({
 
 vi.mock("@/services/authService", () => ({
   authStore: {
-    getUser: vi.fn(),
+    getUser: mockGetUser,
   },
 }));
 
@@ -26,31 +30,46 @@ vi.mock("@/services/eventService", () => ({
 }));
 
 describe("Sharing page", () => {
+  type UseSharingResult = ReturnType<typeof useSharing>;
+
   const shareEvent = vi.fn();
   const replyShare = vi.fn();
-  const fetchShares = vi.fn();
+  const fetchShares = vi.fn(async () => undefined);
+
+  const buildEvent = (overrides: Partial<Event> = {}): Event => ({
+    id: 7,
+    title: "Revision session",
+    start_time: "2099-01-01T10:00:00Z",
+    end_time: "2099-01-01T11:00:00Z",
+    categories: [],
+    reminders: [],
+    ...overrides,
+  });
 
   beforeEach(() => {
     vi.clearAllMocks();
-    vi.mocked(authStore.getUser).mockReturnValue({ id: 1, username: "alice" } as any);
-    vi.mocked(useSharing).mockReturnValue({
+    const currentUser: User = { id: 1, username: "alice", email: "alice@example.com" };
+    mockGetUser.mockReturnValue(currentUser);
+    const sharingState: UseSharingResult = {
       shares: [
         {
           id: 1,
           sender: 2,
           receiver: 1,
           sender_username: "bob",
+          receiver_username: "alice",
           event_id: 7,
           event_title: "Shared event",
-        },
+        } satisfies Share,
         {
           id: 2,
           sender: 1,
           receiver: 3,
+          sender_username: "alice",
           receiver_username: "charlie",
           event_id: 8,
           event_title: "Outgoing event",
-        },
+        } satisfies Share,
       ],
       isSharesloading: false,
       isSharing: false,
@@ -59,11 +78,12 @@ describe("Sharing page", () => {
       shareEvent,
       replyShare,
       fetchShares,
-    });
+    };
+    vi.mocked(useSharing).mockReturnValue(sharingState);
     vi.mocked(getEvents).mockResolvedValue([
-      { id: 7, title: "Revision session" },
-      { id: 7, title: "Revision session" },
-    ] as any);
+      buildEvent(),
+      buildEvent(),
+    ]);
   });
 
   it("shares an event and loads the current event list", async () => {

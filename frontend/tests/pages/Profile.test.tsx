@@ -4,7 +4,11 @@ import { render, screen } from "@testing-library/react";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
 import ProfilePage from "@/pages/Profile";
 import { usePublicProfile } from "@/hooks/profiles/usePublicProfile";
-import { authStore } from "@/services/authService";
+import type { PublicProfile, User } from "@/types";
+
+const { mockGetUser } = vi.hoisted(() => ({
+  mockGetUser: vi.fn(),
+}));
 
 vi.mock("@/layouts/AppLayout", () => ({
   default: ({ children }: { children: ReactNode }) => <div>{children}</div>,
@@ -16,11 +20,20 @@ vi.mock("@/hooks/profiles/usePublicProfile", () => ({
 
 vi.mock("@/services/authService", () => ({
   authStore: {
-    getUser: vi.fn(),
+    getUser: mockGetUser,
   },
 }));
 
 describe("Profile page", () => {
+  const buildPublicProfile = (overrides: Partial<PublicProfile> = {}): PublicProfile => ({
+    username: "alice",
+    name: "Alice Example",
+    avatar_url: null,
+    joined_at: "2024-01-01T00:00:00Z",
+    bio: "Hello there",
+    ...overrides,
+  });
+
   beforeEach(() => {
     vi.clearAllMocks();
   });
@@ -34,19 +47,14 @@ describe("Profile page", () => {
       </MemoryRouter>,
     );
 
-  it("shows edit profile controls for the signed-in user", async () => {
-    vi.mocked(authStore.getUser).mockReturnValue({ username: "alice" } as any);
+  it("shows edit profile controls for the signed-in user", () => {
+    const currentUser: User = { username: "alice", email: "alice@example.com" };
+    mockGetUser.mockReturnValue(currentUser);
     vi.mocked(usePublicProfile).mockReturnValue({
-      profile: {
-        username: "alice",
-        name: "Alice Example",
-        avatar_url: null,
-        joined_at: "2024-01-01T00:00:00Z",
-        bio: "Hello there",
-      },
+      profile: buildPublicProfile(),
       loading: false,
       error: null,
-    } as any);
+    });
 
     renderPage();
 
@@ -54,19 +62,18 @@ describe("Profile page", () => {
     expect(screen.getByRole("link", { name: "Edit profile" })).toHaveAttribute("href", "/settings");
   });
 
-  it("shows the back link for another user's profile", async () => {
-    vi.mocked(authStore.getUser).mockReturnValue({ username: "alice" } as any);
+  it("shows the back link for another user's profile", () => {
+    const currentUser: User = { username: "alice", email: "alice@example.com" };
+    mockGetUser.mockReturnValue(currentUser);
     vi.mocked(usePublicProfile).mockReturnValue({
-      profile: {
+      profile: buildPublicProfile({
         username: "bob",
         name: "Bob Example",
-        avatar_url: null,
-        joined_at: "2024-01-01T00:00:00Z",
         bio: "",
-      },
+      }),
       loading: false,
       error: null,
-    } as any);
+    });
 
     renderPage("/profiles/bob");
 
