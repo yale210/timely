@@ -65,7 +65,7 @@ class PreferenceSeeder(BaseSeeder):
             bool: True if a new record was created, False otherwise.
 
         """
-        
+
         user = self.resolve_user(data["fields"]["user"])
         temporary_preference, created = Preference.objects.update_or_create(
             user=user,

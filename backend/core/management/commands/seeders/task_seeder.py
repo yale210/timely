@@ -59,7 +59,7 @@ class TaskSeeder(BaseSeeder):
                 user ID, title, timing, and category associations.
 
         """
-        
+
         user = self.resolve_user(data["fields"]["user"])
         parent_task = self.resolve_task(data["fields"].get("parent_task"), user)
 

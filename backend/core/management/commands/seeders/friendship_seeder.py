@@ -65,7 +65,7 @@ class FriendshipSeeder(BaseSeeder):
             Friendship: The created or existing Friendship instance.
 
         """
-        
+
         sender = self.resolve_user(data["fields"]["sender"])
         receiver = self.resolve_user(data["fields"]["receiver"])
 
