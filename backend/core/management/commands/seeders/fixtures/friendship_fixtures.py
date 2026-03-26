@@ -1,92 +1,42 @@
 friendships = [
     {
         "model": "core.friendship",
-        "pk": 1,
-        "fields": {
-            "sender": 1,
-            "receiver": 2,
-            "state": "ACCEPTED",
-        },
+        "fields": {"sender": "thomas", "receiver": "david", "state": "ACCEPTED"},
     },
     {
         "model": "core.friendship",
-        "pk": 2,
-        "fields": {
-            "sender": 1,
-            "receiver": 3,
-            "state": "SENT",
-        },
+        "fields": {"sender": "thomas", "receiver": "tommy", "state": "SENT"},
     },
     {
         "model": "core.friendship",
-        "pk": 3,
-        "fields": {
-            "sender": 1,
-            "receiver": 4,
-            "state": "DECLINED",
-        },
+        "fields": {"sender": "thomas", "receiver": "mark", "state": "DECLINED"},
     },
     {
         "model": "core.friendship",
-        "pk": 4,
-        "fields": {
-            "sender": 1,
-            "receiver": 5,
-            "state": "ACCEPTED",
-        },
+        "fields": {"sender": "thomas", "receiver": "patrick", "state": "ACCEPTED"},
     },
     {
         "model": "core.friendship",
-        "pk": 5,
-        "fields": {
-            "sender": 2,
-            "receiver": 3,
-            "state": "DECLINED",
-        },
+        "fields": {"sender": "david", "receiver": "tommy", "state": "DECLINED"},
     },
     {
         "model": "core.friendship",
-        "pk": 6,
-        "fields": {
-            "sender": 2,
-            "receiver": 4,
-            "state": "ACCEPTED",
-        },
+        "fields": {"sender": "david", "receiver": "mark", "state": "ACCEPTED"},
     },
     {
         "model": "core.friendship",
-        "pk": 7,
-        "fields": {
-            "sender": 2,
-            "receiver": 5,
-            "state": "DECLINED",
-        },
+        "fields": {"sender": "david", "receiver": "patrick", "state": "DECLINED"},
     },
     {
         "model": "core.friendship",
-        "pk": 8,
-        "fields": {
-            "sender": 3,
-            "receiver": 4,
-            "state": "SENT",
-        },
+        "fields": {"sender": "tommy", "receiver": "mark", "state": "SENT"},
     },
     {
         "model": "core.friendship",
-        "pk": 9,
-        "fields": {
-            "sender": 3,
-            "receiver": 5,
-            "state": "SENT",
-        },
+        "fields": {"sender": "tommy", "receiver": "patrick", "state": "SENT"},
     },
     {
         "model": "core.friendship",
-        "pk": 10,
-        "fields": {
-            "sender": 4,
-            "receiver": 5,
-            "state": "ACCEPTED",
-        },
+        "fields": {"sender": "mark", "receiver": "patrick", "state": "ACCEPTED"},
     },
 ]

@@ -16,7 +16,6 @@ def exp_required_for_level_up(user):
     Returns:
         bool: ``True`` when the profile meets the threshold for the next level.
     """
-
     next_level = user.level + 1
     required_xp = 100 * next_level**1.5
     return user.xp >= required_xp
@@ -31,7 +30,6 @@ def exp_required_for_level_down(user):
     Returns:
         bool: ``True`` when the profile falls below the current level threshold.
     """
-
     next_level = user.level - 1
     required_xp = 100 * next_level**1.5
     return user.xp < required_xp
@@ -49,7 +47,6 @@ def snapshot_task_state(sender, instance, **kwargs):
     Returns:
         None
     """
-
     if instance.pk:
         try:
             instance._prev_completed = (
@@ -73,7 +70,6 @@ def award_exp(sender, instance, **kwargs):
     Returns:
         None
     """
-
     prev = getattr(instance, "_prev_completed", False)
     now = instance.completed
 

@@ -25,29 +25,27 @@ class TaskSeeder(BaseSeeder):
                 print(f"Error occurred while creating task: {exception}")
 
     def _create_task(self, data):
-        user = get_user_model().objects.get(id=data["fields"]["user"])
-        parent_task = None
-        if data["fields"].get("parent_task") is not None:
-            parent_task = Task.objects.filter(id=data["fields"]["parent_task"]).first()
+        user = self.resolve_user(data["fields"]["user"])
+        parent_task = self.resolve_task(data["fields"].get("parent_task"), user)
 
-        temporary_task, _ = Task.objects.get_or_create(
-            id=data.get("pk"),
-            user_id=user.id,
+        temporary_task, _ = Task.objects.update_or_create(
+            user=user,
             title=data["fields"]["title"],
-            description=data["fields"]["description"],
-            estimated_minutes=data["fields"]["estimated_minutes"],
-            start_time=data["fields"]["start_time"],
-            deadline=data["fields"]["deadline"],
-            completed=data["fields"]["completed"],
-            parent_task_id=parent_task.id if parent_task else None,
-            total_task_allocations=data["fields"]["total_task_allocations"],
-            allocation=data["fields"]["allocation"],
-            importance=data["fields"]["importance"],
+            defaults={
+                "description": data["fields"]["description"],
+                "estimated_minutes": data["fields"]["estimated_minutes"],
+                "start_time": data["fields"]["start_time"],
+                "deadline": data["fields"]["deadline"],
+                "completed": data["fields"]["completed"],
+                "parent_task": parent_task,
+                "total_task_allocations": data["fields"]["total_task_allocations"],
+                "allocation": data["fields"]["allocation"],
+                "importance": data["fields"]["importance"],
+            },
         )
 
-        categories = Category.objects.filter(id__in=data["fields"]["categories"])
-        if categories:
-            temporary_task.categories.set(categories)
+        categories = self.resolve_categories(data["fields"].get("categories", []), user)
+        temporary_task.categories.set(categories)
 
     def _populate_random_task(self):
         temporary_user = self._get_or_create_random_user()

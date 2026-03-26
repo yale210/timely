@@ -1,7 +1,6 @@
 users = [
     {
         "model": "auth.user",
-        "pk": 1,
         "fields": {
             "username": "thomas",
             "password": "pbkdf2_sha256$1000000$x7OkUUpZ0jz1bkch9G2uXN$6HNY4kQaCjyiH4hc+765D1MYlAXsECbVP1G9VM0Bpg8=",
@@ -12,7 +11,6 @@ users = [
     },
     {
         "model": "auth.user",
-        "pk": 2,
         "fields": {
             "username": "david",
             "password": "pbkdf2_sha256$1000000$x7OkUUpZ0jz1bkch9G2uXN$6HNY4kQaCjyiH4hc+765D1MYlAXsECbVP1G9VM0Bpg8=",
@@ -23,7 +21,6 @@ users = [
     },
     {
         "model": "auth.user",
-        "pk": 3,
         "fields": {
             "username": "tommy",
             "password": "pbkdf2_sha256$1000000$x7OkUUpZ0jz1bkch9G2uXN$6HNY4kQaCjyiH4hc+765D1MYlAXsECbVP1G9VM0Bpg8=",
@@ -34,7 +31,6 @@ users = [
     },
     {
         "model": "auth.user",
-        "pk": 4,
         "fields": {
             "username": "mark",
             "password": "pbkdf2_sha256$1000000$x7OkUUpZ0jz1bkch9G2uXN$6HNY4kQaCjyiH4hc+765D1MYlAXsECbVP1G9VM0Bpg8=",
@@ -45,7 +41,6 @@ users = [
     },
     {
         "model": "auth.user",
-        "pk": 5,
         "fields": {
             "username": "patrick",
             "password": "pbkdf2_sha256$1000000$x7OkUUpZ0jz1bkch9G2uXN$6HNY4kQaCjyiH4hc+765D1MYlAXsECbVP1G9VM0Bpg8=",

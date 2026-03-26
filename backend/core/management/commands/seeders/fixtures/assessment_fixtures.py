@@ -1,9 +1,8 @@
 assessments = [
     {
         "model": "core.assessment",
-        "pk": 1,
         "fields": {
-            "user": 1,
+            "user": "thomas",
             "title": "PPA Exam",
             "module": "PPA",
             "assessment_type": "QUIZ",
@@ -14,14 +13,17 @@ assessments = [
             "weighting_of_assessment": 100,
             "notes": "",
             "reminder_offset": 10,
-            "linked_event": 11,
+            "linked_event": {
+                "title": "PPA Exam",
+                "user": "thomas",
+                "start_time": "2026-08-01T11:30:00Z",
+            },
         },
     },
     {
         "model": "core.assessment",
-        "pk": 2,
         "fields": {
-            "user": 1,
+            "user": "thomas",
             "title": "DSA Exam",
             "module": "DSA",
             "assessment_type": "EXAM",
@@ -37,9 +39,8 @@ assessments = [
     },
     {
         "model": "core.assessment",
-        "pk": 3,
         "fields": {
-            "user": 1,
+            "user": "thomas",
             "title": "SEG Coursework",
             "module": "SEG",
             "start_time": "2026-08-01T11:30:00Z",
@@ -55,9 +56,8 @@ assessments = [
     },
     {
         "model": "core.assessment",
-        "pk": 4,
         "fields": {
-            "user": 1,
+            "user": "thomas",
             "title": "FC2 COURSEWORK",
             "module": "FC2",
             "assessment_type": "COURSEWORK",
@@ -73,9 +73,8 @@ assessments = [
     },
     {
         "model": "core.assessment",
-        "pk": 5,
         "fields": {
-            "user": 1,
+            "user": "thomas",
             "title": "FC2 EXAM",
             "module": "FC2",
             "assessment_type": "EXAM",
@@ -94,9 +93,8 @@ assessments = [
 assessment_events = [
     {
         "model": "core.event",
-        "pk": 11,
         "fields": {
-            "user": 1,
+            "user": "thomas",
             "title": "PPA Exam",
             "description": "PPA QUIZ",
             "location": "Bush House 2.01",
@@ -112,9 +110,8 @@ assessment_events = [
     },
     {
         "model": "core.event",
-        "pk": 12,
         "fields": {
-            "user": 2,
+            "user": "david",
             "title": "FC2 EXAM",
             "description": "FC2 EXAM",
             "location": "Bush House 2.01",

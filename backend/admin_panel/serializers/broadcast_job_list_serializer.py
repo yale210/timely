@@ -10,6 +10,8 @@ class BroadcastJobListSerializer(serializers.ModelSerializer):
     sender_username = serializers.ReadOnlyField(source="sender.username")
 
     class Meta:
+        """Metadata for the BroadcastJobListSerializer."""
+
         model = BroadcastJob
         fields = [
             "id",

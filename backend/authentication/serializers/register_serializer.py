@@ -1,3 +1,5 @@
+"""Serializers for user registration."""
+
 from rest_framework import serializers
 
 from ..models import User
@@ -7,6 +9,8 @@ class RegisterSerializer(serializers.ModelSerializer):
     """Serialize and validate data for user registration."""
 
     class Meta:
+        """Metadata for the RegisterSerializer."""
+
         model = User
         fields = ["id", "username", "email", "password"]
         extra_kwargs = {

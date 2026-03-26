@@ -1,3 +1,5 @@
+"""API view for new user account registration."""
+
 from drf_spectacular.utils import (
     extend_schema,
 )

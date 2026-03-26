@@ -26,27 +26,30 @@ class EventSeeder(BaseSeeder):
                 print(f"Error occurred while creating event: {exception}")
 
     def _create_event(self, data):
-        temporary_event, _ = Event.objects.get_or_create(
-            user_id=(
-                data["fields"]["user"].id
-                if hasattr(data["fields"]["user"], "id")
-                else data["fields"]["user"]
-            ),
-            title=data["fields"]["title"],
-            description=data["fields"]["description"],
-            location=data["fields"]["location"],
-            start_time=data["fields"]["start_time"],
-            end_time=data["fields"]["end_time"],
-            recurrence_interval=data["fields"]["recurrence_interval"],
-            recurrence_end=data["fields"]["recurrence_end"],
-            colour=data["fields"].get("colour"),
-            exception_dates=data["fields"].get("exception_dates", []),
-            split_from_event=data["fields"].get("split_from_event"),
+        user = self.resolve_user(data["fields"]["user"])
+        split_from_event = self.resolve_event(
+            data["fields"].get("split_from_event"),
+            user,
         )
 
-        categories = data["fields"].get("categories", [])
-        if categories:
-            temporary_event.categories.set(Category.objects.filter(id__in=categories))
+        temporary_event, _ = Event.objects.update_or_create(
+            user=user,
+            title=data["fields"]["title"],
+            start_time=data["fields"]["start_time"],
+            defaults={
+                "description": data["fields"]["description"],
+                "location": data["fields"]["location"],
+                "end_time": data["fields"]["end_time"],
+                "recurrence_interval": data["fields"]["recurrence_interval"],
+                "recurrence_end": data["fields"]["recurrence_end"],
+                "colour": data["fields"].get("colour"),
+                "exception_dates": data["fields"].get("exception_dates", []),
+                "split_from_event": split_from_event,
+            },
+        )
+
+        categories = self.resolve_categories(data["fields"].get("categories", []), user)
+        temporary_event.categories.set(categories)
 
     """
     If an event is recurring

@@ -35,9 +35,8 @@ class CategorySeeder(BaseSeeder):
 
         self._create_category(
             {
-                "pk": None,
-                "user": temporary_user.id,
                 "fields": {
+                    "user": temporary_user.id,
                     "text": self.faker.word(),
                     "colour": self.faker.hex_color(),
                 },
@@ -45,9 +44,13 @@ class CategorySeeder(BaseSeeder):
         )
 
     def _create_category(self, data):
-        Category.objects.get_or_create(
-            id=data["pk"],
-            user_id=data["user"],
+        user = self.resolve_user(data["fields"]["user"])
+        Category.objects.update_or_create(
+            user=user,
             text=data["fields"]["text"],
-            colour=data["fields"].get("colour", None),
+            defaults={
+                "colour": data["fields"].get("colour"),
+                "max_daily_study_time": data["fields"].get("max_daily_study_time"),
+                "colour_override": data["fields"].get("colour_override", False),
+            },
         )

@@ -1,3 +1,5 @@
+"""Serializers for the admin_panel app."""
+
 from .admin_notification_request_serializer import (
     AdminNotificationRequestSerializer as AdminNotificationRequestSerializer,
 )
