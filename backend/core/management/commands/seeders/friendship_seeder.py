@@ -24,10 +24,8 @@ class FriendshipSeeder(BaseSeeder):
                 print(f"Error occurred while creating friendship: {exception}")
 
     def _create_friendship(self, data):
-        User = get_user_model()
-
-        sender = User.objects.get(id=data["fields"]["sender"])
-        receiver = User.objects.get(id=data["fields"]["receiver"])
+        sender = self.resolve_user(data["fields"]["sender"])
+        receiver = self.resolve_user(data["fields"]["receiver"])
 
         # Check for existing friendship
         request_exists = (
@@ -38,11 +36,13 @@ class FriendshipSeeder(BaseSeeder):
         ).first()
 
         if request_exists:
+            if request_exists.sender == sender and request_exists.receiver == receiver:
+                request_exists.state = data["fields"]["state"]
+                request_exists.save(update_fields=["state"])
             return request_exists
         else:
             # No request existed so make one.
             return Friendship.objects.create(
-                id=data.get("pk"),
                 sender=sender,
                 receiver=receiver,
                 state=data["fields"]["state"],

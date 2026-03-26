@@ -7,6 +7,7 @@ import CategoryLimitsSection from "@/components/settings/CategoryLimitsSection";
 import PrivacySection from "@/components/settings/PrivacySection";
 import type { UseSettingsReturn } from "@/hooks/settings/useSettings";
 import { useProfileSettings } from "@/hooks/settings/useProfileSettings";
+import { makeMyTeacherProfile, unregisterMyTeacherProfile } from "@/services/courseService.ts";
 import { getSchedulingDayMaxMinutes } from "@/utils/schedulingLimits";
 
 interface SettingsContentProps {
@@ -33,11 +34,16 @@ const SettingsContent = ({
 }: SettingsContentProps) => {
   const dragSnapOptions = [5, 10, 15, 20, 30, 60] as const;
   const [featureFlags, setFeatureFlags] = useState(() => ({
+    courses: localStorage.getItem("feature_courses_enabled") !== "false",
     assessments: localStorage.getItem("feature_assessments_enabled") !== "false",
     gradebook: localStorage.getItem("feature_gradebook_enabled") !== "false",
     leaderboard: localStorage.getItem("feature_leaderboard_enabled") !== "false",
     pomodoro: localStorage.getItem("feature_pomodoro_enabled") !== "false",
   }));
+  const [makingTeacher, setMakingTeacher] = useState(false);
+  const [unregisteringTeacher, setUnregisteringTeacher] = useState(false);
+  const [makeTeacherError, setMakeTeacherError] = useState<string | null>(null);
+  const [makeTeacherSuccess, setMakeTeacherSuccess] = useState<string | null>(null);
 
   const featureRows = useMemo(() => ([
     {
@@ -64,10 +70,16 @@ const SettingsContent = ({
       description: "Allows users to view how they are doing in comparison to their friends.",
       value: featureFlags.leaderboard,
     },
+    {
+        key: "courses",
+        label: "Courses",
+        description: "Show course browsing, management, and course details in the app.",
+        value: featureFlags.courses,
+      },
   ]), [featureFlags]);
 
   const updateFeature = (
-    key: "assessments" | "gradebook" | "leaderboard" | "pomodoro",
+    key: "assessments" | "gradebook" | "leaderboard" | "pomodoro" | "courses",
     value: boolean,
   ) => {
     if (key === "assessments") {
@@ -76,11 +88,50 @@ const SettingsContent = ({
       localStorage.setItem("feature_gradebook_enabled", String(value));
     } else if (key === "leaderboard") {
       localStorage.setItem("feature_leaderboard_enabled", String(value));
+    } else if (key === "courses") {
+      localStorage.setItem("feature_courses_enabled", String(value));
+    
     } else {
       localStorage.setItem("feature_pomodoro_enabled", String(value));
-    }
+    } 
     setFeatureFlags((prev) => ({ ...prev, [key]: value }));
     window.dispatchEvent(new Event("feature-flags-changed"));
+  };
+
+  const makeTeacher = async () => {
+    if (makingTeacher) return;
+
+    setMakeTeacherError(null);
+    setMakeTeacherSuccess(null);
+    setMakingTeacher(true);
+
+    try {
+      await makeMyTeacherProfile();
+      setMakeTeacherSuccess("You are now registered as a teacher.");
+    } catch (error: unknown) {
+      console.error("Failed to create teacher profile:", error);
+      setMakeTeacherError("Unable to make you a teacher.");
+    } finally {
+      setMakingTeacher(false);
+    }
+  };
+
+  const unregisterTeacher = async () => {
+    if (unregisteringTeacher) return;
+
+    setMakeTeacherError(null);
+    setMakeTeacherSuccess(null);
+    setUnregisteringTeacher(true);
+
+    try {
+      await unregisterMyTeacherProfile();
+      setMakeTeacherSuccess("You are no longer registered as a teacher.");
+    } catch (error: unknown) {
+      console.error("Failed to unregister teacher profile:", error);
+      setMakeTeacherError("Unable to unregister you as a teacher.");
+    } finally {
+      setUnregisteringTeacher(false);
+    }
   };
 
   const profileState = useProfileSettings(state.activeSection === "profile");
@@ -181,13 +232,50 @@ const SettingsContent = ({
                         checked={feature.value}
                         onChange={(event) => {
                           updateFeature(
-                            feature.key as "assessments" | "gradebook" | "leaderboard" | "pomodoro",
+                            feature.key as "assessments" | "gradebook" | "leaderboard" | "pomodoro" | "courses" ,
                             event.target.checked,
                           );
                         }}
                       />
                     </label>
                   ))}
+                </div>
+                <div className="space-y-3">
+                  {makeTeacherError && (
+                    <div className="rounded-md bg-red-50 px-4 py-3 text-sm text-red-700">
+                      {makeTeacherError}
+                    </div>
+                  )}
+
+                  {makeTeacherSuccess && (
+                    <div className="rounded-md bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
+                      {makeTeacherSuccess}
+                    </div>
+                  )}
+
+                  <div className="flex flex-wrap gap-3">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        void makeTeacher();
+                      }}
+                      disabled={makingTeacher}
+                      className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-50"
+                    >
+                      {makingTeacher ? "Making teacher..." : "Make me a teacher"}
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        void unregisterTeacher();
+                      }}
+                      disabled={unregisteringTeacher}
+                      className="rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-50"
+                    >
+                      {unregisteringTeacher ? "Unregistering..." : "Unregister as teacher"}
+                    </button>
+                  </div>
                 </div>
               </div>
             ) : null}
@@ -199,6 +287,9 @@ const SettingsContent = ({
                     Manage shared app behavior settings.
                   </p>
                 </div>
+
+
+
                 {loading.preference ? (
                   <p className="text-sm text-gray-500">Loading...</p>
                 ) : (() => {

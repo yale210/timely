@@ -26,6 +26,8 @@ class ProfileSerializer(serializers.ModelSerializer):
         return value
 
     class Meta:
+        """Metadata for the profile serializer."""
+
         model = Profile
         fields = [
             "name",
@@ -48,6 +50,8 @@ class PublicProfileSerializer(serializers.ModelSerializer):
     avatar_url = serializers.SerializerMethodField()
 
     class Meta:
+        """Metadata for the profile serializer."""
+
         model = Profile
         fields = ["username", "name", "bio", "avatar_url", "joined_at"]
 

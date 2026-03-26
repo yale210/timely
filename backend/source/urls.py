@@ -19,6 +19,8 @@ from core.views import (
 )
 from core.views.export_view import ExportView
 from core.views.import_view import ImportView
+from courses.views import CourseViewSet
+from courses.views.teacher import TeacherView
 
 from core.views.share_send_view import ShareSendView
 from core.views.share_accept_view import ShareAcceptView
@@ -39,6 +41,8 @@ router.register(r"events", EventViewSet, basename="event")
 router.register(r"preferences", PreferenceViewSet, basename="preference")
 router.register(r"friendships", FriendshipViewSet, basename="friendship")
 router.register(r"special-dates", SpecialDatesViewSet, basename="special-dates")
+router.register(r"courses", CourseViewSet, basename="course")
+router.register(r"teachers", TeacherView, basename="teacher")
 
 urlpatterns = [
     path("api/admin/", include("admin_panel.urls")),

@@ -1,6 +1,8 @@
-from .login_serializer import LoginSerializer as LoginSerializer
-from .register_serializer import RegisterSerializer as RegisterSerializer
-from .user_serializer import UserSerializer as UserSerializer
+"""Authentication serializers."""
+
+from .login_serializer import LoginSerializer
+from .register_serializer import RegisterSerializer
+from .user_serializer import UserSerializer
 
 __all__ = [
     "LoginSerializer",

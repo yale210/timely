@@ -15,6 +15,8 @@ class BroadcastJobDetailSerializer(serializers.ModelSerializer):
     recipients = BroadcastRecipientSerializer(many=True, read_only=True)
 
     class Meta:
+        """Metadata for the BroadcastJobDetailSerializer."""
+
         model = BroadcastJob
         fields = [
             "id",

@@ -1,1 +1,1 @@
-"""Authentication tests package."""
+"""Authentication view tests."""

@@ -1,3 +1,5 @@
+"""Serializers for user registration."""
+
 from rest_framework import serializers
 
 from ..models import User
@@ -7,6 +9,8 @@ class RegisterSerializer(serializers.ModelSerializer):
     """Serialize and validate data for user registration."""
 
     class Meta:
+        """Metadata for the RegisterSerializer."""
+
         model = User
         fields = ["id", "username", "email", "password"]
         extra_kwargs = {
@@ -40,5 +44,6 @@ class RegisterSerializer(serializers.ModelSerializer):
         Returns:
             User: The created user instance.
         """
+        validated_data["username"] = validated_data["username"].strip().lower()
         user = User.objects.create_user(**validated_data)
         return user

@@ -1,3 +1,5 @@
+"""API view for logging out of the current user session."""
+
 from drf_spectacular.utils import (
     OpenApiResponse,
     extend_schema,
