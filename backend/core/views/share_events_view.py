@@ -1,4 +1,4 @@
-"""View for retrieving all the pending share event objects for a user."""
+"""View to retrieve shared event requests."""
 
 from rest_framework import permissions
 from rest_framework.views import APIView
@@ -8,15 +8,25 @@ from django.db.models import Q
 
 
 class ShareEventsView(APIView):
+    """View to list pending shared event requests.
+
+    This view handles the GET request to retrieve all pending share event
+    requests where the current user is either the sender or the receiver.
+    """
+
     permission_classes = [permissions.IsAuthenticated]
 
     def get(self, request):
-        """
-        Handle POST requests for sending a share request to another user.
+        """Retrieve list of shared events involving the user.
 
-        Creates a pending share event object.
+        Args:
+            request (Request): The DRF request object.
+
+        Returns:
+            Response: A list of shared event metadata including sender,
+                receiver, and event details.
+
         """
-        # All share requests that the user sent or received
         shared_events = PendingShareEvent.objects.filter(
             Q(sender=request.user) | Q(receiver=request.user)
         )

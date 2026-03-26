@@ -1,18 +1,27 @@
-"""View for deleting user events."""
+"""Views for bulk deletion of events."""
 
 from rest_framework import permissions
-from rest_framework.views import APIView
 from rest_framework.response import Response
+from rest_framework.views import APIView
+
 from core.models import Event
 
 
 class DeleteAllEventsView(APIView):
-    """API view for deleting user events."""
+    """View for deleting all events belonging to the authenticated user."""
 
     permission_classes = [permissions.IsAuthenticated]
 
     def delete(self, request):
-        """Delete the authenticated user's Event objects."""
+        """Delete all events for the current user.
+
+        Args:
+            request (Request): The DRF request object.
+
+        Returns:
+            Response: A response message indicating the number of events deleted.
+
+        """
         all_events_count = Event.objects.filter(user=request.user).count()
 
         all_events = Event.objects.filter(user=request.user)

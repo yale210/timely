@@ -1,3 +1,5 @@
+"""Django REST Framework views for the core application."""
+
 from .assessment_view import AssessmentViewSet as AssessmentViewSet
 from .calendar_view import TaskViewSet as TaskViewSet
 from .grade_view import GradeViewSet as GradeViewSet

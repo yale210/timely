@@ -8,6 +8,8 @@ User = get_user_model()
 
 
 class FriendshipSerializer(serializers.ModelSerializer):
+    """Serializer for the Friendship model."""
+
     receiver = serializers.PrimaryKeyRelatedField(
         queryset=User.objects.all(), required=False
     )
@@ -40,6 +42,14 @@ class FriendshipSerializer(serializers.ModelSerializer):
         read_only_fields = ["sender", "state", "updated_at"]
 
     def validate(self, attrs):
+        """Validate the friendship data before saving.
+
+        Returns:
+            dict: The validated attributes for the Friendship instance.
+
+        Raises:
+            ValidationError: If the data is invalid.
+        """
         receiver = attrs.get("receiver")
         receiver_username = attrs.pop("receiver_username", None)
         if receiver and receiver_username:
@@ -80,13 +90,33 @@ class FriendshipSerializer(serializers.ModelSerializer):
         return request.build_absolute_uri(url) if request else url
 
     def get_sender_name(self, obj):
+        """Get the profile name of the sender.
+
+        Returns:
+            str: The sender's profile name or username if no profile name.
+        """
         return self._get_profile_name(obj.sender)
 
     def get_receiver_name(self, obj):
+        """Get the display name of the receiver.
+
+        Returns:
+            str: The receiver's name, or their username.
+        """
         return self._get_profile_name(obj.receiver)
 
     def get_sender_avatar(self, obj):
+        """Get the avatar URL of the sender.
+
+        Returns:
+            str | None: The URL of the sender's avatar or None.
+        """
         return self._get_avatar_url(obj.sender)
 
     def get_receiver_avatar(self, obj):
+        """Get the avatar URL of the receiver.
+
+        Returns:
+            str | None: The URL of the receiver's avatar or None.
+        """
         return self._get_avatar_url(obj.receiver)
