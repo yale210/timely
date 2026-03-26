@@ -2,11 +2,6 @@ import { TrophyIcon } from "@heroicons/react/24/solid";
 import type { Profile } from "@/types";
 import { getNameClassName, getPlacementAccent, getProfileProgressStyle, getProgressMetrics } from "@/utils/leaderboardUtils";
 
-interface LeaderboardEntryProps {
-  entry: Profile;
-  index: number;
-}
-
 const LeaderboardEntryPlacement = ({ index }: { index: number }) => {
   const placementAccent = getPlacementAccent(index);
 
@@ -45,7 +40,7 @@ const LeaderboardEntryProgress = ({ entry }: { entry: Profile }) => {
   );
 };
 
-const LeaderboardEntry = ({ entry, index }: LeaderboardEntryProps) => {
+const LeaderboardEntry = ({ entry, index }: { entry: Profile, index: number}) => {
   const placementAccent = getPlacementAccent(index);
   const nameClassName = getNameClassName(entry.name);
 

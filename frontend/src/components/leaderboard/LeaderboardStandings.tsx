@@ -1,10 +1,6 @@
 import type { Profile } from "@/types";
 import LeaderboardEntry from "./LeaderboardEntry";
 
-interface LeaderboardStandingsProps {
-  leaderboard: Profile[];
-}
-
 const LeaderboardStandingsHeader = ({ count }: { count: number }) => (
   <div className="mb-4 flex items-center justify-between gap-4 px-1">
     <div>
@@ -19,7 +15,7 @@ const LeaderboardStandingsHeader = ({ count }: { count: number }) => (
   </div>
 );
 
-const LeaderboardStandingsBody = ({ leaderboard }: LeaderboardStandingsProps) =>
+const LeaderboardStandingsBody = ({ leaderboard }: { leaderboard: Profile[] }) =>
   leaderboard.length === 0 ? (
     <div className="rounded-3xl border border-dashed border-gray-300 bg-white px-6 py-8 text-sm text-gray-500">
       No friends yet.
@@ -36,9 +32,7 @@ const LeaderboardStandingsBody = ({ leaderboard }: LeaderboardStandingsProps) =>
     </ul>
   );
 
-const LeaderboardStandings = ({
-  leaderboard,
-}: LeaderboardStandingsProps) => (
+const LeaderboardStandings = ({ leaderboard }: { leaderboard: Profile[] }) => (
   <section className="mx-auto w-full max-w-6xl">
     <LeaderboardStandingsHeader count={leaderboard.length} />
     <LeaderboardStandingsBody leaderboard={leaderboard} />
