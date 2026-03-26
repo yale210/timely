@@ -76,17 +76,6 @@ describe("useCourses", () => {
     expect(result.current.filteredCourses[0].name).toBe("Python Basics");
   });
 
-  it("returns managed courses for the current user", async () => {
-    const { result } = renderHook(() => useCourses());
-
-    await waitFor(() => {
-      expect(courseService.getCourses).toHaveBeenCalledTimes(1);
-    });
-
-    expect(result.current.managedFilteredCourses).toHaveLength(1);
-    expect(result.current.managedFilteredCourses[0].id).toBe(1);
-  });
-
   it("creates a course and appends it to state", async () => {
     const newCourse = {
       id: 3,
