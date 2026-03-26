@@ -1,5 +1,5 @@
 import type { Profile } from "@/types";
-import type { LeaderboardProfileStats } from "./leaderboardUtils";
+import type { LeaderboardProfileStats } from "@/utils/leaderboardUtils";
 import LeaderboardProfileCard from "./LeaderboardProfileCard";
 import LeaderboardStandings from "./LeaderboardStandings";
 

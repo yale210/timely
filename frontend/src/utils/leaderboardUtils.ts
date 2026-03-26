@@ -111,18 +111,34 @@ export const getProfileProgressStyle = (
  */
 export const getPlacementAccent = (index: number) => {
   if (index === 0) {
-    return { iconClassName: "text-amber-500", rankClassName: "text-amber-600", ringClassName: "ring-amber-200" };
+    return {
+      iconClassName: "text-amber-500",
+      rankClassName: "text-amber-600",
+      ringClassName: "ring-amber-200",
+    };
   }
 
   if (index === 1) {
-    return { iconClassName: "text-slate-400", rankClassName: "text-slate-500", ringClassName: "ring-slate-200" };
+    return {
+      iconClassName: "text-slate-400",
+      rankClassName: "text-slate-500",
+      ringClassName: "ring-slate-200",
+    };
   }
 
   if (index === 2) {
-    return { iconClassName: "text-orange-600", rankClassName: "text-orange-700", ringClassName: "ring-orange-200" };
+    return {
+      iconClassName: "text-orange-600",
+      rankClassName: "text-orange-700",
+      ringClassName: "ring-orange-200",
+    };
   }
 
-  return { iconClassName: "text-transparent", rankClassName: "text-gray-300", ringClassName: "ring-gray-200" };
+  return {
+    iconClassName: "text-transparent",
+    rankClassName: "text-gray-300",
+    ringClassName: "ring-gray-200",
+  };
 };
 
 /**

@@ -1,6 +1,6 @@
 import type { Profile } from "@/types";
-import type { LeaderboardProfileStats } from "./leaderboardUtils";
-import { getProfileProgressStyle } from "./leaderboardUtils";
+import type { LeaderboardProfileStats } from "@/utils/leaderboardUtils";
+import { getProfileProgressStyle } from "@/utils/leaderboardUtils";
 import LeaderboardStatCard from "./LeaderboardStatCard";
 
 interface LeaderboardProfileCardProps {

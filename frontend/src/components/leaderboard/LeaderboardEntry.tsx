@@ -1,6 +1,6 @@
 import { TrophyIcon } from "@heroicons/react/24/solid";
 import type { Profile } from "@/types";
-import { getNameClassName, getPlacementAccent, getProfileProgressStyle, getProgressMetrics } from "./leaderboardUtils";
+import { getNameClassName, getPlacementAccent, getProfileProgressStyle, getProgressMetrics } from "@/utils/leaderboardUtils";
 
 interface LeaderboardEntryProps {
   entry: Profile;

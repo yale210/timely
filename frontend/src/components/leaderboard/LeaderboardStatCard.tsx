@@ -1,4 +1,4 @@
-import { getRankValueClassName } from "./leaderboardUtils";
+import { getRankValueClassName } from "@/utils/leaderboardUtils";
 
 interface LeaderboardStatCardProps {
   label: string;
