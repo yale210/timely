@@ -11,7 +11,7 @@ const LeaderboardStandingsHeader = ({ count }: { count: number }) => (
       <p className="text-sm font-semibold uppercase tracking-[0.24em] text-gray-400">
         Friends Leaderboard
       </p>
-      <h2 className="mt-1 text-2xl font-semibold tracking-[-0.04em] text-[color:var(--text-color)]">
+      <h2 className="mt-1 text-2xl font-semibold tracking-[-0.04em] text-(--text-color)">
         Full standings
       </h2>
     </div>

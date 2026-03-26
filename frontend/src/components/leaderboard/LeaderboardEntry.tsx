@@ -1,11 +1,6 @@
 import { TrophyIcon } from "@heroicons/react/24/solid";
 import type { Profile } from "@/types";
-import {
-  getNameClassName,
-  getPlacementAccent,
-  getProfileProgressStyle,
-  getProgressMetrics,
-} from "./leaderboardUtils";
+import { getNameClassName, getPlacementAccent, getProfileProgressStyle, getProgressMetrics } from "./leaderboardUtils";
 
 interface LeaderboardEntryProps {
   entry: Profile;
@@ -14,6 +9,7 @@ interface LeaderboardEntryProps {
 
 const LeaderboardEntryPlacement = ({ index }: { index: number }) => {
   const placementAccent = getPlacementAccent(index);
+
   return (
     <div className="flex items-center gap-3">
       {index < 3 ? (
@@ -34,6 +30,7 @@ const LeaderboardEntryPlacement = ({ index }: { index: number }) => {
 const LeaderboardEntryProgress = ({ entry }: { entry: Profile }) => {
   const { level, progress, requiredExp } = getProgressMetrics(entry);
   const progressStyle = getProfileProgressStyle(progress);
+
   return (
     <div className="min-w-0 lg:-ml-4 lg:flex-1">
       <div className="flex items-center justify-between text-[11px] font-semibold uppercase tracking-[0.22em] text-gray-400">
@@ -53,15 +50,15 @@ const LeaderboardEntry = ({ entry, index }: LeaderboardEntryProps) => {
   const nameClassName = getNameClassName(entry.name);
 
   return (
-    <li className={`w-full rounded-[1.5rem] border border-gray-200 bg-white px-5 py-3.5 shadow-sm ring-1 ${placementAccent.ringClassName} sm:px-6`}>
+    <li className={`w-full rounded-3xl border border-gray-200 bg-white px-5 py-3.5 shadow-sm ring-1 ${placementAccent.ringClassName} sm:px-6`}>
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-5">
-        <div className="flex items-center gap-4 sm:min-w-[9rem]">
+        <div className="flex items-center gap-4 sm:min-w-36">
           <LeaderboardEntryPlacement index={index} />
         </div>
         <div className="min-w-0 flex-1">
           <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:gap-3">
-            <div className="min-w-0 lg:w-[10.5rem] xl:w-[12rem]">
-              <p className={`truncate font-semibold text-[color:var(--text-color)] ${nameClassName}`}>
+            <div className="min-w-0 lg:w-42 xl:w-48">
+              <p className={`truncate font-semibold text-(--text-color) ${nameClassName}`}>
                 {entry.name}
               </p>
             </div>

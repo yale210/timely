@@ -36,7 +36,7 @@ interface LeaderboardProfileProgressProps {
 const EMPTY_BIO_TEXT = "Add a bio to make your profile card feel more personal.";
 
 const LeaderboardProfileEmptyState = () => (
-  <section className="rounded-[2rem] border border-gray-200 bg-linear-to-br from-white via-cyan-50/60 to-white px-5 py-6 shadow-sm sm:px-7">
+  <section className="rounded-4xl border border-gray-200 bg-linear-to-br from-white via-cyan-50/60 to-white px-5 py-6 shadow-sm sm:px-7">
     <p className="text-sm text-gray-500">No profile data available.</p>
   </section>
 );
@@ -56,7 +56,7 @@ const LeaderboardProfileText = ({bio, name, slogan}: LeaderboardProfileTextProps
     <p className="text-sm font-semibold uppercase tracking-[0.24em] text-cyan-700">
       My Progress
     </p>
-    <h2 className="mt-1 text-3xl font-semibold tracking-[-0.04em] text-[color:var(--text-color)]">
+    <h2 className="mt-1 text-3xl font-semibold tracking-[-0.04em] text-(--text-color">
       {name}
     </h2>
     <p className="mt-2 max-w-2xl text-sm leading-6 text-gray-600">
@@ -120,7 +120,7 @@ const LeaderboardProfileStatsGrid = ({
   rank: string;
   xp: number;
 }) => (
-  <div className="grid gap-3 sm:grid-cols-3 lg:w-[30rem]">
+  <div className="grid gap-3 sm:grid-cols-3 lg:w-120">
     <LeaderboardStatCard label="Joined" value={joinedDate} />
     <LeaderboardStatCard label="Total XP" value={`${xp} XP`} />
     <LeaderboardStatCard label="Friends Rank" value={rank} />
@@ -128,7 +128,7 @@ const LeaderboardProfileStatsGrid = ({
 );
 
 const LeaderboardProfileCardContent = ({ profile, profileStats }: { profile: Profile; profileStats: LeaderboardProfileStats;}) => (
-  <section className="rounded-[2rem] border border-gray-200 bg-linear-to-br from-white via-cyan-50/60 to-white px-5 py-6 shadow-sm sm:px-7">
+  <section className="rounded-4xl border border-gray-200 bg-linear-to-br from-white via-cyan-50/60 to-white px-5 py-6 shadow-sm sm:px-7">
     <div className="flex flex-col gap-5">
       <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
         <LeaderboardProfileIdentity

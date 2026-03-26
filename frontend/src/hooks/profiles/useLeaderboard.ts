@@ -2,10 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import api from "@/services/api";
 import { getMyProfile } from "@/services/profileService";
 import type { Profile } from "@/types";
-import {
-  buildProfileStats,
-  getProfileProgressStyle,
-} from "@/components/leaderboard/leaderboardUtils";
+import { buildProfileStats, getProfileProgressStyle } from "@/components/leaderboard/leaderboardUtils";
 
 const getErrorMessage = (error: unknown) =>
   error instanceof Error ? error.message : "Failed to load leaderboard";

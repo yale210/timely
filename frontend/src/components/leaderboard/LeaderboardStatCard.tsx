@@ -17,7 +17,7 @@ const LeaderboardStatCard = ({
       className={`mt-1.5 text-lg font-semibold ${
         label === "Friends Rank"
           ? getRankValueClassName(value)
-          : "text-[color:var(--text-color)]"
+          : "text-(--text-color)"
       }`}
     >
       {value}

@@ -1,11 +1,9 @@
 import AppLayout from "@/layouts/AppLayout";
-import LeaderboardContent from "@/components/leaderboard/LeaderboardContent";
-import LeaderboardHeader from "@/components/leaderboard/LeaderboardHeader";
+import { LeaderboardContent, LeaderboardHeader } from "@/components/leaderboard";
 import { useLeaderboard } from "@/hooks/profiles/useLeaderboard";
 
 /**
  * Renders the current user's leaderboard summary alongside the friends standings list.
- *
  * @returns The leaderboard page layout and content.
  */
 export default function Leaderboard() {
