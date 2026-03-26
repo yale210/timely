@@ -1,3 +1,5 @@
+"""View for sending shared events."""
+
 from rest_framework import permissions
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -10,7 +12,12 @@ class ShareSendView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def post(self, request):
-        # Who the event is being shared with
+        """
+        Handle part of the sharing of an event between users.
+        Specifically sending an event share request to another user.
+        """
+
+        # Who the event is being shared with and what event ID it is
         username = request.data.get("Receiver")
         event_id = request.data.get("Event-ID")
 
@@ -19,8 +26,7 @@ class ShareSendView(APIView):
             response = {"error": "Please provide a username and event ID"}
             return Response(response, status=400)
 
-        # Events begin with an "e" visually to the user, but in the DB they are just an int
-        # e.g. e123 -> 123
+        # Checks that events are in the correct format and then converts them e.g. e123 -> 123
         try:
             event_id_string = str(event_id).strip()
             if event_id_string.startswith("e"):
@@ -31,7 +37,7 @@ class ShareSendView(APIView):
             response = {"error": "Please provide a valid username and event ID"}
             return Response(response, status=400)
 
-        # This is a security measure to ensure that a user can't share an event they don't own
+        # Just because an event exists, it doesn't mean that the user can share it
         event_belongs_to_sharer = Event.objects.filter(
             user=request.user,
             pk=event_id_in_db,
@@ -73,11 +79,8 @@ class ShareSendView(APIView):
             end_time=event_end,
         ).exists()
 
-        # Techincally the event is not "sent", but this approach ensures privacy for the recipient as telling the sender
-        # that the event was sent ensures that no information about the receiver's calenar is leaked
-
-        # e.g. A malicious user could try sending different events to someone to see what they already have in their calendar
-        # this would be a privacy violation.
+        # This is a special case: the user sends an event that the other person already has, but the user will not be told
+        # that the event failed to save as this would reveal the receivers events in their calendar - privacy violation
         if event_belongs_to_receiver:
             response = {"detail": "Event sent 0"}
             return Response(response)
@@ -89,15 +92,14 @@ class ShareSendView(APIView):
         ).exists()
 
         # Only 1 request per person, per event
-        # This ensures that the GUI is kept clean
+        # This ensures that the GUI is kept clean, and event share requests can't be spam sent
         if request_already_exists:
             response = {
                 "detail": "You may not send more than 1 of the same event to the same person"
             }
             return Response(response, status=400)
 
-        # Just because the event was shared successfully doesn't mean that the receiver will want to accept it
-        # The receiver will have a chance to accept or reject it
+        # After the event is sent, the receiver can choose to accept or reject it -> share_accept_view.py
         PendingShareEvent.objects.create(
             sender=request.user,
             receiver=receiver_user,
