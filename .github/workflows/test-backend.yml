@@ -51,7 +51,8 @@ jobs:
             - name: Run tests
               run: |
                   cd backend
-                  coverage run manage.py test
+                  coverage run --parallel-mode --concurrency=multiprocessing --rcfile=./.coveragerc manage.py test --parallel=4
+                  coverage combine
                   coverage report --fail-under=90 -m
             - name: Generate coverage html
               if: always()
