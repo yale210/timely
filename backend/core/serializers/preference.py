@@ -4,6 +4,7 @@ from core.models import Preference
 
 
 class PreferenceSerializer(serializers.ModelSerializer):
+    """Serializer for the Preference model."""
     user = serializers.HiddenField(default=serializers.CurrentUserDefault())
 
     class Meta:
@@ -25,6 +26,14 @@ class PreferenceSerializer(serializers.ModelSerializer):
         read_only_fields = ["id"]
 
     def validate(self, attributes):
+        """Validate the preference data before saving.
+
+        Returns:
+            dict: The validated attributes for the Preference instance.
+
+        Raises:
+            ValidationError: If the data does not meet model's validation criteria.
+        """
         preference = self.instance or Preference()
 
         for attribute, value in attributes.items():

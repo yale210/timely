@@ -60,6 +60,7 @@ class EventSerializer(serializers.ModelSerializer):
         return representation
 
     def __init__(self, *args, **kwargs):
+        """Initialise the serializer."""
         super().__init__(*args, **kwargs)
         request = self.context.get("request")
         if request and request.user and request.user.is_authenticated:
@@ -70,6 +71,14 @@ class EventSerializer(serializers.ModelSerializer):
             self.fields["categories"].queryset = Category.objects.none()
 
     def validate(self, attributes):
+        """Validate the event data.
+
+        Args:
+            attributes (dict): The data to be validated.
+
+        Returns:
+            dict: The validated data.
+        """
         reminders_data = attributes.get("reminders", [])
 
         self._validate_reminders(reminders_data, attributes)
@@ -118,6 +127,14 @@ class EventSerializer(serializers.ModelSerializer):
 
     @transaction.atomic
     def create(self, validated_data):
+        """Create an Event instance and it's reminders.
+        
+        Args:
+            validated_data (dict): The validated data for the Event and its reminders.
+
+        Returns:
+            Event: The created instance.
+        """
         reminders_data = validated_data.pop("reminders", [])
         categories_data = validated_data.pop("categories", [])
         event = Event.objects.create(**validated_data)
@@ -129,6 +146,15 @@ class EventSerializer(serializers.ModelSerializer):
 
     @transaction.atomic
     def update(self, instance, validated_data):
+        """Update an Event instance and its reminders.
+
+        Args:
+            instance (Event): The Event instance to be updated.
+            validated_data (dict): The validated data.
+
+        Returns:
+            Event: The updated Event instance.
+        """
         reminders_data = validated_data.pop("reminders", None)
         categories_data = validated_data.pop("categories", None)
 
@@ -172,6 +198,7 @@ class EventSerializer(serializers.ModelSerializer):
 
 
 class EventResponseSerializer(serializers.ModelSerializer):
+    """Serializer for the Event model used in responses."""
     categories = CategorySerializer(many=True, read_only=True)
     reminders = EventReminderSerializer(many=True, read_only=True)
     split_from_event_id = serializers.IntegerField(read_only=True)
@@ -195,6 +222,7 @@ class EventResponseSerializer(serializers.ModelSerializer):
 
 
 class ExpandedEventInstanceSerializer(serializers.Serializer):
+    """Serializer for event instances."""
     id = serializers.IntegerField()
     title = serializers.CharField()
     description = serializers.CharField(allow_blank=True)

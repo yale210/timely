@@ -512,6 +512,11 @@ class CalendarResponseSerializer(serializers.ModelSerializer):
         ]
 
     def get_remaining_minutes(self, instance):
+        """Calculate the remaining minutes for a task by subtracting the completed minutes and estimated minutes.
+
+        Returns:
+            int: The number of remaining minutes for the task.
+        """
         return max(0, instance.estimated_minutes - instance.completed_minutes)
 
     def validate(self, attrs):
