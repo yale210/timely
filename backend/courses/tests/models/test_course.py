@@ -1,8 +1,8 @@
 import datetime
-from django.test import TestCase
 
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
+from django.test import TestCase
 from django.utils import timezone
 
 from courses.models import CourseEvent, Teacher, Course, Student, CourseEnrollment
