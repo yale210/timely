@@ -1,11 +1,12 @@
+"""Shared base model for event-like records."""
+
 from django.core.exceptions import ValidationError
 from django.db import models
 from django.utils.timezone import now
 
 
 class BaseEventModel(models.Model):
-    """BaseEventModel is an abstract model that provides common fields for event related models.
-    """
+    """BaseEventModel is an abstract model that provides common fields for event related models."""
 
     title = models.CharField(max_length=500, default="Untitled Event")
     description = models.TextField(blank=True)
@@ -19,6 +20,11 @@ class BaseEventModel(models.Model):
         abstract = True
 
     def clean(self):
+        """Validate the event time window.
+
+        Raises:
+            ValidationError: If end_time is before start_time.
+        """
         if self.start_time and self.end_time and self.end_time < self.start_time:
             raise ValidationError(
                 {"end_time": "End time must be after or equal to start time."}

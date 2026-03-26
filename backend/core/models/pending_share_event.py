@@ -1,3 +1,5 @@
+"""Pending event share model definitions."""
+
 from django.conf import settings
 from django.db import models
 from .event import Event
@@ -5,6 +7,10 @@ from .event import Event
 
 class PendingShareEvent(models.Model):
     """Model to store pending event shares between users.
+<<<<<<< HEAD
+=======
+
+>>>>>>> 5ded433200bfe3694b6104f0db9d21c3d5fd874f
     Allows for the tracking of event shares, enabling collaboration and sharing of events between users.
     """
 

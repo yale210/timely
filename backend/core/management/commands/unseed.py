@@ -20,16 +20,38 @@ from profiles.models import Profile
 
 
 class Command(BaseCommand):
-    """Removes all objects from the database."""
+    """Management command for unseeding the database.
+
+    This class defines the logic for the `unseed` command, which iterates through
+    the main application models and deletes all their instances from the database.
+
+    Attributes:
+        help (str): Short description of the command for the help output.
+
+    """
 
     help = "Unseeds the database. This allows for a clean state for seeding."
 
     def handle(self, *args, **kwargs):
-        """Deletes all objects from the database, unseeding it and allowing for a fresh seed.
+        """Execute the unseeding process.
+
+        Calls the internal `_delete_objects` method to perform the deletion
+        of all records from the database.
+
+        Args:
+            *args: Variable length argument list.
+            **kwargs: Arbitrary keyword arguments.
+
         """
         self._delete_objects()
 
     def _delete_objects(self):
+        """Delete all records for the predefined set of models.
+
+        This method identifies the models that need to be cleared, counts
+        the existing records for reporting, and then deletes all instances.
+        It handles both the custom User model and associated application models.
+        """
         User = get_user_model()
         models = [
             User,
@@ -46,9 +68,11 @@ class Command(BaseCommand):
         ]
 
         counts = []
+        # Gather counts before deletion for informative feedback
         for model in models:
             counts.append((model, model.objects.count()))
 
+        # Perform bulk deletion for each model
         for model, count in counts:
             model.objects.all().delete()
             print(f"Deleted {count} of {model.__name__}")

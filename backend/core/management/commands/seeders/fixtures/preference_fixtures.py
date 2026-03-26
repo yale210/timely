@@ -1,3 +1,5 @@
+"""Fixture data for seeding the database."""
+
 preferences = [
     {
         "model": "core.preference",
@@ -13,7 +15,7 @@ preferences = [
         "model": "core.preference",
         "fields": {
             "user": "david",
-            "day_end": "02:00:01",
+            "day_end": "22:00:01",
             "day_start": "05:57:02",
             "days_off": [1],
             "timezone": "Europe/London",

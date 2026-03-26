@@ -1,15 +1,20 @@
+"""Event model definition."""
+
+import math
+from zoneinfo import ZoneInfo
+
 from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.db import models
+from django.utils import timezone
 
 from .base_event import BaseEventModel
 from .category import Category
-from zoneinfo import ZoneInfo
-from django.utils import timezone
 
 
 class Event(BaseEventModel):
     """Model used to allow for events to be created.
+
     Events can be one-off, or recurring and with set intervals.
     """
 
@@ -24,6 +29,8 @@ class Event(BaseEventModel):
     )
 
     class RecurrenceInterval(models.TextChoices):
+        """Supported recurrence interval values."""
+
         DAILY = "daily", "Daily"
         WEEKLY = "weekly", "Weekly"
         MONTHLY = "monthly", "Monthly"
@@ -43,6 +50,11 @@ class Event(BaseEventModel):
     )
 
     def clean(self):
+        """Validate recurrence settings.
+
+        Raises:
+            ValidationError: If the recurrence settings are invalid.
+        """
         super().clean()
         errors = {}
 
@@ -61,27 +73,40 @@ class Event(BaseEventModel):
             raise ValidationError(errors)
 
     def save(self, *args, **kwargs):
+        """Run validation for the model before saving.
+
+        Args:
+            *args: Variable length argument list.
+            **kwargs: Arbitrary keyword arguments.
+
+        Returns:
+            Event: The saved event instance.
+        """
         self.full_clean()
         return super().save(*args, **kwargs)
 
     def calculate_time_left(self):
         """Calculate the time left of the event.
+
         If event is recurring, return days between now and recurrence end date.
         If event is a one off, return days between start_time and now.
+
+        Returns:
+            int: The number of days remaining, or 0 if the event has passed.
         """
-        # If user doesn't  have a preference, we don't know their timezone so return 0
+        # If user doesn't have a preference, we don't know their timezone so return 0
         if not hasattr(self.user, "preference") or not self.user.preference.timezone:
             return 0
 
         user_timezone = ZoneInfo(self.user.preference.timezone)
-        today = timezone.now().astimezone(user_timezone).date()
+        now = timezone.now().astimezone(user_timezone)
+        today = now.date()
 
         if self.recurrence_interval and self.recurrence_end:
             return max((self.recurrence_end - today).days, 0)
 
-        # DB uses UTC, convert to correct timezone first.
         if self.start_time:
-            start_time = self.start_time.astimezone(user_timezone).date()
-            return max((start_time - today).days, 0)
+            diff = self.start_time - now
+            return max(math.ceil(diff.total_seconds() / 86400), 0)
 
         return 0

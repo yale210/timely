@@ -1,8 +1,9 @@
-"""View for exporting events."""
+"""Views for exporting user event data."""
 
+from django.http import HttpResponse
 from rest_framework import permissions
 from rest_framework.views import APIView
-from django.http import HttpResponse
+
 from core.models import Event
 
 
@@ -12,9 +13,14 @@ class ExportView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def get(self, request):
-        """Handle requests for exporting a user's events.
+        """Generate and return an iCalendar format text file for the user's events.
 
-        Generates a .txt file.
+        Args:
+            request (Request): The DRF request object.
+
+        Returns:
+            HttpResponse: A plain text file attachment in iCalendar format.
+
         """
         # All of the events that belong to the user
         events = Event.objects.filter(user=request.user)

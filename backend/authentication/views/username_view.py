@@ -7,8 +7,7 @@ User = get_user_model()
 
 
 class UsernameView(APIView):
-    """
-    Returns the username for a user ID.
+    """Returns the username for a user ID.
     """
 
     def get(self, request, user_id: int):

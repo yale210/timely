@@ -1,3 +1,5 @@
+"""Reccuring events override model definitions."""
+
 from django.db import models
 
 from .base_event import BaseEventModel
@@ -6,8 +8,12 @@ from .event import Event
 
 
 class EventOverride(BaseEventModel):
+<<<<<<< HEAD
     """Stores an override for a specific occurrence of a recurring event.
     """
+=======
+    """Stores an override for a specific occurrence of a recurring event."""
+>>>>>>> 5ded433200bfe3694b6104f0db9d21c3d5fd874f
 
     parent_event = models.ForeignKey(
         Event,
@@ -31,5 +37,14 @@ class EventOverride(BaseEventModel):
         ]
 
     def save(self, *args, **kwargs):
+        """Run validation for the model before saving.
+
+        Args:
+            *args: Variable length argument list.
+            **kwargs: Arbitrary keyword arguments.
+
+        Returns:
+            EventOverride: The saved event's override instance.
+        """
         self.full_clean()
         return super().save(*args, **kwargs)

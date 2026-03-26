@@ -1,4 +1,4 @@
-"""View for replying to share event requests."""
+"""View for accepting or rejecting shared event requests."""
 
 from rest_framework import permissions
 from rest_framework.views import APIView
@@ -8,14 +8,25 @@ from core.models import PendingShareEvent
 
 
 class ShareAcceptView(APIView):
-    """API view for responding to share event requests."""
+    """View to accept or reject a shared event request.
+
+    This view handles the POST request to either create a new event for the
+    recipient (if accepted) or simply dismiss the share request (if rejected).
+    """
 
     permission_classes = [permissions.IsAuthenticated]
 
     def post(self, request):
-        """Handle POST requests for responding to a shared event.
+        """Handle accepting or rejecting a shared event.
 
-        Share requests can be accepted or rejected.
+        Args:
+            request (Request): The DRF request object containing:
+                - Decision (str): Either "accept" or "reject".
+                - Event-ID (int): The ID of the pending share event.
+
+        Returns:
+            Response: A DRF response with a success message or an error message.
+
         """
         # "accept" or "reject"
         decision = request.data.get("Decision")

@@ -1,3 +1,5 @@
+"""Fixture data for seeding the database."""
+
 assessments = [
     {
         "model": "core.assessment",

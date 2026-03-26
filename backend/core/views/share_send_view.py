@@ -1,4 +1,4 @@
-"""View for sending shared events."""
+"""View for sending event share requests to other users."""
 
 from rest_framework import permissions
 from rest_framework.views import APIView
@@ -9,13 +9,29 @@ from django.contrib.auth import get_user_model
 
 
 class ShareSendView(APIView):
+    """View to initiate sharing an event with another user.
+
+    This view handles the POST request to create a pending share event request.
+    It performs security checks to ensure the sender owns the event and that
+    the receiver exists and does not already have a duplicate event.
+    """
+
     permission_classes = [permissions.IsAuthenticated]
 
     def post(self, request):
-        """Handle part of the sharing of an event between users.
-        Specifically sending an event share request to another user.
+        """Send an event share request to another user.
+
+        Args:
+            request (Request): The DRF request object containing:
+                - Receiver (str): The username of the recipient.
+                - Event-ID (str|int): The ID of the event to share.
+
+        Returns:
+            Response: A DRF response indicating if the event was sent or
+                an error message if validation fails.
+
         """
-        # Who the event is being shared with and what event ID it is
+        # Who the event is being shared with
         username = request.data.get("Receiver")
         event_id = request.data.get("Event-ID")
 
