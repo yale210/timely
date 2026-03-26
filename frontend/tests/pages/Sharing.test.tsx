@@ -34,7 +34,7 @@ describe("Sharing page", () => {
 
   const shareEvent = vi.fn();
   const replyShare = vi.fn();
-  const fetchShares = vi.fn(async () => undefined);
+  const fetchShares = vi.fn(() => Promise.resolve(undefined));
 
   const buildEvent = (overrides: Partial<Event> = {}): Event => ({
     id: 7,

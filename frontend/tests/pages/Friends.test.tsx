@@ -102,7 +102,7 @@ describe("Friends page", () => {
       error: null,
       sending: false,
       actingIds: new Set<number>(),
-      refresh: vi.fn(async () => undefined),
+      refresh: vi.fn(() => Promise.resolve(undefined)),
       sendRequest: mockSendRequest,
       acceptRequest: mockAcceptRequest,
       declineRequest: mockDeclineRequest,

@@ -76,20 +76,20 @@ describe("Assessments page", () => {
     openNewAssessment: vi.fn(),
     openAssessment: vi.fn(),
     closeSidebar: vi.fn(),
-    submitAssessment: vi.fn(async () => undefined),
-    deleteAssessment: vi.fn(async () => undefined),
+    submitAssessment: vi.fn(() => Promise.resolve(undefined)),
+    deleteAssessment: vi.fn(() => Promise.resolve(undefined)),
     setPendingDeleteId: vi.fn(),
     openGradebook: vi.fn(),
     closeGradebook: vi.fn(),
-    createCategory: vi.fn(async (text: string) => ({ id: 99, text })),
-    updateCategory: vi.fn(async (id: number, patch: { colour?: string | null; colour_override?: boolean }) => ({
+    createCategory: vi.fn((text: string) => Promise.resolve({ id: 99, text })),
+    updateCategory: vi.fn((id: number, patch: { colour?: string | null; colour_override?: boolean }) => Promise.resolve({
       id,
       text: "Updated category",
       colour: patch.colour ?? null,
       colour_override: patch.colour_override,
     })),
-    deleteCategory: vi.fn(async () => undefined),
-    refresh: vi.fn(async () => undefined),
+    deleteCategory: vi.fn(() => Promise.resolve(undefined)),
+    refresh: vi.fn(() => Promise.resolve(undefined)),
   };
 
   const buildAssessment = (overrides: Partial<Assessment> = {}): Assessment => ({
