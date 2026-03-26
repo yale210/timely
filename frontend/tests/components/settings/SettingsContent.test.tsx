@@ -19,6 +19,16 @@ vi.mock("@/components/settings/ThemeSection", () => ({
   default: () => <div>theme-section</div>,
 }));
 
+vi.mock("@/components/settings/PrivacySection", () => ({
+  default: ({onDeleteEvents, onDeleteTasks}: any) => (
+  <div>
+  <div>privacy-section</div>,
+  <button onClick={onDeleteEvents}>Delete Events</button>,
+  <button onClick={onDeleteTasks}>Delete Tasks</button>,
+  </div>
+  ),
+}));
+
 const preference: Preference = {
   id: 1,
   day_start: "08:00:00",
@@ -30,7 +40,7 @@ const preference: Preference = {
 };
 
 const createProps = (
-  activeSection: "preferences" | "features" | "themes" | "fonts" | "profile",
+  activeSection: "preferences" | "features" | "themes" | "fonts" | "profile" | "privacy",
 ) => ({
   state: {
     activeSection,
@@ -111,4 +121,19 @@ describe("SettingsContent", () => {
     rerender(<SettingsContent {...createProps("fonts")} />);
     expect(screen.getByText("theme-section")).toBeInTheDocument();
   });
+
+  it("renders privacy menu", () => {
+    render(<SettingsContent {...createProps("privacy")} />);
+
+
+    expect(screen.getByText("privacy-section")).toBeInTheDocument();
+
+    const deleteEventsButton = screen.getByText("Delete Events")
+    const deleteTasksButton = screen.getByText("Delete Tasks")
+
+    fireEvent.click(deleteEventsButton);
+    fireEvent.click(deleteTasksButton);
+  });
+
+
 });

@@ -250,7 +250,7 @@ class DeleteAllEventsViewTests(TestCase):
                 "Event-ID": "e1",
             },
         )
-        self.assertEqual(sharing.data["detail"], "Event sent 1")
+        self.assertEqual(sharing.data["message"], "Event sent 1")
         self.assertEqual(PendingShareEvent.objects.count(), 1)
 
         # Now deleting
@@ -303,7 +303,7 @@ class DeleteAllEventsViewTests(TestCase):
                 "Event-ID": "e1",
             },
         )
-        self.assertEqual(sharing.data["detail"], "Event sent 1")
+        self.assertEqual(sharing.data["message"], "Event sent 1")
         self.assertEqual(PendingShareEvent.objects.count(), 1)
 
         self.client.logout
