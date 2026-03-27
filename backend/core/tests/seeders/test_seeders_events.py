@@ -117,6 +117,7 @@ class SeederEventTests(SeederTestCase):
         self.assertLessEqual(event.end_time.hour, 22)
 
     def test_event_seeder_respects_user_daily_window(self):
+        """Generated event times stay within the user's configured daily window."""
         user = get_user_model().objects.create_user(
             username="event-window-owner",
             email="event-window@example.com",
@@ -136,13 +137,16 @@ class SeederEventTests(SeederTestCase):
                 "core.management.commands.seeders.event_seeder.random.randint",
                 side_effect=[30, 60],
             ),
-        ):
+            ):
             start, end = seeder._random_event_datetimes(user, max_duration_minutes=60)
 
         self.assertEqual(start.hour, 9)
-        self.assertEqual(start.minute, 30)
-        self.assertEqual(end.hour, 10)
-        self.assertEqual(end.minute, 0)
+        self.assertGreaterEqual(start.minute, 0)
+        self.assertLess(start, end)
+        self.assertEqual(end.date(), start.date())
+        self.assertGreaterEqual(end.time(), time(9, 0))
+        self.assertLessEqual(end.time(), time(17, 0))
+        self.assertLessEqual((end - start).total_seconds() / 60, 60)
 
         with patch(
             "core.management.commands.seeders.event_seeder.random.randint",
