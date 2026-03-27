@@ -31,14 +31,15 @@ const PrivacyActionCard = ({
         type="button"
         onClick={onClick}
         disabled={deleting}
-        className={`inline-flex shrink-0 items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
+        aria-label={deleting ? `Deleting ${title}` : title}
+        title={deleting ? `Deleting ${title}` : title}
+        className={`inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-lg transition-colors ${
           deleting
             ? "cursor-not-allowed bg-gray-200 text-gray-500"
             : "bg-red-50 text-red-700 hover:bg-red-100"
         }`}
       >
         <span className="material-icons text-lg">{icon}</span>
-        {deleting ? "Deleting..." : title}
       </button>
     </div>
   </div>
@@ -101,7 +102,7 @@ const PrivacySection = ({
         <PrivacyActionCard
           title="Delete Events"
           description="Remove all calendar events from your account. This cannot be undone."
-          icon="event_busy"
+          icon="delete_forever"
           deleting={deleting}
           onClick={handleDeleteEvents}
         />
