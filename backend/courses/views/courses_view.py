@@ -12,29 +12,22 @@ from rest_framework.response import Response
 from courses.models.course import Course, CourseEnrollment
 from courses.models.student import Student
 from courses.models.teacher import Teacher
-from courses.permissions.course import CoursePermission
-from courses.serializers.course import CourseCreateSerializer, CourseSerializer
-from courses.views.base import CourseViewSetBase
+from courses.permissions.course_permission import CoursePermission
+from courses.serializers.course_serializer import CourseCreateSerializer, CourseSerializer
+from courses.views.base_view import CourseViewSetBase
 
 
 class CourseCrudMixin(CourseViewSetBase):
-    """Mixin providing standard CRUD actions for Course objects.
-
-    Implements list, create, retrieve, update, partial_update, and destroy
-    actions with specific business logic for course visibility and lead assignment.
-    """
+    """Mixin for course CRUD actions."""
 
     def list(self, request):
-        """Returns a list of courses the user is involved in.
-
-        Filters courses by enrollment status, staff assignment, or lead status.
-        Superusers receive all courses in the system.
+        """Return courses relevant to the authenticated user.
 
         Args:
-            request: The current HttpRequest object.
+            request: The incoming DRF request.
 
         Returns:
-            A Response object containing a list of Course objects.
+            Response: A response containing the visible course list.
         """
         student = Student.objects.filter(user=request.user).first()
         teacher = Teacher.objects.filter(user=request.user).first()
@@ -44,12 +37,8 @@ class CourseCrudMixin(CourseViewSetBase):
             return Response(CourseSerializer(courses, many=True).data, status=200)
 
         if not student and not teacher:
-            return Response(
-                {"detail": "Courses not found for the current user."},
-                status=404,
-            )
+            return Response([], status=200)
 
-        # Retrieve courses where user is student, staff, or lead teacher
         courses = (
             Course.objects.filter(
                 Q(enrollments__student=student, enrollments__active=True)
