@@ -58,7 +58,7 @@ class Command(BaseCommand):
             all_users = User.objects.all()
             total_created = 0
             total_updated = 0
-
+            #This is slow. We should use a Write Ahead Log for event updates instead then batch process them. Instead of fetching all users
             for user in all_users:
                 stats = CourseEventSyncService.sync_user_course_events(user)
                 total_created += stats["created"]
