@@ -5,17 +5,9 @@ and reconciling them with user personal calendars (e.g., Google Calendar) or
 the internal core Event model.
 """
 
-from abc import ABC, abstractmethod
-from datetime import datetime
-from typing import List, Optional, Dict, Any
-
-from django.contrib.auth import get_user_model
-from django.contrib.auth.models import User
 import logging
 
-
-from core.models import Event
-
+from django.contrib.auth import get_user_model
 
 logger = logging.getLogger(__name__)
 

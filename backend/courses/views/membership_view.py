@@ -12,11 +12,11 @@ from secrets import token_urlsafe
 
 from courses.models.course import CourseEnrollment, CourseJoinCode
 from courses.models.student import Student
-from courses.serializers.course import (
+from courses.serializers.course_serializer import (
     CourseJoinCodeCreateSerializer,
     CourseJoinCodeSerializer,
 )
-from courses.views.base import CourseViewSetBase
+from courses.views.base_view import CourseViewSetBase
 
 
 class CourseMembershipMixin(CourseViewSetBase):

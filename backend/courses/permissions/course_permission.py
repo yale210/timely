@@ -9,7 +9,7 @@ DRF view actions.
 from rest_framework.permissions import BasePermission
 
 from courses.models.course import CourseEnrollment, CourseStaff
-from courses.permissions.TeacherPermission import IsTeacher
+from courses.permissions.teacher_permission import IsTeacher
 
 
 class CoursePermission(BasePermission):

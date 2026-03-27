@@ -7,7 +7,7 @@ actions a specific user is permitted to perform on a given course instance.
 from django.contrib.auth import get_user_model
 from rest_framework import serializers
 
-from courses.permissions.course import CoursePermission
+from courses.permissions.course_permission import CoursePermission
 
 User = get_user_model()
 

@@ -11,8 +11,8 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.viewsets import ViewSet
 
 from courses.models.course import Course
-from courses.permissions.course import CoursePermission
-from courses.serializers.course import CourseSerializer
+from courses.permissions.course_permission import CoursePermission
+from courses.serializers.course_serializer import CourseSerializer
 
 User = get_user_model()
 

@@ -8,10 +8,10 @@ from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.decorators import action
 
-from courses.serializers.permission import (
+from courses.serializers.permission_serializer import (
     PermissionsSerializer as CoursePermissionsSerializer,
 )
-from courses.views.base import CourseViewSetBase
+from courses.views.base_view import CourseViewSetBase
 
 
 class CoursePermissionsMixin(CourseViewSetBase):

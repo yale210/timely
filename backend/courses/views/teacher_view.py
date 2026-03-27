@@ -12,8 +12,8 @@ from rest_framework.response import Response
 from rest_framework.viewsets import ViewSet
 
 from courses.models import Course, Teacher
-from courses.permissions.TeacherPermission import IsTeacher
-from courses.serializers.teacher import TeacherCreateSerializer, TeacherSerializer
+from courses.permissions.teacher_permission import IsTeacher
+from courses.serializers.teacher_serializer import TeacherCreateSerializer, TeacherSerializer
 
 User = get_user_model()
 

@@ -10,8 +10,8 @@ from rest_framework.response import Response
 
 from courses.models.course import CourseEvent
 from courses.models.teacher import Teacher
-from courses.serializers.course import CourseEventSerializer
-from courses.views.base import CourseViewSetBase
+from courses.serializers.course_serializer import CourseEventSerializer
+from courses.views.base_view import CourseViewSetBase
 
 
 class CourseEventsMixin(CourseViewSetBase):

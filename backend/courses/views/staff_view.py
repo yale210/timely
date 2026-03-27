@@ -10,8 +10,8 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 
 from courses.models.course import CourseStaff
-from courses.serializers.course import CourseStaffAddSerializer
-from courses.views.base import CourseViewSetBase
+from courses.serializers.course_serializer import CourseStaffAddSerializer
+from courses.views.base_view import CourseViewSetBase
 
 User = get_user_model()
 
