@@ -10,6 +10,7 @@ vi.mock("@/services/taskService", () => ({
 describe("useCategories Hook", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.spyOn(console, "error").mockImplementation(() => undefined);
   });
 
   afterEach(() => {

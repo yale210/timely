@@ -15,29 +15,30 @@ User = get_user_model()
 class TeacherViewTests(TestCase):
     """Test cases for the teacher management view set."""
 
-    def setUp(self):
+    @classmethod
+    def setUpTestData(cls):
         """Set up shared test fixtures."""
-        self.factory = APIRequestFactory()
-        self.admin_user = User.objects.create_superuser(
+        cls.factory = APIRequestFactory()
+        cls.admin_user = User.objects.create_superuser(
             username="teacher-view-admin",
             password="password123",
             email="teacher-view-admin@example.com",
         )
-        self.teacher_user = User.objects.create_user(
+        cls.teacher_user = User.objects.create_user(
             username="teacher-view-user",
             password="password123",
             email="teacher-view@example.com",
         )
-        self.other_user = User.objects.create_user(
+        cls.other_user = User.objects.create_user(
             username="teacher-view-other",
             password="password123",
             email="teacher-view-other@example.com",
         )
-        self.teacher = Teacher.objects.create(user=self.teacher_user, active=True)
-        self.course = Course.objects.create(
+        cls.teacher = Teacher.objects.create(user=cls.teacher_user, active=True)
+        cls.course = Course.objects.create(
             name="Security",
             description="Security principles.",
-            lead=self.teacher,
+            lead=cls.teacher,
         )
 
     def test_list_returns_active_teachers(self):

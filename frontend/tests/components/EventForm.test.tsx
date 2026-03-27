@@ -1,6 +1,7 @@
 import { it, describe, expect, vi, beforeEach, afterEach } from 'vitest'
-import { render, screen, fireEvent, cleanup, waitFor } from '@testing-library/react'
+import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import '@testing-library/jest-dom'
+import type { ReactNode } from 'react'
 import EventForm from "@/components/events/EventForm"
 import { type Category, type Event } from "@/types"
 import { getServerTime } from "@/services/eventService"
@@ -8,6 +9,51 @@ import { getServerTime } from "@/services/eventService"
 vi.mock("@/services/eventService", () => ({
   getServerTime: vi.fn(),
 }))
+
+vi.mock("@/hooks/notifications/usePushSubscription", () => ({
+  usePushSubscription: () => ({
+    isSubscribed: true,
+    permission: "granted",
+    subscribe: vi.fn().mockResolvedValue(undefined),
+    loading: false,
+  }),
+}))
+
+vi.mock("@/components", async () => {
+  const actual = await vi.importActual<object>("@/components")
+  return {
+    ...actual,
+    Tooltip: ({ children }: { children: ReactNode }) => children,
+    CategoryColourPicker: () => null,
+    CategoryMultiSelect: ({ categories, selectedIds, onChange }: {
+      categories: Category[]
+      selectedIds: number[]
+      onChange: (nextIds: number[]) => void
+    }) => (
+      <div>
+        <input placeholder="Type to search or add category..." readOnly />
+        {categories.map((category) => {
+          const isSelected = selectedIds.includes(category.id)
+          return (
+            <button
+              key={category.id}
+              type="button"
+              onClick={() =>
+                onChange(
+                  isSelected
+                    ? selectedIds.filter((id) => id !== category.id)
+                    : [...selectedIds, category.id],
+                )
+              }
+            >
+              {category.text}
+            </button>
+          )
+        })}
+      </div>
+    ),
+  }
+})
 
 const toDateInputValue = (value: Date): string => {
   const year = value.getFullYear()
@@ -56,7 +102,7 @@ describe('EventForm', () => {
   })
 
   afterEach(() => {
-    cleanup()
+    vi.restoreAllMocks()
   })
 
   it('renders with initial data', () => {
@@ -412,4 +458,3 @@ describe('EventForm', () => {
     expect(screen.getByRole("button", { name: /Save Event/i })).toBeDisabled()
   })
 })
-

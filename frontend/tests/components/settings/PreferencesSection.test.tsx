@@ -80,19 +80,17 @@ describe("PreferencesSection", () => {
     });
     fireEvent.click(screen.getByRole("button", { name: "Add" }));
 
-    await waitFor(() =>
-      expect(specialDatesService.createSpecialDate).toHaveBeenCalledWith({
-        date: "2026-03-22",
-        text: "Exam",
-      }),
-    );
+    await waitFor(() => expect(specialDatesService.createSpecialDate).toHaveBeenCalledTimes(1));
+    expect(specialDatesService.createSpecialDate).toHaveBeenCalledWith({
+      date: "2026-03-22",
+      text: "Exam",
+    });
     expect(await screen.findByText("2026-03-22")).toBeInTheDocument();
 
     fireEvent.click(screen.getAllByRole("button", { name: "Remove date override" })[0]);
 
-    await waitFor(() =>
-      expect(specialDatesService.deleteSpecialDate).toHaveBeenCalledWith(1),
-    );
+    await waitFor(() => expect(specialDatesService.deleteSpecialDate).toHaveBeenCalledTimes(1));
+    expect(specialDatesService.deleteSpecialDate).toHaveBeenCalledWith(1);
   });
 
   it("switches to per-day scheduling and toggles a day off", () => {

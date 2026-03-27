@@ -1,5 +1,5 @@
-import { render, screen, fireEvent, cleanup } from "@testing-library/react";
-import { vi, describe, it, expect, afterEach } from "vitest";
+import { render, screen, fireEvent } from "@testing-library/react";
+import { vi, describe, it, expect } from "vitest";
 import { NotificationsList } from "@/components/notifications/NotificationsList";
 import type { Notification } from "@/types";
 
@@ -22,10 +22,6 @@ vi.mock("@/components/notifications/NotificationCard", () => ({
 }));
 
 describe("NotificationsList Component", () => {
-  afterEach(() => {
-    cleanup();
-  });
-
   const mockOnNotificationClick = vi.fn();
   const mockOnToggleRead = vi.fn();
   const mockOnDeleteRequest = vi.fn();
@@ -130,4 +126,3 @@ describe("NotificationsList Component", () => {
     expect(screen.getByText("Loading notifications...")).toBeDefined();
   });
 });
-

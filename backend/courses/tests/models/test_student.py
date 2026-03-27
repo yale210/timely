@@ -10,9 +10,9 @@ User = get_user_model()
 class StudentModelTests(TestCase):
     """Tests for the Student model."""
 
-    def setUp(self):
-        """Set up shared test fixtures."""
-        self.user = User.objects.create_user(
+    @classmethod
+    def setUpTestData(cls):
+        cls.user = User.objects.create_user(
             username="student_user", password="testpass123", email="student@test.com"
         )
 
