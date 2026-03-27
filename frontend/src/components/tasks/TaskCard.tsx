@@ -6,7 +6,7 @@ import { formatDateTimeInTimezone, useUserTimezone } from "@/utils/userTimezone"
 
 interface TaskCardProps {
   task: Task;
-  onToggleComplete: (id: number) => void;
+  onToggleComplete: (id: number) => Promise<void> | void;
   onClick: (task: Task) => void;
 }
 
@@ -167,7 +167,8 @@ const TaskCard = ({ task, onToggleComplete, onClick }: TaskCardProps) => {
                 if (!task.completed) {
                   playCompleteSound();
                 }
-                onToggleComplete(task.id);
+
+                void Promise.resolve(onToggleComplete(task.id));
               }}
               className="task-circle-checkbox text-cyan-600 focus:ring-cyan-400"
             />

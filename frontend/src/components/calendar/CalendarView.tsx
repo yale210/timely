@@ -1,5 +1,3 @@
-import "react-big-calendar/lib/css/react-big-calendar.css";
-import "react-big-calendar/lib/addons/dragAndDrop/styles.css";
 import { useEffect, useLayoutEffect, useMemo, useRef, type CSSProperties } from "react";
 import moment from "moment";
 import { Calendar, momentLocalizer, type Components, Views } from "react-big-calendar";

@@ -1,4 +1,3 @@
-import "react-big-calendar/lib/css/react-big-calendar.css";
 import moment from "moment";
 import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import { Calendar, Views, momentLocalizer } from "react-big-calendar";
@@ -202,4 +201,3 @@ const MiniCalendarPreview = ({ tasks, events }: MiniCalendarPreviewProps) => {
 };
 
 export default MiniCalendarPreview;
-

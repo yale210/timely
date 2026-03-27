@@ -1,5 +1,3 @@
-import "react-big-calendar/lib/css/react-big-calendar.css";
-import "react-big-calendar/lib/addons/dragAndDrop/styles.css";
 import moment from "moment";
 import { Calendar, momentLocalizer, Views } from "react-big-calendar";
 import type { Event } from "@/types/event";
