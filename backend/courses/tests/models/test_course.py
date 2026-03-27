@@ -1,3 +1,5 @@
+"""Tests for course models."""
+
 import datetime
 from django.test import TestCase
 from django.utils import timezone
@@ -12,6 +14,7 @@ class CourseModelTests(TestCase):
     """Tests for the Course model."""
 
     def setUp(self):
+        """Set up shared test fixtures."""
         self.teacher_user = get_user_model().objects.create_user(
             username="teacher", password="testpass123", email="teacher@test.com"
         )
@@ -85,6 +88,7 @@ class CourseEnrollmentModelTests(TestCase):
     """Tests for the CourseEnrollment model."""
 
     def setUp(self):
+        """Set up shared test fixtures."""
         self.student_user = get_user_model().objects.create_user(
             username="student", password="testpass123", email="student@test.com"
         )
@@ -221,6 +225,7 @@ class CourseEventModelTests(TestCase):
     """Tests for the CourseEvent model."""
 
     def setUp(self):
+        """Set up shared test fixtures."""
         self.teacher_user = get_user_model().objects.create_user(
             username="teacher", password="testpass123", email="teacher@test.com"
         )

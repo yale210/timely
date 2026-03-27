@@ -1,3 +1,5 @@
+"""Tests for special dates view."""
+
 from rest_framework.test import APITestCase
 from rest_framework import status
 from core.tests.factories import UserFactory
@@ -6,7 +8,10 @@ from django.utils import timezone
 
 
 class SpecialDatesViewTests(APITestCase):
+    """Test cases for special dates view."""
+
     def setUp(self):
+        """Set up shared test fixtures."""
         self.user = UserFactory()
         self.other_user = UserFactory()
         self.client.force_authenticate(user=self.user)
@@ -19,6 +24,7 @@ class SpecialDatesViewTests(APITestCase):
         self.url = "/api/special-dates/"
 
     def test_list_special_dates_filtered_by_user(self):
+        """Test list special dates filtered by user."""
         response = self.client.get(self.url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         # Should only see own
@@ -26,6 +32,7 @@ class SpecialDatesViewTests(APITestCase):
         self.assertEqual(response.data[0]["text"], "My Special Date")
 
     def test_create_special_date_associates_user(self):
+        """Test create special date associates user."""
         data = {"date": timezone.localdate().isoformat(), "text": "New SD"}
         response = self.client.post(self.url, data, format="json")
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)

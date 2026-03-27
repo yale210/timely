@@ -1,10 +1,12 @@
-from courses.views.base import CourseViewSetBase
-from courses.views.courses import CourseCrudMixin
-from courses.views.events import CourseEventsMixin
-from courses.views.membership import CourseMembershipMixin
-from courses.views.permissions import CoursePermissionsMixin
-from courses.views.staff import CourseStaffMixin
-from courses.views.student import CourseStudentMixin
+"""Public course views and view sets."""
+
+from courses.views.base_view import CourseViewSetBase
+from courses.views.courses_view import CourseCrudMixin
+from courses.views.events_view import CourseEventsMixin
+from courses.views.membership_view import CourseMembershipMixin
+from courses.views.permissions_view import CoursePermissionsMixin
+from courses.views.staff_view import CourseStaffMixin
+from courses.views.student_view import CourseStudentMixin
 
 
 class CourseViewSet(
@@ -16,4 +18,6 @@ class CourseViewSet(
     CourseCrudMixin,
     CourseViewSetBase,
 ):
+    """View set for course resources and related actions."""
+
     pass

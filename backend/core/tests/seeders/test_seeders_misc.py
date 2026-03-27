@@ -1,3 +1,5 @@
+"""Tests for miscellaneous core seeders."""
+
 from datetime import time
 from unittest.mock import patch
 
@@ -17,9 +19,12 @@ from .common import SeederTestCase
 
 
 class SeederMiscTests(SeederTestCase):
+    """Test cases for seeder misc."""
+
     def test_grade_special_dates_user_and_profile_seeders_cover_fallback_and_updates(
         self,
     ):
+        """Test grade special dates user and profile seeders cover fallback and updates."""
         user = get_user_model().objects.create_user(
             username="mixed-owner",
             email="mixed-owner@example.com",
@@ -96,6 +101,7 @@ class SeederMiscTests(SeederTestCase):
     def test_preference_day_of_week_and_profile_seeders_cover_remaining_helper_paths(
         self,
     ):
+        """Test preference day of week and profile seeders cover remaining helper paths."""
         preference_seeder_instance = PreferenceSeeder()
         with patch.object(preference_seeder_instance, "faker") as faker:
             faker.user_name.return_value = "preference-fallback-user"

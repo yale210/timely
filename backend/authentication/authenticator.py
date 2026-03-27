@@ -21,7 +21,11 @@ class Authenticator(BaseBackend):
             User | None: The authenticated user if credentials are valid,
             otherwise None.
         """
-        user = User.objects.filter(username=username).first()
+        normalized_username = username.strip().lower() if username else ""
+        if not normalized_username:
+            return None
+
+        user = User.objects.filter(username=normalized_username).first()
         if not user:
             return None
         if user.check_password(password):

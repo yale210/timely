@@ -1,3 +1,5 @@
+"""Tests for analytics view."""
+
 from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APITestCase
@@ -12,12 +14,14 @@ class WeeklySummaryViewTests(APITestCase):
     """Tests for the weekly summary API view and date parsing."""
 
     def setUp(self):
+        """Set up shared test fixtures."""
         self.user = get_user_model().objects.create_user(
             username="tester", password="pwd", email="test@test.com"
         )
         self.url = reverse("weekly-summary")
 
     def _create_test_task(self, **kwargs):
+        """Create test task."""
         defaults = {
             "user": self.user,
             "title": "task",

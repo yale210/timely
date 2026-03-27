@@ -1,3 +1,5 @@
+"""Tests for recurrence instance builders."""
+
 from datetime import timedelta
 
 from django.contrib.auth import get_user_model
@@ -12,7 +14,10 @@ from core.services.recurrence_instance_builders import (
 
 
 class RecurrenceInstanceBuilderTests(TestCase):
+    """Test cases for recurrence instance builder."""
+
     def setUp(self):
+        """Set up shared test fixtures."""
         self.user = get_user_model().objects.create_user(
             username="builder-user",
             email="builder@example.com",
@@ -31,6 +36,7 @@ class RecurrenceInstanceBuilderTests(TestCase):
         )
 
     def test_build_override_instance_uses_parent_reminder_fallback(self):
+        """Test build override instance uses parent reminder fallback."""
         EventReminder.objects.create(
             event=self.event,
             minutes_before=15,
@@ -68,6 +74,7 @@ class RecurrenceInstanceBuilderTests(TestCase):
         self.assertEqual(instance.reminders[0]["minutes_before"], 15)
 
     def test_build_base_instance_uses_occurrence_anchor_for_recurring_event(self):
+        """Test build base instance uses occurrence anchor for recurring event."""
         occurrence_start = self.start_time + timedelta(weeks=1)
 
         instance = build_base_instance(

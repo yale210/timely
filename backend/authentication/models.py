@@ -23,6 +23,7 @@ class UserManager(BaseUserManager):
         Raises:
             ValueError: If the username or email is missing.
         """
+        username = username.strip().lower() if username else ""
         if not username:
             raise ValueError("Users must have a username")
         if not extra_fields.get("email"):

@@ -1,3 +1,5 @@
+"""Tests for grade."""
+
 from django.test import TestCase
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
@@ -8,12 +10,16 @@ from core.models import Grade, Category, Task
 
 
 class GradeModelTests(TestCase):
+    """Test cases for grade model."""
+
     def setUp(self):
+        """Set up shared test fixtures."""
         self.user = get_user_model().objects.create_user(
             username="guser", password="pwd", email="g@mail.com"
         )
 
     def test_valid_grade_creation(self):
+        """Test valid grade creation."""
         cat = Category.objects.create(text="Coursework")
         g = Grade.objects.create(
             user=self.user,
@@ -26,6 +32,7 @@ class GradeModelTests(TestCase):
         self.assertEqual(str(g), f"Assessment 1 ({self.user})")
 
     def test_percentage_calculation(self):
+        """Test percentage calculation."""
         g = Grade.objects.create(
             user=self.user,
             name="A",
@@ -37,6 +44,7 @@ class GradeModelTests(TestCase):
         self.assertEqual(g.percentage, 50.0)
 
     def test_total_possible_validation(self):
+        """Test total possible validation."""
         g = Grade(
             user=self.user,
             name="Bad",
@@ -49,6 +57,7 @@ class GradeModelTests(TestCase):
             g.full_clean()
 
     def test_percentage_when_total_zero_and_str(self):
+        """Test percentage when total zero and str."""
         date = timezone.now().date()
         g = Grade(
             user=self.user,
@@ -62,6 +71,7 @@ class GradeModelTests(TestCase):
         self.assertIn("NoTotal", str(g))
 
     def test_get_time_spent_multiple_tasks(self):
+        """Test get time spent multiple tasks."""
         cat = Category.objects.create(text="Multi")
         date = timezone.now().date()
         # Use make_aware for datetime fields
@@ -118,6 +128,7 @@ class GradeModelTests(TestCase):
         self.assertEqual(g.get_time_spent_minutes(), 30)
 
     def test_get_time_spent_no_category_model(self):
+        """Test get time spent no category model."""
         date = timezone.now().date()
         g = Grade.objects.create(
             user=self.user,

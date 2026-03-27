@@ -1,3 +1,5 @@
+"""Tests for event scope update helpers."""
+
 from datetime import timedelta
 
 from django.contrib.auth import get_user_model
@@ -12,7 +14,10 @@ from core.services.event_scope_update_helpers import (
 
 
 class EventScopeUpdateHelperTests(TestCase):
+    """Test cases for event scope update helper."""
+
     def setUp(self):
+        """Set up shared test fixtures."""
         self.user = get_user_model().objects.create_user(
             username="helper-user",
             email="helper@example.com",
@@ -31,6 +36,7 @@ class EventScopeUpdateHelperTests(TestCase):
         )
 
     def test_resolve_scope_this_fields_uses_existing_override_defaults(self):
+        """Test resolve scope this fields uses existing override defaults."""
         original_start = self.base_start + timedelta(days=1)
         existing_override = EventOverride.objects.create(
             parent_event=self.event,
@@ -58,6 +64,7 @@ class EventScopeUpdateHelperTests(TestCase):
     def test_build_following_child_payload_uses_event_defaults_when_values_missing(
         self,
     ):
+        """Test build following child payload uses event defaults when values missing."""
         child_start = self.base_start + timedelta(days=2)
         child_end = child_start + timedelta(hours=2)
 

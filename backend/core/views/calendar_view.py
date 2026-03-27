@@ -11,8 +11,11 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 
 from core.models import Category, Task
-from core.serializers.calendar import CalendarResponseSerializer, CalendarSerializer
-from core.serializers.category import CategorySerializer
+from core.serializers.calendar_serializer import (
+    CalendarResponseSerializer,
+    CalendarSerializer,
+)
+from core.serializers.category_serializer import CategorySerializer
 from scheduler.services import Scheduler
 
 
