@@ -1,10 +1,10 @@
-import "react-big-calendar/lib/css/react-big-calendar.css";
 import moment from "moment";
 import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
-import { Calendar, Views, momentLocalizer } from "react-big-calendar";
+import { Calendar, Views, momentLocalizer, type Formats } from "react-big-calendar";
 import type { Category, Event, Task } from "@/types";
 import { preferenceService } from "@/services/preferenceService";
 import { getOverrideColour, hexToRgba } from "@/utils/colorUtils";
+import { getStoredTimeFormat, getStoredWeekStartsOn } from "@/utils/userPreferences";
 
 const localizer = momentLocalizer(moment);
 
@@ -49,6 +49,8 @@ const MiniCalendarPreview = ({ tasks, events }: MiniCalendarPreviewProps) => {
   const [dayStart, setDayStart] = useState("08:00");
   const [dayEnd, setDayEnd] = useState("22:00");
   const [daySchedule, setDaySchedule] = useState<DayScheduleEntry[]>([]);
+  const [weekStartsOn, setWeekStartsOn] = useState<"monday" | "sunday">(getStoredWeekStartsOn());
+  const [timeFormat, setTimeFormat] = useState<"24h" | "12h">(getStoredTimeFormat());
   const [containerHeight, setContainerHeight] = useState(0);
   const containerRef = useRef<HTMLDivElement | null>(null);
 
@@ -59,15 +61,25 @@ const MiniCalendarPreview = ({ tasks, events }: MiniCalendarPreviewProps) => {
         setDayStart(preference.day_start.slice(0, 5));
         setDayEnd(preference.day_end.slice(0, 5));
         setDaySchedule(preference.day_schedule ?? []);
+        setWeekStartsOn(preference.week_starts_on ?? "monday");
+        setTimeFormat(preference.time_format ?? "24h");
       } catch {
         setDayStart("08:00");
         setDayEnd("22:00");
         setDaySchedule([]);
+        setWeekStartsOn(getStoredWeekStartsOn());
+        setTimeFormat(getStoredTimeFormat());
       }
     };
 
     void loadPreference();
   }, []);
+
+  useEffect(() => {
+    moment.updateLocale("en", {
+      week: { dow: weekStartsOn === "sunday" ? 0 : 1 },
+    });
+  }, [weekStartsOn]);
 
   useEffect(() => {
     if (!containerRef.current || typeof ResizeObserver === "undefined") return;
@@ -158,6 +170,17 @@ const MiniCalendarPreview = ({ tasks, events }: MiniCalendarPreviewProps) => {
     } as CSSProperties;
   }, [containerHeight, visibleHours]);
 
+  const formats = useMemo<Formats>(() => {
+    const timeLabel = timeFormat === "24h" ? "HH:mm" : "h:mm A";
+    return {
+      timeGutterFormat: timeLabel,
+      eventTimeRangeFormat: ({ start, end }, culture, nextLocalizer) =>
+        `${nextLocalizer?.format(start, timeLabel, culture)} - ${nextLocalizer?.format(end, timeLabel, culture)}`,
+      dayHeaderFormat: "dddd DD MMM",
+      dayFormat: "ddd DD/MM",
+    };
+  }, [timeFormat]);
+
   return (
     <div
       className="mini-calendar-preview h-full w-full overflow-hidden"
@@ -175,6 +198,7 @@ const MiniCalendarPreview = ({ tasks, events }: MiniCalendarPreviewProps) => {
         endAccessor="end"
         step={60}
         timeslots={1}
+        formats={formats}
         eventPropGetter={(entry) => {
           const overrideColour =
             entry.kind === "task"

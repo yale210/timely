@@ -1,4 +1,5 @@
 import { useSyncExternalStore } from "react";
+import { getStoredTimeFormat } from "@/utils/userPreferences";
 
 export const USER_TIMEZONE_STORAGE_KEY = "user_timezone";
 export const USER_TIMEZONE_CHANGE_EVENT = "user-timezone-change";
@@ -217,6 +218,7 @@ export const formatDateTimeInTimezone = (
   timeZone = getStoredUserTimezone(),
 ): string => {
   const date = value instanceof Date ? value : new Date(value);
+  const timeFormat = getStoredTimeFormat();
   const hasCustomDateOrTimeOptions = (
     options.dateStyle != null
     || options.timeStyle != null
@@ -229,6 +231,9 @@ export const formatDateTimeInTimezone = (
   );
   return getFormatter(timeZone, {
     ...(hasCustomDateOrTimeOptions ? {} : { dateStyle: "medium", timeStyle: "short" }),
+    ...(options.hour12 == null && options.hourCycle == null
+      ? (timeFormat === "12h" ? { hour12: true } : { hourCycle: "h23" })
+      : {}),
     ...options,
   }).format(date);
 };
@@ -266,6 +271,7 @@ export const formatTimeInTimezone = (
   timeZone = getStoredUserTimezone(),
 ): string => {
   const date = value instanceof Date ? value : new Date(value);
+  const timeFormat = getStoredTimeFormat();
   const hasTimeOptions = (
     options.timeStyle != null
     || options.hour != null
@@ -273,7 +279,14 @@ export const formatTimeInTimezone = (
     || options.second != null
   );
   return getFormatter(timeZone, {
-    ...(hasTimeOptions ? {} : { hour: "2-digit", minute: "2-digit", hourCycle: "h23" }),
+    ...(hasTimeOptions ? {} : {
+      hour: "2-digit",
+      minute: "2-digit",
+      ...(timeFormat === "12h" ? { hour12: true } : { hourCycle: "h23" }),
+    }),
+    ...(options.hour12 == null && options.hourCycle == null
+      ? (timeFormat === "12h" ? { hour12: true } : { hourCycle: "h23" })
+      : {}),
     ...options,
   }).format(date);
 };

@@ -13,12 +13,19 @@ import { validatePreference } from "@/utils/preferenceValidation";
 import { getSchedulingDayMaxMinutes } from "@/utils/schedulingLimits";
 import { applyFont, applyTheme } from "@/utils/themeSettings";
 import { setStoredUserTimezone } from "@/utils/userTimezone";
+import {
+  setStoredDefaultLandingPage,
+  setStoredTimeFormat,
+  setStoredWeekStartsOn,
+} from "@/utils/userPreferences";
 
 interface SettingsState {
   activeSection: SettingsSection;
   preference: Preference | null;
   categories: Category[];
   fieldErrors: Record<string, string[]>;
+  isPreferenceDirty: boolean;
+  areCategoryLimitsDirty: boolean;
 }
 
 interface SettingsLoading {
@@ -67,7 +74,9 @@ export const useSettings = (): UseSettingsReturn => {
   const navigate = useNavigate();
   const [activeSection, setActiveSection] = useState<SettingsSection>("profile");
   const [preference, setPreference] = useState<Preference | null>(null);
+  const [savedPreference, setSavedPreference] = useState<Preference | null>(null);
   const [categories, setCategories] = useState<Category[]>([]);
+  const [savedCategories, setSavedCategories] = useState<Category[]>([]);
   const [isPreferenceLoading, setIsPreferenceLoading] = useState(false);
   const [isCategoriesLoading, setIsCategoriesLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -137,7 +146,11 @@ export const useSettings = (): UseSettingsReturn => {
     try {
       const nextPreference = await preferenceService.getMyPreference();
       setPreference(nextPreference);
+      setSavedPreference(nextPreference);
       setStoredUserTimezone(nextPreference.timezone);
+      setStoredDefaultLandingPage(nextPreference.default_landing_page ?? "dashboard");
+      setStoredWeekStartsOn(nextPreference.week_starts_on ?? "monday");
+      setStoredTimeFormat(nextPreference.time_format ?? "24h");
       localStorage.setItem(
         "disable_sound_effects",
         String(nextPreference.disable_sound_effects ?? false),
@@ -170,6 +183,7 @@ export const useSettings = (): UseSettingsReturn => {
     try {
       const nextCategories = await categoryService.getCategories();
       setCategories(nextCategories);
+      setSavedCategories(nextCategories);
     } catch (error) {
       const parsed = formatDjangoFormError(error);
       setCategoriesError(parsed.message);
@@ -226,10 +240,17 @@ export const useSettings = (): UseSettingsReturn => {
         drag_snap_minutes: preference.drag_snap_minutes,
         limit_max_hours: preference.limit_max_hours,
         disable_sound_effects: preference.disable_sound_effects,
+        default_landing_page: preference.default_landing_page ?? "dashboard",
+        week_starts_on: preference.week_starts_on ?? "monday",
+        time_format: preference.time_format ?? "24h",
         days_off: preference.days_off,
       });
       setPreference(updatedPreference);
+      setSavedPreference(updatedPreference);
       setStoredUserTimezone(updatedPreference.timezone);
+      setStoredDefaultLandingPage(updatedPreference.default_landing_page ?? "dashboard");
+      setStoredWeekStartsOn(updatedPreference.week_starts_on ?? "monday");
+      setStoredTimeFormat(updatedPreference.time_format ?? "24h");
       localStorage.setItem(
         "disable_sound_effects",
         String(updatedPreference.disable_sound_effects ?? false),
@@ -258,6 +279,7 @@ export const useSettings = (): UseSettingsReturn => {
         })),
       );
       setCategories(updatedCategories);
+      setSavedCategories(updatedCategories);
     } catch (error) {
       const parsed = formatDjangoFormError(error);
       setCategoriesError(parsed.message);
@@ -280,6 +302,8 @@ export const useSettings = (): UseSettingsReturn => {
       preference,
       categories,
       fieldErrors,
+      isPreferenceDirty: JSON.stringify(preference) !== JSON.stringify(savedPreference),
+      areCategoryLimitsDirty: JSON.stringify(categories) !== JSON.stringify(savedCategories),
     },
     loading: {
       preference: isPreferenceLoading,
