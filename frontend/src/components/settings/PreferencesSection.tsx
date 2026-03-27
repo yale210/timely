@@ -93,6 +93,18 @@ const PreferencesSection = ({
   }, [pref, isUniformSchedule]);
 
   useEffect(() => {
+    if (!pref || !useSetAllDays || pref.days_off.length === 0) {
+      return;
+    }
+
+    // Uniform scheduling should override any stale per-day day-off selections.
+    onPrefChange({
+      ...pref,
+      days_off: [],
+    });
+  }, [onPrefChange, pref, useSetAllDays]);
+
+  useEffect(() => {
     let isMounted = true;
     const loadSpecialDates = async () => {
       setSpecialDateLoading(true);
@@ -242,6 +254,7 @@ const PreferencesSection = ({
                         day_start: baseStart,
                         day_end: baseEnd,
                         day_schedule: nextSchedule,
+                        days_off: [],
                       });
                     }
                   }}
