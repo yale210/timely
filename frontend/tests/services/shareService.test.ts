@@ -47,7 +47,28 @@ describe("shareService", () => {
     expect(mockPost).toHaveBeenCalledWith("/api/share_accept/", expect.any(Object));
   });
 
-  
+  it("sendShare axios has message error", async () => {
+    const axiosError = { isAxiosError: true, response : { data: { message : "Error :("} }}
+    mockPost.mockRejectedValue(axiosError);
+    
+    await expect(sendShare("user2", "1")).rejects.toThrow("Error :(");
+    
+  });
 
-  
+  it("sendShare error nonAxios", async () => {
+    const axiosError = new Error("Error not good :(")
+    mockPost.mockRejectedValue(axiosError);
+    
+    await expect(sendShare("user2", "1")).rejects.toThrow("Error not good :(");
+    
+  });
+
+  it("sendShare axios has no message error", async () => {
+    const axiosError = { isAxiosError: true, response : { data: {} }}
+    mockPost.mockRejectedValue(axiosError);
+
+    await expect(sendShare("user2", "1")).rejects.toThrow("Failed to share event");
+    
+  });
+
 });
