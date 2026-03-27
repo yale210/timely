@@ -84,6 +84,85 @@ vi.mock("@/components/settings/ProfileSection", () => ({
   },
 }));
 
+vi.mock("@/components/settings/PreferencesSection", () => ({
+  default: ({
+    pref,
+    prefLoading,
+    prefSaving,
+    prefError,
+    fieldErrors,
+    onPrefChange,
+    onSave,
+  }: {
+    pref: Preference | null;
+    prefLoading: boolean;
+    prefSaving: boolean;
+    prefError: string | null;
+    fieldErrors: Record<string, string[]>;
+    onPrefChange: (pref: Preference) => void;
+    onSave: () => void;
+  }) => {
+    if (prefLoading) {
+      return <div>Loading...</div>;
+    }
+
+    if (!pref) {
+      return (
+        <div>
+          <h2>Scheduling</h2>
+          {prefError ? <div>{prefError}</div> : null}
+        </div>
+      );
+    }
+
+    const isMondayOff = pref.days_off.includes(1);
+
+    return (
+      <div>
+        <h2>Scheduling</h2>
+        {prefError ? <div>{prefError}</div> : null}
+        <input aria-label="Day start" value={pref.day_start.slice(0, 5)} readOnly />
+        <input aria-label="Day end" value={pref.day_end.slice(0, 5)} readOnly />
+        <label htmlFor="pref-max-hours">Max task time per day</label>
+        <input
+          id="pref-max-hours"
+          type="number"
+          value={pref.max_hours_study_per_day}
+          onChange={(event) => {
+            onPrefChange({
+              ...pref,
+              max_hours_study_per_day: Number(event.target.value),
+            });
+          }}
+        />
+        {fieldErrors.max_hours_study_per_day?.length ? (
+          <div>{fieldErrors.max_hours_study_per_day.join(" ")}</div>
+        ) : null}
+        <div>
+          <span>Mon</span>
+          <button
+            type="button"
+            aria-pressed={isMondayOff}
+            onClick={() => {
+              onPrefChange({
+                ...pref,
+                days_off: isMondayOff
+                  ? pref.days_off.filter((day) => day !== 1)
+                  : [...pref.days_off, 1],
+              });
+            }}
+          >
+            Toggle Monday
+          </button>
+        </div>
+        <button type="button" onClick={onSave}>
+          {prefSaving ? "Saving..." : "Save changes"}
+        </button>
+      </div>
+    );
+  },
+}));
+
 vi.mock("@/layouts/AppLayout", () => ({
   default: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
 }));
@@ -138,7 +217,7 @@ describe("Settings page", () => {
       </MemoryRouter>,
     );
     fireEvent.click(screen.getByRole("button", { name: /scheduling/i }));
-    expect((await screen.findAllByDisplayValue("08:00")).length).toBeGreaterThan(0);
+    expect(await screen.findByLabelText(/day start/i)).toHaveDisplayValue("08:00");
     expect(getMyPrefSpy).toHaveBeenCalled();
   });
 
@@ -150,18 +229,20 @@ describe("Settings page", () => {
       </MemoryRouter>,
     );
     fireEvent.click(screen.getByText("Scheduling"));
-    await screen.findAllByDisplayValue("08:00");
-
-    const hoursInput = screen.getByLabelText(/max task time per day/i);
+    const hoursInput = await screen.findByLabelText(/max task time per day/i);
 
     fireEvent.change(hoursInput, { target: { value: "30" } });
     fireEvent.click(screen.getByRole("button", { name: /save|saving/i }));
-    expect(await screen.findByText("Please fix the highlighted fields.")).toBeDefined();
-    expect(await screen.findByText("Must be 24 or less.")).toBeDefined();
+    await waitFor(() => {
+      expect(screen.getByText("Please fix the highlighted fields.")).toBeInTheDocument();
+      expect(screen.getByText("Must be 24 or less.")).toBeInTheDocument();
+    });
 
     fireEvent.change(hoursInput, { target: { value: "-1" } });
     fireEvent.click(screen.getByRole("button", { name: /save|saving/i }));
-    expect(await screen.findByText("Must be at least 0.")).toBeDefined();
+    await waitFor(() => {
+      expect(screen.getByText("Must be at least 0.")).toBeInTheDocument();
+    });
   });
 
   it("handles API error with non-array field errors", async () => {
@@ -175,10 +256,12 @@ describe("Settings page", () => {
       </MemoryRouter>,
     );
     fireEvent.click(screen.getByText("Scheduling"));
-    await screen.findAllByDisplayValue("08:00");
+    await screen.findByLabelText(/max task time per day/i);
     fireEvent.click(screen.getByText("Save changes"));
 
-    expect(await screen.findByText("Please fix the highlighted fields.")).toBeDefined();
+    await waitFor(() => {
+      expect(screen.getByText("Please fix the highlighted fields.")).toBeInTheDocument();
+    });
   });
 
   it("handles API error with empty data object", async () => {
@@ -192,10 +275,12 @@ describe("Settings page", () => {
       </MemoryRouter>,
     );
     fireEvent.click(screen.getByText("Scheduling"));
-    await screen.findAllByDisplayValue("08:00");
+    await screen.findByLabelText(/max task time per day/i);
     fireEvent.click(screen.getByText("Save changes"));
 
-    expect(await screen.findByText("Please fix the highlighted fields.")).toBeDefined();
+    await waitFor(() => {
+      expect(screen.getByText("Please fix the highlighted fields.")).toBeInTheDocument();
+    });
   });
 
   it("handles logout failure and still navigates", async () => {
@@ -219,7 +304,7 @@ describe("Settings page", () => {
       </MemoryRouter>,
     );
     fireEvent.click(screen.getByText("Scheduling"));
-    await screen.findAllByDisplayValue("08:00");
+    await screen.findByText("Mon");
 
     const monLabel = screen.getByText("Mon");
     const monRow = monLabel.parentElement;
@@ -242,7 +327,9 @@ describe("Settings page", () => {
       </MemoryRouter>,
     );
     fireEvent.click(screen.getByText("Scheduling"));
-    expect(await screen.findByText("You are not signed in. Please log in again.")).toBeDefined();
+    await waitFor(() => {
+      expect(screen.getByText("You are not signed in. Please log in again.")).toBeInTheDocument();
+    });
   });
 
   it("handles API error with field array errors", async () => {
@@ -256,9 +343,11 @@ describe("Settings page", () => {
       </MemoryRouter>,
     );
     fireEvent.click(screen.getByText("Scheduling"));
-    await screen.findAllByDisplayValue("08:00");
+    await screen.findByLabelText(/max task time per day/i);
     fireEvent.click(screen.getByText("Save changes"));
-    expect(await screen.findByText("Global error")).toBeDefined();
+    await waitFor(() => {
+      expect(screen.getByText("Global error")).toBeInTheDocument();
+    });
   });
 
   it("handles API error with detail message", async () => {
@@ -271,7 +360,9 @@ describe("Settings page", () => {
       </MemoryRouter>,
     );
     fireEvent.click(screen.getByText("Scheduling"));
-    expect(await screen.findByText("Custom error detail")).toBeDefined();
+    await waitFor(() => {
+      expect(screen.getByText("Custom error detail")).toBeInTheDocument();
+    });
   });
 
   it("handles non-API error objects", async () => {
@@ -282,7 +373,9 @@ describe("Settings page", () => {
       </MemoryRouter>,
     );
     fireEvent.click(screen.getByText("Scheduling"));
-    expect(await screen.findByText("Something went wrong")).toBeDefined();
+    await waitFor(() => {
+      expect(screen.getByText("Something went wrong")).toBeInTheDocument();
+    });
   });
 
   it("handles API error with missing response data", async () => {
@@ -295,7 +388,9 @@ describe("Settings page", () => {
       </MemoryRouter>,
     );
     fireEvent.click(screen.getByText("Scheduling"));
-    expect(await screen.findByText("Something went wrong")).toBeDefined();
+    await waitFor(() => {
+      expect(screen.getByText("Something went wrong")).toBeInTheDocument();
+    });
   });
 
   it("renders all sections and sidebar buttons", async () => {
