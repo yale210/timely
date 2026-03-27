@@ -1,7 +1,7 @@
 """Database models for the pomo application."""
 
-from django.db import models
 from django.conf import settings
+from django.db import models
 
 
 class PomoSession(models.Model):

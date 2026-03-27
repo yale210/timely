@@ -1,7 +1,7 @@
 from django.contrib.auth import get_user_model
+from django.test import TestCase
 
 from courses.models import Teacher
-from django.test import TestCase
 
 
 class TeacherModelTests(TestCase):

@@ -1,9 +1,10 @@
 """Tests for category view."""
 
-from rest_framework.test import APITestCase
 from rest_framework import status
-from core.tests.factories import UserFactory, CategoryFactory
+from rest_framework.test import APITestCase
+
 from core.models import Category
+from core.tests.factories import CategoryFactory, UserFactory
 
 
 class CategoryViewTests(APITestCase):

@@ -1,8 +1,8 @@
 # backend/courses/management/commands/sync_calendar.py
 from django.contrib.auth import get_user_model
 from django.core.management.base import BaseCommand
-from authentication.models import User
 
+from authentication.models import User
 from courses.services.event import CourseEventSyncService
 
 

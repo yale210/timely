@@ -1,6 +1,8 @@
+from unittest.mock import MagicMock, patch
+
 from django.test import TestCase
-from unittest.mock import patch, MagicMock
-from notifications.utils.websocket import send_websocket_notification, notify_user
+
+from notifications.utils.websocket import notify_user, send_websocket_notification
 
 
 class WebSocketUtilsTests(TestCase):

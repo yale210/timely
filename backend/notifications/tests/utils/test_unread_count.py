@@ -1,12 +1,13 @@
-from django.test import TestCase
-from django.core.cache import cache
 from django.contrib.auth import get_user_model
+from django.core.cache import cache
+from django.test import TestCase
+
 from notifications.models import Notification
 from notifications.utils.unread_count import (
-    refresh_unread_count,
-    increment_unread_count,
-    set_unread_count,
     _unread_count_cache_key,
+    increment_unread_count,
+    refresh_unread_count,
+    set_unread_count,
 )
 
 User = get_user_model()

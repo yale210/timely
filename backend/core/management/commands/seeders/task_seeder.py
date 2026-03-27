@@ -6,12 +6,14 @@ for testing and demonstration purposes.
 """
 
 import random
-from core.models import Task, Category
+
+from django.contrib.auth import get_user_model
+from django.utils import timezone
+
+from core.management.commands.seeders.base import BaseSeeder
+from core.models import Category, Task
 
 from .fixtures.task_fixtures import tasks
-from django.contrib.auth import get_user_model
-from core.management.commands.seeders.base import BaseSeeder
-from django.utils import timezone
 
 
 class TaskSeeder(BaseSeeder):
@@ -35,7 +37,7 @@ class TaskSeeder(BaseSeeder):
         random tasks to provide a diverse dataset.
         """
         self._create_fixture_task()
-        for i in range(200):
+        for i in range(750):
             self._populate_random_task()
 
     def _create_fixture_task(self):

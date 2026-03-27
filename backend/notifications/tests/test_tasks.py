@@ -1,19 +1,20 @@
+from unittest.mock import patch
+
+from django.contrib.auth import get_user_model
 from django.test import TestCase
 from django.utils import timezone
-from django.contrib.auth import get_user_model
+
 from core.models.event import Event
 from core.models.event_override import EventOverride
 from core.models.event_reminder import EventReminder
 from core.models.reminder_dispatch_log import ReminderDispatchLog
 from notifications.models import Notification, PushSubscription
 from notifications.tasks import (
-    check_reminders,
-    send_push_notification,
-    cleanup_old_notifications,
     broadcast_notification,
+    check_reminders,
+    cleanup_old_notifications,
+    send_push_notification,
 )
-from unittest.mock import patch
-
 
 User = get_user_model()
 
@@ -211,9 +212,8 @@ class TasksTests(TestCase):
         with patch(
             "notifications.tasks.broadcast._send_push_notification_sync",
             return_value={"success": True, "error_code": "", "error_message": ""},
-        ):
-            with patch("notifications.tasks.broadcast.notify_user") as mock_notify_user:
-                result = broadcast_notification("Global", "Hello", target="all")
+        ), patch("notifications.tasks.broadcast.notify_user") as mock_notify_user:
+            result = broadcast_notification("Global", "Hello", target="all")
 
         self.assertEqual(result, "Broadcasted to 2 users")
         self.assertEqual(Notification.objects.filter(title="Global").count(), 2)
@@ -360,8 +360,9 @@ class TasksTests(TestCase):
         self.assertEqual(res, "Broadcasted to 0 users")
 
     def test_process_due_reminders_invalid_minutes(self):
-        from notifications.tasks import _process_due_reminders
         from unittest.mock import MagicMock
+
+        from notifications.tasks import _process_due_reminders
 
         now = timezone.now()
         expanded = MagicMock()
@@ -380,8 +381,9 @@ class TasksTests(TestCase):
 
     def test_send_push_notification_sync_success_with_error(self):
         # One sub succeeds, one fails
-        from notifications.tasks import _send_push_notification_sync
         from pywebpush import WebPushException
+
+        from notifications.tasks import _send_push_notification_sync
 
         with patch("notifications.tasks.push.webpush") as mock_webpush:
 

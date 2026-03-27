@@ -3,4 +3,4 @@
 from scheduler.engine import Scheduler
 from scheduler.scheduler_types import ScheduleResult, TimeSlot
 
-__all__ = ["Scheduler", "TimeSlot", "ScheduleResult"]
+__all__ = ["ScheduleResult", "Scheduler", "TimeSlot"]

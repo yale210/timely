@@ -5,12 +5,15 @@ of commute-related data for users. It supports both fixture-based commutes
 and randomly generated commutes for performance and scalability testing.
 """
 
-import random
 import datetime
-from core.models import Commute
-from .fixtures.commute_fixtures import commutes
+import random
+
 from django.contrib.auth import get_user_model
+
 from core.management.commands.seeders.base import BaseSeeder
+from core.models import Commute
+
+from .fixtures.commute_fixtures import commutes
 
 
 class CommuteSeeder(BaseSeeder):

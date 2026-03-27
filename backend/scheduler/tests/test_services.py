@@ -214,11 +214,10 @@ class SchedulerTest(TestCase):
         mocked_now = timezone.make_aware(datetime.combine(start_date, time(0, 0)))
         with patch(
             "scheduler.engine.availability.timezone.localdate", return_value=start_date
+        ), patch(
+            "scheduler.engine.availability.timezone.now", return_value=mocked_now
         ):
-            with patch(
-                "scheduler.engine.availability.timezone.now", return_value=mocked_now
-            ):
-                results = scheduler.schedule_tasks(start_date=start_date)
+            results = scheduler.schedule_tasks(start_date=start_date)
 
         self.assertTrue(results[0].success)
         self.assertEqual(results[0].scheduled_start.date(), deadline_dt.date())
@@ -497,11 +496,10 @@ class SchedulerTest(TestCase):
         mocked_now = timezone.make_aware(datetime.combine(day_one, time(21, 48)))
         with patch(
             "scheduler.engine.availability.timezone.localdate", return_value=day_one
+        ), patch(
+            "scheduler.engine.availability.timezone.now", return_value=mocked_now
         ):
-            with patch(
-                "scheduler.engine.availability.timezone.now", return_value=mocked_now
-            ):
-                results = scheduler.schedule_tasks(start_date=day_one)
+            results = scheduler.schedule_tasks(start_date=day_one)
 
         self.assertTrue(results[0].success)
         self.assertEqual(results[0].scheduled_start.date(), day_two)
@@ -530,12 +528,11 @@ class SchedulerTest(TestCase):
         with patch(
             "scheduler.engine.availability.timezone.localdate",
             return_value=today,
+        ), patch(
+            "scheduler.engine.availability.timezone.now",
+            return_value=mocked_now,
         ):
-            with patch(
-                "scheduler.engine.availability.timezone.now",
-                return_value=mocked_now,
-            ):
-                results = scheduler.schedule_tasks(start_date=today)
+            results = scheduler.schedule_tasks(start_date=today)
 
         self.assertTrue(results[0].success)
         for start, end in results[0].segments:

@@ -3,7 +3,7 @@ from rest_framework.decorators import action
 from rest_framework.generics import get_object_or_404
 from rest_framework.response import Response
 
-from courses.models import CourseEnrollment, Course
+from courses.models import Course, CourseEnrollment
 from courses.views import CourseViewSetBase
 
 

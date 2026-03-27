@@ -23,4 +23,3 @@ from knox.views import (
 class LogoutAllAPIView(KnoxLogoutAllView):
     """Log out the user from all active authenticated sessions."""
 
-    pass

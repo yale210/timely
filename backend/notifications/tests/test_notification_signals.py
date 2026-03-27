@@ -30,15 +30,14 @@ class NotificationSignalTests(TestCase):
 
         with patch(
             "notifications.signals.notification_signal.notify_user"
-        ) as mock_notify:
-            with patch(
-                "notifications.signals.notification_signal.send_push_notification.delay"
-            ):
-                Notification.objects.create(
-                    recipient=self.user,
-                    title="New",
-                    message="New message",
-                )
+        ) as mock_notify, patch(
+            "notifications.signals.notification_signal.send_push_notification.delay"
+        ):
+            Notification.objects.create(
+                recipient=self.user,
+                title="New",
+                message="New message",
+            )
 
         self.assertTrue(mock_notify.called)
         _, payload = mock_notify.call_args[0]

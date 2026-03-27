@@ -19,4 +19,3 @@ from knox.views import (
 class LogoutAPIView(KnoxLogoutView):
     """Log out the current authenticated session."""
 
-    pass

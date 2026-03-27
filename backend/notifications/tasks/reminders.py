@@ -1,7 +1,7 @@
 """Tasks for checking and sending calendar event reminders."""
 
-import json
 import hashlib
+import json
 import logging
 from datetime import timedelta
 

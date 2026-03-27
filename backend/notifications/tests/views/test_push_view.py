@@ -1,8 +1,9 @@
-from django.urls import reverse
+from django.contrib.auth import get_user_model
 from django.test import override_settings
+from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APITestCase
-from django.contrib.auth import get_user_model
+
 from notifications.models import PushSubscription
 
 User = get_user_model()

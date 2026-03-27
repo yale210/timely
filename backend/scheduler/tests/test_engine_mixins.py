@@ -567,8 +567,8 @@ class SchedulerSchedulingMixinTests(TestCase):
             scheduled_end=task.start_time + timedelta(minutes=30),
             segments=[(task.start_time, task.start_time + timedelta(minutes=30))],
         )
-        self.scheduler._schedule_task_no_split = (
-            lambda task, start_date: ScheduleResult(
+        self.scheduler._schedule_task_no_split = lambda task, start_date: (
+            ScheduleResult(
                 task_id=task.id,
                 success=True,
                 scheduled_start=task.start_time,

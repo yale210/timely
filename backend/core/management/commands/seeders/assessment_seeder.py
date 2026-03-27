@@ -6,11 +6,14 @@ fixtures and randomly generated assessments and associated events.
 """
 
 import random
-from core.models import Assessment, Event, Category
-from .fixtures.assessment_fixtures import assessments, assessment_events
+
 from django.contrib.auth import get_user_model
-from core.management.commands.seeders.base import BaseSeeder
 from django.utils import timezone
+
+from core.management.commands.seeders.base import BaseSeeder
+from core.models import Assessment, Category, Event
+
+from .fixtures.assessment_fixtures import assessment_events, assessments
 
 
 class AssessmentSeeder(BaseSeeder):

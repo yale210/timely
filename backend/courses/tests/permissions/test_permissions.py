@@ -3,9 +3,8 @@ from django.test import TestCase
 from rest_framework.test import APIRequestFactory
 
 from courses.models import Course, CourseEnrollment, CourseStaff, Student, Teacher
-from courses.permissions.TeacherPermission import IsTeacher
 from courses.permissions.course import CoursePermission
-
+from courses.permissions.TeacherPermission import IsTeacher
 
 User = get_user_model()
 
