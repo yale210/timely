@@ -68,6 +68,7 @@ interface CalendarActions {
   goToToday: () => void;
   goToPrevious: () => void;
   goToNext: () => void;
+  openCreateSidebar: () => void;
   selectSlot: (slot: { start: Date; end?: Date; slots?: Date[]; action?: "select" | "click" | "doubleClick" }) => void;
   selectEntry: (entry: CalendarEntry) => void;
   closeSidebar: () => void;
@@ -371,6 +372,12 @@ export const useCalendar = (): UseCalendarReturn => {
     setIsSidebarOpen(false);
     setSelectedItem(undefined);
     setSidebarMode("event");
+  }, []);
+
+  const openCreateSidebar = useCallback(() => {
+    setSelectedItem(undefined);
+    setSidebarMode("event");
+    setIsSidebarOpen(true);
   }, []);
 
   const selectSlot = useCallback(
@@ -918,6 +925,7 @@ export const useCalendar = (): UseCalendarReturn => {
       goToToday,
       goToPrevious,
       goToNext,
+      openCreateSidebar,
       selectSlot,
       selectEntry,
       closeSidebar,

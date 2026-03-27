@@ -79,8 +79,7 @@ const CalendarContent = ({
           goToPrevious: actions.goToPrevious,
           goToNext: actions.goToNext,
           rescheduleTasks: actions.rescheduleTasks,
-          exportEvents: actions.exportEvents,
-          importEvents: actions.importEvents,
+          openCreateSidebar: actions.openCreateSidebar,
         }}
       />
       <CalendarView
