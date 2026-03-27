@@ -56,6 +56,11 @@ class UserModelTest(TestCase):
         with self.assertRaisesMessage(ValueError, "Users must have a username"):
             User.objects.create_user(username="", email="test@example.com")
 
+    def test_create_user_with_none_username(self):
+        """Verify creating a user with a null username raises a validation error."""
+        with self.assertRaisesMessage(ValueError, "Users must have a username"):
+            User.objects.create_user(username=None, email="test@example.com")
+
     def test_create_user_no_email(self):
         """Verify creating a user without an email raises a validation error."""
         with self.assertRaisesMessage(ValueError, "Users must have an email address"):
