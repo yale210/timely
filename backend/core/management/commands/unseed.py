@@ -3,18 +3,18 @@ This calls the smaller individual seeder files.
 python manage.py unseed
 """
 
-from django.core.management.base import BaseCommand
 from django.contrib.auth import get_user_model
+from django.core.management.base import BaseCommand
+
 from core.models import (
     Category,
-    Commute,
     DayOfWeek,
     Event,
-    Task,
+    Friendship,
     Grade,
     Preference,
     SpecialDates,
-    Friendship,
+    Task,
 )
 from profiles.models import Profile
 
@@ -56,7 +56,6 @@ class Command(BaseCommand):
         models = [
             User,
             Category,
-            Commute,
             DayOfWeek,
             Event,
             Task,

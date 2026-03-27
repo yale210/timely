@@ -1,10 +1,10 @@
 import json
 from unittest.mock import MagicMock, patch
 
+from django.contrib.auth import get_user_model
 from django.test import TestCase
 from pywebpush import WebPushException
 
-from django.contrib.auth import get_user_model
 from notifications.models import PushSubscription
 from notifications.tasks.push import _dispatch_to_subscription
 

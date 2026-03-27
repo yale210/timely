@@ -5,9 +5,11 @@ of category-related data for users. It supports both fixture-based categories
 and randomly generated categories for development testing.
 """
 
-from core.models import Category
 from django.contrib.auth import get_user_model
+
 from core.management.commands.seeders.base import BaseSeeder
+from core.models import Category
+
 from .fixtures.category_fixtures import categories
 
 

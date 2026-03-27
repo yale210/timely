@@ -24,16 +24,17 @@ from core.services.recurrence_instance_builders import (
     ExpandedEventInstance,
     build_base_instance,
     build_override_instance,
+)
+from core.services.recurrence_instance_builders import (
     normalise_reminder_snapshot as _normalise_reminder_snapshot,
 )
 
-
 __all__ = (
-    "serialise_event_reminders",
-    "is_occurrence_in_series",
+    "_normalise_reminder_snapshot",
     "expand_event_instances",
     "expand_user_events",
-    "_normalise_reminder_snapshot",
+    "is_occurrence_in_series",
+    "serialise_event_reminders",
 )
 
 

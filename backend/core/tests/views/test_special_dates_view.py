@@ -1,10 +1,11 @@
 """Tests for special dates view."""
 
-from rest_framework.test import APITestCase
-from rest_framework import status
-from core.tests.factories import UserFactory
-from core.models import SpecialDates
 from django.utils import timezone
+from rest_framework import status
+from rest_framework.test import APITestCase
+
+from core.models import SpecialDates
+from core.tests.factories import UserFactory
 
 
 class SpecialDatesViewTests(APITestCase):

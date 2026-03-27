@@ -2,7 +2,6 @@
 
 from .profile_seeder import ProfileSeeder
 
-
 __all__ = [
     "ProfileSeeder",
 ]

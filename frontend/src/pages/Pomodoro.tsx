@@ -7,6 +7,7 @@ import { usePomodoro } from "@/context/PomodoroContext";
 import AppLayout from "@/layouts/AppLayout";
 import { getTasks, updateTask } from "@/services/taskService";
 import type { Task } from "@/types";
+import { formatDateTimeInTimezone } from "@/utils/userTimezone";
 
 /**
  * Dedicated Pomodoro page surfaced from the Extras section.
@@ -132,7 +133,7 @@ const Pomodoro = () => {
   }, [tasks]);
 
   const formatSlotTime = (value: string) => (
-    new Date(value).toLocaleString([], {
+    formatDateTimeInTimezone(value, {
       month: "short",
       day: "numeric",
       hour: "2-digit",

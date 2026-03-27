@@ -10,7 +10,7 @@ from core.management.commands.seeders.assessment_seeder import AssessmentSeeder
 from core.management.commands.seeders.event_seeder import EventSeeder
 from core.management.commands.seeders.friendship_seeder import FriendshipSeeder
 from core.management.commands.seeders.task_seeder import TaskSeeder
-from core.models import Assessment, Category, Event, Friendship, Task
+from core.models import Assessment, Category, Event, Friendship, Preference, Task
 
 from .common import SeederTestCase
 
@@ -41,7 +41,7 @@ class SeederEventTests(SeederTestCase):
             ),
             patch(
                 "core.management.commands.seeders.event_seeder.random.randint",
-                side_effect=[1, 30, 45, 10],
+                side_effect=[1, 15, 30, 45, 10],
             ),
             patch(
                 "core.management.commands.seeders.event_seeder.random.choice",
@@ -55,6 +55,8 @@ class SeederEventTests(SeederTestCase):
         recurring_event = Event.objects.get(user=user)
         self.assertEqual(recurring_event.recurrence_interval, "weekly")
         self.assertIsNotNone(recurring_event.recurrence_end)
+        self.assertGreaterEqual(recurring_event.start_time.hour, 8)
+        self.assertLessEqual(recurring_event.end_time.hour, 22)
 
         Event.objects.all().delete()
         with (
@@ -67,7 +69,7 @@ class SeederEventTests(SeederTestCase):
             ),
             patch(
                 "core.management.commands.seeders.event_seeder.random.randint",
-                side_effect=[0, 15],
+                side_effect=[0, 15, 15],
             ),
         ):
             seeder._create_random_event_type(
@@ -77,6 +79,8 @@ class SeederEventTests(SeederTestCase):
         single_event = Event.objects.get(user=user)
         self.assertIsNone(single_event.recurrence_interval)
         self.assertIsNone(single_event.recurrence_end)
+        self.assertGreaterEqual(single_event.start_time.hour, 8)
+        self.assertLessEqual(single_event.end_time.hour, 22)
 
     def test_event_seeder_create_recurring_event_and_random_time(self):
         """Test event seeder create recurring event and random time."""
@@ -95,7 +99,7 @@ class SeederEventTests(SeederTestCase):
             patch.object(seeder.faker, "date_time", return_value=base_start),
             patch(
                 "core.management.commands.seeders.event_seeder.random.randint",
-                side_effect=[20, 10],
+                side_effect=[20, 10, 10],
             ),
             patch(
                 "core.management.commands.seeders.event_seeder.random.choice",
@@ -109,6 +113,40 @@ class SeederEventTests(SeederTestCase):
         event = Event.objects.get(user=user)
         self.assertEqual(event.recurrence_interval, "daily")
         self.assertEqual(event.categories.get(), category)
+        self.assertGreaterEqual(event.start_time.hour, 8)
+        self.assertLessEqual(event.end_time.hour, 22)
+
+    def test_event_seeder_respects_user_daily_window(self):
+        """Generated event times stay within the user's configured daily window."""
+        user = get_user_model().objects.create_user(
+            username="event-window-owner",
+            email="event-window@example.com",
+            password="password123",
+        )
+        Preference.objects.create(
+            user=user,
+            day_start=time(9, 0),
+            day_end=time(17, 0),
+        )
+        seeder = EventSeeder()
+        base_start = datetime(2026, 1, 3, 2, 0)
+
+        with (
+            patch.object(seeder.faker, "date_time", return_value=base_start),
+            patch(
+                "core.management.commands.seeders.event_seeder.random.randint",
+                side_effect=[30, 60],
+            ),
+        ):
+            start, end = seeder._random_event_datetimes(user, max_duration_minutes=60)
+
+        self.assertEqual(start.hour, 9)
+        self.assertGreaterEqual(start.minute, 0)
+        self.assertLess(start, end)
+        self.assertEqual(end.date(), start.date())
+        self.assertGreaterEqual(end.time(), time(9, 0))
+        self.assertLessEqual(end.time(), time(17, 0))
+        self.assertLessEqual((end - start).total_seconds() / 60, 60)
 
         with patch(
             "core.management.commands.seeders.event_seeder.random.randint",
@@ -278,7 +316,7 @@ class SeederEventTests(SeederTestCase):
             patch.object(seeder.faker, "date_time", side_effect=[start_time, deadline]),
             patch(
                 "core.management.commands.seeders.task_seeder.random.randint",
-                side_effect=[120, 1, 1, 3, 8],
+                side_effect=[120, 120, 1, 1, 3, 8],
             ),
         ):
             seeder._populate_random_task()

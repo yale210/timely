@@ -1,6 +1,7 @@
 """Viewset for managing special dates like holidays or exams."""
 
 from rest_framework import permissions, viewsets
+
 from core.models import SpecialDates
 from core.serializers.special_dates_serializer import SpecialDatesSerializer
 

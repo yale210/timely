@@ -2,6 +2,7 @@
 
 from django.core.exceptions import ValidationError as DjangoValidationError
 from rest_framework import serializers
+
 from core.models import Preference
 
 
@@ -23,6 +24,9 @@ class PreferenceSerializer(serializers.ModelSerializer):
             "drag_snap_minutes",
             "limit_max_hours",
             "disable_sound_effects",
+            "default_landing_page",
+            "week_starts_on",
+            "time_format",
             "days_off",
             "timezone",
         ]

@@ -1,6 +1,7 @@
 """Reccuring events override model definitions."""
 
 from django.db import models
+
 from .base_event import BaseEventModel
 from .category import Category
 from .event import Event

@@ -77,7 +77,7 @@ describe("authService", () => {
   });
 
   it("register calls correct URL and updates store", async () => {
-    const payload = { username: "u", email: "e", password: "p", password2: "p" };
+    const payload = { username: "u", email: "e", password: "p", password2: "p", name: "User" };
     const mockResponse = { data: { token: "t", user: { username: "u", email: "e" } } };
     mockPost.mockResolvedValue(mockResponse);
 
@@ -123,5 +123,4 @@ describe("authService", () => {
     expect(authStore.getToken()).toBeNull();
   });
 });
-
 

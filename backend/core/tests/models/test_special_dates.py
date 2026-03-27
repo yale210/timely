@@ -1,9 +1,11 @@
 """Tests for special dates."""
 
+import datetime
+
 from django.contrib.auth import get_user_model
 from django.test import TestCase
 from django.utils import timezone
-import datetime
+
 from core.models import SpecialDates
 
 

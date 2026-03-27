@@ -1,10 +1,12 @@
 """Tests for preference."""
 
-from django.test import TestCase
-from django.contrib.auth import get_user_model
-from core.serializers.preference_serializer import PreferenceSerializer
-from core.models import Preference
 import datetime
+
+from django.contrib.auth import get_user_model
+from django.test import TestCase
+
+from core.models import Preference
+from core.serializers.preference_serializer import PreferenceSerializer
 
 User = get_user_model()
 
@@ -46,3 +48,22 @@ class PreferenceSerializerTests(TestCase):
         serializer.save()
         pref.refresh_from_db()
         self.assertEqual(pref.day_start, datetime.time(9, 0))
+
+    def test_update_general_preferences(self):
+        pref = Preference.objects.create(user=self.user)
+        serializer = PreferenceSerializer(
+            instance=pref,
+            data={
+                "default_landing_page": "tasks",
+                "week_starts_on": "sunday",
+                "time_format": "12h",
+            },
+            partial=True,
+            context={"request": type("obj", (object,), {"user": self.user})},
+        )
+        self.assertTrue(serializer.is_valid(), serializer.errors)
+        serializer.save()
+        pref.refresh_from_db()
+        self.assertEqual(pref.default_landing_page, "tasks")
+        self.assertEqual(pref.week_starts_on, "sunday")
+        self.assertEqual(pref.time_format, "12h")

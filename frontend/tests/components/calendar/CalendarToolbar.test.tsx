@@ -12,9 +12,8 @@ describe("CalendarToolbar", () => {
       goToToday: vi.fn(),
       goToPrevious: vi.fn(),
       goToNext: vi.fn(),
+      openCreateSidebar: vi.fn(),
       rescheduleTasks: vi.fn(),
-      exportEvents: vi.fn(),
-      importEvents: vi.fn(),
     };
 
     render(
@@ -29,6 +28,7 @@ describe("CalendarToolbar", () => {
           timeGutterWidth: 60,
           isRescheduling: false,
           rescheduleWarnings: [],
+          preference: null,
         }}
         actions={actions}
       />,
@@ -41,15 +41,15 @@ describe("CalendarToolbar", () => {
 
     fireEvent.click(screen.getByRole("button", { name: "Today" }));
     fireEvent.click(screen.getByRole("button", { name: "Month" }));
+    fireEvent.click(screen.getByRole("button", { name: "Add task or event" }));
     fireEvent.click(screen.getByRole("button", { name: /reschedule/i }));
-    fireEvent.click(screen.getByRole("button", { name: /export/i }));
     fireEvent.click(screen.getAllByRole("button")[0]);
     fireEvent.click(screen.getAllByRole("button")[2]);
 
     expect(actions.goToToday).toHaveBeenCalled();
     expect(actions.setView).toHaveBeenCalledWith(Views.MONTH);
+    expect(actions.openCreateSidebar).toHaveBeenCalled();
     expect(actions.rescheduleTasks).toHaveBeenCalled();
-    expect(actions.exportEvents).toHaveBeenCalled();
     expect(actions.goToPrevious).toHaveBeenCalled();
     expect(actions.goToNext).toHaveBeenCalled();
 

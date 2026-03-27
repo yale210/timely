@@ -60,6 +60,7 @@ describe("ProfileSection", () => {
         profile={baseProfile}
         loading={false}
         saving={false}
+        isDirty
         error={null}
         fieldErrors={{}}
         onChange={vi.fn()}
@@ -292,6 +293,7 @@ describe("ProfileSection", () => {
         profile={baseProfile}
         loading={false}
         saving={false}
+        isDirty
         error={null}
         fieldErrors={{}}
         onChange={vi.fn()}

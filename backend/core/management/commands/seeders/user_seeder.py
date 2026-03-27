@@ -5,9 +5,12 @@ database with both predefined fixture users and randomly generated users
 for development and testing environments.
 """
 
-from .fixtures.user_fixtures import users
 from django.contrib.auth import get_user_model
+from django.contrib.auth.hashers import make_password
+
 from core.management.commands.seeders.base import BaseSeeder
+
+from .fixtures.user_fixtures import users
 
 
 class UserSeeder(BaseSeeder):
@@ -23,6 +26,7 @@ class UserSeeder(BaseSeeder):
     """
 
     help = "Handles seeding of users into the database."
+    RANDOM_USER_PASSWORD_HASH = make_password("Password123")
 
     def seed(self):
         """Execute the seeding process for users.
@@ -31,7 +35,7 @@ class UserSeeder(BaseSeeder):
         random users to provide a large dataset.
         """
         self._create_fixture_user()
-        for i in range(1000):
+        for i in range(250):
             self._populate_random_user()
 
     def _create_fixture_user(self):
@@ -65,15 +69,24 @@ class UserSeeder(BaseSeeder):
         email = data["fields"]["email"]
 
         if User.objects.filter(email=email).exclude(username=username).exists():
-            return None
+            return
 
-        User.objects.update_or_create(
+        user, _ = User.objects.update_or_create(
             username=username,
             defaults={
                 "email": email,
-                "password": data["fields"]["password"],
             },
         )
+
+        password = data["fields"]["password"]
+        # Check if password is already hashed, otherwise hash it.
+        if password.startswith("pbkdf2_"):
+            if user.password != password:
+                user.password = password
+                user.save(update_fields=["password"])
+        else:
+            user.password = self.RANDOM_USER_PASSWORD_HASH
+            user.save(update_fields=["password"])
 
     def _populate_random_user(self):
         """Generate and save a single user with randomized data.
@@ -85,7 +98,7 @@ class UserSeeder(BaseSeeder):
                 "fields": {
                     "username": self.faker.user_name(),
                     "email": self.faker.email(),
-                    "password": self.faker.password(),
+                    "password": "Password123",
                 }
             }
         )

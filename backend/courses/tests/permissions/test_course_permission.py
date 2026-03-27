@@ -7,7 +7,6 @@ from rest_framework.test import APIRequestFactory
 from courses.models import Course, CourseEnrollment, CourseStaff, Student, Teacher
 from courses.permissions.course_permission import CoursePermission
 
-
 User = get_user_model()
 
 

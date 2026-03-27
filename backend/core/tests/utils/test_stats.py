@@ -2,9 +2,9 @@
 
 from datetime import timedelta
 
+from django.contrib.auth import get_user_model
 from django.test import TestCase
 from django.utils import timezone
-from django.contrib.auth import get_user_model
 
 from core.models.task import Task
 from core.utils.stats import calculate_weekly_stats, get_current_week_range
@@ -128,6 +128,7 @@ class WeeklyStatsTests(TestCase):
     def test_calculate_weekly_stats_with_fixed_now(self):
         """Deterministic week ranges when now is provided."""
         from datetime import datetime
+
         from django.utils import timezone
 
         now = timezone.make_aware(datetime(2026, 2, 16, 12, 0))

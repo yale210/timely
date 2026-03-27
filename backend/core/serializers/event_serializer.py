@@ -6,8 +6,8 @@ from django.core.exceptions import ValidationError as DjangoValidationError
 from django.db import transaction
 from django.utils import timezone
 from rest_framework import serializers
-from core.models import Event, EventReminder
-from core.models import Category
+
+from core.models import Category, Event, EventReminder
 from core.serializers.category_serializer import CategorySerializer
 
 
@@ -103,7 +103,6 @@ class EventSerializer(serializers.ModelSerializer):
 
     def _validate_reminders(self, reminders_data, attributes):
         """Validate reminder count and trigger times for the incoming payload."""
-
         # Validate max reminders
         self._validate_max_reminders(reminders_data)
 
@@ -120,7 +119,6 @@ class EventSerializer(serializers.ModelSerializer):
 
     def _build_event_for_validation(self, attributes):
         """Build a temporary event instance so model validation can run safely."""
-
         attrs_copy = attributes.copy()
         attrs_copy.pop("reminders", None)
         attrs_copy.pop("categories", None)
@@ -192,7 +190,6 @@ class EventSerializer(serializers.ModelSerializer):
 
     def _validate_max_reminders(self, reminders_data):
         """Enforce the maximum number of reminders allowed per event."""
-
         if len(reminders_data) > MAX_REMINDERS_PER_EVENT:
             raise serializers.ValidationError(
                 {
@@ -202,7 +199,6 @@ class EventSerializer(serializers.ModelSerializer):
 
     def _validate_trigger_time(self, trigger_at, minutes_before):
         """Reject reminders that would fire in the past."""
-
         now = timezone.now()
         if trigger_at <= now:
             raise serializers.ValidationError(
@@ -213,7 +209,6 @@ class EventSerializer(serializers.ModelSerializer):
 
     def _clean_event(self, event):
         """Run model validation and translate Django errors into DRF errors."""
-
         try:
             event.clean()
         except DjangoValidationError as e:

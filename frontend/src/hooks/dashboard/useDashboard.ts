@@ -4,6 +4,7 @@ import * as taskService from "@/services/taskService";
 import * as eventService from "@/services/eventService";
 import { getWeeklySummary } from "@/services/statsService";
 import type { Event, Task, WeeklyStats } from "@/types";
+import { getStoredWeekStartsOn } from "@/utils/userPreferences";
 
 interface DashboardSections {
   todayTasks: Task[];
@@ -67,8 +68,9 @@ export const useDashboard = (): UseDashboardReturn => {
     setIsSummaryLoading(true);
 
     try {
-      const startOfWeek = moment().startOf("isoWeek").format("YYYY-MM-DD");
-      const endOfWeek = moment().endOf("isoWeek").format("YYYY-MM-DD");
+      const weekUnit = getStoredWeekStartsOn() === "sunday" ? "week" : "isoWeek";
+      const startOfWeek = moment().startOf(weekUnit).format("YYYY-MM-DD");
+      const endOfWeek = moment().endOf(weekUnit).format("YYYY-MM-DD");
       const [nextTasks, nextEvents, nextStats] = await Promise.all([
         taskService.getTasks(),
         eventService.getEvents({ start_date: startOfWeek, end_date: endOfWeek }),
@@ -151,4 +153,3 @@ export const useDashboard = (): UseDashboardReturn => {
     },
   };
 };
-

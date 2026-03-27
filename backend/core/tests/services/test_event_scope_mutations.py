@@ -386,8 +386,9 @@ class EventScopeMutationServiceTests(TestCase):
 
     def test_split_exception_dates_invalid(self):
         """Test split exception dates invalid."""
-        from core.services.event_scope_mutations import _split_exception_dates
         from datetime import date
+
+        from core.services.event_scope_mutations import _split_exception_dates
 
         past, future = _split_exception_dates(
             ["invalid-date", "2026-03-20"], date(2026, 3, 20)
@@ -441,8 +442,9 @@ class EventScopeMutationServiceTests(TestCase):
 
     def test_remove_exception_date_not_present(self):
         """Test remove exception date not present."""
-        from core.services.event_scope_mutations import _remove_exception_date
         from datetime import date
+
+        from core.services.event_scope_mutations import _remove_exception_date
 
         self.event.exception_dates = ["2026-03-19"]
         self.event.save()

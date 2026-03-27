@@ -115,6 +115,7 @@ vi.mock("@/components/settings/PreferencesSection", () => ({
       );
     }
 
+    const maxTaskHoursLimit = 14;
     const isMondayOff = pref.days_off.includes(1);
 
     return (
@@ -123,15 +124,34 @@ vi.mock("@/components/settings/PreferencesSection", () => ({
         {prefError ? <div>{prefError}</div> : null}
         <input aria-label="Day start" value={pref.day_start.slice(0, 5)} readOnly />
         <input aria-label="Day end" value={pref.day_end.slice(0, 5)} readOnly />
+        <div>
+          <span>Set all days</span>
+          <button type="button">Toggle schedule mode</button>
+        </div>
         <label htmlFor="pref-max-hours">Max task time per day</label>
         <input
           id="pref-max-hours"
           type="number"
           value={pref.max_hours_study_per_day}
           onChange={(event) => {
+            const nextValue = event.target.value;
+            if (nextValue === "") {
+              onPrefChange({
+                ...pref,
+                max_hours_study_per_day: "" as unknown as number,
+              });
+              return;
+            }
+
+            const parsed = Number(nextValue);
+            if (Number.isNaN(parsed)) {
+              return;
+            }
+
+            const clampedValue = Math.min(Math.max(0, parsed), maxTaskHoursLimit);
             onPrefChange({
               ...pref,
-              max_hours_study_per_day: Number(event.target.value),
+              max_hours_study_per_day: clampedValue,
             });
           }}
         />
@@ -168,6 +188,10 @@ vi.mock("@/layouts/AppLayout", () => ({
 }));
 
 vi.mock("@/services/authService", () => ({
+  AUTH_CHANGE_EVENT: "auth-change",
+  authStore: {
+    getToken: vi.fn(() => "mock-token"),
+  },
   authService: { logout: vi.fn().mockResolvedValue(undefined) },
 }));
 
@@ -195,6 +219,15 @@ describe("Settings page", () => {
     day_start: "08:00:00",
     day_end: "22:00:00",
     timezone: "Europe/London",
+    day_schedule: [
+      { day: 1, start: "08:00", end: "22:00" },
+      { day: 2, start: "08:00", end: "22:00" },
+      { day: 3, start: "08:00", end: "22:00" },
+      { day: 4, start: "08:00", end: "22:00" },
+      { day: 5, start: "08:00", end: "22:00" },
+      { day: 6, start: "08:00", end: "22:00" },
+      { day: 7, start: "08:00", end: "22:00" },
+    ],
     max_hours_study_per_day: 4,
     max_days_ahead: 7,
     drag_snap_minutes: 15,
@@ -221,7 +254,7 @@ describe("Settings page", () => {
     expect(getMyPrefSpy).toHaveBeenCalled();
   });
 
-  it("handles client-side validation - out of range", async () => {
+  it("clamps max task time input to the allowed range", async () => {
     vi.spyOn(preferenceService, "getMyPreference").mockResolvedValue(mockPref);
     render(
       <MemoryRouter>
@@ -229,20 +262,21 @@ describe("Settings page", () => {
       </MemoryRouter>,
     );
     fireEvent.click(screen.getByText("Scheduling"));
-    const hoursInput = await screen.findByLabelText(/max task time per day/i);
+    await screen.findAllByDisplayValue("08:00");
+
+    const hoursInput = document.getElementById("pref-max-hours") as HTMLInputElement;
 
     fireEvent.change(hoursInput, { target: { value: "30" } });
-    fireEvent.click(screen.getByRole("button", { name: /save|saving/i }));
-    await waitFor(() => {
-      expect(screen.getByText("Please fix the highlighted fields.")).toBeInTheDocument();
-      expect(screen.getByText("Must be 24 or less.")).toBeInTheDocument();
-    });
+    expect(hoursInput.value).toBe("14");
 
     fireEvent.change(hoursInput, { target: { value: "-1" } });
-    fireEvent.click(screen.getByRole("button", { name: /save|saving/i }));
-    await waitFor(() => {
-      expect(screen.getByText("Must be at least 0.")).toBeInTheDocument();
-    });
+    expect(hoursInput.value).toBe("0");
+
+    fireEvent.change(hoursInput, { target: { value: "" } });
+    expect(hoursInput.value).toBe("");
+
+    fireEvent.change(hoursInput, { target: { value: "abc" } });
+    expect(hoursInput.value).toBe("");
   });
 
   it("handles API error with non-array field errors", async () => {
@@ -256,7 +290,10 @@ describe("Settings page", () => {
       </MemoryRouter>,
     );
     fireEvent.click(screen.getByText("Scheduling"));
-    await screen.findByLabelText(/max task time per day/i);
+    await screen.findAllByDisplayValue("08:00");
+    fireEvent.change(document.getElementById("pref-max-hours") as HTMLInputElement, {
+      target: { value: "5" },
+    });
     fireEvent.click(screen.getByText("Save changes"));
 
     await waitFor(() => {
@@ -275,7 +312,10 @@ describe("Settings page", () => {
       </MemoryRouter>,
     );
     fireEvent.click(screen.getByText("Scheduling"));
-    await screen.findByLabelText(/max task time per day/i);
+    await screen.findAllByDisplayValue("08:00");
+    fireEvent.change(document.getElementById("pref-max-hours") as HTMLInputElement, {
+      target: { value: "5" },
+    });
     fireEvent.click(screen.getByText("Save changes"));
 
     await waitFor(() => {
@@ -304,7 +344,10 @@ describe("Settings page", () => {
       </MemoryRouter>,
     );
     fireEvent.click(screen.getByText("Scheduling"));
-    await screen.findByText("Mon");
+    await screen.findAllByDisplayValue("08:00");
+    const scheduleToggleRow = screen.getByText("Set all days").parentElement;
+    expect(scheduleToggleRow).toBeTruthy();
+    fireEvent.click(within(scheduleToggleRow!).getByRole("button"));
 
     const monLabel = screen.getByText("Mon");
     const monRow = monLabel.parentElement;
@@ -343,7 +386,10 @@ describe("Settings page", () => {
       </MemoryRouter>,
     );
     fireEvent.click(screen.getByText("Scheduling"));
-    await screen.findByLabelText(/max task time per day/i);
+    await screen.findAllByDisplayValue("08:00");
+    fireEvent.change(document.getElementById("pref-max-hours") as HTMLInputElement, {
+      target: { value: "5" },
+    });
     fireEvent.click(screen.getByText("Save changes"));
     await waitFor(() => {
       expect(screen.getByText("Global error")).toBeInTheDocument();
@@ -415,7 +461,7 @@ describe("Settings page", () => {
     expect(screen.getByRole("heading", { name: /general/i })).toBeDefined();
 
     fireEvent.click(screen.getByRole("button", { name: /extras/i }));
-    expect(screen.getByText("Toggle optional sections of the app.")).toBeDefined();
+    expect(screen.getByText("Turn optional app features on or off.")).toBeDefined();
 
     fireEvent.click(screen.getByRole("button", { name: /themes/i }));
     expect(screen.getByText("Choose the colour theme used across the app.")).toBeDefined();
