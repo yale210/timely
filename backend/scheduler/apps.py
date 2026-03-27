@@ -1,3 +1,5 @@
+"""Django app configuration for the scheduler package."""
+
 from django.apps import AppConfig
 
 

@@ -1,3 +1,9 @@
+<<<<<<< HEAD
+=======
+"""Tests for the student model."""
+
+from courses.models import Student
+>>>>>>> origin/main
 from django.contrib.auth import get_user_model
 from django.test import TestCase
 
@@ -10,6 +16,7 @@ class StudentModelTests(TestCase):
     """Tests for the Student model."""
 
     def setUp(self):
+        """Set up shared test fixtures."""
         self.user = User.objects.create_user(
             username="student_user", password="testpass123", email="student@test.com"
         )

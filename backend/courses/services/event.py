@@ -1,4 +1,9 @@
+<<<<<<< HEAD
 import logging
+=======
+"""Services for syncing course events."""
+
+>>>>>>> origin/main
 from abc import ABC, abstractmethod
 from datetime import datetime
 from typing import Any
