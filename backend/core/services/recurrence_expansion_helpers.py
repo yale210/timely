@@ -21,6 +21,11 @@ def _build_expanded_content(
     range_end: datetime,
     overrides: list[Any] | None,
 ) -> tuple[Any, ...]:
+    """Preload recurring-event data needed to assemble occurrences efficiently.
+
+    Returns:
+        tuple[Any, ...]: Cached recurrence inputs used for expansion.
+    """
     range_start = _make_aware(range_start)
     range_end = _make_aware(range_end)
     category_cache = list(event.categories.all())
@@ -54,6 +59,11 @@ def _should_include_base_occurrence(
     range_start: datetime,
     range_end: datetime,
 ) -> bool:
+    """Decide whether the base series occurrence belongs in the output window.
+
+    Returns:
+        bool: True when the occurrence should be emitted.
+    """
     return range_start <= occurrence_start <= range_end or (
         not event.recurrence_interval
         and occurrence_start <= range_end
@@ -68,6 +78,11 @@ def _build_override_occurrence(
     range_end: datetime,
     reminder_cache: list[dict[str, Any]],
 ) -> tuple[ExpandedEventInstance | None, int | None]:
+    """Build an expanded instance for an explicit override when it is in range.
+
+    Returns:
+        tuple[ExpandedEventInstance | None, int | None]: The instance and its override id.
+    """
     if not range_start <= override.start_time <= range_end:
         return None, override.id
     return build_override_instance(
@@ -86,6 +101,11 @@ def _build_base_occurrence(
     category_cache: list[Any],
     reminder_cache: list[dict[str, Any]],
 ) -> tuple[ExpandedEventInstance | None, None]:
+    """Build the base series occurrence when it is not masked by exclusions.
+
+    Returns:
+        tuple[ExpandedEventInstance | None, None]: The base instance and no override id.
+    """
     if not _should_include_base_occurrence(
         event,
         occurrence_start,
@@ -114,6 +134,11 @@ def _build_occurrence_instance(
     category_cache: list[Any],
     reminder_cache: list[dict[str, Any]],
 ) -> tuple[ExpandedEventInstance | None, int | None]:
+    """Build either the override or base occurrence for a generated anchor.
+
+    Returns:
+        tuple[ExpandedEventInstance | None, int | None]: The chosen instance and override id.
+    """
     override = overrides_by_original.get(occurrence_start)
     if override is not None:
         return _build_override_occurrence(
@@ -145,6 +170,11 @@ def _build_base_or_skipped_occurrence(
     category_cache: list[Any],
     reminder_cache: list[dict[str, Any]],
 ) -> tuple[ExpandedEventInstance | None, int | None]:
+    """Skip excluded dates and otherwise convert the anchor into a base instance.
+
+    Returns:
+        tuple[ExpandedEventInstance | None, int | None]: The base instance and override id.
+    """
     if occurrence_start.date().isoformat() in exception_dates:
         return None, None
     occurrence_end = occurrence_start + duration
@@ -167,6 +197,11 @@ def _build_standalone_override_instances(
     range_end: datetime,
     reminder_cache: list[dict[str, Any]],
 ) -> list[ExpandedEventInstance]:
+    """Build standalone override instances that were not consumed by recurrence.
+
+    Returns:
+        list[ExpandedEventInstance]: Remaining override instances in range.
+    """
     return [
         build_override_instance(event, override, reminder_cache=reminder_cache)
         for override in loaded_overrides
@@ -186,6 +221,11 @@ def _collect_occurrence_instances(
     reminder_cache: list[dict[str, Any]],
     occurrence_generator: Any,
 ) -> tuple[list[ExpandedEventInstance], set[int]]:
+    """Walk the recurrence generator and collect visible instances plus override ids.
+
+    Returns:
+        tuple[list[ExpandedEventInstance], set[int]]: Instances and consumed override ids.
+    """
     instances: list[ExpandedEventInstance] = []
     seen_override_ids: set[int] = set()
     for occurrence_start in occurrence_generator(event, range_start, range_end):
@@ -216,6 +256,7 @@ def _append_standalone_overrides(
     range_end: datetime,
     reminder_cache: list[dict[str, Any]],
 ) -> None:
+    """Append standalone overrides that were not matched by generated anchors."""
     instances.extend(
         _build_standalone_override_instances(
             event,
@@ -233,6 +274,11 @@ def _build_sorted_instances(
     content: tuple[Any, ...],
     occurrence_generator: Any,
 ) -> list[ExpandedEventInstance]:
+    """Sort all assembled instances by start time after merging sources.
+
+    Returns:
+        list[ExpandedEventInstance]: The merged, sorted instances.
+    """
     unpacked_content = _unpack_expanded_content(content)
     instances, seen_override_ids = _collect_occurrence_instances(
         event,
@@ -258,6 +304,11 @@ def _build_sorted_instances(
 
 
 def _unpack_expanded_content(content: tuple[Any, ...]) -> dict[str, Any]:
+    """Convert the packed content tuple into a named lookup dictionary.
+
+    Returns:
+        dict[str, Any]: Named recurrence inputs for the expansion pipeline.
+    """
     (
         range_start,
         range_end,
@@ -288,5 +339,10 @@ def expand_event_instances(
     overrides: list[Any] | None = None,
     occurrence_generator: Any = _generate_occurrence_starts,
 ) -> list[ExpandedEventInstance]:
+    """Expand a recurring event into ordered instances for the requested window.
+
+    Returns:
+        list[ExpandedEventInstance]: All visible instances for the interval.
+    """
     content = _build_expanded_content(event, range_start, range_end, overrides)
     return _build_sorted_instances(event, content, occurrence_generator)

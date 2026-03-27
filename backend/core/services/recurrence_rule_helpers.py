@@ -17,6 +17,11 @@ FREQ_BY_INTERVAL = {
 
 
 def _make_aware(value: Any) -> Any:
+    """Convert a datetime-like value to an aware datetime when required.
+
+    Returns:
+        Any: The aware datetime value.
+    """
     if timezone.is_aware(value):
         return value
     return timezone.make_aware(value)
@@ -40,6 +45,11 @@ def serialise_event_reminders(event: Any) -> list[dict[str, Any]]:
 
 
 def _get_event_rule_until(event: Any, window_end: datetime) -> Any:
+    """Clamp the recurrence rule to the series end or the requested window.
+
+    Returns:
+        Any: The recurrence cutoff datetime.
+    """
     if not event.recurrence_end:
         return window_end
     series_tz = event.start_time.tzinfo or timezone.get_current_timezone()
@@ -50,6 +60,11 @@ def _get_event_rule_until(event: Any, window_end: datetime) -> Any:
 
 
 def _build_event_rrule(event: Any, window_end: datetime) -> rrule | None:
+    """Create an RRULE for the event when a recognised interval is configured.
+
+    Returns:
+        rrule | None: The recurrence rule, or None when the series is not repeatable.
+    """
     if not event.recurrence_interval:
         return None
     frequency: Any = FREQ_BY_INTERVAL.get(event.recurrence_interval)
@@ -66,6 +81,11 @@ def _generate_occurrence_starts(
     range_start: datetime,
     range_end: datetime,
 ) -> list[datetime]:
+    """Generate occurrence anchors that fall inside the requested range.
+
+    Returns:
+        list[datetime]: Matching occurrence start datetimes.
+    """
     if not event.recurrence_interval:
         if event.start_time <= range_end and event.end_time >= range_start:
             return [event.start_time]
