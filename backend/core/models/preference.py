@@ -1,6 +1,6 @@
 """Preference model definitions."""
 
-from datetime import datetime, timedelta
+from datetime import datetime
 from zoneinfo import ZoneInfo, available_timezones
 
 from django.conf import settings
