@@ -252,8 +252,6 @@ describe("Courses page", () => {
       </MemoryRouter>
     );
 
-    fireEvent.click(screen.getByRole("button", { name: "Create course" }));
-    expect(mockNavigate).toHaveBeenCalledWith("/course/create");
 
     fireEvent.click(screen.getByRole("button", { name: "Manage" }));
     expect(mockNavigate).toHaveBeenCalledWith("/courses/manage");

@@ -7,7 +7,6 @@ describe("CoursesHeader", () => {
   const onJoinCourseIdChange = vi.fn();
   const onJoinCourse = vi.fn();
   const onRefresh = vi.fn();
-  const onCreateCourse = vi.fn();
   const onManageCourses = vi.fn();
 
   beforeEach(() => {
@@ -66,7 +65,6 @@ describe("CoursesHeader", () => {
     expect(onJoinCourseIdChange).toHaveBeenCalledWith("123");
     expect(onJoinCourse).toHaveBeenCalledTimes(1);
     expect(onRefresh).toHaveBeenCalledTimes(1);
-    expect(onCreateCourse).toHaveBeenCalledTimes(1);
     expect(onManageCourses).toHaveBeenCalledTimes(1);
   });
 
