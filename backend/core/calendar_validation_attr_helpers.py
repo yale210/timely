@@ -12,6 +12,19 @@ def _prepared_allocation_slots(
     allocation: Any,
     allow_split: bool,
 ) -> list[tuple[datetime, datetime]]:
+    """Normalise, validate, and sort the raw allocation slot payload.
+
+    Args:
+        ensure_allocation_list (Any): Validator that enforces list-shaped input.
+        normalised_slots_or_error (Any): Helper that converts raw slots or raises.
+        ensure_split_is_allowed (Any): Validator for multiple-slot allocations.
+        serializer (Any): The calendar serializer instance.
+        allocation (Any): Raw allocation payload.
+        allow_split (bool): Whether multiple allocations are permitted.
+
+    Returns:
+        list[tuple[datetime, datetime]]: Ordered, validated allocation windows.
+    """
     ensure_allocation_list(allocation)
     normalised_slots = normalised_slots_or_error(serializer, allocation)
     ensure_split_is_allowed(normalised_slots, allow_split)
@@ -30,6 +43,7 @@ def _validate_slot_constraints(
     estimated_minutes: int,
     completed_minutes: int,
 ) -> None:
+    """Validate slot boundaries and remaining-task capacity in one step."""
     validate_requested_slots(
         normalised_slots,
         start_time,
@@ -51,6 +65,7 @@ def _validate_external_conflicts(
     buffer_after_minutes: int,
     categories: list[Any],
 ) -> None:
+    """Delegate external conflict validation back to the serializer instance."""
     serializer._validate_external_conflicts(
         normalised_slots,
         buffer_before_minutes,
@@ -65,6 +80,7 @@ def _validate_calendar_state(
     validate_completed_minutes: Any,
     state: dict[str, Any],
 ) -> None:
+    """Validate the calendar state fields before allocation-specific checks."""
     validate_start_and_deadline(state["start_time"], state["deadline"])
     validate_split_limits(
         state["min_split_minutes"],
@@ -82,6 +98,7 @@ def _apply_completion_state(
     attrs: dict[str, Any],
     state: dict[str, Any],
 ) -> None:
+    """Apply completion-derived state before allocation validation runs."""
     state["completed_minutes"] = apply_completion_request(
         attrs,
         state["estimated_minutes"],
