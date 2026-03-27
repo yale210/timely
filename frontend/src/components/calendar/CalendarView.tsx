@@ -1,17 +1,17 @@
 import "react-big-calendar/lib/css/react-big-calendar.css";
 import "react-big-calendar/lib/addons/dragAndDrop/styles.css";
 import { useEffect, useLayoutEffect, useMemo, useRef, type CSSProperties } from "react";
-import moment from "moment";
-import { Calendar, momentLocalizer, type Components, Views } from "react-big-calendar";
+import { Calendar, type Components, Views } from "react-big-calendar";
 import withDragAndDrop from "react-big-calendar/lib/addons/dragAndDrop";
 import { DndProvider } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
 import type { UseCalendarReturn } from "@/hooks/calendar/useCalendar";
 import { isOutsidePreferredDayWindow } from "@/hooks/calendar/useCalendar";
 import type { CalendarEntry } from "@/utils/calendarAdapter";
+import { useCalendarLocalizer } from "@/utils/calendarLocalizer";
 import { getOverrideColour, hexToRgba } from "@/utils/colorUtils";
+import { getStoredUserTimezone, getZonedDateParts } from "@/utils/userTimezone";
 
-const localizer = momentLocalizer(moment);
 const DragAndDropCalendar = withDragAndDrop<CalendarEntry>(Calendar);
 const DEFAULT_DRAG_SNAP_MINUTES = 5;
 
@@ -51,6 +51,7 @@ const CalendarView = ({
   actions,
 }: CalendarViewProps) => {
   const calendarShellRef = useRef<HTMLDivElement | null>(null);
+  const localizer = useCalendarLocalizer();
   const dragSnapMinutes = state.preference?.drag_snap_minutes ?? DEFAULT_DRAG_SNAP_MINUTES;
   const dragSnapTimeslots = 60 / dragSnapMinutes;
 
@@ -115,7 +116,8 @@ const CalendarView = ({
         return;
       }
 
-      const currentHour = new Date().getHours();
+      const activeTimezone = state.preference?.timezone ?? getStoredUserTimezone();
+      const currentHour = getZonedDateParts(new Date(), activeTimezone).hour;
       const targetIndex = Math.min(Math.max(currentHour, 0), slotGroups.length - 1);
       const targetSlot = slotGroups[targetIndex];
       if (!(targetSlot instanceof HTMLElement)) {

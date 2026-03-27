@@ -71,6 +71,7 @@ const CalendarContent = ({
           timeGutterWidth: state.timeGutterWidth,
           isRescheduling: state.isRescheduling,
           rescheduleWarnings: state.rescheduleWarnings,
+          preference: state.preference,
         }}
         actions={{
           setView: actions.setView,

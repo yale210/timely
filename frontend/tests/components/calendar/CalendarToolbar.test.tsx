@@ -29,6 +29,7 @@ describe("CalendarToolbar", () => {
           timeGutterWidth: 60,
           isRescheduling: false,
           rescheduleWarnings: [],
+          preference: null,
         }}
         actions={actions}
       />,

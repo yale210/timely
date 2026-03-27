@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, type RefObject } from "react";
-import moment from "moment";
+import moment from "moment-timezone";
 import { Views } from "react-big-calendar";
 import type { UseCalendarReturn } from "@/hooks/calendar/useCalendar";
 
@@ -8,7 +8,7 @@ interface CalendarToolbarProps {
   calendarHeaderTopClass: string;
   state: Pick<
     UseCalendarReturn["state"],
-    "view" | "date" | "currentLabel" | "dateStripDays" | "timeGutterWidth" | "isRescheduling" | "rescheduleWarnings"
+    "view" | "date" | "currentLabel" | "dateStripDays" | "timeGutterWidth" | "isRescheduling" | "rescheduleWarnings" | "preference"
   >;
   actions: Pick<
     UseCalendarReturn["actions"],
@@ -34,6 +34,7 @@ const CalendarToolbar = ({
   const [isWarningsOpen, setIsWarningsOpen] = useState(false);
   const warningPanelRef = useRef<HTMLDivElement | null>(null);
   const rescheduleWarnings = state.rescheduleWarnings ?? [];
+  const activeTimezone = state.preference?.timezone ?? "UTC";
 
   useEffect(() => {
     if (!isWarningsOpen) {
@@ -211,8 +212,8 @@ const CalendarToolbar = ({
         >
           <div className="border-r border-gray-200 bg-gray-50" />
           {state.dateStripDays.map((dayMoment) => {
-            const isToday = dayMoment.isSame(moment(), "day");
-            const isActiveDay = state.view === Views.DAY && dayMoment.isSame(moment(state.date), "day");
+            const isToday = dayMoment.isSame(moment().tz(activeTimezone), "day");
+            const isActiveDay = state.view === Views.DAY && dayMoment.isSame(moment(state.date).tz(activeTimezone), "day");
             return (
               <div
                 key={dayMoment.format("YYYY-MM-DD")}
