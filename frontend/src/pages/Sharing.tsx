@@ -35,8 +35,6 @@ export default function Sharing() {
   useEffect(() => {
     getEvents()
     .then((data) => {
-      console.log("Data get Events")
-      console.log(data)
       setEvents(data)
     } )
     .catch(console.error)

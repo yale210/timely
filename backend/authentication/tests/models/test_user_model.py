@@ -1,3 +1,5 @@
+"""Tests for the custom user model."""
+
 from django.test import TestCase
 from ...models import User
 
@@ -30,9 +32,11 @@ class UserModelTest(TestCase):
         self.assertTrue(admin_user.check_password("adminpassword"))
 
     def test_create_user_no_username(self):
+        """Verify creating a user without a username raises a validation error."""
         with self.assertRaisesMessage(ValueError, "Users must have a username"):
             User.objects.create_user(username="", email="test@example.com")
 
     def test_create_user_no_email(self):
+        """Verify creating a user without an email raises a validation error."""
         with self.assertRaisesMessage(ValueError, "Users must have an email address"):
             User.objects.create_user(username="testuser", email="")

@@ -8,8 +8,8 @@ from .views import (
     LogoutAPIView,
     RegisterView,
     TestPermissionView,
+    UsernameView,
 )
-from .views.username_view import UsernameView
 
 urlpatterns = [
     path("register/", RegisterView.as_view(), name="register"),

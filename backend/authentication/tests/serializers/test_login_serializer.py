@@ -1,3 +1,5 @@
+"""Tests for the login serializer."""
+
 from django.test import TestCase
 from rest_framework.exceptions import ErrorDetail
 
@@ -6,7 +8,7 @@ from ...serializers import LoginSerializer
 
 
 class LoginSerializerTest(TestCase):
-    """Tests for login credential validation."""
+    """Test login credential validation."""
 
     def setUp(self):
         """Create a user for serializer authentication tests."""

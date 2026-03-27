@@ -26,7 +26,6 @@ export default function CourseCreate() {
 
   const handleCreate = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    console.log("LOLL")
     setError(null);
     setSaving(true);
 
