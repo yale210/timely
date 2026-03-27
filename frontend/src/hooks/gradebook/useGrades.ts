@@ -28,6 +28,41 @@ interface UseGradesReturn {
   confirmDelete: () => Promise<void>
 }
 
+const filterByCategory = (grade: Grade, categoryId: number | null) =>
+  categoryId === null ? true : grade.category === categoryId
+
+const filterByPerformance = (grade: Grade, filter: GradePerformanceFilter) => {
+  if (filter === "all") return true
+  if (filter === "excellent") return grade.percentage >= 85
+  if (filter === "good") return grade.percentage >= 55 && grade.percentage < 85
+  return grade.percentage < 55
+}
+
+const filterBySearch = (grade: Grade, search: string) => {
+  if (!search) return true
+  const normalisedSearch = search.trim().toLowerCase()
+  return (
+    grade.name.toLowerCase().includes(normalisedSearch)
+    || (grade.category_name?.toLowerCase().includes(normalisedSearch) ?? false)
+  )
+}
+
+const sortGrades = (left: Grade, right: Grade, sortBy: GradeSortOption) => {
+  if (sortBy === "date_asc") {
+    return left.date_achieved.localeCompare(right.date_achieved)
+  }
+  if (sortBy === "percentage_desc") {
+    return right.percentage - left.percentage
+  }
+  if (sortBy === "percentage_asc") {
+    return left.percentage - right.percentage
+  }
+  if (sortBy === "name_asc") {
+    return left.name.localeCompare(right.name)
+  }
+  return right.date_achieved.localeCompare(left.date_achieved)
+}
+
 /**
  * Manage gradebook data and gradebook page UI state.
  */
@@ -113,43 +148,11 @@ export default function useGrades(): UseGradesReturn {
 
   const filteredGrades = useMemo<Grade[]>(() => {
     if (!grades) return []
-    const normalizedSearch = search.trim().toLowerCase()
-
-    const next = grades
-      .filter((grade) => (
-        selectedCategoryId == null ? true : grade.category === selectedCategoryId
-      ))
-      .filter((grade) => {
-        if (performanceFilter === "all") return true
-        if (performanceFilter === "excellent") return grade.percentage >= 85
-        if (performanceFilter === "good") return grade.percentage >= 55 && grade.percentage < 85
-        return grade.percentage < 55
-      })
-      .filter((grade) => {
-        if (!normalizedSearch) return true
-        return (
-          grade.name.toLowerCase().includes(normalizedSearch)
-          || (grade.category_name?.toLowerCase().includes(normalizedSearch) ?? false)
-        )
-      })
-
-    next.sort((left, right) => {
-      if (sortBy === "date_asc") {
-        return left.date_achieved.localeCompare(right.date_achieved)
-      }
-      if (sortBy === "percentage_desc") {
-        return right.percentage - left.percentage
-      }
-      if (sortBy === "percentage_asc") {
-        return left.percentage - right.percentage
-      }
-      if (sortBy === "name_asc") {
-        return left.name.localeCompare(right.name)
-      }
-      return right.date_achieved.localeCompare(left.date_achieved)
-    })
-
-    return next
+    return grades
+      .filter((grade) => filterByCategory(grade, selectedCategoryId))
+      .filter((grade) => filterByPerformance(grade, performanceFilter))
+      .filter((grade) => filterBySearch(grade, search))
+      .sort((left, right) => sortGrades(left, right, sortBy))
   }, [grades, performanceFilter, search, selectedCategoryId, sortBy])
 
   return {
