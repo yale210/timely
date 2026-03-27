@@ -1,12 +1,14 @@
 """Tests for event serializer."""
 
 import datetime
+
 from django.contrib.auth import get_user_model
 from django.test import TestCase
 from django.utils import timezone
+from rest_framework.exceptions import ValidationError
+
 from core.models import Event
 from core.serializers.event_serializer import EventSerializer
-from rest_framework.exceptions import ValidationError
 
 
 class EventSerializerTests(TestCase):

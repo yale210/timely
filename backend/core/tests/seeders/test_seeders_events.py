@@ -316,7 +316,7 @@ class SeederEventTests(SeederTestCase):
             patch.object(seeder.faker, "date_time", side_effect=[start_time, deadline]),
             patch(
                 "core.management.commands.seeders.task_seeder.random.randint",
-                side_effect=[120, 1, 1, 3, 8],
+                side_effect=[120, 120, 1, 1, 3, 8],
             ),
         ):
             seeder._populate_random_task()

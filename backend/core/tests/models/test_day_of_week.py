@@ -1,11 +1,10 @@
 """Tests for day of week."""
 
+from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
 from django.test import TestCase
 
-from core.models import DayOfWeek
-from core.models import Preference
-from django.contrib.auth import get_user_model
+from core.models import DayOfWeek, Preference
 
 
 class DayOfWeekTests(TestCase):

@@ -1,12 +1,13 @@
 """Tests for grade."""
 
-from django.test import TestCase
-from django.contrib.auth import get_user_model
-from django.core.exceptions import ValidationError
-from django.utils import timezone
 import datetime
 
-from core.models import Grade, Category, Task
+from django.contrib.auth import get_user_model
+from django.core.exceptions import ValidationError
+from django.test import TestCase
+from django.utils import timezone
+
+from core.models import Category, Grade, Task
 
 
 class GradeModelTests(TestCase):

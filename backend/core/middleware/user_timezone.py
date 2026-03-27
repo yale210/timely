@@ -7,20 +7,17 @@ from django.utils import timezone
 
 
 class UserTimezoneMiddleware:
-    """
-    Activate the authenticated user's preferred timezone for the lifetime of
+    """Activate the authenticated user's preferred timezone for the lifetime of
     the request so view-level `localdate()` / `get_current_timezone()` calls
     reflect user preferences instead of the global project default.
     """
 
     def __init__(self, get_response):
         """Store the downstream response callable."""
-
         self.get_response = get_response
 
     def __call__(self, request):
         """Activate the resolved timezone for the duration of the request."""
-
         selected_timezone = None
         user = getattr(request, "user", None)
 

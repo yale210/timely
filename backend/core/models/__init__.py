@@ -1,31 +1,31 @@
 """Model exports for the core application."""
 
 from .assessment import Assessment
+from .category import Category
 from .day_of_week import DayOfWeek
 from .event import Event
 from .event_override import EventOverride
 from .event_reminder import EventReminder
-from .preference import Preference
-from .special_dates import SpecialDates
-from .category import Category
-from .task import Task
-from .grade import Grade
 from .friendship import Friendship
-from .reminder_dispatch_log import ReminderDispatchLog
+from .grade import Grade
 from .pending_share_event import PendingShareEvent
+from .preference import Preference
+from .reminder_dispatch_log import ReminderDispatchLog
+from .special_dates import SpecialDates
+from .task import Task
 
 __all__ = [
     "Assessment",
+    "Category",
     "DayOfWeek",
     "Event",
     "EventOverride",
     "EventReminder",
-    "Preference",
-    "SpecialDates",
-    "Category",
-    "Task",
-    "Grade",
     "Friendship",
-    "ReminderDispatchLog",
+    "Grade",
     "PendingShareEvent",
+    "Preference",
+    "ReminderDispatchLog",
+    "SpecialDates",
+    "Task",
 ]

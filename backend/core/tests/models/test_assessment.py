@@ -4,9 +4,10 @@ import datetime
 
 from django.core.exceptions import ValidationError
 from django.test import TestCase
+from django.utils import timezone
+
 from core.models import Assessment
 from core.tests.factories import AssessmentFactory, UserFactory
-from django.utils import timezone
 
 
 class AssessmentModelTest(TestCase):

@@ -10,7 +10,6 @@ from notifications.tasks.broadcast_delivery import (
     finalise_broadcast_delivery,
 )
 
-
 User = get_user_model()
 
 

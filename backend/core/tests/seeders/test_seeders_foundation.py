@@ -105,8 +105,9 @@ class SeederFoundationTests(SeederTestCase):
             "_populate_random_category",
             200,
         )
+
         self.assert_seed_calls(
-            EventSeeder(), "_create_fixture_event", "_populate_random_event", 200
+            EventSeeder(), "_create_fixture_event", "_populate_random_event", 750
         )
         self.assert_seed_calls(
             GradeSeeder(), "_create_fixture_grade", "_populate_random_grade", 200
@@ -124,7 +125,7 @@ class SeederFoundationTests(SeederTestCase):
             200,
         )
         self.assert_seed_calls(
-            TaskSeeder(), "_create_fixture_task", "_populate_random_task", 200
+            TaskSeeder(), "_create_fixture_task", "_populate_random_task", 750
         )
         self.assert_seed_calls(
             FriendshipSeeder(),
@@ -133,7 +134,7 @@ class SeederFoundationTests(SeederTestCase):
             200,
         )
         self.assert_seed_calls(
-            UserSeeder(), "_create_fixture_user", "_populate_random_user", 1000
+            UserSeeder(), "_create_fixture_user", "_populate_random_user", 250
         )
         self.assert_seed_calls(
             ProfileSeeder(), "_create_fixture_profile", "_populate_random_profile", 200

@@ -2,6 +2,7 @@
 
 from django.test import TestCase
 from rest_framework.exceptions import ErrorDetail
+
 from ...models import User
 from ...serializers import RegisterSerializer
 

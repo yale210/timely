@@ -1,8 +1,8 @@
 """Course permission view mixins."""
 
 from rest_framework import status
-from rest_framework.response import Response
 from rest_framework.decorators import action
+from rest_framework.response import Response
 
 from courses.serializers.permission_serializer import (
     PermissionsSerializer as CoursePermissionsSerializer,

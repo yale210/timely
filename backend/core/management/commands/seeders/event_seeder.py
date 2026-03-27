@@ -5,14 +5,17 @@ of event-related data, including both single and recurring events. It
 facilitates testing the calendar and scheduling features of the application.
 """
 
-import random
 import datetime
+import random
 from datetime import timedelta
-from core.models import Event, Category
-from django.utils import timezone
-from .fixtures.event_fixtures import events
+
 from django.contrib.auth import get_user_model
+from django.utils import timezone
+
 from core.management.commands.seeders.base import BaseSeeder
+from core.models import Category, Event
+
+from .fixtures.event_fixtures import events
 
 
 class EventSeeder(BaseSeeder):
@@ -40,7 +43,7 @@ class EventSeeder(BaseSeeder):
         """
         self._create_fixture_event()
         # Generate random events across various users
-        for _ in range(200):
+        for _ in range(750):
             self._populate_random_event()
 
     def _create_fixture_event(self):
@@ -96,10 +99,10 @@ class EventSeeder(BaseSeeder):
         Determines whether to create a recurring or non-recurring event
         randomly.
         """
+        # Delegate to randomized event type creation
         temporary_user = self._get_or_create_random_user()
         temporary_category = self._get_or_create_random_category(temporary_user)
 
-        # Delegate to randomized event type creation
         self._create_random_event_type(
             {
                 "fields": {

@@ -1,10 +1,11 @@
 """Tests for top-level URL routing in the source package."""
 
+import sys
+from importlib import reload
+
 from django.conf import settings
 from django.test import SimpleTestCase, override_settings
 from django.urls import reverse
-from importlib import reload
-import sys
 
 
 class SourceUrlsTest(SimpleTestCase):

@@ -1,10 +1,12 @@
 """Tests for preference."""
 
-from django.test import TestCase
-from django.contrib.auth import get_user_model
-from core.serializers.preference_serializer import PreferenceSerializer
-from core.models import Preference
 import datetime
+
+from django.contrib.auth import get_user_model
+from django.test import TestCase
+
+from core.models import Preference
+from core.serializers.preference_serializer import PreferenceSerializer
 
 User = get_user_model()
 

@@ -5,13 +5,16 @@ of user preference data, such as day start/end times and preferred days off.
 It facilitates testing user-specific configuration and scheduling constraints.
 """
 
-import random
 import datetime
+import random
+
+from django.contrib.auth import get_user_model
+
+from core.management.commands.seeders.base import BaseSeeder
 from core.models import Preference
 from core.models.preference import default_day_schedule
+
 from .fixtures.preference_fixtures import preferences
-from django.contrib.auth import get_user_model
-from core.management.commands.seeders.base import BaseSeeder
 
 
 class PreferenceSeeder(BaseSeeder):

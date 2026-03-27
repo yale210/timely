@@ -1,12 +1,13 @@
 """Test cases for the delete all events view"""
 
-from django.test import TestCase
-from django.contrib.auth import get_user_model
-from rest_framework.test import APIClient
 from datetime import datetime
+
+from django.contrib.auth import get_user_model
+from django.test import TestCase
 from django.utils import timezone
-from core.models import PendingShareEvent
-from core.models import Event
+from rest_framework.test import APIClient
+
+from core.models import Event, PendingShareEvent
 
 
 class DeleteAllEventsViewTests(TestCase):

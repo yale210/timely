@@ -3,7 +3,7 @@
 from django.contrib.auth import get_user_model
 from rest_framework import serializers
 
-from courses.models.course import Course, CourseEvent, CourseJoinCode, CourseEnrollment
+from courses.models.course import Course, CourseEnrollment, CourseEvent, CourseJoinCode
 
 User = get_user_model()
 
