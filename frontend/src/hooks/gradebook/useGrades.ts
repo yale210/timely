@@ -63,10 +63,7 @@ const sortGrades = (left: Grade, right: Grade, sortBy: GradeSortOption) => {
   return right.date_achieved.localeCompare(left.date_achieved)
 }
 
-/**
- * Manage gradebook data and gradebook page UI state.
- */
-export default function useGrades(): UseGradesReturn {
+const useGradesState = () => {
   const [grades, setGrades] = useState<Grade[] | null>(null)
   const [loading, setLoading] = useState<boolean>(true)
   const [modalOpen, setModalOpen] = useState<boolean>(false)
@@ -76,6 +73,33 @@ export default function useGrades(): UseGradesReturn {
   const [performanceFilter, setPerformanceFilter] = useState<GradePerformanceFilter>("all")
   const [selectedCategoryId, setSelectedCategoryId] = useState<number | null>(null)
   const [pendingDeleteId, setPendingDeleteId] = useState<number | null>(null)
+
+  return {
+    grades,
+    setGrades,
+    loading,
+    setLoading,
+    modalOpen,
+    setModalOpen,
+    editInitial,
+    setEditInitial,
+    search,
+    setSearch,
+    sortBy,
+    setSortBy,
+    performanceFilter,
+    setPerformanceFilter,
+    selectedCategoryId,
+    setSelectedCategoryId,
+    pendingDeleteId,
+    setPendingDeleteId,
+  }
+}
+
+type GradesState = ReturnType<typeof useGradesState>
+
+const useGradesActions = (state: GradesState) => {
+  const { setGrades, setLoading, setModalOpen, setEditInitial, setPendingDeleteId, pendingDeleteId } = state
 
   const fetchGrades = useCallback(async (): Promise<void> => {
     try {
@@ -91,25 +115,21 @@ export default function useGrades(): UseGradesReturn {
     } finally {
       setLoading(false)
     }
-  }, [])
+  }, [setGrades, setLoading])
 
   const refreshGrades = useCallback(async (): Promise<void> => {
     setLoading(true)
     await fetchGrades()
-  }, [fetchGrades])
+  }, [fetchGrades, setLoading])
 
   useEffect(() => {
     void refreshGrades()
   }, [refreshGrades])
 
-  const getCsrfToken = useCallback((): string | null => {
-    const match = /(?:^|; )csrftoken=([^;]+)/.exec(document.cookie)
-    return match ? decodeURIComponent(match[1]) : null
-  }, [])
-
   const deleteGradeById = useCallback(
     async (id: number): Promise<void> => {
-      const csrfToken = getCsrfToken()
+      const match = /(?:^|; )csrftoken=([^;]+)/.exec(document.cookie)
+      const csrfToken = match ? decodeURIComponent(match[1]) : null
       const res = await fetch(`/api/grades/${id}/`, {
         method: "DELETE",
         credentials: "include",
@@ -120,7 +140,7 @@ export default function useGrades(): UseGradesReturn {
         await refreshGrades()
       }
     },
-    [getCsrfToken, refreshGrades],
+    [refreshGrades],
   )
 
   const handleEditGrade = useCallback((grade: Grade): void => {
@@ -133,20 +153,25 @@ export default function useGrades(): UseGradesReturn {
       categoryId: grade.category ?? null,
     })
     setModalOpen(true)
-  }, [])
+  }, [setEditInitial, setModalOpen])
 
   const closeModal = useCallback((): void => {
     setModalOpen(false)
     setEditInitial(null)
-  }, [])
+  }, [setModalOpen, setEditInitial])
 
   const confirmDelete = useCallback(async (): Promise<void> => {
     if (pendingDeleteId === null) return
     await deleteGradeById(pendingDeleteId)
     setPendingDeleteId(null)
-  }, [deleteGradeById, pendingDeleteId])
+  }, [deleteGradeById, pendingDeleteId, setPendingDeleteId])
 
-  const filteredGrades = useMemo<Grade[]>(() => {
+  return { refreshGrades, handleEditGrade, closeModal, confirmDelete }
+}
+
+const useFilteredGrades = (state: GradesState) => {
+  const { grades, performanceFilter, search, selectedCategoryId, sortBy } = state
+  return useMemo<Grade[]>(() => {
     if (!grades) return []
     return grades
       .filter((grade) => filterByCategory(grade, selectedCategoryId))
@@ -154,27 +179,19 @@ export default function useGrades(): UseGradesReturn {
       .filter((grade) => filterBySearch(grade, search))
       .sort((left, right) => sortGrades(left, right, sortBy))
   }, [grades, performanceFilter, search, selectedCategoryId, sortBy])
+}
+
+/**
+ * Manage gradebook data and gradebook page UI state.
+ */
+export default function useGrades(): UseGradesReturn {
+  const state = useGradesState()
+  const actions = useGradesActions(state)
+  const filteredGrades = useFilteredGrades(state)
 
   return {
-    grades,
-    loading,
-    modalOpen,
-    editInitial,
-    search,
-    sortBy,
-    performanceFilter,
-    selectedCategoryId,
-    pendingDeleteId,
+    ...state,
+    ...actions,
     filteredGrades,
-    setModalOpen,
-    setSearch,
-    setSortBy,
-    setPerformanceFilter,
-    setSelectedCategoryId,
-    setPendingDeleteId,
-    refreshGrades,
-    handleEditGrade,
-    closeModal,
-    confirmDelete,
   }
 }
