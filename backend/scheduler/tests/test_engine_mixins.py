@@ -466,8 +466,7 @@ class SchedulerSchedulingMixinTests(TestCase):
             task,
             slot,
             60,
-            30,
-            60,
+            (30, 60),
             20,
         )
         self.assertEqual(empty_segments[0], [])
@@ -477,8 +476,7 @@ class SchedulerSchedulingMixinTests(TestCase):
             task,
             slot,
             60,
-            30,
-            30,
+            (30, 30),
             60,
         )
         self.assertEqual(len(segments), 2)
@@ -550,8 +548,7 @@ class SchedulerSchedulingMixinTests(TestCase):
             task.deadline,
             [],
             50,
-            30,
-            None,
+            (30, None),
         )
         self.assertEqual(day_segments, [])
         self.assertEqual(day_remaining, 50)
