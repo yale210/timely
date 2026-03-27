@@ -244,18 +244,6 @@ export default function AppNavbar() {
                     </Link>
                   )}
                 </MenuItem>
-                <MenuItem>
-                  {({ focus }) => (
-                    <Link
-                      to="/logout"
-                      className={`block px-4 py-2 text-sm ${
-                        focus ? "bg-gray-50 text-gray-900" : "text-gray-700"
-                      }`}
-                    >
-                      Log out
-                    </Link>
-                  )}
-                </MenuItem>
               </div>
             </MenuItems>
           </Menu>
