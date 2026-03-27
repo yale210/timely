@@ -12,6 +12,11 @@ import { validatePreference } from "@/utils/preferenceValidation";
 import { getSchedulingDayMaxMinutes } from "@/utils/schedulingLimits";
 import { applyFont, applyTheme } from "@/utils/themeSettings";
 import { setStoredUserTimezone } from "@/utils/userTimezone";
+import {
+  setStoredDefaultLandingPage,
+  setStoredTimeFormat,
+  setStoredWeekStartsOn,
+} from "@/utils/userPreferences";
 
 interface SettingsState {
   activeSection: SettingsSection;
@@ -128,6 +133,9 @@ export const useSettings = (): UseSettingsReturn => {
       setPreference(nextPreference);
       setSavedPreference(nextPreference);
       setStoredUserTimezone(nextPreference.timezone);
+      setStoredDefaultLandingPage(nextPreference.default_landing_page ?? "dashboard");
+      setStoredWeekStartsOn(nextPreference.week_starts_on ?? "monday");
+      setStoredTimeFormat(nextPreference.time_format ?? "24h");
       localStorage.setItem(
         "disable_sound_effects",
         String(nextPreference.disable_sound_effects ?? false),
@@ -217,11 +225,17 @@ export const useSettings = (): UseSettingsReturn => {
         drag_snap_minutes: preference.drag_snap_minutes,
         limit_max_hours: preference.limit_max_hours,
         disable_sound_effects: preference.disable_sound_effects,
+        default_landing_page: preference.default_landing_page ?? "dashboard",
+        week_starts_on: preference.week_starts_on ?? "monday",
+        time_format: preference.time_format ?? "24h",
         days_off: preference.days_off,
       });
       setPreference(updatedPreference);
       setSavedPreference(updatedPreference);
       setStoredUserTimezone(updatedPreference.timezone);
+      setStoredDefaultLandingPage(updatedPreference.default_landing_page ?? "dashboard");
+      setStoredWeekStartsOn(updatedPreference.week_starts_on ?? "monday");
+      setStoredTimeFormat(updatedPreference.time_format ?? "24h");
       localStorage.setItem(
         "disable_sound_effects",
         String(updatedPreference.disable_sound_effects ?? false),

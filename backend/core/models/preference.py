@@ -32,6 +32,29 @@ class Preference(models.Model):
     Preferences are used to help customise their scheduling.
     """
 
+    LANDING_PAGE_DASHBOARD = "dashboard"
+    LANDING_PAGE_CALENDAR = "calendar"
+    LANDING_PAGE_TASKS = "tasks"
+    LANDING_PAGE_CHOICES = [
+        (LANDING_PAGE_DASHBOARD, "Dashboard"),
+        (LANDING_PAGE_CALENDAR, "Calendar"),
+        (LANDING_PAGE_TASKS, "Tasks"),
+    ]
+
+    WEEK_STARTS_ON_MONDAY = "monday"
+    WEEK_STARTS_ON_SUNDAY = "sunday"
+    WEEK_STARTS_ON_CHOICES = [
+        (WEEK_STARTS_ON_MONDAY, "Monday"),
+        (WEEK_STARTS_ON_SUNDAY, "Sunday"),
+    ]
+
+    TIME_FORMAT_24H = "24h"
+    TIME_FORMAT_12H = "12h"
+    TIME_FORMAT_CHOICES = [
+        (TIME_FORMAT_24H, "24-hour"),
+        (TIME_FORMAT_12H, "12-hour"),
+    ]
+
     user = models.OneToOneField(
         settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="preference"
     )
@@ -56,6 +79,21 @@ class Preference(models.Model):
     drag_snap_minutes = models.PositiveSmallIntegerField(default=5)
     limit_max_hours = models.BooleanField(default=True)
     disable_sound_effects = models.BooleanField(default=False)
+    default_landing_page = models.CharField(
+        max_length=20,
+        choices=LANDING_PAGE_CHOICES,
+        default=LANDING_PAGE_DASHBOARD,
+    )
+    week_starts_on = models.CharField(
+        max_length=10,
+        choices=WEEK_STARTS_ON_CHOICES,
+        default=WEEK_STARTS_ON_MONDAY,
+    )
+    time_format = models.CharField(
+        max_length=3,
+        choices=TIME_FORMAT_CHOICES,
+        default=TIME_FORMAT_24H,
+    )
 
     # Store as IANA timezone. Enables us to use timezone aware features (like adjusting for the clocks going forward or back).
     timezone = models.CharField(max_length=100, default="Europe/London")
@@ -77,6 +115,30 @@ class Preference(models.Model):
                     )
                 }
             )
+        allowed_landing_pages = {
+            self.LANDING_PAGE_DASHBOARD,
+            self.LANDING_PAGE_CALENDAR,
+            self.LANDING_PAGE_TASKS,
+        }
+        if self.default_landing_page not in allowed_landing_pages:
+            raise ValidationError(
+                {"default_landing_page": "Default landing page is not valid."}
+            )
+
+        allowed_week_starts_on = {
+            self.WEEK_STARTS_ON_MONDAY,
+            self.WEEK_STARTS_ON_SUNDAY,
+        }
+        if self.week_starts_on not in allowed_week_starts_on:
+            raise ValidationError({"week_starts_on": "Week start is not valid."})
+
+        allowed_time_formats = {
+            self.TIME_FORMAT_24H,
+            self.TIME_FORMAT_12H,
+        }
+        if self.time_format not in allowed_time_formats:
+            raise ValidationError({"time_format": "Time format is not valid."})
+
         if self.timezone not in available_timezones():
             raise ValidationError({"timezone": "Timezone is not valid"})
 

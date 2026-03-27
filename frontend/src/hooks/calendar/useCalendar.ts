@@ -20,6 +20,7 @@ import type {
 } from "@/types";
 import { buildCalendarEntries, type CalendarEntry } from "@/utils/calendarAdapter";
 import { hasTaskAllocationRescheduleConflict } from "@/utils/apiErrors";
+import { getStoredWeekStartsOn } from "@/utils/userPreferences";
 import completeSoundUrl from "@/assets/sounds/task-complete.mp3";
 
 interface CalendarState {
@@ -107,18 +108,20 @@ export interface UseCalendarReturn {
 export const getCalendarWindow = (
   currentView: View,
   currentDate: Date,
+  weekStartsOn: "monday" | "sunday" = getStoredWeekStartsOn(),
 ): { start_date: string; end_date: string } => {
   const anchor = moment(currentDate);
+  const weekUnit = weekStartsOn === "sunday" ? "week" : "isoWeek";
   if (currentView === Views.MONTH) {
     return {
-      start_date: anchor.clone().startOf("month").startOf("week").format("YYYY-MM-DD"),
-      end_date: anchor.clone().endOf("month").endOf("week").format("YYYY-MM-DD"),
+      start_date: anchor.clone().startOf("month").startOf(weekUnit).format("YYYY-MM-DD"),
+      end_date: anchor.clone().endOf("month").endOf(weekUnit).format("YYYY-MM-DD"),
     };
   }
   if (currentView === Views.WEEK) {
     return {
-      start_date: anchor.clone().startOf("week").format("YYYY-MM-DD"),
-      end_date: anchor.clone().endOf("week").format("YYYY-MM-DD"),
+      start_date: anchor.clone().startOf(weekUnit).format("YYYY-MM-DD"),
+      end_date: anchor.clone().endOf(weekUnit).format("YYYY-MM-DD"),
     };
   }
   if (currentView === Views.DAY) {
@@ -248,6 +251,7 @@ export const useCalendar = (): UseCalendarReturn => {
   const [exportingError, setExportingError] = useState<string | null>(null);
   const [importingError, setImportingError] = useState<string | null>(null);
   const hasInitialized = useRef(false);
+  const weekStartsOn = preference?.week_starts_on ?? getStoredWeekStartsOn();
 
   const fetchTasks = useCallback(async () => {
     setIsTasksLoading(true);
@@ -282,7 +286,7 @@ export const useCalendar = (): UseCalendarReturn => {
   const fetchEvents = useCallback(async (activeView: View, activeDate: Date) => {
     setIsEventsLoading(true);
     try {
-      const nextEvents = await eventService.getEvents(getCalendarWindow(activeView, activeDate));
+      const nextEvents = await eventService.getEvents(getCalendarWindow(activeView, activeDate, weekStartsOn));
       setEvents(nextEvents);
       setEventError(null);
     } catch (error) {
@@ -292,7 +296,7 @@ export const useCalendar = (): UseCalendarReturn => {
     } finally {
       setIsEventsLoading(false);
     }
-  }, []);
+  }, [weekStartsOn]);
 
   const fetchPreference = useCallback(async () => {
     try {
@@ -346,7 +350,7 @@ export const useCalendar = (): UseCalendarReturn => {
 
   const dateStripDays = useMemo(() => {
     if (view === Views.WEEK) {
-      const startOfWeek = moment(date).startOf("week");
+      const startOfWeek = moment(date).startOf(weekStartsOn === "sunday" ? "week" : "isoWeek");
       return Array.from({ length: 7 }, (_, index) => startOfWeek.clone().add(index, "day"));
     }
 
@@ -355,7 +359,7 @@ export const useCalendar = (): UseCalendarReturn => {
     }
 
     return [];
-  }, [date, view]);
+  }, [date, view, weekStartsOn]);
 
   const closeSidebar = useCallback(() => {
     setIsSidebarOpen(false);

@@ -15,8 +15,6 @@ interface PreferencesSectionProps {
   onSave: () => void;
 }
 
-const dragSnapOptions = [5, 10, 15, 20, 30, 60] as const;
-
 const dayLabels: [number, string][] = [
   [1, "Mon"],
   [2, "Tue"],
@@ -163,9 +161,8 @@ const PreferencesSection = ({
       )}
 
       {!prefLoading && pref && (
-        <div className="mt-6 space-y-6">
-          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
-            <div className="sm:col-span-2">
+        <div className="mt-6 space-y-4">
+          <div className="rounded-lg border border-gray-200 bg-white px-4 py-4 shadow-sm">
               <InfoLabel
                 htmlFor="pref-max-hours"
                 label="Max task time per day"
@@ -238,7 +235,7 @@ const PreferencesSection = ({
                   }}
                   className={`mt-2 bg-white px-3 py-2 block outline w-full rounded-md ${
                     displayFieldErrors.max_hours_study_per_day ? "outline-red-300" : "outline-gray-300"
-                  } max-w-[14rem] focus: outline-2 focus:outline-turquoise-600`}
+                  } max-w-[4.75rem] focus: outline-2 focus:outline-turquoise-600`}
                 />
               )}
               {displayFieldErrors.max_hours_study_per_day?.length ? (
@@ -246,9 +243,9 @@ const PreferencesSection = ({
                   {displayFieldErrors.max_hours_study_per_day.join(" ")}
                 </div>
               ) : null}
-            </div>
+          </div>
 
-            <div className="sm:col-span-2">
+          <div className="rounded-lg border border-gray-200 bg-white px-4 py-4 shadow-sm">
               <InfoLabel
                 htmlFor="pref-max-days-ahead"
                 label="Max schedule ahead"
@@ -312,7 +309,7 @@ const PreferencesSection = ({
                   }}
                   className={`mt-2 bg-white px-3 py-2 block outline w-full rounded-md ${
                     displayFieldErrors.max_days_ahead ? "outline-red-300" : "outline-gray-300"
-                  } max-w-[14rem] focus:outline-2 focus:outline-turquoise-600`}
+                  } max-w-[4.75rem] focus:outline-2 focus:outline-turquoise-600`}
                 />
               )}
               {displayFieldErrors.max_days_ahead?.length ? (
@@ -320,9 +317,9 @@ const PreferencesSection = ({
                   {displayFieldErrors.max_days_ahead.join(" ")}
                 </div>
               ) : null}
-            </div>
+          </div>
 
-            <div className="sm:col-span-2">
+          <div className="rounded-lg border border-gray-200 bg-white px-4 py-4 shadow-sm">
               <InfoLabel
                 htmlFor="pref-timezone"
                 label="Timezone"
@@ -352,41 +349,9 @@ const PreferencesSection = ({
                   {displayFieldErrors.timezone.join(" ")}
                 </div>
               ) : null}
-            </div>
+          </div>
 
-            <div className="sm:col-span-2">
-              <InfoLabel
-                htmlFor="pref-drag-snap-minutes"
-                label="Calendar drag timeslot"
-                tooltip="Controls how task drag and resize actions snap on the calendar."
-              />
-              <select
-                id="pref-drag-snap-minutes"
-                value={pref.drag_snap_minutes}
-                onChange={(event) => {
-                  onPrefChange({
-                    ...pref,
-                    drag_snap_minutes: Number(event.target.value) as 5 | 10 | 15 | 20 | 30 | 60,
-                  });
-                }}
-                className={`mt-2 bg-white px-3 py-2 block outline w-full rounded-md ${
-                  displayFieldErrors.drag_snap_minutes ? "outline-red-300" : "outline-gray-300"
-                } max-w-[14rem] focus:outline-2 focus:outline-turquoise-600`}
-              >
-                {dragSnapOptions.map((minutes) => (
-                  <option key={minutes} value={minutes}>
-                    {minutes} minutes
-                  </option>
-                ))}
-              </select>
-              {displayFieldErrors.drag_snap_minutes?.length ? (
-                <div className="mt-1 text-xs text-red-700">
-                  {displayFieldErrors.drag_snap_minutes.join(" ")}
-                </div>
-              ) : null}
-            </div>
-
-            <div className="sm:col-span-2">
+          <div className="rounded-lg border border-gray-200 bg-white px-4 py-4 shadow-sm">
               <InfoLabel
                 label="Daily hours"
                 tooltip="Tasks will be auto-scheduled during these hours."
@@ -595,7 +560,6 @@ const PreferencesSection = ({
                 ) : null}
               </div>
               ) : null}
-            </div>
           </div>
           <div className="flex justify-end">
             <button

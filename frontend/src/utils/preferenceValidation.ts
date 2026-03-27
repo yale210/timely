@@ -34,6 +34,18 @@ export const validatePreference = (preference: Preference): Record<string, strin
     errors.timezone = ["Required."];
   }
 
+  if (!["dashboard", "calendar", "tasks"].includes(preference.default_landing_page ?? "dashboard")) {
+    errors.default_landing_page = ["Must be dashboard, calendar, or tasks."];
+  }
+
+  if (!["monday", "sunday"].includes(preference.week_starts_on ?? "monday")) {
+    errors.week_starts_on = ["Must be monday or sunday."];
+  }
+
+  if (!["24h", "12h"].includes(preference.time_format ?? "24h")) {
+    errors.time_format = ["Must be 24h or 12h."];
+  }
+
   if (limitMax && Number.isNaN(max)) {
     errors.max_hours_study_per_day = ["Must be a number."];
   } else if (limitMax && max < 0) {

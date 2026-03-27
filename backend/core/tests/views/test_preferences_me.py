@@ -98,3 +98,22 @@ class PreferenceMeTests(APITestCase):
         )
         self.assertEqual(res.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn("day_schedule", res.json())
+
+    def test_me_patch_accepts_new_general_preferences(self):
+        self.client.force_authenticate(user=self.user)
+
+        res = self.client.patch(
+            "/api/preferences/me/",
+            {
+                "default_landing_page": "calendar",
+                "week_starts_on": "sunday",
+                "time_format": "12h",
+            },
+            format="json",
+        )
+
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+        body = res.json()
+        self.assertEqual(body["default_landing_page"], "calendar")
+        self.assertEqual(body["week_starts_on"], "sunday")
+        self.assertEqual(body["time_format"], "12h")

@@ -1,10 +1,19 @@
+<<<<<<<< HEAD:frontend/src/components/tasks/TaskListSection.tsx
 import { useState } from "react";
 import TaskCard from "@/components/tasks/TaskCard";
 import { type Task } from "@/types";
+========
+import TaskListSectionMain from "@/components/tasks/TaskListSection";
+import type { Task, Category } from "@/types";
+>>>>>>>> 0a59c9fc (refactor(settings): standardize settings layout and reorganize general controls):frontend/src/components/taskList/TaskListSection.tsx
 
 interface TaskListSectionProps {
   title: string;
   tasks: Task[];
+<<<<<<<< HEAD:frontend/src/components/tasks/TaskListSection.tsx
+========
+  categories?: Category[];
+>>>>>>>> 0a59c9fc (refactor(settings): standardize settings layout and reorganize general controls):frontend/src/components/taskList/TaskListSection.tsx
   onToggleComplete: (id: number) => void;
   onTaskClick: (task: Task) => void;
   initialVisible?: number;
@@ -12,6 +21,7 @@ interface TaskListSectionProps {
   defaultCollapsed?: boolean;
 }
 
+<<<<<<<< HEAD:frontend/src/components/tasks/TaskListSection.tsx
 /**
  * A functional component that renders a section of tasks with a title.
  * @param props - The properties for the TaskListSection component.
@@ -24,18 +34,14 @@ interface TaskListSectionProps {
  * @param props.defaultCollapsed - Indicates whether the section is collapsed by default.
  * @returns The rendered task list section component.
  */
+========
+>>>>>>>> 0a59c9fc (refactor(settings): standardize settings layout and reorganize general controls):frontend/src/components/taskList/TaskListSection.tsx
 const TaskListSection = ({
-  title,
-  tasks,
-  onToggleComplete,
-  onTaskClick,
-  initialVisible = 5,
-  isCollapsible = false,
-  defaultCollapsed = false,
-}: TaskListSectionProps) => {
-  const [visibleCount, setVisibleCount] = useState(initialVisible);
-  const [isCollapsed, setIsCollapsed] = useState(defaultCollapsed);
+  categories: _categories,
+  ...props
+}: TaskListSectionProps) => <TaskListSectionMain {...props} />;
 
+<<<<<<<< HEAD:frontend/src/components/tasks/TaskListSection.tsx
   const hasMore = tasks.length > visibleCount && !isCollapsed;
   const visibleTasks = isCollapsed ? [] : tasks.slice(0, visibleCount);
 
@@ -105,3 +111,6 @@ const TaskListSection = ({
 
 export default TaskListSection;
 
+========
+export default TaskListSection;
+>>>>>>>> 0a59c9fc (refactor(settings): standardize settings layout and reorganize general controls):frontend/src/components/taskList/TaskListSection.tsx

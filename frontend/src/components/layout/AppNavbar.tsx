@@ -145,8 +145,8 @@ export default function AppNavbar() {
   })
 
   return (
-    <header className="fixed left-0 right-0 top-0 z-30 m-0 bg-white shadow-sm ring-1 ring-gray-200">
-      <div className="grid w-full grid-cols-3 items-center gap-2 px-3 py-0 min-h-10">
+    <header className="app-navbar fixed left-0 right-0 top-0 z-30 m-0 bg-white shadow-sm ring-1 ring-gray-200">
+      <div className="app-navbar-grid grid w-full grid-cols-3 items-center gap-2 px-3 py-0 min-h-10">
         <div className="flex justify-start">
           <button
             type="button"
@@ -269,7 +269,7 @@ export default function AppNavbar() {
 
       {/* Sliding drawer */}
       <nav
-        className={`fixed inset-y-0 left-0 z-50 flex w-56 max-w-full flex-col transform bg-white shadow-xl ring-1 ring-gray-200 transition-transform duration-300 ease-out ${
+        className={`app-drawer fixed inset-y-0 left-0 z-50 flex w-56 max-w-full flex-col transform bg-white shadow-xl ring-1 ring-gray-200 transition-transform duration-300 ease-out ${
           open ? "translate-x-0" : "-translate-x-full"
         }`}
         aria-label="Main"
@@ -304,7 +304,7 @@ export default function AppNavbar() {
                       to={item.to}
                       className={({ isActive }) =>
                         [
-                          "flex items-center gap-3 rounded-md px-3 py-2.5 text-sm font-semibold transition-colors",
+                          "app-nav-link flex items-center gap-3 rounded-md px-3 py-2.5 text-sm font-semibold transition-colors",
                           isActive ? "bg-cyan-50 text-cyan-700 ring-1 ring-cyan-100" : "text-gray-800 hover:bg-gray-100",
                         ].join(" ")
                       }
@@ -329,7 +329,7 @@ export default function AppNavbar() {
                           to={item.to}
                           className={({ isActive }) =>
                             [
-                              "flex items-center gap-3 rounded-md px-3 py-2.5 text-sm font-semibold transition-colors",
+                              "app-nav-link flex items-center gap-3 rounded-md px-3 py-2.5 text-sm font-semibold transition-colors",
                               isActive ? "bg-cyan-50 text-cyan-700 ring-1 ring-cyan-100" : "text-gray-800 hover:bg-gray-100",
                             ].join(" ")
                           }
@@ -368,7 +368,7 @@ export default function AppNavbar() {
             to="/friends"
             className={({ isActive }) =>
               [
-                "mb-2 flex items-center gap-3 rounded-md px-3 py-2 text-sm font-semibold transition-colors",
+                "app-nav-link mb-2 flex items-center gap-3 rounded-md px-3 py-2 text-sm font-semibold transition-colors",
                 isActive ? "bg-cyan-50 text-cyan-700 ring-1 ring-cyan-100" : "text-gray-800 hover:bg-gray-100",
               ].join(" ")
             }
@@ -380,7 +380,7 @@ export default function AppNavbar() {
             to="/settings"
             className={({ isActive }) =>
               [
-                "flex items-center gap-3 rounded-md px-3 py-2 text-sm font-semibold transition-colors",
+                "app-nav-link flex items-center gap-3 rounded-md px-3 py-2 text-sm font-semibold transition-colors",
                 isActive ? "bg-cyan-50 text-cyan-700 ring-1 ring-cyan-100" : "text-gray-800 hover:bg-gray-100",
               ].join(" ")
             }
