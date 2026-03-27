@@ -28,10 +28,42 @@ interface UseGradesReturn {
   confirmDelete: () => Promise<void>
 }
 
-/**
- * Manage gradebook data and gradebook page UI state.
- */
-export default function useGrades(): UseGradesReturn {
+const filterByCategory = (grade: Grade, categoryId: number | null) =>
+  categoryId === null ? true : grade.category === categoryId
+
+const filterByPerformance = (grade: Grade, filter: GradePerformanceFilter) => {
+  if (filter === "all") return true
+  if (filter === "excellent") return grade.percentage >= 85
+  if (filter === "good") return grade.percentage >= 55 && grade.percentage < 85
+  return grade.percentage < 55
+}
+
+const filterBySearch = (grade: Grade, search: string) => {
+  if (!search) return true
+  const normalisedSearch = search.trim().toLowerCase()
+  return (
+    grade.name.toLowerCase().includes(normalisedSearch)
+    || (grade.category_name?.toLowerCase().includes(normalisedSearch) ?? false)
+  )
+}
+
+const sortGrades = (left: Grade, right: Grade, sortBy: GradeSortOption) => {
+  if (sortBy === "date_asc") {
+    return left.date_achieved.localeCompare(right.date_achieved)
+  }
+  if (sortBy === "percentage_desc") {
+    return right.percentage - left.percentage
+  }
+  if (sortBy === "percentage_asc") {
+    return left.percentage - right.percentage
+  }
+  if (sortBy === "name_asc") {
+    return left.name.localeCompare(right.name)
+  }
+  return right.date_achieved.localeCompare(left.date_achieved)
+}
+
+const useGradesState = () => {
   const [grades, setGrades] = useState<Grade[] | null>(null)
   const [loading, setLoading] = useState<boolean>(true)
   const [modalOpen, setModalOpen] = useState<boolean>(false)
@@ -41,6 +73,33 @@ export default function useGrades(): UseGradesReturn {
   const [performanceFilter, setPerformanceFilter] = useState<GradePerformanceFilter>("all")
   const [selectedCategoryId, setSelectedCategoryId] = useState<number | null>(null)
   const [pendingDeleteId, setPendingDeleteId] = useState<number | null>(null)
+
+  return {
+    grades,
+    setGrades,
+    loading,
+    setLoading,
+    modalOpen,
+    setModalOpen,
+    editInitial,
+    setEditInitial,
+    search,
+    setSearch,
+    sortBy,
+    setSortBy,
+    performanceFilter,
+    setPerformanceFilter,
+    selectedCategoryId,
+    setSelectedCategoryId,
+    pendingDeleteId,
+    setPendingDeleteId,
+  }
+}
+
+type GradesState = ReturnType<typeof useGradesState>
+
+const useGradesFetch = (state: GradesState) => {
+  const { setGrades, setLoading } = state
 
   const fetchGrades = useCallback(async (): Promise<void> => {
     try {
@@ -56,25 +115,27 @@ export default function useGrades(): UseGradesReturn {
     } finally {
       setLoading(false)
     }
-  }, [])
+  }, [setGrades, setLoading])
 
   const refreshGrades = useCallback(async (): Promise<void> => {
     setLoading(true)
     await fetchGrades()
-  }, [fetchGrades])
+  }, [fetchGrades, setLoading])
 
   useEffect(() => {
     void refreshGrades()
   }, [refreshGrades])
 
-  const getCsrfToken = useCallback((): string | null => {
-    const match = /(?:^|; )csrftoken=([^;]+)/.exec(document.cookie)
-    return match ? decodeURIComponent(match[1]) : null
-  }, [])
+  return { refreshGrades }
+}
+
+const useGradesDelete = (state: GradesState, refreshGrades: () => Promise<void>) => {
+  const { setPendingDeleteId, pendingDeleteId } = state
 
   const deleteGradeById = useCallback(
     async (id: number): Promise<void> => {
-      const csrfToken = getCsrfToken()
+      const match = /(?:^|; )csrftoken=([^;]+)/.exec(document.cookie)
+      const csrfToken = match ? decodeURIComponent(match[1]) : null
       const res = await fetch(`/api/grades/${id}/`, {
         method: "DELETE",
         credentials: "include",
@@ -85,93 +146,72 @@ export default function useGrades(): UseGradesReturn {
         await refreshGrades()
       }
     },
-    [getCsrfToken, refreshGrades],
+    [refreshGrades],
   )
-
-  const handleEditGrade = useCallback((grade: Grade): void => {
-    setEditInitial({
-      id: grade.id,
-      name: grade.name,
-      score: grade.score,
-      total: grade.total_possible,
-      date: grade.date_achieved,
-      categoryId: grade.category ?? null,
-    })
-    setModalOpen(true)
-  }, [])
-
-  const closeModal = useCallback((): void => {
-    setModalOpen(false)
-    setEditInitial(null)
-  }, [])
 
   const confirmDelete = useCallback(async (): Promise<void> => {
     if (pendingDeleteId === null) return
     await deleteGradeById(pendingDeleteId)
     setPendingDeleteId(null)
-  }, [deleteGradeById, pendingDeleteId])
+  }, [deleteGradeById, pendingDeleteId, setPendingDeleteId])
 
-  const filteredGrades = useMemo<Grade[]>(() => {
+  return { confirmDelete }
+}
+
+const useGradesEdit = (state: GradesState) => {
+  const { setEditInitial, setModalOpen } = state
+
+  const handleEditGrade = useCallback(
+    (grade: Grade): void => {
+      setEditInitial({
+        id: grade.id,
+        name: grade.name,
+        score: grade.score,
+        total: grade.total_possible,
+        date: grade.date_achieved,
+        categoryId: grade.category ?? null,
+      })
+      setModalOpen(true)
+    },
+    [setEditInitial, setModalOpen],
+  )
+
+  const closeModal = useCallback((): void => {
+    setModalOpen(false)
+    setEditInitial(null)
+  }, [setModalOpen, setEditInitial])
+
+  return { handleEditGrade, closeModal }
+}
+
+const useFilteredGrades = (state: GradesState) => {
+  const { grades, performanceFilter, search, selectedCategoryId, sortBy } = state
+  return useMemo<Grade[]>(() => {
     if (!grades) return []
-    const normalizedSearch = search.trim().toLowerCase()
-
-    const next = grades
-      .filter((grade) => (
-        selectedCategoryId == null ? true : grade.category === selectedCategoryId
-      ))
-      .filter((grade) => {
-        if (performanceFilter === "all") return true
-        if (performanceFilter === "excellent") return grade.percentage >= 85
-        if (performanceFilter === "good") return grade.percentage >= 55 && grade.percentage < 85
-        return grade.percentage < 55
-      })
-      .filter((grade) => {
-        if (!normalizedSearch) return true
-        return (
-          grade.name.toLowerCase().includes(normalizedSearch)
-          || (grade.category_name?.toLowerCase().includes(normalizedSearch) ?? false)
-        )
-      })
-
-    next.sort((left, right) => {
-      if (sortBy === "date_asc") {
-        return left.date_achieved.localeCompare(right.date_achieved)
-      }
-      if (sortBy === "percentage_desc") {
-        return right.percentage - left.percentage
-      }
-      if (sortBy === "percentage_asc") {
-        return left.percentage - right.percentage
-      }
-      if (sortBy === "name_asc") {
-        return left.name.localeCompare(right.name)
-      }
-      return right.date_achieved.localeCompare(left.date_achieved)
-    })
-
-    return next
+    return grades
+      .filter((grade) => filterByCategory(grade, selectedCategoryId))
+      .filter((grade) => filterByPerformance(grade, performanceFilter))
+      .filter((grade) => filterBySearch(grade, search))
+      .sort((left, right) => sortGrades(left, right, sortBy))
   }, [grades, performanceFilter, search, selectedCategoryId, sortBy])
+}
+
+/**
+ * Manage gradebook data and gradebook page UI state.
+ */
+export default function useGrades(): UseGradesReturn {
+  const state = useGradesState()
+  const { refreshGrades } = useGradesFetch(state)
+  const { confirmDelete } = useGradesDelete(state, refreshGrades)
+  const { handleEditGrade, closeModal } = useGradesEdit(state)
+  const filteredGrades = useFilteredGrades(state)
 
   return {
-    grades,
-    loading,
-    modalOpen,
-    editInitial,
-    search,
-    sortBy,
-    performanceFilter,
-    selectedCategoryId,
-    pendingDeleteId,
-    filteredGrades,
-    setModalOpen,
-    setSearch,
-    setSortBy,
-    setPerformanceFilter,
-    setSelectedCategoryId,
-    setPendingDeleteId,
+    ...state,
     refreshGrades,
     handleEditGrade,
     closeModal,
     confirmDelete,
+    filteredGrades,
   }
 }
