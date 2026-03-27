@@ -9,6 +9,7 @@ from django.utils.timezone import make_aware
 from rest_framework import serializers
 from rest_framework.test import APIRequestFactory
 
+from core.calendar_validation_helpers import _validate_allocation_slots
 from core.models import Category, Event, Task
 from core.serializers import CalendarSerializer
 from core.serializers.calendar_serializer import CalendarResponseSerializer
@@ -49,6 +50,23 @@ class CalendarSerializerTests(TestCase):
         }
         data.update(overrides)
         return data
+
+    def _validate_allocation(self, serializer, **overrides):
+        state = {
+            "allocation": [],
+            "allow_split": False,
+            "min_split_minutes": 15,
+            "max_split_minutes": None,
+            "buffer_before_minutes": 0,
+            "buffer_after_minutes": 0,
+            "start_time": None,
+            "deadline": None,
+            "categories": [],
+            "estimated_minutes": 60,
+            "completed_minutes": 0,
+        }
+        state.update(overrides)
+        _validate_allocation_slots(serializer, state)
 
     def test_calendar_serializer_fields(self):
         """Test calendar serializer fields."""
@@ -240,24 +258,28 @@ class CalendarSerializerTests(TestCase):
         self.assertEqual(minutes_by_day[start.date()], 30)
         self.assertEqual(minutes_by_day[end.date()], 30)
 
+    def test_minutes_by_day_accumulates_multiple_slots_on_same_day(self):
+        serializer = CalendarSerializer(context=self._request_context())
+        evening = make_aware(datetime.datetime(2026, 3, 20, 23, 30))
+        midnight = make_aware(datetime.datetime(2026, 3, 21, 0, 0))
+        morning_end = make_aware(datetime.datetime(2026, 3, 21, 1, 0))
+
+        minutes_by_day = serializer._minutes_by_day(
+            [
+                (evening, midnight),
+                (midnight, morning_end),
+            ]
+        )
+
+        self.assertEqual(minutes_by_day[evening.date()], 30)
+        self.assertEqual(minutes_by_day[midnight.date()], 60)
+
     def test_validate_allocation_slots_rejects_non_list(self):
         """Test validate allocation slots rejects non list."""
         serializer = CalendarSerializer(context=self._request_context())
 
         with self.assertRaises(serializers.ValidationError):
-            serializer._validate_allocation_slots(
-                allocation="invalid",
-                allow_split=False,
-                min_split_minutes=15,
-                max_split_minutes=None,
-                buffer_before_minutes=0,
-                buffer_after_minutes=0,
-                start_time=None,
-                deadline=None,
-                categories=[],
-                estimated_minutes=60,
-                completed_minutes=0,
-            )
+            self._validate_allocation(serializer, allocation="invalid")
 
     def test_validate_allocation_slots_rejects_multiple_slots_without_split(self):
         """Test validate allocation slots rejects multiple slots without split."""
@@ -265,7 +287,8 @@ class CalendarSerializerTests(TestCase):
         now = timezone.now() + datetime.timedelta(days=1)
 
         with self.assertRaises(serializers.ValidationError):
-            serializer._validate_allocation_slots(
+            self._validate_allocation(
+                serializer,
                 allocation=[
                     {
                         "start": now.isoformat(),
@@ -276,16 +299,8 @@ class CalendarSerializerTests(TestCase):
                         "end": (now + datetime.timedelta(minutes=60)).isoformat(),
                     },
                 ],
-                allow_split=False,
-                min_split_minutes=15,
-                max_split_minutes=None,
-                buffer_before_minutes=0,
-                buffer_after_minutes=0,
                 start_time=now,
                 deadline=now + datetime.timedelta(hours=2),
-                categories=[],
-                estimated_minutes=60,
-                completed_minutes=0,
             )
 
     def test_validate_allocation_slots_rejects_start_deadline_and_remaining_limit_errors(
@@ -296,7 +311,8 @@ class CalendarSerializerTests(TestCase):
         now = timezone.now() + datetime.timedelta(days=1)
 
         with self.assertRaises(serializers.ValidationError):
-            serializer._validate_allocation_slots(
+            self._validate_allocation(
+                serializer,
                 allocation=[
                     {
                         "start": (now - datetime.timedelta(minutes=30)).isoformat(),
@@ -304,19 +320,13 @@ class CalendarSerializerTests(TestCase):
                     }
                 ],
                 allow_split=True,
-                min_split_minutes=15,
-                max_split_minutes=None,
-                buffer_before_minutes=0,
-                buffer_after_minutes=0,
                 start_time=now,
                 deadline=now + datetime.timedelta(hours=2),
-                categories=[],
-                estimated_minutes=60,
-                completed_minutes=0,
             )
 
         with self.assertRaises(serializers.ValidationError):
-            serializer._validate_allocation_slots(
+            self._validate_allocation(
+                serializer,
                 allocation=[
                     {
                         "start": now.isoformat(),
@@ -324,19 +334,13 @@ class CalendarSerializerTests(TestCase):
                     }
                 ],
                 allow_split=True,
-                min_split_minutes=15,
-                max_split_minutes=None,
-                buffer_before_minutes=0,
-                buffer_after_minutes=0,
                 start_time=now,
                 deadline=now + datetime.timedelta(hours=2),
-                categories=[],
-                estimated_minutes=60,
-                completed_minutes=0,
             )
 
         with self.assertRaises(serializers.ValidationError):
-            serializer._validate_allocation_slots(
+            self._validate_allocation(
+                serializer,
                 allocation=[
                     {
                         "start": now.isoformat(),
@@ -344,15 +348,9 @@ class CalendarSerializerTests(TestCase):
                     }
                 ],
                 allow_split=True,
-                min_split_minutes=15,
-                max_split_minutes=None,
-                buffer_before_minutes=0,
-                buffer_after_minutes=0,
                 start_time=now,
                 deadline=now + datetime.timedelta(hours=3),
-                categories=[],
                 estimated_minutes=30,
-                completed_minutes=0,
             )
 
     def test_validate_allocation_slots_rejects_min_max_and_overlap_errors(self):
@@ -361,7 +359,8 @@ class CalendarSerializerTests(TestCase):
         now = timezone.now() + datetime.timedelta(days=1)
 
         with self.assertRaises(serializers.ValidationError):
-            serializer._validate_allocation_slots(
+            self._validate_allocation(
+                serializer,
                 allocation=[
                     {
                         "start": now.isoformat(),
@@ -372,20 +371,15 @@ class CalendarSerializerTests(TestCase):
                         "end": (now + datetime.timedelta(minutes=40)).isoformat(),
                     },
                 ],
-                allow_split=True,
-                min_split_minutes=15,
                 max_split_minutes=60,
-                buffer_before_minutes=0,
-                buffer_after_minutes=0,
+                allow_split=True,
                 start_time=now,
                 deadline=now + datetime.timedelta(hours=2),
-                categories=[],
-                estimated_minutes=60,
-                completed_minutes=0,
             )
 
         with self.assertRaises(serializers.ValidationError):
-            serializer._validate_allocation_slots(
+            self._validate_allocation(
+                serializer,
                 allocation=[
                     {
                         "start": now.isoformat(),
@@ -396,20 +390,16 @@ class CalendarSerializerTests(TestCase):
                         "end": (now + datetime.timedelta(minutes=80)).isoformat(),
                     },
                 ],
-                allow_split=True,
-                min_split_minutes=15,
                 max_split_minutes=60,
-                buffer_before_minutes=0,
-                buffer_after_minutes=0,
+                allow_split=True,
                 start_time=now,
                 deadline=now + datetime.timedelta(hours=3),
-                categories=[],
                 estimated_minutes=120,
-                completed_minutes=0,
             )
 
         with self.assertRaises(serializers.ValidationError):
-            serializer._validate_allocation_slots(
+            self._validate_allocation(
+                serializer,
                 allocation=[
                     {
                         "start": now.isoformat(),
@@ -420,16 +410,11 @@ class CalendarSerializerTests(TestCase):
                         "end": (now + datetime.timedelta(minutes=50)).isoformat(),
                     },
                 ],
-                allow_split=True,
-                min_split_minutes=15,
                 max_split_minutes=60,
-                buffer_before_minutes=0,
-                buffer_after_minutes=0,
+                allow_split=True,
                 start_time=now,
                 deadline=now + datetime.timedelta(hours=3),
-                categories=[],
                 estimated_minutes=120,
-                completed_minutes=0,
             )
 
     def test_validate_allocation_slots_rejects_overlap_with_events_other_tasks_and_category_limits(
@@ -451,7 +436,8 @@ class CalendarSerializerTests(TestCase):
             end_time=now + datetime.timedelta(minutes=50),
         )
         with self.assertRaises(serializers.ValidationError):
-            serializer._validate_allocation_slots(
+            self._validate_allocation(
+                serializer,
                 allocation=[
                     {
                         "start": now.isoformat(),
@@ -459,15 +445,9 @@ class CalendarSerializerTests(TestCase):
                     }
                 ],
                 allow_split=True,
-                min_split_minutes=15,
-                max_split_minutes=None,
                 buffer_before_minutes=15,
-                buffer_after_minutes=0,
                 start_time=now,
                 deadline=now + datetime.timedelta(hours=3),
-                categories=[],
-                estimated_minutes=60,
-                completed_minutes=0,
             )
 
         Event.objects.all().delete()
@@ -489,7 +469,8 @@ class CalendarSerializerTests(TestCase):
             buffer_before_minutes=10,
         )
         with self.assertRaises(serializers.ValidationError):
-            serializer._validate_allocation_slots(
+            self._validate_allocation(
+                serializer,
                 allocation=[
                     {
                         "start": now.isoformat(),
@@ -497,15 +478,9 @@ class CalendarSerializerTests(TestCase):
                     }
                 ],
                 allow_split=True,
-                min_split_minutes=15,
-                max_split_minutes=None,
                 buffer_before_minutes=20,
-                buffer_after_minutes=0,
                 start_time=now,
                 deadline=now + datetime.timedelta(hours=3),
-                categories=[],
-                estimated_minutes=60,
-                completed_minutes=0,
             )
 
         other_task.delete()
@@ -528,7 +503,8 @@ class CalendarSerializerTests(TestCase):
         limited_task.categories.add(category)
 
         with self.assertRaises(serializers.ValidationError):
-            serializer._validate_allocation_slots(
+            self._validate_allocation(
+                serializer,
                 allocation=[
                     {
                         "start": (now + datetime.timedelta(hours=1)).isoformat(),
@@ -538,15 +514,9 @@ class CalendarSerializerTests(TestCase):
                     }
                 ],
                 allow_split=True,
-                min_split_minutes=15,
-                max_split_minutes=None,
-                buffer_before_minutes=0,
-                buffer_after_minutes=0,
                 start_time=now,
                 deadline=now + datetime.timedelta(hours=4),
                 categories=[category],
-                estimated_minutes=60,
-                completed_minutes=0,
             )
 
     def test_validate_rewrites_buffer_only_conflicts_to_buffer_fields(self):
@@ -585,6 +555,84 @@ class CalendarSerializerTests(TestCase):
         self.assertFalse(serializer.is_valid())
         self.assertIn("buffer_after_minutes", serializer.errors)
 
+    def test_validate_allocation_slots_preserves_event_conflict_message(self):
+        serializer = CalendarSerializer(context=self._request_context())
+        now = timezone.now() + datetime.timedelta(days=1)
+        Event.objects.create(
+            user=self.user,
+            title="Lecture",
+            start_time=now + datetime.timedelta(minutes=20),
+            end_time=now + datetime.timedelta(minutes=50),
+        )
+
+        with self.assertRaises(serializers.ValidationError) as exc_info:
+            self._validate_allocation(
+                serializer,
+                allocation=[
+                    {
+                        "start": now.isoformat(),
+                        "end": (now + datetime.timedelta(minutes=35)).isoformat(),
+                    }
+                ],
+                allow_split=True,
+                buffer_before_minutes=15,
+                start_time=now,
+                deadline=now + datetime.timedelta(hours=3),
+            )
+
+        self.assertEqual(
+            str(exc_info.exception.detail["allocation"]),
+            "Allocation slots and their task buffers cannot overlap calendar events.",
+        )
+
+    def test_validate_allocation_slots_preserves_category_limit_message(self):
+        serializer = CalendarSerializer(context=self._request_context())
+        now = timezone.now() + datetime.timedelta(days=1)
+        category = Category.objects.create(
+            user=self.user,
+            text="Capped",
+            max_daily_study_time=45,
+        )
+        limited_task = Task.objects.create(
+            user=self.user,
+            title="Limited task",
+            description="",
+            estimated_minutes=60,
+            start_time=now,
+            deadline=now + datetime.timedelta(hours=4),
+            importance=5,
+            allocation=[
+                {
+                    "start": now.isoformat(),
+                    "end": (now + datetime.timedelta(minutes=30)).isoformat(),
+                }
+            ],
+            total_task_allocations=1,
+        )
+        limited_task.categories.add(category)
+
+        with self.assertRaises(serializers.ValidationError) as exc_info:
+            self._validate_allocation(
+                serializer,
+                allocation=[
+                    {
+                        "start": (now + datetime.timedelta(hours=1)).isoformat(),
+                        "end": (
+                            now + datetime.timedelta(hours=1, minutes=30)
+                        ).isoformat(),
+                    }
+                ],
+                allow_split=True,
+                start_time=now,
+                deadline=now + datetime.timedelta(hours=4),
+                categories=[category],
+            )
+
+        self.assertEqual(
+            str(exc_info.exception.detail["allocation"]),
+            f'Category "{category.text}" exceeds its daily limit on {now.date().isoformat()}.',
+        )
+
     def test_validate_sets_completed_flags_and_resolves_user_from_instance(self):
         """Test validate sets completed flags and resolves user from instance."""
         now = timezone.now() + datetime.timedelta(days=1)
@@ -620,6 +668,76 @@ class CalendarSerializerTests(TestCase):
         updated = update_serializer.save()
         self.assertFalse(updated.completed)
         self.assertEqual(updated.completed_minutes, 0)
+
+    def test_validate_partial_update_uses_instance_split_settings(self):
+        now = timezone.now() + datetime.timedelta(days=1)
+        task = Task.objects.create(
+            user=self.user,
+            title="Existing",
+            description="",
+            estimated_minutes=60,
+            start_time=now,
+            deadline=now + datetime.timedelta(hours=3),
+            importance=5,
+            allow_split=False,
+        )
+
+        serializer = CalendarSerializer(
+            instance=task,
+            data={
+                "allocation": [
+                    {
+                        "start": now.isoformat(),
+                        "end": (now + datetime.timedelta(minutes=30)).isoformat(),
+                    },
+                    {
+                        "start": (now + datetime.timedelta(minutes=30)).isoformat(),
+                        "end": (now + datetime.timedelta(minutes=60)).isoformat(),
+                    },
+                ]
+            },
+            partial=True,
+            context=self._request_context(),
+        )
+
+        self.assertFalse(serializer.is_valid())
+        self.assertEqual(
+            str(serializer.errors["allocation"][0]),
+            "Tasks without split enabled cannot have multiple allocations.",
+        )
+
+    def test_validate_partial_update_excludes_current_task_from_category_limit(self):
+        now = timezone.now() + datetime.timedelta(days=1)
+        category = Category.objects.create(
+            user=self.user,
+            text="Capped",
+            max_daily_study_time=30,
+        )
+        task = Task.objects.create(
+            user=self.user,
+            title="Existing",
+            description="",
+            estimated_minutes=60,
+            start_time=now,
+            deadline=now + datetime.timedelta(hours=3),
+            importance=5,
+            allocation=[
+                {
+                    "start": now.isoformat(),
+                    "end": (now + datetime.timedelta(minutes=30)).isoformat(),
+                }
+            ],
+            total_task_allocations=1,
+        )
+        task.categories.add(category)
+
+        serializer = CalendarSerializer(
+            instance=task,
+            data={"title": "Updated title"},
+            partial=True,
+        )
+
+        self.assertTrue(serializer.is_valid(), serializer.errors)
 
     def test_calendar_response_serializer_covers_representation_and_validation(self):
         """Test calendar response serializer covers representation and validation."""

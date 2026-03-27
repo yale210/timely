@@ -164,34 +164,40 @@ class AssessmentSerializer(serializers.ModelSerializer):
                 minutes_before=reminder_offset,
             )
 
-    def _sync_linked_event(self, assessment, categories, event_details):
-        """Create, update, or delete the event linked to an assessment."""
-        if event_details is serializers.empty:
-            if assessment.linked_event is None:
-                return
-            event = assessment.linked_event
-            event.title = assessment.title
-            event.description = assessment.notes
-            event.save(update_fields=["title", "description"])
-            event.categories.set(categories)
-            self._sync_event_reminders(event, assessment.reminder_offset)
+    def _finalise_linked_event(self, event, categories, reminder_offset):
+        event.categories.set(categories)
+        self._sync_event_reminders(event, reminder_offset)
+
+    def _sync_existing_linked_event(self, assessment, categories):
+        if assessment.linked_event is None:
             return
 
-        if event_details is None:
-            if assessment.linked_event is not None:
-                linked_event = assessment.linked_event
-                assessment.linked_event = None
-                assessment.save(update_fields=["linked_event"])
-                linked_event.delete()
+        event = assessment.linked_event
+        event.title = assessment.title
+        event.description = assessment.notes
+        event.save(update_fields=["title", "description"])
+        self._finalise_linked_event(event, categories, assessment.reminder_offset)
+
+    def _remove_linked_event(self, assessment):
+        if assessment.linked_event is None:
             return
 
-        payload = {
+        linked_event = assessment.linked_event
+        assessment.linked_event = None
+        assessment.save(update_fields=["linked_event"])
+        linked_event.delete()
+
+    def _build_linked_event_payload(self, assessment, event_details):
+        return {
             "title": assessment.title,
             "description": assessment.notes,
             "location": event_details.get("location", ""),
             "start_time": event_details["start_time"],
             "end_time": event_details["end_time"],
         }
+
+    def _upsert_linked_event(self, assessment, categories, event_details):
+        payload = self._build_linked_event_payload(assessment, event_details)
         if assessment.linked_event is None:
             event = Event.objects.create(user=assessment.user, colour=None, **payload)
             assessment.linked_event = event
@@ -201,8 +207,20 @@ class AssessmentSerializer(serializers.ModelSerializer):
             for field, value in payload.items():
                 setattr(event, field, value)
             event.save()
-        event.categories.set(categories)
-        self._sync_event_reminders(event, assessment.reminder_offset)
+
+        self._finalise_linked_event(event, categories, assessment.reminder_offset)
+
+    def _sync_linked_event(self, assessment, categories, event_details):
+        """Create, update, or delete the event linked to an assessment."""
+        if event_details is serializers.empty:
+            self._sync_existing_linked_event(assessment, categories)
+            return
+
+        if event_details is None:
+            self._remove_linked_event(assessment)
+            return
+
+        self._upsert_linked_event(assessment, categories, event_details)
 
     @transaction.atomic
     def create(self, validated_data):

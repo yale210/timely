@@ -118,7 +118,12 @@ class EventSerializer(serializers.ModelSerializer):
                 self._validate_trigger_time(trigger_at, minutes_before)
 
     def _build_event_for_validation(self, attributes):
-        """Build a temporary event instance so model validation can run safely."""
+        """Build a temporary event instance so model validation can run safely.
+
+        Returns:
+            Event: A temporary event instance for validation.
+
+        """
         attrs_copy = attributes.copy()
         attrs_copy.pop("reminders", None)
         attrs_copy.pop("categories", None)
@@ -189,7 +194,12 @@ class EventSerializer(serializers.ModelSerializer):
         return instance
 
     def _validate_max_reminders(self, reminders_data):
-        """Enforce the maximum number of reminders allowed per event."""
+        """Enforce the maximum number of reminders allowed per event.
+
+        Raises:
+            ValidationError: If too many reminders are provided.
+
+        """
         if len(reminders_data) > MAX_REMINDERS_PER_EVENT:
             raise serializers.ValidationError(
                 {
@@ -198,7 +208,12 @@ class EventSerializer(serializers.ModelSerializer):
             )
 
     def _validate_trigger_time(self, trigger_at, minutes_before):
-        """Reject reminders that would fire in the past."""
+        """Reject reminders that would fire in the past.
+
+        Raises:
+            ValidationError: If a reminder would trigger in the past.
+
+        """
         now = timezone.now()
         if trigger_at <= now:
             raise serializers.ValidationError(
@@ -208,7 +223,12 @@ class EventSerializer(serializers.ModelSerializer):
             )
 
     def _clean_event(self, event):
-        """Run model validation and translate Django errors into DRF errors."""
+        """Run model validation and translate Django errors into DRF errors.
+
+        Raises:
+            ValidationError: If model validation fails.
+
+        """
         try:
             event.clean()
         except DjangoValidationError as e:

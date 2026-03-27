@@ -1,11 +1,6 @@
-"""Views and schemas for user events and recurring event handling."""
-
-from calendar import monthrange
-from datetime import datetime, time
-
 from django.conf import settings
 from django.utils import timezone
-from django.utils.dateparse import parse_datetime
+from typing import Any, cast
 from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import (
     OpenApiParameter,
@@ -15,7 +10,6 @@ from drf_spectacular.utils import (
 )
 from rest_framework import permissions, serializers, status, viewsets
 from rest_framework.decorators import action
-from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
 
 from core.models import Event
@@ -30,50 +24,16 @@ from core.services import (
     expand_user_events,
     revert_override_instance,
 )
-
-VALID_SCOPES = {"this", "following", "all"}
-
-LIST_WINDOW_PARAMETERS = [
-    OpenApiParameter(
-        "start_date",
-        OpenApiTypes.DATE,
-        OpenApiParameter.QUERY,
-        description="Start date for flattened event expansion (YYYY-MM-DD).",
-    ),
-    OpenApiParameter(
-        "end_date",
-        OpenApiTypes.DATE,
-        OpenApiParameter.QUERY,
-        description="End date for flattened event expansion (YYYY-MM-DD).",
-    ),
-]
-
-SCOPE_PARAMETERS = [
-    OpenApiParameter("id", OpenApiTypes.INT, OpenApiParameter.PATH),
-    OpenApiParameter(
-        "scope",
-        OpenApiTypes.STR,
-        OpenApiParameter.QUERY,
-        description="Mutation scope: this, following, all.",
-    ),
-    OpenApiParameter(
-        "original_start_time",
-        OpenApiTypes.DATETIME,
-        OpenApiParameter.QUERY,
-        description="UTC ISO datetime anchor of interacted recurring instance.",
-    ),
-]
-
-REVERT_PARAMETERS = [
-    OpenApiParameter("id", OpenApiTypes.INT, OpenApiParameter.PATH),
-    OpenApiParameter(
-        "original_start_time",
-        OpenApiTypes.DATETIME,
-        OpenApiParameter.QUERY,
-        description="UTC ISO datetime anchor of the overridden recurring instance.",
-        required=True,
-    ),
-]
+from core.views.event_view_helpers import (
+    LIST_WINDOW_PARAMETERS,
+    REVERT_PARAMETERS,
+    SCOPE_PARAMETERS,
+    parse_list_window,
+    parse_original_start_time,
+    parse_scope_context,
+    validate_revert,
+    validate_scope,
+)
 
 
 @extend_schema_view(
@@ -101,183 +61,53 @@ REVERT_PARAMETERS = [
     destroy=extend_schema(parameters=SCOPE_PARAMETERS),
 )
 class EventViewSet(viewsets.ModelViewSet):
-    """ViewSet providing an API for managing user events.
-
-    Supports CRUD operations on events, in addition to behaviour for
-    handling recurring events.
-    """
+    """Manage event CRUD operations, including recurrence-scope mutations."""
 
     serializer_class = EventSerializer
     permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self):
-        """Retrieve events for the current user ordered by ID.
+        """Return the authenticated user's events.
 
         Returns:
-            QuerySet: A filtered queryset of Event objects.
-
+            Any: QuerySet of events owned by the current user.
         """
-        return Event.objects.filter(user=self.request.user).order_by("id")
-
-    def _parse_list_window(self, request):
-        """Parse and validate the expansion window used for recurring events.
-
-        Args:
-            request (Request): The DRF request object.
-
-        Returns:
-            tuple: A tuple containing (range_start, range_end) as aware datetimes.
-
-        Raises:
-            ValidationError: If date formats are invalid or ranges exceed limits.
-
-        """
-        start_date_raw = request.query_params.get("start_date")
-        end_date_raw = request.query_params.get("end_date")
-
-        if not start_date_raw or not end_date_raw:
-            today = timezone.localdate()
-            month_start = today.replace(day=1)
-            month_end = today.replace(day=monthrange(today.year, today.month)[1])
-        else:
-            try:
-                month_start = datetime.strptime(start_date_raw, "%Y-%m-%d").date()
-                month_end = datetime.strptime(end_date_raw, "%Y-%m-%d").date()
-            except ValueError as exc:
-                raise ValidationError(
-                    "start_date and end_date must use YYYY-MM-DD."
-                ) from exc
-
-        if month_end < month_start:
-            raise ValidationError("end_date must be on or after start_date.")
-        if (month_end - month_start).days > 365:
-            raise ValidationError("Date range cannot exceed 366 days.")
-
-        timezone_info = timezone.get_current_timezone()
-        range_start = timezone.make_aware(
-            datetime.combine(month_start, time.min),
-            timezone_info,
-        )
-        range_end = timezone.make_aware(
-            datetime.combine(month_end, time.max),
-            timezone_info,
-        )
-        return range_start, range_end
-
-    def _parse_original_start_time(self, request):
-        """Parse original_start_time from query parameters into an aware datetime.
-
-        Args:
-            request (Request): The DRF request object.
-
-        Returns:
-            datetime | None: The parsed aware datetime or None.
-
-        Raises:
-            ValidationError: If the datetime string is invalid.
-
-        """
-        original_start_time = None
-        original_start_time_raw = request.query_params.get("original_start_time")
-        if original_start_time_raw:
-            original_start_time_raw = original_start_time_raw.replace(" ", "+")
-            parsed_datetime = parse_datetime(original_start_time_raw)
-            if parsed_datetime is None:
-                raise ValidationError(
-                    "original_start_time must be a valid ISO datetime."
-                )
-            if timezone.is_naive(parsed_datetime):
-                parsed_datetime = timezone.make_aware(parsed_datetime)
-            original_start_time = parsed_datetime
-        return original_start_time
-
-    def _parse_scope_context(self, request):
-        """Parse mutation scope and original_start_time from query parameters.
-
-        Args:
-            request (Request): The DRF request object.
-
-        Returns:
-            tuple: A tuple containing (scope string, original_start_time datetime).
-
-        Raises:
-            ValidationError: If the scope is invalid.
-
-        """
-        scope = request.query_params.get("scope", "all").lower()
-        if scope not in VALID_SCOPES:
-            raise ValidationError("scope must be one of: this, following, all.")
-
-        original_start_time = self._parse_original_start_time(request)
-
-        return scope, original_start_time
+        return cast(Any, Event).objects.filter(user=self.request.user).order_by("id")
 
     def list(self, request, *args, **kwargs):
-        """List events for the authenticated user.
-        When recurrence overrides are enabled, events are expanded
-        into individual instances based on the provided timeframe.
-
-        Args:
-            request (Request): The DRF request object.
-            *args: Variable length argument list.
-            **kwargs: Arbitrary keyword arguments.
+        """List events or expanded recurring instances for the requested window.
 
         Returns:
-            Response: A DRF response with expanded or raw event data.
-
+            Response: Serialised event list response.
         """
         if not settings.ENABLE_RECURRENCE_OVERRIDES:
             return super().list(request, *args, **kwargs)
 
-        range_start, range_end = self._parse_list_window(request)
+        range_start, range_end = parse_list_window(request)
         expanded_instances = expand_user_events(request.user, range_start, range_end)
         return Response(
             ExpandedEventInstanceSerializer(expanded_instances, many=True).data
         )
 
     def update(self, request, *args, **kwargs):
-        """Update an event and handle recurrence logic if applicable.
-
-        Args:
-            request (Request): The DRF request object.
-            *args: Variable length argument list.
-            **kwargs: Arbitrary keyword arguments.
+        """Handle full event updates.
 
         Returns:
-            Response: A DRF response with updated event data.
-
+            Response: Updated event response.
         """
         return self._handle_update(request, partial=False, *args, **kwargs)
 
     def partial_update(self, request, *args, **kwargs):
-        """Partial update an event and handle recurrence logic if applicable.
-
-        Args:
-            request (Request): The DRF request object.
-            *args: Variable length argument list.
-            **kwargs: Arbitrary keyword arguments.
+        """Handle partial event updates.
 
         Returns:
-            Response: A DRF response with updated event data.
-
+            Response: Updated event response.
         """
         return self._handle_update(request, partial=True, *args, **kwargs)
 
     def _handle_update(self, request, partial, *args, **kwargs):
-        """Handle internal update logic for both full and partial updates.
-
-        Args:
-            request (Request): The DRF request object.
-            partial (bool): Whether this is a partial update.
-            *args: Variable length argument list.
-            **kwargs: Arbitrary keyword arguments.
-
-        Returns:
-            Response: A DRF response with updated event data or error.
-
-        """
         event = self.get_object()
-        scope, original_start_time = self._parse_scope_context(request)
+        scope, original_start_time = parse_scope_context(request)
 
         if event.recurrence_interval and not settings.ENABLE_RECURRENCE_OVERRIDES:
             if scope != "all":
@@ -288,7 +118,7 @@ class EventViewSet(viewsets.ModelViewSet):
             return super().update(request, *args, partial=partial, **kwargs)
 
         if event.recurrence_interval and settings.ENABLE_RECURRENCE_OVERRIDES:
-            error = self._validate_scope(scope, original_start_time)
+            error = validate_scope(scope, original_start_time)
             if error:
                 return error
 
@@ -311,19 +141,13 @@ class EventViewSet(viewsets.ModelViewSet):
         return super().update(request, *args, partial=partial, **kwargs)
 
     def destroy(self, request, *args, **kwargs):
-        """Delete an event and handle recurrence scoping if applicable.
-
-        Args:
-            request (Request): The DRF request object.
-            *args: Variable length argument list.
-            **kwargs: Arbitrary keyword arguments.
+        """Delete an event or recurring slice based on the requested scope.
 
         Returns:
-            Response: A DRF response indicating success or error.
-
+            Response: Deletion response.
         """
         event = self.get_object()
-        scope, original_start_time = self._parse_scope_context(request)
+        scope, original_start_time = parse_scope_context(request)
 
         if event.recurrence_interval and not settings.ENABLE_RECURRENCE_OVERRIDES:
             if scope != "all":
@@ -334,7 +158,7 @@ class EventViewSet(viewsets.ModelViewSet):
             return super().destroy(request, *args, **kwargs)
 
         if event.recurrence_interval and settings.ENABLE_RECURRENCE_OVERRIDES:
-            error = self._validate_scope(scope, original_start_time)
+            error = validate_scope(scope, original_start_time)
             if error:
                 return error
 
@@ -345,24 +169,6 @@ class EventViewSet(viewsets.ModelViewSet):
 
         return super().destroy(request, *args, **kwargs)
 
-    def _validate_scope(self, scope, original_start_time):
-        """Validate scope and original_start_time combinations.
-
-        Args:
-            scope (str): The mutation scope.
-            original_start_time (datetime | None): The anchor datetime.
-
-        Returns:
-            Response | None: A DRF error response or None.
-
-        """
-        if scope in {"this", "following"} and original_start_time is None:
-            return Response(
-                {"detail": "original_start_time is required for this scope."},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-        return None
-
     @extend_schema(
         parameters=REVERT_PARAMETERS,
         request=None,
@@ -370,69 +176,17 @@ class EventViewSet(viewsets.ModelViewSet):
     )
     @action(detail=True, methods=["post"], url_path="revert-instance")
     def revert_instance(self, request, *args, **kwargs):
-        """Revert a specific instance override for a recurring event.
-
-        Args:
-            request (Request): The DRF request object.
-            *args: Variable length argument list.
-            **kwargs: Arbitrary keyword arguments.
+        """Revert a single overridden recurring instance back to the base series.
 
         Returns:
-            Response: A DRF response indicating success or error.
-
+            Response: Revert result response.
         """
         event = self.get_object()
 
-        original_start_time = self._parse_original_start_time(request)
-
-        error = self._validate_revert(event, original_start_time)
-
+        original_start_time = parse_original_start_time(request)
+        error = validate_revert(event, original_start_time)
         if error:
             return error
-
-        return self._perform_revert(event, original_start_time)
-
-    def _validate_revert(self, event, original_start_time):
-        """Validate context before performing an override revert.
-
-        Args:
-            event (Event): The recurring event instance.
-            original_start_time (datetime | None): The anchor datetime.
-
-        Returns:
-            Response | None: A DRF error response or None.
-
-        """
-        if not settings.ENABLE_RECURRENCE_OVERRIDES:
-            return Response(
-                {"detail": "Recurring overrides are disabled by feature flag."},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-
-        if not event.recurrence_interval:
-            return Response(
-                {"detail": "Only recurring events support override reverts."},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-
-        if original_start_time is None:
-            return Response(
-                {"detail": "original_start_time is required."},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-        return None
-
-    def _perform_revert(self, event, original_start_time):
-        """Trigger the internal service logic for reverting an override.
-
-        Args:
-            event (Event): The recurring event instance.
-            original_start_time (datetime): The anchor datetime.
-
-        Returns:
-            Response: A DRF response indicating success or error.
-
-        """
         try:
             revert_override_instance(event, original_start_time)
         except ValueError as exc:
@@ -450,13 +204,9 @@ class EventViewSet(viewsets.ModelViewSet):
     )
     @action(detail=False, methods=["get"])
     def server_time(self, request):
-        """Return the current server time in ISO format.
-
-        Args:
-            request (Request): The DRF request object.
+        """Return the current server time.
 
         Returns:
-            Response: A DRF response containing the server time.
-
+            Response: Current server time payload.
         """
         return Response({"server_time": timezone.now().isoformat()})

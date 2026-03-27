@@ -85,7 +85,12 @@ class FriendshipSerializer(serializers.ModelSerializer):
         return user.username
 
     def _get_avatar_url(self, user):
-        """Build the avatar URL for a friendship user when available."""
+        """Build the avatar URL for a friendship user when available.
+
+        Returns:
+            str | None: The absolute avatar URL when available.
+
+        """
         profile = self._get_profile(user)
         if not profile or not getattr(profile, "avatar", None):
             return None
