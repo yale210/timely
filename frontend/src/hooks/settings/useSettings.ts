@@ -5,6 +5,7 @@ import { authService } from "@/services/authService";
 import * as categoryService from "@/services/categoryService";
 import { deleteEvents as deleteEventsAPI} from "@/services/taskService";
 import { deleteTasks as deleteTasksAPI} from "@/services/taskService";
+import { deleteAccount as deleteAccountAPI} from "@/services/taskService";
 import { preferenceService } from "@/services/preferenceService";
 import type { Category, Preference } from "@/types";
 import { formatDjangoFormError } from "@/utils/apiErrors";
@@ -50,6 +51,7 @@ interface SettingsActions {
   applyFont: (fontName: string) => void;
   deleteEvents: () => Promise<string>;
   deleteTasks: () => Promise<string>;
+  deleteAccount: () => Promise<string>;
   makeTeacher: () => Promise<void>;
   unregisterTeacher: () => Promise<void>;
 }
@@ -117,6 +119,19 @@ export const useSettings = (): UseSettingsReturn => {
     setIsDeleting(true);
     try {
       return await deleteTasksAPI();
+    } finally {
+      setIsDeleting(false);
+    }
+  }, []);
+
+  const deleteAccount = useCallback(async () => {
+    setIsDeleting(true);
+    try {
+      const message = await deleteAccountAPI();
+
+      await authService.logout();
+      
+      return message;
     } finally {
       setIsDeleting(false);
     }
@@ -311,6 +326,7 @@ export const useSettings = (): UseSettingsReturn => {
       applyFont,
       deleteTasks,
       deleteEvents,
+      deleteAccount,
       makeTeacher,
       unregisterTeacher,
     },

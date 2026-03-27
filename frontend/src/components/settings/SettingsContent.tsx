@@ -613,11 +613,14 @@ const SettingsContent = ({
                   onDeleteEvents={() => {
                     return actions.deleteEvents();
                   }}
-                  onDeleteTasks={() => {
-                    return actions.deleteTasks();
-                  }}
-                />
-              ) : null}
+                onDeleteTasks={() => {
+                  return actions.deleteTasks();
+                }}
+                onDeleteAccount={() => {
+                  return actions.deleteAccount();
+                }}
+              />
+            ) : null}
             </div>
           </section>
         </div>

@@ -5,6 +5,7 @@ import PrivacySection from "@/components/settings/PrivacySection";
 describe("PrivacySection", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.spyOn(window, "confirm").mockReturnValue(true);
   });
 
   it("rendering the page", async () => {
@@ -14,6 +15,7 @@ describe("PrivacySection", () => {
         deleting={false}
         onDeleteEvents={vi.fn()}
         onDeleteTasks={vi.fn()}
+        onDeleteAccount={vi.fn()}
       />,
     );
 
@@ -31,6 +33,7 @@ describe("PrivacySection", () => {
         deleting={false}
         onDeleteEvents={onDeleteEvents}
         onDeleteTasks={vi.fn()}
+        onDeleteAccount={vi.fn()}
       />,
     );
 
@@ -51,6 +54,7 @@ describe("PrivacySection", () => {
         deleting={false}
         onDeleteEvents={vi.fn()}
         onDeleteTasks={onDeleteTasks}
+        onDeleteAccount={vi.fn()}
       />,
     );
 
@@ -63,6 +67,26 @@ describe("PrivacySection", () => {
     expect(await screen.findByText("Tasks Deleted")).toBeInTheDocument();
   });
 
+  it("calls onDeleteAccount successfully", async () => {
+    const onDeleteAccount = vi.fn().mockResolvedValue("Account Deleted");
+
+    render(
+      <PrivacySection
+        deleting={false}
+        onDeleteEvents={vi.fn()}
+        onDeleteTasks={vi.fn()}
+        onDeleteAccount={onDeleteAccount}
+      />,
+    );
+
+    const deleteAccountButton  = screen.getByRole("button", { name: /Delete accounT/i });
+    fireEvent.click(deleteAccountButton);
+
+    expect(onDeleteAccount).toHaveBeenCalled();
+
+    expect(await screen.findByText("Account Deleted")).toBeInTheDocument();
+  });
+
   it("error shown when onDeleteEvents fails", async () => {
     const onDeleteEvents = vi.fn().mockRejectedValue(new Error("failEvents?"));
 
@@ -71,6 +95,7 @@ describe("PrivacySection", () => {
         deleting={false}
         onDeleteEvents={onDeleteEvents}
         onDeleteTasks={vi.fn()}
+        onDeleteAccount={vi.fn()}
       />,
     );
 
@@ -91,6 +116,7 @@ describe("PrivacySection", () => {
         deleting={false}
         onDeleteEvents={vi.fn()}
         onDeleteTasks={onDeleteTasks}
+        onDeleteAccount={vi.fn()}
       />,
     );
 
@@ -103,6 +129,26 @@ describe("PrivacySection", () => {
     expect(await screen.findByText("Failed to delete tasks.")).toBeInTheDocument();
   });
 
+  it("error shown when onDeleteAccount fails", async () => {
+    const onDeleteAccount = vi.fn().mockRejectedValue(new Error("failEvents?"));
+
+    render(
+      <PrivacySection
+        deleting={false}
+        onDeleteEvents={vi.fn()}
+        onDeleteTasks={vi.fn()}
+        onDeleteAccount={onDeleteAccount}
+      />,
+    );
+
+    const deleteAccountButton  = screen.getByRole("button", { name: /Delete Account/i });
+    fireEvent.click(deleteAccountButton);
+
+    expect(onDeleteAccount).toHaveBeenCalled();
+
+    expect(await screen.findByText("Failed to delete account.")).toBeInTheDocument();
+  });
+
   it("Disables all buttons when deleting", () => {
 
     render(
@@ -110,13 +156,100 @@ describe("PrivacySection", () => {
         deleting={true}
         onDeleteEvents={vi.fn()}
         onDeleteTasks={vi.fn()}
+        onDeleteAccount={vi.fn()}
       />,
     );
 
     const buttons = screen.getAllByRole("button", { name: /Deleting/i })
-    expect(buttons).toHaveLength(2);
+    expect(buttons).toHaveLength(3);
 
     buttons.forEach((button) => expect(button).toBeDisabled());
 
     });
+
+
+
+    it("error shown when onDeleteAccount fails", async () => {
+    const onDeleteAccount = vi.fn().mockRejectedValue(new Error("failEvents?"));
+
+    render(
+      <PrivacySection
+        deleting={false}
+        onDeleteEvents={vi.fn()}
+        onDeleteTasks={vi.fn()}
+        onDeleteAccount={onDeleteAccount}
+      />,
+    );
+
+    const deleteAccountButton  = screen.getByRole("button", { name: /Delete Account/i });
+    fireEvent.click(deleteAccountButton);
+
+    expect(onDeleteAccount).toHaveBeenCalled();
+
+    expect(await screen.findByText("Failed to delete account.")).toBeInTheDocument();
+  });
+
+
+  
+
+  it("does not call onDeleteEvents when not confirmed", () => {
+    const onDeleteEvents = vi.fn();
+    vi.spyOn(window, "confirm").mockReturnValue(false);
+
+    render(
+      <PrivacySection
+        deleting={false}
+        onDeleteEvents={onDeleteEvents}
+        onDeleteTasks={vi.fn()}
+        onDeleteAccount={vi.fn()}
+      />,
+    );
+
+    const deleteEventsButton  = screen.getByRole("button", { name: /Delete Events/i });
+    fireEvent.click(deleteEventsButton);
+
+    expect(onDeleteEvents).not.toHaveBeenCalled();
+
+  });
+
+  it("does not call onDeleteTasks when not confirmed", () => {
+    const onDeleteTasks = vi.fn();
+    vi.spyOn(window, "confirm").mockReturnValue(false);
+
+    render(
+      <PrivacySection
+        deleting={false}
+        onDeleteEvents={vi.fn()}
+        onDeleteTasks={onDeleteTasks}
+        onDeleteAccount={vi.fn()}
+      />,
+    );
+
+    const deleteTasksButton  = screen.getByRole("button", { name: /Delete Tasks/i });
+    fireEvent.click(deleteTasksButton);
+
+    expect(onDeleteTasks).not.toHaveBeenCalled();
+
+  });
+
+  it("does not call onDeleteAccount when not confirmed", () => {
+    const onDeleteAccount = vi.fn();
+    vi.spyOn(window, "confirm").mockReturnValue(false);
+
+    render(
+      <PrivacySection
+        deleting={false}
+        onDeleteEvents={vi.fn()}
+        onDeleteTasks={vi.fn()}
+        onDeleteAccount={onDeleteAccount}
+      />,
+    );
+
+    const deleteAccountButton  = screen.getByRole("button", { name: /Delete Account/i });
+    fireEvent.click(deleteAccountButton);
+
+    expect(onDeleteAccount).not.toHaveBeenCalled();
+
+  });
+  
 });

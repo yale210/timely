@@ -89,3 +89,11 @@ export const deleteTasks = async (): Promise<string> => {
   const response = await api.delete<DeleteResponse>("/api/delete_tasks/");
   return response.data.message;
 };
+
+/**
+ * Deletes the user's account
+ */
+export const deleteAccount = async (): Promise<string> => {
+  const response = await api.delete<DeleteResponse>("/api/delete_account/");
+  return response.data.message;
+};
