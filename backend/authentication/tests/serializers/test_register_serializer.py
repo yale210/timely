@@ -16,6 +16,7 @@ class RegisterSerializerTest(TestCase):
             "username": "newuser",
             "email": "newuser@example.com",
             "password": "password123",
+            "name": "New User",
         }
         serializer = RegisterSerializer(data=data)
         self.assertTrue(serializer.is_valid())
@@ -35,6 +36,7 @@ class RegisterSerializerTest(TestCase):
             "username": "existinguser",
             "email": "another@example.com",
             "password": "password123",
+            "name": "Another User",
         }
         serializer = RegisterSerializer(data=data)
         self.assertFalse(serializer.is_valid())
@@ -55,11 +57,12 @@ class RegisterSerializerTest(TestCase):
             "username": "  EXISTINGUSER  ",
             "email": "another@example.com",
             "password": "password123",
+            "name": "Another User",
         }
         serializer = RegisterSerializer(data=data)
         self.assertFalse(serializer.is_valid())
         self.assertIn("non_field_errors", serializer.errors)
         self.assertEqual(
             serializer.errors["non_field_errors"][0],
-            "User with this username already exists.",
+            ErrorDetail("User with this username already exists.", code="invalid"),
         )

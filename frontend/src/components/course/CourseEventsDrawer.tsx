@@ -1,8 +1,8 @@
-import moment from "moment";
-import { Calendar, momentLocalizer, Views } from "react-big-calendar";
+import "react-big-calendar/lib/css/react-big-calendar.css";
+import "react-big-calendar/lib/addons/dragAndDrop/styles.css";
+import { Calendar, Views } from "react-big-calendar";
 import type { Event } from "@/types/event";
-
-const localizer = momentLocalizer(moment);
+import { useCalendarLocalizer } from "@/utils/calendarLocalizer";
 
 interface CourseEventsDrawerProps {
   courseName: string;
@@ -26,6 +26,7 @@ export default function CourseEventsDrawer({
   loading,
   onClose,
 }: CourseEventsDrawerProps) {
+  const localizer = useCalendarLocalizer();
   const calendarEvents = events.map((event) => ({
     ...event,
     title: event.title,

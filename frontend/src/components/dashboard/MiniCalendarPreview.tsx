@@ -118,7 +118,7 @@ const MiniCalendarPreview = ({ tasks, events }: MiniCalendarPreviewProps) => {
     })),
   ];
 
-  const { minTime, maxTime, visibleHours } = useMemo(() => {
+  const { visibleHours } = useMemo(() => {
     const schedule = daySchedule.length > 0
       ? daySchedule
       : [{ day: 1, start: dayStart, end: dayEnd }];
@@ -151,8 +151,6 @@ const MiniCalendarPreview = ({ tasks, events }: MiniCalendarPreviewProps) => {
     maxDate.setHours(Math.floor((safeStartMinutes + diffMinutes) / 60), (safeStartMinutes + diffMinutes) % 60, 0, 0);
 
     return {
-      minTime: minDate,
-      maxTime: maxDate,
       visibleHours,
     };
   }, [dayEnd, daySchedule, dayStart]);
@@ -198,8 +196,6 @@ const MiniCalendarPreview = ({ tasks, events }: MiniCalendarPreviewProps) => {
         date={new Date()}
         startAccessor="start"
         endAccessor="end"
-        min={minTime}
-        max={maxTime}
         step={60}
         timeslots={1}
         formats={formats}

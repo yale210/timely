@@ -63,7 +63,7 @@ export const authStore = {
 // Backend API layer for authentication
 export const authService = {
   // Sends signup data to '/api/authentication/register/'
-  async register(payload: { username: string; email: string; password: string; password2: string; }) {
+  async register(payload: { username: string; email: string; password: string; password2: string; name: string; }) {
     const { data } = await api.post<AuthResponse>("/api/authentication/register/", payload)
 
     const token = getTokenFromResponse(data)

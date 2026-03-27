@@ -11,6 +11,8 @@ import { useTeacher } from "@/hooks/course/useTeacher";
 import type { UseSettingsReturn } from "@/hooks/settings/useSettings";
 import { useProfileSettings } from "@/hooks/settings/useProfileSettings";
 import { makeMyTeacherProfile, unregisterMyTeacherProfile } from "@/services/courseService.ts";
+import * as exportService from "@/services/exportService";
+import * as importService from "@/services/importService";
 import { getSchedulingDayMaxMinutes } from "@/utils/schedulingLimits";
 
 interface SettingsContentProps {
@@ -78,6 +80,9 @@ const SettingsContent = ({
   const [unregisteringTeacher, setUnregisteringTeacher] = useState(false);
   const [makeTeacherError, setMakeTeacherError] = useState<string | null>(null);
   const [makeTeacherSuccess, setMakeTeacherSuccess] = useState<string | null>(null);
+  const [isExportingCalendar, setIsExportingCalendar] = useState(false);
+  const [isImportingCalendar, setIsImportingCalendar] = useState(false);
+  const [calendarDataError, setCalendarDataError] = useState<string | null>(null);
   const teacherState = useTeacher();
 
   const featureRows = useMemo(() => ([
@@ -159,6 +164,44 @@ const SettingsContent = ({
       setMakeTeacherError("Unable to unregister you as a teacher.");
     } finally {
       setUnregisteringTeacher(false);
+    }
+  };
+
+  const exportCalendarData = async () => {
+    if (isExportingCalendar) return;
+
+    setCalendarDataError(null);
+    setIsExportingCalendar(true);
+    try {
+      const response = await exportService.exportEvents();
+      const url = window.URL.createObjectURL(new Blob([response]));
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute("download", "events.txt");
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+    } catch (error: unknown) {
+      console.error("Failed to export calendar data:", error);
+      setCalendarDataError("Unable to export calendar data.");
+    } finally {
+      setIsExportingCalendar(false);
+    }
+  };
+
+  const importCalendarData = async (file: File) => {
+    if (isImportingCalendar) return;
+
+    setCalendarDataError(null);
+    setIsImportingCalendar(true);
+    try {
+      await importService.importEvents(file);
+    } catch (error: unknown) {
+      console.error("Failed to import calendar data:", error);
+      setCalendarDataError("Unable to import calendar data.");
+    } finally {
+      setIsImportingCalendar(false);
     }
   };
 
@@ -306,173 +349,225 @@ const SettingsContent = ({
 
                     return (
                       <div className="space-y-4">
-                        <div className="rounded-lg border border-gray-200 bg-white px-4 py-4 shadow-sm">
-                          <InfoLabel
-                            label="Sound effects"
-                            tooltip="Controls app sound cues such as completion and button click effects."
-                          />
-                          <div className="mt-2 flex items-center gap-3">
-                            <div className="text-xs font-medium text-gray-600">
-                              {preference.disable_sound_effects ? "Disabled" : "Enabled"}
+                        <div className="space-y-4">
+                          <div className="rounded-lg border border-gray-200 bg-white px-4 py-4 shadow-sm">
+                            <InfoLabel
+                              label="Sound effects"
+                              tooltip="Controls app sound cues such as completion and button click effects."
+                            />
+                            <div className="mt-2 flex items-center gap-3">
+                              <div className="text-xs font-medium text-gray-600">
+                                {preference.disable_sound_effects ? "Disabled" : "Enabled"}
+                              </div>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  actions.setPreference({
+                                    ...preference,
+                                    disable_sound_effects: !preference.disable_sound_effects,
+                                  });
+                                }}
+                                className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${
+                                  preference.disable_sound_effects ? "bg-gray-300" : "bg-primary"
+                                }`}
+                                aria-pressed={!preference.disable_sound_effects}
+                              >
+                                <span
+                                  className={`inline-block h-4 w-4 transform rounded-full bg-white shadow-sm transition-transform ${
+                                    preference.disable_sound_effects ? "translate-x-1" : "translate-x-4"
+                                  }`}
+                                />
+                              </button>
                             </div>
+                          </div>
+
+                          <div className="rounded-lg border border-gray-200 bg-white px-4 py-4 shadow-sm">
+                            <InfoLabel
+                              htmlFor="general-default-landing-page"
+                              label="Default landing page"
+                              tooltip="Choose which page opens first after login."
+                            />
+                            <select
+                              id="general-default-landing-page"
+                              value={preference.default_landing_page ?? "dashboard"}
+                              onChange={(event) => {
+                                actions.setPreference({
+                                  ...preference,
+                                  default_landing_page: event.target.value as "dashboard" | "calendar" | "tasks",
+                                });
+                              }}
+                              className={`${formControlClass} ${
+                                state.fieldErrors.default_landing_page?.length ? "border-red-300" : ""
+                              }`}
+                            >
+                              <option value="dashboard">Overview</option>
+                              <option value="calendar">Calendar</option>
+                              <option value="tasks">Tasks</option>
+                            </select>
+                            {state.fieldErrors.default_landing_page?.length ? (
+                              <div className="mt-1 text-xs text-red-700">
+                                {state.fieldErrors.default_landing_page.join(" ")}
+                              </div>
+                            ) : null}
+                          </div>
+
+                          <div className="rounded-lg border border-gray-200 bg-white px-4 py-4 shadow-sm">
+                            <InfoLabel
+                              htmlFor="general-week-starts-on"
+                              label="Week starts on"
+                              tooltip="Choose whether calendar and weekly views start on Monday or Sunday."
+                            />
+                            <select
+                              id="general-week-starts-on"
+                              value={preference.week_starts_on ?? "monday"}
+                              onChange={(event) => {
+                                actions.setPreference({
+                                  ...preference,
+                                  week_starts_on: event.target.value as "monday" | "sunday",
+                                });
+                              }}
+                              className={`${formControlClass} ${
+                                state.fieldErrors.week_starts_on?.length ? "border-red-300" : ""
+                              }`}
+                            >
+                              <option value="monday">Monday</option>
+                              <option value="sunday">Sunday</option>
+                            </select>
+                            {state.fieldErrors.week_starts_on?.length ? (
+                              <div className="mt-1 text-xs text-red-700">
+                                {state.fieldErrors.week_starts_on.join(" ")}
+                              </div>
+                            ) : null}
+                          </div>
+
+                          <div className="rounded-lg border border-gray-200 bg-white px-4 py-4 shadow-sm">
+                            <InfoLabel
+                              htmlFor="general-time-format"
+                              label="Time format"
+                              tooltip="Switch how times are displayed throughout the app."
+                            />
+                            <select
+                              id="general-time-format"
+                              value={preference.time_format ?? "24h"}
+                              onChange={(event) => {
+                                actions.setPreference({
+                                  ...preference,
+                                  time_format: event.target.value as "24h" | "12h",
+                                });
+                              }}
+                              className={`${formControlClass} ${
+                                state.fieldErrors.time_format?.length ? "border-red-300" : ""
+                              }`}
+                            >
+                              <option value="24h">24-hour</option>
+                              <option value="12h">12-hour</option>
+                            </select>
+                            {state.fieldErrors.time_format?.length ? (
+                              <div className="mt-1 text-xs text-red-700">
+                                {state.fieldErrors.time_format.join(" ")}
+                              </div>
+                            ) : null}
+                          </div>
+
+                          <div className="rounded-lg border border-gray-200 bg-white px-4 py-4 shadow-sm">
+                            <InfoLabel
+                              htmlFor="general-drag-snap-minutes"
+                              label="Calendar drag timeslot"
+                              tooltip="Controls how task drag and resize actions snap on the calendar."
+                            />
+                            <select
+                              id="general-drag-snap-minutes"
+                              value={preference.drag_snap_minutes}
+                              onChange={(event) => {
+                                actions.setPreference({
+                                  ...preference,
+                                  drag_snap_minutes: Number(event.target.value) as 5 | 10 | 15 | 20 | 30 | 60,
+                                });
+                              }}
+                              className={`${formControlClass} ${
+                                state.fieldErrors.drag_snap_minutes?.length ? "border-red-300" : ""
+                              }`}
+                            >
+                              <option value={5}>5 minutes</option>
+                              <option value={10}>10 minutes</option>
+                              <option value={15}>15 minutes</option>
+                              <option value={20}>20 minutes</option>
+                              <option value={30}>30 minutes</option>
+                              <option value={60}>60 minutes</option>
+                            </select>
+                            {state.fieldErrors.drag_snap_minutes?.length ? (
+                              <div className="mt-1 text-xs text-red-700">
+                                {state.fieldErrors.drag_snap_minutes.join(" ")}
+                              </div>
+                            ) : null}
+                          </div>
+
+                          <div className="flex justify-end">
                             <button
                               type="button"
                               onClick={() => {
-                                actions.setPreference({
-                                  ...preference,
-                                  disable_sound_effects: !preference.disable_sound_effects,
-                                });
+                                void actions.savePreferences();
                               }}
-                              className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${
-                                preference.disable_sound_effects ? "bg-gray-300" : "bg-primary"
+                              disabled={loading.saving || !(state.isPreferenceDirty ?? false)}
+                              className={`rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
+                                loading.saving || !(state.isPreferenceDirty ?? false)
+                                  ? "cursor-not-allowed bg-gray-200 text-gray-500"
+                                  : "bg-primary text-white hover:bg-blue-300"
                               }`}
-                              aria-pressed={!preference.disable_sound_effects}
                             >
-                              <span
-                                className={`inline-block h-4 w-4 transform rounded-full bg-white shadow-sm transition-transform ${
-                                  preference.disable_sound_effects ? "translate-x-1" : "translate-x-4"
-                                }`}
-                              />
+                              {loading.saving ? "Saving..." : "Save changes"}
                             </button>
                           </div>
                         </div>
 
-                        <div className="rounded-lg border border-gray-200 bg-white px-4 py-4 shadow-sm">
-                          <InfoLabel
-                            htmlFor="general-default-landing-page"
-                            label="Default landing page"
-                            tooltip="Choose which page opens first after login."
-                          />
-                          <select
-                            id="general-default-landing-page"
-                            value={preference.default_landing_page ?? "dashboard"}
-                            onChange={(event) => {
-                              actions.setPreference({
-                                ...preference,
-                                default_landing_page: event.target.value as "dashboard" | "calendar" | "tasks",
-                              });
-                            }}
-                            className={`${formControlClass} ${
-                              state.fieldErrors.default_landing_page?.length ? "border-red-300" : ""
-                            }`}
-                          >
-                            <option value="dashboard">Overview</option>
-                            <option value="calendar">Calendar</option>
-                            <option value="tasks">Tasks</option>
-                          </select>
-                          {state.fieldErrors.default_landing_page?.length ? (
-                            <div className="mt-1 text-xs text-red-700">
-                              {state.fieldErrors.default_landing_page.join(" ")}
+                        <div className="rounded-lg border border-gray-200 bg-white px-4 py-3 shadow-sm">
+                          <p className="text-sm font-semibold text-gray-900">Calendar data</p>
+                          <p className="mt-1 text-xs text-gray-500">
+                            Import or export your calendar events.
+                          </p>
+                          {calendarDataError ? (
+                            <div className="mt-2 rounded-md bg-red-50 px-3 py-2 text-xs text-red-700">
+                              {calendarDataError}
                             </div>
                           ) : null}
-                        </div>
-
-                        <div className="rounded-lg border border-gray-200 bg-white px-4 py-4 shadow-sm">
-                          <InfoLabel
-                            htmlFor="general-week-starts-on"
-                            label="Week starts on"
-                            tooltip="Choose whether calendar and weekly views start on Monday or Sunday."
-                          />
-                          <select
-                            id="general-week-starts-on"
-                            value={preference.week_starts_on ?? "monday"}
-                            onChange={(event) => {
-                              actions.setPreference({
-                                ...preference,
-                                week_starts_on: event.target.value as "monday" | "sunday",
-                              });
-                            }}
-                            className={`${formControlClass} ${
-                              state.fieldErrors.week_starts_on?.length ? "border-red-300" : ""
-                            }`}
-                          >
-                            <option value="monday">Monday</option>
-                            <option value="sunday">Sunday</option>
-                          </select>
-                          {state.fieldErrors.week_starts_on?.length ? (
-                            <div className="mt-1 text-xs text-red-700">
-                              {state.fieldErrors.week_starts_on.join(" ")}
-                            </div>
-                          ) : null}
-                        </div>
-
-                        <div className="rounded-lg border border-gray-200 bg-white px-4 py-4 shadow-sm">
-                          <InfoLabel
-                            htmlFor="general-time-format"
-                            label="Time format"
-                            tooltip="Switch how times are displayed throughout the app."
-                          />
-                          <select
-                            id="general-time-format"
-                            value={preference.time_format ?? "24h"}
-                            onChange={(event) => {
-                              actions.setPreference({
-                                ...preference,
-                                time_format: event.target.value as "24h" | "12h",
-                              });
-                            }}
-                            className={`${formControlClass} ${
-                              state.fieldErrors.time_format?.length ? "border-red-300" : ""
-                            }`}
-                          >
-                            <option value="24h">24-hour</option>
-                            <option value="12h">12-hour</option>
-                          </select>
-                          {state.fieldErrors.time_format?.length ? (
-                            <div className="mt-1 text-xs text-red-700">
-                              {state.fieldErrors.time_format.join(" ")}
-                            </div>
-                          ) : null}
-                        </div>
-
-                        <div className="rounded-lg border border-gray-200 bg-white px-4 py-4 shadow-sm">
-                          <InfoLabel
-                            htmlFor="general-drag-snap-minutes"
-                            label="Calendar drag timeslot"
-                            tooltip="Controls how task drag and resize actions snap on the calendar."
-                          />
-                          <select
-                            id="general-drag-snap-minutes"
-                            value={preference.drag_snap_minutes}
-                            onChange={(event) => {
-                              actions.setPreference({
-                                ...preference,
-                                drag_snap_minutes: Number(event.target.value) as 5 | 10 | 15 | 20 | 30 | 60,
-                              });
-                            }}
-                            className={`${formControlClass} ${
-                              state.fieldErrors.drag_snap_minutes?.length ? "border-red-300" : ""
-                            }`}
-                          >
-                            <option value={5}>5 minutes</option>
-                            <option value={10}>10 minutes</option>
-                            <option value={15}>15 minutes</option>
-                            <option value={20}>20 minutes</option>
-                            <option value={30}>30 minutes</option>
-                            <option value={60}>60 minutes</option>
-                          </select>
-                          {state.fieldErrors.drag_snap_minutes?.length ? (
-                            <div className="mt-1 text-xs text-red-700">
-                              {state.fieldErrors.drag_snap_minutes.join(" ")}
-                            </div>
-                          ) : null}
-                        </div>
-
-                        <div className="flex justify-end">
-                          <button
-                            type="button"
-                            onClick={() => {
-                              void actions.savePreferences();
-                            }}
-                            disabled={loading.saving || !(state.isPreferenceDirty ?? false)}
-                            className={`rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
-                              loading.saving || !(state.isPreferenceDirty ?? false)
-                                ? "cursor-not-allowed bg-gray-200 text-gray-500"
-                                : "bg-primary text-white hover:bg-blue-300"
-                            }`}
-                          >
-                            {loading.saving ? "Saving..." : "Save changes"}
-                          </button>
+                          <div className="mt-3 flex flex-wrap gap-3">
+                            <button
+                              type="button"
+                              onClick={() => {
+                                void exportCalendarData();
+                              }}
+                              disabled={isExportingCalendar}
+                              className={`rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
+                                isExportingCalendar
+                                  ? "cursor-not-allowed bg-gray-200 text-gray-500"
+                                  : "border border-gray-300 bg-white text-gray-900 hover:bg-gray-100"
+                              }`}
+                            >
+                              {isExportingCalendar ? "Exporting..." : "Export events"}
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const input = document.createElement("input");
+                                input.type = "file";
+                                input.onchange = (event) => {
+                                  const target = event.target;
+                                  if (target instanceof HTMLInputElement && target.files?.[0]) {
+                                    void importCalendarData(target.files[0]);
+                                  }
+                                };
+                                input.click();
+                              }}
+                              disabled={isImportingCalendar}
+                              className={`rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
+                                isImportingCalendar
+                                  ? "cursor-not-allowed bg-gray-200 text-gray-500"
+                                  : "border border-gray-300 bg-white text-gray-900 hover:bg-gray-100"
+                              }`}
+                            >
+                              {isImportingCalendar ? "Importing..." : "Import events"}
+                            </button>
+                          </div>
                         </div>
                       </div>
                     );
