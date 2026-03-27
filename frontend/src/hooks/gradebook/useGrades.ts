@@ -98,8 +98,8 @@ const useGradesState = () => {
 
 type GradesState = ReturnType<typeof useGradesState>
 
-const useGradesActions = (state: GradesState) => {
-  const { setGrades, setLoading, setModalOpen, setEditInitial, setPendingDeleteId, pendingDeleteId } = state
+const useGradesFetch = (state: GradesState) => {
+  const { setGrades, setLoading } = state
 
   const fetchGrades = useCallback(async (): Promise<void> => {
     try {
@@ -126,6 +126,12 @@ const useGradesActions = (state: GradesState) => {
     void refreshGrades()
   }, [refreshGrades])
 
+  return { refreshGrades }
+}
+
+const useGradesDelete = (state: GradesState, refreshGrades: () => Promise<void>) => {
+  const { setPendingDeleteId, pendingDeleteId } = state
+
   const deleteGradeById = useCallback(
     async (id: number): Promise<void> => {
       const match = /(?:^|; )csrftoken=([^;]+)/.exec(document.cookie)
@@ -143,30 +149,39 @@ const useGradesActions = (state: GradesState) => {
     [refreshGrades],
   )
 
-  const handleEditGrade = useCallback((grade: Grade): void => {
-    setEditInitial({
-      id: grade.id,
-      name: grade.name,
-      score: grade.score,
-      total: grade.total_possible,
-      date: grade.date_achieved,
-      categoryId: grade.category ?? null,
-    })
-    setModalOpen(true)
-  }, [setEditInitial, setModalOpen])
-
-  const closeModal = useCallback((): void => {
-    setModalOpen(false)
-    setEditInitial(null)
-  }, [setModalOpen, setEditInitial])
-
   const confirmDelete = useCallback(async (): Promise<void> => {
     if (pendingDeleteId === null) return
     await deleteGradeById(pendingDeleteId)
     setPendingDeleteId(null)
   }, [deleteGradeById, pendingDeleteId, setPendingDeleteId])
 
-  return { refreshGrades, handleEditGrade, closeModal, confirmDelete }
+  return { confirmDelete }
+}
+
+const useGradesEdit = (state: GradesState) => {
+  const { setEditInitial, setModalOpen } = state
+
+  const handleEditGrade = useCallback(
+    (grade: Grade): void => {
+      setEditInitial({
+        id: grade.id,
+        name: grade.name,
+        score: grade.score,
+        total: grade.total_possible,
+        date: grade.date_achieved,
+        categoryId: grade.category ?? null,
+      })
+      setModalOpen(true)
+    },
+    [setEditInitial, setModalOpen],
+  )
+
+  const closeModal = useCallback((): void => {
+    setModalOpen(false)
+    setEditInitial(null)
+  }, [setModalOpen, setEditInitial])
+
+  return { handleEditGrade, closeModal }
 }
 
 const useFilteredGrades = (state: GradesState) => {
@@ -186,12 +201,17 @@ const useFilteredGrades = (state: GradesState) => {
  */
 export default function useGrades(): UseGradesReturn {
   const state = useGradesState()
-  const actions = useGradesActions(state)
+  const { refreshGrades } = useGradesFetch(state)
+  const { confirmDelete } = useGradesDelete(state, refreshGrades)
+  const { handleEditGrade, closeModal } = useGradesEdit(state)
   const filteredGrades = useFilteredGrades(state)
 
   return {
     ...state,
-    ...actions,
+    refreshGrades,
+    handleEditGrade,
+    closeModal,
+    confirmDelete,
     filteredGrades,
   }
 }
