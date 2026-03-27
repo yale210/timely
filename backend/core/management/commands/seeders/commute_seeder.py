@@ -74,7 +74,7 @@ class CommuteSeeder(BaseSeeder):
         commute_end = self._random_time()
 
         # Ensure start and end times are distinct
-        if commute_end == commute_start:
+        if commute_end <= commute_start:
             commute_end = self._random_time()
 
         # Construct and persist the random commute

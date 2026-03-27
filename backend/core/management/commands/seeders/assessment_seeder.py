@@ -131,13 +131,14 @@ class AssessmentSeeder(BaseSeeder):
         metadata such as title, description, and color.
         """
         start = timezone.make_aware(self.faker.date_time())
+        user = self._get_or_create_random_user()
         self._create_event(
             {
                 "fields": {
-                    "user": self._get_or_create_random_user().id,
+                    "user": user.id,
                     "categories": [
                         self._get_or_create_random_category(
-                            self._get_or_create_random_user()
+                            user
                         ).id
                     ],
                     "title": self.faker.sentence(),
