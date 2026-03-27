@@ -114,24 +114,16 @@ const buildIsoFromZonedParts = (parts: {
 
   for (let i = 0; i < 4; i += 1) {
     const current = getZonedDateParts(new Date(utcGuess), timeZone);
+
     const desiredUtcEquivalent = Date.UTC(
-      parts.year,
-      parts.month - 1,
-      parts.day,
-      parts.hour,
-      parts.minute,
+      parts.year, parts.month - 1, parts.day, parts.hour, parts.minute,
     );
     const actualUtcEquivalent = Date.UTC(
-      current.year,
-      current.month - 1,
-      current.day,
-      current.hour,
-      current.minute,
+      current.year, current.month - 1, current.day, current.hour, current.minute,
     );
     const diffMs = desiredUtcEquivalent - actualUtcEquivalent;
-    if (diffMs === 0) {
-      break;
-    }
+    
+    if (diffMs === 0) break;
     utcGuess += diffMs;
   }
 
@@ -366,8 +358,8 @@ export const combineTimezoneDateAndTimeToIso = (
  * @param timeZone - Optional timezone override.
  * @returns A UTC ISO timestamp or an empty string for invalid input.
  */
-export const timezoneDateTimeLocalToIso = (
-  value: string,
+export const timezoneDateTimeLocalToIso = ( 
+  value: string, 
   timeZone = getStoredUserTimezone(),
 ): string => {
   const parsed = parseDateParts(value);
@@ -380,23 +372,13 @@ export const timezoneDateTimeLocalToIso = (
   for (let i = 0; i < 4; i += 1) {
     const current = getZonedDateParts(new Date(utcGuess), timeZone);
     const desiredUtcEquivalent = Date.UTC(
-      parsed.year,
-      parsed.month - 1,
-      parsed.day,
-      parsed.hour,
-      parsed.minute,
+      parsed.year, parsed.month - 1, parsed.day, parsed.hour, parsed.minute,
     );
     const actualUtcEquivalent = Date.UTC(
-      current.year,
-      current.month - 1,
-      current.day,
-      current.hour,
-      current.minute,
+      current.year, current.month - 1, current.day, current.hour, current.minute,
     );
     const diffMs = desiredUtcEquivalent - actualUtcEquivalent;
-    if (diffMs === 0) {
-      break;
-    }
+    if (diffMs === 0) break;
     utcGuess += diffMs;
   }
 
