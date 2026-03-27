@@ -1,3 +1,4 @@
+import { Tooltip } from "@/components/ui";
 import type { Category } from "@/types";
 
 const DEFAULT_SWATCH = "#94a3b8";
@@ -7,6 +8,7 @@ interface CategoryLimitsSectionProps {
   maxDailyMinutes: number;
   loading: boolean;
   saving: boolean;
+  hasChanges?: boolean;
   error: string | null;
   onLimitChange: (id: number, value: number | null) => void;
   onSave: () => void;
@@ -29,6 +31,7 @@ const CategoryLimitsSection = ({
   maxDailyMinutes,
   loading,
   saving,
+  hasChanges = false,
   error,
   onLimitChange,
   onSave,
@@ -40,10 +43,18 @@ const CategoryLimitsSection = ({
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-lg font-semibold text-gray-900">Category Limits</h2>
-        <p className="mt-1 text-sm text-gray-500">
-          Set an optional maximum number of minutes per day for each category when scheduling tasks.
-        </p>
+        <div className="flex items-center gap-2">
+          <h2 className="text-lg font-semibold text-gray-900">Category Limits</h2>
+          <Tooltip content="Set an optional maximum number of minutes per day for each category when scheduling tasks.">
+            <button
+              type="button"
+              className="inline-flex h-5 w-5 items-center justify-center rounded-full border border-gray-300 text-xs text-gray-500 hover:bg-gray-100"
+              aria-label="Explain category limits"
+            >
+              ?
+            </button>
+          </Tooltip>
+        </div>
         <p className="mt-1 text-xs text-gray-500">
           Limits cannot exceed your current daily scheduling maximum of {maxDailyMinutes} minutes.
         </p>
@@ -110,9 +121,9 @@ const CategoryLimitsSection = ({
         <button
           type="button"
           onClick={onSave}
-          disabled={saving || loading || categories.length === 0}
+          disabled={saving || loading || categories.length === 0 || !hasChanges}
           className={`rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
-            saving || loading || categories.length === 0
+            saving || loading || categories.length === 0 || !hasChanges
               ? "cursor-not-allowed bg-gray-200 text-gray-500"
               : "bg-primary text-white hover:bg-blue-300"
           }`}

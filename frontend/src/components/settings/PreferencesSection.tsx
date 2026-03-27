@@ -1,19 +1,21 @@
-import { Fragment, useEffect, useMemo, useRef, useState } from "react";
-import { Dialog, DialogPanel, DialogTitle, Transition, TransitionChild } from "@headlessui/react";
-import type { Preference, SpecialDate } from "@/types";
-import * as specialDatesService from "@/services/specialDatesService";
-import { getSchedulingDayMaxMinutes } from "@/utils/schedulingLimits";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { Tooltip } from "@/components/ui";
+import type { Preference } from "@/types";
+import { getAvailableSchedulingDayMaxMinutes, getSchedulingDayMaxMinutes } from "@/utils/schedulingLimits";
 import { validatePreference } from "@/utils/preferenceValidation";
 
 interface PreferencesSectionProps {
   pref: Preference | null;
   prefLoading: boolean;
   prefSaving: boolean;
+  prefDirty?: boolean;
   prefError: string | null;
   fieldErrors: Record<string, string[]>;
   onPrefChange: (pref: Preference) => void;
   onSave: () => void;
 }
+
+const dragSnapOptions = [5, 10, 15, 20, 30, 60] as const;
 
 const dayLabels: [number, string][] = [
   [1, "Mon"],
@@ -46,21 +48,43 @@ const getTimezoneOptions = (): string[] => {
 const buildDefaultSchedule = (start: string, end: string) =>
   dayLabels.map(([day]) => ({ day, start, end }));
 
+const InfoLabel = ({
+  label,
+  tooltip,
+  htmlFor,
+}: {
+  label: string;
+  tooltip?: string;
+  htmlFor?: string;
+}) => (
+  <div className="flex items-center gap-2">
+    <label htmlFor={htmlFor} className="block text-sm font-medium text-gray-900">
+      {label}
+    </label>
+    {tooltip ? (
+      <Tooltip content={tooltip}>
+        <button
+          type="button"
+          className="inline-flex h-5 w-5 items-center justify-center rounded-full border border-gray-300 text-xs text-gray-500 hover:bg-gray-100"
+          aria-label={`Explain ${label}`}
+        >
+          ?
+        </button>
+      </Tooltip>
+    ) : null}
+  </div>
+);
+
 const PreferencesSection = ({
   pref,
   prefLoading,
   prefSaving,
+  prefDirty = false,
   prefError,
   fieldErrors,
   onPrefChange,
   onSave,
 }: PreferencesSectionProps) => {
-  const [specialDates, setSpecialDates] = useState<SpecialDate[]>([]);
-  const [specialDateLoading, setSpecialDateLoading] = useState(false);
-  const [specialDateError, setSpecialDateError] = useState<string | null>(null);
-  const [specialDateValue, setSpecialDateValue] = useState("");
-  const [specialDateLabel, setSpecialDateLabel] = useState("");
-  const [isAddingSpecialDate, setIsAddingSpecialDate] = useState(false);
   const timezoneOptions = useMemo(() => getTimezoneOptions(), []);
   const liveFieldErrors = useMemo(
     () => (pref ? validatePreference(pref) : {}),
@@ -78,7 +102,9 @@ const PreferencesSection = ({
   }, [pref?.day_schedule]);
   const [useSetAllDays, setUseSetAllDays] = useState(isUniformSchedule);
   const [maxHoursInput, setMaxHoursInput] = useState("");
+  const [maxDaysAheadInput, setMaxDaysAheadInput] = useState("");
   const hasBlockingErrors = Object.keys(liveFieldErrors).length > 0;
+  const maxTaskHoursLimit = Math.max(0, Math.floor(getAvailableSchedulingDayMaxMinutes(pref) / 60));
 
   const lastPrefIdRef = useRef<number | null>(null);
   useEffect(() => {
@@ -90,6 +116,7 @@ const PreferencesSection = ({
       setUseSetAllDays(isUniformSchedule);
     }
     setMaxHoursInput(String(pref.max_hours_study_per_day ?? 0));
+    setMaxDaysAheadInput(String(pref.max_days_ahead >= 365 ? 30 : pref.max_days_ahead));
   }, [pref, isUniformSchedule]);
 
   useEffect(() => {
@@ -104,65 +131,6 @@ const PreferencesSection = ({
     });
   }, [onPrefChange, pref, useSetAllDays]);
 
-  useEffect(() => {
-    let isMounted = true;
-    const loadSpecialDates = async () => {
-      setSpecialDateLoading(true);
-      setSpecialDateError(null);
-      try {
-        const data = await specialDatesService.getSpecialDates();
-        if (isMounted) {
-          setSpecialDates(data);
-        }
-      } catch {
-        if (isMounted) {
-          setSpecialDateError("Unable to load date overrides.");
-        }
-      } finally {
-        if (isMounted) {
-          setSpecialDateLoading(false);
-        }
-      }
-    };
-    void loadSpecialDates();
-    return () => {
-      isMounted = false;
-    };
-  }, []);
-
-  const sortedSpecialDates = useMemo(
-    () => [...specialDates].sort((a, b) => a.date.localeCompare(b.date)),
-    [specialDates],
-  );
-
-  const addSpecialDate = async () => {
-    if (!specialDateValue) {
-      setSpecialDateError("Please select a date.");
-      return;
-    }
-    setSpecialDateError(null);
-    try {
-      const created = await specialDatesService.createSpecialDate({
-        date: specialDateValue,
-        text: specialDateLabel.trim(),
-      });
-      setSpecialDates((prev) => [...prev, created]);
-      setSpecialDateValue("");
-      setSpecialDateLabel("");
-      setIsAddingSpecialDate(false);
-    } catch {
-      setSpecialDateError("Unable to save date override.");
-    }
-  };
-
-  const removeSpecialDate = async (id: number) => {
-    try {
-      await specialDatesService.deleteSpecialDate(id);
-      setSpecialDates((prev) => prev.filter((item) => item.id !== id));
-    } catch {
-      setSpecialDateError("Unable to remove date override.");
-    }
-  };
   const toggleDayOnOff = (dayId: number) => {
     if (!pref) {
       return;
@@ -179,7 +147,7 @@ const PreferencesSection = ({
       <div className="w-full">
         <h2 className="text-lg font-semibold">Scheduling</h2>
       <p className="mt-2 text-sm text-gray-600">
-        Set your day&apos;s start and end, and max hours of study time per day.
+        Configure when scheduling can happen and how far ahead the planner should search.
       </p>
 
       {prefError && (
@@ -198,12 +166,168 @@ const PreferencesSection = ({
         <div className="mt-6 space-y-6">
           <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
             <div className="sm:col-span-2">
-              <label htmlFor="pref-timezone" className="block text-sm font-medium text-gray-900">
-                Timezone
-              </label>
-              <p className="mt-1 text-xs text-gray-500">
-                Used for scheduling, reminders, and date/time display throughout the app.
-              </p>
+              <InfoLabel
+                htmlFor="pref-max-hours"
+                label="Max task time per day"
+                tooltip="Limits how much task time the scheduler can place in a single day. Turning it off uses the full available daily window instead."
+              />
+              <div className="mt-2 flex items-center gap-3">
+                <div className="text-xs font-medium text-gray-600">
+                  {pref.limit_max_hours === false ? "No limit" : "Limit max hours"}
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    const nextValue = !(pref.limit_max_hours ?? true);
+                    onPrefChange({
+                      ...pref,
+                      limit_max_hours: nextValue,
+                    });
+                    if (!nextValue) {
+                      // "No limit" still stores a concrete cap equal to the widest available daily window.
+                      const maxHours = Math.floor(getSchedulingDayMaxMinutes(pref) / 60);
+                      onPrefChange({
+                        ...pref,
+                        limit_max_hours: false,
+                        max_hours_study_per_day: maxHours,
+                      });
+                      setMaxHoursInput(String(maxHours));
+                    } else if (maxHoursInput !== "" && !Number.isNaN(Number(maxHoursInput))) {
+                      const nextHours = Math.min(Math.max(0, Number(maxHoursInput)), maxTaskHoursLimit);
+                      onPrefChange({
+                        ...pref,
+                        limit_max_hours: true,
+                        max_hours_study_per_day: nextHours,
+                      });
+                      setMaxHoursInput(String(nextHours));
+                    }
+                  }}
+                  className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${
+                    pref.limit_max_hours === false ? "bg-gray-300" : "bg-primary"
+                  }`}
+                  aria-pressed={pref.limit_max_hours !== false}
+                >
+                  <span
+                    className={`inline-block h-4 w-4 transform rounded-full bg-white shadow-sm transition-transform ${
+                      pref.limit_max_hours === false ? "translate-x-1" : "translate-x-4"
+                    }`}
+                  />
+                </button>
+              </div>
+              {pref.limit_max_hours === false ? null : (
+                <input
+                  id="pref-max-hours"
+                  type="number"
+                  min={0}
+                  max={maxTaskHoursLimit}
+                  value={maxHoursInput}
+                  onChange={(event) => {
+                    const nextValue = event.target.value;
+                    if (nextValue === "") {
+                      setMaxHoursInput(nextValue);
+                      return;
+                    }
+                    const parsed = Number(nextValue);
+                    if (Number.isNaN(parsed)) return;
+                    const clampedValue = Math.min(Math.max(0, parsed), maxTaskHoursLimit);
+                    setMaxHoursInput(String(clampedValue));
+                    onPrefChange({
+                      ...pref,
+                      max_hours_study_per_day: clampedValue,
+                    });
+                  }}
+                  className={`mt-2 bg-white px-3 py-2 block outline w-full rounded-md ${
+                    displayFieldErrors.max_hours_study_per_day ? "outline-red-300" : "outline-gray-300"
+                  } max-w-[14rem] focus: outline-2 focus:outline-turquoise-600`}
+                />
+              )}
+              {displayFieldErrors.max_hours_study_per_day?.length ? (
+                <div className="mt-1 text-xs text-red-700">
+                  {displayFieldErrors.max_hours_study_per_day.join(" ")}
+                </div>
+              ) : null}
+            </div>
+
+            <div className="sm:col-span-2">
+              <InfoLabel
+                htmlFor="pref-max-days-ahead"
+                label="Max schedule ahead"
+                tooltip="The scheduler will search this many days ahead when auto-scheduling tasks."
+              />
+              <div className="mt-2 flex items-center gap-3">
+                <div className="text-xs font-medium text-gray-600">
+                  {pref.max_days_ahead >= 365 ? "No limit" : "Limit schedule ahead"}
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    const isUnlimited = pref.max_days_ahead >= 365;
+                    if (isUnlimited) {
+                      const parsed = Number(maxDaysAheadInput);
+                      const nextValue = Number.isNaN(parsed) || parsed < 1 || parsed >= 365 ? 30 : parsed;
+                      onPrefChange({
+                        ...pref,
+                        max_days_ahead: nextValue,
+                      });
+                      setMaxDaysAheadInput(String(nextValue));
+                      return;
+                    }
+
+                    onPrefChange({
+                      ...pref,
+                      max_days_ahead: 365,
+                    });
+                  }}
+                  className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${
+                    pref.max_days_ahead >= 365 ? "bg-gray-300" : "bg-primary"
+                  }`}
+                  aria-pressed={pref.max_days_ahead < 365}
+                >
+                  <span
+                    className={`inline-block h-4 w-4 transform rounded-full bg-white shadow-sm transition-transform ${
+                      pref.max_days_ahead >= 365 ? "translate-x-1" : "translate-x-4"
+                    }`}
+                  />
+                </button>
+              </div>
+              {pref.max_days_ahead >= 365 ? null : (
+                <input
+                  id="pref-max-days-ahead"
+                  type="number"
+                  min={1}
+                  max={365}
+                  value={maxDaysAheadInput}
+                  onChange={(event) => {
+                    const nextValue = event.target.value;
+                    setMaxDaysAheadInput(nextValue);
+                    if (nextValue === "") {
+                      return;
+                    }
+                    const parsed = Number(nextValue);
+                    if (Number.isNaN(parsed)) return;
+                    onPrefChange({
+                      ...pref,
+                      max_days_ahead: parsed,
+                    });
+                  }}
+                  className={`mt-2 bg-white px-3 py-2 block outline w-full rounded-md ${
+                    displayFieldErrors.max_days_ahead ? "outline-red-300" : "outline-gray-300"
+                  } max-w-[14rem] focus:outline-2 focus:outline-turquoise-600`}
+                />
+              )}
+              {displayFieldErrors.max_days_ahead?.length ? (
+                <div className="mt-1 text-xs text-red-700">
+                  {displayFieldErrors.max_days_ahead.join(" ")}
+                </div>
+              ) : null}
+            </div>
+
+            <div className="sm:col-span-2">
+              <InfoLabel
+                htmlFor="pref-timezone"
+                label="Timezone"
+                tooltip="Used for scheduling, reminders, and date and time display throughout the app."
+              />
               <select
                 id="pref-timezone"
                 value={pref.timezone}
@@ -215,7 +339,7 @@ const PreferencesSection = ({
                 }}
                 className={`mt-2 bg-white px-3 py-2 block outline w-full rounded-md ${
                   displayFieldErrors.timezone ? "outline-red-300" : "outline-gray-300"
-                } focus:outline-2 focus:outline-turquoise-600`}
+                } max-w-[14rem] focus:outline-2 focus:outline-turquoise-600`}
               >
                 {timezoneOptions.map((timeZone) => (
                   <option key={timeZone} value={timeZone}>
@@ -231,10 +355,42 @@ const PreferencesSection = ({
             </div>
 
             <div className="sm:col-span-2">
-              <div className="text-sm font-medium text-gray-900">Daily hours</div>
-              <p className="mt-1 text-xs text-gray-500">
-                Tasks will be auto-scheduled during these hours.
-              </p>
+              <InfoLabel
+                htmlFor="pref-drag-snap-minutes"
+                label="Calendar drag timeslot"
+                tooltip="Controls how task drag and resize actions snap on the calendar."
+              />
+              <select
+                id="pref-drag-snap-minutes"
+                value={pref.drag_snap_minutes}
+                onChange={(event) => {
+                  onPrefChange({
+                    ...pref,
+                    drag_snap_minutes: Number(event.target.value) as 5 | 10 | 15 | 20 | 30 | 60,
+                  });
+                }}
+                className={`mt-2 bg-white px-3 py-2 block outline w-full rounded-md ${
+                  displayFieldErrors.drag_snap_minutes ? "outline-red-300" : "outline-gray-300"
+                } max-w-[14rem] focus:outline-2 focus:outline-turquoise-600`}
+              >
+                {dragSnapOptions.map((minutes) => (
+                  <option key={minutes} value={minutes}>
+                    {minutes} minutes
+                  </option>
+                ))}
+              </select>
+              {displayFieldErrors.drag_snap_minutes?.length ? (
+                <div className="mt-1 text-xs text-red-700">
+                  {displayFieldErrors.drag_snap_minutes.join(" ")}
+                </div>
+              ) : null}
+            </div>
+
+            <div className="sm:col-span-2">
+              <InfoLabel
+                label="Daily hours"
+                tooltip="Tasks will be auto-scheduled during these hours."
+              />
               <div className="mt-5 flex items-center gap-3">
                 <div className="text-xs font-medium text-gray-600">
                   {useSetAllDays ? "Set all days" : "Set per day"}
@@ -440,168 +596,17 @@ const PreferencesSection = ({
               </div>
               ) : null}
             </div>
-
-            <div className="sm:col-span-2">
-              <label htmlFor="pref-max-hours" className="block text-sm font-medium text-gray-900">
-                Max task time per day
-              </label>
-              <div className="mt-2 flex items-center gap-3">
-                <div className="text-xs font-medium text-gray-600">
-                  {pref.limit_max_hours === false ? "No limit (uses daily hours)" : "Limit max hours"}
-                </div>
-                <button
-                  type="button"
-                  onClick={() => {
-                    const nextValue = !(pref.limit_max_hours ?? true);
-                    onPrefChange({
-                      ...pref,
-                      limit_max_hours: nextValue,
-                    });
-                    if (!nextValue) {
-                      // "No limit" still stores a concrete cap equal to the widest available daily window.
-                      const maxHours = Math.floor(getSchedulingDayMaxMinutes(pref) / 60);
-                      onPrefChange({
-                        ...pref,
-                        limit_max_hours: false,
-                        max_hours_study_per_day: maxHours,
-                      });
-                      setMaxHoursInput(String(maxHours));
-                    } else if (maxHoursInput !== "" && !Number.isNaN(Number(maxHoursInput))) {
-                      onPrefChange({
-                        ...pref,
-                        limit_max_hours: true,
-                        max_hours_study_per_day: Number(maxHoursInput),
-                      });
-                    }
-                  }}
-                  className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${
-                    pref.limit_max_hours === false ? "bg-gray-300" : "bg-primary"
-                  }`}
-                  aria-pressed={pref.limit_max_hours !== false}
-                >
-                  <span
-                    className={`inline-block h-4 w-4 transform rounded-full bg-white shadow-sm transition-transform ${
-                      pref.limit_max_hours === false ? "translate-x-1" : "translate-x-4"
-                    }`}
-                  />
-                </button>
-              </div>
-              {pref.limit_max_hours === false ? null : (
-                <input
-                  id="pref-max-hours"
-                  type="number"
-                  min={0}
-                  max={24}
-                  value={maxHoursInput}
-                  onChange={(event) => {
-                    const nextValue = event.target.value;
-                    setMaxHoursInput(nextValue);
-                    if (nextValue === "") {
-                      return;
-                    }
-                    const parsed = Number(nextValue);
-                    if (Number.isNaN(parsed)) return;
-                    onPrefChange({
-                      ...pref,
-                      max_hours_study_per_day: parsed,
-                    });
-                  }}
-                  className={`mt-2 bg-white px-3 py-2 block outline w-full rounded-md ${
-                    displayFieldErrors.max_hours_study_per_day ? "outline-red-300" : "outline-gray-300"
-                  } focus: outline-2 focus:outline-turquoise-600`}
-                />
-              )}
-              {displayFieldErrors.max_hours_study_per_day?.length ? (
-                <div className="mt-1 text-xs text-red-700">
-                  {displayFieldErrors.max_hours_study_per_day.join(" ")}
-                </div>
-              ) : null}
-            </div>
-
-            <div className="sm:col-span-2">
-              <label htmlFor="pref-max-days-ahead" className="block text-sm font-medium text-gray-900">
-                Max schedule ahead
-              </label>
-              <p className="mt-1 text-xs text-gray-500">
-                The scheduler will search this many days ahead when auto-scheduling tasks.
-              </p>
-              <input
-                id="pref-max-days-ahead"
-                type="number"
-                min={1}
-                max={365}
-                value={pref.max_days_ahead}
-                onChange={(event) => {
-                  const parsed = Number(event.target.value);
-                  onPrefChange({
-                    ...pref,
-                    max_days_ahead: parsed,
-                  });
-                }}
-                className={`mt-2 bg-white px-3 py-2 block outline w-full rounded-md ${
-                  displayFieldErrors.max_days_ahead ? "outline-red-300" : "outline-gray-300"
-                } focus:outline-2 focus:outline-turquoise-600`}
-              />
-              {displayFieldErrors.max_days_ahead?.length ? (
-                <div className="mt-1 text-xs text-red-700">
-                  {displayFieldErrors.max_days_ahead.join(" ")}
-                </div>
-              ) : null}
-            </div>
-
-            <div className="sm:col-span-2">
-              <div className="text-sm font-medium text-gray-900">Date overrides</div>
-              <p className="mt-1 text-xs text-gray-500">
-                Block specific dates from scheduling when you need to be free.
-              </p>
-              <div className="mt-3 flex flex-col gap-3">
-                <button
-                  type="button"
-                  onClick={() => setIsAddingSpecialDate(true)}
-                  className="h-10 w-fit rounded-md border border-gray-300 bg-white px-4 text-sm font-semibold text-gray-700 hover:bg-gray-50 inline-flex items-center gap-2"
-                >
-                  <span className="material-icons text-base">add</span>
-                  Add date override
-                </button>
-                {specialDateError && (
-                  <div className="text-xs text-red-700">{specialDateError}</div>
-                )}
-                {specialDateLoading ? (
-                  <div className="text-xs text-gray-500">Loading overrides...</div>
-                ) : (
-                  <div className="space-y-2">
-                    {sortedSpecialDates.map((item) => (
-                      <div
-                        key={item.id}
-                        className="flex items-center justify-between rounded-md border border-gray-200 bg-white px-3 py-2 text-sm text-gray-700"
-                      >
-                        <div>
-                          <div className="font-medium text-gray-900">{item.date}</div>
-                          {item.text ? (
-                            <div className="text-xs text-gray-500">{item.text}</div>
-                          ) : null}
-                        </div>
-                        <button
-                          type="button"
-                          onClick={() => void removeSpecialDate(item.id)}
-                          className="inline-flex h-8 w-8 items-center justify-center rounded-md text-red-600 hover:bg-red-50"
-                          aria-label="Remove date override"
-                        >
-                          <span className="material-icons text-lg">delete</span>
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            </div>
           </div>
           <div className="flex justify-end">
             <button
               type="button"
               onClick={onSave}
-              disabled={prefSaving || hasBlockingErrors}
-              className="text-sm font-semibold text-white rounded-md border border-blue-500 bg-blue-500 px-4 py-2 shadow-sm transition-colors hover:bg-blue-400 disabled:cursor-not-allowed disabled:opacity-60"
+              disabled={prefSaving || hasBlockingErrors || !prefDirty}
+              className={`rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
+                prefSaving || hasBlockingErrors || !prefDirty
+                  ? "bg-gray-200 text-gray-500 cursor-not-allowed"
+                  : "bg-primary text-white hover:bg-blue-300"
+              }`}
             >
               {prefSaving ? "Saving..." : "Save changes"}
             </button>
@@ -609,92 +614,6 @@ const PreferencesSection = ({
         </div>
       )}
       </div>
-      <Transition show={isAddingSpecialDate} as={Fragment}>
-      <Dialog as="div" className="relative z-60" onClose={() => setIsAddingSpecialDate(false)}>
-        <TransitionChild
-          as={Fragment}
-          enter="ease-out duration-300"
-          enterFrom="opacity-0"
-          enterTo="opacity-100"
-          leave="ease-in duration-200"
-          leaveFrom="opacity-100"
-          leaveTo="opacity-0"
-        >
-          <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm transition-opacity" />
-        </TransitionChild>
-
-        <div className="fixed inset-0 z-10 overflow-y-auto">
-          <div className="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
-            <TransitionChild
-              as={Fragment}
-              enter="ease-out duration-300"
-              enterFrom="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
-              enterTo="opacity-100 translate-y-0 sm:scale-100"
-              leave="ease-in duration-200"
-              leaveFrom="opacity-100 translate-y-0 sm:scale-100"
-              leaveTo="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
-            >
-              <DialogPanel className="relative w-full max-w-lg transform overflow-hidden rounded-lg bg-white px-6 pb-5 pt-5 text-left shadow-xl transition-all">
-                <DialogTitle className="text-lg font-semibold text-black">
-                  Add date override
-                </DialogTitle>
-                <div className="mt-4 space-y-4">
-                  <div>
-                    <label htmlFor="special-date" className="block text-xs font-medium text-gray-600">
-                      Date
-                    </label>
-                    <input
-                      id="special-date"
-                      type="date"
-                      value={specialDateValue}
-                      onChange={(event) => setSpecialDateValue(event.target.value)}
-                      className="mt-1 bg-white px-3 py-2 block outline w-full rounded-md outline-gray-300"
-                    />
-                  </div>
-                  <div>
-                    <label htmlFor="special-date-label" className="block text-xs font-medium text-gray-600">
-                      Label (optional)
-                    </label>
-                    <input
-                      id="special-date-label"
-                      type="text"
-                      value={specialDateLabel}
-                      onChange={(event) => setSpecialDateLabel(event.target.value)}
-                      placeholder="e.g., Holiday"
-                      className="mt-1 bg-white px-3 py-2 block outline w-full rounded-md outline-gray-300"
-                    />
-                  </div>
-                  {specialDateError && (
-                    <div className="text-xs text-red-700">{specialDateError}</div>
-                  )}
-                </div>
-                <div className="mt-5 flex justify-end gap-3">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setIsAddingSpecialDate(false);
-                      setSpecialDateValue("");
-                      setSpecialDateLabel("");
-                      setSpecialDateError(null);
-                    }}
-                    className="rounded-md border border-gray-200 bg-white px-4 py-2 text-sm font-semibold text-gray-500 hover:bg-gray-50"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => void addSpecialDate()}
-                    className="rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50"
-                  >
-                    Add
-                  </button>
-                </div>
-              </DialogPanel>
-            </TransitionChild>
-          </div>
-        </div>
-      </Dialog>
-      </Transition>
     </>
   );
 };

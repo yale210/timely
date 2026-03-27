@@ -18,6 +18,8 @@ interface SettingsState {
   preference: Preference | null;
   categories: Category[];
   fieldErrors: Record<string, string[]>;
+  isPreferenceDirty: boolean;
+  areCategoryLimitsDirty: boolean;
 }
 
 interface SettingsLoading {
@@ -65,7 +67,9 @@ export const useSettings = (): UseSettingsReturn => {
   const navigate = useNavigate();
   const [activeSection, setActiveSection] = useState<SettingsSection>("profile");
   const [preference, setPreference] = useState<Preference | null>(null);
+  const [savedPreference, setSavedPreference] = useState<Preference | null>(null);
   const [categories, setCategories] = useState<Category[]>([]);
+  const [savedCategories, setSavedCategories] = useState<Category[]>([]);
   const [isPreferenceLoading, setIsPreferenceLoading] = useState(false);
   const [isCategoriesLoading, setIsCategoriesLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -122,6 +126,7 @@ export const useSettings = (): UseSettingsReturn => {
     try {
       const nextPreference = await preferenceService.getMyPreference();
       setPreference(nextPreference);
+      setSavedPreference(nextPreference);
       setStoredUserTimezone(nextPreference.timezone);
       localStorage.setItem(
         "disable_sound_effects",
@@ -155,6 +160,7 @@ export const useSettings = (): UseSettingsReturn => {
     try {
       const nextCategories = await categoryService.getCategories();
       setCategories(nextCategories);
+      setSavedCategories(nextCategories);
     } catch (error) {
       const parsed = formatDjangoFormError(error);
       setCategoriesError(parsed.message);
@@ -214,6 +220,7 @@ export const useSettings = (): UseSettingsReturn => {
         days_off: preference.days_off,
       });
       setPreference(updatedPreference);
+      setSavedPreference(updatedPreference);
       setStoredUserTimezone(updatedPreference.timezone);
       localStorage.setItem(
         "disable_sound_effects",
@@ -243,6 +250,7 @@ export const useSettings = (): UseSettingsReturn => {
         })),
       );
       setCategories(updatedCategories);
+      setSavedCategories(updatedCategories);
     } catch (error) {
       const parsed = formatDjangoFormError(error);
       setCategoriesError(parsed.message);
@@ -265,6 +273,8 @@ export const useSettings = (): UseSettingsReturn => {
       preference,
       categories,
       fieldErrors,
+      isPreferenceDirty: JSON.stringify(preference) !== JSON.stringify(savedPreference),
+      areCategoryLimitsDirty: JSON.stringify(categories) !== JSON.stringify(savedCategories),
     },
     loading: {
       preference: isPreferenceLoading,

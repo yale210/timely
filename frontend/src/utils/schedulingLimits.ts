@@ -44,6 +44,14 @@ const getScheduleMaxMinutes = (pref: Preference): number => {
   return maxMinutes;
 };
 
+export const getAvailableSchedulingDayMaxMinutes = (pref: Preference | null): number => {
+  if (!pref) {
+    return 24 * 60;
+  }
+
+  return getScheduleMaxMinutes(pref);
+};
+
 /**
  * Computes the maximum number of minutes the user can schedule in a single day.
  * @param pref - The scheduling preferences to derive the daily cap from.
@@ -54,7 +62,7 @@ export const getSchedulingDayMaxMinutes = (pref: Preference | null): number => {
     return 24 * 60;
   }
 
-  const scheduleMaxMinutes = getScheduleMaxMinutes(pref);
+  const scheduleMaxMinutes = getAvailableSchedulingDayMaxMinutes(pref);
   if (pref.limit_max_hours === false) {
     return scheduleMaxMinutes;
   }

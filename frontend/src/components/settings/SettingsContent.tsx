@@ -1,21 +1,54 @@
 import { useMemo, useState } from "react";
 import PreferencesSection from "@/components/settings/PreferencesSection";
+import OverridesSection from "@/components/settings/OverridesSection";
 import SettingsSidebar from "@/components/settings/SettingsSidebar";
 import ThemeSection from "@/components/settings/ThemeSection";
 import ProfileSection from "@/components/settings/ProfileSection";
 import CategoryLimitsSection from "@/components/settings/CategoryLimitsSection";
 import PrivacySection from "@/components/settings/PrivacySection";
+import { Tooltip } from "@/components/ui";
+import { useTeacher } from "@/hooks/course/useTeacher";
 import type { UseSettingsReturn } from "@/hooks/settings/useSettings";
 import { useProfileSettings } from "@/hooks/settings/useProfileSettings";
 import { makeMyTeacherProfile, unregisterMyTeacherProfile } from "@/services/courseService.ts";
 import { getSchedulingDayMaxMinutes } from "@/utils/schedulingLimits";
 
 interface SettingsContentProps {
-  state: UseSettingsReturn["state"];
+  state: Omit<UseSettingsReturn["state"], "isPreferenceDirty" | "areCategoryLimitsDirty"> & {
+    isPreferenceDirty?: boolean;
+    areCategoryLimitsDirty?: boolean;
+  };
   loading: UseSettingsReturn["loading"];
   error: UseSettingsReturn["error"];
   actions: UseSettingsReturn["actions"];
 }
+
+const InfoLabel = ({
+  label,
+  tooltip,
+  htmlFor,
+}: {
+  label: string;
+  tooltip?: string;
+  htmlFor?: string;
+}) => (
+  <div className="flex items-center gap-2">
+    <label htmlFor={htmlFor} className="block text-sm font-medium text-gray-900">
+      {label}
+    </label>
+    {tooltip ? (
+      <Tooltip content={tooltip}>
+        <button
+          type="button"
+          className="inline-flex h-5 w-5 items-center justify-center rounded-full border border-gray-300 text-xs text-gray-500 hover:bg-gray-100"
+          aria-label={`Explain ${label}`}
+        >
+          ?
+        </button>
+      </Tooltip>
+    ) : null}
+  </div>
+);
 
 /**
  * Renders the settings page layout and selected section content.
@@ -32,7 +65,6 @@ const SettingsContent = ({
   error,
   actions,
 }: SettingsContentProps) => {
-  const dragSnapOptions = [5, 10, 15, 20, 30, 60] as const;
   const [featureFlags, setFeatureFlags] = useState(() => ({
     courses: localStorage.getItem("feature_courses_enabled") !== "false",
     assessments: localStorage.getItem("feature_assessments_enabled") !== "false",
@@ -44,6 +76,7 @@ const SettingsContent = ({
   const [unregisteringTeacher, setUnregisteringTeacher] = useState(false);
   const [makeTeacherError, setMakeTeacherError] = useState<string | null>(null);
   const [makeTeacherSuccess, setMakeTeacherSuccess] = useState<string | null>(null);
+  const teacherState = useTeacher();
 
   const featureRows = useMemo(() => ([
     {
@@ -107,6 +140,7 @@ const SettingsContent = ({
 
     try {
       await makeMyTeacherProfile();
+      await teacherState.reload?.();
       setMakeTeacherSuccess("You are now registered as a teacher.");
     } catch (error: unknown) {
       console.error("Failed to create teacher profile:", error);
@@ -125,6 +159,7 @@ const SettingsContent = ({
 
     try {
       await unregisterMyTeacherProfile();
+      await teacherState.reload?.();
       setMakeTeacherSuccess("You are no longer registered as a teacher.");
     } catch (error: unknown) {
       console.error("Failed to unregister teacher profile:", error);
@@ -173,6 +208,7 @@ const SettingsContent = ({
                 pref={state.preference}
                 prefLoading={loading.preference}
                 prefSaving={loading.saving}
+                prefDirty={state.isPreferenceDirty ?? false}
                 prefError={error.preference}
                 fieldErrors={state.fieldErrors}
                 onPrefChange={actions.setPreference}
@@ -180,6 +216,9 @@ const SettingsContent = ({
                   void actions.savePreferences();
                 }}
               />
+            ) : null}
+            {state.activeSection === "overrides" ? (
+              <OverridesSection />
             ) : null}
             {state.activeSection === "themes" ? (
               <ThemeSection
@@ -201,6 +240,7 @@ const SettingsContent = ({
                 maxDailyMinutes={categoryLimitMaxMinutes}
                 loading={loading.categories}
                 saving={loading.saving}
+                hasChanges={state.areCategoryLimitsDirty ?? false}
                 error={error.categories}
                 onLimitChange={actions.setCategoryLimit}
                 onSave={() => {
@@ -210,11 +250,17 @@ const SettingsContent = ({
             ) : null}
             {state.activeSection === "features" ? (
               <div className="space-y-6">
-                <div>
+                <div className="flex items-center gap-2">
                   <h2 className="text-lg font-semibold text-gray-900">Extras</h2>
-                  <p className="mt-1 text-sm text-gray-500">
-                    Toggle optional sections of the app.
-                  </p>
+                  <Tooltip content="Optional extra features you can turn on or off in the app.">
+                    <button
+                      type="button"
+                      className="inline-flex h-5 w-5 items-center justify-center rounded-full border border-gray-300 text-xs text-gray-500 hover:bg-gray-100"
+                      aria-label="Explain Extras"
+                    >
+                      ?
+                    </button>
+                  </Tooltip>
                 </div>
                 <div className="space-y-4">
                   {featureRows.map((feature) => (
@@ -224,7 +270,7 @@ const SettingsContent = ({
                     >
                       <div>
                         <p className="text-sm font-semibold text-gray-900">{feature.label}</p>
-                        <p className="text-xs text-gray-500">{feature.description}</p>
+                        <p className="mt-1 text-xs text-gray-500">{feature.description}</p>
                       </div>
                       <input
                         type="checkbox"
@@ -240,52 +286,12 @@ const SettingsContent = ({
                     </label>
                   ))}
                 </div>
-                <div className="space-y-3">
-                  {makeTeacherError && (
-                    <div className="rounded-md bg-red-50 px-4 py-3 text-sm text-red-700">
-                      {makeTeacherError}
-                    </div>
-                  )}
-
-                  {makeTeacherSuccess && (
-                    <div className="rounded-md bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
-                      {makeTeacherSuccess}
-                    </div>
-                  )}
-
-                  <div className="flex flex-wrap gap-3">
-                    <button
-                      type="button"
-                      onClick={() => {
-                        void makeTeacher();
-                      }}
-                      disabled={makingTeacher}
-                      className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-50"
-                    >
-                      {makingTeacher ? "Making teacher..." : "Make me a teacher"}
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={() => {
-                        void unregisterTeacher();
-                      }}
-                      disabled={unregisteringTeacher}
-                      className="rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-50"
-                    >
-                      {unregisteringTeacher ? "Unregistering..." : "Unregister as teacher"}
-                    </button>
-                  </div>
-                </div>
               </div>
             ) : null}
             {state.activeSection === "general" ? (
               <div className="space-y-6">
                 <div>
                   <h2 className="text-lg font-semibold text-gray-900">General</h2>
-                  <p className="mt-1 text-sm text-gray-500">
-                    Manage shared app behavior settings.
-                  </p>
                 </div>
 
 
@@ -300,60 +306,35 @@ const SettingsContent = ({
 
                   return (
                     <div className="space-y-4">
-                      <div className="flex items-center justify-between rounded-lg border border-gray-200 bg-white px-4 py-3 shadow-sm">
-                        <p className="text-sm font-semibold text-gray-900">Sound effects</p>
-                        <button
-                          type="button"
-                          onClick={() => {
-                            actions.setPreference({
-                              ...preference,
-                              disable_sound_effects: !preference.disable_sound_effects,
-                            });
-                          }}
-                          className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${
-                            preference.disable_sound_effects ? "bg-gray-300" : "bg-primary"
-                          }`}
-                          aria-pressed={!preference.disable_sound_effects}
-                        >
-                          <span
-                            className={`inline-block h-4 w-4 transform rounded-full bg-white shadow-sm transition-transform ${
-                              preference.disable_sound_effects ? "translate-x-1" : "translate-x-4"
-                            }`}
-                          />
-                        </button>
-                      </div>
                       <div>
-                        <label
-                          htmlFor="general-drag-snap-minutes"
-                          className="block text-sm font-medium text-gray-900"
-                        >
-                          Calendar drag timeslot
-                        </label>
-                        <p className="mt-1 text-xs text-gray-500">
-                          Controls how task drag and resize actions snap on the calendar.
-                        </p>
-                        <select
-                          id="general-drag-snap-minutes"
-                          value={preference.drag_snap_minutes}
-                          onChange={(event) => {
-                            actions.setPreference({
-                              ...preference,
-                              drag_snap_minutes: Number(event.target.value) as 5 | 10 | 15 | 20 | 30 | 60,
-                            });
-                          }}
-                          className="mt-2 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-primary focus:outline-none"
-                        >
-                          {dragSnapOptions.map((minutes) => (
-                            <option key={minutes} value={minutes}>
-                              {minutes} minutes
-                            </option>
-                          ))}
-                        </select>
-                        {state.fieldErrors.drag_snap_minutes?.length ? (
-                          <div className="mt-1 text-xs text-red-700">
-                            {state.fieldErrors.drag_snap_minutes.join(" ")}
+                        <InfoLabel
+                          label="Sound effects"
+                          tooltip="Controls app sound cues such as completion and button click effects."
+                        />
+                        <div className="mt-2 flex items-center gap-3">
+                          <div className="text-xs font-medium text-gray-600">
+                            {preference.disable_sound_effects ? "Disabled" : "Enabled"}
                           </div>
-                        ) : null}
+                          <button
+                            type="button"
+                            onClick={() => {
+                              actions.setPreference({
+                                ...preference,
+                                disable_sound_effects: !preference.disable_sound_effects,
+                              });
+                            }}
+                            className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${
+                              preference.disable_sound_effects ? "bg-gray-300" : "bg-primary"
+                            }`}
+                            aria-pressed={!preference.disable_sound_effects}
+                          >
+                            <span
+                              className={`inline-block h-4 w-4 transform rounded-full bg-white shadow-sm transition-transform ${
+                                preference.disable_sound_effects ? "translate-x-1" : "translate-x-4"
+                              }`}
+                            />
+                          </button>
+                        </div>
                       </div>
                       <div className="flex justify-end">
                         <button
@@ -361,10 +342,10 @@ const SettingsContent = ({
                           onClick={() => {
                             void actions.savePreferences();
                           }}
-                          disabled={loading.saving}
+                          disabled={loading.saving || !(state.isPreferenceDirty ?? false)}
                           className={`rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
-                            loading.saving
-                              ? "bg-gray-200 text-gray-500 cursor-not-allowed"
+                            loading.saving || !(state.isPreferenceDirty ?? false)
+                              ? "cursor-not-allowed bg-gray-200 text-gray-500"
                               : "bg-primary text-white hover:bg-blue-300"
                           }`}
                         >
@@ -381,10 +362,29 @@ const SettingsContent = ({
                 profile={profileState.state.profile}
                 loading={profileState.state.loading}
                 saving={profileState.state.saving}
+                isDirty={profileState.state.isDirty}
                 error={profileState.state.error}
                 fieldErrors={profileState.state.fieldErrors}
+                teacherActionLoading={{
+                  makingTeacher,
+                  unregisteringTeacher,
+                  teacherStatus: teacherState.loading,
+                }}
+                teacherActionState={{
+                  error: makeTeacherError,
+                  success: makeTeacherSuccess,
+                }}
+                isTeacher={teacherState.isTeacher}
                 onChange={profileState.actions.setProfile}
                 onAvatarChange={profileState.actions.setAvatarFile}
+                onToggleTeacher={(nextValue) => {
+                  if (nextValue) {
+                    void makeTeacher();
+                    return;
+                  }
+
+                  void unregisterTeacher();
+                }}
                 onSave={() => {
                   void profileState.actions.saveProfile();
                 }}
