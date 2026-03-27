@@ -6,6 +6,7 @@ for testing and demonstration purposes.
 """
 
 import random
+import datetime
 
 from django.contrib.auth import get_user_model
 from django.utils import timezone
