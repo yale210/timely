@@ -422,7 +422,7 @@ class CalendarSerializerTests(TestCase):
     ):
         """Test validate allocation slots rejects overlap with events other tasks and category limits."""
         serializer = CalendarSerializer(context=self._request_context())
-        now = timezone.now() + datetime.timedelta(days=1)
+        now = make_aware(datetime.datetime(2026, 4, 1, 12, 0, 0))
         category = Category.objects.create(
             user=self.user,
             text="Capped",
@@ -587,7 +587,7 @@ class CalendarSerializerTests(TestCase):
 
     def test_validate_allocation_slots_preserves_category_limit_message(self):
         serializer = CalendarSerializer(context=self._request_context())
-        now = timezone.now() + datetime.timedelta(days=1)
+        now = make_aware(datetime.datetime(2026, 4, 1, 12, 0, 0))
         category = Category.objects.create(
             user=self.user,
             text="Capped",
