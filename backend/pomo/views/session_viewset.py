@@ -1,6 +1,7 @@
 """ViewSets for managing pomodoro sessions."""
 
-from rest_framework import viewsets, permissions
+from rest_framework import permissions, viewsets
+
 from pomo.models import PomoSession
 from pomo.serializers import PomoSessionSerializer
 

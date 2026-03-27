@@ -1,6 +1,7 @@
 """Serializers for broadcast job list responses."""
 
 from rest_framework import serializers
+
 from notifications.models import BroadcastJob
 
 

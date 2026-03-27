@@ -1,14 +1,14 @@
 """Preference model definitions."""
 
-from django.db import models
-from django.conf import settings
-
-from django.core.exceptions import ValidationError
 from datetime import datetime, timedelta
-from django.core.validators import MinValueValidator, MaxValueValidator
-from zoneinfo import available_timezones
-from zoneinfo import ZoneInfo
+from zoneinfo import ZoneInfo, available_timezones
+
+from django.conf import settings
+from django.core.exceptions import ValidationError
+from django.core.validators import MaxValueValidator, MinValueValidator
+from django.db import models
 from django.utils import timezone
+
 from .day_of_week import DayOfWeek
 
 

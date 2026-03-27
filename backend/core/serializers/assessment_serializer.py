@@ -155,7 +155,6 @@ class AssessmentSerializer(serializers.ModelSerializer):
 
     def _sync_event_reminders(self, event, reminder_offset):
         """Replace event reminders to match the assessment reminder offset."""
-
         event.reminders.all().delete()
         if reminder_offset is not None:
             EventReminder.objects.create(
@@ -167,7 +166,6 @@ class AssessmentSerializer(serializers.ModelSerializer):
 
     def _sync_linked_event(self, assessment, categories, event_details):
         """Create, update, or delete the event linked to an assessment."""
-
         if event_details is serializers.empty:
             if assessment.linked_event is None:
                 return

@@ -1,20 +1,21 @@
 """Tests for recurrence instances."""
 
-from datetime import timedelta
 import datetime
+from datetime import timedelta
+from unittest.mock import patch
+
 from django.contrib.auth import get_user_model
 from django.test import TestCase
 from django.utils import timezone
-from unittest.mock import patch
 
 from core.models import Event, EventOverride
 from core.services import expand_event_instances, expand_user_events
 from core.services.recurrence_instances import (
-    _make_aware,
-    _normalise_reminder_snapshot,
-    _get_event_rule_until,
     _build_event_rrule,
     _generate_occurrence_starts,
+    _get_event_rule_until,
+    _make_aware,
+    _normalise_reminder_snapshot,
     is_occurrence_in_series,
 )
 

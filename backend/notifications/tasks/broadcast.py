@@ -3,9 +3,9 @@
 import logging
 
 from celery import shared_task
+from django.contrib.auth import get_user_model
 from django.db import transaction
 from django.utils import timezone
-from django.contrib.auth import get_user_model
 
 from ..models import BroadcastJob, BroadcastRecipient, Notification
 from ..utils.unread_count import refresh_unread_count

@@ -1,13 +1,13 @@
 """Models for the notifications app."""
 
+from .broadcast import BroadcastAuditLog, BroadcastJob, BroadcastRecipient
 from .notification import Notification
 from .push_subscription import PushSubscription
-from .broadcast import BroadcastAuditLog, BroadcastJob, BroadcastRecipient
 
 __all__ = [
-    "Notification",
-    "PushSubscription",
+    "BroadcastAuditLog",
     "BroadcastJob",
     "BroadcastRecipient",
-    "BroadcastAuditLog",
+    "Notification",
+    "PushSubscription",
 ]

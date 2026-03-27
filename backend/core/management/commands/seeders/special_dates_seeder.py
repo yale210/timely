@@ -5,10 +5,12 @@ of user-specific special dates (e.g., holidays, birthdays, or specific one-off
 events). It supports both fixture-based and randomized data generation.
 """
 
-from core.models import SpecialDates
-from .fixtures.special_dates_fixtures import special_dates
 from django.contrib.auth import get_user_model
+
 from core.management.commands.seeders.base import BaseSeeder
+from core.models import SpecialDates
+
+from .fixtures.special_dates_fixtures import special_dates
 
 
 class SpecialDatesSeeder(BaseSeeder):
