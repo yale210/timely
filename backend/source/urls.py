@@ -27,8 +27,6 @@ from core.views.share_send_view import ShareSendView
 from courses.views import CourseViewSet
 from courses.views.teacher_view import TeacherView
 
-from core.views.delete_all_events_view import DeleteAllEventsView
-from core.views.delete_all_tasks_view import DeleteAllTasksView
 from core.views.delete_account_view import DeleteAccountView
 
 from scheduler.views import ScheduleTasksAPIView, UnscheduleTasksAPIView
