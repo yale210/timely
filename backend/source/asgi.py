@@ -1,5 +1,6 @@
 """ASGI application entrypoint for HTTP and websocket traffic."""
 
+from importlib import import_module
 import os
 
 from channels.auth import AuthMiddlewareStack
@@ -9,16 +10,14 @@ from django.core.asgi import get_asgi_application
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "source.settings")
 django_asgi_app = get_asgi_application()
 
-# Import websocket routes after Django setup so routing modules run against
-# an initialized app registry.
-import notifications.routing
+notifications_routing = import_module("notifications.routing")
 
 
 application = ProtocolTypeRouter(
     {
         "http": django_asgi_app,
         "websocket": AuthMiddlewareStack(
-            URLRouter(notifications.routing.websocket_urlpatterns)
+            URLRouter(notifications_routing.websocket_urlpatterns)
         ),
     }
 )
