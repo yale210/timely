@@ -2,7 +2,6 @@
 
 from .user_seeder import UserSeeder
 from .category_seeder import CategorySeeder
-from .commute_seeder import CommuteSeeder
 from .day_of_week_seeder import DayOfWeekSeeder
 from .event_seeder import EventSeeder
 from .grade_seeder import GradeSeeder
@@ -16,7 +15,6 @@ from .assessment_seeder import AssessmentSeeder
 __all__ = [
     "UserSeeder",
     "CategorySeeder",
-    "CommuteSeeder",
     "DayOfWeekSeeder",
     "EventSeeder",
     "GradeSeeder",

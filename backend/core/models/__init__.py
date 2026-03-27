@@ -1,7 +1,6 @@
 """Model exports for the core application."""
 
 from .assessment import Assessment
-from .commute import Commute
 from .day_of_week import DayOfWeek
 from .event import Event
 from .event_override import EventOverride
@@ -17,7 +16,6 @@ from .pending_share_event import PendingShareEvent
 
 __all__ = [
     "Assessment",
-    "Commute",
     "DayOfWeek",
     "Event",
     "EventOverride",

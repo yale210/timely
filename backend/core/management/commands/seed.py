@@ -6,7 +6,6 @@ python manage.py seed
 from django.core.management.base import BaseCommand
 from core.management.commands.seeders.user_seeder import UserSeeder
 from core.management.commands.seeders.category_seeder import CategorySeeder
-from core.management.commands.seeders.commute_seeder import CommuteSeeder
 from core.management.commands.seeders.day_of_week_seeder import DayOfWeekSeeder
 from core.management.commands.seeders.event_seeder import EventSeeder
 from core.management.commands.seeders.grade_seeder import GradeSeeder
@@ -48,7 +47,6 @@ class Command(BaseCommand):
         seeders = [
             UserSeeder,
             CategorySeeder,
-            CommuteSeeder,
             DayOfWeekSeeder,
             EventSeeder,
             GradeSeeder,

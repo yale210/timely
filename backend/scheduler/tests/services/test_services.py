@@ -7,7 +7,6 @@ from django.utils import timezone
 
 from core.models import (
     Category,
-    Commute,
     DayOfWeek,
     Event,
     Preference,
@@ -81,22 +80,6 @@ class SchedulerTest(TestCase):
         events = scheduler._get_events()
         self.assertEqual(len(events), 2)
         self.assertEqual(events[0], event1)
-
-    def test_get_commutes(self):
-        Commute.objects.create(
-            user=self.user,
-            commute_start=time(8, 30),
-            commute_end=time(9, 0),
-        )
-        Commute.objects.create(
-            user=self.user,
-            commute_start=time(17, 0),
-            commute_end=time(17, 30),
-        )
-
-        scheduler = Scheduler(self.user)
-        commutes = scheduler._get_commutes()
-        self.assertEqual(len(commutes), 2)
 
     def test_is_day_available_with_days_off_and_special_dates(self):
         target_date = date(2026, 2, 12)  # Thursday
