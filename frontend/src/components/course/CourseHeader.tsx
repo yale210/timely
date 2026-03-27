@@ -35,7 +35,6 @@ export default function CoursesHeader({
   onJoinCourseIdChange,
   onJoinCourse,
   onRefresh,
-    onCreateCourse,
     onManageCourses,
                                         isTeacher,
 }: CoursesHeaderProps): JSX.Element {

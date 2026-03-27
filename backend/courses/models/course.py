@@ -90,7 +90,7 @@ class CourseStaff(models.Model):
 
     def __str__(self):
         """Returns a string identifying the user as staff for a specific course."""
-        return f"{self.student.username} is staff for {self.course.name}"
+        return f"{self.student.userername} is staff for {self.course.name}"
 
 
 class CourseEvent(BaseEventModel):
