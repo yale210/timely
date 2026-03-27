@@ -2,8 +2,68 @@ import { useState, type FormEvent, type ReactNode } from "react"
 import { authService } from "@/services/authService"
 import { useNavigate } from "react-router-dom"
 
-interface SignupFormProps {
-    children?: ReactNode
+interface SignupPayload {
+  email: string
+  password: string
+  password2: string
+  username: string
+}
+
+const PASSWORD_MISMATCH_ERROR = "Try again, your passwords did not match."
+const SIGNUP_FAILED_ERROR = "Signup failed"
+
+const buildSignupPayload = (
+  email: string,
+  username: string,
+  password: string,
+  confirmPassword: string,
+): SignupPayload => ({
+  email,
+  password,
+  password2: confirmPassword,
+  username,
+})
+
+const getSignupErrorData = (error: unknown): Record<string, unknown> | null => {
+  if (typeof error !== "object" || error === null || !("response" in error)) {
+    return null
+  }
+
+  const response = (error as { response?: { data?: unknown } }).response
+  const data = response?.data
+  return data && typeof data === "object" ? (data as Record<string, unknown>) : null
+}
+
+const getSignupErrorLine = (field: string, value: unknown): string | null => {
+  if (typeof value === "string") {
+    return `${field}: ${value}`
+  }
+
+  if (!Array.isArray(value)) {
+    return null
+  }
+
+  const joined = value
+    .filter((entry): entry is string => typeof entry === "string")
+    .join(" ")
+    .trim()
+
+  return joined ? `${field}: ${joined}` : null
+}
+
+const getSignupErrorMessage = (error: unknown): string => {
+  const data = getSignupErrorData(error)
+  if (data) {
+    const lines = Object.entries(data)
+      .map(([field, value]) => getSignupErrorLine(field, value))
+      .filter((line): line is string => Boolean(line))
+
+    if (lines.length > 0) {
+      return lines.join("\n")
+    }
+  }
+
+  return error instanceof Error ? error.message : SIGNUP_FAILED_ERROR
 }
 
 /**
@@ -12,7 +72,7 @@ interface SignupFormProps {
  * @param root0.children Optional child elements to render.
  * @returns The rendered signup page component.
  */
-export default function SignupForm({ children }: SignupFormProps) {
+export default function SignupForm({ children }: { children?: ReactNode }) {
   const [email, setEmail] = useState("")
   const [username, setUsername] = useState("")
   const [password, setPassword] = useState("")
@@ -22,64 +82,31 @@ export default function SignupForm({ children }: SignupFormProps) {
 
   const navigate = useNavigate()
 
-  const signup = (e: FormEvent<HTMLFormElement>) => {
+  const submitSignup = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     setError(null)
-    setLoading(true)
 
-    if (password!=confirmPassword){
-      setError("Try again, your passwords did not match.")
-      setLoading(false)
+    if (password !== confirmPassword) {
+      setError(PASSWORD_MISMATCH_ERROR)
       return
     }
 
-    void authService
-      .register({
-        username,
-        email,
-        password,
-        password2: confirmPassword,
-      })
-      .then(() => {
-        void navigate("/login")
-      })
-      .catch((err: unknown) => {
-        let message = "Signup failed";
-        if (typeof err === "object" && err !== null && "response" in err) {
-          const maybeAxios = err as {
-            response?: {
-              data?: unknown
-            }
-          }
-          const data = maybeAxios.response?.data
-          if (data && typeof data === "object"){
-            const obj= data as Record<string, unknown>;
-            const lines: string[] = []
+    setLoading(true)
 
-            for (const [field, value] of Object.entries(obj)) {
-              if (Array.isArray(value)) {
-                const joined = value.filter((v) => typeof v === "string").join(" ")
-                if (joined) {
-                  lines.push(`${field}: ${joined}`)
-                }
-              } else if (typeof value === "string"){
-                lines.push(`${field}: ${value}`)
-              }
-            }
+    try {
+      await authService.register(
+        buildSignupPayload(email, username, password, confirmPassword),
+      )
+      void navigate("/login")
+    } catch (err: unknown) {
+      setError(getSignupErrorMessage(err))
+    } finally {
+      setLoading(false)
+    }
+  }
 
-            if (lines.length>0) {
-              message=lines.join("\n")
-            }
-          }
-        } else if (err instanceof Error){
-          message = err.message
-        }
-        //message = err instanceof Error ? err.message : "Signup failed"
-        setError(message)
-      })
-      .finally(() => {
-        setLoading(false)
-      })
+  const signup = (e: FormEvent<HTMLFormElement>) => {
+    void submitSignup(e)
   }
 
   return (
