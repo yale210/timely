@@ -39,7 +39,9 @@ class RegisterSerializer(serializers.ModelSerializer):
         if User.objects.filter(username=username).exists():
             raise serializers.ValidationError("User with this username already exists.")
         if not name:
-            raise serializers.ValidationError({"name": ["This field may not be blank."]})
+            raise serializers.ValidationError(
+                {"name": ["This field may not be blank."]}
+            )
         attrs["username"] = username
         attrs["name"] = name
         return attrs
