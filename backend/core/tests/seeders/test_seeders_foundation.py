@@ -1,3 +1,5 @@
+"""Tests for foundational core seeders."""
+
 from datetime import time
 from unittest.mock import patch
 

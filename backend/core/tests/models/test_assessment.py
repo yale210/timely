@@ -1,3 +1,5 @@
+"""Tests for assessment."""
+
 import datetime
 
 from django.core.exceptions import ValidationError

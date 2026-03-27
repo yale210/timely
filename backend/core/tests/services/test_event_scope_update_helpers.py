@@ -1,3 +1,5 @@
+"""Tests for event scope update helpers."""
+
 from datetime import timedelta
 
 from django.contrib.auth import get_user_model

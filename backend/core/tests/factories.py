@@ -1,14 +1,20 @@
+"""Factory helpers shared across core app tests."""
+
+import datetime
+
 import factory
 from django.contrib.auth import get_user_model
-from core.models import Task, Category, Assessment
-from profiles.models.profile import Profile
 from django.utils import timezone
-import datetime
+
+from core.models import Assessment, Category, Task
+from profiles.models.profile import Profile
 
 User = get_user_model()
 
 
 class UserFactory(factory.django.DjangoModelFactory):
+    """Create test users with an associated profile by default."""
+
     class Meta:
         model = User
 
@@ -18,12 +24,16 @@ class UserFactory(factory.django.DjangoModelFactory):
 
     @factory.post_generation
     def create_profile(obj, create, extracted, **kwargs):
+        """Ensure user-based tests also have the related profile record."""
+
         if not create:
             return
         Profile.objects.get_or_create(user=obj, defaults={"name": obj.username})
 
 
 class AssessmentFactory(factory.django.DjangoModelFactory):
+    """Create assessments with sensible default scheduling values."""
+
     class Meta:
         model = Assessment
 
@@ -38,6 +48,8 @@ class AssessmentFactory(factory.django.DjangoModelFactory):
 
 
 class CategoryFactory(factory.django.DjangoModelFactory):
+    """Create categories scoped to the generated test user."""
+
     class Meta:
         model = Category
 
@@ -47,6 +59,8 @@ class CategoryFactory(factory.django.DjangoModelFactory):
 
 
 class TaskFactory(factory.django.DjangoModelFactory):
+    """Create tasks with short default scheduling windows for tests."""
+
     class Meta:
         model = Task
 

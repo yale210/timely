@@ -1,3 +1,5 @@
+"""Tests for task viewset."""
+
 import datetime
 
 from django.contrib.auth import get_user_model

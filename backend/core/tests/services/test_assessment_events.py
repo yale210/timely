@@ -1,3 +1,5 @@
+"""Tests for assessment events."""
+
 from types import SimpleNamespace
 from unittest.mock import Mock, patch
 

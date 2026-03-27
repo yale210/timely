@@ -1,3 +1,5 @@
+"""Tests for share views."""
+
 import datetime
 
 from django.contrib.auth import get_user_model

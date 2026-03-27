@@ -1,3 +1,5 @@
+"""Tests for preference."""
+
 import datetime
 
 from django.contrib.auth import get_user_model

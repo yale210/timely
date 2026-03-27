@@ -1,3 +1,5 @@
+"""Coverage-oriented tests for core stats utility functions."""
+
 from django.test import TestCase
 from core.utils.stats import get_current_week_range, calculate_weekly_stats
 from django.contrib.auth import get_user_model

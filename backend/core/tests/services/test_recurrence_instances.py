@@ -1,3 +1,5 @@
+"""Tests for recurrence instances."""
+
 from datetime import timedelta
 import datetime
 from django.contrib.auth import get_user_model

@@ -1,3 +1,5 @@
+"""Tests for event viewset."""
+
 import datetime
 from django.contrib.auth import get_user_model
 from django.urls import reverse

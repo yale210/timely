@@ -1,3 +1,5 @@
+"""Tests for preference."""
+
 from django.test import TestCase
 from django.contrib.auth import get_user_model
 from core.serializers.preference import PreferenceSerializer

@@ -1,3 +1,5 @@
+"""Tests for special dates view."""
+
 from rest_framework.test import APITestCase
 from rest_framework import status
 from core.tests.factories import UserFactory

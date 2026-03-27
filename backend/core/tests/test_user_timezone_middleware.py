@@ -1,3 +1,5 @@
+"""Tests for per-request user timezone activation middleware."""
+
 from django.conf import settings
 from django.contrib.auth.models import AnonymousUser
 from django.http import HttpResponse
@@ -10,10 +12,16 @@ from core.tests.factories import UserFactory
 
 
 class UserTimezoneMiddlewareTests(TestCase):
+    """Verify timezone activation and fallback behavior for requests."""
+
     def setUp(self):
+        """Create the request factory used across middleware tests."""
+
         self.factory = RequestFactory()
 
     def test_activates_authenticated_users_preference_timezone(self):
+        """Activate the stored user timezone for authenticated requests."""
+
         user = UserFactory()
         Preference.objects.update_or_create(
             user=user,
@@ -31,6 +39,8 @@ class UserTimezoneMiddlewareTests(TestCase):
         self.assertEqual(timezone.get_current_timezone_name(), settings.TIME_ZONE)
 
     def test_falls_back_to_project_timezone_for_anonymous_requests(self):
+        """Use the project default timezone when there is no authenticated user."""
+
         request = self.factory.get("/api/preferences/me/")
         request.user = AnonymousUser()
 
@@ -43,6 +53,8 @@ class UserTimezoneMiddlewareTests(TestCase):
         self.assertEqual(timezone.get_current_timezone_name(), settings.TIME_ZONE)
 
     def test_falls_back_to_project_timezone_for_invalid_user_timezone(self):
+        """Gracefully fall back when the stored timezone value is invalid."""
+
         user = UserFactory()
         Preference.objects.update_or_create(
             user=user,

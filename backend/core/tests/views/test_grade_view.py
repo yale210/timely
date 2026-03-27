@@ -1,3 +1,5 @@
+"""Tests for grade view."""
+
 import datetime
 
 from django.test import TestCase

@@ -1,3 +1,5 @@
+"""Tests for event-related core seeders."""
+
 from datetime import datetime, time
 from unittest.mock import patch
 
