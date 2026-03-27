@@ -394,11 +394,9 @@ const SettingsContent = ({
               <PrivacySection
                 deleting={false}
                 onDeleteEvents={() => {
-                  console.log("Delete Log Test")
                   return actions.deleteEvents()
                 }}
                 onDeleteTasks={() => {
-                  console.log("Delete Log Test")
                   return actions.deleteTasks();
                 }}
               />
