@@ -63,6 +63,11 @@ class Preference(models.Model):
     timezone = models.CharField(max_length=100, default="Europe/London")
 
     def _validate_drag_snap_minutes(self):
+        """Ensure drag snapping stays within the scheduler's supported granularity.
+
+        Raises:
+            ValidationError: If the snap interval is not one of the allowed values.
+        """
         allowed_drag_snap_minutes = {5, 10, 15, 20, 30, 60}
         if self.drag_snap_minutes not in allowed_drag_snap_minutes:
             raise ValidationError(
@@ -74,14 +79,32 @@ class Preference(models.Model):
             )
 
     def _validate_timezone(self):
+        """Reject timezone values that are not valid IANA identifiers.
+
+        Raises:
+            ValidationError: If the timezone is not recognised by zoneinfo.
+        """
         if self.timezone not in available_timezones():
             raise ValidationError({"timezone": "Timezone is not valid"})
 
     def _validate_day_bounds(self):
+        """Prevent identical start and end times from collapsing the day window.
+
+        Raises:
+            ValidationError: If the day start and end are equal.
+        """
         if self.day_start == self.day_end:
             raise ValidationError({"day_end": "Day start and end must be different."})
 
     def _get_day_schedule_entries(self):
+        """Return the seven scheduled day entries after validating the payload shape.
+
+        Returns:
+            list[dict]: The per-day schedule entries.
+
+        Raises:
+            ValidationError: If the schedule is not a list of exactly seven items.
+        """
         schedule = self.day_schedule or []
         if not isinstance(schedule, list):
             raise ValidationError({"day_schedule": "Day schedule must be a list."})
@@ -92,6 +115,18 @@ class Preference(models.Model):
         return schedule
 
     def _validate_day_entry(self, entry, seen_days):
+        """Validate a single schedule entry and return its weekday identifier.
+
+        Args:
+            entry (dict): The schedule entry under validation.
+            seen_days (set[int]): Weekday numbers already encountered.
+
+        Returns:
+            int: The weekday number for the entry.
+
+        Raises:
+            ValidationError: If the entry is malformed or duplicates a weekday.
+        """
         if not isinstance(entry, dict):
             raise ValidationError({"day_schedule": "Each day entry must be an object."})
 
@@ -103,6 +138,17 @@ class Preference(models.Model):
         return day
 
     def _parse_schedule_time(self, value):
+        """Parse a schedule time string into a `datetime.time` value.
+
+        Args:
+            value (str): A HH:MM-formatted time value.
+
+        Returns:
+            time: The parsed time.
+
+        Raises:
+            ValidationError: If the time value cannot be parsed.
+        """
         try:
             return datetime.strptime(value, "%H:%M").time()
         except (TypeError, ValueError) as exc:
@@ -111,6 +157,19 @@ class Preference(models.Model):
             ) from exc
 
     def _get_available_minutes(self, entry, today, user_timezone):
+        """Calculate the number of minutes represented by one schedule row.
+
+        Args:
+            entry (dict): A validated schedule row.
+            today (date): The reference date used to build aware datetimes.
+            user_timezone (ZoneInfo): The user's active timezone.
+
+        Returns:
+            int: The number of minutes between the configured start and end.
+
+        Raises:
+            ValidationError: If the row collapses to a zero-length interval.
+        """
         start_time = self._parse_schedule_time(entry.get("start"))
         end_time = self._parse_schedule_time(entry.get("end"))
         if start_time == end_time:
@@ -124,6 +183,11 @@ class Preference(models.Model):
         return int((end_dt - start_dt).total_seconds() // 60)
 
     def _validate_max_hours_against_schedule(self, minutes_available, max_minutes):
+        """Ensure the configured daily cap fits within the available schedule.
+
+        Raises:
+            ValidationError: If the configured max exceeds the available minutes.
+        """
         if self.limit_max_hours and max_minutes > minutes_available:
             raise ValidationError(
                 {
@@ -132,6 +196,7 @@ class Preference(models.Model):
             )
 
     def _validate_day_schedule(self):
+        """Validate the weekly schedule against timezone-aware availability rules."""
         user_timezone = ZoneInfo(self.timezone)
         today = timezone.now().astimezone(user_timezone).date()
         seen_days = set()

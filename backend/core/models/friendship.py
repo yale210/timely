@@ -42,6 +42,8 @@ class Friendship(models.Model):
     updated_at = models.DateTimeField(null=True, blank=True)
 
     class Meta:
+        """Enforce one canonical friendship record per user pair."""
+
         constraints = [
             models.UniqueConstraint(
                 fields=["sender", "receiver"], name="unique_friend_request"
@@ -67,12 +69,31 @@ class Friendship(models.Model):
 
     @classmethod
     def _get_existing_request(cls, sender, receiver):
+        """Return the existing friend-request record for either direction.
+
+        Args:
+            sender (User): The user requesting the friendship.
+            receiver (User): The user receiving the request.
+
+        Returns:
+            Friendship | None: The matching request if it already exists.
+        """
         return cls.objects.filter(
             Q(sender=sender, receiver=receiver) | Q(sender=receiver, receiver=sender)
         ).first()
 
     @classmethod
     def _resend_declined_request(cls, request_exists, sender, receiver):
+        """Reopen a previously declined request with the current direction.
+
+        Args:
+            request_exists (Friendship): The declined request being revived.
+            sender (User): The user sending the request now.
+            receiver (User): The user receiving the request now.
+
+        Returns:
+            Friendship: The updated request instance.
+        """
         request_exists.state = cls.State.SENT
         if request_exists.sender != sender or request_exists.receiver != receiver:
             request_exists.sender = sender
@@ -82,6 +103,20 @@ class Friendship(models.Model):
 
     @classmethod
     def _handle_existing_request(cls, request_exists, sender, receiver):
+        """Resolve request collisions before creating a new friendship row.
+
+        Args:
+            request_exists (Friendship): The existing record discovered.
+            sender (User): The user sending the request now.
+            receiver (User): The user receiving the request now.
+
+        Returns:
+            Friendship: The revived request when the prior state was declined.
+
+        Raises:
+            ValidationError: If the users are already connected or a pending
+                request already exists.
+        """
         if request_exists.state == cls.State.ACCEPTED:
             raise ValidationError("Users are already friends.")
 
