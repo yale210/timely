@@ -8,10 +8,11 @@ from rest_framework import status
 from rest_framework.decorators import action
 from rest_framework.response import Response
 
-from courses.models.course import CourseEvent
+from courses.models.course import CourseEvent, CourseEnrollment
 from courses.models.teacher import Teacher
 from courses.serializers.course_serializer import CourseEventSerializer
 from courses.views.base_view import CourseViewSetBase
+from notifications.models import Notification
 
 
 class CourseEventsMixin(CourseViewSetBase):
@@ -46,4 +47,54 @@ class CourseEventsMixin(CourseViewSetBase):
         serializer = CourseEventSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         serializer.save(course=course, created_by=teacher)
+    
         return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+    def post_notification(self, request, course_id):
+        """Handles the creation of notifications for course events.
+
+        Creates a notification for each enrolled student in the specified course.
+
+        Args:
+            request: The current HttpRequest object containing notification data.
+            course_id: The primary key of the course.
+
+        Returns:
+            A Response object with created notification data and 201 status.
+        """
+        course = self.get_course(course_id)
+        self.check_object_permissions(request, course)
+
+        # Get all active enrollments for the course
+        enrollments = CourseEnrollment.objects.filter(
+            course=course, active=True
+        ).select_related("student__user")
+
+        # Extract notification content from request
+        title = request.data.get("title", "")
+        message = request.data.get("message", "")
+
+        # Create notifications for each enrolled student
+        notifications = []
+        for enrollment in enrollments:
+            notification = Notification.objects.create(
+                user=enrollment.student.user,
+                title=title,
+                message=message,
+                course=course
+            )
+            notifications.append(notification)
+
+        # Serialize and return created notifications
+        notification_data = [
+            {
+                "id": notif.id,
+                "user_id": notif.user.id,
+                "title": notif.title,
+                "message": notif.message,
+                "course_id": notif.course.id
+            }
+            for notif in notifications
+        ]
+
+        return Response(notification_data, status=status.HTTP_201_CREATED)

@@ -275,7 +275,7 @@ CELERY_BEAT_SCHEDULE = {
     },
     "sync_course_calendar": {
         "task": "courses.tasks.sync_cal",
-        "schedule": crontab(hour=2, minute=0),
+        "schedule": 15,
     },
 }
 
