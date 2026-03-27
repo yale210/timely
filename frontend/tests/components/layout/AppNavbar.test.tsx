@@ -221,16 +221,16 @@ describe("AppNavbar Component", () => {
     
     await waitFor(() => {
       expect(screen.getByRole("menuitem", { name: "Settings" })).toBeDefined();
-      expect(screen.getByRole("menuitem", { name: "Log out" })).toBeDefined();
+      expect(screen.getByRole("menuitem", { name: "My profile" })).toBeDefined();
     });
 
     const settingsLink = screen.getByRole("menuitem", { name: "Settings" });
     fireEvent.mouseEnter(settingsLink);
     settingsLink.focus();
 
-    const logoutLink = screen.getByRole("menuitem", { name: "Log out" });
-    fireEvent.mouseEnter(logoutLink);
-    logoutLink.focus();
+    const profileLink = screen.getByRole("menuitem", { name: "My profile" });
+    fireEvent.mouseEnter(profileLink);
+    profileLink.focus();
   });
 
   it("applies active classes to NavLinks", () => {

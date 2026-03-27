@@ -102,7 +102,7 @@ describe("validatePreference", () => {
     });
   });
 
-  it("allows overnight schedules when the max fits within the available time", () => {
+  it("rejects overnight schedules", () => {
     const errors = validatePreference(
       buildPreference({
         max_hours_study_per_day: 6,
@@ -110,7 +110,9 @@ describe("validatePreference", () => {
       }),
     );
 
-    expect(errors).toEqual({});
+    expect(errors).toEqual({
+      day_schedule: ["Each day must end after it starts."],
+    });
   });
 
   it("skips max-hours validation when the limit is disabled", () => {
