@@ -28,10 +28,13 @@ class NotificationSignalTests(TestCase):
         # Simulate stale cache state from another process.
         cache.set(f"notifications:unread_count:{self.user.id}", 5, timeout=3600)
 
-        with patch(
-            "notifications.signals.notification_signal.notify_user"
-        ) as mock_notify, patch(
-            "notifications.signals.notification_signal.send_push_notification.delay"
+        with (
+            patch(
+                "notifications.signals.notification_signal.notify_user"
+            ) as mock_notify,
+            patch(
+                "notifications.signals.notification_signal.send_push_notification.delay"
+            ),
         ):
             Notification.objects.create(
                 recipient=self.user,

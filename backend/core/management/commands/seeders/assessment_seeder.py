@@ -136,11 +136,7 @@ class AssessmentSeeder(BaseSeeder):
             {
                 "fields": {
                     "user": user.id,
-                    "categories": [
-                        self._get_or_create_random_category(
-                            user
-                        ).id
-                    ],
+                    "categories": [self._get_or_create_random_category(user).id],
                     "title": self.faker.sentence(),
                     "description": self.faker.sentence(),
                     "location": self.faker.word(),

@@ -168,7 +168,7 @@ class EventSeeder(BaseSeeder):
             }
         )
 
-    def _create_random_event_type(self,data):
+    def _create_random_event_type(self, data):
         """Determine and create either a recurring or single random event.
 
         Args:

@@ -109,7 +109,7 @@ class SeederFoundationTests(SeederTestCase):
             "_populate_random_category",
             200,
         )
-        
+
         self.assert_seed_calls(
             EventSeeder(), "_create_fixture_event", "_populate_random_event", 750
         )

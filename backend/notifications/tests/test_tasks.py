@@ -209,10 +209,13 @@ class TasksTests(TestCase):
         self.assertFalse(Notification.objects.filter(id=old_notification.id).exists())
 
     def test_broadcast_notification_all(self):
-        with patch(
-            "notifications.tasks.broadcast._send_push_notification_sync",
-            return_value={"success": True, "error_code": "", "error_message": ""},
-        ), patch("notifications.tasks.broadcast.notify_user") as mock_notify_user:
+        with (
+            patch(
+                "notifications.tasks.broadcast._send_push_notification_sync",
+                return_value={"success": True, "error_code": "", "error_message": ""},
+            ),
+            patch("notifications.tasks.broadcast.notify_user") as mock_notify_user,
+        ):
             result = broadcast_notification("Global", "Hello", target="all")
 
         self.assertEqual(result, "Broadcasted to 2 users")

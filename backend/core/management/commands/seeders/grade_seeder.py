@@ -98,7 +98,10 @@ class GradeSeeder(BaseSeeder):
                 "fields": {
                     "user": temporary_user.id,
                     "name": self.faker.sentence(),
-                    "category": Category.objects.order_by("?").filter(user=temporary_user).first().id,
+                    "category": Category.objects.order_by("?")
+                    .filter(user=temporary_user)
+                    .first()
+                    .id,
                     "score": random.randint(0, 100),
                     "total_possible": 100,
                     "date_achieved": self.faker.date(),
