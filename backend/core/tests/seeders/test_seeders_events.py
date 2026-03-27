@@ -137,7 +137,7 @@ class SeederEventTests(SeederTestCase):
                 "core.management.commands.seeders.event_seeder.random.randint",
                 side_effect=[30, 60],
             ),
-            ):
+        ):
             start, end = seeder._random_event_datetimes(user, max_duration_minutes=60)
 
         self.assertEqual(start.hour, 9)
