@@ -7,7 +7,8 @@ from django.utils import timezone
 
 
 class UserTimezoneMiddleware:
-    """Activate the authenticated user's preferred timezone for the lifetime of
+    """Activate the authenticated user's preferred timezone for the lifetime of a request.
+
     the request so view-level `localdate()` / `get_current_timezone()` calls
     reflect user preferences instead of the global project default.
     """
@@ -16,23 +17,28 @@ class UserTimezoneMiddleware:
         """Store the downstream response callable."""
         self.get_response = get_response
 
-    def __call__(self, request):
-        """Activate the resolved timezone for the duration of the request."""
-        selected_timezone = None
+    def _get_timezone_to_activate(self, request):
         user = getattr(request, "user", None)
+        if not getattr(user, "is_authenticated", False):
+            return settings.TIME_ZONE
 
-        if getattr(user, "is_authenticated", False):
-            user_timezone = getattr(getattr(user, "preference", None), "timezone", None)
-            if user_timezone:
-                try:
-                    selected_timezone = ZoneInfo(user_timezone)
-                except ZoneInfoNotFoundError:
-                    selected_timezone = None
+        user_timezone = getattr(getattr(user, "preference", None), "timezone", None)
+        if not user_timezone:
+            return settings.TIME_ZONE
 
-        if selected_timezone is None:
-            timezone.activate(settings.TIME_ZONE)
-        else:
-            timezone.activate(selected_timezone)
+        try:
+            return ZoneInfo(user_timezone)
+        except ZoneInfoNotFoundError:
+            return settings.TIME_ZONE
+
+    def __call__(self, request):
+        """Activate the resolved timezone for the duration of the request.
+
+        Returns:
+            HttpResponse: The downstream response.
+
+        """
+        timezone.activate(self._get_timezone_to_activate(request))
 
         try:
             return self.get_response(request)
