@@ -91,6 +91,7 @@ class TaskSeeder(BaseSeeder):
         """
         temporary_user = self._get_or_create_random_user()
         temporary_category = self._get_or_create_random_category(temporary_user)
+        start = timezone.make_aware(self.faker.date_time())
         self._create_task(
             {
                 "fields": {
@@ -99,8 +100,8 @@ class TaskSeeder(BaseSeeder):
                     "description": self.faker.sentence(),
                     "categories": [temporary_category.id],
                     "estimated_minutes": random.randint(1, 60 * 24),
-                    "start_time": timezone.make_aware(self.faker.date_time()),
-                    "deadline": timezone.make_aware(self.faker.date_time()),
+                    "start_time": start,
+                    "deadline":  timezone.make_aware(start + datetime.timedelta(hours=random.randint(1, 24))),
                     "completed": random.randint(0, 1) == 1,
                     "parent_task": Task.objects.order_by("?").first().id
                     if Task.objects.exists() and random.randint(0, 3) == 1
