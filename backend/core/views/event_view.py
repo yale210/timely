@@ -106,6 +106,17 @@ class EventViewSet(viewsets.ModelViewSet):
         return self._handle_update(request, partial=True, *args, **kwargs)
 
     def _handle_update(self, request, partial, *args, **kwargs):
+        """Apply scoped recurrence updates while preserving series integrity.
+
+        Args:
+            request (Request): The DRF request object containing scope metadata.
+            partial (bool): Whether the update should behave like PATCH.
+            *args: Variable positional arguments passed to DRF handlers.
+            **kwargs: Variable keyword arguments passed to DRF handlers.
+
+        Returns:
+            Response: A DRF response for the requested update scope.
+        """
         event = self.get_object()
         scope, original_start_time = parse_scope_context(request)
 
