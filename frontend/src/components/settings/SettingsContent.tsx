@@ -72,7 +72,6 @@ const SettingsContent = ({
     courses: localStorage.getItem("feature_courses_enabled") !== "false",
     assessments: localStorage.getItem("feature_assessments_enabled") !== "false",
     gradebook: localStorage.getItem("feature_gradebook_enabled") !== "false",
-    leaderboard: localStorage.getItem("feature_leaderboard_enabled") !== "false",
     pomodoro: localStorage.getItem("feature_pomodoro_enabled") !== "false",
   }));
   const [makingTeacher, setMakingTeacher] = useState(false);
@@ -101,12 +100,6 @@ const SettingsContent = ({
       value: featureFlags.gradebook,
     },
     {
-      key: "leaderboard",
-      label: "Leaderboard",
-      description: "Allows users to view how they are doing in comparison to their friends.",
-      value: featureFlags.leaderboard,
-    },
-    {
       key: "courses",
       label: "Courses",
       description: "Show course browsing, management, and course details in the app.",
@@ -115,15 +108,13 @@ const SettingsContent = ({
   ]), [featureFlags]);
 
   const updateFeature = (
-    key: "assessments" | "gradebook" | "leaderboard" | "pomodoro" | "courses",
+    key: "assessments" | "gradebook" | "pomodoro" | "courses",
     value: boolean,
   ) => {
     if (key === "assessments") {
       localStorage.setItem("feature_assessments_enabled", String(value));
     } else if (key === "gradebook") {
       localStorage.setItem("feature_gradebook_enabled", String(value));
-    } else if (key === "leaderboard") {
-      localStorage.setItem("feature_leaderboard_enabled", String(value));
     } else if (key === "courses") {
       localStorage.setItem("feature_courses_enabled", String(value));
     } else {
@@ -285,7 +276,7 @@ const SettingsContent = ({
                           checked={feature.value}
                           onChange={(event) => {
                             updateFeature(
-                              feature.key as "assessments" | "gradebook" | "leaderboard" | "pomodoro" | "courses",
+                              feature.key as "assessments" | "gradebook" | "pomodoro" | "courses",
                               event.target.checked,
                             );
                           }}

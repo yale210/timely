@@ -19,7 +19,6 @@ const featureItems = [
   { key: "pomodoro", label: "Pomodoro", to: "/pomodoro", icon: "timer" },
   { key: "assessments", label: "Assessments", to: "/assessments", icon: "assignment" },
   { key: "gradebook", label: "Gradebook", to: "/gradebook", icon: "auto_graph" },
-  { key: "leaderboard", label: "Leaderboard", to: "/leaderboard", icon: "leaderboard" },
   { key: "courses", label: "Courses", to: "/courses", icon: "school" },
 ]
 
@@ -28,7 +27,6 @@ const FEATURE_FLAGS = {
   gradebook: "feature_gradebook_enabled",
   courses: "feature_courses_enabled",
   pomodoro: "feature_pomodoro_enabled",
-  leaderboard: "feature_leaderboard_enabled",
 }
 
 const readFeatureFlag = (key: keyof typeof FEATURE_FLAGS) => {
@@ -56,7 +54,6 @@ export default function AppNavbar() {
     gradebook: readFeatureFlag("gradebook"),
     courses: readFeatureFlag("courses"),
     pomodoro: readFeatureFlag("pomodoro"),
-    leaderboard: readFeatureFlag("leaderboard"),
   }))
   const {
     notifications,
@@ -93,7 +90,6 @@ export default function AppNavbar() {
         gradebook: readFeatureFlag("gradebook"),
         courses: readFeatureFlag("courses"),
         pomodoro: readFeatureFlag("pomodoro"),
-        leaderboard: readFeatureFlag("leaderboard"),
       })
     }
     window.addEventListener("feature-flags-changed", refreshFlags)
@@ -140,7 +136,6 @@ export default function AppNavbar() {
     if (item.key === "courses") return featureFlags.courses
    
     if (item.key === "pomodoro") return featureFlags.pomodoro
-    if (item.key === "leaderboard") return featureFlags.leaderboard
     return false
   })
 
@@ -364,6 +359,18 @@ export default function AppNavbar() {
           )}
         </div>
         <div className="mt-auto border-t border-gray-200 px-4 py-3">
+          <NavLink
+            to="/leaderboard"
+            className={({ isActive }) =>
+              [
+                "app-nav-link mb-2 flex items-center gap-3 rounded-md px-3 py-2 text-sm font-semibold transition-colors",
+                isActive ? "bg-cyan-50 text-cyan-700 ring-1 ring-cyan-100" : "text-gray-800 hover:bg-gray-100",
+              ].join(" ")
+            }
+          >
+            <span aria-hidden="true" className="material-icons text-lg leading-none">leaderboard</span>
+            <span>Leaderboard</span>
+          </NavLink>
           <NavLink
             to="/friends"
             className={({ isActive }) =>
