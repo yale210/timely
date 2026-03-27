@@ -52,6 +52,7 @@ const CalendarView = ({
 }: CalendarViewProps) => {
   const calendarShellRef = useRef<HTMLDivElement | null>(null);
   const localizer = useCalendarLocalizer();
+  const activeTimezone = state.preference?.timezone ?? getStoredUserTimezone();
   const dragSnapMinutes = state.preference?.drag_snap_minutes ?? DEFAULT_DRAG_SNAP_MINUTES;
   const dragSnapTimeslots = 60 / dragSnapMinutes;
 
@@ -116,7 +117,6 @@ const CalendarView = ({
         return;
       }
 
-      const activeTimezone = state.preference?.timezone ?? getStoredUserTimezone();
       const currentHour = getZonedDateParts(new Date(), activeTimezone).hour;
       const targetIndex = Math.min(Math.max(currentHour, 0), slotGroups.length - 1);
       const targetSlot = slotGroups[targetIndex];
@@ -140,7 +140,7 @@ const CalendarView = ({
       window.cancelAnimationFrame(frame);
       window.clearTimeout(timer);
     };
-  }, [state.date, state.calendarEntries.length, state.view]);
+  }, [activeTimezone, state.date, state.calendarEntries.length, state.view]);
 
   useEffect(() => {
     const shell = calendarShellRef.current;

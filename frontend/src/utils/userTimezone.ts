@@ -60,6 +60,12 @@ const getFormatter = (
   ...options,
 });
 
+/**
+ * Extracts date/time parts for a Date as seen in a given timezone.
+ * @param date - Source UTC date.
+ * @param timeZone - IANA timezone identifier to interpret the date in.
+ * @returns Numeric calendar/time parts in the target timezone.
+ */
 export const getZonedDateParts = (date: Date, timeZone: string) => {
   const parts = getFormatter(timeZone, {
     year: "numeric",
@@ -85,6 +91,17 @@ export const getZonedDateParts = (date: Date, timeZone: string) => {
   };
 };
 
+/**
+ * Builds a UTC ISO string from date/time parts interpreted in a given timezone.
+ * @param parts - Calendar date and clock time in the target timezone.
+ * @param parts.year - Calendar year in the target timezone.
+ * @param parts.month - Calendar month in the target timezone.
+ * @param parts.day - Calendar day in the target timezone.
+ * @param parts.hour - Hour in the target timezone.
+ * @param parts.minute - Minute in the target timezone.
+ * @param timeZone - IANA timezone identifier used to resolve the UTC instant.
+ * @returns UTC ISO timestamp for the zoned local time.
+ */
 const buildIsoFromZonedParts = (parts: {
   year: number;
   month: number;
