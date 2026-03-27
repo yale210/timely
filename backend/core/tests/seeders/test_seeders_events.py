@@ -17,6 +17,7 @@ from .common import SeederTestCase
 
 class SeederEventTests(SeederTestCase):
     """Test cases for seeder event."""
+
     def test_event_seeder_create_random_event_type_covers_recurring_and_nonrecurring_paths(
         self,
     ):

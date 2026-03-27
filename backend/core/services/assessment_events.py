@@ -1,3 +1,5 @@
+"""Helpers for keeping assessments and linked events in sync."""
+
 from core.models import Assessment, Event
 
 

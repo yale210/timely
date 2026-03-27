@@ -9,6 +9,7 @@ from django.utils import timezone
 
 class SpecialDatesViewTests(APITestCase):
     """Test cases for special dates view."""
+
     def setUp(self):
         """Set up shared test fixtures."""
         self.user = UserFactory()

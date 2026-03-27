@@ -11,6 +11,7 @@ from core.models import Event
 # This file will also be larger than other tests
 class RealisitcImportViewTests(TestCase):
     """Test cases for realisitc import view."""
+
     def setUp(self):
         """Set up shared test fixtures."""
         self.client = APIClient()

@@ -9,6 +9,7 @@ from core.models import Event, EventReminder
 
 class EventReminderTests(TestCase):
     """Test cases for event reminder."""
+
     def setUp(self):
         """Set up shared test fixtures."""
         self.user = get_user_model().objects.create_user(

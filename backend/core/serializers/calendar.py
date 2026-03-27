@@ -1,3 +1,5 @@
+"""Serializers and validation helpers for calendar task data."""
+
 from datetime import datetime, time, timedelta
 
 from django.utils import timezone
@@ -95,11 +97,15 @@ class CalendarSerializer(serializers.ModelSerializer):
 
     @staticmethod
     def _aware(dt: datetime) -> datetime:
+        """Ensure datetimes are timezone-aware before comparison."""
+
         if timezone.is_naive(dt):
             return timezone.make_aware(dt)
         return dt
 
     def _resolve_user(self):
+        """Resolve the effective user from the request context or bound instance."""
+
         request = self.context.get("request")
         if request and request.user and request.user.is_authenticated:
             return request.user
@@ -108,6 +114,8 @@ class CalendarSerializer(serializers.ModelSerializer):
         return None
 
     def _parse_allocation_slots(self, allocation):
+        """Normalise allocation slots and collect per-slot validation errors."""
+
         normalized = []
         errors = []
         for index, slot in enumerate(allocation):
@@ -139,12 +147,16 @@ class CalendarSerializer(serializers.ModelSerializer):
 
     @staticmethod
     def _overlaps(left_start, left_end, right_start, right_end):
+        """Return whether two time ranges overlap."""
+
         return left_start < right_end and left_end > right_start
 
     @staticmethod
     def _expand_with_buffer(
         slot_start, slot_end, buffer_before_minutes, buffer_after_minutes
     ):
+        """Expand a slot by the configured before and after buffers."""
+
         return (
             slot_start - timedelta(minutes=buffer_before_minutes),
             slot_end + timedelta(minutes=buffer_after_minutes),
@@ -152,6 +164,8 @@ class CalendarSerializer(serializers.ModelSerializer):
 
     @staticmethod
     def _minutes_by_day(slots):
+        """Aggregate allocated minutes by calendar day across slot ranges."""
+
         minutes_by_day = {}
         for start, end in slots:
             cursor = start
@@ -171,6 +185,8 @@ class CalendarSerializer(serializers.ModelSerializer):
         return minutes_by_day
 
     def _validate_category_limits(self, user, categories, normalized_slots):
+        """Enforce per-category daily study limits for the requested allocation."""
+
         if not user or not normalized_slots:
             return
         limited_categories = [
@@ -227,6 +243,8 @@ class CalendarSerializer(serializers.ModelSerializer):
         estimated_minutes,
         completed_minutes,
     ):
+        """Validate allocation slots against timing, buffer, and category rules."""
+
         if allocation in (None, []):
             return
         if not isinstance(allocation, list):
@@ -362,6 +380,8 @@ class CalendarSerializer(serializers.ModelSerializer):
             self._validate_category_limits(user, categories, normalized_slots)
 
     def _rewrite_buffer_only_conflict(self, attrs, exc):
+        """Rewrite generic overlap errors when only buffer edits caused the conflict."""
+
         if self.instance is None or "allocation" in attrs:
             return exc
         if not ("buffer_before_minutes" in attrs or "buffer_after_minutes" in attrs):

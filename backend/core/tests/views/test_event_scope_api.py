@@ -14,6 +14,7 @@ from core.models import Event, EventOverride
 
 class EventScopeApiTests(APITestCase):
     """Test cases for event scope api."""
+
     def setUp(self):
         """Set up shared test fixtures."""
         self.user = get_user_model().objects.create_user(

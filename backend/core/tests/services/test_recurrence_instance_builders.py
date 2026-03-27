@@ -15,6 +15,7 @@ from core.services.recurrence_instance_builders import (
 
 class RecurrenceInstanceBuilderTests(TestCase):
     """Test cases for recurrence instance builder."""
+
     def setUp(self):
         """Set up shared test fixtures."""
         self.user = get_user_model().objects.create_user(

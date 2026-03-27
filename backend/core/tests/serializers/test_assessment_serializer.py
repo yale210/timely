@@ -16,6 +16,7 @@ from core.serializers.assessment import (
 
 class AssessmentSerializerTests(TestCase):
     """Test cases for assessment serializer."""
+
     def setUp(self):
         """Set up shared test fixtures."""
         self.user = get_user_model().objects.create_user(

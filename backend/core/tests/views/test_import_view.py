@@ -8,6 +8,7 @@ from django.core.files.uploadedfile import SimpleUploadedFile
 
 class ImportViewTests(TestCase):
     """Test cases for import view."""
+
     def setUp(self):
         """Set up shared test fixtures."""
         self.client = APIClient()

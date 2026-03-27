@@ -16,6 +16,7 @@ from core.serializers.calendar import CalendarResponseSerializer
 
 class CalendarSerializerTests(TestCase):
     """Test cases for calendar serializer."""
+
     def setUp(self):
         """Set up shared test fixtures."""
         self.user = get_user_model().objects.create_user(

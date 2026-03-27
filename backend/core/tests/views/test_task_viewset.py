@@ -13,6 +13,7 @@ from profiles.models.profile import Profile
 
 class TaskViewSetTests(TestCase):
     """Test cases for task view set."""
+
     def setUp(self):
         """Set up shared test fixtures."""
         self.client = APIClient()

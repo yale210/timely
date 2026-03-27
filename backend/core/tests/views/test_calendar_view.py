@@ -8,6 +8,7 @@ from core.models import Task, Category
 
 class CalendarViewTests(APITestCase):
     """Test cases for calendar view."""
+
     def setUp(self):
         """Set up shared test fixtures."""
         self.user = UserFactory()

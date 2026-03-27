@@ -11,6 +11,7 @@ from core.models import Grade, Category, Task
 
 class GradeModelTests(TestCase):
     """Test cases for grade model."""
+
     def setUp(self):
         """Set up shared test fixtures."""
         self.user = get_user_model().objects.create_user(

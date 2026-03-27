@@ -12,6 +12,7 @@ from core.services import apply_delete_scope, apply_update_scope, expand_event_i
 
 class EventScopeMutationServiceTests(TestCase):
     """Test cases for event scope mutation service."""
+
     def setUp(self):
         """Set up shared test fixtures."""
         self.user = get_user_model().objects.create_user(
@@ -400,6 +401,7 @@ class EventScopeMutationServiceTests(TestCase):
 
         class MockObj:
             """Test cases for mock obj."""
+
             id = 123
 
         self.assertEqual(_category_id_set([MockObj(), 456]), {123, 456})

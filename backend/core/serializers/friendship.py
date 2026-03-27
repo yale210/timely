@@ -1,3 +1,5 @@
+"""Serializers for friendship requests and related profile display metadata."""
+
 from django.contrib.auth import get_user_model
 from rest_framework import serializers
 
@@ -73,15 +75,21 @@ class FriendshipSerializer(serializers.ModelSerializer):
         return attrs
 
     def _get_profile(self, user):
+        """Return the related profile object for a friendship user if present."""
+
         return getattr(user, "user_profile", None)
 
     def _get_profile_name(self, user):
+        """Return the preferred display name for a friendship user."""
+
         profile = self._get_profile(user)
         if profile and profile.name:
             return profile.name
         return user.username
 
     def _get_avatar_url(self, user):
+        """Build the avatar URL for a friendship user when available."""
+
         profile = self._get_profile(user)
         if not profile or not getattr(profile, "avatar", None):
             return None

@@ -10,6 +10,7 @@ from core.models import Event
 
 class ShareSendViewTests(TestCase):
     """Test cases for share send view."""
+
     def setUp(self):
         """Set up shared test fixtures."""
         self.client = APIClient()

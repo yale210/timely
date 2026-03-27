@@ -9,6 +9,7 @@ User = get_user_model()
 
 class PreferenceMeTests(APITestCase):
     """Test cases for preference me."""
+
     def setUp(self):
         """Set up shared test fixtures."""
         self.user = User.objects.create_user(

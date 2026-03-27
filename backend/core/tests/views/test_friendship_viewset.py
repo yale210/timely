@@ -10,6 +10,7 @@ from core.models import Friendship
 
 class FriendshipViewSetTests(APITestCase):
     """Test cases for friendship view set."""
+
     def setUp(self):
         """Set up shared test fixtures."""
         self.sender = get_user_model().objects.create_user(

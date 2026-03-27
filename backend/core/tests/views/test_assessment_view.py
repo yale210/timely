@@ -13,6 +13,7 @@ from core.models import Assessment, Category
 
 class AssessmentViewTests(TestCase):
     """Test cases for assessment view."""
+
     def setUp(self):
         """Set up shared test fixtures."""
         self.client = APIClient()

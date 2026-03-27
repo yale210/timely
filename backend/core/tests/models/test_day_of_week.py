@@ -10,6 +10,7 @@ from django.contrib.auth import get_user_model
 
 class DayOfWeekTests(TestCase):
     """Test cases for day of week."""
+
     def setUp(self):
         """Set up shared test fixtures."""
         self.monday = DayOfWeek.objects.get_or_create(day=DayOfWeek.Day.MONDAY)[0]

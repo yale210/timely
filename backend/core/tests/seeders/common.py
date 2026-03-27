@@ -32,6 +32,7 @@ from profiles.models import Profile
 
 class SeederTestCase(TestCase):
     """Shared base test case for core seeder tests."""
+
     def assert_seed_calls(self, seeder, fixture_method, random_method, random_calls):
         """Assert seed calls."""
         from unittest.mock import patch

@@ -13,6 +13,7 @@ from django.db import IntegrityError
 
 class FriendshipTests(TestCase):
     """Test cases for friendship."""
+
     def setUp(self):
         """Set up shared test fixtures."""
         self.sender = get_user_model().objects.create_user(

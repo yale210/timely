@@ -14,6 +14,7 @@ from core.services.assessment_events import (
 
 class AssessmentEventServiceTests(SimpleTestCase):
     """Test cases for assessment event service."""
+
     def _build_assessment(self, **overrides):
         """Build assessment."""
         assessment = SimpleNamespace(

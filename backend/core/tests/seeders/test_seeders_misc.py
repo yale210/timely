@@ -20,6 +20,7 @@ from .common import SeederTestCase
 
 class SeederMiscTests(SeederTestCase):
     """Test cases for seeder misc."""
+
     def test_grade_special_dates_user_and_profile_seeders_cover_fallback_and_updates(
         self,
     ):

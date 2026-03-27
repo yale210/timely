@@ -8,6 +8,7 @@ from django.utils import timezone
 
 class StatsCoverageTests(TestCase):
     """Test cases for stats coverage."""
+
     def setUp(self):
         """Set up shared test fixtures."""
         self.user = get_user_model().objects.create_user(

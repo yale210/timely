@@ -10,6 +10,7 @@ from core.models import Commute
 
 class CommuteTests(TestCase):
     """Test cases for commute."""
+
     def setUp(self):
         """Set up shared test fixtures."""
         self.user = get_user_model().objects.create_user(

@@ -11,6 +11,7 @@ from core.models import Event
 
 class ShareAcceptViewTests(TestCase):
     """Test cases for share accept view."""
+
     def setUp(self):
         """Set up shared test fixtures."""
         self.client = APIClient()

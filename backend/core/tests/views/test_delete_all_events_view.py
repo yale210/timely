@@ -11,6 +11,7 @@ from core.models import Event
 
 class DeleteAllEventsViewTests(TestCase):
     """Test cases for delete all events view."""
+
     def setUp(self):
         """Set up shared test fixtures."""
         self.client = APIClient()

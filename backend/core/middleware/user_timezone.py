@@ -1,3 +1,5 @@
+"""Middleware for activating a user's preferred timezone."""
+
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 from django.conf import settings
@@ -12,9 +14,13 @@ class UserTimezoneMiddleware:
     """
 
     def __init__(self, get_response):
+        """Store the downstream response callable."""
+
         self.get_response = get_response
 
     def __call__(self, request):
+        """Activate the resolved timezone for the duration of the request."""
+
         selected_timezone = None
         user = getattr(request, "user", None)
 

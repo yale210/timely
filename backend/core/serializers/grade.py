@@ -1,3 +1,5 @@
+"""Serializer definitions for grade resources."""
+
 from typing import Any
 
 from rest_framework import serializers

@@ -12,6 +12,7 @@ from core.models import Task, Category
 
 class TaskTests(TestCase):
     """Test cases for task."""
+
     def setUp(self):
         """Set up shared test fixtures."""
         self.user = get_user_model().objects.create_user(

@@ -10,6 +10,7 @@ from core.views.event_view import EventViewSet
 
 class UrlTests(SimpleTestCase):
     """Test cases for url."""
+
     def test_assessments_url_resolves(self):
         """Test assessments url resolves."""
         resolver = resolve("/api/assessments/")

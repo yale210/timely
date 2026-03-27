@@ -9,6 +9,7 @@ from core.serializers import CategorySerializer
 
 class CategorySerializerTests(TestCase):
     """Test cases for category serializer."""
+
     def setUp(self):
         """Set up shared test fixtures."""
         self.user = get_user_model().objects.create_user(

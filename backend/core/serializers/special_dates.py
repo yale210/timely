@@ -1,3 +1,5 @@
+"""Serializer definitions for special date resources."""
+
 from rest_framework import serializers
 from core.models import SpecialDates
 

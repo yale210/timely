@@ -11,6 +11,7 @@ from core.models import Event, EventReminder
 
 class EventViewSetTests(APITestCase):
     """Test cases for event view set."""
+
     def setUp(self):
         """Set up shared test fixtures."""
         self.user = get_user_model().objects.create_user(

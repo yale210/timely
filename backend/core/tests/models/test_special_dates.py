@@ -9,6 +9,7 @@ from core.models import SpecialDates
 
 class SpecialDatesTests(TestCase):
     """Test cases for special dates."""
+
     def setUp(self):
         """Set up shared test fixtures."""
         self.user = get_user_model().objects.create_user(

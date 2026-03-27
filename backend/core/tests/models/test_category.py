@@ -9,6 +9,7 @@ from core.models import Category
 
 class CategoryTests(TestCase):
     """Test cases for category."""
+
     def setUp(self):
         """Set up shared test fixtures."""
         self.category = Category.objects.create(

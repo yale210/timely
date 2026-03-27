@@ -11,6 +11,7 @@ from django.utils import timezone
 
 class AssessmentModelTest(TestCase):
     """Test cases for assessment model test."""
+
     def test_assessment_creation(self):
         """Test assessment creation."""
         assessment = AssessmentFactory()

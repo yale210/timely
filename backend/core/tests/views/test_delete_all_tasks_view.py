@@ -11,6 +11,7 @@ from core.models import Task
 
 class DeleteAllTasksViewTests(TestCase):
     """Test cases for delete all tasks view."""
+
     def setUp(self):
         """Set up shared test fixtures."""
         self.client = APIClient()

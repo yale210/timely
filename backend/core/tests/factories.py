@@ -17,6 +17,7 @@ class UserFactory(factory.django.DjangoModelFactory):
 
     class Meta:
         """Test cases for meta."""
+
         model = User
 
     username = factory.Sequence(lambda n: f"user_{n}")
@@ -37,6 +38,7 @@ class AssessmentFactory(factory.django.DjangoModelFactory):
 
     class Meta:
         """Test cases for meta."""
+
         model = Assessment
 
     user = factory.SubFactory(UserFactory)
@@ -54,6 +56,7 @@ class CategoryFactory(factory.django.DjangoModelFactory):
 
     class Meta:
         """Test cases for meta."""
+
         model = Category
 
     user = factory.SubFactory(UserFactory)
@@ -66,6 +69,7 @@ class TaskFactory(factory.django.DjangoModelFactory):
 
     class Meta:
         """Test cases for meta."""
+
         model = Task
 
     user = factory.SubFactory(UserFactory)

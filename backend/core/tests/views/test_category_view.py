@@ -8,6 +8,7 @@ from core.models import Category
 
 class CategoryViewTests(APITestCase):
     """Test cases for category view."""
+
     def setUp(self):
         """Set up shared test fixtures."""
         self.user = UserFactory()

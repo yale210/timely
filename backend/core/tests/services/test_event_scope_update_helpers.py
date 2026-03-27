@@ -15,6 +15,7 @@ from core.services.event_scope_update_helpers import (
 
 class EventScopeUpdateHelperTests(TestCase):
     """Test cases for event scope update helper."""
+
     def setUp(self):
         """Set up shared test fixtures."""
         self.user = get_user_model().objects.create_user(

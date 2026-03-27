@@ -12,6 +12,7 @@ from core.models import Event
 
 class ExportViewTests(TestCase):
     """Test cases for export view."""
+
     def setUp(self):
         """Set up shared test fixtures."""
         self.client = APIClient()

@@ -21,6 +21,7 @@ from core.services.recurrence_instances import (
 
 class RecurrenceExpansionServiceTests(TestCase):
     """Test cases for recurrence expansion service."""
+
     def setUp(self):
         """Set up shared test fixtures."""
         self.user = get_user_model().objects.create_user(

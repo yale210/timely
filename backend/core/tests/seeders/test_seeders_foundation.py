@@ -49,6 +49,7 @@ from .common import SeederTestCase
 
 class SeederFoundationTests(SeederTestCase):
     """Test cases for seeder foundation."""
+
     def test_fixture_seeders_are_idempotent(self):
         """Test fixture seeders are idempotent."""
         self.seed_fixture_data()

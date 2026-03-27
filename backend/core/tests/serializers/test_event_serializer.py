@@ -11,6 +11,7 @@ from rest_framework.exceptions import ValidationError
 
 class EventSerializerTests(TestCase):
     """Test cases for event serializer."""
+
     def setUp(self):
         """Set up shared test fixtures."""
         self.user = get_user_model().objects.create_user(

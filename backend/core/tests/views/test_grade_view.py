@@ -13,6 +13,7 @@ from core.models import Grade, Category, Task
 
 class GradeViewTests(TestCase):
     """Test cases for grade view."""
+
     def setUp(self):
         """Set up shared test fixtures."""
         self.client = APIClient()

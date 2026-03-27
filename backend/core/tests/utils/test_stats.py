@@ -12,6 +12,7 @@ from core.utils.stats import calculate_weekly_stats, get_current_week_range
 
 class WeeklyStatsTests(TestCase):
     """Test cases for weekly stats."""
+
     def setUp(self):
         """Set up shared test fixtures."""
         self.User = get_user_model()

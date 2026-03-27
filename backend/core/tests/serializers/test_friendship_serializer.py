@@ -14,6 +14,7 @@ User = get_user_model()
 
 class FriendshipSerializerTests(TestCase):
     """Test cases for friendship serializer."""
+
     def setUp(self):
         """Set up shared test fixtures."""
         self.user = User.objects.create_user(

@@ -12,6 +12,7 @@ User = get_user_model()
 
 class PreferenceViewSetTests(APITestCase):
     """Test cases for preference view set."""
+
     def setUp(self):
         """Set up shared test fixtures."""
         self.user = User.objects.create_user(

@@ -12,6 +12,7 @@ from core.models import Event, PendingShareEvent, Task
 
 class ShareSendViewTests(APITestCase):
     """Test cases for share send view."""
+
     def setUp(self):
         """Set up shared test fixtures."""
         self.sender = get_user_model().objects.create_user(
@@ -169,6 +170,7 @@ class ShareSendViewTests(APITestCase):
 
 class ShareAcceptViewTests(APITestCase):
     """Test cases for share accept view."""
+
     def setUp(self):
         """Set up shared test fixtures."""
         self.sender = get_user_model().objects.create_user(
@@ -284,6 +286,7 @@ class ShareAcceptViewTests(APITestCase):
 
 class ShareEventsViewTests(APITestCase):
     """Test cases for share events view."""
+
     def setUp(self):
         """Set up shared test fixtures."""
         self.sender = get_user_model().objects.create_user(
@@ -356,6 +359,7 @@ class ShareEventsViewTests(APITestCase):
 
 class DeleteAllDataViewTests(APITestCase):
     """Test cases for delete all data view."""
+
     def setUp(self):
         """Set up shared test fixtures."""
         self.user = get_user_model().objects.create_user(
