@@ -249,6 +249,3 @@ class AssessmentSerializer(serializers.ModelSerializer):
 
         self._sync_linked_event(instance, effective_categories, event_details)
         return instance
-
-
-

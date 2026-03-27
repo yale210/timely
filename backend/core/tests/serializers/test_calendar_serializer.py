@@ -647,6 +647,3 @@ class CalendarSerializerTests(TestCase):
         )
         self.assertFalse(serializer.is_valid())
         self.assertIn("max_split_minutes", serializer.errors)
-
-
-

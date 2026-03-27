@@ -460,6 +460,3 @@ class EventViewSet(viewsets.ModelViewSet):
 
         """
         return Response({"server_time": timezone.now().isoformat()})
-
-
-

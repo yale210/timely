@@ -265,6 +265,3 @@ class AssessmentSerializerTests(TestCase):
         self.assertEqual(
             updated_assessment.linked_event.categories.first(), update_category
         )
-
-
-

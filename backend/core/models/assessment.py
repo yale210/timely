@@ -124,5 +124,3 @@ class Assessment(models.Model):
 
         if errors:
             raise ValidationError(errors)
-
-

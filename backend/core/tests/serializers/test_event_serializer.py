@@ -199,6 +199,3 @@ class EventSerializerTests(TestCase):
         self.assertTrue(serializer.is_valid(), serializer.errors)
         event.refresh_from_db()
         self.assertEqual(event.start_time, now)
-
-
-

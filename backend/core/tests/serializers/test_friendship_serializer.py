@@ -140,6 +140,3 @@ class FriendshipSerializerTests(TestCase):
         """Test get receiver avatar."""
         serializer = FriendshipSerializer()
         self.assertIsNone(serializer.get_receiver_avatar(self.friendship))
-
-
-

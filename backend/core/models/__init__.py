@@ -31,5 +31,3 @@ __all__ = [
     "ReminderDispatchLog",
     "PendingShareEvent",
 ]
-
-

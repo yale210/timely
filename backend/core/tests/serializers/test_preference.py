@@ -46,6 +46,3 @@ class PreferenceSerializerTests(TestCase):
         serializer.save()
         pref.refresh_from_db()
         self.assertEqual(pref.day_start, datetime.time(9, 0))
-
-
-

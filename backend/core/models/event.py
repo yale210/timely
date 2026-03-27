@@ -110,5 +110,3 @@ class Event(BaseEventModel):
             return max(math.ceil(diff.total_seconds() / 86400), 0)
 
         return 0
-
-

@@ -269,6 +269,3 @@ class ExpandedEventInstanceSerializer(serializers.Serializer):
     instance_id = serializers.CharField()
     is_split_series = serializers.BooleanField()
     split_from_event_id = serializers.IntegerField(allow_null=True, required=False)
-
-
-

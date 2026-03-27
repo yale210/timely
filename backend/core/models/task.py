@@ -115,5 +115,3 @@ class Task(models.Model):
                 "Maximum split block minutes must be greater than or equal to minimum split block minutes."
             )
         super().clean()
-
-

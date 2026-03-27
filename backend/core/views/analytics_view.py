@@ -54,6 +54,3 @@ class WeeklySummaryView(APIView):
         stats = calculate_weekly_stats(request.user, now=now_dt)
         serializer = WeeklySummarySerializer(stats)
         return Response(serializer.data)
-
-
-

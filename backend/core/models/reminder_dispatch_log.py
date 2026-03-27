@@ -24,5 +24,3 @@ class ReminderDispatchLog(models.Model):
                 name="unique_reminder_dispatch_for_occurrence",
             )
         ]
-
-

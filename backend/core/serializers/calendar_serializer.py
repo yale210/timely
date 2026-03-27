@@ -624,4 +624,3 @@ class CalendarResponseSerializer(serializers.ModelSerializer):
                 }
             )
         return attrs
-
