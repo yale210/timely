@@ -1,3 +1,5 @@
+"""Serializers for the core application."""
+
 from .assessment import AssessmentSerializer as AssessmentSerializer
 from .calendar import CalendarSerializer as CalendarSerializer
 from .grade import GradeSerializer as GradeSerializer
@@ -10,5 +12,4 @@ __all__ = [
     "GradeSerializer",
     "CategorySerializer",
     "FriendshipSerializer",
-    "AssessmentSerializer",
 ]
