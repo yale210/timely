@@ -13,6 +13,7 @@ User = get_user_model()
 
 class CoursePermissionTests(TestCase):
     """Test cases for course permission."""
+
     @classmethod
     def setUpTestData(cls):
         cls.teacher_user = User.objects.create_user(
@@ -45,7 +46,7 @@ class CoursePermissionTests(TestCase):
             description="Intro course",
             lead=cls.teacher,
         )
-    
+
     def setUp(self):
         """Set up shared test fixtures."""
         self.factory = APIRequestFactory()
