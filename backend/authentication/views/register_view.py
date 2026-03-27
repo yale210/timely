@@ -1,14 +1,17 @@
 """API view for new user account registration."""
 
+from django.contrib.auth import login
+from django.utils import timezone
 from drf_spectacular.utils import (
     extend_schema,
 )
+from knox.models import AuthToken
 from rest_framework import status
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from ..serializers import RegisterSerializer
+from ..serializers import RegisterSerializer, UserSerializer
 
 
 class RegisterView(APIView):
@@ -29,6 +32,16 @@ class RegisterView(APIView):
         """
         serializer = self.serializer_class(data=request.data)
         serializer.is_valid(raise_exception=True)
-        serializer.save()
+        user = serializer.save()
+        login(request, user, backend="django.contrib.auth.backends.ModelBackend")
+        user.last_login = timezone.now()
+        user.save(update_fields=["last_login"])
+        _, token = AuthToken.objects.create(user)
 
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(
+            {
+                "token": token,
+                "user": UserSerializer(user).data,
+            },
+            status=status.HTTP_201_CREATED,
+        )
