@@ -1,3 +1,5 @@
+"""Tests for scheduler schedule-tasks API behavior."""
+
 from datetime import datetime, timedelta, time
 
 from django.contrib.auth import get_user_model
@@ -10,26 +12,25 @@ from core.models import Event, Preference, Task
 from scheduler.views import ScheduleTasksAPIView
 
 
-class SchedulerViewsTests(APITestCase):
+class ScheduleTasksAPIViewTests(APITestCase):
+    """Test schedule task API behavior and helper methods."""
+
     def setUp(self):
+        """Create an authenticated user and resolve the schedule endpoint."""
         self.user = get_user_model().objects.create_user(
             username="scheduser", password="password123", email="sched@user.com"
         )
         self.client.force_authenticate(user=self.user)
         self.schedule_url = reverse("schedule-tasks")
-        self.unschedule_url = reverse("unschedule-tasks")
 
     def test_schedule_requires_auth(self):
+        """Verify anonymous callers cannot schedule tasks."""
         self.client.force_authenticate(user=None)
         response = self.client.post(self.schedule_url, {}, format="json")
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
-    def test_unschedule_requires_auth(self):
-        self.client.force_authenticate(user=None)
-        response = self.client.post(self.unschedule_url, {}, format="json")
-        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
-
     def test_schedule_success_updates_allocation_without_mutating_task_window(self):
+        """Verify successful scheduling updates allocations but not task bounds."""
         now = timezone.now()
         task = Task.objects.create(
             user=self.user,
@@ -56,6 +57,7 @@ class SchedulerViewsTests(APITestCase):
         self.assertEqual(task.deadline, now + timedelta(days=1))
 
     def test_schedule_split_creates_multiple_segments(self):
+        """Verify split scheduling can allocate a task across multiple days."""
         base_date = timezone.localdate() + timedelta(days=1)
         day1_start = timezone.make_aware(datetime.combine(base_date, time.min))
         day1_block_start = day1_start + timedelta(hours=1)
@@ -63,7 +65,6 @@ class SchedulerViewsTests(APITestCase):
         day2_start = timezone.make_aware(datetime.combine(day2, time.min))
         day2_block_start = day2_start + timedelta(hours=1)
 
-        # Block most of each day so only 1-hour slots remain at the start.
         Event.objects.create(
             user=self.user,
             title="Block Day 1",
@@ -105,38 +106,8 @@ class SchedulerViewsTests(APITestCase):
         self.assertGreaterEqual(len(task.allocation), 2)
         self.assertEqual(task.total_task_allocations, len(task.allocation))
 
-    def test_unschedule_resets_allocation_without_mutating_task_window(self):
-        now = timezone.now()
-        original_start_time = now - timedelta(hours=2)
-        original_deadline = now + timedelta(days=1)
-        task = Task.objects.create(
-            user=self.user,
-            title="Unschedule me",
-            description="",
-            estimated_minutes=30,
-            start_time=original_start_time,
-            deadline=original_deadline,
-            importance=5,
-            completed=False,
-            allocation=[
-                {
-                    "start": (now - timedelta(hours=2)).isoformat(),
-                    "end": (now - timedelta(hours=1, minutes=30)).isoformat(),
-                }
-            ],
-            total_task_allocations=1,
-        )
-
-        response = self.client.post(self.unschedule_url, {}, format="json")
-
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        task.refresh_from_db()
-        self.assertEqual(task.allocation, [])
-        self.assertEqual(task.total_task_allocations, 0)
-        self.assertEqual(task.start_time, original_start_time)
-        self.assertEqual(task.deadline, original_deadline)
-
     def test_schedule_uses_saved_preference_horizon_when_request_omits_it(self):
+        """Verify the saved preference horizon is used as the default search window."""
         base_date = timezone.localdate() + timedelta(days=1)
         Preference.objects.create(
             user=self.user,
@@ -182,9 +153,8 @@ class SchedulerViewsTests(APITestCase):
         task.refresh_from_db()
         self.assertEqual(task.total_task_allocations, 1)
 
-    def test_schedule_with_replace_existing_reschedules_without_separate_unschedule(
-        self,
-    ):
+    def test_schedule_with_replace_existing_reschedules_without_separate_unschedule(self):
+        """Verify replace-existing clears prior allocations before rescheduling."""
         now = timezone.now()
         original_start = now + timedelta(hours=1)
         Event.objects.create(
@@ -227,6 +197,7 @@ class SchedulerViewsTests(APITestCase):
         self.assertNotEqual(task.allocation[0]["start"], original_start.isoformat())
 
     def test_schedule_tasks_failure_results(self):
+        """Verify failed scheduler results are counted correctly in the response."""
         from unittest.mock import patch
 
         from scheduler.scheduler_types import ScheduleResult
@@ -252,6 +223,7 @@ class SchedulerViewsTests(APITestCase):
         self.assertEqual(response.data["failed_count"], 3)
 
     def test_clear_existing_allocations_only_resets_unlocked_incomplete_tasks(self):
+        """Verify only resettable tasks are cleared by the helper method."""
         other_user = get_user_model().objects.create_user(
             username="otheruser",
             password="password123",
@@ -328,6 +300,7 @@ class SchedulerViewsTests(APITestCase):
         self.assertEqual(other_user_task.allocation, allocation)
 
     def test_serialise_allocation_returns_iso_timestamps(self):
+        """Verify allocations are serialized to ISO timestamp dictionaries."""
         start = timezone.make_aware(datetime(2026, 3, 19, 9, 0))
         end = start + timedelta(minutes=30)
 
@@ -337,3 +310,4 @@ class SchedulerViewsTests(APITestCase):
             allocation,
             [{"start": start.isoformat(), "end": end.isoformat()}],
         )
+
