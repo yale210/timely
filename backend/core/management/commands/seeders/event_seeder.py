@@ -193,6 +193,11 @@ class EventSeeder(BaseSeeder):
         self._create_random_single_event(user)
 
     def _create_random_recurring_event(self, user):
+        """Generate a recurring event with randomized dates and recurrence.
+
+        Args:
+            user (User): The user that should own the generated event.
+        """
         start = timezone.make_aware(self.faker.date_time())
         recurrence_end = (start + timedelta(random.randint(0, 100))).date()
         self._create_event(
@@ -210,6 +215,11 @@ class EventSeeder(BaseSeeder):
         )
 
     def _create_random_single_event(self, user):
+        """Generate a one-off event with a bounded random duration.
+
+        Args:
+            user (User): The user that should own the generated event.
+        """
         start = timezone.make_aware(self.faker.date_time())
         self._create_event(
             {
@@ -226,6 +236,20 @@ class EventSeeder(BaseSeeder):
     def _build_random_event_fields(
         self, user, start, end, recurrence_interval, recurrence_end
     ):
+        """Build the payload used to persist generated event fixtures.
+
+        Args:
+            user (User): The event owner.
+            start (datetime): The event start datetime.
+            end (datetime): The event end datetime.
+            recurrence_interval (str | None): The recurrence cadence when the
+                event should repeat.
+            recurrence_end (date | None): The date when recurrence should stop.
+
+        Returns:
+            dict: Event field values in the fixture format consumed by the create
+                helper.
+        """
         return {
             "user": user.id,
             "categories": [self._get_or_create_random_category(user).id],

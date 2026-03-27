@@ -87,6 +87,11 @@ class AssessmentSeeder(BaseSeeder):
 
     @staticmethod
     def _random_assessment_type():
+        """Choose a realistic assessment type for generated seed data.
+
+        Returns:
+            str: One of the supported assessment type values.
+        """
         return random.choice(
             [
                 "EXAM",
@@ -102,6 +107,15 @@ class AssessmentSeeder(BaseSeeder):
 
     @staticmethod
     def _get_random_unlinked_event(user):
+        """Find a candidate event that can be linked to a generated assessment.
+
+        Args:
+            user (User): The user whose event pool should be searched.
+
+        Returns:
+            Event | None: An unlinked event for the user, or None when no
+                suitable event exists.
+        """
         return (
             Event.objects.filter(user=user, assessment__isnull=True)
             .order_by("?")
@@ -109,6 +123,15 @@ class AssessmentSeeder(BaseSeeder):
         )
 
     def _build_random_assessment_fields(self, temporary_user):
+        """Assemble seed payload fields for a generated assessment record.
+
+        Args:
+            temporary_user (User): The user that should own the generated data.
+
+        Returns:
+            dict: Assessment field values in the fixture format consumed by the
+                create helpers.
+        """
         return {
             "user": temporary_user.id,
             "title": self.faker.sentence(),
