@@ -80,49 +80,46 @@ class AssessmentSeeder(BaseSeeder):
         due date, weighting, etc.) and attempts to link it to an available
         event for that user.
         """
-        User = get_user_model()
-        # Randomly select a user to own this assessment
-        temporary_user = User.objects.order_by("?").first()
-        if temporary_user is None:
-            # Fallback: create a new user if the database is empty
-            temporary_user = User.objects.create_user(
-                username=self.faker.user_name(),
-                email=self.faker.email(),
-                password="thomas123",
-            )
-
-        # Build assessment data with randomized fields
+        temporary_user = self._get_or_create_random_user()
         self._create_assessment(
-            {
-                "fields": {
-                    "user": temporary_user.id,
-                    "title": self.faker.sentence(),
-                    "assessment_type": random.choice(
-                        [
-                            "EXAM",
-                            "COURSEWORK",
-                            "FORMATIVE",
-                            "SUMMATIVE",
-                            "OTHER",
-                            "QUIZ",
-                            "PRESENTATION",
-                            "PRACTICAL",
-                        ]
-                    ),
-                    "due_date": timezone.make_aware(self.faker.date_time()),
-                    "length_of_assessment": random.randint(1, 300),
-                    "weighting_of_assessment": random.randint(1, 100),
-                    "notes": self.faker.sentence(),
-                    "reminder_offset": random.randint(1, 100),
-                    # Link to a random event owned by the user that isn't already linked
-                    "linked_event": Event.objects.filter(
-                        user=temporary_user, assessment__isnull=True
-                    )
-                    .order_by("?")
-                    .first(),
-                }
-            }
+            {"fields": self._build_random_assessment_fields(temporary_user)}
         )
+
+    @staticmethod
+    def _random_assessment_type():
+        return random.choice(
+            [
+                "EXAM",
+                "COURSEWORK",
+                "FORMATIVE",
+                "SUMMATIVE",
+                "OTHER",
+                "QUIZ",
+                "PRESENTATION",
+                "PRACTICAL",
+            ]
+        )
+
+    @staticmethod
+    def _get_random_unlinked_event(user):
+        return (
+            Event.objects.filter(user=user, assessment__isnull=True)
+            .order_by("?")
+            .first()
+        )
+
+    def _build_random_assessment_fields(self, temporary_user):
+        return {
+            "user": temporary_user.id,
+            "title": self.faker.sentence(),
+            "assessment_type": self._random_assessment_type(),
+            "due_date": timezone.make_aware(self.faker.date_time()),
+            "length_of_assessment": random.randint(1, 300),
+            "weighting_of_assessment": random.randint(1, 100),
+            "notes": self.faker.sentence(),
+            "reminder_offset": random.randint(1, 100),
+            "linked_event": self._get_random_unlinked_event(temporary_user),
+        }
 
     def _populate_random_assessment_event(self):
         """Generate a single random event record to be used for assessments.

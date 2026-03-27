@@ -185,56 +185,61 @@ class EventSeeder(BaseSeeder):
             data (dict): A dictionary containing user and category metadata.
 
         """
-        # Determine recurrence randomly
-        recurring = random.randint(0, 1) == 1
         user = self._get_or_create_random_user()
+        if random.randint(0, 1) == 1:
+            self._create_random_recurring_event(user)
+            return
 
-        if recurring:
-            start = timezone.make_aware(self.faker.date_time())
-            self._create_event(
-                {
-                    "fields": {
-                        "user": user.id,
-                        "categories": [self._get_or_create_random_category(user).id],
-                        "title": self.faker.sentence(),
-                        "description": self.faker.sentence(),
-                        "location": self.faker.word(),
-                        "start_time": start,
-                        "end_time": start + timedelta(random.randint(0, 100)),
-                        "recurrence_interval": random.choice(
-                            ["daily", "weekly", "monthly", "yearly"]
-                        ),
-                        "recurrence_end": (
-                            start + timedelta(random.randint(0, 100))
-                        ).date(),
-                        "exception_dates": [],
-                        "split_from_event": None,
-                        "colour": self.faker.hex_color(),
-                    }
-                }
-            )
-        else:
-            start = timezone.make_aware(self.faker.date_time())
-            end = start + timedelta(random.randint(0, 60))
+        self._create_random_single_event(user)
 
-            self._create_event(
-                {
-                    "fields": {
-                        "user": user.id,
-                        "categories": [self._get_or_create_random_category(user).id],
-                        "title": self.faker.sentence(),
-                        "description": self.faker.sentence(),
-                        "location": self.faker.word(),
-                        "start_time": start,
-                        "end_time": end,
-                        "recurrence_interval": None,
-                        "recurrence_end": None,
-                        "exception_dates": [],
-                        "split_from_event": None,
-                        "colour": self.faker.hex_color(),
-                    }
-                }
-            )
+    def _create_random_recurring_event(self, user):
+        start = timezone.make_aware(self.faker.date_time())
+        recurrence_end = (start + timedelta(random.randint(0, 100))).date()
+        self._create_event(
+            {
+                "fields": self._build_random_event_fields(
+                    user=user,
+                    start=start,
+                    end=start + timedelta(random.randint(0, 100)),
+                    recurrence_interval=random.choice(
+                        ["daily", "weekly", "monthly", "yearly"]
+                    ),
+                    recurrence_end=recurrence_end,
+                )
+            }
+        )
+
+    def _create_random_single_event(self, user):
+        start = timezone.make_aware(self.faker.date_time())
+        self._create_event(
+            {
+                "fields": self._build_random_event_fields(
+                    user=user,
+                    start=start,
+                    end=start + timedelta(random.randint(0, 60)),
+                    recurrence_interval=None,
+                    recurrence_end=None,
+                )
+            }
+        )
+
+    def _build_random_event_fields(
+        self, user, start, end, recurrence_interval, recurrence_end
+    ):
+        return {
+            "user": user.id,
+            "categories": [self._get_or_create_random_category(user).id],
+            "title": self.faker.sentence(),
+            "description": self.faker.sentence(),
+            "location": self.faker.word(),
+            "start_time": start,
+            "end_time": end,
+            "recurrence_interval": recurrence_interval,
+            "recurrence_end": recurrence_end,
+            "exception_dates": [],
+            "split_from_event": None,
+            "colour": self.faker.hex_color(),
+        }
 
     def _random_time(self):
         """Generate a random `datetime.time` object.

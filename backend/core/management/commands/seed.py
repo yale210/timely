@@ -1,6 +1,7 @@
 """Management command to seed the database with initial data.
+
 This calls the smaller individual seeder files.
-python manage.py seed
+python manage.py seed.
 """
 
 from django.core.management.base import BaseCommand

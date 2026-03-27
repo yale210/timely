@@ -1,6 +1,7 @@
 """Management command to unseed the database with initial data.
+
 This calls the smaller individual seeder files.
-python manage.py unseed
+python manage.py unseed.
 """
 
 from django.contrib.auth import get_user_model

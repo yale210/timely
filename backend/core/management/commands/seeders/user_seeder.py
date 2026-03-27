@@ -58,10 +58,6 @@ class UserSeeder(BaseSeeder):
             data (dict): A dictionary containing user field metadata, including
                 username, email, and password.
 
-        Returns:
-            None: Returns None if a user with the same username or email
-                already exists.
-
         """
         User = get_user_model()
 
