@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 __all__ = [
     "Course",
     "CourseEnrollment",
@@ -8,9 +7,6 @@ __all__ = [
     "Student",
     "Teacher",
 ]
-=======
-"""Model exports for the courses application."""
->>>>>>> origin/main
 
 from courses.models.course import (
     Course,
@@ -19,18 +15,5 @@ from courses.models.course import (
     CourseJoinCode,
     CourseStaff,
 )
-<<<<<<< HEAD
 from courses.models.student import Student
 from courses.models.teacher import Teacher
-=======
-
-__all__ = [
-    "Course",
-    "Teacher",
-    "CourseEnrollment",
-    "CourseEvent",
-    "Student",
-    "CourseStaff",
-    "CourseJoinCode",
-]
->>>>>>> origin/main

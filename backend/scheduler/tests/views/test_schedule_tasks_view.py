@@ -1,10 +1,4 @@
-<<<<<<< HEAD:backend/scheduler/tests/test_views.py
 from datetime import datetime, time, timedelta
-=======
-"""Tests for scheduler schedule-tasks API behavior."""
-
-from datetime import datetime, timedelta, time
->>>>>>> origin/main:backend/scheduler/tests/views/test_schedule_tasks_view.py
 
 from django.contrib.auth import get_user_model
 from django.urls import reverse

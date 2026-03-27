@@ -1,9 +1,3 @@
-<<<<<<< HEAD
-=======
-"""Tests for the student model."""
-
-from courses.models import Student
->>>>>>> origin/main
 from django.contrib.auth import get_user_model
 from django.test import TestCase
 

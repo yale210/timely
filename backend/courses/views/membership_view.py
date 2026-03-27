@@ -1,8 +1,4 @@
-<<<<<<< HEAD:backend/courses/views/membership.py
 from secrets import token_urlsafe
-=======
-"""Course membership view mixins."""
->>>>>>> origin/main:backend/courses/views/membership_view.py
 
 from django.utils import timezone
 from rest_framework import status

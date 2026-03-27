@@ -25,7 +25,7 @@ from core.views.share_accept_view import ShareAcceptView
 from core.views.share_events_view import ShareEventsView
 from core.views.share_send_view import ShareSendView
 from courses.views import CourseViewSet
-from courses.views.teacher import TeacherView
+from courses.views.teacher_view import TeacherView
 from scheduler.views import ScheduleTasksAPIView, UnscheduleTasksAPIView
 
 # Register the core REST resources under the shared ``/api/`` prefix.

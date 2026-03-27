@@ -41,7 +41,7 @@ class EventSeeder(BaseSeeder):
         self._create_fixture_event()
         # Generate random events across various users
         for _ in range(750):
-            self._populate_random_event()
+            self._populate_random_event(None)
 
     def _create_fixture_event(self):
         """Load and create event instances from predefined fixtures.

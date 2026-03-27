@@ -5,13 +5,7 @@ from django.test import TestCase
 from rest_framework.test import APIRequestFactory
 
 from courses.models import Course, CourseEnrollment, CourseStaff, Student, Teacher
-<<<<<<< HEAD:backend/courses/tests/permissions/test_permissions.py
-from courses.permissions.course import CoursePermission
-from courses.permissions.TeacherPermission import IsTeacher
-=======
 from courses.permissions.course_permission import CoursePermission
-
->>>>>>> origin/main:backend/courses/tests/permissions/test_course_permission.py
 
 User = get_user_model()
 
