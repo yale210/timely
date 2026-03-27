@@ -22,14 +22,16 @@ vi.mock("@/components/settings/ThemeSection", () => ({
 interface PrivacySettingsProps {
   onDeleteEvents: () => void;
   onDeleteTasks: () => void;
+  onDeleteAccount: () => void;
 }
 
 vi.mock("@/components/settings/PrivacySection", () => ({
-  default: ({onDeleteEvents, onDeleteTasks}: PrivacySettingsProps) => (
+  default: ({onDeleteEvents, onDeleteTasks, onDeleteAccount}: PrivacySettingsProps) => (
   <div>
   <div>privacy-section</div>
   <button onClick={onDeleteEvents}>Delete Events</button>
   <button onClick={onDeleteTasks}>Delete Tasks</button>
+  <button onClick={onDeleteAccount}>Delete Tasks</button>
   </div>
   ),
 }));
