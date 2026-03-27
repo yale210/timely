@@ -1,6 +1,6 @@
 import { act, renderHook, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { useCalendar } from "@/hooks/calendar/useCalendar";
+import { isOutsidePreferredDayWindow, useCalendar } from "@/hooks/calendar/useCalendar";
 import * as eventService from "@/services/eventService";
 import * as categoryService from "@/services/categoryService";
 import * as schedulerService from "@/services/schedulerService";
@@ -188,5 +188,36 @@ describe("useCalendar", () => {
 
     expect(categoryService.deleteCategory).toHaveBeenCalledWith(7);
     expect(result.current.state.categories).toHaveLength(0);
+  });
+});
+
+describe("isOutsidePreferredDayWindow", () => {
+  it("evaluates slots using the preference timezone instead of the browser timezone", () => {
+    const preference = {
+      id: 1,
+      timezone: "America/New_York",
+      day_start: "08:00:00",
+      day_end: "22:00:00",
+      day_schedule: [
+        { day: 1, start: "08:00", end: "22:00" },
+        { day: 2, start: "08:00", end: "22:00" },
+        { day: 3, start: "08:00", end: "22:00" },
+        { day: 4, start: "08:00", end: "22:00" },
+        { day: 5, start: "08:00", end: "22:00" },
+        { day: 6, start: "08:00", end: "22:00" },
+        { day: 7, start: "08:00", end: "22:00" },
+      ],
+      max_hours_study_per_day: 4,
+      max_days_ahead: 7,
+      drag_snap_minutes: 15,
+      days_off: [],
+    } as never;
+
+    expect(
+      isOutsidePreferredDayWindow(new Date("2026-03-27T12:00:00.000Z"), preference),
+    ).toBe(false);
+    expect(
+      isOutsidePreferredDayWindow(new Date("2026-03-27T10:00:00.000Z"), preference),
+    ).toBe(true);
   });
 });

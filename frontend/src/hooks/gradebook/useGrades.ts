@@ -32,10 +32,16 @@ const filterByCategory = (grade: Grade, categoryId: number | null) =>
   categoryId === null ? true : grade.category === categoryId
 
 const filterByPerformance = (grade: Grade, filter: GradePerformanceFilter) => {
-  if (filter === "all") return true
-  if (filter === "excellent") return grade.percentage >= 85
-  if (filter === "good") return grade.percentage >= 55 && grade.percentage < 85
-  return grade.percentage < 55
+  switch (filter) {
+    case "all":
+      return true
+    case "excellent":
+      return grade.percentage >= 85
+    case "good":
+      return grade.percentage >= 55 && grade.percentage < 85
+    default:
+      return grade.percentage < 55
+  }
 }
 
 const filterBySearch = (grade: Grade, search: string) => {
@@ -48,19 +54,18 @@ const filterBySearch = (grade: Grade, search: string) => {
 }
 
 const sortGrades = (left: Grade, right: Grade, sortBy: GradeSortOption) => {
-  if (sortBy === "date_asc") {
-    return left.date_achieved.localeCompare(right.date_achieved)
+  switch (sortBy) {
+    case "date_asc":
+      return left.date_achieved.localeCompare(right.date_achieved)
+    case "percentage_desc":
+      return right.percentage - left.percentage
+    case "percentage_asc":
+      return left.percentage - right.percentage
+    case "name_asc":
+      return left.name.localeCompare(right.name)
+    default:
+      return right.date_achieved.localeCompare(left.date_achieved)
   }
-  if (sortBy === "percentage_desc") {
-    return right.percentage - left.percentage
-  }
-  if (sortBy === "percentage_asc") {
-    return left.percentage - right.percentage
-  }
-  if (sortBy === "name_asc") {
-    return left.name.localeCompare(right.name)
-  }
-  return right.date_achieved.localeCompare(left.date_achieved)
 }
 
 const useGradesState = () => {

@@ -8,6 +8,8 @@ import PrivacySection from "@/components/settings/PrivacySection";
 import type { UseSettingsReturn } from "@/hooks/settings/useSettings";
 import { useProfileSettings } from "@/hooks/settings/useProfileSettings";
 import { makeMyTeacherProfile, unregisterMyTeacherProfile } from "@/services/courseService.ts";
+import * as exportService from "@/services/exportService";
+import * as importService from "@/services/importService";
 import { getSchedulingDayMaxMinutes } from "@/utils/schedulingLimits";
 
 interface SettingsContentProps {
@@ -44,6 +46,9 @@ const SettingsContent = ({
   const [unregisteringTeacher, setUnregisteringTeacher] = useState(false);
   const [makeTeacherError, setMakeTeacherError] = useState<string | null>(null);
   const [makeTeacherSuccess, setMakeTeacherSuccess] = useState<string | null>(null);
+  const [isExportingCalendar, setIsExportingCalendar] = useState(false);
+  const [isImportingCalendar, setIsImportingCalendar] = useState(false);
+  const [calendarDataError, setCalendarDataError] = useState<string | null>(null);
 
   const featureRows = useMemo(() => ([
     {
@@ -131,6 +136,44 @@ const SettingsContent = ({
       setMakeTeacherError("Unable to unregister you as a teacher.");
     } finally {
       setUnregisteringTeacher(false);
+    }
+  };
+
+  const exportCalendarData = async () => {
+    if (isExportingCalendar) return;
+
+    setCalendarDataError(null);
+    setIsExportingCalendar(true);
+    try {
+      const response = await exportService.exportEvents();
+      const url = window.URL.createObjectURL(new Blob([response]));
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute("download", "events.txt");
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+    } catch (error: unknown) {
+      console.error("Failed to export calendar data:", error);
+      setCalendarDataError("Unable to export calendar data.");
+    } finally {
+      setIsExportingCalendar(false);
+    }
+  };
+
+  const importCalendarData = async (file: File) => {
+    if (isImportingCalendar) return;
+
+    setCalendarDataError(null);
+    setIsImportingCalendar(true);
+    try {
+      await importService.importEvents(file);
+    } catch (error: unknown) {
+      console.error("Failed to import calendar data:", error);
+      setCalendarDataError("Unable to import calendar data.");
+    } finally {
+      setIsImportingCalendar(false);
     }
   };
 
@@ -354,6 +397,55 @@ const SettingsContent = ({
                             {state.fieldErrors.drag_snap_minutes.join(" ")}
                           </div>
                         ) : null}
+                      </div>
+                      <div className="rounded-lg border border-gray-200 bg-white px-4 py-3 shadow-sm">
+                        <p className="text-sm font-semibold text-gray-900">Calendar data</p>
+                        <p className="mt-1 text-xs text-gray-500">
+                          Import or export your calendar events.
+                        </p>
+                        {calendarDataError ? (
+                          <div className="mt-2 rounded-md bg-red-50 px-3 py-2 text-xs text-red-700">
+                            {calendarDataError}
+                          </div>
+                        ) : null}
+                        <div className="mt-3 flex flex-wrap gap-3">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              void exportCalendarData();
+                            }}
+                            disabled={isExportingCalendar}
+                            className={`rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
+                              isExportingCalendar
+                                ? "bg-gray-200 text-gray-500 cursor-not-allowed"
+                                : "border border-gray-300 bg-white text-gray-900 hover:bg-gray-100"
+                            }`}
+                          >
+                            {isExportingCalendar ? "Exporting..." : "Export events"}
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const input = document.createElement("input");
+                              input.type = "file";
+                              input.onchange = (event) => {
+                                const target = event.target;
+                                if (target instanceof HTMLInputElement && target.files?.[0]) {
+                                  void importCalendarData(target.files[0]);
+                                }
+                              };
+                              input.click();
+                            }}
+                            disabled={isImportingCalendar}
+                            className={`rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
+                              isImportingCalendar
+                                ? "bg-gray-200 text-gray-500 cursor-not-allowed"
+                                : "border border-gray-300 bg-white text-gray-900 hover:bg-gray-100"
+                            }`}
+                          >
+                            {isImportingCalendar ? "Importing..." : "Import events"}
+                          </button>
+                        </div>
                       </div>
                       <div className="flex justify-end">
                         <button

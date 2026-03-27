@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom"
 
 interface SignupPayload {
   email: string
+  name: string
   password: string
   password2: string
   username: string
@@ -13,12 +14,14 @@ const PASSWORD_MISMATCH_ERROR = "Try again, your passwords did not match."
 const SIGNUP_FAILED_ERROR = "Signup failed"
 
 const buildSignupPayload = (
+  name: string,
   email: string,
   username: string,
   password: string,
   confirmPassword: string,
 ): SignupPayload => ({
   email,
+  name,
   password,
   password2: confirmPassword,
   username,
@@ -73,6 +76,7 @@ const getSignupErrorMessage = (error: unknown): string => {
  * @returns The rendered signup page component.
  */
 export default function SignupForm({ children }: { children?: ReactNode }) {
+  const [name, setName] = useState("")
   const [email, setEmail] = useState("")
   const [username, setUsername] = useState("")
   const [password, setPassword] = useState("")
@@ -95,9 +99,9 @@ export default function SignupForm({ children }: { children?: ReactNode }) {
 
     try {
       await authService.register(
-        buildSignupPayload(email, username, password, confirmPassword),
+        buildSignupPayload(name, email, username, password, confirmPassword),
       )
-      void navigate("/login")
+      void navigate("/dashboard")
     } catch (err: unknown) {
       setError(getSignupErrorMessage(err))
     } finally {
@@ -129,6 +133,20 @@ export default function SignupForm({ children }: { children?: ReactNode }) {
               )}
 
               {/* same fields */}
+              <div>
+                <label htmlFor="signup-name" className="block text-sm font-medium text-gray-900">Name</label>
+                <div className="mt-2">
+                  <input
+                    id="signup-name"
+                    type="text"
+                    required
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    className="block w-full rounded-md bg-white px-3 py-1.5 text-gray-900 outline outline-gray-300 focus:outline-2 focus:outline-indigo-600"
+                  />
+                </div>
+              </div>
+
               <div>
                 <label htmlFor="signup-username" className="block text-sm font-medium text-gray-900">Username</label>
                 <div className="mt-2">
