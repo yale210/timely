@@ -36,10 +36,7 @@ class CourseCrudMixin(CourseViewSetBase):
             return Response(CourseSerializer(courses, many=True).data, status=200)
 
         if not student and not teacher:
-            return Response(
-                {"detail": "Courses not found for the current user."},
-                status=404,
-            )
+            return Response([], status=200)
 
         courses = (
             Course.objects.filter(
