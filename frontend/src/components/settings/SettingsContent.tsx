@@ -200,6 +200,7 @@ const SettingsContent = ({
             <div className={sectionContentClass}>
               {state.activeSection === "preferences" ? (
                 <PreferencesSection
+                  key={state.preference?.id ?? "preferences"}
                   pref={state.preference}
                   prefLoading={loading.preference}
                   prefSaving={loading.saving}

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Tooltip } from "@/components/ui";
 import type { Preference } from "@/types";
 import { getAvailableSchedulingDayMaxMinutes, getSchedulingDayMaxMinutes } from "@/utils/schedulingLimits";
@@ -99,23 +99,14 @@ const PreferencesSection = ({
     return schedule.every((entry) => entry.start === first.start && entry.end === first.end);
   }, [pref?.day_schedule]);
   const [useSetAllDays, setUseSetAllDays] = useState(isUniformSchedule);
-  const [maxHoursInput, setMaxHoursInput] = useState("");
-  const [maxDaysAheadInput, setMaxDaysAheadInput] = useState("");
+  const [maxHoursInput, setMaxHoursInput] = useState(
+    pref ? String(pref.max_hours_study_per_day ?? 0) : "",
+  );
+  const [maxDaysAheadInput, setMaxDaysAheadInput] = useState(
+    pref ? String(pref.max_days_ahead >= 365 ? 30 : pref.max_days_ahead) : "",
+  );
   const hasBlockingErrors = Object.keys(liveFieldErrors).length > 0;
   const maxTaskHoursLimit = Math.max(0, Math.floor(getAvailableSchedulingDayMaxMinutes(pref) / 60));
-
-  const lastPrefIdRef = useRef<number | null>(null);
-  useEffect(() => {
-    if (!pref) return;
-    const isNewPref = lastPrefIdRef.current !== pref.id;
-    if (isNewPref) {
-      lastPrefIdRef.current = pref.id;
-      // Only reset the toggle when a different preference record loads, not on every field edit.
-      setUseSetAllDays(isUniformSchedule);
-    }
-    setMaxHoursInput(String(pref.max_hours_study_per_day ?? 0));
-    setMaxDaysAheadInput(String(pref.max_days_ahead >= 365 ? 30 : pref.max_days_ahead));
-  }, [pref, isUniformSchedule]);
 
   useEffect(() => {
     if (!pref || !useSetAllDays || pref.days_off.length === 0) {

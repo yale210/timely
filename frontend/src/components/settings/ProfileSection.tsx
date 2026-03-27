@@ -24,6 +24,8 @@ interface ProfileSectionProps {
   onToggleTeacher?: (nextValue: boolean) => void;
 }
 
+const noopToggleTeacher = (_nextValue: boolean): void => undefined;
+
 const ProfileSection = ({
   profile,
   loading,
@@ -44,7 +46,7 @@ const ProfileSection = ({
   onChange,
   onSave,
   onAvatarChange,
-  onToggleTeacher = () => {},
+  onToggleTeacher = noopToggleTeacher,
 }: ProfileSectionProps) => {
   if (loading) {
     return <p className="text-sm text-gray-500">Loading...</p>;
@@ -56,6 +58,9 @@ const ProfileSection = ({
 
   const updateField = <K extends keyof Profile>(key: K, value: Profile[K]) => {
     onChange({ ...profile, [key]: value });
+  };
+  const handleTeacherToggle = () => {
+    onToggleTeacher(!isTeacher);
   };
 
   const today = new Date();
@@ -172,7 +177,7 @@ const ProfileSection = ({
               </div>
               <button
                 type="button"
-                onClick={() => onToggleTeacher(!isTeacher)}
+                onClick={handleTeacherToggle}
                 disabled={
                   teacherActionLoading.teacherStatus
                   || teacherActionLoading.makingTeacher

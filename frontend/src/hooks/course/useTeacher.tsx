@@ -72,7 +72,11 @@ export function useTeacher(): UseTeacherResult {
 
   useEffect(() => {
     let cancelled = false;
-    void loadTeacher();
+    queueMicrotask(() => {
+      if (!cancelled) {
+        void loadTeacher();
+      }
+    });
 
     const handleAuthChange = () => {
       if (!cancelled) {
