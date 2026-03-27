@@ -29,8 +29,12 @@ const getFaviconLink = (): HTMLLinkElement => {
  * Falls back to the default logo if the themed favicon cannot be generated.
  */
 export const updateThemeFavicon = (): void => {
-  const primaryColor = getComputedStyle(document.documentElement)
-    .getPropertyValue("--primary")
+  const root = document.documentElement;
+  const faviconVariable = root.dataset.theme === "paper"
+    ? "--background"
+    : "--primary";
+  const primaryColor = getComputedStyle(root)
+    .getPropertyValue(faviconVariable)
     .trim();
 
   if (!primaryColor) {
