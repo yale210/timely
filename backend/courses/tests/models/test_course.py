@@ -13,12 +13,12 @@ from courses.models import CourseEvent, Teacher, Course, Student, CourseEnrollme
 class CourseModelTests(TestCase):
     """Tests for the Course model."""
 
-    def setUp(self):
-        """Set up shared test fixtures."""
-        self.teacher_user = get_user_model().objects.create_user(
+    @classmethod
+    def setUpTestData(cls):
+        cls.teacher_user = get_user_model().objects.create_user(
             username="teacher", password="testpass123", email="teacher@test.com"
         )
-        self.teacher = Teacher.objects.create(user=self.teacher_user)
+        cls.teacher = Teacher.objects.create(user=cls.teacher_user)
 
     def test_course_creation(self):
         """Test basic course creation."""

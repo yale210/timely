@@ -42,6 +42,8 @@ const getTimezoneOptions = (): string[] => {
   ];
 };
 
+const TIMEZONE_OPTIONS = getTimezoneOptions();
+
 const buildDefaultSchedule = (start: string, end: string) =>
   dayLabels.map(([day]) => ({ day, start, end }));
 
@@ -60,7 +62,7 @@ const PreferencesSection = ({
   const [specialDateValue, setSpecialDateValue] = useState("");
   const [specialDateLabel, setSpecialDateLabel] = useState("");
   const [isAddingSpecialDate, setIsAddingSpecialDate] = useState(false);
-  const timezoneOptions = useMemo(() => getTimezoneOptions(), []);
+  const timezoneOptions = TIMEZONE_OPTIONS;
   const isUniformSchedule = useMemo(() => {
     const schedule = pref?.day_schedule ?? [];
     if (schedule.length === 0) return false;

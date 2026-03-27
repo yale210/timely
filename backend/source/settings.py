@@ -285,13 +285,14 @@ TESTING = "test" in sys.argv or os.getenv("TESTING") == "True"
 if TESTING:
     CELERY_TASK_ALWAYS_EAGER = True
     CELERY_TASK_EAGER_PROPAGATES = True
-
-if TESTING:
     CHANNEL_LAYERS = {
         "default": {
             "BACKEND": "channels.layers.InMemoryChannelLayer",
         },
     }
+    PASSWORD_HASHERS = [
+        "django.contrib.auth.hashers.MD5PasswordHasher",
+    ]
 else:
     CHANNEL_LAYERS = {
         "default": {

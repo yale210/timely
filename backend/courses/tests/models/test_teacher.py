@@ -9,9 +9,9 @@ from django.test import TestCase
 class TeacherModelTests(TestCase):
     """Tests for the Teacher model."""
 
-    def setUp(self):
-        """Set up shared test fixtures."""
-        self.user = get_user_model().objects.create_user(
+    @classmethod
+    def setUpTestData(cls):
+        cls.user = get_user_model().objects.create_user(
             username="teacher_user", password="testpass123", email="teacher@test.com"
         )
 
