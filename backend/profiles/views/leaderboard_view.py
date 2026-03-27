@@ -60,7 +60,9 @@ class LeaderboardAPIView(GenericAPIView):
                 friends_ids.append(entries.sender)
 
         friends_profiles = Profile.objects.filter(user__in=friends_ids).order_by(
-            "-level"
+            "-level",
+            "-xp",
+            "name"
         )
         serializer = self.serializer_class(friends_profiles, many=True)
         return Response(serializer.data)
