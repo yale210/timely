@@ -88,6 +88,8 @@ class Assessment(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
+        """Database ordering for assessment timelines and review queues."""
+
         ordering = ["due_date"]
 
     def __str__(self):
