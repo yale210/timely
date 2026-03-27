@@ -5,7 +5,6 @@ from rest_framework import serializers
 
 from core.models import Friendship
 
-
 User = get_user_model()
 
 
@@ -76,12 +75,10 @@ class FriendshipSerializer(serializers.ModelSerializer):
 
     def _get_profile(self, user):
         """Return the related profile object for a friendship user if present."""
-
         return getattr(user, "user_profile", None)
 
     def _get_profile_name(self, user):
         """Return the preferred display name for a friendship user."""
-
         profile = self._get_profile(user)
         if profile and profile.name:
             return profile.name
@@ -89,7 +86,6 @@ class FriendshipSerializer(serializers.ModelSerializer):
 
     def _get_avatar_url(self, user):
         """Build the avatar URL for a friendship user when available."""
-
         profile = self._get_profile(user)
         if not profile or not getattr(profile, "avatar", None):
             return None

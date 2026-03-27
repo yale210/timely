@@ -1,6 +1,7 @@
 """Event reminder model definition."""
 
 from datetime import timedelta
+
 from django.db import models
 
 

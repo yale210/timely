@@ -1,10 +1,10 @@
 """View for accepting or rejecting shared event requests."""
 
 from rest_framework import permissions
-from rest_framework.views import APIView
 from rest_framework.response import Response
-from core.models import Event
-from core.models import PendingShareEvent
+from rest_framework.views import APIView
+
+from core.models import Event, PendingShareEvent
 
 
 class ShareAcceptView(APIView):

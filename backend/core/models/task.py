@@ -1,12 +1,12 @@
 """Task model definitions."""
 
-from django.db import models
-from django.utils.timezone import now
 from django.conf import settings
 from django.core.exceptions import ValidationError
-from .category import Category
-from django.core.validators import MinValueValidator, MaxValueValidator
+from django.core.validators import MaxValueValidator, MinValueValidator
+from django.db import models
+from django.utils.timezone import now
 
+from .category import Category
 from .importance_choices import ImportanceChoices
 
 

@@ -1,22 +1,19 @@
-"""Model exports for the courses application."""
-
-from courses.models.student import Student
-from courses.models.teacher import Teacher
+__all__ = [
+    "Course",
+    "CourseEnrollment",
+    "CourseEvent",
+    "CourseJoinCode",
+    "CourseStaff",
+    "Student",
+    "Teacher",
+]
 
 from courses.models.course import (
     Course,
     CourseEnrollment,
     CourseEvent,
-    CourseStaff,
     CourseJoinCode,
+    CourseStaff,
 )
-
-__all__ = [
-    "Course",
-    "Teacher",
-    "CourseEnrollment",
-    "CourseEvent",
-    "Student",
-    "CourseStaff",
-    "CourseJoinCode",
-]
+from courses.models.student import Student
+from courses.models.teacher import Teacher

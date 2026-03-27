@@ -7,9 +7,10 @@ orchestration required to split event series for 'following' scope updates.
 
 from __future__ import annotations
 
+from collections.abc import Iterable
 from dataclasses import dataclass
 from datetime import date, datetime
-from typing import Any, Iterable
+from typing import Any
 
 from core.models import Event, EventOverride, EventReminder
 from core.services.event_scope_datetime_helpers import (
@@ -20,7 +21,6 @@ from core.services.recurrence_instances import (
     is_occurrence_in_series,
     serialise_event_reminders,
 )
-
 
 ReminderData = dict[str, Any]
 

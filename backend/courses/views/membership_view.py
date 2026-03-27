@@ -1,10 +1,9 @@
-"""Course membership view mixins."""
+from secrets import token_urlsafe
 
 from django.utils import timezone
 from rest_framework import status
 from rest_framework.decorators import action
 from rest_framework.response import Response
-from secrets import token_urlsafe
 
 from courses.models.course import CourseEnrollment, CourseJoinCode
 from courses.models.student import Student

@@ -2,7 +2,6 @@
 
 from django.db.models import Q
 from rest_framework.generics import get_object_or_404
-
 from rest_framework.response import Response
 
 from courses.models.course import Course, CourseEnrollment
