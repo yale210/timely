@@ -13,6 +13,7 @@ User = get_user_model()
 
 class IsTeacherPermissionTests(TestCase):
     """Test cases for is teacher permission."""
+
     def setUp(self):
         """Set up shared test fixtures."""
         self.factory = APIRequestFactory()

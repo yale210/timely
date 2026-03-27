@@ -10,6 +10,7 @@ User = get_user_model()
 
 class CourseCreateSerializer(serializers.ModelSerializer):
     """Serializer for creating courses."""
+
     class Meta:
         model = Course
         fields = ("id", "name", "description")
@@ -30,6 +31,7 @@ class CourseCreateSerializer(serializers.ModelSerializer):
 
 class CourseSerializer(serializers.ModelSerializer):
     """Serializer for course responses."""
+
     class Meta:
         model = Course
         fields = ("id", "name", "description", "created_at", "active", "lead")
@@ -38,6 +40,7 @@ class CourseSerializer(serializers.ModelSerializer):
 
 class CourseEventSerializer(serializers.ModelSerializer):
     """Serializer for course events."""
+
     class Meta:
         model = CourseEvent
         fields = "__all__"
@@ -62,6 +65,7 @@ class CourseEventSerializer(serializers.ModelSerializer):
 
 class CourseNameSerializer(serializers.ModelSerializer):
     """Serializer for course name updates."""
+
     class Meta:
         model = Course
         fields = ("name",)
@@ -69,6 +73,7 @@ class CourseNameSerializer(serializers.ModelSerializer):
 
 class CourseDescriptionSerializer(serializers.ModelSerializer):
     """Serializer for course description updates."""
+
     class Meta:
         model = Course
         fields = ("description",)
@@ -76,6 +81,7 @@ class CourseDescriptionSerializer(serializers.ModelSerializer):
 
 class CourseJoinCodeSerializer(serializers.Serializer):
     """Serializer for joining a course by code."""
+
     code = serializers.CharField(max_length=64)
 
     def validate_code(self, value):
@@ -113,6 +119,7 @@ class CourseJoinCodeSerializer(serializers.Serializer):
 
 class CourseJoinCodeCreateSerializer(serializers.ModelSerializer):
     """Serializer for creating course join codes."""
+
     class Meta:
         model = CourseJoinCode
         fields = ("id", "code", "expires_at", "active")
@@ -133,6 +140,7 @@ class CourseJoinCodeCreateSerializer(serializers.ModelSerializer):
 
 class CourseStaffAddSerializer(serializers.Serializer):
     """Serializer for adding course staff members."""
+
     user_id = serializers.IntegerField()
 
     def validate_user_id(self, value):

@@ -10,6 +10,7 @@ User = get_user_model()
 
 class TeacherCreateSerializer(serializers.Serializer):
     """Serializer for creating teacher records."""
+
     user_id = serializers.IntegerField()
 
     def validate_user_id(self, value):
@@ -31,6 +32,7 @@ class TeacherCreateSerializer(serializers.Serializer):
 
 class TeacherSerializer(serializers.ModelSerializer):
     """Serializer for teacher responses."""
+
     user_id = serializers.IntegerField(source="user.id", read_only=True)
     username = serializers.CharField(source="user.username", read_only=True)
     first_name = serializers.CharField(source="user.first_name", read_only=True)

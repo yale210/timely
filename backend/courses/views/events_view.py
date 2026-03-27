@@ -36,4 +36,3 @@ class CourseEventsMixin(CourseViewSetBase):
         serializer.is_valid(raise_exception=True)
         serializer.save(course=course, created_by=teacher)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
-

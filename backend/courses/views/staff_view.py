@@ -84,4 +84,3 @@ class CourseStaffMixin(CourseViewSetBase):
             return Response({"detail": "Staff member not found."}, status=404)
 
         return Response(status=status.HTTP_204_NO_CONTENT)
-

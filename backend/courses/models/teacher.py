@@ -6,6 +6,7 @@ from django.db import models
 
 class Teacher(models.Model):
     """Model for teacher records in the courses app."""
+
     user = models.OneToOneField(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,

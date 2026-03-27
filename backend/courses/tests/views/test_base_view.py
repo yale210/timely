@@ -39,4 +39,3 @@ class CourseViewSetBaseTests(TestCase):
         """Test get_course raises 404 for a missing course."""
         with self.assertRaises(Http404):
             self.view.get_course(999999)
-

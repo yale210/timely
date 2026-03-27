@@ -10,8 +10,10 @@ from courses.permissions.course_permission import CoursePermission
 
 User = get_user_model()
 
+
 class CoursePermissionTests(TestCase):
     """Test cases for course permission."""
+
     def setUp(self):
         """Set up shared test fixtures."""
         self.factory = APIRequestFactory()

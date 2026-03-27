@@ -15,6 +15,7 @@ User = get_user_model()
 
 class SyncCalendarTests(TestCase):
     """Test cases for sync calendar."""
+
     def setUp(self):
         """Set up shared test fixtures."""
         self.teacher_user = User.objects.create_user(

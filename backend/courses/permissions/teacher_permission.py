@@ -7,6 +7,7 @@ from courses.models.teacher import Teacher
 
 class IsTeacher(BasePermission):
     """Permission class for teacher-only access."""
+
     message = "Only teachers are allowed to perform this action"
 
     def has_permission(self, request, view):

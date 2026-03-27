@@ -10,6 +10,7 @@ from courses.models.teacher import Teacher
 
 class Course(models.Model):
     """Model for a course."""
+
     name = models.CharField(max_length=255)
     description = models.TextField(blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -29,6 +30,7 @@ class Course(models.Model):
 
 class CourseEnrollment(models.Model):
     """Model linking a student to a course."""
+
     course = models.ForeignKey(
         Course, on_delete=models.CASCADE, related_name="enrollments"
     )
@@ -49,6 +51,7 @@ class CourseEnrollment(models.Model):
 
 class CourseStaff(models.Model):
     """Model for course staff memberships."""
+
     course = models.ForeignKey(
         Course, on_delete=models.CASCADE, related_name="staff_members"
     )
@@ -71,6 +74,7 @@ class CourseStaff(models.Model):
 
 class CourseEvent(BaseEventModel):
     """Model for events attached to a course."""
+
     course = models.ForeignKey(Course, on_delete=models.CASCADE, related_name="events")
     created_by = models.ForeignKey(
         Teacher, on_delete=models.SET_NULL, null=True, blank=True, related_name="author"
@@ -79,6 +83,7 @@ class CourseEvent(BaseEventModel):
 
 class CourseJoinCode(models.Model):
     """Model for course join codes."""
+
     course = models.ForeignKey(
         Course,
         on_delete=models.CASCADE,

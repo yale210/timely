@@ -11,4 +11,3 @@ class CourseDetailsModuleTests(SimpleTestCase):
     def test_details_module_imports_cleanly(self):
         """Test the details helper module imports cleanly."""
         self.assertEqual(details_module.__doc__, "Helpers for course detail responses.")
-

@@ -176,4 +176,3 @@ class CourseMembershipMixin(CourseViewSetBase):
             },
             status=status.HTTP_201_CREATED,
         )
-

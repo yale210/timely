@@ -19,5 +19,5 @@ class CourseViewSet(
     CourseViewSetBase,
 ):
     """View set for course resources and related actions."""
-    pass
 
+    pass

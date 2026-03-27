@@ -18,6 +18,7 @@ from courses.models.course import CourseJoinCode
 @admin.register(CourseStaff)
 class CourseStaffAdmin(admin.ModelAdmin):
     """Admin configuration for course staff memberships."""
+
     list_display = ("course", "student", "active", "assigned_at")
     list_filter = ("active", "course")
     search_fields = ("course__name", "student__username", "student__email")
@@ -34,6 +35,7 @@ def expire_selected_codes(modeladmin, request, queryset):
 @admin.register(CourseJoinCode)
 class CourseJoinCodeAdmin(admin.ModelAdmin):
     """Admin configuration for course join codes."""
+
     list_display = (
         "code",
         "course",
@@ -64,6 +66,7 @@ class CourseJoinCodeAdmin(admin.ModelAdmin):
 @admin.register(Course)
 class CourseAdmin(admin.ModelAdmin):
     """Admin configuration for courses."""
+
     search_fields = ("name", "description")
 
 

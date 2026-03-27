@@ -69,7 +69,9 @@ class CourseMembershipViewTests(TestCase):
 
         response = view(request, pk=self.course.pk)
 
-        enrollment = CourseEnrollment.objects.get(course=self.course, student=self.student)
+        enrollment = CourseEnrollment.objects.get(
+            course=self.course, student=self.student
+        )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertFalse(enrollment.active)
 
@@ -93,7 +95,9 @@ class CourseMembershipViewTests(TestCase):
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertTrue(
-            CourseEnrollment.objects.filter(course=self.course, student=self.student).exists()
+            CourseEnrollment.objects.filter(
+                course=self.course, student=self.student
+            ).exists()
         )
 
     def test_join_code_creates_join_code_for_lead_teacher(self):

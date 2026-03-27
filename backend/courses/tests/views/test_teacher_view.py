@@ -65,8 +65,12 @@ class TeacherViewTests(TestCase):
 
         response = view(request)
 
-        self.assertIn(response.status_code, {status.HTTP_201_CREATED, status.HTTP_200_OK})
-        self.assertTrue(Teacher.objects.filter(user=self.other_user, active=True).exists())
+        self.assertIn(
+            response.status_code, {status.HTTP_201_CREATED, status.HTTP_200_OK}
+        )
+        self.assertTrue(
+            Teacher.objects.filter(user=self.other_user, active=True).exists()
+        )
 
     def test_unregister_teacher_deactivates_teacher(self):
         """Test unregister_teacher deactivates the current teacher."""
@@ -79,4 +83,3 @@ class TeacherViewTests(TestCase):
         self.teacher.refresh_from_db()
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertFalse(self.teacher.active)
-

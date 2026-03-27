@@ -30,4 +30,3 @@ class CoursePermissionsMixin(CourseViewSetBase):
             context={"request": request},
         )
         return Response(serializer.data, status=status.HTTP_200_OK)
-

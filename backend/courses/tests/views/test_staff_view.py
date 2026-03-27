@@ -64,7 +64,9 @@ class CourseStaffViewTests(TestCase):
 
         response = view(request, pk=self.course.pk)
 
-        self.assertIn(response.status_code, {status.HTTP_201_CREATED, status.HTTP_200_OK})
+        self.assertIn(
+            response.status_code, {status.HTTP_201_CREATED, status.HTTP_200_OK}
+        )
         self.assertTrue(
             CourseStaff.objects.filter(
                 course=self.course,

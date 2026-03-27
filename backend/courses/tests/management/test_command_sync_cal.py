@@ -10,6 +10,7 @@ from django.test import TestCase
 
 class SyncCalCommandTests(TestCase):
     """Test cases for sync cal command."""
+
     def setUp(self):
         """Set up shared test fixtures."""
         self.User = get_user_model()

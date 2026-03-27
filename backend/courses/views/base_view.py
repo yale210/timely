@@ -14,6 +14,7 @@ User = get_user_model()
 
 class CourseViewSetBase(ViewSet):
     """Base view set for course resources."""
+
     serializer_class = CourseSerializer
     permission_classes = [IsAuthenticated, CoursePermission]
 

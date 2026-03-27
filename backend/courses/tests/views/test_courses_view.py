@@ -85,7 +85,9 @@ class CourseViewTests(TestCase):
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data["cohort"], 1)
-        self.assertEqual(response.data["students"][0]["username"], self.student_user.username)
+        self.assertEqual(
+            response.data["students"][0]["username"], self.student_user.username
+        )
 
     def test_destroy_deactivates_course(self):
         """Test destroy soft-deletes the course by deactivating it."""

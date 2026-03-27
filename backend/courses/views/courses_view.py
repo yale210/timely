@@ -9,12 +9,16 @@ from courses.models.course import Course, CourseEnrollment
 from courses.models.student import Student
 from courses.models.teacher import Teacher
 from courses.permissions.course_permission import CoursePermission
-from courses.serializers.course_serializer import CourseCreateSerializer, CourseSerializer
+from courses.serializers.course_serializer import (
+    CourseCreateSerializer,
+    CourseSerializer,
+)
 from courses.views.base_view import CourseViewSetBase
 
 
 class CourseCrudMixin(CourseViewSetBase):
     """Mixin for course CRUD actions."""
+
     def list(self, request):
         """Return courses relevant to the authenticated user.
 
@@ -166,4 +170,3 @@ class CourseCrudMixin(CourseViewSetBase):
         course.active = False
         course.save(update_fields=["active"])
         return Response(CourseSerializer(course).data, status=204)
-

@@ -10,6 +10,7 @@ User = get_user_model()
 
 class PermissionsSerializer(serializers.Serializer):
     """Serializer for course permission flags."""
+
     can_view_course_details = serializers.BooleanField(read_only=True)
     can_view_events = serializers.BooleanField(read_only=True)
     can_create_join_code = serializers.BooleanField(read_only=True)

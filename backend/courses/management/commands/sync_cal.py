@@ -9,6 +9,7 @@ from courses.services.event import CourseEventSyncService
 
 class Command(BaseCommand):
     """Management command for syncing course calendars."""
+
     help = "Sync all course events to user calendars"
 
     def add_arguments(self, parser):

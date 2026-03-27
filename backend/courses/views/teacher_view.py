@@ -9,13 +9,17 @@ from rest_framework.viewsets import ViewSet
 
 from courses.models import Course, Teacher
 from courses.permissions.teacher_permission import IsTeacher
-from courses.serializers.teacher_serializer import TeacherCreateSerializer, TeacherSerializer
+from courses.serializers.teacher_serializer import (
+    TeacherCreateSerializer,
+    TeacherSerializer,
+)
 
 User = get_user_model()
 
 
 class TeacherView(ViewSet):
     """View set for teacher registration and listing."""
+
     permission_classes = [IsAuthenticated, IsTeacher]
 
     def list(self, request):
