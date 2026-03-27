@@ -232,7 +232,9 @@ class SchedulerViewsTests(APITestCase):
         from scheduler.scheduler_types import ScheduleResult
 
         now = timezone.now()
-        with patch("scheduler.views.Scheduler.schedule_tasks") as mock_schedule:
+        with patch(
+            "scheduler.views.schedule_tasks_view.Scheduler.schedule_tasks"
+        ) as mock_schedule:
             mock_schedule.return_value = [
                 ScheduleResult(task_id=1, success=False, segments=[]),
                 ScheduleResult(task_id=2, success=True, segments=[]),
