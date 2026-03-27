@@ -1,3 +1,5 @@
+"""Services for syncing course events."""
+
 from abc import ABC, abstractmethod
 from datetime import datetime
 from typing import List, Optional, Dict, Any

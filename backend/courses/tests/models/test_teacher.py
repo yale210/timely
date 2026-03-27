@@ -1,3 +1,5 @@
+"""Tests for the teacher model."""
+
 from django.contrib.auth import get_user_model
 
 from courses.models import Teacher

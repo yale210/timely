@@ -1,3 +1,5 @@
+"""Admin registrations for the courses application."""
+
 from django.contrib import admin
 from django.utils import timezone
 from django.utils.html import format_html
@@ -15,6 +17,8 @@ from courses.models.course import CourseJoinCode
 
 @admin.register(CourseStaff)
 class CourseStaffAdmin(admin.ModelAdmin):
+    """Admin configuration for course staff memberships."""
+
     list_display = ("course", "student", "active", "assigned_at")
     list_filter = ("active", "course")
     search_fields = ("course__name", "student__username", "student__email")
@@ -24,11 +28,14 @@ class CourseStaffAdmin(admin.ModelAdmin):
 
 @admin.action(description="Expire selected join codes")
 def expire_selected_codes(modeladmin, request, queryset):
+    """Expire the selected course join codes."""
     queryset.update(active=False, expires_at=timezone.now())
 
 
 @admin.register(CourseJoinCode)
 class CourseJoinCodeAdmin(admin.ModelAdmin):
+    """Admin configuration for course join codes."""
+
     list_display = (
         "code",
         "course",
@@ -47,6 +54,7 @@ class CourseJoinCodeAdmin(admin.ModelAdmin):
 
     @admin.display(description="Join URL")
     def copy_join_url(self, obj):
+        """Render a join URL hint for the admin."""
         join_url = "/courses/join-by-code/"
         return format_html(
             '<span title="POST {} with code={}">Copy join URL</span>',
@@ -57,6 +65,8 @@ class CourseJoinCodeAdmin(admin.ModelAdmin):
 
 @admin.register(Course)
 class CourseAdmin(admin.ModelAdmin):
+    """Admin configuration for courses."""
+
     search_fields = ("name", "description")
 
 

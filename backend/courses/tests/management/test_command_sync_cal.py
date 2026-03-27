@@ -1,3 +1,5 @@
+"""Tests for the sync_cal management command."""
+
 from io import StringIO
 from unittest.mock import patch
 
@@ -25,6 +27,7 @@ class SyncCalCommandTests(TestCase):
         "courses.management.commands.sync_cal.CourseEventSyncService.sync_user_course_events"
     )
     def test_sync_cal_command_syncs_specific_user(self, mock_sync):
+        """Test sync cal command syncs specific user."""
         mock_sync.return_value = {"created": 2, "updated": 1, "errors": []}
         out = StringIO()
 
@@ -39,6 +42,7 @@ class SyncCalCommandTests(TestCase):
         "courses.management.commands.sync_cal.CourseEventSyncService.sync_user_course_events"
     )
     def test_sync_cal_command_syncs_all_users_when_no_user_is_provided(self, mock_sync):
+        """Test sync cal command syncs all users when no user is provided."""
         mock_sync.side_effect = [
             {"created": 1, "updated": 0, "errors": []},
             {"created": 3, "updated": 2, "errors": []},
