@@ -15,7 +15,7 @@ class IsTeacherPermissionTests(TestCase):
     def setUpTestData(cls):
         cls.factory = APIRequestFactory()
         cls.permission = IsTeacher()
-        
+
         cls.teacher_user = User.objects.create_user(
             username="teacher_user",
             password="password123",

@@ -41,6 +41,7 @@ class AdminNotificationActionTests(APITestCase):
         )
         cls.inactive_user.is_active = False
         cls.inactive_user.save(update_fields=["is_active"])
+
     def setUp(self):
         """Create users and route paths for notification action tests."""
         self.send_url = reverse("admin-send-notification")

@@ -20,7 +20,6 @@ User = get_user_model()
 
 
 class CourseViewTests(APITestCase):
-    
     @classmethod
     def setUpTestData(cls):
         cls.teacher_user = User.objects.create_user(
@@ -59,7 +58,7 @@ class CourseViewTests(APITestCase):
             lead=cls.teacher,
             active=False,
         )
-    
+
     def setUp(self):
         self.list_url = reverse("course-list")
         self.detail_url = reverse("course-detail", args=[self.course.id])

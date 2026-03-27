@@ -9,13 +9,13 @@ from ...models import User
 
 class LoginAPIViewTest(APITestCase):
     """Tests for login API validation."""
-    
+
     @classmethod
     def setUpTestData(cls):
         cls.user = User.objects.create_user(
             username="testuser", email="test@example.com", password="password123"
         )
-    
+
     def setUp(self):
         """Create a user for login API authentication tests."""
         self.login_url = reverse("login")

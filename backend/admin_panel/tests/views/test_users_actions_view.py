@@ -10,6 +10,7 @@ User = get_user_model()
 
 class AdminUsersActionTests(APITestCase):
     """Test admin user list and filter actions."""
+
     @classmethod
     def setUpTestData(cls):
         cls.admin_user = User.objects.create_superuser(

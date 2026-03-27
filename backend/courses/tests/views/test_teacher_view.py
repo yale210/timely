@@ -39,7 +39,7 @@ class CourseViewTests(APITestCase):
             user=cls.inactive_teacher_user,
             active=False,
         )
-    
+
     def setUp(self):
         self.url = reverse("teacher-list")
         self.create_url = reverse("teacher-create-teacher")
