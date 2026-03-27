@@ -1,8 +1,6 @@
-import moment from "moment";
-import { Calendar, momentLocalizer, Views } from "react-big-calendar";
+import { Calendar, Views } from "react-big-calendar";
 import type { Event } from "@/types/event";
-
-const localizer = momentLocalizer(moment);
+import { useCalendarLocalizer } from "@/utils/calendarLocalizer";
 
 interface CourseEventsCalendarProps {
   courseName: string;
@@ -42,6 +40,7 @@ export default function CourseEventsCalendar({
   onClose,
   inline = false,
 }: CourseEventsCalendarProps) {
+  const localizer = useCalendarLocalizer();
   const calendarEvents = events.map((event) => ({
     ...event,
     title: event.title,

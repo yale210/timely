@@ -7,6 +7,7 @@ import * as courseService from "@/services/courseService";
 import { getUsernameById } from "@/services/authService.ts";
 import type { Course } from "@/types/course.ts";
 import type { Event } from "@/types/event.ts";
+import { formatDateTimeInTimezone, timezoneDateTimeLocalToIso } from "@/utils/userTimezone";
 
 interface CourseEditForm {
   name: string;
@@ -94,8 +95,8 @@ export default function CourseDetail() {
   };
 
   const toIsoString = (value: string) => {
-    const parsed = new Date(value);
-    return Number.isNaN(parsed.getTime()) ? value : parsed.toISOString();
+    const isoValue = timezoneDateTimeLocalToIso(value);
+    return isoValue || value;
   };
 
   const openEditModal = () => {
@@ -337,7 +338,7 @@ export default function CourseDetail() {
                 <div>
                   <dt className="text-sm font-medium text-gray-500">Created</dt>
                   <dd className="mt-1 text-sm text-gray-900">
-                    {new Date(course.created_at).toLocaleString()}
+                    {formatDateTimeInTimezone(course.created_at)}
                   </dd>
                 </div>
                 <div>

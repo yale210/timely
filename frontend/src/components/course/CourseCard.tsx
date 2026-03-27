@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import type { Course } from "@/types/course";
 import { getUsernameById } from "@/services/authService";
 import type {CoursePermissions} from "@/types/course.ts";
+import { formatDateTimeInTimezone } from "@/utils/userTimezone";
 
 interface CourseCardProps {
   course: Course;
@@ -74,7 +75,7 @@ export default function CourseCard({ course, permission, onView }: CourseCardPro
         </div>
         <div className="flex justify-between gap-4">
           <dt className="font-medium text-gray-500">Created</dt>
-          <dd>{new Date(course.created_at).toLocaleString()}</dd>
+          <dd>{formatDateTimeInTimezone(course.created_at)}</dd>
         </div>
       </dl>
 
