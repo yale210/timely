@@ -44,6 +44,7 @@ describe("useCourses", () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.spyOn(console, "error").mockImplementation(() => undefined);
 
     // eslint-disable-next-line @typescript-eslint/unbound-method
     vi.mocked(authStore.getUser).mockReturnValue({

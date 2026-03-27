@@ -1,8 +1,18 @@
-import { render, screen, fireEvent, cleanup } from "@testing-library/react";
+import { render, screen, fireEvent } from "@testing-library/react";
 import { describe, it, expect, vi, afterEach } from "vitest";
+import type { ReactNode } from "react";
 import '@testing-library/jest-dom'
 import UnifiedSidebar from "@/components/tasks/UnifiedSidebar";
 import { type Category, type Task, type Event, type TaskSubmission, type EventSubmission } from "@/types";
+
+vi.mock("@headlessui/react", () => ({
+  Dialog: ({ children }: { children: ReactNode }) => <div>{children}</div>,
+  DialogPanel: ({ children }: { children: ReactNode }) => <div>{children}</div>,
+  DialogTitle: ({ children }: { children: ReactNode }) => <div>{children}</div>,
+  Transition: ({ show, children }: { show: boolean; children: ReactNode }) =>
+    show ? <>{children}</> : null,
+  TransitionChild: ({ children }: { children: ReactNode }) => <>{children}</>,
+}))
 
 const mockCategories: Category[] = [
   { id: 1, text: "Work" },
@@ -77,7 +87,7 @@ vi.mock("@/components/events/EventForm", () => ({
 
 describe("UnifiedSidebar", () => {
   afterEach(() => {
-    cleanup();
+    vi.restoreAllMocks();
   });
 
   const onCreateCategory = vi.fn().mockResolvedValue({ id: 3, text: "New" });
