@@ -1,6 +1,7 @@
 """Serializers for broadcast recipient details."""
 
 from rest_framework import serializers
+
 from notifications.models import BroadcastRecipient
 
 

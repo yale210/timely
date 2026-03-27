@@ -1,8 +1,7 @@
-import { it, describe, expect, beforeEach, afterEach } from 'vitest'
-import { cleanup, render, screen } from '@testing-library/react'
+import { it, describe, expect, beforeEach } from 'vitest'
+import { render, screen } from '@testing-library/react'
 import { Home } from "@/pages/index"
 import { MemoryRouter } from 'react-router-dom'
-import { NotificationProvider } from '@/context/NotificationContext'
 
 describe('Home', () => {
 
@@ -10,16 +9,9 @@ describe('Home', () => {
     beforeEach(() => {
         render(
             <MemoryRouter>
-                <NotificationProvider>
-                    <Home />
-                </NotificationProvider>
+                <Home />
             </MemoryRouter>
         )
-    })
-
-    // Runs after every test, ensures the DOM isn't rendered repeatedly
-    afterEach(() => {
-        cleanup()
     })
     
     it("renders the heading", () => {

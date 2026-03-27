@@ -1,9 +1,11 @@
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { vi, describe, it, expect, beforeEach, afterEach } from "vitest";
 import { MemoryRouter, useNavigate } from "react-router-dom";
+import type { ReactNode, ButtonHTMLAttributes, HTMLAttributes } from "react";
 import AppNavbar from "@/components/layout/AppNavbar";
 import { useNotificationContext } from "@/context/NotificationContext";
 import { authStore } from "@/services/authService";
+import { getMyProfile } from "@/services/profileService";
 
 // Mock react-router-dom
 vi.mock("react-router-dom", async () => {
@@ -19,11 +21,28 @@ vi.mock("@/context/NotificationContext", () => ({
   useNotificationContext: vi.fn(),
 }));
 
+vi.mock("@headlessui/react", () => ({
+  Menu: ({ children }: { children: ReactNode }) => <div>{children}</div>,
+  MenuButton: ({ children, ...props }: ButtonHTMLAttributes<HTMLButtonElement>) => (
+    <button type="button" {...props}>{children}</button>
+  ),
+  MenuItems: ({ children, modal: _modal, ...props }: HTMLAttributes<HTMLDivElement> & { modal?: boolean }) => (
+    <div {...props}>{children}</div>
+  ),
+  MenuItem: ({ children }: { children: (bag: { focus: boolean }) => ReactNode }) => (
+    <div role="menuitem">{children({ focus: false })}</div>
+  ),
+}));
+
 // Mock authStore
 vi.mock("@/services/authService", () => ({
   authStore: {
     getUser: vi.fn(),
   },
+}));
+
+vi.mock("@/services/profileService", () => ({
+  getMyProfile: vi.fn(),
 }));
 
 interface NotificationDropdownProps {
@@ -98,6 +117,7 @@ describe("AppNavbar Component", () => {
       email: "test@example.com",
       is_staff: false,
     });
+    vi.mocked(getMyProfile).mockResolvedValue({ avatar: null } as never);
   });
 
   afterEach(() => {
@@ -265,8 +285,9 @@ describe("AppNavbar Component", () => {
     renderNavbar();
     
     fireEvent.click(screen.getByLabelText("Open navigation"));
-    const settingsSidebarLink = screen.getByRole("link", { name: "Settings" });
-    fireEvent.click(settingsSidebarLink);
+    const settingsSidebarLink = screen.getAllByRole("link", { name: "Settings" }).at(-1);
+    expect(settingsSidebarLink).toBeDefined();
+    fireEvent.click(settingsSidebarLink!);
     expect(document.body.classList.contains("menu-open")).toBe(true);
   });
 

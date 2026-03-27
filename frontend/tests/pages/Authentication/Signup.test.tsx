@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest"
-import { render, screen, fireEvent, waitFor, cleanup } from "@testing-library/react"
+import { render, screen, fireEvent, waitFor } from "@testing-library/react"
 import { MemoryRouter } from "react-router-dom"
 import Signup from "@/pages/Authentication/Signup"
 import type * as ComponentsIndexModule from "@/components/index"
@@ -40,7 +40,6 @@ describe("Signup page", () => {
   })
 
   afterEach(() => {
-    cleanup()
     vi.restoreAllMocks()
   })
 
@@ -70,11 +69,6 @@ describe("Signup page", () => {
       </MemoryRouter>
     )
 
-    //Replaced with one function to save space and alow it to be changed later.
-    fireEvent.change(screen.getByLabelText(/username/i), { target: { value: "alice" } })
-    fireEvent.change(screen.getByLabelText(/email address/i), { target: { value: "alice@example.com" } })
-    fireEvent.change(screen.getByLabelText(/^password$/i), { target: { value: "Secret123" } })
-    fireEvent.change(screen.getByLabelText(/confirm password/i), { target: { value: "Secret123" } })
     fillForm()
     fireEvent.click(screen.getByRole("button", { name: /sign up/i }))
 

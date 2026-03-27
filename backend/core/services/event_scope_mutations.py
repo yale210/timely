@@ -38,15 +38,14 @@ from core.services.event_scope_update_helpers import (
     truncate_or_delete_parent_series,
 )
 
-
 __all__ = (
-    "apply_update_scope",
-    "apply_delete_scope",
-    "revert_override_instance",
     "_category_id_set",
+    "_detach_non_aligned_overrides",
     "_normalise_reminders",
     "_resolve_submitted_occurrence_window",
-    "_detach_non_aligned_overrides",
+    "apply_delete_scope",
+    "apply_update_scope",
+    "revert_override_instance",
 )
 
 

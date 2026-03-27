@@ -2,13 +2,12 @@
 
 import datetime
 
-from django.test import TestCase
 from django.contrib.auth import get_user_model
+from django.test import TestCase
 from django.utils import timezone
-
 from rest_framework.test import APIClient
 
-from core.models import Grade, Category, Task
+from core.models import Category, Grade, Task
 
 
 class GradeViewTests(TestCase):

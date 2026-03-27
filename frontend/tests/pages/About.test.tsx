@@ -1,5 +1,5 @@
-import { it, describe, expect, beforeEach, afterEach, vi} from 'vitest'
-import { cleanup, render, screen } from '@testing-library/react'
+import { it, describe, expect, beforeEach, vi} from 'vitest'
+import { render, screen } from '@testing-library/react'
 import { About } from "@/pages/index"
 import { FEATURES } from '@/components/about'
 import { MemoryRouter } from 'react-router-dom'
@@ -17,10 +17,6 @@ describe('About', () => {
                 <About />
             </MemoryRouter>
         )
-    })
-
-    afterEach(() => {
-        cleanup()
     })
 
     it('about page renders without crashing', () => {
@@ -61,4 +57,3 @@ describe('About', () => {
 
     
 })
-

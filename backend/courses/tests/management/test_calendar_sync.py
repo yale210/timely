@@ -14,39 +14,37 @@ User = get_user_model()
 
 
 class SyncCalendarTests(TestCase):
-    """Test cases for sync calendar."""
-
-    def setUp(self):
-        """Set up shared test fixtures."""
-        self.teacher_user = User.objects.create_user(
+    @classmethod
+    def setUpTestData(cls):
+        cls.teacher_user = User.objects.create_user(
             username="teacher",
             password="password123",
             email="teacher@example.com",
         )
-        self.student_user = User.objects.create_user(
+        cls.student_user = User.objects.create_user(
             username="student",
             password="password123",
             email="student@example.com",
         )
-        self.other_user = User.objects.create_user(
+        cls.other_user = User.objects.create_user(
             username="other",
             password="password123",
             email="other@example.com",
         )
 
-        self.teacher = Teacher.objects.create(user=self.teacher_user)
-        self.student = Student.objects.create(user=self.student_user)
-        self.other_student = Student.objects.create(user=self.other_user)
+        cls.teacher = Teacher.objects.create(user=cls.teacher_user)
+        cls.student = Student.objects.create(user=cls.student_user)
+        cls.other_student = Student.objects.create(user=cls.other_user)
 
-        self.course = Course.objects.create(
+        cls.course = Course.objects.create(
             name="Python Basics",
             description="Intro course",
-            lead=self.teacher,
+            lead=cls.teacher,
         )
 
-        self.course_event = CourseEvent.objects.create(
-            course=self.course,
-            created_by=self.teacher,
+        cls.course_event = CourseEvent.objects.create(
+            course=cls.course,
+            created_by=cls.teacher,
             title="Lesson 1",
             description="Intro lesson",
             location="Room 101",
@@ -55,6 +53,7 @@ class SyncCalendarTests(TestCase):
             end_time=timezone.now() + datetime.timedelta(days=2, hours=1),
         )
 
+    def setUp(self):
         self.provider = Mock()
         self.sync_service = SyncCalendar(self.provider)
 

@@ -1,11 +1,12 @@
 """Tests for analytics view."""
 
+from datetime import datetime
+
+from django.contrib.auth import get_user_model
 from django.urls import reverse
+from django.utils import timezone
 from rest_framework import status
 from rest_framework.test import APITestCase
-from django.contrib.auth import get_user_model
-from django.utils import timezone
-from datetime import datetime
 
 from core.models.task import Task
 

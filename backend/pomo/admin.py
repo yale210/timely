@@ -1,6 +1,7 @@
 """Admin configuration for the pomo application."""
 
 from django.contrib import admin
+
 from .models import PomoSession
 
 

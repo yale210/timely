@@ -8,23 +8,24 @@ from rest_framework.routers import DefaultRouter
 
 from core.views import (
     AssessmentViewSet,
-    EventViewSet,
-    GradeViewSet,
     CategoryViewSet,
+    EventViewSet,
+    FriendshipViewSet,
+    GradeViewSet,
     PreferenceViewSet,
+    SpecialDatesViewSet,
     TaskViewSet,
     WeeklySummaryView,
-    FriendshipViewSet,
-    SpecialDatesViewSet,
 )
+from core.views.delete_all_events_view import DeleteAllEventsView
+from core.views.delete_all_tasks_view import DeleteAllTasksView
 from core.views.export_view import ExportView
 from core.views.import_view import ImportView
-from courses.views import CourseViewSet
-from courses.views.teacher_view import TeacherView
-
-from core.views.share_send_view import ShareSendView
 from core.views.share_accept_view import ShareAcceptView
 from core.views.share_events_view import ShareEventsView
+from core.views.share_send_view import ShareSendView
+from courses.views import CourseViewSet
+from courses.views.teacher_view import TeacherView
 
 from core.views.delete_all_events_view import DeleteAllEventsView
 from core.views.delete_all_tasks_view import DeleteAllTasksView

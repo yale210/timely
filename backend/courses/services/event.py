@@ -1,15 +1,11 @@
-"""Services for syncing course events."""
-
+import logging
 from abc import ABC, abstractmethod
 from datetime import datetime
-from typing import List, Optional, Dict, Any
+from typing import Any
 
 from django.contrib.auth.models import User
-import logging
-
 
 from core.models import Event
-
 
 logger = logging.getLogger(__name__)
 
@@ -18,35 +14,31 @@ class CalendarProvider(ABC):
     """Abstract base class for calendar providers (Google Calendar, Outlook, etc.)"""
 
     @abstractmethod
-    def create_event(self, user: User, event_data: Dict[str, Any]) -> str:
+    def create_event(self, user: User, event_data: dict[str, Any]) -> str:
         """Create an event in the calendar. Returns event ID."""
-        pass
 
     @abstractmethod
     def update_event(
-        self, user: User, event_id: str, event_data: Dict[str, Any]
+        self, user: User, event_id: str, event_data: dict[str, Any]
     ) -> bool:
         """Update an existing event. Returns True if successful."""
-        pass
 
     @abstractmethod
     def delete_event(self, user: User, event_id: str) -> bool:
         """Delete an event. Returns True if successful."""
-        pass
 
     @abstractmethod
     def get_events(
         self, user: User, start_date: datetime, end_date: datetime
-    ) -> List[Dict[str, Any]]:
+    ) -> list[dict[str, Any]]:
         """Retrieve events from the calendar within a date range."""
-        pass
 
 
 class CalendarEventMapper:
     """Maps CourseEvent objects to calendar provider format"""
 
     @staticmethod
-    def to_calendar_event(course_event) -> Dict[str, Any]:
+    def to_calendar_event(course_event) -> dict[str, Any]:
         """Convert a CourseEvent to a generic calendar event format.
 
         Args:
@@ -84,9 +76,9 @@ class SyncCalendar:
     def sync_user_calendar(
         self,
         user: User,
-        start_date: Optional[datetime] = None,
-        end_date: Optional[datetime] = None,
-    ) -> Dict[str, Any]:
+        start_date: datetime | None = None,
+        end_date: datetime | None = None,
+    ) -> dict[str, Any]:
         """Sync all course events for enrolled courses to user's calendar.
 
         Args:
@@ -168,7 +160,7 @@ class SyncCalendar:
                                 f"Failed to create event for {course_event.id}"
                             )
                 except Exception as e:
-                    error_msg = f"Error syncing event {course_event.id}: {str(e)}"
+                    error_msg = f"Error syncing event {course_event.id}: {e!s}"
                     logger.error(error_msg)
                     stats["errors"].append(error_msg)
 
@@ -179,15 +171,15 @@ class SyncCalendar:
             )
 
         except Exception as e:
-            error_msg = f"Failed to sync calendar for user {user.username}: {str(e)}"
+            error_msg = f"Failed to sync calendar for user {user.username}: {e!s}"
             logger.error(error_msg)
             stats["errors"].append(error_msg)
 
         return stats
 
     def sync_course_event(
-        self, course_event, user: Optional[User] = None
-    ) -> Dict[str, Any]:
+        self, course_event, user: User | None = None
+    ) -> dict[str, Any]:
         """Sync a single course event to all enrolled users' calendars.
 
         Args:
@@ -224,20 +216,20 @@ class SyncCalendar:
                 except Exception as e:
                     error_msg = (
                         f"Failed to sync event {course_event.id} "
-                        f"for user {enrollment.student.user.username}: {str(e)}"
+                        f"for user {enrollment.student.user.username}: {e!s}"
                     )
                     logger.error(error_msg)
                     stats["errors"].append(error_msg)
 
         except Exception as e:
-            error_msg = f"Failed to sync course event {course_event.id}: {str(e)}"
+            error_msg = f"Failed to sync course event {course_event.id}: {e!s}"
             logger.error(error_msg)
             stats["errors"].append(error_msg)
 
         return stats
 
     @staticmethod
-    def _event_needs_update(course_event, calendar_event: Dict[str, Any]) -> bool:
+    def _event_needs_update(course_event, calendar_event: dict[str, Any]) -> bool:
         """Determine if a calendar event needs updating based on course event changes.
 
         Args:
@@ -283,7 +275,7 @@ class SyncCalendar:
             )
             return False
         except Exception as e:
-            logger.error(f"Failed to remove calendar event: {str(e)}")
+            logger.error(f"Failed to remove calendar event: {e!s}")
             return False
 
 
@@ -293,7 +285,7 @@ class CourseEventSyncService:
     """
 
     @staticmethod
-    def sync_course_event_to_core(course_event) -> Dict[str, Any]:
+    def sync_course_event_to_core(course_event) -> dict[str, Any]:
         """Sync a single CourseEvent to core.models.Event for all enrolled students.
 
         Args:
@@ -384,7 +376,7 @@ class CourseEventSyncService:
                 except Exception as e:
                     error_msg = (
                         f"Failed to sync course_event {course_event.id} "
-                        f"for user {enrollment.student.user.username}: {str(e)}"
+                        f"for user {enrollment.student.user.username}: {e!s}"
                     )
                     logger.error(error_msg, exc_info=True)
                     stats["errors"].append(error_msg)
@@ -396,14 +388,14 @@ class CourseEventSyncService:
             )
 
         except Exception as e:
-            error_msg = f"Failed to sync course event {course_event.id}: {str(e)}"
+            error_msg = f"Failed to sync course event {course_event.id}: {e!s}"
             logger.error(error_msg, exc_info=True)
             stats["errors"].append(error_msg)
 
         return stats
 
     @staticmethod
-    def sync_user_course_events(user: User) -> Dict[str, Any]:
+    def sync_user_course_events(user: User) -> dict[str, Any]:
         """Sync all CourseEvents for a user's enrolled courses to core.models.Event.
 
         Args:
@@ -485,7 +477,7 @@ class CourseEventSyncService:
                 except Exception as e:
                     error_msg = (
                         f"Failed to sync course_event {course_event.id} "
-                        f"for user {user.username}: {str(e)}"
+                        f"for user {user.username}: {e!s}"
                     )
                     logger.error(error_msg, exc_info=True)
                     stats["errors"].append(error_msg)
@@ -497,7 +489,7 @@ class CourseEventSyncService:
             )
 
         except Exception as e:
-            error_msg = f"Failed to sync user events for {user.username}: {str(e)}"
+            error_msg = f"Failed to sync user events for {user.username}: {e!s}"
             logger.error(error_msg, exc_info=True)
             stats["errors"].append(error_msg)
 

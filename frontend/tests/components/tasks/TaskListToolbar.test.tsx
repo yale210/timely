@@ -1,6 +1,9 @@
 import { render, screen, fireEvent } from "@testing-library/react";
 import { vi, describe, it, expect } from "vitest";
+import type { ButtonHTMLAttributes, HTMLAttributes, ReactNode } from "react";
 import TaskListToolbar from "@/components/tasks/TaskListToolbar";
+
+const getMenuButton = (name: RegExp | string) => screen.getByText(name).closest("button");
 
 // Polyfill ResizeObserver for Headless UI
 vi.hoisted(() => {
@@ -10,6 +13,17 @@ vi.hoisted(() => {
     disconnect: vi.fn(),
   }));
 });
+
+vi.mock("@headlessui/react", () => ({
+  Menu: ({ children }: { children: ReactNode }) => <div>{children}</div>,
+  MenuButton: ({ children, ...props }: ButtonHTMLAttributes<HTMLButtonElement>) => (
+    <button type="button" {...props}>{children}</button>
+  ),
+  MenuItems: ({ children, ...props }: HTMLAttributes<HTMLDivElement>) => <div {...props}>{children}</div>,
+  MenuItem: ({ children }: { children: (bag: { focus: boolean }) => ReactNode }) => (
+    <div role="menuitem">{children({ focus: false })}</div>
+  ),
+}));
 
 describe("TaskListToolbar Component", () => {
   const mockCategories = [
@@ -40,84 +54,70 @@ describe("TaskListToolbar Component", () => {
     expect(defaultProps.onSearchChange).toHaveBeenCalledWith("test search");
   });
 
-  it("handles filter changes - status", async () => {
+  it("handles filter changes - status", () => {
     render(<TaskListToolbar {...defaultProps} />);
-    
-    // Open Filter menu
+
     fireEvent.click(screen.getByRole("button", { name: "filter_listFilter" }));
-    
-    // Select 'completed'
-    const item = await screen.findByRole("menuitem", { name: /completed/i });
-    fireEvent.click(item);
+    fireEvent.click(getMenuButton(/^completed$/i)!);
     expect(defaultProps.onCompletedChange).toHaveBeenCalledWith("completed");
   });
 
-  it("handles filter changes - high importance", async () => {
+  it("handles filter changes - high importance", () => {
     const { rerender } = render(<TaskListToolbar {...defaultProps} />);
-    
+
     fireEvent.click(screen.getByRole("button", { name: "filter_listFilter" }));
-    const item = await screen.findByRole("menuitem", { name: /high importance only/i });
-    fireEvent.click(item);
+    fireEvent.click(getMenuButton(/^high importance only$/i)!);
     expect(defaultProps.onToggleHighImportance).toHaveBeenCalled();
 
-    // Test with filter ON
     rerender(<TaskListToolbar {...defaultProps} filterHighImportance={true} />);
     fireEvent.click(screen.getByRole("button", { name: "filter_listFilter" }));
-    const itemOn = await screen.findByRole("menuitem", { name: /high importance only/i });
-    expect(itemOn.querySelector(".text-primary")).toBeDefined();
+    const itemOn = getMenuButton(/^high importance only$/i)!;
+    expect(itemOn.className).toContain("text-primary");
   });
 
-  it("handles filter changes - quick wins", async () => {
+  it("handles filter changes - quick wins", () => {
     const { rerender } = render(<TaskListToolbar {...defaultProps} />);
     
     fireEvent.click(screen.getByRole("button", { name: "filter_listFilter" }));
-    const item = await screen.findByRole("menuitem", { name: /quick wins/i });
+    const item = getMenuButton(/quick wins/i)!;
     fireEvent.click(item);
     expect(defaultProps.onToggleQuickWins).toHaveBeenCalled();
 
     // Test with filter ON
     rerender(<TaskListToolbar {...defaultProps} filterQuickWins={true} />);
     fireEvent.click(screen.getByRole("button", { name: "filter_listFilter" }));
-    const itemOn = await screen.findByRole("menuitem", { name: /quick wins/i });
-    expect(itemOn.querySelector(".text-primary")).toBeDefined();
+    const itemOn = getMenuButton(/quick wins/i)!;
+    expect(itemOn.className).toContain("text-primary");
   });
 
-  it("handles filter changes - categories", async () => {
+  it("handles filter changes - categories", () => {
     render(<TaskListToolbar {...defaultProps} />);
     
     fireEvent.click(screen.getByRole("button", { name: "filter_listFilter" }));
     
-    // Select a category
-    const cat1 = await screen.findByRole("menuitem", { name: /category 1/i });
-    fireEvent.click(cat1);
+    fireEvent.click(getMenuButton(/^Category 1$/i)!);
     expect(defaultProps.onCategoryChange).toHaveBeenCalledWith(1);
 
-    // Re-open and Select all categories
     fireEvent.click(screen.getByRole("button", { name: "filter_listFilter" }));
-    const allCat = await screen.findByRole("menuitem", { name: /all categories/i });
-    fireEvent.click(allCat);
+    fireEvent.click(getMenuButton(/^All Categories$/i)!);
     expect(defaultProps.onCategoryChange).toHaveBeenCalledWith(null);
   });
 
-  it("handles sort changes", async () => {
+  it("handles sort changes", () => {
     render(<TaskListToolbar {...defaultProps} />);
     
     // Open Sort menu
     fireEvent.click(screen.getByRole("button", { name: "sortSort" }));
     
-    // Select Importance
-    const impItem = await screen.findByRole("menuitem", { name: /importance/i });
-    fireEvent.click(impItem);
+    fireEvent.click(getMenuButton(/^Importance$/i)!);
     expect(defaultProps.onSortChange).toHaveBeenCalledWith("-importance");
 
-    // Re-open and Select Estimated Time
     fireEvent.click(screen.getByRole("button", { name: "sortSort" }));
-    const estItem = await screen.findByRole("menuitem", { name: /estimated time/i });
-    fireEvent.click(estItem);
+    fireEvent.click(getMenuButton(/^Estimated Time$/i)!);
     expect(defaultProps.onSortChange).toHaveBeenCalledWith("estimated_minutes");
   });
 
-  it("displays active filters correctly", async () => {
+  it("displays active filters correctly", () => {
     render(
       <TaskListToolbar 
         {...defaultProps} 
@@ -129,13 +129,13 @@ describe("TaskListToolbar Component", () => {
     
     fireEvent.click(screen.getByRole("button", { name: "filter_listFilter" }));
     
-    const completedItem = await screen.findByRole("menuitem", { name: /completed/i });
+    const completedItem = getMenuButton(/^completed$/i)!;
     expect(completedItem.className).toContain("font-bold");
 
-    const highImportanceItem = await screen.findByRole("menuitem", { name: /high importance only/i });
+    const highImportanceItem = getMenuButton(/^high importance only$/i)!;
     expect(highImportanceItem.className).toContain("font-bold");
     
-    const categoryItem = await screen.findByRole("menuitem", { name: /category 1/i });
+    const categoryItem = getMenuButton(/^Category 1$/i)!;
     expect(categoryItem.className).toContain("font-bold");
   });
 });

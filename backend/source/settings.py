@@ -13,9 +13,10 @@ https://docs.djangoproject.com/en/6.0/ref/settings/
 import os
 import sys
 from datetime import timedelta
+from pathlib import Path
+
 from celery.schedules import crontab
 from django.core.exceptions import ImproperlyConfigured
-from pathlib import Path
 from dotenv import load_dotenv
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -281,13 +282,14 @@ TESTING = "test" in sys.argv or os.getenv("TESTING") == "True"
 if TESTING:
     CELERY_TASK_ALWAYS_EAGER = True
     CELERY_TASK_EAGER_PROPAGATES = True
-
-if TESTING:
     CHANNEL_LAYERS = {
         "default": {
             "BACKEND": "channels.layers.InMemoryChannelLayer",
         },
     }
+    PASSWORD_HASHERS = [
+        "django.contrib.auth.hashers.MD5PasswordHasher",
+    ]
 else:
     CHANNEL_LAYERS = {
         "default": {

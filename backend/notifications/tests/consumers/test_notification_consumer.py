@@ -1,11 +1,13 @@
-from channels.testing import WebsocketCommunicator
+import asyncio
+
+from channels.layers import get_channel_layer
 from channels.routing import URLRouter
+from channels.testing import WebsocketCommunicator
+from django.contrib.auth import get_user_model
 from django.contrib.auth.models import AnonymousUser
 from django.test import TransactionTestCase
+
 from notifications.routing import websocket_urlpatterns
-from django.contrib.auth import get_user_model
-from channels.layers import get_channel_layer
-import asyncio
 
 User = get_user_model()
 

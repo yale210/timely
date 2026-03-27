@@ -4,6 +4,21 @@ import { NotificationDropdown } from '@/components/notifications/NotificationDro
 import { BrowserRouter } from 'react-router-dom';
 import { NotificationType } from '@/types';
 
+vi.mock('@/hooks/friends/useFriendships', () => ({
+  useFriendships: () => ({
+    friendships: [],
+    loading: false,
+    error: null,
+    sending: false,
+    actingIds: new Set<number>(),
+    acceptRequest: vi.fn(),
+    declineRequest: vi.fn(),
+    sendRequest: vi.fn(),
+    removeFriend: vi.fn(),
+    refresh: vi.fn(),
+  }),
+}));
+
 const mockNotifications = [
   {
     id: 1,
@@ -102,4 +117,3 @@ describe('NotificationDropdown', () => {
     expect(await screen.findByText('No notifications')).toBeDefined();
   });
 });
-
