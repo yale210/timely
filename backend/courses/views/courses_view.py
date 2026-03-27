@@ -1,3 +1,5 @@
+"""Course CRUD view mixins."""
+
 from django.db.models import Q
 from rest_framework.generics import get_object_or_404
 
@@ -6,14 +8,22 @@ from rest_framework.response import Response
 from courses.models.course import Course, CourseEnrollment
 from courses.models.student import Student
 from courses.models.teacher import Teacher
-from courses.permissions.course import CoursePermission
-from courses.serializers.course import CourseCreateSerializer, CourseSerializer
-from courses.views.base import CourseViewSetBase
+from courses.permissions.course_permission import CoursePermission
+from courses.serializers.course_serializer import CourseCreateSerializer, CourseSerializer
+from courses.views.base_view import CourseViewSetBase
 
 
 class CourseCrudMixin(CourseViewSetBase):
+    """Mixin for course CRUD actions."""
     def list(self, request):
-        """Return courses the user is enrolled in, staffs, or leads."""
+        """Return courses relevant to the authenticated user.
+
+        Args:
+            request: The incoming DRF request.
+
+        Returns:
+            Response: A response containing the visible course list.
+        """
         student = Student.objects.filter(user=request.user).first()
         teacher = Teacher.objects.filter(user=request.user).first()
 
@@ -40,6 +50,14 @@ class CourseCrudMixin(CourseViewSetBase):
         return Response(CourseSerializer(courses, many=True).data, status=200)
 
     def create(self, request):
+        """Create a new course for the authenticated teacher.
+
+        Args:
+            request: The incoming DRF request.
+
+        Returns:
+            Response: A response containing the created course payload.
+        """
         teacher = Teacher.objects.filter(user=request.user).first()
         serializer = CourseCreateSerializer(
             data=request.data,
@@ -50,6 +68,15 @@ class CourseCrudMixin(CourseViewSetBase):
         return Response(CourseCreateSerializer(course).data, status=201)
 
     def retrieve(self, request, pk=None):
+        """Return a course with its active student cohort.
+
+        Args:
+            request: The incoming DRF request.
+            pk: The primary key of the course to retrieve.
+
+        Returns:
+            Response: A response containing the course detail payload.
+        """
         course = get_object_or_404(Course, pk=pk)
         self.check_object_permissions(request, course)
 
@@ -73,6 +100,15 @@ class CourseCrudMixin(CourseViewSetBase):
         return resp
 
     def update(self, request, pk=None):
+        """Replace the course fields the user is allowed to modify.
+
+        Args:
+            request: The incoming DRF request.
+            pk: The primary key of the course to update.
+
+        Returns:
+            Response: A response containing the updated course payload.
+        """
         course = get_object_or_404(Course, pk=pk)
         self.check_object_permissions(request, course)
 
@@ -90,6 +126,15 @@ class CourseCrudMixin(CourseViewSetBase):
         return Response(serializer.data)
 
     def partial_update(self, request, pk=None):
+        """Partially update the course fields the user may change.
+
+        Args:
+            request: The incoming DRF request.
+            pk: The primary key of the course to update.
+
+        Returns:
+            Response: A response containing the updated course payload.
+        """
         course = get_object_or_404(Course, pk=pk)
         self.check_object_permissions(request, course)
 
@@ -107,8 +152,18 @@ class CourseCrudMixin(CourseViewSetBase):
         return Response(serializer.data)
 
     def destroy(self, request, pk=None):
+        """Soft-delete a course by deactivating it.
+
+        Args:
+            request: The incoming DRF request.
+            pk: The primary key of the course to deactivate.
+
+        Returns:
+            Response: A response containing the deactivated course payload.
+        """
         course = self.get_course(pk)
         self.check_object_permissions(request, course)
         course.active = False
         course.save(update_fields=["active"])
         return Response(CourseSerializer(course).data, status=204)
+

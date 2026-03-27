@@ -20,7 +20,7 @@ from core.views import (
 from core.views.export_view import ExportView
 from core.views.import_view import ImportView
 from courses.views import CourseViewSet
-from courses.views.teacher import TeacherView
+from courses.views.teacher_view import TeacherView
 
 from core.views.share_send_view import ShareSendView
 from core.views.share_accept_view import ShareAcceptView
@@ -66,3 +66,4 @@ urlpatterns = [
 
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+

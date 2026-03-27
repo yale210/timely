@@ -1,12 +1,15 @@
+"""Serializer definitions for course permission payloads."""
+
 from django.contrib.auth import get_user_model
 from rest_framework import serializers
 
-from courses.permissions.course import CoursePermission
+from courses.permissions.course_permission import CoursePermission
 
 User = get_user_model()
 
 
 class PermissionsSerializer(serializers.Serializer):
+    """Serializer for course permission flags."""
     can_view_course_details = serializers.BooleanField(read_only=True)
     can_view_events = serializers.BooleanField(read_only=True)
     can_create_join_code = serializers.BooleanField(read_only=True)
@@ -19,6 +22,14 @@ class PermissionsSerializer(serializers.Serializer):
     can_leave = serializers.BooleanField(read_only=True)
 
     def to_representation(self, course):
+        """Build the permission payload for the supplied course.
+
+        Args:
+            course: The course instance being serialized.
+
+        Returns:
+            dict[str, bool]: A mapping of course permission flags.
+        """
         request = self.context["request"]
         perm = CoursePermission()
 

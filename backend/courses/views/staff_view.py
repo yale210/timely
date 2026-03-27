@@ -1,18 +1,31 @@
+"""Course staff view mixins."""
+
 from django.contrib.auth import get_user_model
 from rest_framework import status
 from rest_framework.decorators import action
 from rest_framework.response import Response
 
 from courses.models.course import CourseStaff
-from courses.serializers.course import CourseStaffAddSerializer
-from courses.views.base import CourseViewSetBase
+from courses.serializers.course_serializer import CourseStaffAddSerializer
+from courses.views.base_view import CourseViewSetBase
 
 User = get_user_model()
 
 
 class CourseStaffMixin(CourseViewSetBase):
+    """Mixin for course staff actions."""
+
     @action(detail=True, methods=["get", "post", "delete"], url_path="staff")
     def staff(self, request, pk=None):
+        """List, add, or remove course staff members.
+
+        Args:
+            request: The incoming DRF request.
+            pk: The primary key of the course whose staff is being managed.
+
+        Returns:
+            Response: A response containing the staff payload or operation result.
+        """
         course = self.get_course(pk)
         self.check_object_permissions(request, course)
 
@@ -71,3 +84,4 @@ class CourseStaffMixin(CourseViewSetBase):
             return Response({"detail": "Staff member not found."}, status=404)
 
         return Response(status=status.HTTP_204_NO_CONTENT)
+

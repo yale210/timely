@@ -1,3 +1,5 @@
+"""Tests for course event sync services."""
+
 import datetime
 from unittest.mock import patch
 
@@ -13,7 +15,9 @@ User = get_user_model()
 
 
 class CourseEventSyncServiceTests(TestCase):
+    """Test cases for course event sync service."""
     def setUp(self):
+        """Set up shared test fixtures."""
         self.teacher_user = User.objects.create_user(
             username="teacher",
             password="password123",
@@ -65,6 +69,7 @@ class CourseEventSyncServiceTests(TestCase):
         )
 
     def test_sync_course_event_to_core_creates_events_for_all_active_enrollments(self):
+        """Test sync course event to core creates events for all active enrollments."""
         CourseEnrollment.objects.create(
             course=self.course, student=self.student, active=True
         )
@@ -88,6 +93,7 @@ class CourseEventSyncServiceTests(TestCase):
         self.assertEqual(event.colour, "#ff0000")
 
     def test_sync_course_event_to_core_updates_existing_event(self):
+        """Test sync course event to core updates existing event."""
         CourseEnrollment.objects.create(
             course=self.course, student=self.student, active=True
         )
@@ -115,6 +121,7 @@ class CourseEventSyncServiceTests(TestCase):
         self.assertEqual(existing_event.end_time, self.course_event.end_time)
 
     def test_sync_course_event_to_core_returns_noop_when_no_enrollments(self):
+        """Test sync course event to core returns noop when no enrollments."""
         stats = CourseEventSyncService.sync_course_event_to_core(self.course_event)
 
         self.assertEqual(stats["created"], 0)
@@ -123,6 +130,7 @@ class CourseEventSyncServiceTests(TestCase):
         self.assertEqual(Event.objects.count(), 0)
 
     def test_sync_user_course_events_creates_events_for_enrolled_courses(self):
+        """Test sync user course events creates events for enrolled courses."""
         CourseEnrollment.objects.create(
             course=self.course, student=self.student, active=True
         )
@@ -135,6 +143,7 @@ class CourseEventSyncServiceTests(TestCase):
         self.assertEqual(Event.objects.filter(user=self.student_user).count(), 1)
 
     def test_sync_user_course_events_updates_existing_event(self):
+        """Test sync user course events updates existing event."""
         CourseEnrollment.objects.create(
             course=self.course, student=self.student, active=True
         )
@@ -163,6 +172,7 @@ class CourseEventSyncServiceTests(TestCase):
         self.assertEqual(existing_event.end_time, self.course_event.end_time)
 
     def test_sync_user_course_events_skips_users_without_enrollments(self):
+        """Test sync user course events skips users without enrollments."""
         stats = CourseEventSyncService.sync_user_course_events(self.other_user)
 
         self.assertEqual(stats["created"], 0)
@@ -172,6 +182,7 @@ class CourseEventSyncServiceTests(TestCase):
 
     @patch("courses.services.event.logger")
     def test_sync_course_event_to_core_collects_errors(self, mock_logger):
+        """Test sync course event to core collects errors."""
         CourseEnrollment.objects.create(
             course=self.course, student=self.student, active=True
         )

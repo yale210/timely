@@ -1,3 +1,5 @@
+"""Course-related model definitions."""
+
 from django.conf import settings
 from django.db import models
 
@@ -7,6 +9,7 @@ from courses.models.teacher import Teacher
 
 
 class Course(models.Model):
+    """Model for a course."""
     name = models.CharField(max_length=255)
     description = models.TextField(blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -20,10 +23,12 @@ class Course(models.Model):
     )
 
     def __str__(self):
+        """Return the string representation of the object."""
         return self.name
 
 
 class CourseEnrollment(models.Model):
+    """Model linking a student to a course."""
     course = models.ForeignKey(
         Course, on_delete=models.CASCADE, related_name="enrollments"
     )
@@ -38,10 +43,12 @@ class CourseEnrollment(models.Model):
         ordering = ["-enrolled_at"]
 
     def __str__(self):
+        """Return the string representation of the object."""
         return f"{self.student.user.username} enrolled in {self.course.name}"
 
 
 class CourseStaff(models.Model):
+    """Model for course staff memberships."""
     course = models.ForeignKey(
         Course, on_delete=models.CASCADE, related_name="staff_members"
     )
@@ -58,10 +65,12 @@ class CourseStaff(models.Model):
         ordering = ["-assigned_at"]
 
     def __str__(self):
+        """Return the string representation of the object."""
         return f"{self.student.username} is staff for {self.course.name}"
 
 
 class CourseEvent(BaseEventModel):
+    """Model for events attached to a course."""
     course = models.ForeignKey(Course, on_delete=models.CASCADE, related_name="events")
     created_by = models.ForeignKey(
         Teacher, on_delete=models.SET_NULL, null=True, blank=True, related_name="author"
@@ -69,6 +78,7 @@ class CourseEvent(BaseEventModel):
 
 
 class CourseJoinCode(models.Model):
+    """Model for course join codes."""
     course = models.ForeignKey(
         Course,
         on_delete=models.CASCADE,
@@ -83,4 +93,5 @@ class CourseJoinCode(models.Model):
         ordering = ["-created_at"]
 
     def __str__(self):
+        """Return the string representation of the object."""
         return f"Join code for {self.course.name}: {self.code}"

@@ -1,3 +1,5 @@
+"""Course membership view mixins."""
+
 from django.utils import timezone
 from rest_framework import status
 from rest_framework.decorators import action
@@ -6,16 +8,27 @@ from secrets import token_urlsafe
 
 from courses.models.course import CourseEnrollment, CourseJoinCode
 from courses.models.student import Student
-from courses.serializers.course import (
+from courses.serializers.course_serializer import (
     CourseJoinCodeCreateSerializer,
     CourseJoinCodeSerializer,
 )
-from courses.views.base import CourseViewSetBase
+from courses.views.base_view import CourseViewSetBase
 
 
 class CourseMembershipMixin(CourseViewSetBase):
+    """Mixin for course membership actions."""
+
     @action(detail=True, methods=["post"], url_path="join")
     def join(self, request, pk=None):
+        """Enroll the current user in the requested course.
+
+        Args:
+            request: The incoming DRF request.
+            pk: The primary key of the course to join.
+
+        Returns:
+            Response: A response describing the enrollment result.
+        """
         course = self.get_course(pk)
         student = Student.objects.get_or_create(user=request.user)[0]
 
@@ -38,6 +51,15 @@ class CourseMembershipMixin(CourseViewSetBase):
 
     @action(detail=True, methods=["post"], url_path="leave")
     def leave(self, request, pk=None):
+        """Leave the requested course.
+
+        Args:
+            request: The incoming DRF request.
+            pk: The primary key of the course to leave.
+
+        Returns:
+            Response: A response describing the leave result.
+        """
         course = self.get_course(pk)
         student = Student.objects.filter(user=request.user).first()
 
@@ -64,6 +86,14 @@ class CourseMembershipMixin(CourseViewSetBase):
 
     @action(detail=False, methods=["post"], url_path="join-by-code")
     def join_by_code(self, request):
+        """Join a course using a join code.
+
+        Args:
+            request: The incoming DRF request.
+
+        Returns:
+            Response: A response describing the enrollment result.
+        """
         serializer = CourseJoinCodeSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
@@ -109,6 +139,15 @@ class CourseMembershipMixin(CourseViewSetBase):
 
     @action(detail=True, methods=["post"], url_path="join-code")
     def join_code(self, request, pk=None):
+        """Create a join code for the requested course.
+
+        Args:
+            request: The incoming DRF request.
+            pk: The primary key of the course to generate a join code for.
+
+        Returns:
+            Response: A response containing the created join code payload.
+        """
         course = self.get_course(pk)
         self.check_object_permissions(request, course)
 
@@ -137,3 +176,4 @@ class CourseMembershipMixin(CourseViewSetBase):
             },
             status=status.HTTP_201_CREATED,
         )
+

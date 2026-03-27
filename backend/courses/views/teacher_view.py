@@ -1,3 +1,5 @@
+"""Teacher management views for courses."""
+
 from django.contrib.auth import get_user_model
 from rest_framework import status
 from rest_framework.decorators import action
@@ -6,16 +8,25 @@ from rest_framework.response import Response
 from rest_framework.viewsets import ViewSet
 
 from courses.models import Course, Teacher
-from courses.permissions.TeacherPermission import IsTeacher
-from courses.serializers.teacher import TeacherCreateSerializer, TeacherSerializer
+from courses.permissions.teacher_permission import IsTeacher
+from courses.serializers.teacher_serializer import TeacherCreateSerializer, TeacherSerializer
 
 User = get_user_model()
 
 
 class TeacherView(ViewSet):
+    """View set for teacher registration and listing."""
     permission_classes = [IsAuthenticated, IsTeacher]
 
     def list(self, request):
+        """Return active teachers and the courses they lead.
+
+        Args:
+            request: The incoming DRF request.
+
+        Returns:
+            Response: A response containing active teachers and their courses.
+        """
         teachers = (
             Teacher.objects.select_related("user")
             .filter(active=True)
@@ -55,6 +66,14 @@ class TeacherView(ViewSet):
         permission_classes=[IsAuthenticated],
     )
     def create_teacher(self, request):
+        """Register or reactivate a teacher profile for a user.
+
+        Args:
+            request: The incoming DRF request.
+
+        Returns:
+            Response: A response containing the teacher payload.
+        """
         serializer = TeacherCreateSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
@@ -88,6 +107,14 @@ class TeacherView(ViewSet):
         permission_classes=[IsAuthenticated],
     )
     def unregister_teacher(self, request):
+        """Deactivate the current user's teacher registration.
+
+        Args:
+            request: The incoming DRF request.
+
+        Returns:
+            Response: A response containing the updated teacher payload.
+        """
         teacher = Teacher.objects.filter(user=request.user).first()
 
         if teacher is None:

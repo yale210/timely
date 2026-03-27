@@ -1,3 +1,5 @@
+"""Tests for calendar sync services."""
+
 import datetime
 from unittest.mock import Mock, patch
 
@@ -12,7 +14,9 @@ User = get_user_model()
 
 
 class SyncCalendarTests(TestCase):
+    """Test cases for sync calendar."""
     def setUp(self):
+        """Set up shared test fixtures."""
         self.teacher_user = User.objects.create_user(
             username="teacher",
             password="password123",
@@ -54,6 +58,7 @@ class SyncCalendarTests(TestCase):
         self.sync_service = SyncCalendar(self.provider)
 
     def test_sync_user_calendar_creates_new_event(self):
+        """Test sync user calendar creates new event."""
         CourseEnrollment.objects.create(
             course=self.course, student=self.student, active=True
         )
@@ -74,6 +79,7 @@ class SyncCalendarTests(TestCase):
         self.assertEqual(called_data["location"], "Room 101")
 
     def test_sync_user_calendar_updates_existing_event_when_changed(self):
+        """Test sync user calendar updates existing event when changed."""
         CourseEnrollment.objects.create(
             course=self.course, student=self.student, active=True
         )
@@ -106,6 +112,7 @@ class SyncCalendarTests(TestCase):
         self.assertEqual(called_data["title"], "Lesson 1")
 
     def test_sync_user_calendar_does_not_update_when_event_is_unchanged(self):
+        """Test sync user calendar does not update when event is unchanged."""
         CourseEnrollment.objects.create(
             course=self.course, student=self.student, active=True
         )
@@ -131,6 +138,7 @@ class SyncCalendarTests(TestCase):
         self.provider.create_event.assert_not_called()
 
     def test_sync_user_calendar_honors_date_filters(self):
+        """Test sync user calendar honors date filters."""
         CourseEnrollment.objects.create(
             course=self.course, student=self.student, active=True
         )
@@ -151,6 +159,7 @@ class SyncCalendarTests(TestCase):
         self.provider.create_event.assert_not_called()
 
     def test_sync_user_calendar_returns_noop_when_user_has_no_enrollments(self):
+        """Test sync user calendar returns noop when user has no enrollments."""
         stats = self.sync_service.sync_user_calendar(self.other_user)
 
         self.assertEqual(stats["created"], 0)
@@ -162,6 +171,7 @@ class SyncCalendarTests(TestCase):
         self.provider.update_event.assert_not_called()
 
     def test_sync_course_event_syncs_all_active_enrolled_users(self):
+        """Test sync course event syncs all active enrolled users."""
         CourseEnrollment.objects.create(
             course=self.course, student=self.student, active=True
         )
@@ -176,6 +186,7 @@ class SyncCalendarTests(TestCase):
         self.assertEqual(self.provider.create_event.call_count, 2)
 
     def test_sync_course_event_only_syncs_specific_user_when_provided(self):
+        """Test sync course event only syncs specific user when provided."""
         CourseEnrollment.objects.create(
             course=self.course, student=self.student, active=True
         )
@@ -196,6 +207,7 @@ class SyncCalendarTests(TestCase):
         self.assertEqual(called_data["title"], "Lesson 1")
 
     def test_remove_calendar_event_deletes_matching_event(self):
+        """Test remove calendar event deletes matching event."""
         self.provider.get_events.return_value = [
             {
                 "id": "external-1",
@@ -215,6 +227,7 @@ class SyncCalendarTests(TestCase):
 
     @patch("courses.services.event.logger")
     def test_remove_calendar_event_returns_false_when_not_found(self, mock_logger):
+        """Test remove calendar event returns false when not found."""
         self.provider.get_events.return_value = []
 
         result = self.sync_service.remove_calendar_event(
@@ -229,6 +242,7 @@ class SyncCalendarTests(TestCase):
 
     @patch("courses.services.event.logger")
     def test_sync_user_calendar_collects_provider_errors(self, mock_logger):
+        """Test sync user calendar collects provider errors."""
         CourseEnrollment.objects.create(
             course=self.course, student=self.student, active=True
         )
