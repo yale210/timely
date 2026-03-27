@@ -1,5 +1,6 @@
 import api from "@/services/api";
 import type { Share } from "@/types";
+import axios from "axios";
 
 /**
  * Returns all of the user's share requests
@@ -18,7 +19,19 @@ export const sendShare = async (receiverUsername: string, eventID: string): Prom
     const formData = new FormData()
     formData.append("Receiver", receiverUsername)
     formData.append("Event-ID", eventID)
-    await api.post("/api/share_send/", formData)
+
+    try {
+        await api.post<{ message: string }>("/api/share_send/", formData);
+    } catch (error: unknown) {
+        if (axios.isAxiosError(error)) {
+            const data = error.response?.data as { message ?: string}
+            const message = data.message;
+
+            throw new Error(message ?? "Failed to share event")
+        }
+        throw error;
+    }
+
 };
 
 /**

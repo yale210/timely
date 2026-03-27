@@ -9,7 +9,7 @@ on:
 
 jobs:
     build:
-        runs-on: self-hosted
+        runs-on: ubuntu-latest
         steps:
             - uses: actions/checkout@v4
             - name: Log in to DOCR
@@ -27,7 +27,7 @@ jobs:
                   docker push registry.digitalocean.com/segmajor/backend:latest
                   docker push registry.digitalocean.com/segmajor/frontend:latest
     deploy:
-        runs-on: self-hosted
+        runs-on: ubuntu-latest
         needs: [build]
         steps:
             - name: SSH and deploy
@@ -43,4 +43,3 @@ jobs:
                   sudo docker compose exec backend python manage.py migrate
                   sudo docker image prune -f
                   EOF
-
