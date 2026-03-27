@@ -4,7 +4,7 @@ from django.test import TestCase
 from django.contrib.auth import get_user_model
 from rest_framework import serializers
 from core.models import Friendship
-from core.serializers.friendship import FriendshipSerializer
+from core.serializers.friendship_serializer import FriendshipSerializer
 from profiles.models.profile import Profile
 from django.core.files.uploadedfile import SimpleUploadedFile
 from rest_framework.test import APIRequestFactory
@@ -140,3 +140,6 @@ class FriendshipSerializerTests(TestCase):
         """Test get receiver avatar."""
         serializer = FriendshipSerializer()
         self.assertIsNone(serializer.get_receiver_avatar(self.friendship))
+
+
+

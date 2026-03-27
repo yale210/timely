@@ -2,7 +2,7 @@
 
 from django.test import TestCase
 from django.contrib.auth import get_user_model
-from core.serializers.preference import PreferenceSerializer
+from core.serializers.preference_serializer import PreferenceSerializer
 from core.models import Preference
 import datetime
 
@@ -46,3 +46,6 @@ class PreferenceSerializerTests(TestCase):
         serializer.save()
         pref.refresh_from_db()
         self.assertEqual(pref.day_start, datetime.time(9, 0))
+
+
+

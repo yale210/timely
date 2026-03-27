@@ -19,7 +19,7 @@ from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
 
 from core.models import Event
-from core.serializers.event import (
+from core.serializers.event_serializer import (
     EventResponseSerializer,
     EventSerializer,
     ExpandedEventInstanceSerializer,
@@ -460,3 +460,6 @@ class EventViewSet(viewsets.ModelViewSet):
 
         """
         return Response({"server_time": timezone.now().isoformat()})
+
+
+

@@ -5,7 +5,7 @@ from django.contrib.auth import get_user_model
 from django.test import TestCase
 from django.utils import timezone
 from core.models import Event
-from core.serializers.event import EventSerializer
+from core.serializers.event_serializer import EventSerializer
 from rest_framework.exceptions import ValidationError
 
 
@@ -199,3 +199,6 @@ class EventSerializerTests(TestCase):
         self.assertTrue(serializer.is_valid(), serializer.errors)
         event.refresh_from_db()
         self.assertEqual(event.start_time, now)
+
+
+

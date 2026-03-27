@@ -4,8 +4,8 @@ from django.db import transaction
 from rest_framework import serializers
 
 from core.models import Assessment, Category, Event, EventReminder
-from core.serializers.category import CategorySerializer
-from core.serializers.event import EventResponseSerializer
+from core.serializers.category_serializer import CategorySerializer
+from core.serializers.event_serializer import EventResponseSerializer
 
 
 class AssessmentEventInputSerializer(serializers.Serializer):
@@ -249,3 +249,6 @@ class AssessmentSerializer(serializers.ModelSerializer):
 
         self._sync_linked_event(instance, effective_categories, event_details)
         return instance
+
+
+

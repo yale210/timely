@@ -25,3 +25,5 @@ class PendingShareEvent(models.Model):
     # Ensures only 1 of the same event can be shared to each user.
     class Meta:
         unique_together = ("sender", "receiver", "event")
+
+

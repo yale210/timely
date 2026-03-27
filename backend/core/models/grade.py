@@ -69,3 +69,5 @@ class Grade(models.Model):
         )
         total = qs.aggregate(models.Sum("estimated_minutes"))["estimated_minutes__sum"]
         return int(total or 0)
+
+

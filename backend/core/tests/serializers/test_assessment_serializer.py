@@ -8,7 +8,7 @@ from django.utils import timezone
 from rest_framework.test import APIRequestFactory
 
 from core.models import Category
-from core.serializers.assessment import (
+from core.serializers.assessment_serializer import (
     AssessmentEventInputSerializer,
     AssessmentSerializer,
 )
@@ -265,3 +265,6 @@ class AssessmentSerializerTests(TestCase):
         self.assertEqual(
             updated_assessment.linked_event.categories.first(), update_category
         )
+
+
+

@@ -7,7 +7,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from ..serializers.summary import WeeklySummarySerializer
+from ..serializers.summary_serializer import WeeklySummarySerializer
 from ..utils.stats import calculate_weekly_stats
 
 
@@ -54,3 +54,6 @@ class WeeklySummaryView(APIView):
         stats = calculate_weekly_stats(request.user, now=now_dt)
         serializer = WeeklySummarySerializer(stats)
         return Response(serializer.data)
+
+
+

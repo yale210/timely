@@ -6,7 +6,7 @@ from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
 
 from core.models import Preference
-from core.serializers.preference import PreferenceSerializer
+from core.serializers.preference_serializer import PreferenceSerializer
 
 
 class PreferenceViewSet(viewsets.ModelViewSet):
@@ -72,3 +72,6 @@ class PreferenceViewSet(viewsets.ModelViewSet):
         serializer.is_valid(raise_exception=True)
         serializer.save()
         return Response(serializer.data)
+
+
+

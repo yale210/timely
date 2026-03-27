@@ -8,7 +8,7 @@ from django.utils import timezone
 from rest_framework import serializers
 from core.models import Event, EventReminder
 from core.models import Category
-from core.serializers.category import CategorySerializer
+from core.serializers.category_serializer import CategorySerializer
 
 
 class EventReminderSerializer(serializers.ModelSerializer):
@@ -269,3 +269,6 @@ class ExpandedEventInstanceSerializer(serializers.Serializer):
     instance_id = serializers.CharField()
     is_split_series = serializers.BooleanField()
     split_from_event_id = serializers.IntegerField(allow_null=True, required=False)
+
+
+

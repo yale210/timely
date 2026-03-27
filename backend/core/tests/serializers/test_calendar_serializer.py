@@ -11,7 +11,7 @@ from rest_framework.test import APIRequestFactory
 
 from core.models import Category, Event, Task
 from core.serializers import CalendarSerializer
-from core.serializers.calendar import CalendarResponseSerializer
+from core.serializers.calendar_serializer import CalendarResponseSerializer
 
 
 class CalendarSerializerTests(TestCase):
@@ -647,3 +647,6 @@ class CalendarSerializerTests(TestCase):
         )
         self.assertFalse(serializer.is_valid())
         self.assertIn("max_split_minutes", serializer.errors)
+
+
+

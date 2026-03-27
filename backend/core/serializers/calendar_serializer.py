@@ -6,7 +6,7 @@ from django.utils import timezone
 from rest_framework import serializers
 
 from core.models import Category, Event, Task
-from .category import CategorySerializer
+from .category_serializer import CategorySerializer
 
 
 class CalendarSerializer(serializers.ModelSerializer):
@@ -624,3 +624,4 @@ class CalendarResponseSerializer(serializers.ModelSerializer):
                 }
             )
         return attrs
+
