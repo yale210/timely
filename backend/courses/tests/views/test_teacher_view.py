@@ -11,34 +11,36 @@ User = get_user_model()
 
 
 class CourseViewTests(APITestCase):
-    def setUp(self):
-        self.admin_user = User.objects.create_superuser(
+    @classmethod
+    def setUpTestData(cls):
+        cls.admin_user = User.objects.create_superuser(
             username="admin",
             password="password123",
             email="admin@example.com",
         )
-        self.regular_user = User.objects.create_user(
+        cls.regular_user = User.objects.create_user(
             username="regular",
             password="password123",
             email="regular@example.com",
         )
-        self.teacher_user = User.objects.create_user(
+        cls.teacher_user = User.objects.create_user(
             username="teacher",
             password="password123",
             email="teacher@example.com",
         )
-        self.inactive_teacher_user = User.objects.create_user(
+        cls.inactive_teacher_user = User.objects.create_user(
             username="inactive_teacher",
             password="password123",
             email="inactive@example.com",
         )
 
-        self.teacher = Teacher.objects.create(user=self.teacher_user, active=True)
-        self.inactive_teacher = Teacher.objects.create(
-            user=self.inactive_teacher_user,
+        cls.teacher = Teacher.objects.create(user=cls.teacher_user, active=True)
+        cls.inactive_teacher = Teacher.objects.create(
+            user=cls.inactive_teacher_user,
             active=False,
         )
-
+    
+    def setUp(self):
         self.url = reverse("teacher-list")
         self.create_url = reverse("teacher-create-teacher")
         self.unregister_url = reverse("teacher-unregister-teacher")

@@ -11,21 +11,22 @@ User = get_user_model()
 
 
 class IsTeacherPermissionTests(TestCase):
-    def setUp(self):
-        self.factory = APIRequestFactory()
-        self.permission = IsTeacher()
-
-        self.teacher_user = User.objects.create_user(
+    @classmethod
+    def setUpTestData(cls):
+        cls.factory = APIRequestFactory()
+        cls.permission = IsTeacher()
+        
+        cls.teacher_user = User.objects.create_user(
             username="teacher_user",
             password="password123",
             email="teacher@example.com",
         )
-        self.student_user = User.objects.create_user(
+        cls.student_user = User.objects.create_user(
             username="student_user",
             password="password123",
             email="student@example.com",
         )
-        self.superuser = User.objects.create_superuser(
+        cls.superuser = User.objects.create_superuser(
             username="admin",
             password="password123",
             email="admin@example.com",

@@ -20,44 +20,47 @@ User = get_user_model()
 
 
 class CourseViewTests(APITestCase):
-    def setUp(self):
-        self.teacher_user = User.objects.create_user(
+    
+    @classmethod
+    def setUpTestData(cls):
+        cls.teacher_user = User.objects.create_user(
             username="teacher",
             password="password123",
             email="teacher@example.com",
         )
-        self.student_user = User.objects.create_user(
+        cls.student_user = User.objects.create_user(
             username="student",
             password="password123",
             email="student@example.com",
         )
-        self.other_user = User.objects.create_user(
+        cls.other_user = User.objects.create_user(
             username="other",
             password="password123",
             email="other@example.com",
         )
-        self.admin_user = User.objects.create_superuser(
+        cls.admin_user = User.objects.create_superuser(
             username="admin",
             password="password123",
             email="admin@example.com",
         )
 
-        self.teacher = Teacher.objects.create(user=self.teacher_user)
-        self.student = Student.objects.create(user=self.student_user)
-        self.other_student = Student.objects.create(user=self.other_user)
+        cls.teacher = Teacher.objects.create(user=cls.teacher_user)
+        cls.student = Student.objects.create(user=cls.student_user)
+        cls.other_student = Student.objects.create(user=cls.other_user)
 
-        self.course = Course.objects.create(
+        cls.course = Course.objects.create(
             name="Python Basics",
             description="Intro course",
-            lead=self.teacher,
+            lead=cls.teacher,
         )
-        self.inactive_course = Course.objects.create(
+        cls.inactive_course = Course.objects.create(
             name="Inactive Course",
             description="Inactive",
-            lead=self.teacher,
+            lead=cls.teacher,
             active=False,
         )
-
+    
+    def setUp(self):
         self.list_url = reverse("course-list")
         self.detail_url = reverse("course-detail", args=[self.course.id])
         self.inactive_detail_url = reverse(

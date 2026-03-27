@@ -7,12 +7,12 @@ User = get_user_model()
 
 class StudentModelTests(TestCase):
     """Tests for the Student model."""
-
-    def setUp(self):
-        self.user = User.objects.create_user(
+    
+    @classmethod
+    def setUpTestData(cls):
+        cls.user = User.objects.create_user(
             username="student_user", password="testpass123", email="student@test.com"
         )
-
     def test_student_creation(self):
         """Test basic student creation."""
         student = Student.objects.create(user=self.user)
