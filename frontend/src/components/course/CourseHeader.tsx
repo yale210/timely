@@ -8,7 +8,6 @@ interface CoursesHeaderProps {
   onJoinCourse: () => void;
   onRefresh: () => void;
   isTeacher: boolean;
-  onCreateCourse: () => void;
   onManageCourses: () => void;
 }
 
@@ -23,7 +22,6 @@ interface CoursesHeaderProps {
  * @param props.onJoinCourseIdChange - Callback triggered when the course ID input value changes.
  * @param props.onJoinCourse - Callback triggered when the user attempts to join a course.
  * @param props.onRefresh - Callback triggered when the user refreshes the course list.
- * @param props.onCreateCourse - Callback triggered when the user clicks to create a new course (only visible for teachers).
  * @param props.onManageCourses - Callback triggered when the user manages courses (only visible for teachers).
  * @param props.isTeacher - Indicates whether the current user is a teacher, affecting which actions are available.
  * @returns The rendered CoursesHeader component.
