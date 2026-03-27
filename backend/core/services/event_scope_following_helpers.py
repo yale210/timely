@@ -41,6 +41,11 @@ def _following_child_series_fields(
     event: Any,
     validated_data: dict[str, Any],
 ) -> dict[str, Any]:
+    """Build child-series fields while preserving parent values by default.
+
+    Returns:
+        dict[str, Any]: The fallback-driven field payload for the split child.
+    """
     return {
         "title": _field_value(validated_data, "title", fallback=event.title),
         "description": _field_value(

@@ -16,6 +16,11 @@ ReminderData = dict[str, Any]
 def _normalise_reminders(
     reminders_data: list[ReminderData] | None,
 ) -> list[ReminderData]:
+    """Coerce reminder payload values into the canonical storage shape.
+
+    Returns:
+        list[ReminderData]: Normalised reminder payloads.
+    """
     if reminders_data is None:
         return []
     return [
@@ -29,6 +34,11 @@ def _normalise_reminders(
 
 
 def _current_event_reminder_snapshot(event: Any) -> list[ReminderData]:
+    """Capture the event's current reminders in a mutation-safe structure.
+
+    Returns:
+        list[ReminderData]: The current reminder snapshot.
+    """
     reminder_rows = serialise_event_reminders(event)
     return [
         {
@@ -44,6 +54,7 @@ def _replace_event_reminders(
     event: Any,
     reminders_data: list[ReminderData] | None,
 ) -> None:
+    """Replace all reminders on an event when a new payload is provided."""
     if reminders_data is None:
         return
     cast(Any, event).reminders.all().delete()
@@ -52,6 +63,7 @@ def _replace_event_reminders(
 
 
 def _set_exception_date(event: Any, exception_date: date) -> None:
+    """Record a recurring-instance exception date on the parent event."""
     current = set(cast(Any, event).exception_dates or [])
     current.add(exception_date.isoformat())
     cast(Any, event).exception_dates = sorted(current)
@@ -59,6 +71,7 @@ def _set_exception_date(event: Any, exception_date: date) -> None:
 
 
 def _remove_exception_date(event: Any, exception_date: date) -> None:
+    """Remove a recurring-instance exception date when the occurrence is restored."""
     current = set(cast(Any, event).exception_dates or [])
     value = exception_date.isoformat()
     if value not in current:
@@ -69,6 +82,11 @@ def _remove_exception_date(event: Any, exception_date: date) -> None:
 
 
 def _category_id_set(values: Iterable[Any]) -> set[int]:
+    """Convert category objects or ids into a stable integer id set.
+
+    Returns:
+        set[int]: The normalised category ids.
+    """
     ids: set[int] = set()
     for value in values:
         ids.add(int(value.id) if hasattr(value, "id") else int(value))
@@ -78,6 +96,11 @@ def _category_id_set(values: Iterable[Any]) -> set[int]:
 def _canonicalise_reminders(
     reminders_data: list[ReminderData],
 ) -> list[tuple[int, bool, bool]]:
+    """Sort reminder payloads into a deterministic comparison tuple format.
+
+    Returns:
+        list[tuple[int, bool, bool]]: The reminder comparison tuples.
+    """
     return sorted(
         (
             int(reminder["minutes_before"]),
@@ -92,6 +115,11 @@ def _split_exception_dates(
     exception_dates: list[str] | None,
     threshold: date,
 ) -> tuple[list[str], list[str]]:
+    """Separate exception dates into historical and future partitions.
+
+    Returns:
+        tuple[list[str], list[str]]: Past dates first, future dates second.
+    """
     past: list[str] = []
     future: list[str] = []
     for value in exception_dates or []:
@@ -107,6 +135,11 @@ def _split_exception_dates(
 
 
 def _create_detached_event(event: Any, override: Any) -> Any:
+    """Materialise a detached non-recurring event from an override snapshot.
+
+    Returns:
+        Any: The detached event created from the override.
+    """
     detached = cast(Any, Event).objects.create(
         user=event.user,
         title=override.title,
