@@ -94,7 +94,7 @@ describe('taskService', () => {
 
     it('deleteEvents should call api.delete', async () => {
         const message = "Delete Events"
-        const spy = vi.spyOn(api, 'delete').mockResolvedValue({ data: { message: message }, } as any)
+        const spy = vi.spyOn(api, 'delete').mockResolvedValue({ data: { message: message }, } as { data: { message: string } })
         const result = await taskService.deleteEvents();
         expect(spy).toHaveBeenCalledWith('/api/delete_events/')
         expect(result).toBe(message)
@@ -102,7 +102,7 @@ describe('taskService', () => {
 
     it('deleteTasks should call api.delete', async () => {
         const message = "Delete Tasks"
-        const spy = vi.spyOn(api, 'delete').mockResolvedValue({ data: { message: message }, } as any)
+        const spy = vi.spyOn(api, 'delete').mockResolvedValue({ data: { message: message }, } as { data: { message: string } })
         const result = await taskService.deleteTasks();
         expect(spy).toHaveBeenCalledWith('/api/delete_tasks/')
         expect(result).toBe(message)
