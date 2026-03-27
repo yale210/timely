@@ -77,6 +77,7 @@ const createProps = (
     applyFont: vi.fn(),
     deleteEvents: vi.fn(),
     deleteTasks: vi.fn(),
+    deleteAccount: vi.fn(),
     makeTeacher: vi.fn(),
     unregisterTeacher: vi.fn(),
   },
