@@ -1,3 +1,5 @@
+"""Tests for admin-panel broadcast job service helpers."""
+
 from types import SimpleNamespace
 from unittest.mock import patch
 
@@ -15,7 +17,10 @@ User = get_user_model()
 
 
 class BroadcastJobServiceTests(TestCase):
+    """Test broadcast job creation and queueing helpers."""
+
     def setUp(self):
+        """Create users used by the broadcast job service tests."""
         self.admin_user = User.objects.create_superuser(
             username="admin",
             password="password",
@@ -35,6 +40,7 @@ class BroadcastJobServiceTests(TestCase):
         self.staff_user.save(update_fields=["is_staff"])
 
     def test_create_broadcast_job_creates_recipients_and_audit_log(self):
+        """Verify creating a broadcast persists recipients and an audit entry."""
         broadcast = create_broadcast_job(
             sender=self.admin_user,
             title="Notice",
@@ -69,6 +75,7 @@ class BroadcastJobServiceTests(TestCase):
         )
 
     def test_create_retry_broadcast_job_uses_failed_recipients_only(self):
+        """Verify retry jobs only target recipients that previously failed."""
         broadcast = BroadcastJob.objects.create(
             sender=self.admin_user,
             title="Original",
@@ -110,6 +117,7 @@ class BroadcastJobServiceTests(TestCase):
 
     @patch("admin_panel.services.broadcast_jobs.process_broadcast_job.delay")
     def test_queue_broadcast_job_updates_task_id(self, mock_delay):
+        """Verify queueing stores the async task identifier on the job."""
         broadcast = BroadcastJob.objects.create(
             sender=self.admin_user,
             title="Queued",

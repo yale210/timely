@@ -2,6 +2,8 @@ from django.db import models
 
 
 class ImportanceChoices(models.IntegerChoices):
+    """Enum for the importance of an event."""
+
     VERY_LOW = 1, "Very low"
     LOW = 2, "Low"
     LOW_MEDIUM = 3, "Low-medium"

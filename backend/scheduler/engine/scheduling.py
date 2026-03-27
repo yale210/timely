@@ -1,18 +1,36 @@
+"""Mixin for scheduling logic in the scheduler engine."""
+
 from __future__ import annotations
 
 from datetime import date, datetime, timedelta
 
 from core.models import Task
+from scheduler.engine.scheduling_split import _SchedulerSplitSchedulingMixin
 from scheduler.intervals import minutes_between
 from scheduler.scheduler_types import ScheduleResult
 
 
-class SchedulerSchedulingMixin:
+class SchedulerSchedulingMixin(_SchedulerSplitSchedulingMixin):
+    """Mixin providing core scheduling algorithms for the scheduler.
+
+    This class contains methods for finding available slots, handling
+    task splitting, and managing overall task allocation.
+    """
+
     def _clip_to_deadline(
         self,
         slot: tuple[datetime, datetime],
         deadline: datetime,
     ) -> tuple[datetime, datetime] | None:
+        """Clip a time slot so it does not exceed the task's deadline.
+
+        Args:
+            slot: The time slot to clip.
+            deadline: The deadline for the task.
+
+        Returns:
+            The clipped time slot, or None if the slot starts after the deadline.
+        """
         start, end = slot
         if end <= deadline:
             return slot
@@ -25,6 +43,15 @@ class SchedulerSchedulingMixin:
         slot: tuple[datetime, datetime],
         task_start: datetime,
     ) -> tuple[datetime, datetime] | None:
+        """Clip a time slot so it does not start before the task's start time.
+
+        Args:
+            slot: The time slot to clip.
+            task_start: The earliest start time allowed for the task.
+
+        Returns:
+            The clipped time slot, or None if the slot ends before the task start.
+        """
         start, end = slot
         if end <= task_start:
             return None
@@ -33,6 +60,14 @@ class SchedulerSchedulingMixin:
         return slot
 
     def _empty_success(self, task: Task) -> ScheduleResult:
+        """Create a ScheduleResult indicating successful but empty allocation.
+
+        Args:
+            task: The task with no remaining minutes.
+
+        Returns:
+            A ScheduleResult object.
+        """
         return ScheduleResult(
             task_id=task.id,  # type: ignore[arg-type]
             success=True,
@@ -43,6 +78,15 @@ class SchedulerSchedulingMixin:
 
     @staticmethod
     def _task_search_start(task_start: datetime, start_date: date) -> date:
+        """Determine the date to start searching for available slots.
+
+        Args:
+            task_start: The task's earliest start time.
+            start_date: The proposed scheduling start date.
+
+        Returns:
+            The starting date for the search.
+        """
         return max(start_date, task_start.date())
 
     def _task_slot(
@@ -50,6 +94,15 @@ class SchedulerSchedulingMixin:
         task: Task,
         slot: tuple[datetime, datetime],
     ) -> tuple[datetime, datetime] | None:
+        """Adjust an available slot based on a task's buffer requirements.
+
+        Args:
+            task: The task to be scheduled.
+            slot: The candidate time slot.
+
+        Returns:
+            The adjusted time slot, or None if it cannot accommodate the task.
+        """
         return self._shrink_slot_for_task(task, slot)
 
     def _clip_slot(
@@ -58,6 +111,16 @@ class SchedulerSchedulingMixin:
         task_start: datetime,
         deadline: datetime,
     ) -> tuple[datetime, datetime] | None:
+        """Apply task start and deadline boundaries to a time slot.
+
+        Args:
+            slot: The time slot to clip.
+            task_start: The task's earliest start time.
+            deadline: The task's deadline.
+
+        Returns:
+            The clipped time slot, or None if no valid range remains.
+        """
         if not slot:
             return None
         clipped = self._clip_to_deadline(slot, deadline)
@@ -71,6 +134,16 @@ class SchedulerSchedulingMixin:
         slot: tuple[datetime, datetime],
         remaining_minutes: int,
     ) -> ScheduleResult:
+        """Construct a successful ScheduleResult using a single slot.
+
+        Args:
+            task: The scheduled task.
+            slot: The selected time slot.
+            remaining_minutes: The task duration to allocate.
+
+        Returns:
+            A ScheduleResult object.
+        """
         start, _ = slot
         end = start + timedelta(minutes=remaining_minutes)
         return ScheduleResult(
@@ -87,38 +160,46 @@ class SchedulerSchedulingMixin:
         slot: tuple[datetime, datetime],
         remaining_minutes: int,
     ) -> bool:
+        """Check if a single slot can accommodate a task's remaining time.
+
+        Args:
+            task: The task to check.
+            slot: The candidate time slot.
+            remaining_minutes: The number of minutes to allocate.
+
+        Returns:
+            True if the slot can be used, False otherwise.
+        """
         category_minutes = self._get_remaining_category_minutes(task, slot[0].date())
         if category_minutes is not None and remaining_minutes > category_minutes:
             return False
         return minutes_between(*slot) >= remaining_minutes
 
     def _schedule_task_no_split(self, task: Task, start_date: date) -> ScheduleResult:
+        """Attempt to schedule a task without splitting it.
+
+        Args:
+            task: The task to schedule.
+            start_date: The date to start searching from.
+
+        Returns:
+            A ScheduleResult object.
+        """
         task_start = self._aware(task.start_time)
         deadline = self._aware(task.deadline)
         remaining = self._get_task_remaining_minutes(task)
         if remaining <= 0:
             return self._empty_success(task)
         search_start = self._task_search_start(task_start, start_date)
-        for current_date in self._iter_search_dates(search_start, deadline):
-            if not self._is_day_available(current_date):
-                continue
-            slots = self._task_slots_for_date(
-                task,
-                current_date,
-                remaining,
-                task_start,
-                deadline,
-            )
-            for slot in slots:
-                candidate = self._clip_slot(
-                    self._task_slot(task, slot),
-                    task_start,
-                    deadline,
-                )
-                if not candidate:
-                    continue
-                if self._can_use_single_slot(task, candidate, remaining):
-                    return self._single_slot_result(task, candidate, remaining)
+        candidate = self._find_single_slot_within_horizon(
+            task,
+            search_start,
+            task_start,
+            deadline,
+            remaining,
+        )
+        if candidate:
+            return self._single_slot_result(task, candidate, remaining)
         return ScheduleResult(
             task_id=task.id,  # type: ignore[arg-type]
             success=False,
@@ -126,185 +207,114 @@ class SchedulerSchedulingMixin:
             segments=[],
         )
 
-    def _schedule_task_split(self, task: Task, start_date: date) -> ScheduleResult:
-        remaining = self._get_task_remaining_minutes(task)
-        task_start = self._aware(task.start_time)
-        deadline = self._aware(task.deadline)
-        segments: list[tuple[datetime, datetime]] = []
-        if remaining <= 0:
-            return self._empty_success(task)
-        min_block = getattr(task, "min_split_minutes", self.min_block_minutes)
-        max_block = getattr(task, "max_split_minutes", None)
-        search_start = self._task_search_start(task_start, start_date)
+    def _find_single_slot_within_horizon(
+        self,
+        task: Task,
+        search_start: date,
+        task_start: datetime,
+        deadline: datetime,
+        remaining: int,
+    ) -> tuple[datetime, datetime] | None:
+        """Search for a single contiguous time slot across multiple days.
+
+        This method iterates through dates from the search start until the
+        task's deadline, attempting to find a single slot that satisfies
+        all task constraints on each day.
+
+        Args:
+            task: The Task object to be scheduled.
+            search_start: The date to begin the search.
+            task_start: The earliest allowed start time for the task.
+            deadline: The latest allowed end time for the task.
+            remaining: The required duration in minutes.
+
+        Returns:
+            The first valid datetime tuple representing a single slot, or None
+            if no such slot exists within the search horizon.
+        """
         for current_date in self._iter_search_dates(search_start, deadline):
-            if remaining <= 0 or not self._is_day_available(current_date):
-                continue
-            day_segments, day_remaining = self._schedule_split_day(
+            candidate = self._find_single_slot_for_date(
                 task,
                 current_date,
                 task_start,
                 deadline,
-                segments,
                 remaining,
-                min_block,
-                max_block,
             )
-            if not day_segments or self._has_invalid_split_remainder(
-                day_remaining,
-                min_block,
-            ):
-                continue
-            segments.extend(day_segments)
-            remaining = day_remaining
-        if remaining <= 0 and segments:
-            return ScheduleResult(
-                task_id=task.id,  # type: ignore[arg-type]
-                success=True,
-                scheduled_start=segments[0][0],
-                scheduled_end=segments[-1][1],
-                segments=segments,
-            )
-        return ScheduleResult(
-            task_id=task.id,  # type: ignore[arg-type]
-            success=False,
-            reason="Insufficient time within horizon",
-            segments=[],
-        )
+            if candidate:
+                return candidate
+        return None
 
-    def _schedule_split_day(
+    def _find_single_slot_for_date(
         self,
         task: Task,
         current_date: date,
         task_start: datetime,
         deadline: datetime,
-        segments: list[tuple[datetime, datetime]],
         remaining: int,
-        min_block: int,
-        max_block: int | None,
-    ) -> tuple[list[tuple[datetime, datetime]], int]:
-        category_minutes = self._get_remaining_category_minutes(
-            task,
-            current_date,
-            current_segments=segments,
-        )
-        if self._insufficient_category_minutes(category_minutes, min_block):
-            return [], remaining
+    ) -> tuple[datetime, datetime] | None:
+        """Find a valid scheduling slot for a specific date.
+
+        Args:
+            task: The Task object being scheduled.
+            current_date: The specific date to inspect.
+            task_start: Boundary for task's earliest start.
+            deadline: Boundary for task's latest end.
+            remaining: Required duration in minutes.
+
+        Returns:
+            A valid datetime tuple for the date, or None if the date has
+            no available capacity or valid slots.
+        """
+        if not self._is_day_available(current_date):
+            return None
         slots = self._task_slots_for_date(
-            task,
-            current_date,
-            min_block,
-            task_start,
-            deadline,
+            task, current_date, remaining, task_start, deadline
         )
-        return self._split_segments_for_slots(
-            task,
-            slots,
-            task_start,
-            deadline,
-            remaining,
-            min_block,
-            max_block,
-            category_minutes,
-        )
-
-    @staticmethod
-    def _insufficient_category_minutes(
-        category_minutes: int | None,
-        min_block: int,
-    ) -> bool:
-        return category_minutes is not None and category_minutes < min_block
-
-    @staticmethod
-    def _has_invalid_split_remainder(day_remaining: int, min_block: int) -> bool:
-        return 0 < day_remaining < min_block
-
-    def _split_segments_for_slots(
-        self,
-        task: Task,
-        slots: list[tuple[datetime, datetime]],
-        task_start: datetime,
-        deadline: datetime,
-        remaining: int,
-        min_block: int,
-        max_block: int | None,
-        category_minutes: int | None,
-    ) -> tuple[list[tuple[datetime, datetime]], int]:
-        day_remaining = remaining
-        day_segments: list[tuple[datetime, datetime]] = []
         for slot in slots:
-            candidate = self._clip_slot(
-                self._task_slot(task, slot), task_start, deadline
+            candidate = self._candidate_single_slot(
+                task, slot, task_start, deadline, remaining
             )
-            if not candidate:
-                continue
-            next_segments, day_remaining, category_minutes = self._split_slot(
-                task,
-                candidate,
-                day_remaining,
-                min_block,
-                max_block,
-                category_minutes,
-            )
-            day_segments.extend(next_segments)
-            if day_remaining <= 0:
-                break
-        return day_segments, day_remaining
+            if candidate:
+                return candidate
+        return None
 
-    def _split_slot(
+    def _candidate_single_slot(
         self,
         task: Task,
         slot: tuple[datetime, datetime],
+        task_start: datetime,
+        deadline: datetime,
         remaining: int,
-        min_block: int,
-        max_block: int | None,
-        category_minutes: int | None,
-    ) -> tuple[list[tuple[datetime, datetime]], int, int | None]:
-        segments: list[tuple[datetime, datetime]] = []
-        buffer_gap = sum(self._get_task_buffer_minutes(task))
-        cursor, end = slot
-        while remaining > 0 and cursor < end:
-            if self._insufficient_category_minutes(category_minutes, min_block):
-                return segments, remaining, category_minutes
-            chunk = self._next_chunk_minutes(
-                cursor,
-                end,
-                remaining,
-                min_block,
-                max_block,
-                category_minutes,
-            )
-            if chunk is None:
-                return segments, remaining, category_minutes
-            next_end = cursor + timedelta(minutes=chunk)
-            segments.append((cursor, next_end))
-            remaining -= chunk
-            if category_minutes is not None:
-                category_minutes -= chunk
-            cursor = next_end + timedelta(minutes=buffer_gap)
-        return segments, remaining, category_minutes
+    ) -> tuple[datetime, datetime] | None:
+        """Evaluate and prepare a candidate slot for single-slot scheduling.
 
-    @staticmethod
-    def _next_chunk_minutes(
-        start: datetime,
-        end: datetime,
-        remaining: int,
-        min_block: int,
-        max_block: int | None,
-        category_minutes: int | None,
-    ) -> int | None:
-        free_minutes = minutes_between(start, end)
-        if free_minutes < min_block and remaining > min_block:
+        Applies clipping and task-specific constraints (like category limits)
+        to a raw available slot to determine if it can accommodate the task.
+
+        Args:
+            task: The Task being scheduled.
+            slot: A raw available datetime range.
+            task_start: Task's earliest start boundary.
+            deadline: Task's latest end boundary.
+            remaining: Required duration in minutes.
+
+        Returns:
+            A clipped and validated datetime tuple, or None if invalid.
+        """
+        candidate = self._clip_slot(self._task_slot(task, slot), task_start, deadline)
+        if not candidate or not self._can_use_single_slot(task, candidate, remaining):
             return None
-        chunk = min(remaining, free_minutes)
-        if category_minutes is not None:
-            chunk = min(chunk, category_minutes)
-        if max_block is not None:
-            chunk = min(chunk, max_block)
-        if chunk < min_block:
-            return None
-        return chunk
+        return candidate
 
     def schedule_tasks(self, start_date: date) -> list[ScheduleResult]:
+        """Schedule all pending tasks for the user iteratively.
+
+        Args:
+            start_date: The date to begin scheduling from.
+
+        Returns:
+            A list of ScheduleResult objects for each task.
+        """
         results: list[ScheduleResult] = []
         for task in self._sorted_tasks():
             result = self._schedule_task(task, start_date)
@@ -313,9 +323,23 @@ class SchedulerSchedulingMixin:
         return results
 
     def _sorted_tasks(self) -> list[Task]:
+        """Get the user's tasks sorted by importance and deadline.
+
+        Returns:
+            A sorted list of Task objects.
+        """
         return sorted(self.tasks, key=lambda task: (-task.importance, task.deadline))
 
     def _schedule_task(self, task: Task, start_date: date) -> ScheduleResult:
+        """Execute scheduling for an individual task.
+
+        Args:
+            task: The task to schedule.
+            start_date: The starting date for search.
+
+        Returns:
+            A ScheduleResult object.
+        """
         deadline = self._aware(task.deadline)
         if deadline.date() < start_date:
             return ScheduleResult(
@@ -328,6 +352,12 @@ class SchedulerSchedulingMixin:
         return self._schedule_task_no_split(task, start_date)
 
     def _store_result(self, task: Task, result: ScheduleResult) -> None:
+        """Save a task's scheduling result to internal state.
+
+        Args:
+            task: The task that was scheduled.
+            result: The result of the scheduling process.
+        """
         if not self._should_store_result(result):
             return
         segments = result.segments or [
@@ -342,6 +372,14 @@ class SchedulerSchedulingMixin:
 
     @staticmethod
     def _should_store_result(result: ScheduleResult) -> bool:
+        """Determine if a scheduling result should be saved.
+
+        Args:
+            result: The result to check.
+
+        Returns:
+            True if the result represents a successful allocation, False otherwise.
+        """
         return (
             result.success
             and result.scheduled_start is not None

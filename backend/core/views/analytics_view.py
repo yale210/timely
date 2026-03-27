@@ -1,3 +1,5 @@
+"""Views for analytics and statistical summaries."""
+
 from datetime import datetime
 
 from django.utils import timezone
@@ -10,7 +12,15 @@ from ..utils.stats import calculate_weekly_stats
 
 
 def _parse_date(date_str: str | None):
-    """Parse YYYY-MM-DD into a date, or return None on failure/omission."""
+    """Parse YYYY-MM-DD into a date, or return None on failure/omission.
+
+    Args:
+        date_str (str | None): The date string to parse.
+
+    Returns:
+        date | None: The parsed date or None if parsing fails.
+
+    """
     if not date_str:
         return None
     try:
@@ -25,6 +35,15 @@ class WeeklySummaryView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
+        """Retrieve weekly stats for the user based on an optional date.
+
+        Args:
+            request (Request): The DRF request object.
+
+        Returns:
+            Response: A DRF response containing weekly statistics.
+
+        """
         date_str = request.query_params.get("date")
         parsed = _parse_date(date_str)
         now_dt = (

@@ -7,6 +7,7 @@ from rest_framework import status
 from rest_framework.test import APITestCase
 
 from core.models import Event, Preference, Task
+from scheduler.views import ScheduleTasksAPIView
 
 
 class SchedulerViewsTests(APITestCase):
@@ -247,3 +248,90 @@ class SchedulerViewsTests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data["scheduled_count"], 0)
         self.assertEqual(response.data["failed_count"], 3)
+
+    def test_clear_existing_allocations_only_resets_unlocked_incomplete_tasks(self):
+        other_user = get_user_model().objects.create_user(
+            username="otheruser",
+            password="password123",
+            email="other@user.com",
+        )
+        now = timezone.now()
+        allocation = [
+            {
+                "start": now.isoformat(),
+                "end": (now + timedelta(minutes=30)).isoformat(),
+            }
+        ]
+        resettable_task = Task.objects.create(
+            user=self.user,
+            title="Reset me",
+            description="",
+            estimated_minutes=30,
+            start_time=now,
+            deadline=now + timedelta(days=1),
+            importance=5,
+            completed=False,
+            allocation=allocation,
+            total_task_allocations=1,
+        )
+        locked_task = Task.objects.create(
+            user=self.user,
+            title="Keep locked",
+            description="",
+            estimated_minutes=30,
+            start_time=now,
+            deadline=now + timedelta(days=1),
+            importance=5,
+            completed=False,
+            locked=True,
+            allocation=allocation,
+            total_task_allocations=1,
+        )
+        completed_task = Task.objects.create(
+            user=self.user,
+            title="Keep completed",
+            description="",
+            estimated_minutes=30,
+            start_time=now,
+            deadline=now + timedelta(days=1),
+            importance=5,
+            completed=True,
+            allocation=allocation,
+            total_task_allocations=1,
+        )
+        other_user_task = Task.objects.create(
+            user=other_user,
+            title="Keep other user",
+            description="",
+            estimated_minutes=30,
+            start_time=now,
+            deadline=now + timedelta(days=1),
+            importance=5,
+            completed=False,
+            allocation=allocation,
+            total_task_allocations=1,
+        )
+
+        updated = ScheduleTasksAPIView()._clear_existing_allocations(self.user)
+
+        self.assertEqual(updated, 1)
+        resettable_task.refresh_from_db()
+        locked_task.refresh_from_db()
+        completed_task.refresh_from_db()
+        other_user_task.refresh_from_db()
+        self.assertEqual(resettable_task.allocation, [])
+        self.assertEqual(resettable_task.total_task_allocations, 0)
+        self.assertEqual(locked_task.allocation, allocation)
+        self.assertEqual(completed_task.allocation, allocation)
+        self.assertEqual(other_user_task.allocation, allocation)
+
+    def test_serialise_allocation_returns_iso_timestamps(self):
+        start = timezone.make_aware(datetime(2026, 3, 19, 9, 0))
+        end = start + timedelta(minutes=30)
+
+        allocation = ScheduleTasksAPIView()._serialise_allocation([(start, end)])
+
+        self.assertEqual(
+            allocation,
+            [{"start": start.isoformat(), "end": end.isoformat()}],
+        )

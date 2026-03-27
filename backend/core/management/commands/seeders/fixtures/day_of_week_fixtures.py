@@ -1,3 +1,5 @@
+"""Fixture data for seeding the database."""
+
 daysofweek = [
     {"model": "core.daysofweek", "fields": {"day": 1}},
     {"model": "core.daysofweek", "fields": {"day": 2}},

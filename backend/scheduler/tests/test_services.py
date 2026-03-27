@@ -211,13 +211,12 @@ class SchedulerTest(TestCase):
         scheduler = Scheduler(
             self.user, max_days_ahead=7, allow_split=True, min_block_minutes=30
         )
+        mocked_now = timezone.make_aware(datetime.combine(start_date, time(0, 0)))
         with patch(
-            "scheduler.engine.availability.timezone.localdate",
-            return_value=start_date,
+            "scheduler.engine.availability.timezone.localdate", return_value=start_date
         ):
             with patch(
-                "scheduler.engine.availability.timezone.now",
-                return_value=mocked_now,
+                "scheduler.engine.availability.timezone.now", return_value=mocked_now
             ):
                 results = scheduler.schedule_tasks(start_date=start_date)
 
@@ -571,3 +570,53 @@ class SchedulerTest(TestCase):
             ),
             75,
         )
+
+    def test_split_task_limits_prefer_task_over_scheduler_defaults(self):
+        task = Task.objects.create(
+            user=self.user,
+            title="Task-specific split limits",
+            description="",
+            estimated_minutes=90,
+            importance=5,
+            start_time=self.reference_dt,
+            deadline=timezone.make_aware(datetime(2026, 2, 20, 12, 0)),
+            completed=False,
+            allow_split=True,
+            min_split_minutes=15,
+            max_split_minutes=45,
+        )
+
+        scheduler = Scheduler(self.user, max_days_ahead=2, allow_split=True)
+
+        self.assertEqual(scheduler._split_task_limits(task), (15, 45))
+
+    def test_build_split_result_returns_success_when_segments_cover_task(self):
+        task = Task.objects.create(
+            user=self.user,
+            title="Build split result",
+            description="",
+            estimated_minutes=60,
+            importance=5,
+            start_time=self.reference_dt,
+            deadline=timezone.make_aware(datetime(2026, 2, 20, 12, 0)),
+            completed=False,
+            allow_split=True,
+        )
+        scheduler = Scheduler(self.user, max_days_ahead=2, allow_split=True)
+        segments = [
+            (
+                timezone.make_aware(datetime(2026, 2, 12, 9, 0)),
+                timezone.make_aware(datetime(2026, 2, 12, 9, 30)),
+            ),
+            (
+                timezone.make_aware(datetime(2026, 2, 12, 10, 0)),
+                timezone.make_aware(datetime(2026, 2, 12, 10, 30)),
+            ),
+        ]
+
+        result = scheduler._build_split_result(task, segments, remaining=0)
+
+        self.assertTrue(result.success)
+        self.assertEqual(result.scheduled_start, segments[0][0])
+        self.assertEqual(result.scheduled_end, segments[-1][1])
+        self.assertEqual(result.segments, segments)

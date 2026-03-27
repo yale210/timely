@@ -1,3 +1,5 @@
+"""Fixture data for seeding the database."""
+
 special_dates = [
     {
         "model": "core.specialdates",

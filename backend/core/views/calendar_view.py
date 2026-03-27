@@ -1,9 +1,11 @@
-from drf_spectacular.types import OpenApiTypes
-from drf_spectacular.utils import OpenApiParameter, extend_schema, extend_schema_view
+"""Views and filters for calendar tasks and categories."""
+
 from django.db import transaction
 from django.db.models import Q
 from django.utils import timezone
 from django_filters import rest_framework as django_filters
+from drf_spectacular.types import OpenApiTypes
+from drf_spectacular.utils import OpenApiParameter, extend_schema, extend_schema_view
 from rest_framework import filters, permissions, serializers, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
@@ -15,6 +17,15 @@ from scheduler.services import Scheduler
 
 
 class TaskFilter(django_filters.FilterSet):
+    """Filter set for Task objects in the calendar view.
+
+    Attributes:
+        categories: Filter tasks by a list of category IDs.
+        start_time__gte: Filter tasks starting on or after a specific datetime.
+        deadline__lte: Filter tasks due on or before a specific datetime.
+
+    """
+
     categories = django_filters.BaseInFilter(
         field_name="categories__id", lookup_expr="in"
     )
@@ -26,6 +37,8 @@ class TaskFilter(django_filters.FilterSet):
     )
 
     class Meta:
+        """Meta options for TaskFilter."""
+
         model = Task
         fields = ["completed", "categories", "start_time__gte", "deadline__lte"]
 
@@ -63,6 +76,11 @@ class TaskFilter(django_filters.FilterSet):
     ),
 )
 class TaskViewSet(viewsets.ModelViewSet):
+    """ViewSet for managing tasks in the calendar context.
+
+    Provides CRUD operations for tasks and a custom action for rescheduling.
+    """
+
     queryset = Task.objects.none()
     serializer_class = CalendarSerializer
     permission_classes = [permissions.IsAuthenticated]
@@ -71,12 +89,35 @@ class TaskViewSet(viewsets.ModelViewSet):
     ordering_fields = ["importance", "deadline", "estimated_minutes", "start_time"]
 
     def get_queryset(self):
+        """Retrieve tasks for the current user ordered by start time.
+
+        Returns:
+            QuerySet: A filtered queryset of Task objects.
+
+        """
         return Task.objects.filter(user=self.request.user).order_by("start_time")
 
     def perform_create(self, serializer):
+        """Save the new task linked to the current user.
+
+        Args:
+            serializer (BaseSerializer): The serializer instance containing validated data.
+
+        """
         serializer.save(user=self.request.user)
 
     def _append_profile_metadata(self, response, profile, user_profile_level_before):
+        """Append level and XP metadata to the response data.
+
+        Args:
+            response (Response): The original DRF response.
+            profile (UserProfile): The user's profile instance.
+            user_profile_level_before (int): The profile level before the update.
+
+        Returns:
+            Response: The updated response with level-up metadata.
+
+        """
         profile.refresh_from_db()
         level_up = profile.level > user_profile_level_before
 
@@ -86,6 +127,17 @@ class TaskViewSet(viewsets.ModelViewSet):
         return response
 
     def update(self, request, *args, **kwargs):
+        """Update a task and include profile metadata in the response.
+
+        Args:
+            request (Request): The DRF request object.
+            *args: Variable length argument list.
+            **kwargs: Arbitrary keyword arguments.
+
+        Returns:
+            Response: A DRF response containing updated task data and metadata.
+
+        """
         profile = request.user.user_profile
         user_profile_level_before = profile.level
 
@@ -95,6 +147,17 @@ class TaskViewSet(viewsets.ModelViewSet):
         )
 
     def partial_update(self, request, *args, **kwargs):
+        """Partial update a task and include profile metadata in the response.
+
+        Args:
+            request (Request): The DRF request object.
+            *args: Variable length argument list.
+            **kwargs: Arbitrary keyword arguments.
+
+        Returns:
+            Response: A DRF response containing updated task data and metadata.
+
+        """
         profile = request.user.user_profile
         user_profile_level_before = profile.level
 
@@ -105,6 +168,20 @@ class TaskViewSet(viewsets.ModelViewSet):
 
     @action(detail=True, methods=["post"], url_path="save-and-reschedule")
     def save_and_reschedule(self, request, *args, **kwargs):
+        """Save task changes and trigger a full reschedule for the user.
+
+        Args:
+            request (Request): The DRF request object.
+            *args: Variable length argument list.
+            **kwargs: Arbitrary keyword arguments.
+
+        Returns:
+            Response: A DRF response with the updated task and reschedule status.
+
+        Raises:
+            ValidationError: If the start_date provided is invalid.
+
+        """
         profile = request.user.user_profile
         user_profile_level_before = profile.level
         task = self.get_object()
@@ -197,6 +274,8 @@ class TaskViewSet(viewsets.ModelViewSet):
 
 
 class CategoryViewSet(viewsets.ModelViewSet):
+    """ViewSet for managing user categories."""
+
     serializer_class = CategorySerializer
     permission_classes = [permissions.IsAuthenticated]
     queryset = Category.objects.all()

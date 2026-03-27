@@ -1,3 +1,5 @@
+"""Fixture data for seeding the database."""
+
 friendships = [
     {
         "model": "core.friendship",

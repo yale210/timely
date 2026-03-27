@@ -7,6 +7,8 @@ from core.models import Grade
 
 
 class GradeSerializer(serializers.ModelSerializer):
+    """Serializer for the Grade model."""
+
     category_name = serializers.SerializerMethodField()
     category_colour = serializers.SerializerMethodField()
     percentage = serializers.FloatField(read_only=True)
@@ -31,16 +33,37 @@ class GradeSerializer(serializers.ModelSerializer):
 
     @extend_schema_field(serializers.CharField(allow_null=True))
     def get_category_name(self, obj: Any) -> str | None:
+        """Get the name of the category associated with the grade.
+
+        Returns:
+            str | None: The name of the category or None.
+        """
         return obj.category.text if obj.category else None
 
     @extend_schema_field(serializers.CharField(allow_null=True))
     def get_category_colour(self, obj: Any) -> str | None:
+        """Get the colour associated with the grade's category.
+
+        Returns:
+            str | None: The colour of the category or None.
+
+        """
         return obj.category.colour if obj.category else None
 
     @extend_schema_field(serializers.IntegerField(min_value=0))
     def get_time_spent_minutes(self, obj: Any) -> int:
+        """Calculate total estimated minutes spent on tasks.
+
+        Returns:
+            int: The total minutes spent on tasks linked to the specific grade's assessment.
+        """
         return obj.get_time_spent_minutes()
 
     def create(self, validated_data):
+        """Override the create method to set the user from the context of the request.
+
+        Returns:
+            Grade: The created Grade instance.
+        """
         validated_data["user"] = self.context["request"].user
         return super().create(validated_data)

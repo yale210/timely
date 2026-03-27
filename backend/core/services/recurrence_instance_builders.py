@@ -1,3 +1,10 @@
+"""Builders for materialising Event and EventOverride into ExpandedEventInstance.
+
+This module provides the data structures and factory functions used during
+recurrence expansion to create stable, serialisable instances representing
+specific occurrences on a calendar.
+"""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -9,7 +16,11 @@ from core.models import Event, EventOverride
 
 @dataclass(frozen=True)
 class ExpandedEventInstance:
-    """Materialised calendar instance returned by recurrence expansion."""
+    """Materialised calendar instance returned by recurrence expansion.
+
+    This dataclass represents a single occurrence of an event, regardless
+    of whether it is a base instance from a series or a specific override.
+    """
 
     id: int
     title: str
@@ -33,7 +44,16 @@ class ExpandedEventInstance:
 def normalise_reminder_snapshot(
     reminders_snapshot: Iterable[dict[str, Any]],
 ) -> list[dict[str, Any]]:
-    """Coerce reminder snapshot values into the event reminder payload shape."""
+    """Coerce reminder snapshot values into the event reminder payload shape.
+
+    Args:
+        reminders_snapshot (Iterable): Raw reminder data from a JSON field.
+
+    Returns:
+        list[dict[str, Any]]: A list of dictionaries with consistent types
+            for email, push, and timing.
+
+    """
     normalised: list[dict[str, Any]] = []
     for reminder in reminders_snapshot:
         try:
@@ -56,6 +76,20 @@ def _build_instance_id(
     anchor_time: datetime | None,
     start_time: datetime,
 ) -> str:
+    """Generate a unique string identifier for a specific occurrence instance.
+
+    The ID format is {event_id}:{iso_timestamp}:{type}.
+
+    Args:
+        source_event_id (int): The ID of the parent event.
+        is_override (bool): Whether this is an override instance.
+        anchor_time (datetime | None): The original series start time.
+        start_time (datetime): The actual start time of this instance.
+
+    Returns:
+        str: A unique identifier for the instance.
+
+    """
     anchor = (anchor_time or start_time).isoformat()
     kind = "override" if is_override else "base"
     return f"{source_event_id}:{anchor}:{kind}"
@@ -67,6 +101,18 @@ def _build_instance_metadata(
     original_start_time: datetime | None,
     start_time: datetime,
 ) -> dict[str, Any]:
+    """Collect metadata shared by all expanded event instances.
+
+    Args:
+        source_event (Event): The parent event series.
+        is_override (bool): Whether this is an override.
+        original_start_time (datetime | None): Original start if recurring.
+        start_time (datetime): Current start time.
+
+    Returns:
+        dict[str, Any]: A dictionary of metadata for the ExpandedEventInstance.
+
+    """
     return {
         "id": source_event.id,
         "recurrence_interval": source_event.recurrence_interval,
@@ -99,6 +145,25 @@ def _build_expanded_instance(
     location: str,
     colour: str | None,
 ) -> ExpandedEventInstance:
+    """Assemble an ExpandedEventInstance from raw metadata and field data.
+
+    Args:
+        source_event (Event): Parent event.
+        categories (list): List of category objects.
+        reminders (list): List of serialised reminders.
+        start_time (datetime): Occurrence start.
+        end_time (datetime): Occurrence end.
+        is_override (bool): Override flag.
+        original_start_time (datetime | None): Series original start.
+        title (str): Instance title.
+        description (str): Instance description.
+        location (str): Instance location.
+        colour (str | None): Instance colour.
+
+    Returns:
+        ExpandedEventInstance: The assembled instance object.
+
+    """
     metadata = _build_instance_metadata(
         source_event, is_override, original_start_time, start_time
     )
@@ -121,7 +186,17 @@ def build_override_instance(
     *,
     reminder_cache: list[dict[str, Any]],
 ) -> ExpandedEventInstance:
-    """Build an expanded instance from an override row."""
+    """Build an expanded instance from an override row.
+
+    Args:
+        source_event (Event): The parent series event.
+        override (EventOverride): The database override record.
+        reminder_cache (list): Reminders to use if override lacks its own.
+
+    Returns:
+        ExpandedEventInstance: The materialised instance from the override.
+
+    """
     return _build_expanded_instance(
         source_event=source_event,
         categories=list(override.categories.all()),
@@ -147,7 +222,19 @@ def build_base_instance(
     occurrence_start: datetime,
     occurrence_end: datetime,
 ) -> ExpandedEventInstance:
-    """Build an expanded instance for a base recurring occurrence."""
+    """Build an expanded instance for a base recurring occurrence.
+
+    Args:
+        source_event (Event): The parent series event.
+        categories (list): Cached parent categories.
+        reminders (list): Cached parent reminders.
+        occurrence_start (datetime): The point in time for this instance.
+        occurrence_end (datetime): Calculated end time for this instance.
+
+    Returns:
+        ExpandedEventInstance: The materialised instance from the series.
+
+    """
     original_start_time = occurrence_start if source_event.recurrence_interval else None
     return _build_expanded_instance(
         source_event=source_event,

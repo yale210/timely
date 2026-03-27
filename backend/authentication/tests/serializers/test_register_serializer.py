@@ -1,3 +1,5 @@
+"""Tests for the register serializer."""
+
 from django.test import TestCase
 from rest_framework.exceptions import ErrorDetail
 from ...models import User
@@ -55,7 +57,6 @@ class RegisterSerializerTest(TestCase):
         }
         serializer = RegisterSerializer(data=data)
         self.assertFalse(serializer.is_valid())
-        # This should trigger our manual ValidationError in validate()
         self.assertIn("non_field_errors", serializer.errors)
         self.assertEqual(
             serializer.errors["non_field_errors"][0],

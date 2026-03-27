@@ -36,7 +36,7 @@ class SeederEventTests(SeederTestCase):
             ),
             patch(
                 "core.management.commands.seeders.event_seeder.random.randint",
-                side_effect=[30, 1, 45, 10],
+                side_effect=[1, 30, 45, 10],
             ),
             patch(
                 "core.management.commands.seeders.event_seeder.random.choice",
@@ -62,7 +62,7 @@ class SeederEventTests(SeederTestCase):
             ),
             patch(
                 "core.management.commands.seeders.event_seeder.random.randint",
-                side_effect=[15, 0, 25],
+                side_effect=[0, 15],
             ),
         ):
             seeder._create_random_event_type(

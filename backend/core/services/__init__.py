@@ -1,3 +1,5 @@
+"""Business logic services for event management and recurrence."""
+
 from .event_scope_mutations import (
     apply_delete_scope,
     apply_update_scope,

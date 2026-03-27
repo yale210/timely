@@ -1,4 +1,9 @@
-"""Event Seeder"""
+"""Event Seeder module.
+
+This module provides the `EventSeeder` class, which handles the generation
+of event-related data, including both single and recurring events. It
+facilitates testing the calendar and scheduling features of the application.
+"""
 
 import random
 import datetime
@@ -11,14 +16,36 @@ from core.management.commands.seeders.base import BaseSeeder
 
 
 class EventSeeder(BaseSeeder):
+    """Seeder for the Event model.
+
+    This class orchestrates the seeding of events by loading predefined
+    fixtures and generating a large set of random events (both one-off and
+    recurring) assigned to users in the database.
+
+    Attributes:
+        help (str): Description of the seeder's purpose.
+
+    """
+
     help = "Handles seeding of events into the database."
 
     def seed(self):
+        """Execute the seeding logic for events.
+
+        This method first loads fixture events and then generates a large
+        number of randomized events to test various calendar view scenarios.
+        """
         self._create_fixture_event()
-        for i in range(200):
+        # Generate random events across various users
+        for _ in range(200):
             self._populate_random_event()
 
     def _create_fixture_event(self):
+        """Load and create event instances from predefined fixtures.
+
+        Iterates through the `events` list from fixtures and attempts
+        to persist each record.
+        """
         for event in events:
             try:
                 self._create_event(event)
@@ -26,6 +53,15 @@ class EventSeeder(BaseSeeder):
                 print(f"Error occurred while creating event: {exception}")
 
     def _create_event(self, data):
+        """Create or get an Event record from raw data.
+
+        Handles basic field mapping, user resolution, and category relation
+        assignment.
+
+        Args:
+            data (dict): A dictionary containing event field metadata.
+
+        """
         user = self.resolve_user(data["fields"]["user"])
         split_from_event = self.resolve_event(
             data["fields"].get("split_from_event"),
@@ -51,37 +87,39 @@ class EventSeeder(BaseSeeder):
         categories = self.resolve_categories(data["fields"].get("categories", []), user)
         temporary_event.categories.set(categories)
 
-    """
-    If an event is recurring
-    """
-
     def _populate_random_event(self):
+        """Generate a single random event and assign it to a random user.
+
+        Determines whether to create a recurring or non-recurring event
+        randomly.
+        """
         temporary_user = self._get_or_create_random_user()
         temporary_category = self._get_or_create_random_category(temporary_user)
 
-        if random.randint(0, 1) == 1:
-            self._create_random_event_type(
-                {
-                    "fields": {
-                        "user": temporary_user.id,
-                        "categories": [temporary_category.id],
-                    }
+        # Delegate to randomized event type creation
+        self._create_random_event_type(
+            {
+                "fields": {
+                    "user": temporary_user.id,
+                    "categories": [temporary_category.id],
                 }
-            )
-        else:
-            self._create_random_event_type(
-                {
-                    "fields": {
-                        "user": temporary_user.id,
-                        "categories": [temporary_category.id],
-                    }
-                }
-            )
+            }
+        )
 
     def _get_or_create_random_category(self, user):
+        """Retrieve an existing random category or create one for the user.
+
+        Args:
+            user (User): The user for whom the category should be retrieved/created.
+
+        Returns:
+            Category: The resolved Category instance.
+
+        """
         temporary_category = Category.objects.filter(user=user).order_by("?").first()
 
         if temporary_category is None:
+            # Create a new category if the user doesn't have any
             temporary_category = Category.objects.create(
                 user=user,
                 text=self.faker.word(),
@@ -90,11 +128,18 @@ class EventSeeder(BaseSeeder):
         return temporary_category
 
     def _get_or_create_random_user(self):
+        """Retrieve an existing random user or create a new one.
+
+        Returns:
+            User: The resolved User instance.
+
+        """
         User = get_user_model()
-        # Shuffle users and get a random user.
+        # Fetch a random user from the database
         temporary_user = User.objects.order_by("?").first()
 
         if temporary_user is None:
+            # Create a default user if none exist
             temporary_user = User.objects.create_user(
                 username=self.faker.user_name(),
                 email=self.faker.email(),
@@ -103,6 +148,12 @@ class EventSeeder(BaseSeeder):
         return temporary_user
 
     def _create_recurring_event(self, data):
+        """Generate a single random recurring event.
+
+        Args:
+            data (dict): A dictionary containing user and category metadata.
+
+        """
         start = timezone.make_aware(self.faker.date_time())
         self._create_event(
             {
@@ -125,9 +176,13 @@ class EventSeeder(BaseSeeder):
         )
 
     def _create_random_event_type(self, data):
-        start = timezone.make_aware(self.faker.date_time())
-        end = start + timedelta(random.randint(0, 60))
+        """Determine and create either a recurring or single random event.
 
+        Args:
+            data (dict): A dictionary containing user and category metadata.
+
+        """
+        # Determine recurrence randomly
         recurring = random.randint(0, 1) == 1
 
         if recurring:
@@ -186,6 +241,12 @@ class EventSeeder(BaseSeeder):
             )
 
     def _random_time(self):
+        """Generate a random `datetime.time` object.
+
+        Returns:
+            datetime.time: A randomly generated time.
+
+        """
         hours = random.randint(0, 23)
         minutes = random.randint(0, 59)
         return datetime.time(hour=hours, minute=minutes)

@@ -1,3 +1,5 @@
+"""Preference model definitions."""
+
 from django.db import models
 from django.conf import settings
 
@@ -11,8 +13,7 @@ from .day_of_week import DayOfWeek
 
 
 def default_day_schedule():
-    """
-    Return the weekly available time slots for the user.
+    """Return the weekly available time slots for the user.
     The user is by default available from 8am to 10pm.
     """
     return [
@@ -27,8 +28,7 @@ def default_day_schedule():
 
 
 class Preference(models.Model):
-    """
-    This model allows users to store their preferences.
+    """This model allows users to store their preferences.
     Preferences are used to help customise their scheduling.
     """
 
@@ -61,8 +61,7 @@ class Preference(models.Model):
     timezone = models.CharField(max_length=100, default="Europe/London")
 
     def clean(self):
-        """
-        Validate the timezone and weekly schedule to ensure they are in the correct format,
+        """Validate the timezone and weekly schedule to ensure they are in the correct format,
         and that the max hours per day does not exceed the available time in the schedule.
 
         Raises:
@@ -139,14 +138,23 @@ class Preference(models.Model):
                     }
                 )
 
-    # Get the sleep length of the user.
     def get_break_time(self):
+        """Return the configured daily break time window as a string.
+
+        Returns:
+            str: The break time window.
+        """
         return f"{self.day_start} - {self.day_end}"
 
     def get_day_window(self, target_date):
-        """
-        Get the available time frame for the user on a given date.
+        """Get the available time frame for the user on a given date.
         Helps to determine when the user can be scheduled for tasks.
+
+        Args:
+            target_date (date): The date to get the time window for.
+
+        Returns:
+            tuple: A tuple containing the start and end time for the provided day.
         """
         day_key = target_date.weekday() + 1
         schedule = {}

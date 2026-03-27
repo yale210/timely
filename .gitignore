@@ -2223,3 +2223,4 @@ frontend/src/pages/Test.tsx
 /data/postgres/postmaster.opts
 /data/postgres/postmaster.pid
 backend/.python-version
+backend/pyproject.toml
