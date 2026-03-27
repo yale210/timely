@@ -1,75 +1,104 @@
 import logging
 from abc import ABC, abstractmethod
 from datetime import datetime
-from typing import Any
+from importlib import import_module
+from typing import Any, TypedDict
 
 from django.contrib.auth.models import User
 
-from core.models import Event
+from core.models.event import Event
+from courses.services.event_sync_helpers import _run_user_calendar_sync
 
+support = import_module("courses.services.event_support")
 logger = logging.getLogger(__name__)
 
 
+class CalendarSyncStats(TypedDict):
+    """Result counters for a user calendar sync run."""
+
+    created: int
+    updated: int
+    deleted: int
+    errors: list[str]
+
+
+class CalendarCourseSyncStats(TypedDict):
+    """Result counters for syncing one course event to users."""
+
+    synced_users: int
+    errors: list[str]
+
+
+class CoreSyncStats(TypedDict):
+    """Result counters for syncing course events into core events."""
+
+    created: int
+    updated: int
+    errors: list[str]
+
+
 class CalendarProvider(ABC):
-    """Abstract base class for calendar providers (Google Calendar, Outlook, etc.)"""
+    """Calendar provider contract used by sync services."""
 
     @abstractmethod
     def create_event(self, user: User, event_data: dict[str, Any]) -> str:
-        """Create an event in the calendar. Returns event ID."""
+        """Create an event in the external calendar.
+
+        Returns:
+            str: External provider event identifier.
+        """
 
     @abstractmethod
     def update_event(
         self, user: User, event_id: str, event_data: dict[str, Any]
     ) -> bool:
-        """Update an existing event. Returns True if successful."""
+        """Update an existing external calendar event.
+
+        Returns:
+            bool: True when the provider reports success.
+        """
 
     @abstractmethod
     def delete_event(self, user: User, event_id: str) -> bool:
-        """Delete an event. Returns True if successful."""
+        """Delete an external calendar event.
+
+        Returns:
+            bool: True when the provider reports success.
+        """
 
     @abstractmethod
     def get_events(
         self, user: User, start_date: datetime, end_date: datetime
     ) -> list[dict[str, Any]]:
-        """Retrieve events from the calendar within a date range."""
+        """Fetch external calendar events for a user within a window.
+
+        Returns:
+            list[dict[str, Any]]: Provider event payloads.
+        """
 
 
 class CalendarEventMapper:
-    """Maps CourseEvent objects to calendar provider format"""
+    """Translate course events into provider event payloads."""
 
     @staticmethod
     def to_calendar_event(course_event) -> dict[str, Any]:
-        """Convert a CourseEvent to a generic calendar event format.
-
-        Args:
-            course_event: CourseEvent model instance
+        """Convert a course event into provider event data.
 
         Returns:
-            Dictionary with calendar event data
+            dict[str, Any]: Provider-ready event payload.
         """
         return {
             "title": f"{course_event.title}",
-            "description": f"{course_event.course.name} + {course_event.title}"
-            + "'\n"
-            + (course_event.description or "")
-            + "\n"
-            + "By "
-            + course_event.created_by.user.username,
+            "description": support.authored_course_event_description(course_event, "+"),
             "location": getattr(course_event, "location", ""),
         }
 
 
 class SyncCalendar:
-    """Service to synchronize course events with user calendar events.
-    Handles one-way sync from CourseEvent to user's calendar.
-    """
+    """Synchronise course events with an external calendar provider."""
 
     def __init__(self, provider: CalendarProvider):
-        """Initialize the sync service with a calendar provider.
-
-        Args:
-            provider: CalendarProvider instance (e.g., GoogleCalendarProvider)
-        """
+        """Store the provider implementation used for sync operations."""
         self.provider = provider
         self.mapper = CalendarEventMapper()
 
@@ -78,419 +107,285 @@ class SyncCalendar:
         user: User,
         start_date: datetime | None = None,
         end_date: datetime | None = None,
-    ) -> dict[str, Any]:
-        """Sync all course events for enrolled courses to user's calendar.
-
-        Args:
-            user: User instance to sync calendar for
-            start_date: Filter events from this date (optional)
-            end_date: Filter events until this date (optional)
+    ) -> CalendarSyncStats:
+        """Sync all active course events into one user's external calendar.
 
         Returns:
-            Dictionary with sync statistics (created, updated, deleted, errors)
+            CalendarSyncStats: Aggregate sync counters and collected errors.
         """
-        from courses.models import CourseEnrollment, CourseEvent
-
-        stats = {
+        stats: CalendarSyncStats = {
             "created": 0,
             "updated": 0,
             "deleted": 0,
             "errors": [],
         }
-
         try:
-            # Get all courses the user is enrolled in
-            user_enrollments = CourseEnrollment.objects.filter(
-                student__user=user, active=True
-            ).select_related("course")
-
-            if not user_enrollments.exists():
-                logger.info(f"User {user.username} has no active course enrollments")
-                return stats
-
-            # Get course IDs
-            course_ids = [enrollment.course.id for enrollment in user_enrollments]
-
-            # Build query for course events
-            query = CourseEvent.objects.filter(course__in=course_ids)
-
-            if start_date:
-                query = query.filter(start_time__gte=start_date)
-            if end_date:
-                query = query.filter(end_time__lte=end_date)
-
-            course_events = query.select_related("course", "created_by")
-            calendar_events = self.provider.get_events(
-                user, start_date or datetime.min, end_date or datetime.now()
+            return _run_user_calendar_sync(
+                self,
+                user,
+                start_date,
+                end_date,
+                stats,
+                support,
+                logger,
             )
-
-            # Create a mapping of external IDs to calendar events
-            calendar_map = {
-                event.get("metadata", {}).get("event_id"): event
-                for event in calendar_events
-                if event.get("metadata", {}).get("event_id")
-            }
-
-            # Sync each course event
-            for course_event in course_events:
-                try:
-                    calendar_data = self.mapper.to_calendar_event(course_event)
-
-                    if course_event.id in calendar_map:
-                        # Update existing event
-                        if self._event_needs_update(
-                            course_event, calendar_map[course_event.id]
-                        ):
-                            success = self.provider.update_event(
-                                user, calendar_map[course_event.id]["id"], calendar_data
-                            )
-                            if success:
-                                stats["updated"] += 1
-                            else:
-                                stats["errors"].append(
-                                    f"Failed to update event {course_event.id}"
-                                )
-                    else:
-                        # Create new event
-                        event_id = self.provider.create_event(user, calendar_data)
-                        if event_id:
-                            stats["created"] += 1
-                        else:
-                            stats["errors"].append(
-                                f"Failed to create event for {course_event.id}"
-                            )
-                except Exception as e:
-                    error_msg = f"Error syncing event {course_event.id}: {e!s}"
-                    logger.error(error_msg)
-                    stats["errors"].append(error_msg)
-
-            logger.info(
-                f"Calendar sync completed for user {user.username}. "
-                f"Created: {stats['created']}, Updated: {stats['updated']}, "
-                f"Deleted: {stats['deleted']}, Errors: {len(stats['errors'])}"
-            )
-
-        except Exception as e:
-            error_msg = f"Failed to sync calendar for user {user.username}: {e!s}"
+        except Exception as exc:
+            error_msg = f"Failed to sync calendar for user {user.username}: {exc!s}"
             logger.error(error_msg)
             stats["errors"].append(error_msg)
-
         return stats
 
     def sync_course_event(
         self, course_event, user: User | None = None
-    ) -> dict[str, Any]:
-        """Sync a single course event to all enrolled users' calendars.
-
-        Args:
-            course_event: CourseEvent instance to sync
-            user: Optional specific user to sync for (if None, syncs for all)
+    ) -> CalendarCourseSyncStats:
+        """Sync one course event to enrolled users' external calendars.
 
         Returns:
-            Dictionary with sync statistics
+            CalendarCourseSyncStats: User sync totals and collected errors.
         """
-        from courses.models import CourseEnrollment
+        from courses.models.course import CourseEnrollment
 
-        stats = {
-            "synced_users": 0,
-            "errors": [],
-        }
-
+        stats: CalendarCourseSyncStats = {"synced_users": 0, "errors": []}
         try:
-            # Get all students enrolled in the course
-            if user:
-                enrollments = CourseEnrollment.objects.filter(
-                    course=course_event.course, student__user=user, active=True
-                )
-            else:
-                enrollments = CourseEnrollment.objects.filter(
-                    course=course_event.course, active=True
-                )
-
+            filters = {"course": course_event.course, "active": True}
+            if user is not None:
+                filters["student__user"] = user
             calendar_data = self.mapper.to_calendar_event(course_event)
-
+            enrollments = CourseEnrollment._default_manager.filter(
+                **filters
+            ).select_related("student__user")
             for enrollment in enrollments:
-                try:
-                    self.provider.create_event(enrollment.student.user, calendar_data)
-                    stats["synced_users"] += 1
-                except Exception as e:
-                    error_msg = (
-                        f"Failed to sync event {course_event.id} "
-                        f"for user {enrollment.student.user.username}: {e!s}"
-                    )
-                    logger.error(error_msg)
-                    stats["errors"].append(error_msg)
-
-        except Exception as e:
-            error_msg = f"Failed to sync course event {course_event.id}: {e!s}"
+                self._sync_enrolment_calendar_event(
+                    enrollment.student.user, calendar_data, course_event.id, stats
+                )
+        except Exception as exc:
+            error_msg = f"Failed to sync course event {course_event.id}: {exc!s}"
             logger.error(error_msg)
             stats["errors"].append(error_msg)
-
         return stats
 
     @staticmethod
     def _event_needs_update(course_event, calendar_event: dict[str, Any]) -> bool:
-        """Determine if a calendar event needs updating based on course event changes.
-
-        Args:
-            course_event: CourseEvent instance
-            calendar_event: Calendar event dictionary
-
-        Returns:
-            True if the event should be updated
-        """
-        # Compare key fields
-        title_match = calendar_event.get("title") == (
-            f"{course_event.course.name} - {course_event.title}"
+        return not (
+            calendar_event.get("title") == support.course_event_title(course_event)
+            and calendar_event.get("start") == course_event.start_time.isoformat()
+            and calendar_event.get("end") == course_event.end_time.isoformat()
+            and calendar_event.get("description") == (course_event.description or "")
         )
-        start_match = calendar_event.get("start") == course_event.start_time.isoformat()
-        end_match = calendar_event.get("end") == course_event.end_time.isoformat()
-        description_match = calendar_event.get("description") == (
-            course_event.description or ""
-        )
-
-        return not (title_match and start_match and end_match and description_match)
 
     def remove_calendar_event(self, user: User, course_event_id: int) -> bool:
-        """Remove a course event from user's calendar.
-
-        Args:
-            user: User instance
-            course_event_id: ID of the course event to remove
+        """Remove a synced calendar event for the given course event.
 
         Returns:
-            True if successful
+            bool: True when a matching provider event was deleted.
         """
         try:
-            calendar_events = self.provider.get_events(
-                user, datetime.min, datetime.now()
+            matched_event = next(
+                (
+                    event
+                    for event in self.provider.get_events(
+                        user, *support.calendar_window(None, None)
+                    )
+                    if event.get("metadata", {}).get("event_id") == course_event_id
+                ),
+                None,
             )
+            if matched_event is None:
+                logger.warning(
+                    f"Calendar event for course_event_id {course_event_id} not found"
+                )
+                return False
+            return self.provider.delete_event(user, matched_event["id"])
+        except Exception as exc:
+            logger.error(f"Failed to remove calendar event: {exc!s}")
+            return False
 
-            for event in calendar_events:
-                if event.get("metadata", {}).get("event_id") == course_event_id:
-                    return self.provider.delete_event(user, event["id"])
-
-            logger.warning(
-                f"Calendar event for course_event_id {course_event_id} not found"
+    def _sync_user_course_event(
+        self,
+        user: User,
+        course_event,
+        calendar_map: dict[Any, dict[str, Any]],
+        stats: CalendarSyncStats,
+    ) -> None:
+        try:
+            calendar_data = self.mapper.to_calendar_event(course_event)
+            existing_event = calendar_map.get(course_event.id)
+            if existing_event is None:
+                self._create_calendar_event(user, course_event.id, calendar_data, stats)
+                return
+            self._update_calendar_event(
+                user, course_event, existing_event, calendar_data, stats
             )
-            return False
-        except Exception as e:
-            logger.error(f"Failed to remove calendar event: {e!s}")
-            return False
+        except Exception as exc:
+            error_msg = f"Error syncing event {course_event.id}: {exc!s}"
+            logger.error(error_msg)
+            stats["errors"].append(error_msg)
+
+    def _create_calendar_event(
+        self,
+        user: User,
+        course_event_id: int,
+        calendar_data: dict[str, Any],
+        stats: CalendarSyncStats,
+    ) -> None:
+        if self.provider.create_event(user, calendar_data):
+            stats["created"] += 1
+            return
+        stats["errors"].append(f"Failed to create event for {course_event_id}")
+
+    def _update_calendar_event(
+        self,
+        user: User,
+        course_event,
+        existing_event: dict[str, Any],
+        calendar_data: dict[str, Any],
+        stats: CalendarSyncStats,
+    ) -> None:
+        if not self._event_needs_update(course_event, existing_event):
+            return
+        if self.provider.update_event(user, existing_event["id"], calendar_data):
+            stats["updated"] += 1
+            return
+        stats["errors"].append(f"Failed to update event {course_event.id}")
+
+    def _sync_enrolment_calendar_event(
+        self,
+        user: User,
+        calendar_data: dict[str, Any],
+        course_event_id: int,
+        stats: CalendarCourseSyncStats,
+    ) -> None:
+        try:
+            self.provider.create_event(user, calendar_data)
+            stats["synced_users"] += 1
+        except Exception as exc:
+            error_msg = f"Failed to sync event {course_event_id} for user {user.username}: {exc!s}"
+            logger.error(error_msg)
+            stats["errors"].append(error_msg)
 
 
 class CourseEventSyncService:
-    """Service to sync CourseEvent objects to core.models.Event
-    for all enrolled students.
-    """
+    """Synchronise course events into core calendar events."""
 
     @staticmethod
-    def sync_course_event_to_core(course_event) -> dict[str, Any]:
-        """Sync a single CourseEvent to core.models.Event for all enrolled students.
-
-        Args:
-            course_event: CourseEvent instance to sync
+    def sync_course_event_to_core(course_event) -> CoreSyncStats:
+        """Sync one course event to core events for active enrolled users.
 
         Returns:
-            Dictionary with sync statistics (created, updated, errors)
+            CoreSyncStats: Aggregate create and update counts.
         """
-        from courses.models import CourseEnrollment
+        from courses.models.course import CourseEnrollment
 
-        stats = {
-            "created": 0,
-            "updated": 0,
-            "errors": [],
-        }
-
+        stats: CoreSyncStats = {"created": 0, "updated": 0, "errors": []}
         try:
-            # Get all students enrolled in the course
-            enrollments = CourseEnrollment.objects.filter(
+            enrollments = CourseEnrollment._default_manager.filter(
                 course=course_event.course, active=True
             ).select_related("student__user")
-
             if not enrollments.exists():
                 logger.info(
                     f"No active enrollments for course {course_event.course.id}"
                 )
                 return stats
-
             for enrollment in enrollments:
-                try:
-                    user = enrollment.student.user
-                    event_title = f"{course_event.course.name} - {course_event.title}"
-
-                    # Check if event already exists
-                    try:
-                        core_event = Event.objects.get(
-                            user=user,
-                            title=event_title,
-                            start_time=course_event.start_time,
-                        )
-                        # Update existing event
-                        updated = False
-                        if core_event.description != (course_event.description or ""):
-                            core_event.description = course_event.description or ""
-                            updated = True
-                        if core_event.location != (course_event.location or ""):
-                            core_event.location = course_event.location or ""
-                            updated = True
-                        if core_event.colour != course_event.colour:
-                            core_event.colour = course_event.colour
-                            updated = True
-                        if core_event.end_time != course_event.end_time:
-                            core_event.end_time = course_event.end_time
-                            updated = True
-
-                        if updated:
-                            # Save without validation to avoid recurrence errors
-                            core_event.save(
-                                update_fields=[
-                                    "description",
-                                    "location",
-                                    "colour",
-                                    "end_time",
-                                ]
-                            )
-                            stats["updated"] += 1
-                            logger.info(
-                                f"Updated Event {core_event.id} for user {user.username}"
-                            )
-                    except Event.DoesNotExist:
-                        # Create new event without validation
-                        core_event = Event(
-                            user=user,
-                            title=event_title,
-                            description=course_event.description or "",
-                            location=course_event.location or "",
-                            colour=course_event.colour,
-                            start_time=course_event.start_time,
-                            end_time=course_event.end_time,
-                        )
-                        # Save without full_clean() to avoid validation errors
-                        core_event.save()
-                        stats["created"] += 1
-                        logger.info(
-                            f"Created Event {core_event.id} for user {user.username}"
-                        )
-
-                except Exception as e:
-                    error_msg = (
-                        f"Failed to sync course_event {course_event.id} "
-                        f"for user {enrollment.student.user.username}: {e!s}"
-                    )
-                    logger.error(error_msg, exc_info=True)
-                    stats["errors"].append(error_msg)
-
+                CourseEventSyncService._sync_core_event(
+                    course_event,
+                    enrollment.student.user,
+                    stats,
+                    support.create_course_core_event,
+                    CourseEventSyncService._update_course_core_event,
+                )
             logger.info(
-                f"Course event sync completed for CourseEvent {course_event.id}. "
-                f"Created: {stats['created']}, Updated: {stats['updated']}, "
-                f"Errors: {len(stats['errors'])}"
+                f"Course event sync completed for CourseEvent {course_event.id}. Created: {stats['created']}, Updated: {stats['updated']}, Errors: {len(stats['errors'])}"
             )
-
-        except Exception as e:
-            error_msg = f"Failed to sync course event {course_event.id}: {e!s}"
+        except Exception as exc:
+            error_msg = f"Failed to sync course event {course_event.id}: {exc!s}"
             logger.error(error_msg, exc_info=True)
             stats["errors"].append(error_msg)
-
         return stats
 
     @staticmethod
-    def sync_user_course_events(user: User) -> dict[str, Any]:
-        """Sync all CourseEvents for a user's enrolled courses to core.models.Event.
-
-        Args:
-            user: User instance to sync events for
+    def sync_user_course_events(user: User) -> CoreSyncStats:
+        """Sync all enrolled course events into one user's core calendar.
 
         Returns:
-            Dictionary with sync statistics
+            CoreSyncStats: Aggregate create and update counts.
         """
-        from courses.models import CourseEnrollment, CourseEvent
-
-        stats = {
-            "created": 0,
-            "updated": 0,
-            "errors": [],
-        }
-
+        stats: CoreSyncStats = {"created": 0, "updated": 0, "errors": []}
         try:
-            # Get all courses the user is enrolled in
-            user_enrollments = CourseEnrollment.objects.filter(
-                student__user=user, active=True
-            ).select_related("course")
-
-            if not user_enrollments.exists():
+            course_ids = support.active_course_ids(user)
+            if not course_ids:
                 logger.info(f"User {user.username} has no active course enrollments")
                 return stats
-
-            # Get course IDs
-            course_ids = [enrollment.course.id for enrollment in user_enrollments]
-
-            # Get all course events for enrolled courses
-            course_events = CourseEvent.objects.filter(
-                course__in=course_ids
-            ).select_related("course")
-
-            for course_event in course_events:
-                try:
-                    event_title = f"{course_event.course.name} - {course_event.title}"
-                    event_description = (
-                        f"{course_event.course.name} - {course_event.title}"
-                        + "'\n"
-                        + (course_event.description or "")
-                        + "\n"
-                        + "By "
-                        + course_event.created_by.user.username
-                    )
-                    # Check if event already exists
-                    try:
-                        core_event = Event.objects.get(
-                            user=user,
-                            title=event_title,
-                            start_time=course_event.start_time,
-                        )
-                        # Update if needed
-                        updated = False
-                        if core_event.description != (course_event.description or ""):
-                            core_event.description = event_description
-                            updated = True
-                        if core_event.end_time != course_event.end_time:
-                            core_event.end_time = course_event.end_time
-                            updated = True
-
-                        if updated:
-                            core_event.save(update_fields=["description", "end_time"])
-                            stats["updated"] += 1
-                    except Event.DoesNotExist:
-                        # Create new event
-                        core_event = Event(
-                            user=user,
-                            title=event_title,
-                            description=event_description,
-                            location=course_event.location or "",
-                            colour=course_event.colour,
-                            start_time=course_event.start_time,
-                            end_time=course_event.end_time,
-                        )
-                        core_event.save()
-                        stats["created"] += 1
-
-                except Exception as e:
-                    error_msg = (
-                        f"Failed to sync course_event {course_event.id} "
-                        f"for user {user.username}: {e!s}"
-                    )
-                    logger.error(error_msg, exc_info=True)
-                    stats["errors"].append(error_msg)
-
+            for course_event in support.course_events(course_ids):
+                CourseEventSyncService._sync_core_event(
+                    course_event,
+                    user,
+                    stats,
+                    support.create_user_core_event,
+                    CourseEventSyncService._update_user_core_event,
+                )
             logger.info(
-                f"User event sync completed for {user.username}. "
-                f"Created: {stats['created']}, Updated: {stats['updated']}, "
-                f"Errors: {len(stats['errors'])}"
+                f"User event sync completed for {user.username}. Created: {stats['created']}, Updated: {stats['updated']}, Errors: {len(stats['errors'])}"
             )
+        except Exception as exc:
+            error_msg = f"Failed to sync user events for {user.username}: {exc!s}"
+            logger.error(error_msg, exc_info=True)
+            stats["errors"].append(error_msg)
+        return stats
 
-        except Exception as e:
-            error_msg = f"Failed to sync user events for {user.username}: {e!s}"
+    @staticmethod
+    def _sync_core_event(
+        course_event,
+        user: User,
+        stats: CoreSyncStats,
+        create_core_event,
+        update_core_event,
+    ) -> None:
+        try:
+            core_event = support.existing_core_event(user, course_event)
+            if core_event is None:
+                create_core_event(course_event, user)
+                stats["created"] += 1
+                return
+            if update_core_event(core_event, course_event):
+                stats["updated"] += 1
+        except Exception as exc:
+            error_msg = f"Failed to sync course_event {course_event.id} for user {user.username}: {exc!s}"
             logger.error(error_msg, exc_info=True)
             stats["errors"].append(error_msg)
 
-        return stats
+    @staticmethod
+    def _update_course_core_event(core_event: Event, course_event) -> bool:
+        update_fields = []
+        for field, value in (
+            ("description", course_event.description or ""),
+            ("location", course_event.location or ""),
+            ("colour", course_event.colour),
+            ("end_time", course_event.end_time),
+        ):
+            if getattr(core_event, field) != value:
+                setattr(core_event, field, value)
+                update_fields.append(field)
+        if not update_fields:
+            return False
+        core_event.save(update_fields=update_fields)
+        logger.info("Updated Event for enrolled user")
+        return True
+
+    @staticmethod
+    def _update_user_core_event(core_event: Event, course_event) -> bool:
+        update_fields = []
+        if core_event.description != (course_event.description or ""):
+            setattr(
+                core_event,
+                "description",
+                support.authored_course_event_description(course_event, "-"),
+            )
+            update_fields.append("description")
+        if core_event.end_time != course_event.end_time:
+            setattr(core_event, "end_time", course_event.end_time)
+            update_fields.append("end_time")
+        if not update_fields:
+            return False
+        core_event.save(update_fields=update_fields)
+        return True

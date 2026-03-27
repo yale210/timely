@@ -15,6 +15,60 @@ User = get_user_model()
 class CourseStaffMixin(CourseViewSetBase):
     """Mixin for course staff actions."""
 
+    def _serialise_staff_member(self, staff_member):
+        return {
+            "id": staff_member.id,
+            "user_id": staff_member.student_id,
+            "username": staff_member.student.username,
+            "active": staff_member.active,
+            "assigned_at": staff_member.assigned_at,
+        }
+
+    def _list_staff(self, course):
+        staff = (
+            CourseStaff.objects.select_related("student")
+            .filter(course=course, active=True)
+            .order_by("-assigned_at")
+        )
+        return Response([self._serialise_staff_member(item) for item in staff])
+
+    def _add_staff_member(self, request, course):
+        serializer = CourseStaffAddSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        user = User.objects.get(id=serializer.validated_data["user_id"])
+        staff_member, created = CourseStaff.objects.get_or_create(
+            course=course,
+            student=user,
+            defaults={"active": True},
+        )
+        if not created and not staff_member.active:
+            staff_member.active = True
+            staff_member.save(update_fields=["active"])
+
+        return Response(
+            {
+                "message": "Staff member added successfully.",
+                "staff_id": staff_member.id,
+                "created": created,
+            },
+            status=status.HTTP_201_CREATED if created else status.HTTP_200_OK,
+        )
+
+    def _remove_staff_member(self, request, course):
+        staff_user_id = request.data.get("user_id")
+        if not staff_user_id:
+            return Response({"detail": "user_id is required."}, status=400)
+
+        deleted, _ = CourseStaff.objects.filter(
+            course=course,
+            student_id=staff_user_id,
+        ).delete()
+        if not deleted:
+            return Response({"detail": "Staff member not found."}, status=404)
+
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
     @action(detail=True, methods=["get", "post", "delete"], url_path="staff")
     def staff(self, request, pk=None):
         """List, add, or remove course staff members.
@@ -30,57 +84,9 @@ class CourseStaffMixin(CourseViewSetBase):
         self.check_object_permissions(request, course)
 
         if request.method == "GET":
-            staff = (
-                CourseStaff.objects.select_related("student")
-                .filter(course=course, active=True)
-                .order_by("-assigned_at")
-            )
-            return Response(
-                [
-                    {
-                        "id": item.id,
-                        "user_id": item.student_id,
-                        "username": item.student.username,
-                        "active": item.active,
-                        "assigned_at": item.assigned_at,
-                    }
-                    for item in staff
-                ]
-            )
+            return self._list_staff(course)
 
         if request.method == "POST":
-            serializer = CourseStaffAddSerializer(data=request.data)
-            serializer.is_valid(raise_exception=True)
+            return self._add_staff_member(request, course)
 
-            user = User.objects.get(id=serializer.validated_data["user_id"])
-            staff_member, created = CourseStaff.objects.get_or_create(
-                course=course,
-                student=user,
-                defaults={"active": True},
-            )
-            if not created and not staff_member.active:
-                staff_member.active = True
-                staff_member.save(update_fields=["active"])
-
-            return Response(
-                {
-                    "message": "Staff member added successfully.",
-                    "staff_id": staff_member.id,
-                    "created": created,
-                },
-                status=status.HTTP_201_CREATED if created else status.HTTP_200_OK,
-            )
-
-        staff_user_id = request.data.get("user_id")
-        if not staff_user_id:
-            return Response({"detail": "user_id is required."}, status=400)
-
-        deleted, _ = CourseStaff.objects.filter(
-            course=course,
-            student_id=staff_user_id,
-        ).delete()
-
-        if not deleted:
-            return Response({"detail": "Staff member not found."}, status=404)
-
-        return Response(status=status.HTTP_204_NO_CONTENT)
+        return self._remove_staff_member(request, course)

@@ -141,6 +141,14 @@ class CourseEventSyncServiceTests(TestCase):
         self.assertEqual(stats["errors"], [])
         self.assertEqual(Event.objects.filter(user=self.student_user).count(), 1)
 
+        event = Event.objects.get(user=self.student_user)
+        self.assertEqual(
+            event.description,
+            "Python Basics - Lesson 1'\nIntro lesson\nBy teacher",
+        )
+        self.assertEqual(event.location, "Room 101")
+        self.assertEqual(event.colour, "#ff0000")
+
     def test_sync_user_course_events_updates_existing_event(self):
         """Test sync user course events updates existing event."""
         CourseEnrollment.objects.create(
@@ -188,6 +196,21 @@ class CourseEventSyncServiceTests(TestCase):
 
         with patch.object(Event.objects, "get", side_effect=Exception("boom")):
             stats = CourseEventSyncService.sync_course_event_to_core(self.course_event)
+
+        self.assertEqual(stats["created"], 0)
+        self.assertEqual(stats["updated"], 0)
+        self.assertEqual(len(stats["errors"]), 1)
+        self.assertIn("boom", stats["errors"][0])
+        mock_logger.error.assert_called()
+
+    @patch("courses.services.event.logger")
+    def test_sync_user_course_events_collects_errors(self, mock_logger):
+        CourseEnrollment.objects.create(
+            course=self.course, student=self.student, active=True
+        )
+
+        with patch.object(Event.objects, "get", side_effect=Exception("boom")):
+            stats = CourseEventSyncService.sync_user_course_events(self.student_user)
 
         self.assertEqual(stats["created"], 0)
         self.assertEqual(stats["updated"], 0)

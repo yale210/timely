@@ -54,7 +54,12 @@ class CourseJoinCodeAdmin(admin.ModelAdmin):
 
     @admin.display(description="Join URL")
     def copy_join_url(self, obj):
-        """Render a join URL hint for the admin."""
+        """Render a join URL hint for the admin.
+
+        Returns:
+            SafeString: The rendered admin hint.
+
+        """
         join_url = "/courses/join-by-code/"
         return format_html(
             '<span title="POST {} with code={}">Copy join URL</span>',

@@ -17,6 +17,36 @@ from courses.views.base_view import CourseViewSetBase
 class CourseMembershipMixin(CourseViewSetBase):
     """Mixin for course membership actions."""
 
+    def _get_student_for_user(self, user):
+        return Student.objects.get_or_create(user=user)[0]
+
+    def _get_active_join_code(self, code):
+        return (
+            CourseJoinCode.objects.select_related("course")
+            .filter(code=code, active=True)
+            .first()
+        )
+
+    def _get_or_create_active_enrollment(self, course, student):
+        enrollment, created = CourseEnrollment.objects.get_or_create(
+            course=course,
+            student=student,
+            defaults={"active": True},
+        )
+        if not created and not enrollment.active:
+            enrollment.active = True
+            enrollment.save(update_fields=["active"])
+        return enrollment, created
+
+    def _get_join_by_code_error_response(self, join_code):
+        if join_code.expires_at and join_code.expires_at <= timezone.now():
+            return Response({"detail": "Join code has expired."}, status=400)
+
+        if not join_code.course.active:
+            return Response({"detail": "Course is not active."}, status=400)
+
+        return None
+
     @action(detail=True, methods=["post"], url_path="join")
     def join(self, request, pk=None):
         """Enroll the current user in the requested course.
@@ -29,20 +59,12 @@ class CourseMembershipMixin(CourseViewSetBase):
             Response: A response describing the enrollment result.
         """
         course = self.get_course(pk)
-        student = Student.objects.get_or_create(user=request.user)[0]
+        student = self._get_student_for_user(request.user)
 
         if not course.active:
             return Response({"detail": "Course is not active."}, status=400)
 
-        enrollment, created = CourseEnrollment.objects.get_or_create(
-            course=course,
-            student=student,
-            defaults={"active": True},
-        )
-        if not created and not enrollment.active:
-            enrollment.active = True
-            enrollment.save(update_fields=["active"])
-        enrollment.active = True
+        _, created = self._get_or_create_active_enrollment(course, student)
         return Response(
             {"message": "Course enrollment successful.", "created": created},
             status=status.HTTP_200_OK,
@@ -97,35 +119,17 @@ class CourseMembershipMixin(CourseViewSetBase):
         serializer.is_valid(raise_exception=True)
 
         code = serializer.validated_data["code"].strip()
-        join_code = (
-            CourseJoinCode.objects.select_related("course")
-            .filter(code=code, active=True)
-            .first()
-        )
-
-        if not join_code:
+        join_code = self._get_active_join_code(code)
+        if join_code is None:
             return Response({"detail": "Invalid join code."}, status=404)
 
-        if join_code.expires_at and join_code.expires_at <= timezone.now():
-            return Response({"detail": "Join code has expired."}, status=400)
+        error_response = self._get_join_by_code_error_response(join_code)
+        if error_response is not None:
+            return error_response
 
         course = join_code.course
-        if not course.active:
-            return Response({"detail": "Course is not active."}, status=400)
-
-        student = Student.objects.filter(user=request.user).first()
-        if not student:
-            student = Student.objects.create(user=request.user)
-
-        enrollment, created = CourseEnrollment.objects.get_or_create(
-            course=course,
-            student=student,
-            defaults={"active": True},
-        )
-
-        if not created and not enrollment.active:
-            enrollment.active = True
-            enrollment.save(update_fields=["active"])
+        student = self._get_student_for_user(request.user)
+        _, created = self._get_or_create_active_enrollment(course, student)
 
         return Response(
             {
