@@ -169,7 +169,9 @@ class SchedulerDataMixinTests(TestCase):
 
     def test_working_window_bounds_and_search_dates_follow_preferences(self):
         scheduler = Scheduler(self.user, max_days_ahead=2)
-        task_start = timezone.make_aware(datetime.combine(self.reference_day, time(10, 0)))
+        task_start = timezone.make_aware(
+            datetime.combine(self.reference_day, time(10, 0))
+        )
         deadline = timezone.make_aware(
             datetime.combine(self.reference_day + timedelta(days=4), time(12, 0))
         )

@@ -45,4 +45,3 @@ class ScheduleRequestSerializerTests(TestCase):
         self.assertFalse(serializer.is_valid())
         self.assertIn("max_days_ahead", serializer.errors)
         self.assertIn("min_block_minutes", serializer.errors)
-

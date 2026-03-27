@@ -153,7 +153,9 @@ class ScheduleTasksAPIViewTests(APITestCase):
         task.refresh_from_db()
         self.assertEqual(task.total_task_allocations, 1)
 
-    def test_schedule_with_replace_existing_reschedules_without_separate_unschedule(self):
+    def test_schedule_with_replace_existing_reschedules_without_separate_unschedule(
+        self,
+    ):
         """Verify replace-existing clears prior allocations before rescheduling."""
         now = timezone.now()
         original_start = now + timedelta(hours=1)
@@ -310,4 +312,3 @@ class ScheduleTasksAPIViewTests(APITestCase):
             allocation,
             [{"start": start.isoformat(), "end": end.isoformat()}],
         )
-
