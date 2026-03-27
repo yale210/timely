@@ -139,9 +139,11 @@ describe("SettingsContent", () => {
 
     const deleteEventsButton = screen.getByText("Delete Events")
     const deleteTasksButton = screen.getByText("Delete Tasks")
+    const deleteAccountButton = screen.getByText("Delete Account")
 
     fireEvent.click(deleteEventsButton);
     fireEvent.click(deleteTasksButton);
+    fireEvent.click(deleteAccountButton);
   });
 
 
