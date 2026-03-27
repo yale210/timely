@@ -7,17 +7,32 @@ from django.utils import timezone
 
 
 class UserTimezoneMiddleware:
-    """Activate the authenticated user's preferred timezone for the lifetime of a request.
+    """Activate the request user's timezone so date-aware views match preferences.
 
-    the request so view-level `localdate()` / `get_current_timezone()` calls
-    reflect user preferences instead of the global project default.
+    The middleware resolves an authenticated user's saved IANA timezone and
+    activates it for the request lifetime. That keeps calendar and scheduling
+    responses aligned with the user's local day boundaries instead of the
+    project default timezone.
     """
 
     def __init__(self, get_response):
-        """Store the downstream response callable."""
+        """Store the downstream response callable used to continue the chain.
+
+        Args:
+            get_response (Callable): The next middleware or view callable.
+        """
         self.get_response = get_response
 
     def _get_timezone_to_activate(self, request):
+        """Resolve the timezone that should be active for the current request.
+
+        Args:
+            request (HttpRequest): The incoming request object.
+
+        Returns:
+            ZoneInfo | str: The user's configured timezone when valid, otherwise
+                the project default timezone string.
+        """
         user = getattr(request, "user", None)
         if not getattr(user, "is_authenticated", False):
             return settings.TIME_ZONE
@@ -33,6 +48,9 @@ class UserTimezoneMiddleware:
 
     def __call__(self, request):
         """Activate the resolved timezone for the duration of the request.
+
+        Args:
+            request (HttpRequest): The incoming request object.
 
         Returns:
             HttpResponse: The downstream response.
