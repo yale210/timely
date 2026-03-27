@@ -4,6 +4,7 @@ interface PrivacySectionProps {
   deleting: boolean
   onDeleteTasks: () => Promise<string>
   onDeleteEvents: () => Promise<string>
+  onDeleteAccount: () => Promise<string>
 }
 
 interface PrivacyActionCardProps {
@@ -48,11 +49,14 @@ const PrivacySection = ({
   deleting,
   onDeleteTasks,
   onDeleteEvents,
+  onDeleteAccount,
 }: PrivacySectionProps) => {
   const [message, setMessage] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
 
   const handleDeleteEvents = () => {
+    const confirmed = confirm("Are you sure you want to delete all of your events? This cannot be undone.")
+    if (!confirmed) return
     setMessage(null)
     setError(null)
     onDeleteEvents()
@@ -65,6 +69,9 @@ const PrivacySection = ({
   }
 
   const handleDeleteTasks = () => {
+    const confirmed = confirm("Are you sure you want to delete all of your tasks? This cannot be undone.")
+    if (!confirmed) return
+
     setMessage(null)
     setError(null)
     onDeleteTasks()
@@ -73,6 +80,20 @@ const PrivacySection = ({
       })
       .catch(() => {
         setError("Failed to delete tasks.")
+      })
+  }
+
+  const handleDeleteAccount = () => {
+    const confirmed = confirm("Are you sure you want to delete your account? This cannot be undone.")
+    if (!confirmed) return
+    setMessage(null)
+    setError(null)
+    onDeleteAccount()
+      .then((result) => {
+        setMessage(result)
+      })
+      .catch(() => {
+        setError("Failed to delete account.")
       })
   }
 
@@ -111,6 +132,13 @@ const PrivacySection = ({
           icon="delete_forever"
           deleting={deleting}
           onClick={handleDeleteTasks}
+        />
+        <PrivacyActionCard
+          title="Delete Account"
+          description="Permanently delete your account and all associated data. This cannot be undone."
+          icon="delete_forever"
+          deleting={deleting}
+          onClick={handleDeleteAccount}
         />
       </div>
     </div>

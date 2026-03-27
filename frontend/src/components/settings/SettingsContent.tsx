@@ -399,6 +399,9 @@ const SettingsContent = ({
                 onDeleteTasks={() => {
                   return actions.deleteTasks();
                 }}
+                onDeleteAccount={() => {
+                  return actions.deleteAccount();
+                }}
               />
             ) : null}
           </section>

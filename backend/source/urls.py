@@ -28,6 +28,7 @@ from core.views.share_events_view import ShareEventsView
 
 from core.views.delete_all_events_view import DeleteAllEventsView
 from core.views.delete_all_tasks_view import DeleteAllTasksView
+from core.views.delete_account_view import DeleteAccountView
 
 from scheduler.views import ScheduleTasksAPIView, UnscheduleTasksAPIView
 
@@ -60,6 +61,7 @@ urlpatterns = [
     path("api/share_events/", ShareEventsView.as_view()),
     path("api/delete_events/", DeleteAllEventsView.as_view()),
     path("api/delete_tasks/", DeleteAllTasksView.as_view()),
+    path("api/delete_account/", DeleteAccountView.as_view()),
     path("api/profiles/", include("profiles.urls")),
     path("api/pomo/", include("pomo.urls")),
 ]

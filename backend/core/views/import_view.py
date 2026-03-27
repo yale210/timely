@@ -145,7 +145,8 @@ class ImportView(APIView):
 
                         # A DTSTAMP is optional, no error for it not existing,
                         if "DTSTAMP" in current_event:
-                            dt_stamp = current_event["DTSTAMP"]
+                            dt_stamp_unformatted = current_event["DTSTAMP"]
+                            dt_stamp = dt_stamp_unformatted[:-1]
                         else:
                             # Current date/time
                             current_date_time_unformatted = timezone.now()
@@ -175,8 +176,9 @@ class ImportView(APIView):
                             if until_date == "None":
                                 until_date_final = None
                             else:
+                                until_date_modified = until_date[:-1]
                                 until_date_final = datetime.strptime(
-                                    until_date, "%Y%m%dT%H%M%S"
+                                    until_date_modified, "%Y%m%dT%H%M%S"
                                 ).date()
 
                         else:
