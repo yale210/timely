@@ -188,7 +188,7 @@ describe("PreferencesSection", () => {
 
   
 
-  it("does not call onDeleteEvents when not confirmed", async () => {
+  it("does not call onDeleteEvents when not confirmed", () => {
     const onDeleteEvents = vi.fn();
     vi.spyOn(window, "confirm").mockReturnValue(false);
 
@@ -208,7 +208,7 @@ describe("PreferencesSection", () => {
 
   });
 
-  it("does not call onDeleteTasks when not confirmed", async () => {
+  it("does not call onDeleteTasks when not confirmed", () => {
     const onDeleteTasks = vi.fn();
     vi.spyOn(window, "confirm").mockReturnValue(false);
 
@@ -228,7 +228,7 @@ describe("PreferencesSection", () => {
 
   });
 
-  it("does not call onDeleteAccount when not confirmed", async () => {
+  it("does not call onDeleteAccount when not confirmed", () => {
     const onDeleteAccount = vi.fn();
     vi.spyOn(window, "confirm").mockReturnValue(false);
 
