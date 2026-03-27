@@ -1,7 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { render, screen, fireEvent, waitFor, cleanup } from "@testing-library/react";
+import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
-import { NotificationProvider } from '@/context/NotificationContext'
 import moment from "moment";
 
 import CalendarPage from "@/pages/Calendar";
@@ -201,9 +200,7 @@ const eventEntryTestId = `mock-event-event-${mockEvents[0].id}-${mockEvents[0].s
 const renderPage = () =>
   render(
     <MemoryRouter>
-      <NotificationProvider>
-        <CalendarPage />
-      </NotificationProvider>
+      <CalendarPage useLayout={false} showNavbar={false} />
     </MemoryRouter>
   );
 
@@ -212,7 +209,6 @@ const renderPage = () =>
 // ----------------------
 describe("CalendarPage (lean tests)", () => {
   afterEach(() => {
-    cleanup();
     sidebarProps = null;
     vi.clearAllMocks();
   });

@@ -1,5 +1,5 @@
-import { cleanup, render, screen } from '@testing-library/react'
-import { it, expect, describe, beforeEach, afterEach } from 'vitest'
+import { render, screen } from '@testing-library/react'
+import { it, expect, describe, beforeEach } from 'vitest'
 import { Footer } from '@/components'
 
 describe('Footer', () => {
@@ -7,10 +7,6 @@ describe('Footer', () => {
         render(
             <Footer />
         )
-    })
-
-    afterEach(() => {
-        cleanup()
     })
 
     it("renders footer description", () => {

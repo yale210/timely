@@ -1,3 +1,5 @@
+"""Tests for calendar sync services."""
+
 import datetime
 from unittest.mock import Mock, patch
 
@@ -12,36 +14,37 @@ User = get_user_model()
 
 
 class SyncCalendarTests(TestCase):
-    def setUp(self):
-        self.teacher_user = User.objects.create_user(
+    @classmethod
+    def setUpTestData(cls):
+        cls.teacher_user = User.objects.create_user(
             username="teacher",
             password="password123",
             email="teacher@example.com",
         )
-        self.student_user = User.objects.create_user(
+        cls.student_user = User.objects.create_user(
             username="student",
             password="password123",
             email="student@example.com",
         )
-        self.other_user = User.objects.create_user(
+        cls.other_user = User.objects.create_user(
             username="other",
             password="password123",
             email="other@example.com",
         )
 
-        self.teacher = Teacher.objects.create(user=self.teacher_user)
-        self.student = Student.objects.create(user=self.student_user)
-        self.other_student = Student.objects.create(user=self.other_user)
+        cls.teacher = Teacher.objects.create(user=cls.teacher_user)
+        cls.student = Student.objects.create(user=cls.student_user)
+        cls.other_student = Student.objects.create(user=cls.other_user)
 
-        self.course = Course.objects.create(
+        cls.course = Course.objects.create(
             name="Python Basics",
             description="Intro course",
-            lead=self.teacher,
+            lead=cls.teacher,
         )
 
-        self.course_event = CourseEvent.objects.create(
-            course=self.course,
-            created_by=self.teacher,
+        cls.course_event = CourseEvent.objects.create(
+            course=cls.course,
+            created_by=cls.teacher,
             title="Lesson 1",
             description="Intro lesson",
             location="Room 101",
@@ -50,10 +53,12 @@ class SyncCalendarTests(TestCase):
             end_time=timezone.now() + datetime.timedelta(days=2, hours=1),
         )
 
+    def setUp(self):
         self.provider = Mock()
         self.sync_service = SyncCalendar(self.provider)
 
     def test_sync_user_calendar_creates_new_event(self):
+        """Test sync user calendar creates new event."""
         CourseEnrollment.objects.create(
             course=self.course, student=self.student, active=True
         )
@@ -74,6 +79,7 @@ class SyncCalendarTests(TestCase):
         self.assertEqual(called_data["location"], "Room 101")
 
     def test_sync_user_calendar_updates_existing_event_when_changed(self):
+        """Test sync user calendar updates existing event when changed."""
         CourseEnrollment.objects.create(
             course=self.course, student=self.student, active=True
         )
@@ -106,6 +112,7 @@ class SyncCalendarTests(TestCase):
         self.assertEqual(called_data["title"], "Lesson 1")
 
     def test_sync_user_calendar_does_not_update_when_event_is_unchanged(self):
+        """Test sync user calendar does not update when event is unchanged."""
         CourseEnrollment.objects.create(
             course=self.course, student=self.student, active=True
         )
@@ -131,6 +138,7 @@ class SyncCalendarTests(TestCase):
         self.provider.create_event.assert_not_called()
 
     def test_sync_user_calendar_honors_date_filters(self):
+        """Test sync user calendar honors date filters."""
         CourseEnrollment.objects.create(
             course=self.course, student=self.student, active=True
         )
@@ -151,6 +159,7 @@ class SyncCalendarTests(TestCase):
         self.provider.create_event.assert_not_called()
 
     def test_sync_user_calendar_returns_noop_when_user_has_no_enrollments(self):
+        """Test sync user calendar returns noop when user has no enrollments."""
         stats = self.sync_service.sync_user_calendar(self.other_user)
 
         self.assertEqual(stats["created"], 0)
@@ -162,6 +171,7 @@ class SyncCalendarTests(TestCase):
         self.provider.update_event.assert_not_called()
 
     def test_sync_course_event_syncs_all_active_enrolled_users(self):
+        """Test sync course event syncs all active enrolled users."""
         CourseEnrollment.objects.create(
             course=self.course, student=self.student, active=True
         )
@@ -176,6 +186,7 @@ class SyncCalendarTests(TestCase):
         self.assertEqual(self.provider.create_event.call_count, 2)
 
     def test_sync_course_event_only_syncs_specific_user_when_provided(self):
+        """Test sync course event only syncs specific user when provided."""
         CourseEnrollment.objects.create(
             course=self.course, student=self.student, active=True
         )
@@ -196,6 +207,7 @@ class SyncCalendarTests(TestCase):
         self.assertEqual(called_data["title"], "Lesson 1")
 
     def test_remove_calendar_event_deletes_matching_event(self):
+        """Test remove calendar event deletes matching event."""
         self.provider.get_events.return_value = [
             {
                 "id": "external-1",
@@ -215,6 +227,7 @@ class SyncCalendarTests(TestCase):
 
     @patch("courses.services.event.logger")
     def test_remove_calendar_event_returns_false_when_not_found(self, mock_logger):
+        """Test remove calendar event returns false when not found."""
         self.provider.get_events.return_value = []
 
         result = self.sync_service.remove_calendar_event(
@@ -229,6 +242,7 @@ class SyncCalendarTests(TestCase):
 
     @patch("courses.services.event.logger")
     def test_sync_user_calendar_collects_provider_errors(self, mock_logger):
+        """Test sync user calendar collects provider errors."""
         CourseEnrollment.objects.create(
             course=self.course, student=self.student, active=True
         )

@@ -1,3 +1,5 @@
+"""Shared importance level choices for schedulable models."""
+
 from django.db import models
 
 

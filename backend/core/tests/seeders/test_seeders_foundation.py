@@ -1,3 +1,5 @@
+"""Tests for foundational core seeders."""
+
 from datetime import time
 from unittest.mock import patch
 
@@ -46,7 +48,10 @@ from .common import SeederTestCase
 
 
 class SeederFoundationTests(SeederTestCase):
+    """Test cases for seeder foundation."""
+
     def test_fixture_seeders_are_idempotent(self):
+        """Test fixture seeders are idempotent."""
         self.seed_fixture_data()
         initial_counts = {
             "users": get_user_model().objects.count(),
@@ -67,6 +72,7 @@ class SeederFoundationTests(SeederTestCase):
         self.assert_fixture_counts_unchanged(initial_counts)
 
     def test_fixture_relations_resolve_by_same_user_natural_keys(self):
+        """Test fixture relations resolve by same user natural keys."""
         self.seed_fixture_data()
 
         task = Task.objects.get(user__username="david", title="AKC Weeks 2-5")
@@ -78,6 +84,7 @@ class SeederFoundationTests(SeederTestCase):
         self.assertEqual(grade.category.user.username, "david")
 
     def test_fixture_seeders_preserve_profile_preference_and_assessment_values(self):
+        """Test fixture seeders preserve profile preference and assessment values."""
         self.seed_fixture_data()
 
         preference = Preference.objects.get(user__username="thomas")
@@ -95,6 +102,7 @@ class SeederFoundationTests(SeederTestCase):
         self.assertEqual(assessment.linked_event.title, "PPA Exam")
 
     def test_seed_methods_call_fixture_and_random_helpers(self):
+        """Test seed methods call fixture and random helpers."""
         self.assert_seed_calls(
             CategorySeeder(),
             "_create_fixture_category",
@@ -161,6 +169,7 @@ class SeederFoundationTests(SeederTestCase):
         self.assertEqual(assessment_populate_mock.call_count, 200)
 
     def test_fixture_seeders_print_errors_when_creation_fails(self):
+        """Test fixture seeders print errors when creation fails."""
         cases = [
             (
                 CategorySeeder(),
@@ -302,6 +311,7 @@ class SeederFoundationTests(SeederTestCase):
         )
 
     def test_category_and_preference_seeders_cover_update_and_defaults(self):
+        """Test category and preference seeders cover update and defaults."""
         user = get_user_model().objects.create_user(
             username="category-owner",
             email="category@example.com",
@@ -366,6 +376,7 @@ class SeederFoundationTests(SeederTestCase):
         self.assertEqual(set(preference.days_off.values_list("day", flat=True)), {1, 3})
 
     def test_commute_seeder_creates_missing_user_before_random_commute(self):
+        """Test commute seeder creates missing user before random commute."""
         seeder = CommuteSeeder()
         self.assertEqual(get_user_model().objects.count(), 0)
 
@@ -376,6 +387,7 @@ class SeederFoundationTests(SeederTestCase):
         self.assertEqual(get_user_model().objects.count(), 1)
 
     def test_category_seeder_populates_existing_random_user(self):
+        """Test category seeder populates existing random user."""
         user = get_user_model().objects.create_user(
             username="existing-category-user",
             email="existing-category@example.com",
@@ -391,6 +403,7 @@ class SeederFoundationTests(SeederTestCase):
         self.assertIsNotNone(category.colour)
 
     def test_category_seeder_creates_missing_random_user(self):
+        """Test category seeder creates missing random user."""
         seeder = CategorySeeder()
         self.assertEqual(get_user_model().objects.count(), 0)
 

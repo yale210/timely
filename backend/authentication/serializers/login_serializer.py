@@ -3,8 +3,6 @@
 from django.contrib.auth import authenticate
 from rest_framework import serializers
 
-from ..models import User
-
 
 class LoginSerializer(serializers.Serializer):
     """Serialize and validate user login credentials."""
@@ -35,9 +33,6 @@ class LoginSerializer(serializers.Serializer):
 
         if not password:
             raise serializers.ValidationError("Password is required.")
-
-        if not User.objects.filter(username=username).exists():
-            raise serializers.ValidationError("Invalid credentials.")
 
         user = authenticate(
             request=self.context.get("request"), username=username, password=password

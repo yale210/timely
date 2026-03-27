@@ -1,22 +1,15 @@
-import { cleanup, fireEvent, render, screen } from '@testing-library/react'
-import { it, expect, describe, beforeEach, afterEach } from 'vitest'
+import { fireEvent, render, screen } from '@testing-library/react'
+import { it, expect, describe, beforeEach } from 'vitest'
 import { HomeNavbar } from "@/components/index"
 import { MemoryRouter } from 'react-router-dom'
-import { NotificationProvider } from '@/context/NotificationContext'
 
 describe('Navbar', () => {
     beforeEach(() => {
         render(
             <MemoryRouter>
-                <NotificationProvider>
-                    <HomeNavbar />
-                </NotificationProvider>
+                <HomeNavbar />
             </MemoryRouter>
         )
-    })
-
-    afterEach(() => {
-        cleanup()
     })
 
     it("renders the brand link to the homepage", () => {

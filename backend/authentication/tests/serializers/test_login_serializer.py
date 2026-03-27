@@ -23,6 +23,14 @@ class LoginSerializerTest(TestCase):
         self.assertTrue(serializer.is_valid())
         self.assertEqual(serializer.validated_data["user"], self.user)
 
+    def test_valid_login_with_mixed_case_username(self):
+        """Verify login accepts mixed-case input for normalized usernames."""
+        data = {"username": "  TESTUSER  ", "password": "password123"}
+        serializer = LoginSerializer(data=data)
+
+        self.assertTrue(serializer.is_valid())
+        self.assertEqual(serializer.validated_data["user"], self.user)
+
     def test_login_with_incorrect_password(self):
         """Verify that an incorrect password fails validation."""
         data = {"username": "testuser", "password": "wrongpassword"}

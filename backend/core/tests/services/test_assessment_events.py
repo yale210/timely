@@ -1,3 +1,5 @@
+"""Tests for assessment events."""
+
 from types import SimpleNamespace
 from unittest.mock import Mock, patch
 
@@ -11,7 +13,10 @@ from core.services.assessment_events import (
 
 
 class AssessmentEventServiceTests(SimpleTestCase):
+    """Test cases for assessment event service."""
+
     def _build_assessment(self, **overrides):
+        """Build assessment."""
         assessment = SimpleNamespace(
             user=object(),
             title="Operating Systems Exam",
@@ -28,6 +33,7 @@ class AssessmentEventServiceTests(SimpleTestCase):
 
     @patch("core.services.assessment_events.Event.objects.create")
     def test_create_assessment_event_creates_and_links_event(self, create_mock):
+        """Test create assessment event creates and links event."""
         event = object()
         create_mock.return_value = event
         assessment = self._build_assessment()
@@ -49,6 +55,7 @@ class AssessmentEventServiceTests(SimpleTestCase):
         )
 
     def test_delete_assessment_event_removes_existing_link(self):
+        """Test delete assessment event removes existing link."""
         linked_event = Mock()
         assessment = self._build_assessment(linked_event=linked_event)
 
@@ -61,6 +68,7 @@ class AssessmentEventServiceTests(SimpleTestCase):
         )
 
     def test_delete_assessment_event_noops_without_linked_event(self):
+        """Test delete assessment event noops without linked event."""
         assessment = self._build_assessment(linked_event=None)
 
         delete_assessment_event(assessment)
@@ -68,6 +76,7 @@ class AssessmentEventServiceTests(SimpleTestCase):
         assessment.save.assert_not_called()
 
     def test_update_assessment_event_updates_existing_linked_event(self):
+        """Test update assessment event updates existing linked event."""
         linked_event = Mock()
         assessment = self._build_assessment(linked_event=linked_event)
 
@@ -82,6 +91,7 @@ class AssessmentEventServiceTests(SimpleTestCase):
         linked_event.save.assert_called_once_with()
 
     def test_update_assessment_event_returns_none_when_no_linked_event(self):
+        """Test update assessment event returns none when no linked event."""
         assessment = self._build_assessment(linked_event=None)
 
         self.assertIsNone(update_assessment_event(assessment))

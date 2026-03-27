@@ -1,3 +1,5 @@
+"""Tests for the student model."""
+
 from courses.models import Student
 from django.contrib.auth import get_user_model
 from django.test import TestCase
@@ -8,8 +10,9 @@ User = get_user_model()
 class StudentModelTests(TestCase):
     """Tests for the Student model."""
 
-    def setUp(self):
-        self.user = User.objects.create_user(
+    @classmethod
+    def setUpTestData(cls):
+        cls.user = User.objects.create_user(
             username="student_user", password="testpass123", email="student@test.com"
         )
 
