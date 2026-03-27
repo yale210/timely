@@ -4,7 +4,7 @@ from django.db import models
 from django.conf import settings
 
 from django.core.exceptions import ValidationError
-from datetime import datetime, timedelta
+from datetime import datetime
 from django.core.validators import MinValueValidator, MaxValueValidator
 from zoneinfo import available_timezones
 from zoneinfo import ZoneInfo

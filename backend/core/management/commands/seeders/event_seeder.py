@@ -252,14 +252,18 @@ class EventSeeder(BaseSeeder):
 
         available_minutes = int((window_end - window_start).total_seconds() // 60)
         if available_minutes < self.MIN_EVENT_MINUTES:
-            window_start = datetime.datetime.combine(target_date, self.DEFAULT_DAY_START)
+            window_start = datetime.datetime.combine(
+                target_date, self.DEFAULT_DAY_START
+            )
             window_end = datetime.datetime.combine(target_date, self.DEFAULT_DAY_END)
             available_minutes = int((window_end - window_start).total_seconds() // 60)
 
         duration_cap = min(max_duration_minutes, available_minutes)
         duration_minutes = random.randint(self.MIN_EVENT_MINUTES, duration_cap)
         start_offset_max = max(0, available_minutes - duration_minutes)
-        start_offset = random.randint(0, start_offset_max) if start_offset_max > 0 else 0
+        start_offset = (
+            random.randint(0, start_offset_max) if start_offset_max > 0 else 0
+        )
 
         start = timezone.make_aware(window_start + timedelta(minutes=start_offset))
         end = start + timedelta(minutes=duration_minutes)
