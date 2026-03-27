@@ -19,6 +19,16 @@ class UserModelTest(TestCase):
         self.assertFalse(user.is_superuser)
         self.assertTrue(user.check_password("password123"))
 
+    def test_create_user_normalizes_username(self):
+        """Verify that `create_user` trims and lowercases usernames before saving."""
+        user = User.objects.create_user(
+            username="  TestUser  ",
+            email="test@example.com",
+            password="password123",
+        )
+
+        self.assertEqual(user.username, "testuser")
+
     def test_create_superuser(self):
         """Verify that `create_superuser` creates an active admin user."""
         admin_user = User.objects.create_superuser(
@@ -30,6 +40,16 @@ class UserModelTest(TestCase):
         self.assertTrue(admin_user.is_staff)
         self.assertTrue(admin_user.is_superuser)
         self.assertTrue(admin_user.check_password("adminpassword"))
+
+    def test_create_superuser_normalizes_username(self):
+        """Verify that `create_superuser` also trims and lowercases usernames."""
+        admin_user = User.objects.create_superuser(
+            username="  AdminUser  ",
+            email="admin@example.com",
+            password="adminpassword",
+        )
+
+        self.assertEqual(admin_user.username, "adminuser")
 
     def test_create_user_no_username(self):
         """Verify creating a user without a username raises a validation error."""
