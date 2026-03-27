@@ -4,7 +4,6 @@ from django.contrib.auth import authenticate
 from rest_framework import serializers
 
 
-
 class LoginSerializer(serializers.Serializer):
     """Serialize and validate user login credentials."""
 
