@@ -75,7 +75,7 @@ describe("TaskListToolbar Component", () => {
     expect(itemOn.className).toContain("text-primary");
   });
 
-  it("handles filter changes - quick wins", async () => {
+  it("handles filter changes - quick wins", () => {
     const { rerender } = render(<TaskListToolbar {...defaultProps} />);
     
     fireEvent.click(screen.getByRole("button", { name: "filter_listFilter" }));

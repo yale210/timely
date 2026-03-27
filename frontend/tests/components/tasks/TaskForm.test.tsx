@@ -70,7 +70,7 @@ describe("TaskForm Component", () => {
     expect(screen.getByLabelText(/est. minutes/i)).toHaveValue(null);
   });
 
-  it("handles input changes and submits", async () => {
+  it("handles input changes and submits", () => {
     render(<TaskForm {...defaultProps} />);
 
     fireEvent.change(screen.getByLabelText(/title/i), { target: { value: "New Task" } });
@@ -92,7 +92,7 @@ describe("TaskForm Component", () => {
     }));
   });
 
-  it("validates importance (1-10)", async () => {
+  it("validates importance (1-10)", () => {
     render(<TaskForm {...defaultProps} />);
     
     const importanceInput = screen.getByLabelText(/importance/i);
@@ -106,7 +106,7 @@ describe("TaskForm Component", () => {
     expect(defaultProps.onSubmit).not.toHaveBeenCalled();
   });
 
-  it("validates time (start before deadline)", async () => {
+  it("validates time (start before deadline)", () => {
     render(<TaskForm {...defaultProps} />);
     
     const startDate = screen.getByLabelText(/start date/i);
@@ -120,13 +120,13 @@ describe("TaskForm Component", () => {
     expect(defaultProps.onSubmit).not.toHaveBeenCalled();
   });
 
-  it("calls onCancel when cancel button is clicked", async () => {
+  it("calls onCancel when cancel button is clicked", () => {
     render(<TaskForm {...defaultProps} />);
     fireEvent.click(screen.getByRole("button", { name: /cancel/i }));
     expect(defaultProps.onCancel).toHaveBeenCalled();
   });
 
-  it("calls onDataChange when inputs change", async () => {
+  it("calls onDataChange when inputs change", () => {
     const onDataChange = vi.fn();
     render(<TaskForm {...defaultProps} onDataChange={onDataChange} />);
     
@@ -134,7 +134,7 @@ describe("TaskForm Component", () => {
     expect(onDataChange).toHaveBeenCalled();
   });
 
-  it("handles invalid dates in safeToISOString path", async () => {
+  it("handles invalid dates in safeToISOString path", () => {
     render(<TaskForm {...defaultProps} />);
     
     const startDate = screen.getByLabelText(/start date/i);
