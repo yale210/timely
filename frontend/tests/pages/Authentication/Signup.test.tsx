@@ -45,6 +45,9 @@ describe("Signup page", () => {
   })
 
   function fillForm() {
+    fireEvent.change(screen.getByLabelText(/^name$/i), {
+      target: { value: "Alice Example"},
+    })
     fireEvent.change(screen.getByLabelText(/username/i), {
       target: { value: "alice"},
     })
@@ -59,7 +62,7 @@ describe("Signup page", () => {
     })
   }
 
-  it("submits details and navigates to login on success", async () => {
+  it("submits details and navigates to the dashboard on success", async () => {
     const registerSpy = vi
     .spyOn(authService, "register")
     .mockResolvedValue({} as never)
@@ -71,6 +74,7 @@ describe("Signup page", () => {
     )
 
     //Replaced with one function to save space and alow it to be changed later.
+    fireEvent.change(screen.getByLabelText(/^name$/i), { target: { value: "Alice Example" } })
     fireEvent.change(screen.getByLabelText(/username/i), { target: { value: "alice" } })
     fireEvent.change(screen.getByLabelText(/email address/i), { target: { value: "alice@example.com" } })
     fireEvent.change(screen.getByLabelText(/^password$/i), { target: { value: "Secret123" } })
@@ -80,6 +84,7 @@ describe("Signup page", () => {
 
     await waitFor(() =>
       expect(registerSpy).toHaveBeenCalledWith({
+        name: "Alice Example",
         username: "alice",
         email: "alice@example.com",
         password: "Secret123",
@@ -87,7 +92,7 @@ describe("Signup page", () => {
       })
     )
     await waitFor(() => {
-      expect(navigateMock).toHaveBeenCalledWith("/login")
+      expect(navigateMock).toHaveBeenCalledWith("/dashboard")
     })
     expect(container.querySelector(".bg-red-50")).toBeNull()
   })
@@ -103,6 +108,7 @@ describe("Signup page", () => {
       </MemoryRouter>
     )
 
+    fireEvent.change(screen.getByLabelText(/^name$/i), { target: { value: "Bob Example" } })
     fireEvent.change(screen.getByLabelText(/username/i), { target: { value: "bob" } })
     fireEvent.change(screen.getByLabelText(/email address/i), { target: { value: "bob@example.com" } })
     fireEvent.change(screen.getByLabelText(/^password$/i), { target: { value: "pass" } })
@@ -128,6 +134,7 @@ describe("Signup page", () => {
       </MemoryRouter>
     )
 
+    fireEvent.change(screen.getByLabelText(/^name$/i), { target: { value: "Carol Example" } })
     fireEvent.change(screen.getByLabelText(/username/i), { target: { value: "carol" } })
     fireEvent.change(screen.getByLabelText(/email address/i), { target: { value: "carol@example.com" } })
     fireEvent.change(screen.getByLabelText(/^password$/i), { target: { value: "pw" } })
