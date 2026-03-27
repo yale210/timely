@@ -25,6 +25,8 @@ class FriendshipSerializer(serializers.ModelSerializer):
     receiver_avatar = serializers.SerializerMethodField()
 
     class Meta:
+        """Describe the friendship request payload used by the social flow."""
+
         model = Friendship
         fields = [
             "id",

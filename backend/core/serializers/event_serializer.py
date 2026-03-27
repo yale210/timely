@@ -15,6 +15,12 @@ class EventReminderSerializer(serializers.ModelSerializer):
     """Serializer for the EventReminder model."""
 
     class Meta:
+        """Configure reminder fields used when events expose nested reminders.
+
+        The API only persists the identifier, push/email toggles, and relative
+        offset because reminder timing is derived from the parent event window.
+        """
+
         model = EventReminder
         fields = ["id", "send_push", "send_email", "minutes_before"]
 
@@ -42,6 +48,13 @@ class EventSerializer(serializers.ModelSerializer):
     )
 
     class Meta:
+        """Define the writable event payload shape for calendar edits.
+
+        The serializer exposes the core scheduling fields plus nested reminders
+        and category links so clients can create or edit recurring events in one
+        request without guessing which relations are writable.
+        """
+
         model = Event
         fields = [
             "id",
@@ -243,6 +256,12 @@ class EventResponseSerializer(serializers.ModelSerializer):
     split_from_event_id = serializers.IntegerField(read_only=True)
 
     class Meta:
+        """Describe the response payload returned after event mutations.
+
+        The view layer uses this structure when returning persisted event data
+        together with nested relations and any split-series metadata.
+        """
+
         model = Event
         fields = [
             "id",
