@@ -102,7 +102,8 @@ class TaskSeeder(BaseSeeder):
                     "categories": [temporary_category.id],
                     "estimated_minutes": random.randint(1, 60 * 24),
                     "start_time": start,
-                    "deadline": start + datetime.timedelta(minutes=random.randint(1, 60 * 24 * 10)),
+                    "deadline": start
+                    + datetime.timedelta(minutes=random.randint(1, 60 * 24 * 10)),
                     "completed": random.randint(0, 1) == 1,
                     "parent_task": Task.objects.order_by("?").first().id
                     if Task.objects.exists() and random.randint(0, 3) == 1
