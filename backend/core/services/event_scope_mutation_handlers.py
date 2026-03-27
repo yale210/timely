@@ -43,6 +43,12 @@ def _scope_this_update_data(
     validated_data: dict[str, Any],
     original_start_time: datetime,
 ) -> tuple[Any, list[dict[str, Any]], set[int]]:
+    """Resolve the payload, reminders, and categories for a single-instance edit.
+
+    Returns:
+        tuple[Any, list[dict[str, Any]], set[int]]: The override payload,
+            reminder payloads, and category ids.
+    """
     payload = resolve_scope_this_fields(
         event,
         existing_override,
@@ -62,6 +68,11 @@ def _cleanup_scope_this_noop(
     existing_override: Any | None,
     original_start_time: datetime,
 ) -> Any:
+    """Drop the temporary override and restore the base event occurrence.
+
+    Returns:
+        Any: The parent event after restoring the base occurrence.
+    """
     if existing_override is not None:
         existing_override.delete()
     _remove_exception_date(event, original_start_time.date())
@@ -72,6 +83,11 @@ def _has_recurrence_pattern_change(
     event: Any,
     validated_data: dict[str, Any],
 ) -> bool:
+    """Detect whether the recurrence pattern itself is being altered.
+
+    Returns:
+        bool: True when recurrence interval or end date changes.
+    """
     interval_changed = (
         "recurrence_interval" in validated_data
         and validated_data["recurrence_interval"] != event.recurrence_interval
@@ -88,6 +104,11 @@ def _update_scope_all(
     validated_data: dict[str, Any],
     original_start_time: datetime | None = None,
 ) -> Any:
+    """Apply a scope='all' update directly to the parent recurring series.
+
+    Returns:
+        Any: The updated event instance.
+    """
     normalised_data = validated_data
     if event.recurrence_interval:
         anchor_time = original_start_time or event.start_time
@@ -111,6 +132,11 @@ def _get_existing_override(
     event: Any,
     original_start_time: datetime,
 ) -> Any | None:
+    """Return the override matching the supplied recurring occurrence anchor.
+
+    Returns:
+        Any | None: The matching override row, or None when absent.
+    """
     return (
         event.overrides.filter(original_start_time=original_start_time)
         .prefetch_related("categories")
@@ -123,6 +149,11 @@ def _update_scope_this(
     validated_data: dict[str, Any],
     original_start_time: datetime,
 ) -> Any:
+    """Persist a scope='this' update by creating or reusing an override row.
+
+    Returns:
+        Any: The parent event after the override has been saved.
+    """
     original_start_time = _make_aware(original_start_time)
     existing_override = _get_existing_override(event, original_start_time)
     payload, final_reminders, final_category_ids = _scope_this_update_data(
@@ -149,6 +180,24 @@ def _persist_scope_this_update(
     final_reminders: list[dict[str, Any]],
     original_start_time: datetime,
 ) -> Any:
+    """Persist or discard a single-instance override based on the resolved diff.
+
+    Args:
+        event (Any): The recurring parent event being edited.
+        existing_override (Any | None): Existing override for the same anchor,
+            if one already exists.
+        payload (Any): Resolved override field values for the target instance.
+        final_category_ids (set[int]): Category ids that should remain attached
+            to the override.
+        final_reminders (list[dict[str, Any]]): Reminder payloads to store on
+            the override snapshot.
+        original_start_time (datetime): Anchor timestamp for the edited series
+            occurrence.
+
+    Returns:
+        Any: The parent event after the override is saved, or the restored event
+        when the edit is effectively a no-op.
+    """
     if scope_this_is_noop(
         event,
         payload,
@@ -174,6 +223,11 @@ def _update_scope_following(
     validated_data: dict[str, Any],
     original_start_time: datetime,
 ) -> Any:
+    """Create the split child series and rehome future occurrences to it.
+
+    Returns:
+        Any: The newly created child event.
+    """
     original_start_time = _make_aware(original_start_time)
     original_date = original_start_time.date()
     parent_categories = list(event.categories.all())
@@ -201,12 +255,14 @@ def _update_scope_following(
 
 
 def _delete_scope_this(event: Any, original_start_time: datetime) -> None:
+    """Delete a single overridden occurrence and restore the parent series."""
     original_start_time = _make_aware(original_start_time)
     event.overrides.filter(original_start_time=original_start_time).delete()
     _set_exception_date(event, original_start_time.date())
 
 
 def _delete_scope_following(event: Any, original_start_time: datetime) -> None:
+    """Remove the current and future series fragments from the parent event."""
     original_start_time = _make_aware(original_start_time)
     original_date = original_start_time.date()
     cutoff = original_date - timedelta(days=1)

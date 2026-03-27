@@ -31,6 +31,19 @@ def _scope_this_default_values(
     existing_override: Any | None,
     original_start_time: datetime,
 ) -> dict[str, Any]:
+    """Build the fallback field set for a single recurring occurrence edit.
+
+    Args:
+        event (Any): The parent recurring event providing the base values.
+        existing_override (Any | None): Existing stored override, if the user is
+            editing a previously customised occurrence.
+        original_start_time (datetime): The anchor timestamp for the occurrence
+            being edited.
+
+    Returns:
+        dict[str, Any]: The baseline values merged with validated payload data
+        before override persistence.
+    """
     duration = event.end_time - event.start_time
     if existing_override is None:
         return {
