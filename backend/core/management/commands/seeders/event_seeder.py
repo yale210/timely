@@ -41,7 +41,7 @@ class EventSeeder(BaseSeeder):
         self._create_fixture_event()
         # Generate random events across various users
         for _ in range(750):
-            self._populate_random_event(None)
+            self._populate_random_event()
 
     def _create_fixture_event(self):
         """Load and create event instances from predefined fixtures.
@@ -97,7 +97,17 @@ class EventSeeder(BaseSeeder):
         randomly.
         """
         # Delegate to randomized event type creation
-        self._create_random_event_type()
+        temporary_user = self._get_or_create_random_user()
+        temporary_category = self._get_or_create_random_category(temporary_user)
+
+        self._create_random_event_type(
+            {
+                "fields": {
+                    "user": temporary_user.id,
+                    "categories": [temporary_category.id],
+                }
+            }
+        )
 
     def _get_or_create_random_category(self, user):
         """Retrieve an existing random category or create one for the user.

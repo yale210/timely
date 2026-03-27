@@ -92,7 +92,9 @@ class TaskSeeder(BaseSeeder):
         """
         temporary_user = self._get_or_create_random_user()
         temporary_category = self._get_or_create_random_category(temporary_user)
-        start = timezone.make_aware(self.faker.date_time())
+        start = self.faker.date_time()
+        if timezone.is_naive(start):
+            start = timezone.make_aware(start)
         self._create_task(
             {
                 "fields": {
