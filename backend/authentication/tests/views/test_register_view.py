@@ -30,9 +30,7 @@ class RegisterViewTest(APITestCase):
 
     def test_registration_with_invalid_data(self):
         """Verify unsuccessful registration of user with invalid data."""
-        data = {
-            "username": "invaliduser"
-        }
+        data = {"username": "invaliduser"}
         response = self.client.post(self.url, data, format="json")
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn("email", response.data)

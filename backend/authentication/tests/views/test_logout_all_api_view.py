@@ -43,4 +43,6 @@ class LogoutAllAPIViewTest(APITestCase):
 
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
         self.assertEqual(AuthToken.objects.filter(user=self.user).count(), 0)
-        self.assertTrue(AuthToken.objects.filter(pk=self.other_token_instance.pk).exists())
+        self.assertTrue(
+            AuthToken.objects.filter(pk=self.other_token_instance.pk).exists()
+        )
