@@ -301,6 +301,49 @@ class ScheduleTasksAPIViewTests(APITestCase):
         self.assertEqual(completed_task.allocation, allocation)
         self.assertEqual(other_user_task.allocation, allocation)
 
+    def test_clear_existing_allocations_ignores_null_allocations(self):
+        """Verify the helper does not count tasks with null allocations."""
+        now = timezone.now()
+        null_task = Task.objects.create(
+            user=self.user,
+            title="Null allocation",
+            description="",
+            estimated_minutes=30,
+            start_time=now,
+            deadline=now + timedelta(days=1),
+            importance=5,
+            completed=False,
+            allocation=None,
+            total_task_allocations=0,
+        )
+        allocated_task = Task.objects.create(
+            user=self.user,
+            title="Allocated",
+            description="",
+            estimated_minutes=30,
+            start_time=now,
+            deadline=now + timedelta(days=1),
+            importance=5,
+            completed=False,
+            allocation=[
+                {
+                    "start": now.isoformat(),
+                    "end": (now + timedelta(minutes=30)).isoformat(),
+                }
+            ],
+            total_task_allocations=1,
+        )
+
+        updated = ScheduleTasksAPIView()._clear_existing_allocations(self.user)
+
+        self.assertEqual(updated, 1)
+        null_task.refresh_from_db()
+        allocated_task.refresh_from_db()
+        self.assertIsNone(null_task.allocation)
+        self.assertEqual(null_task.total_task_allocations, 0)
+        self.assertEqual(allocated_task.allocation, [])
+        self.assertEqual(allocated_task.total_task_allocations, 0)
+
     def test_serialise_allocation_returns_iso_timestamps(self):
         """Verify allocations are serialized to ISO timestamp dictionaries."""
         start = timezone.make_aware(datetime(2026, 3, 19, 9, 0))

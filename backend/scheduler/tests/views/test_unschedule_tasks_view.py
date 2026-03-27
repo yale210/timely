@@ -59,3 +59,47 @@ class UnscheduleTasksAPIViewTests(APITestCase):
         self.assertEqual(task.total_task_allocations, 0)
         self.assertEqual(task.start_time, original_start_time)
         self.assertEqual(task.deadline, original_deadline)
+
+    def test_unschedule_ignores_tasks_with_null_allocation(self):
+        """Verify unscheduling does not count tasks that were never allocated."""
+        now = timezone.now()
+        null_task = Task.objects.create(
+            user=self.user,
+            title="Never scheduled",
+            description="",
+            estimated_minutes=30,
+            start_time=now,
+            deadline=now + timedelta(days=1),
+            importance=5,
+            completed=False,
+            allocation=None,
+            total_task_allocations=0,
+        )
+        allocated_task = Task.objects.create(
+            user=self.user,
+            title="Scheduled",
+            description="",
+            estimated_minutes=30,
+            start_time=now,
+            deadline=now + timedelta(days=1),
+            importance=5,
+            completed=False,
+            allocation=[
+                {
+                    "start": now.isoformat(),
+                    "end": (now + timedelta(minutes=30)).isoformat(),
+                }
+            ],
+            total_task_allocations=1,
+        )
+
+        response = self.client.post(self.unschedule_url, {}, format="json")
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data["unscheduled_count"], 1)
+        null_task.refresh_from_db()
+        allocated_task.refresh_from_db()
+        self.assertIsNone(null_task.allocation)
+        self.assertEqual(null_task.total_task_allocations, 0)
+        self.assertEqual(allocated_task.allocation, [])
+        self.assertEqual(allocated_task.total_task_allocations, 0)

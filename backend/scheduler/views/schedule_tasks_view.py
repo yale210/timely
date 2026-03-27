@@ -104,7 +104,7 @@ class ScheduleTasksAPIView(APIView):
             The number of task records updated (allocations cleared).
         """
         return (
-            Task.objects.filter(user=user)
+            Task.objects.filter(user=user, allocation__isnull=False)
             .exclude(allocation=[])
             .filter(completed=False, locked=False)
             .update(allocation=[], total_task_allocations=0)

@@ -26,7 +26,7 @@ class UnscheduleTasksAPIView(APIView):
             A Response object with the count of unscheduled tasks.
         """
         updated = (
-            Task.objects.filter(user=request.user)
+            Task.objects.filter(user=request.user, allocation__isnull=False)
             .exclude(allocation=[])
             .filter(completed=False, locked=False)
             .update(allocation=[], total_task_allocations=0)
