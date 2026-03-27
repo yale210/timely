@@ -9,6 +9,26 @@ export const validatePreference = (preference: Preference): Record<string, strin
   const errors: Record<string, string[]> = {};
   const max = preference.max_hours_study_per_day;
   const limitMax = preference.limit_max_hours ?? true;
+  const parseMinutes = (value: string | undefined) => {
+    if (!value) {
+      return null;
+    }
+
+    const [hourRaw, minuteRaw] = value.split(":");
+    const hour = Number.parseInt(hourRaw ?? "0", 10);
+    const minute = Number.parseInt(minuteRaw ?? "0", 10);
+    if (
+      Number.isNaN(hour)
+      || Number.isNaN(minute)
+      || hour < 0
+      || hour > 23
+      || minute < 0
+      || minute > 59
+    ) {
+      return null;
+    }
+    return (hour * 60) + minute;
+  };
 
   if (!preference.timezone) {
     errors.timezone = ["Required."];
@@ -37,24 +57,23 @@ export const validatePreference = (preference: Preference): Record<string, strin
     errors.drag_snap_minutes = ["Must be one of 5, 10, 15, 20, 30, or 60 minutes."];
   }
 
+  const dayStartMinutes = parseMinutes(preference.day_start?.slice(0, 5));
+  const dayEndMinutes = parseMinutes(preference.day_end?.slice(0, 5));
   const schedule = preference.day_schedule ?? [];
-  if (schedule.length === 0) {
-    if (!preference.day_start) {
-      errors.day_start = ["Required."];
-    }
-    if (!preference.day_end) {
-      errors.day_end = ["Required."];
-    }
-  } else {
-    const parseMinutes = (value: string) => {
-      const [hourRaw, minuteRaw] = value.split(":");
-      const hour = Number.parseInt(hourRaw ?? "0", 10);
-      const minute = Number.parseInt(minuteRaw ?? "0", 10);
-      if (Number.isNaN(hour) || Number.isNaN(minute)) {
-        return null;
-      }
-      return (hour * 60) + minute;
-    };
+  if (!preference.day_start) {
+    errors.day_start = ["Required."];
+  } else if (dayStartMinutes === null) {
+    errors.day_start = ["Must be a valid time."];
+  }
+  if (!preference.day_end) {
+    errors.day_end = ["Required."];
+  } else if (dayEndMinutes === null) {
+    errors.day_end = ["Must be a valid time."];
+  } else if (dayStartMinutes !== null && dayEndMinutes <= dayStartMinutes) {
+    errors.day_end = ["Day end must be after day start."];
+  }
+
+  if (schedule.length > 0) {
     schedule.forEach((entry) => {
       const startMinutes = parseMinutes(entry.start);
       const endMinutes = parseMinutes(entry.end);
@@ -62,8 +81,11 @@ export const validatePreference = (preference: Preference): Record<string, strin
         errors.day_schedule = ["All day schedules must have valid start/end times."];
         return;
       }
-      const diff = (endMinutes - startMinutes + (24 * 60)) % (24 * 60);
-      const minutesAvailable = diff === 0 ? 24 * 60 : diff;
+      if (endMinutes <= startMinutes) {
+        errors.day_schedule = ["Each day must end after it starts."];
+        return;
+      }
+      const minutesAvailable = endMinutes - startMinutes;
       if (limitMax && max * 60 > minutesAvailable) {
         errors.max_hours_study_per_day = [
           "Max task time exceeds your available day length.",

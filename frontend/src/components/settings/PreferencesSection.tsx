@@ -3,6 +3,7 @@ import { Dialog, DialogPanel, DialogTitle, Transition, TransitionChild } from "@
 import type { Preference, SpecialDate } from "@/types";
 import * as specialDatesService from "@/services/specialDatesService";
 import { getSchedulingDayMaxMinutes } from "@/utils/schedulingLimits";
+import { validatePreference } from "@/utils/preferenceValidation";
 
 interface PreferencesSectionProps {
   pref: Preference | null;
@@ -61,6 +62,14 @@ const PreferencesSection = ({
   const [specialDateLabel, setSpecialDateLabel] = useState("");
   const [isAddingSpecialDate, setIsAddingSpecialDate] = useState(false);
   const timezoneOptions = useMemo(() => getTimezoneOptions(), []);
+  const liveFieldErrors = useMemo(
+    () => (pref ? validatePreference(pref) : {}),
+    [pref],
+  );
+  const displayFieldErrors = useMemo(() => ({
+    ...fieldErrors,
+    ...liveFieldErrors,
+  }), [fieldErrors, liveFieldErrors]);
   const isUniformSchedule = useMemo(() => {
     const schedule = pref?.day_schedule ?? [];
     if (schedule.length === 0) return false;
@@ -69,6 +78,7 @@ const PreferencesSection = ({
   }, [pref?.day_schedule]);
   const [useSetAllDays, setUseSetAllDays] = useState(isUniformSchedule);
   const [maxHoursInput, setMaxHoursInput] = useState("");
+  const hasBlockingErrors = Object.keys(liveFieldErrors).length > 0;
 
   const lastPrefIdRef = useRef<number | null>(null);
   useEffect(() => {
@@ -192,7 +202,7 @@ const PreferencesSection = ({
                   });
                 }}
                 className={`mt-2 bg-white px-3 py-2 block outline w-full rounded-md ${
-                  fieldErrors.timezone ? "outline-red-300" : "outline-gray-300"
+                  displayFieldErrors.timezone ? "outline-red-300" : "outline-gray-300"
                 } focus:outline-2 focus:outline-turquoise-600`}
               >
                 {timezoneOptions.map((timeZone) => (
@@ -201,9 +211,9 @@ const PreferencesSection = ({
                   </option>
                 ))}
               </select>
-              {fieldErrors.timezone?.length ? (
+              {displayFieldErrors.timezone?.length ? (
                 <div className="mt-1 text-xs text-red-700">
-                  {fieldErrors.timezone.join(" ")}
+                  {displayFieldErrors.timezone.join(" ")}
                 </div>
               ) : null}
             </div>
@@ -279,7 +289,9 @@ const PreferencesSection = ({
                         });
                       }}
                       className={`bg-white px-3 py-2 block outline w-45 rounded-md text-right ${
-                        fieldErrors.day_schedule ? "outline-red-300" : "outline-gray-300"
+                        displayFieldErrors.day_start || displayFieldErrors.day_end || displayFieldErrors.day_schedule
+                          ? "outline-red-300"
+                          : "outline-gray-300"
                       } focus:outline-2 focus:outline-turquoise-600`}
                     />
                     <input
@@ -297,10 +309,17 @@ const PreferencesSection = ({
                         });
                       }}
                       className={`bg-white px-3 py-2 block outline w-45 rounded-md text-right ${
-                        fieldErrors.day_schedule ? "outline-red-300" : "outline-gray-300"
+                        displayFieldErrors.day_start || displayFieldErrors.day_end || displayFieldErrors.day_schedule
+                          ? "outline-red-300"
+                          : "outline-gray-300"
                       } focus:outline-2 focus:outline-turquoise-600`}
                     />
                   </div>
+                  {(displayFieldErrors.day_start?.length || displayFieldErrors.day_end?.length || displayFieldErrors.day_schedule?.length) ? (
+                    <div className="col-start-2 mt-2 text-xs text-red-700">
+                      {displayFieldErrors.day_start?.join(" ")} {displayFieldErrors.day_end?.join(" ")} {displayFieldErrors.day_schedule?.join(" ")}
+                    </div>
+                  ) : null}
                 </div>
               ) : null}
               {!useSetAllDays ? (
@@ -352,7 +371,7 @@ const PreferencesSection = ({
                           });
                         }}
                         className={`bg-white px-3 py-2 block outline w-45 rounded-md text-right ${
-                          fieldErrors.day_schedule ? "outline-red-300" : "outline-gray-300"
+                          displayFieldErrors.day_schedule ? "outline-red-300" : "outline-gray-300"
                         } focus:outline-2 focus:outline-turquoise-600 ${isDayOff ? "opacity-60" : ""}`}
                       />
                       <input
@@ -377,7 +396,7 @@ const PreferencesSection = ({
                           });
                         }}
                         className={`bg-white px-3 py-2 block outline w-45 rounded-md text-right ${
-                          fieldErrors.day_schedule ? "outline-red-300" : "outline-gray-300"
+                          displayFieldErrors.day_schedule ? "outline-red-300" : "outline-gray-300"
                         } focus:outline-2 focus:outline-turquoise-600 ${isDayOff ? "opacity-60" : ""}`}
                       />
                       <div className="flex w-15 items-center justify-end">
@@ -400,9 +419,9 @@ const PreferencesSection = ({
                   </div>
                 );
                 })}
-                {fieldErrors.day_schedule?.length ? (
+                {displayFieldErrors.day_schedule?.length ? (
                   <div className="text-xs text-red-700">
-                    {fieldErrors.day_schedule.join(" ")}
+                    {displayFieldErrors.day_schedule.join(" ")}
                   </div>
                 ) : null}
               </div>
@@ -475,13 +494,13 @@ const PreferencesSection = ({
                     });
                   }}
                   className={`mt-2 bg-white px-3 py-2 block outline w-full rounded-md ${
-                    fieldErrors.max_hours_study_per_day ? "outline-red-300" : "outline-gray-300"
+                    displayFieldErrors.max_hours_study_per_day ? "outline-red-300" : "outline-gray-300"
                   } focus: outline-2 focus:outline-turquoise-600`}
                 />
               )}
-              {fieldErrors.max_hours_study_per_day?.length ? (
+              {displayFieldErrors.max_hours_study_per_day?.length ? (
                 <div className="mt-1 text-xs text-red-700">
-                  {fieldErrors.max_hours_study_per_day.join(" ")}
+                  {displayFieldErrors.max_hours_study_per_day.join(" ")}
                 </div>
               ) : null}
             </div>
@@ -507,12 +526,12 @@ const PreferencesSection = ({
                   });
                 }}
                 className={`mt-2 bg-white px-3 py-2 block outline w-full rounded-md ${
-                  fieldErrors.max_days_ahead ? "outline-red-300" : "outline-gray-300"
+                  displayFieldErrors.max_days_ahead ? "outline-red-300" : "outline-gray-300"
                 } focus:outline-2 focus:outline-turquoise-600`}
               />
-              {fieldErrors.max_days_ahead?.length ? (
+              {displayFieldErrors.max_days_ahead?.length ? (
                 <div className="mt-1 text-xs text-red-700">
-                  {fieldErrors.max_days_ahead.join(" ")}
+                  {displayFieldErrors.max_days_ahead.join(" ")}
                 </div>
               ) : null}
             </div>
@@ -568,8 +587,8 @@ const PreferencesSection = ({
             <button
               type="button"
               onClick={onSave}
-              disabled={prefSaving}
-              className="text-sm font-semibold text-white rounded-md border border-blue-500 bg-blue-500 px-4 py-2 shadow-sm transition-colors hover:bg-blue-400 disabled:opacity-60"
+              disabled={prefSaving || hasBlockingErrors}
+              className="text-sm font-semibold text-white rounded-md border border-blue-500 bg-blue-500 px-4 py-2 shadow-sm transition-colors hover:bg-blue-400 disabled:cursor-not-allowed disabled:opacity-60"
             >
               {prefSaving ? "Saving..." : "Save changes"}
             </button>

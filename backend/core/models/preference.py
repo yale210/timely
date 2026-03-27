@@ -80,8 +80,8 @@ class Preference(models.Model):
         if self.timezone not in available_timezones():
             raise ValidationError({"timezone": "Timezone is not valid"})
 
-        if self.day_start == self.day_end:
-            raise ValidationError({"day_end": "Day start and end must be different."})
+        if self.day_end <= self.day_start:
+            raise ValidationError({"day_end": "Day end must be after day start."})
 
         user_timezone = ZoneInfo(self.timezone)
         today = timezone.now().astimezone(user_timezone).date()
@@ -120,15 +120,13 @@ class Preference(models.Model):
                     {"day_schedule": "Start and end must be in HH:MM format."}
                 )
 
-            if start_time == end_time:
+            if end_time <= start_time:
                 raise ValidationError(
-                    {"day_schedule": "Start and end must be different."}
+                    {"day_schedule": "Each day must end after it starts."}
                 )
 
             start_dt = datetime.combine(today, start_time, tzinfo=user_timezone)
             end_dt = datetime.combine(today, end_time, tzinfo=user_timezone)
-            if end_dt <= start_dt:
-                end_dt += timedelta(days=1)
 
             minutes_available = int((end_dt - start_dt).total_seconds() // 60)
             if self.limit_max_hours and max_minutes > minutes_available:
