@@ -11,7 +11,9 @@ from core.models import Task, Category
 
 
 class TaskTests(TestCase):
+    """Test cases for task."""
     def setUp(self):
+        """Set up shared test fixtures."""
         self.user = get_user_model().objects.create_user(
             username="testuser", password="password123", email="test@user.com"
         )
@@ -19,6 +21,7 @@ class TaskTests(TestCase):
         self.category2 = Category.objects.create(text="Personal")
 
     def test_task_calculate_time_left_is_overdue_returns_zero(self):
+        """Test task calculate time left is overdue returns zero."""
         now = timezone.now()
         task = Task.objects.create(
             user=self.user,
@@ -33,6 +36,7 @@ class TaskTests(TestCase):
         self.assertEqual(task.calculate_time_left(), 0)
 
     def test_task_calculate_time_left_deadline(self):
+        """Test task calculate time left deadline."""
         now = timezone.now()
         task = Task.objects.create(
             user=self.user,
@@ -47,6 +51,7 @@ class TaskTests(TestCase):
         self.assertEqual(task.calculate_time_left(), 5)
 
     def test_task_calculate_time_left_same_day_deadline(self):
+        """Test task calculate time left same day deadline."""
         now = timezone.now()
         task = Task.objects.create(
             user=self.user,
@@ -61,6 +66,7 @@ class TaskTests(TestCase):
         self.assertEqual(task.calculate_time_left(), 0)
 
     def test_tasks_can_have_subtasks(self):
+        """Test tasks can have subtasks."""
         now = timezone.now()
         parent = Task.objects.create(
             user=self.user,
@@ -87,6 +93,7 @@ class TaskTests(TestCase):
         self.assertEqual(child.parent_task, parent)
 
     def test_task_is_linked_to_user(self):
+        """Test task is linked to user."""
         now = timezone.now()
         task = Task.objects.create(
             user=self.user,
@@ -102,6 +109,7 @@ class TaskTests(TestCase):
         self.assertEqual(self.user.tasks.count(), 1)
 
     def test_task_calculate_time_left_and_no_deadline_returns_zero(self):
+        """Test task calculate time left and no deadline returns zero."""
         now = timezone.now()
         task = Task.objects.create(
             user=self.user,
@@ -118,6 +126,7 @@ class TaskTests(TestCase):
         self.assertEqual(task.calculate_time_left(), 0)
 
     def test_task_clean_with_invalid_dates(self):
+        """Test task clean with invalid dates."""
         now = timezone.now()
         task = Task.objects.create(
             user=self.user,

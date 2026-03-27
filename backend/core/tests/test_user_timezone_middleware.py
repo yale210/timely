@@ -31,6 +31,7 @@ class UserTimezoneMiddlewareTests(TestCase):
         request.user = user
 
         def get_response(_request):
+            """Get response."""
             return HttpResponse(timezone.get_current_timezone_name())
 
         response = UserTimezoneMiddleware(get_response)(request)
@@ -45,6 +46,7 @@ class UserTimezoneMiddlewareTests(TestCase):
         request.user = AnonymousUser()
 
         def get_response(_request):
+            """Get response."""
             return HttpResponse(timezone.get_current_timezone_name())
 
         response = UserTimezoneMiddleware(get_response)(request)
@@ -64,6 +66,7 @@ class UserTimezoneMiddlewareTests(TestCase):
         request.user = user
 
         def get_response(_request):
+            """Get response."""
             return HttpResponse(timezone.get_current_timezone_name())
 
         response = UserTimezoneMiddleware(get_response)(request)

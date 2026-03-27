@@ -12,7 +12,9 @@ from core.models import Grade, Category, Task
 
 
 class GradeViewTests(TestCase):
+    """Test cases for grade view."""
     def setUp(self):
+        """Set up shared test fixtures."""
         self.client = APIClient()
         self.user = get_user_model().objects.create_user(
             username="viewuser", password="pwd", email="view@user.com"
@@ -22,10 +24,12 @@ class GradeViewTests(TestCase):
         )
 
     def test_unauthenticated_access(self):
+        """Test unauthenticated access."""
         res = self.client.get("/api/grades/")
         self.assertIn(res.status_code, (401, 403))
 
     def test_retrieve_only_own_grades(self):
+        """Test retrieve only own grades."""
         Grade.objects.create(
             user=self.other,
             name="Other",
@@ -49,6 +53,7 @@ class GradeViewTests(TestCase):
         self.assertEqual(res.data[0]["id"], g.id)
 
     def test_create_grade_attaches_user(self):
+        """Test create grade attaches user."""
         self.client.force_authenticate(user=self.user)
         payload = {
             "name": "New",
@@ -63,6 +68,7 @@ class GradeViewTests(TestCase):
         self.assertEqual(g.user, self.user)
 
     def test_time_spent_no_category_returns_zero(self):
+        """Test time spent no category returns zero."""
         date = timezone.now().date()
         Grade.objects.create(
             user=self.user,
@@ -78,6 +84,7 @@ class GradeViewTests(TestCase):
         self.assertEqual(res.data[0]["time_spent_minutes"], 0)
 
     def test_time_spent_category_with_no_tasks(self):
+        """Test time spent category with no tasks."""
         cat = Category.objects.create(text="Module")
         date = timezone.now().date()
         Grade.objects.create(
@@ -94,6 +101,7 @@ class GradeViewTests(TestCase):
         self.assertEqual(res.data[0]["time_spent_minutes"], 0)
 
     def test_time_spent_ignores_future_tasks(self):
+        """Test time spent ignores future tasks."""
         cat = Category.objects.create(text="Module2")
         date = timezone.now().date()
         start_time = timezone.make_aware(
@@ -128,6 +136,7 @@ class GradeViewTests(TestCase):
         self.assertEqual(res.data[0]["time_spent_minutes"], 0)
 
     def test_time_spent_sums_past_tasks(self):
+        """Test time spent sums past tasks."""
         cat = Category.objects.create(text="Module3")
         date = timezone.now().date()
         start_time = timezone.make_aware(
@@ -164,6 +173,7 @@ class GradeViewTests(TestCase):
         self.assertEqual(res.data[0]["time_spent_minutes"], 45)
 
     def test_update_grade(self):
+        """Test update grade."""
         self.client.force_authenticate(user=self.user)
         g = Grade.objects.create(
             user=self.user,
@@ -187,6 +197,7 @@ class GradeViewTests(TestCase):
         self.assertEqual(g.score, 8.0)
 
     def test_delete_grade(self):
+        """Test delete grade."""
         self.client.force_authenticate(user=self.user)
         g = Grade.objects.create(
             user=self.user,
@@ -201,6 +212,7 @@ class GradeViewTests(TestCase):
         self.assertFalse(Grade.objects.filter(id=g.id).exists())
 
     def test_category_name_in_serializer(self):
+        """Test category name in serializer."""
         cat = Category.objects.create(text="SerializerCat")
         Grade.objects.create(
             user=self.user,

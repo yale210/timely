@@ -13,7 +13,9 @@ from core.models import Event, EventOverride
 
 
 class EventScopeApiTests(APITestCase):
+    """Test cases for event scope api."""
     def setUp(self):
+        """Set up shared test fixtures."""
         self.user = get_user_model().objects.create_user(
             username="event-scope-user",
             email="event-scope@example.com",
@@ -32,6 +34,7 @@ class EventScopeApiTests(APITestCase):
         )
 
     def test_list_returns_flattened_metadata(self):
+        """Test list returns flattened metadata."""
         response = self.client.get(
             self.list_url,
             {
@@ -51,6 +54,7 @@ class EventScopeApiTests(APITestCase):
         self.assertEqual(first["source_event_id"], self.recurring_event.id)
 
     def test_list_rejects_excessive_date_window(self):
+        """Test list rejects excessive date window."""
         response = self.client.get(
             self.list_url,
             {"start_date": "2026-01-01", "end_date": "2027-12-31"},
@@ -58,6 +62,7 @@ class EventScopeApiTests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
     def test_scope_update_this_requires_original_start_time(self):
+        """Test scope update this requires original start time."""
         detail_url = reverse("event-detail", args=[self.recurring_event.id])
         response = self.client.patch(
             f"{detail_url}?scope=this",
@@ -67,6 +72,7 @@ class EventScopeApiTests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
     def test_scope_update_this_creates_override(self):
+        """Test scope update this creates override."""
         original = self.start + timedelta(days=1)
         detail_url = reverse("event-detail", args=[self.recurring_event.id])
         response = self.client.patch(
@@ -86,6 +92,7 @@ class EventScopeApiTests(APITestCase):
         self.assertIn(original.date().isoformat(), self.recurring_event.exception_dates)
 
     def test_scope_update_this_rejects_recurrence_pattern_change(self):
+        """Test scope update this rejects recurrence pattern change."""
         original = self.start + timedelta(days=1)
         detail_url = reverse("event-detail", args=[self.recurring_event.id])
         response = self.client.patch(
@@ -98,6 +105,7 @@ class EventScopeApiTests(APITestCase):
         self.assertIn("Recurrence pattern changes", response.data["detail"])
 
     def test_scope_update_all_preserves_prior_occurrences(self):
+        """Test scope update all preserves prior occurrences."""
         anchor = self.start + timedelta(days=2)
         detail_url = reverse("event-detail", args=[self.recurring_event.id])
         response = self.client.patch(
@@ -133,6 +141,7 @@ class EventScopeApiTests(APITestCase):
         )
 
     def test_scope_update_following_preserves_prior_occurrences(self):
+        """Test scope update following preserves prior occurrences."""
         anchor = self.start + timedelta(days=2)
         detail_url = reverse("event-detail", args=[self.recurring_event.id])
         response = self.client.patch(
@@ -166,6 +175,7 @@ class EventScopeApiTests(APITestCase):
         )
 
     def test_revert_instance_removes_override_and_exception_date(self):
+        """Test revert instance removes override and exception date."""
         original = self.start + timedelta(days=1)
         EventOverride.objects.create(
             parent_event=self.recurring_event,
@@ -198,12 +208,14 @@ class EventScopeApiTests(APITestCase):
         )
 
     def test_revert_instance_requires_original_start_time(self):
+        """Test revert instance requires original start time."""
         revert_url = reverse("event-revert-instance", args=[self.recurring_event.id])
         response = self.client.post(revert_url, format="json")
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
     @override_settings(ENABLE_RECURRENCE_OVERRIDES=False)
     def test_scope_update_rejected_when_feature_flag_disabled(self):
+        """Test scope update rejected when feature flag disabled."""
         original = self.start + timedelta(days=1)
         detail_url = reverse("event-detail", args=[self.recurring_event.id])
         response = self.client.patch(
@@ -215,6 +227,7 @@ class EventScopeApiTests(APITestCase):
 
     @override_settings(ENABLE_RECURRENCE_OVERRIDES=False)
     def test_revert_instance_rejected_when_feature_flag_disabled(self):
+        """Test revert instance rejected when feature flag disabled."""
         original = self.start + timedelta(days=1)
         revert_url = reverse("event-revert-instance", args=[self.recurring_event.id])
         response = self.client.post(

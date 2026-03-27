@@ -10,12 +10,15 @@ from rest_framework.exceptions import ValidationError
 
 
 class EventSerializerTests(TestCase):
+    """Test cases for event serializer."""
     def setUp(self):
+        """Set up shared test fixtures."""
         self.user = get_user_model().objects.create_user(
             username="testuser", password="password123", email="test@user.com"
         )
 
     def test_serializer_validation_error(self):
+        """Test serializer validation error."""
         now = timezone.now()
         # End time before start time should trigger DjangoValidationError in clean()
         # which is then caught and re-raised as rest_framework.ValidationError
@@ -37,6 +40,7 @@ class EventSerializerTests(TestCase):
         )
 
     def test_serializer_create_without_reminders(self):
+        """Test serializer create without reminders."""
         now = timezone.now()
         data = {
             "title": "No Reminders",
@@ -52,6 +56,7 @@ class EventSerializerTests(TestCase):
         self.assertEqual(event.reminders.count(), 0)
 
     def test_serializer_update_reminders_none(self):
+        """Test serializer update reminders none."""
         now = timezone.now()
         event = Event.objects.create(
             user=self.user,
@@ -74,6 +79,7 @@ class EventSerializerTests(TestCase):
         self.assertEqual(updated_event.title, "Updated Title")
 
     def test_serializer_create_without_categories(self):
+        """Test serializer create without categories."""
         now = timezone.now()
         data = {
             "title": "No Categories Event",
@@ -89,6 +95,7 @@ class EventSerializerTests(TestCase):
         self.assertEqual(event.categories.count(), 0)
 
     def test_serializer_update_categories(self):
+        """Test serializer update categories."""
         from core.models import Category
 
         now = timezone.now()
@@ -115,6 +122,7 @@ class EventSerializerTests(TestCase):
         self.assertEqual(updated_event.categories.first(), category)
 
     def test_serializer_create_with_categories(self):
+        """Test serializer create with categories."""
         from core.models import Category
 
         now = timezone.now()
@@ -136,6 +144,7 @@ class EventSerializerTests(TestCase):
     def test_serializer_partial_update_reminders_validates_against_existing_start_time(
         self,
     ):
+        """Test serializer partial update reminders validates against existing start time."""
         now = timezone.now()
         event = Event.objects.create(
             user=self.user,
@@ -161,6 +170,7 @@ class EventSerializerTests(TestCase):
         self.assertIn("reminders", context.exception.detail)
 
     def test_partial_validate_does_not_mutate_instance_fields(self):
+        """Test partial validate does not mutate instance fields."""
         now = timezone.now().replace(minute=0, second=0, microsecond=0)
         event = Event.objects.create(
             user=self.user,

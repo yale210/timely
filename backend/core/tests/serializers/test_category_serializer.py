@@ -8,7 +8,9 @@ from core.serializers import CategorySerializer
 
 
 class CategorySerializerTests(TestCase):
+    """Test cases for category serializer."""
     def setUp(self):
+        """Set up shared test fixtures."""
         self.user = get_user_model().objects.create_user(
             username="categoryserializer",
             password="password123",
@@ -16,6 +18,7 @@ class CategorySerializerTests(TestCase):
         )
 
     def test_category_serializer_includes_max_daily_study_time(self):
+        """Test category serializer includes max daily study time."""
         category = Category.objects.create(
             user=self.user,
             text="Study",
@@ -27,6 +30,7 @@ class CategorySerializerTests(TestCase):
         self.assertEqual(data["max_daily_study_time"], 180)
 
     def test_category_serializer_accepts_max_daily_study_time(self):
+        """Test category serializer accepts max daily study time."""
         serializer = CategorySerializer(
             data={
                 "text": "Reading",

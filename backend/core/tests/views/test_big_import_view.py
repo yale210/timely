@@ -10,13 +10,16 @@ from core.models import Event
 # This will aim to create a "realistic" file import with varying data and event types
 # This file will also be larger than other tests
 class RealisitcImportViewTests(TestCase):
+    """Test cases for realisitc import view."""
     def setUp(self):
+        """Set up shared test fixtures."""
         self.client = APIClient()
         self.user = get_user_model().objects.create_user(
             username="testuser", password="password", email="test@user.com"
         )
 
     def test_success_if_logged_in(self):
+        """Test success if logged in."""
         self.client.login(username="testuser", password="password")
 
         importing_file_content = (

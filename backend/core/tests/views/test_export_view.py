@@ -11,22 +11,27 @@ from core.models import Event
 
 
 class ExportViewTests(TestCase):
+    """Test cases for export view."""
     def setUp(self):
+        """Set up shared test fixtures."""
         self.client = APIClient()
         self.user = get_user_model().objects.create_user(
             username="testuser", password="password", email="test@user.com"
         )
 
     def test_fail_if_not_logged_in(self):
+        """Test fail if not logged in."""
         response = self.client.get("/api/export/")
         self.assertEqual(response.status_code, 401)
 
     def test_success_if_logged_in(self):
+        """Test success if logged in."""
         self.client.login(username="testuser", password="password")
         response = self.client.get("/api/export/")
         self.assertEqual(response.status_code, 200)
 
     def test_export_empty_calendar(self):
+        """Test export empty calendar."""
         self.client.login(username="testuser", password="password")
         response = self.client.get("/api/export/")
 
@@ -44,6 +49,7 @@ class ExportViewTests(TestCase):
         )
 
     def test_export_one_event_only(self):
+        """Test export one event only."""
         self.client.login(username="testuser", password="password")
 
         Event.objects.create(
@@ -82,6 +88,7 @@ class ExportViewTests(TestCase):
         )
 
     def test_export_two_events(self):
+        """Test export two events."""
         self.client.login(username="testuser", password="password")
 
         Event.objects.create(
@@ -140,6 +147,7 @@ class ExportViewTests(TestCase):
         )
 
     def test_export_r_rule_1(self):
+        """Test export r rule 1."""
         self.client.login(username="testuser", password="password")
 
         Event.objects.create(
@@ -181,6 +189,7 @@ class ExportViewTests(TestCase):
         )
 
     def test_export_r_rule_2(self):
+        """Test export r rule 2."""
         self.client.login(username="testuser", password="password")
 
         start = datetime.strptime("20260325T200000", "%Y%m%dT%H%M%S")
@@ -231,6 +240,7 @@ class ExportViewTests(TestCase):
         )
 
     def test_export_r_rule_until(self):
+        """Test export r rule until."""
         self.client.login(username="testuser", password="password")
 
         start = datetime.strptime("20260325T200000", "%Y%m%dT%H%M%S")

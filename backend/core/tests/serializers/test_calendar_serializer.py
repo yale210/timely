@@ -15,7 +15,9 @@ from core.serializers.calendar import CalendarResponseSerializer
 
 
 class CalendarSerializerTests(TestCase):
+    """Test cases for calendar serializer."""
     def setUp(self):
+        """Set up shared test fixtures."""
         self.user = get_user_model().objects.create_user(
             username="serializeruser", password="password123", email="test@user.com"
         )
@@ -24,11 +26,13 @@ class CalendarSerializerTests(TestCase):
         self.category2 = Category.objects.create(user=self.user, text="Work")
 
     def _request_context(self):
+        """Request context."""
         request = self.request_factory.post("/api/tasks/")
         request.user = self.user
         return {"request": request}
 
     def _base_data(self, **overrides):
+        """Base data."""
         now = timezone.now() + datetime.timedelta(days=1)
         data = {
             "title": "Task",
@@ -46,6 +50,7 @@ class CalendarSerializerTests(TestCase):
         return data
 
     def test_calendar_serializer_fields(self):
+        """Test calendar serializer fields."""
         now = timezone.now()
         task = Task.objects.create(
             user=self.user,
@@ -97,6 +102,7 @@ class CalendarSerializerTests(TestCase):
         )
 
     def test_calendar_serializer_create_with_categories(self):
+        """Test calendar serializer create with categories."""
         now = timezone.now()
         data = {
             "title": "New Task",
@@ -128,6 +134,7 @@ class CalendarSerializerTests(TestCase):
         self.assertEqual(task.buffer_after_minutes, 20)
 
     def test_calendar_serializer_rejects_max_split_below_minimum(self):
+        """Test calendar serializer rejects max split below minimum."""
         now = timezone.now()
         serializer = CalendarSerializer(
             data={
@@ -152,6 +159,7 @@ class CalendarSerializerTests(TestCase):
     def test_calendar_serializer_marks_task_complete_when_completed_minutes_reaches_estimate(
         self,
     ):
+        """Test calendar serializer marks task complete when completed minutes reaches estimate."""
         now = timezone.now()
         serializer = CalendarSerializer(
             data={
@@ -174,6 +182,7 @@ class CalendarSerializerTests(TestCase):
         self.assertEqual(task.remaining_minutes, 0)
 
     def test_calendar_serializer_rejects_completed_minutes_above_estimate(self):
+        """Test calendar serializer rejects completed minutes above estimate."""
         now = timezone.now()
         serializer = CalendarSerializer(
             data={
@@ -196,6 +205,7 @@ class CalendarSerializerTests(TestCase):
     def test_parse_allocation_slots_collects_errors_and_normalizes_valid_datetimes(
         self,
     ):
+        """Test parse allocation slots collects errors and normalizes valid datetimes."""
         serializer = CalendarSerializer(context=self._request_context())
 
         normalized, errors = serializer._parse_allocation_slots(
@@ -219,6 +229,7 @@ class CalendarSerializerTests(TestCase):
         self.assertTrue(timezone.is_aware(normalized[0][0]))
 
     def test_minutes_by_day_splits_cross_midnight(self):
+        """Test minutes by day splits cross midnight."""
         serializer = CalendarSerializer(context=self._request_context())
         start = make_aware(datetime.datetime(2026, 3, 20, 23, 30))
         end = make_aware(datetime.datetime(2026, 3, 21, 0, 30))
@@ -229,6 +240,7 @@ class CalendarSerializerTests(TestCase):
         self.assertEqual(minutes_by_day[end.date()], 30)
 
     def test_validate_allocation_slots_rejects_non_list(self):
+        """Test validate allocation slots rejects non list."""
         serializer = CalendarSerializer(context=self._request_context())
 
         with self.assertRaises(serializers.ValidationError):
@@ -247,6 +259,7 @@ class CalendarSerializerTests(TestCase):
             )
 
     def test_validate_allocation_slots_rejects_multiple_slots_without_split(self):
+        """Test validate allocation slots rejects multiple slots without split."""
         serializer = CalendarSerializer(context=self._request_context())
         now = timezone.now() + datetime.timedelta(days=1)
 
@@ -277,6 +290,7 @@ class CalendarSerializerTests(TestCase):
     def test_validate_allocation_slots_rejects_start_deadline_and_remaining_limit_errors(
         self,
     ):
+        """Test validate allocation slots rejects start deadline and remaining limit errors."""
         serializer = CalendarSerializer(context=self._request_context())
         now = timezone.now() + datetime.timedelta(days=1)
 
@@ -341,6 +355,7 @@ class CalendarSerializerTests(TestCase):
             )
 
     def test_validate_allocation_slots_rejects_min_max_and_overlap_errors(self):
+        """Test validate allocation slots rejects min max and overlap errors."""
         serializer = CalendarSerializer(context=self._request_context())
         now = timezone.now() + datetime.timedelta(days=1)
 
@@ -419,6 +434,7 @@ class CalendarSerializerTests(TestCase):
     def test_validate_allocation_slots_rejects_overlap_with_events_other_tasks_and_category_limits(
         self,
     ):
+        """Test validate allocation slots rejects overlap with events other tasks and category limits."""
         serializer = CalendarSerializer(context=self._request_context())
         now = timezone.now() + datetime.timedelta(days=1)
         category = Category.objects.create(
@@ -533,6 +549,7 @@ class CalendarSerializerTests(TestCase):
             )
 
     def test_validate_rewrites_buffer_only_conflicts_to_buffer_fields(self):
+        """Test validate rewrites buffer only conflicts to buffer fields."""
         now = timezone.now() + datetime.timedelta(days=1)
         task = Task.objects.create(
             user=self.user,
@@ -568,6 +585,7 @@ class CalendarSerializerTests(TestCase):
         self.assertIn("buffer_after_minutes", serializer.errors)
 
     def test_validate_sets_completed_flags_and_resolves_user_from_instance(self):
+        """Test validate sets completed flags and resolves user from instance."""
         now = timezone.now() + datetime.timedelta(days=1)
         task = Task.objects.create(
             user=self.user,
@@ -603,6 +621,7 @@ class CalendarSerializerTests(TestCase):
         self.assertEqual(updated.completed_minutes, 0)
 
     def test_calendar_response_serializer_covers_representation_and_validation(self):
+        """Test calendar response serializer covers representation and validation."""
         now = timezone.now()
         task = Task.objects.create(
             user=self.user,

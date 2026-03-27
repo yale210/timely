@@ -11,7 +11,9 @@ from core.utils.stats import calculate_weekly_stats, get_current_week_range
 
 
 class WeeklyStatsTests(TestCase):
+    """Test cases for weekly stats."""
     def setUp(self):
+        """Set up shared test fixtures."""
         self.User = get_user_model()
         # project requires emails when creating users
         self.user = self.User.objects.create_user(
@@ -19,6 +21,7 @@ class WeeklyStatsTests(TestCase):
         )
 
     def _create_task(self, **kwargs):
+        """Create task."""
         defaults = {
             "user": self.user,
             "title": "task",
@@ -31,6 +34,7 @@ class WeeklyStatsTests(TestCase):
         return Task.objects.create(**defaults)
 
     def test_no_tasks_in_week(self):
+        """Test no tasks in week."""
         stats = calculate_weekly_stats(self.user)
         self.assertEqual(stats["total_tasks"], 0)
         self.assertEqual(stats["completed_tasks"], 0)
@@ -38,6 +42,7 @@ class WeeklyStatsTests(TestCase):
         self.assertEqual(stats["total_minutes_planned"], 0)
 
     def test_only_incomplete_tasks(self):
+        """Test only incomplete tasks."""
         start, end = get_current_week_range()
         # create 3 incomplete tasks inside week
         self._create_task(
@@ -66,6 +71,7 @@ class WeeklyStatsTests(TestCase):
         self.assertEqual(stats["total_minutes_planned"], 180)
 
     def test_only_completed_tasks(self):
+        """Test only completed tasks."""
         start, end = get_current_week_range()
         self._create_task(
             start_time=start + timedelta(hours=2),
@@ -87,6 +93,7 @@ class WeeklyStatsTests(TestCase):
         self.assertEqual(stats["total_minutes_planned"], 120)
 
     def test_mixed_tasks_and_outside_week(self):
+        """Test mixed tasks and outside week."""
         start, end = get_current_week_range()
         # inside week
         self._create_task(

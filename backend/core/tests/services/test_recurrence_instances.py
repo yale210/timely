@@ -20,7 +20,9 @@ from core.services.recurrence_instances import (
 
 
 class RecurrenceExpansionServiceTests(TestCase):
+    """Test cases for recurrence expansion service."""
     def setUp(self):
+        """Set up shared test fixtures."""
         self.user = get_user_model().objects.create_user(
             username="recurrence-user",
             email="recurrence@example.com",
@@ -28,6 +30,7 @@ class RecurrenceExpansionServiceTests(TestCase):
         )
 
     def test_expand_event_instances_skips_exception_dates(self):
+        """Test expand event instances skips exception dates."""
         now = timezone.now().replace(minute=0, second=0, microsecond=0)
         event = Event.objects.create(
             user=self.user,
@@ -47,10 +50,12 @@ class RecurrenceExpansionServiceTests(TestCase):
         )
 
     def test_make_aware_already_aware(self):
+        """Test make aware already aware."""
         now = timezone.now()
         self.assertEqual(_make_aware(now), now)
 
     def test_normalise_reminder_snapshot_invalid(self):
+        """Test normalise reminder snapshot invalid."""
         bad_data = [
             {"minutes_before": "not-a-number", "send_email": True},
             {"minutes_before": 15, "send_email": True},
@@ -60,6 +65,7 @@ class RecurrenceExpansionServiceTests(TestCase):
         self.assertEqual(result[0]["minutes_before"], 15)
 
     def test_get_event_rule_until_aware_mock(self):
+        """Test get event rule until aware mock."""
         now = timezone.now().replace(microsecond=0)
         event = Event(start_time=now, recurrence_end=(now + timedelta(days=5)).date())
         window_end = now + timedelta(days=10)
@@ -73,16 +79,19 @@ class RecurrenceExpansionServiceTests(TestCase):
             self.assertEqual(until, aware_dt)
 
     def test_build_event_rrule_none_interval(self):
+        """Test build event rrule none interval."""
         now = timezone.now()
         event = Event(start_time=now, recurrence_interval=None)
         self.assertIsNone(_build_event_rrule(event, now + timedelta(days=1)))
 
     def test_build_event_rrule_invalid_frequency(self):
+        """Test build event rrule invalid frequency."""
         now = timezone.now()
         event = Event(start_time=now, recurrence_interval="INVALID")
         self.assertIsNone(_build_event_rrule(event, now + timedelta(days=1)))
 
     def test_generate_occurrence_starts_non_recurring_coverage(self):
+        """Test generate occurrence starts non recurring coverage."""
         now = timezone.now().replace(microsecond=0)
         event = Event(
             start_time=now, end_time=now + timedelta(hours=1), recurrence_interval=None
@@ -107,12 +116,14 @@ class RecurrenceExpansionServiceTests(TestCase):
         )
 
     def test_is_occurrence_in_series_non_recurring(self):
+        """Test is occurrence in series non recurring."""
         now = timezone.now().replace(microsecond=0)
         event = Event(start_time=now, recurrence_interval=None)
         self.assertTrue(is_occurrence_in_series(event, now))
         self.assertFalse(is_occurrence_in_series(event, now + timedelta(hours=1)))
 
     def test_is_occurrence_in_series_naive_conversion(self):
+        """Test is occurrence in series naive conversion."""
         now = timezone.now().replace(microsecond=0)
         now_naive = timezone.make_naive(now)
         event = Event(
@@ -121,6 +132,7 @@ class RecurrenceExpansionServiceTests(TestCase):
         self.assertTrue(is_occurrence_in_series(event, now_naive))
 
     def test_expand_event_instances_with_overrides(self):
+        """Test expand event instances with overrides."""
         now = timezone.now().replace(microsecond=0)
         event = Event.objects.create(
             user=self.user,
@@ -154,6 +166,7 @@ class RecurrenceExpansionServiceTests(TestCase):
         self.assertNotIn("Base Event", titles)  # anchor was 'now', which was overridden
 
     def test_expand_user_events_empty(self):
+        """Test expand user events empty."""
         now = timezone.now()
         other_user = get_user_model().objects.create_user(
             username="other-rec", email="other@rec.com", password="password123"
@@ -165,6 +178,7 @@ class RecurrenceExpansionServiceTests(TestCase):
         self.assertEqual(len(instances), 0)
 
     def test_non_recurring_event_fully_before_range_excluded(self):
+        """Test non recurring event fully before range excluded."""
         now = timezone.now().replace(microsecond=0)
         event = Event.objects.create(
             user=self.user,
@@ -176,6 +190,7 @@ class RecurrenceExpansionServiceTests(TestCase):
         self.assertEqual(len(instances), 0)
 
     def test_recurrence_end_limit(self):
+        """Test recurrence end limit."""
         now = timezone.now().replace(microsecond=0)
         event = Event.objects.create(
             user=self.user,
@@ -190,6 +205,7 @@ class RecurrenceExpansionServiceTests(TestCase):
         self.assertEqual(len(instances), 1)
 
     def test_build_event_rrule_until_before_start(self):
+        """Test build event rrule until before start."""
         now = timezone.now().replace(microsecond=0)
         event = Event(
             start_time=now,
@@ -199,6 +215,7 @@ class RecurrenceExpansionServiceTests(TestCase):
         self.assertIsNone(_build_event_rrule(event, now + timedelta(days=1)))
 
     def test_expand_event_instances_reminders_snapshot_empty(self):
+        """Test expand event instances reminders snapshot empty."""
         now = timezone.now().replace(microsecond=0)
         event = Event.objects.create(
             user=self.user,
@@ -220,6 +237,7 @@ class RecurrenceExpansionServiceTests(TestCase):
         self.assertTrue(instances[0].is_override)
 
     def test_expand_user_events_sorted(self):
+        """Test expand user events sorted."""
         now = timezone.now().replace(microsecond=0)
         Event.objects.create(
             user=self.user,
@@ -240,6 +258,7 @@ class RecurrenceExpansionServiceTests(TestCase):
         self.assertEqual(instances[1].title, "Later")
 
     def test_generate_occurrence_starts_future_event(self):
+        """Test generate occurrence starts future event."""
         now = timezone.now().replace(microsecond=0)
         event = Event(
             start_time=now + timedelta(days=10),
@@ -249,6 +268,7 @@ class RecurrenceExpansionServiceTests(TestCase):
         self.assertEqual(len(starts), 0)
 
     def test_generate_occurrence_starts_rule_none_recurring(self):
+        """Test generate occurrence starts rule none recurring."""
         now = timezone.now().replace(microsecond=0)
         # Event that ends before it starts but has recurrence interval
         event = Event(
@@ -260,6 +280,7 @@ class RecurrenceExpansionServiceTests(TestCase):
         self.assertEqual(len(starts), 0)
 
     def test_is_occurrence_in_series_before_start(self):
+        """Test is occurrence in series before start."""
         now = timezone.now().replace(microsecond=0)
         event = Event(
             start_time=now, recurrence_interval=Event.RecurrenceInterval.DAILY
@@ -267,6 +288,7 @@ class RecurrenceExpansionServiceTests(TestCase):
         self.assertFalse(is_occurrence_in_series(event, now - timedelta(days=1)))
 
     def test_is_occurrence_in_series_after_end(self):
+        """Test is occurrence in series after end."""
         now = timezone.now().replace(microsecond=0)
         event = Event(
             start_time=now,
@@ -276,12 +298,14 @@ class RecurrenceExpansionServiceTests(TestCase):
         self.assertFalse(is_occurrence_in_series(event, now + timedelta(days=1)))
 
     def test_is_occurrence_in_series_rule_none(self):
+        """Test is occurrence in series rule none."""
         now = timezone.now().replace(microsecond=0)
         # recurrence_interval is set but invalid
         event = Event(start_time=now, recurrence_interval="GARBAGE")
         self.assertFalse(is_occurrence_in_series(event, now))
 
     def test_expand_event_instances_override_outside_range(self):
+        """Test expand event instances override outside range."""
         now = timezone.now().replace(microsecond=0)
         event = Event.objects.create(
             user=self.user,
@@ -308,6 +332,7 @@ class RecurrenceExpansionServiceTests(TestCase):
         self.assertNotIn("Far Away Override", titles)
 
     def test_expand_event_instances_non_recurring_spanning_start(self):
+        """Test expand event instances non recurring spanning start."""
         now = timezone.now().replace(microsecond=0)
         # Starts before range, ends in range
         event = Event.objects.create(
@@ -322,6 +347,7 @@ class RecurrenceExpansionServiceTests(TestCase):
         self.assertEqual(instances[0].title, "Spanning")
 
     def test_expand_event_instances_standalone_override_outside_range(self):
+        """Test expand event instances standalone override outside range."""
         now = timezone.now().replace(microsecond=0)
         event = Event.objects.create(
             user=self.user, start_time=now, end_time=now + timedelta(hours=1)
@@ -340,6 +366,7 @@ class RecurrenceExpansionServiceTests(TestCase):
         self.assertNotIn("Future Override", titles)
 
     def test_expand_event_instances_override_no_reminders_uses_parent(self):
+        """Test expand event instances override no reminders uses parent."""
         now = timezone.now().replace(microsecond=0)
         event = Event.objects.create(
             user=self.user, start_time=now, end_time=now + timedelta(hours=1)
@@ -357,6 +384,7 @@ class RecurrenceExpansionServiceTests(TestCase):
         self.assertEqual(instances[0].reminders, [])
 
     def test_expand_event_instances_occurrence_outside_range_branch_coverage(self):
+        """Test expand event instances occurrence outside range branch coverage."""
         # We need an occurrence_start that is generated by _generate_occurrence_starts
         # but is NOT in the range and NOT spanning it (for non-recurring).
         # We'll mock _generate_occurrence_starts to return such a value.

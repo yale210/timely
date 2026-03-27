@@ -10,12 +10,15 @@ User = get_user_model()
 
 
 class PreferenceSerializerTests(TestCase):
+    """Test cases for preference serializer."""
     def setUp(self):
+        """Set up shared test fixtures."""
         self.user = User.objects.create_user(
             username="testuser", password="password", email="test@example.com"
         )
 
     def test_validation_error_from_model(self):
+        """Test validation error from model."""
         # Model has a clean() method that raises ValidationError if day_start == day_end
         data = {"day_start": "08:00:00", "day_end": "08:00:00"}
         serializer = PreferenceSerializer(
@@ -25,6 +28,7 @@ class PreferenceSerializerTests(TestCase):
         self.assertIn("day_end", serializer.errors)
 
     def test_update_preference(self):
+        """Test update preference."""
         pref = Preference.objects.create(
             user=self.user,
             day_start=datetime.time(8, 0),

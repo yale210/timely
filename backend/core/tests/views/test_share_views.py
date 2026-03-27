@@ -11,7 +11,9 @@ from core.models import Event, PendingShareEvent, Task
 
 
 class ShareSendViewTests(APITestCase):
+    """Test cases for share send view."""
     def setUp(self):
+        """Set up shared test fixtures."""
         self.sender = get_user_model().objects.create_user(
             username="sender", password="password123", email="sender@test.com"
         )
@@ -32,11 +34,13 @@ class ShareSendViewTests(APITestCase):
         )
 
     def test_requires_authentication(self):
+        """Test requires authentication."""
         response = self.client.post(self.url, {"Receiver": "receiver", "Event-ID": 1})
 
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
     def test_rejects_missing_fields(self):
+        """Test rejects missing fields."""
         self.client.force_authenticate(user=self.sender)
 
         response = self.client.post(
@@ -50,6 +54,7 @@ class ShareSendViewTests(APITestCase):
         )
 
     def test_rejects_invalid_event_id(self):
+        """Test rejects invalid event id."""
         self.client.force_authenticate(user=self.sender)
 
         response = self.client.post(
@@ -64,6 +69,7 @@ class ShareSendViewTests(APITestCase):
         )
 
     def test_rejects_event_not_owned_by_sender(self):
+        """Test rejects event not owned by sender."""
         self.client.force_authenticate(user=self.sender)
         other_event = Event.objects.create(
             user=self.other_user,
@@ -84,6 +90,7 @@ class ShareSendViewTests(APITestCase):
         )
 
     def test_rejects_missing_receiver(self):
+        """Test rejects missing receiver."""
         self.client.force_authenticate(user=self.sender)
 
         response = self.client.post(
@@ -100,6 +107,7 @@ class ShareSendViewTests(APITestCase):
     def test_returns_success_without_creating_duplicate_when_receiver_already_has_event(
         self,
     ):
+        """Test returns success without creating duplicate when receiver already has event."""
         self.client.force_authenticate(user=self.sender)
         Event.objects.create(
             user=self.receiver,
@@ -118,6 +126,7 @@ class ShareSendViewTests(APITestCase):
         self.assertFalse(PendingShareEvent.objects.exists())
 
     def test_rejects_duplicate_pending_request(self):
+        """Test rejects duplicate pending request."""
         self.client.force_authenticate(user=self.sender)
         PendingShareEvent.objects.create(
             sender=self.sender,
@@ -139,6 +148,7 @@ class ShareSendViewTests(APITestCase):
         )
 
     def test_creates_pending_share_for_valid_request(self):
+        """Test creates pending share for valid request."""
         self.client.force_authenticate(user=self.sender)
 
         response = self.client.post(
@@ -158,7 +168,9 @@ class ShareSendViewTests(APITestCase):
 
 
 class ShareAcceptViewTests(APITestCase):
+    """Test cases for share accept view."""
     def setUp(self):
+        """Set up shared test fixtures."""
         self.sender = get_user_model().objects.create_user(
             username="sender", password="password123", email="sender@test.com"
         )
@@ -186,6 +198,7 @@ class ShareAcceptViewTests(APITestCase):
         )
 
     def test_requires_authentication(self):
+        """Test requires authentication."""
         response = self.client.post(
             self.url,
             {"Decision": "accept", "Event-ID": self.event.id},
@@ -194,6 +207,7 @@ class ShareAcceptViewTests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
     def test_rejects_missing_decision(self):
+        """Test rejects missing decision."""
         self.client.force_authenticate(user=self.receiver)
 
         response = self.client.post(self.url, {"Event-ID": self.event.id})
@@ -205,6 +219,7 @@ class ShareAcceptViewTests(APITestCase):
         )
 
     def test_rejects_missing_pending_event(self):
+        """Test rejects missing pending event."""
         self.client.force_authenticate(user=self.receiver)
 
         response = self.client.post(self.url, {"Decision": "accept", "Event-ID": 99999})
@@ -216,6 +231,7 @@ class ShareAcceptViewTests(APITestCase):
         )
 
     def test_rejects_wrong_recipient(self):
+        """Test rejects wrong recipient."""
         self.client.force_authenticate(user=self.other_user)
 
         response = self.client.post(
@@ -227,6 +243,7 @@ class ShareAcceptViewTests(APITestCase):
         self.assertEqual(response.data, {"error": "This event is not shared with you"})
 
     def test_accept_creates_event_copy_and_deletes_pending_share(self):
+        """Test accept creates event copy and deletes pending share."""
         self.client.force_authenticate(user=self.receiver)
 
         response = self.client.post(
@@ -247,6 +264,7 @@ class ShareAcceptViewTests(APITestCase):
         self.assertEqual(copied_event.end_time, self.event.end_time)
 
     def test_reject_deletes_pending_share_without_creating_event(self):
+        """Test reject deletes pending share without creating event."""
         self.client.force_authenticate(user=self.receiver)
 
         response = self.client.post(
@@ -265,7 +283,9 @@ class ShareAcceptViewTests(APITestCase):
 
 
 class ShareEventsViewTests(APITestCase):
+    """Test cases for share events view."""
     def setUp(self):
+        """Set up shared test fixtures."""
         self.sender = get_user_model().objects.create_user(
             username="sender", password="password123", email="sender@test.com"
         )
@@ -307,11 +327,13 @@ class ShareEventsViewTests(APITestCase):
         )
 
     def test_requires_authentication(self):
+        """Test requires authentication."""
         response = self.client.get(self.url)
 
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
     def test_lists_only_shares_related_to_current_user(self):
+        """Test lists only shares related to current user."""
         self.client.force_authenticate(user=self.receiver)
 
         response = self.client.get(self.url)
@@ -333,7 +355,9 @@ class ShareEventsViewTests(APITestCase):
 
 
 class DeleteAllDataViewTests(APITestCase):
+    """Test cases for delete all data view."""
     def setUp(self):
+        """Set up shared test fixtures."""
         self.user = get_user_model().objects.create_user(
             username="cleanup", password="password123", email="cleanup@test.com"
         )
@@ -345,11 +369,13 @@ class DeleteAllDataViewTests(APITestCase):
         self.start_time = timezone.now() + datetime.timedelta(days=1)
 
     def test_delete_events_requires_authentication(self):
+        """Test delete events requires authentication."""
         response = self.client.delete(self.delete_events_url)
 
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
     def test_delete_events_removes_only_current_users_events(self):
+        """Test delete events removes only current users events."""
         self.client.force_authenticate(user=self.user)
         Event.objects.create(
             user=self.user,
@@ -378,6 +404,7 @@ class DeleteAllDataViewTests(APITestCase):
         self.assertEqual(Event.objects.filter(user=self.other_user).count(), 1)
 
     def test_delete_events_handles_empty_calendar(self):
+        """Test delete events handles empty calendar."""
         self.client.force_authenticate(user=self.user)
 
         response = self.client.delete(self.delete_events_url)
@@ -388,11 +415,13 @@ class DeleteAllDataViewTests(APITestCase):
         )
 
     def test_delete_tasks_requires_authentication(self):
+        """Test delete tasks requires authentication."""
         response = self.client.delete(self.delete_tasks_url)
 
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
     def test_delete_tasks_removes_only_current_users_tasks(self):
+        """Test delete tasks removes only current users tasks."""
         self.client.force_authenticate(user=self.user)
 
         Task.objects.create(
@@ -428,6 +457,7 @@ class DeleteAllDataViewTests(APITestCase):
         self.assertEqual(Task.objects.filter(user=self.other_user).count(), 1)
 
     def test_delete_tasks_handles_empty_task_list(self):
+        """Test delete tasks handles empty task list."""
         self.client.force_authenticate(user=self.user)
 
         response = self.client.delete(self.delete_tasks_url)

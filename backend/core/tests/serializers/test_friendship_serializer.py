@@ -13,7 +13,9 @@ User = get_user_model()
 
 
 class FriendshipSerializerTests(TestCase):
+    """Test cases for friendship serializer."""
     def setUp(self):
+        """Set up shared test fixtures."""
         self.user = User.objects.create_user(
             username="sender", email="sender@example.com"
         )
@@ -32,6 +34,7 @@ class FriendshipSerializerTests(TestCase):
         )
 
     def test_validate_both_provided(self):
+        """Test validate both provided."""
         serializer = FriendshipSerializer(
             data={"receiver": self.receiver.id, "receiver_username": "receiver"}
         )
@@ -40,27 +43,32 @@ class FriendshipSerializerTests(TestCase):
         self.assertIn("receiver_username", cm.exception.detail)
 
     def test_validate_username_exists(self):
+        """Test validate username exists."""
         serializer = FriendshipSerializer(data={"receiver_username": "receiver"})
         self.assertTrue(serializer.is_valid())
         self.assertEqual(serializer.validated_data["receiver"], self.receiver)
 
     def test_validate_username_does_not_exist(self):
+        """Test validate username does not exist."""
         serializer = FriendshipSerializer(data={"receiver_username": "nonexistent"})
         with self.assertRaises(serializers.ValidationError) as cm:
             serializer.is_valid(raise_exception=True)
         self.assertIn("receiver_username", cm.exception.detail)
 
     def test_validate_no_receiver(self):
+        """Test validate no receiver."""
         serializer = FriendshipSerializer(data={})
         with self.assertRaises(serializers.ValidationError) as cm:
             serializer.is_valid(raise_exception=True)
         self.assertIn("receiver_username", cm.exception.detail)
 
     def test_get_profile_name_exists(self):
+        """Test get profile name exists."""
         serializer = FriendshipSerializer()
         self.assertEqual(serializer._get_profile_name(self.user), "Sender")
 
     def test_get_profile_name_fallback(self):
+        """Test get profile name fallback."""
         # receiver_profile has empty name
         self.receiver_profile.name = ""
         self.receiver_profile.save()
@@ -68,6 +76,7 @@ class FriendshipSerializerTests(TestCase):
         self.assertEqual(serializer._get_profile_name(self.receiver), "receiver")
 
     def test_get_profile_no_profile(self):
+        """Test get profile no profile."""
         # User without profile (should fallback to username)
         user_no_profile = User.objects.create_user(
             username="noprofile", email="no@profile.com"
@@ -78,10 +87,12 @@ class FriendshipSerializerTests(TestCase):
         self.assertEqual(serializer._get_profile_name(user_no_profile), "noprofile")
 
     def test_get_avatar_url_none(self):
+        """Test get avatar url none."""
         serializer = FriendshipSerializer()
         self.assertIsNone(serializer._get_avatar_url(self.user))
 
     def test_get_avatar_url_with_request(self):
+        """Test get avatar url with request."""
         avatar = SimpleUploadedFile(
             "avatar.png", b"file_content", content_type="image/png"
         )
@@ -95,6 +106,7 @@ class FriendshipSerializerTests(TestCase):
         self.assertIn("http://testserver", avatar_url)
 
     def test_get_avatar_url_without_request(self):
+        """Test get avatar url without request."""
         avatar = SimpleUploadedFile(
             "avatar2.png", b"file_content", content_type="image/png"
         )
@@ -106,10 +118,12 @@ class FriendshipSerializerTests(TestCase):
         self.assertTrue(avatar_url.startswith("/api/media/avatars/avatar2"))
 
     def test_get_sender_name(self):
+        """Test get sender name."""
         serializer = FriendshipSerializer()
         self.assertEqual(serializer.get_sender_name(self.friendship), "Sender")
 
     def test_get_receiver_name(self):
+        """Test get receiver name."""
         # Set receiver profile name
         self.receiver_profile.name = "Receiver"
         self.receiver_profile.save()
@@ -117,9 +131,11 @@ class FriendshipSerializerTests(TestCase):
         self.assertEqual(serializer.get_receiver_name(self.friendship), "Receiver")
 
     def test_get_sender_avatar(self):
+        """Test get sender avatar."""
         serializer = FriendshipSerializer()
         self.assertIsNone(serializer.get_sender_avatar(self.friendship))
 
     def test_get_receiver_avatar(self):
+        """Test get receiver avatar."""
         serializer = FriendshipSerializer()
         self.assertIsNone(serializer.get_receiver_avatar(self.friendship))

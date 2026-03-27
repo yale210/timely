@@ -8,7 +8,9 @@ User = get_user_model()
 
 
 class PreferenceMeTests(APITestCase):
+    """Test cases for preference me."""
     def setUp(self):
+        """Set up shared test fixtures."""
         self.user = User.objects.create_user(
             username="alice",
             email="alice@example.com",
@@ -16,10 +18,12 @@ class PreferenceMeTests(APITestCase):
         )
 
     def test_me_requires_auth(self):
+        """Test me requires auth."""
         res = self.client.get("/api/preferences/me/")
         self.assertEqual(res.status_code, status.HTTP_401_UNAUTHORIZED)
 
     def test_me_get_creates_and_returns_pref(self):
+        """Test me get creates and returns pref."""
         self.client.force_authenticate(user=self.user)
 
         res = self.client.get("/api/preferences/me/")
@@ -33,6 +37,7 @@ class PreferenceMeTests(APITestCase):
         self.assertIn("days_off", data)
 
     def test_me_patch_validation_max_hours(self):
+        """Test me patch validation max hours."""
         self.client.force_authenticate(user=self.user)
 
         res = self.client.patch(
@@ -44,6 +49,7 @@ class PreferenceMeTests(APITestCase):
         self.assertIn("max_hours_study_per_day", res.json())
 
     def test_me_patch_validation_day_start_equals_day_end(self):
+        """Test me patch validation day start equals day end."""
         self.client.force_authenticate(user=self.user)
 
         res = self.client.patch(

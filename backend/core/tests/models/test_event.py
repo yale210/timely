@@ -9,7 +9,9 @@ from core.models import Event, Preference
 
 
 class EventTests(TestCase):
+    """Test cases for event."""
     def setUp(self):
+        """Set up shared test fixtures."""
         self.user = get_user_model().objects.create_user(
             username="testuser", password="password123", email="test@user.com"
         )
@@ -21,6 +23,7 @@ class EventTests(TestCase):
         )
 
     def test_event_calculate_time_left_one_off(self):
+        """Test event calculate time left one off."""
         now = timezone.now()
         start_time = now + datetime.timedelta(days=10)
         end_time = start_time + datetime.timedelta(hours=1)
@@ -34,6 +37,7 @@ class EventTests(TestCase):
         self.assertEqual(event.calculate_time_left(), 10)
 
     def test_event_calculate_time_left_recurring(self):
+        """Test event calculate time left recurring."""
         now = timezone.now()
         start_time = now
         end_time = now + datetime.timedelta(hours=1)
@@ -50,6 +54,7 @@ class EventTests(TestCase):
         self.assertEqual(event.calculate_time_left(), 15)
 
     def test_event_end_time_after_start_time(self):
+        """Test event end time after start time."""
         now = timezone.now()
         start_time = now
         end_time = now - datetime.timedelta(hours=1)
@@ -64,6 +69,7 @@ class EventTests(TestCase):
         self.assertIn("end_time", context.exception.message_dict)
 
     def test_event_is_linked_to_user(self):
+        """Test event is linked to user."""
         now = timezone.now()
         event = Event.objects.create(
             user=self.user,
@@ -75,6 +81,7 @@ class EventTests(TestCase):
         self.assertEqual(self.user.events.count(), 1)
 
     def test_recurring_event_allows_no_end_date(self):
+        """Test recurring event allows no end date."""
         now = timezone.now()
         # Recurring event WITHOUT end date should be valid (i.e., "never" ending)
         event = Event(
@@ -90,6 +97,7 @@ class EventTests(TestCase):
         self.assertEqual(Event.objects.filter(title="Never Ending Event").count(), 1)
 
     def test_recurrence_end_requires_interval(self):
+        """Test recurrence end requires interval."""
         now = timezone.now()
         # Test: end date without interval is invalid
         with self.assertRaises(ValidationError) as context:
@@ -104,6 +112,7 @@ class EventTests(TestCase):
         self.assertIn("recurrence_interval", context.exception.message_dict)
 
     def test_recurrence_end_after_start_time(self):
+        """Test recurrence end after start time."""
         now = timezone.now()
         start_time = now
         recurrence_end = (now - datetime.timedelta(days=1)).date()
@@ -120,11 +129,13 @@ class EventTests(TestCase):
         self.assertIn("recurrence_end", context.exception.message_dict)
 
     def test_calculate_time_left_no_start_time(self):
+        """Test calculate time left no start time."""
         event = Event(user=self.user, title="No Start Time")
         event.start_time = None
         self.assertEqual(event.calculate_time_left(), 0)
 
     def test_user_has_no_preference_returns_zero_for_get_time_left(self):
+        """Test user has no preference returns zero for get time left."""
         new_user = get_user_model().objects.create_user(
             username="thomas23112123213", password="password", email="test@email.com"
         )

@@ -9,17 +9,21 @@ from core.models import Event
 
 
 class ShareSendViewTests(TestCase):
+    """Test cases for share send view."""
     def setUp(self):
+        """Set up shared test fixtures."""
         self.client = APIClient()
         self.user = get_user_model().objects.create_user(
             username="testuser", password="password", email="test@user.com"
         )
 
     def test_fail_if_not_logged_in(self):
+        """Test fail if not logged in."""
         response = self.client.get("/api/share_send/")
         self.assertEqual(response.status_code, 401)
 
     def test_no_data(self):
+        """Test no data."""
         self.client.login(username="testuser", password="password")
         response = self.client.post(
             "/api/share_send/",
@@ -31,6 +35,7 @@ class ShareSendViewTests(TestCase):
         )
 
     def test_e_no_int(self):
+        """Test e no int."""
         self.client.login(username="testuser", password="password")
         # Event ID is in the formant e123 -> ee is invalid
         response = self.client.post(
@@ -46,6 +51,7 @@ class ShareSendViewTests(TestCase):
         )
 
     def test_no_e_no_int(self):
+        """Test no e no int."""
         self.client.login(username="testuser", password="password")
         # Event ID is in the formant e123 -> 1.5 is invalid
         response = self.client.post(
@@ -61,6 +67,7 @@ class ShareSendViewTests(TestCase):
         )
 
     def test_user_shares_event_they_do_not_own(self):
+        """Test user shares event they do not own."""
         self.client.login(username="testuser", password="password")
 
         get_user_model().objects.create_user(
@@ -93,6 +100,7 @@ class ShareSendViewTests(TestCase):
         )
 
     def test_recipient_does_not_exist(self):
+        """Test recipient does not exist."""
         self.client.login(username="testuser", password="password")
 
         get_user_model().objects.create_user(
@@ -123,6 +131,7 @@ class ShareSendViewTests(TestCase):
         )
 
     def test_recipient_already_has_the_same_event(self):
+        """Test recipient already has the same event."""
         self.client.login(username="testuser", password="password")
 
         get_user_model().objects.create_user(
@@ -163,6 +172,7 @@ class ShareSendViewTests(TestCase):
         self.assertEqual(response.data["message"], "Event sent 0")
 
     def test_request_already_exists(self):
+        """Test request already exists."""
         self.client.login(username="testuser", password="password")
 
         get_user_model().objects.create_user(
@@ -204,6 +214,7 @@ class ShareSendViewTests(TestCase):
         )
 
     def test_successful_event_sent(self):
+        """Test successful event sent."""
         self.client.login(username="testuser", password="password")
 
         get_user_model().objects.create_user(

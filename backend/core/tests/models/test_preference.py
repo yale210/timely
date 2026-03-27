@@ -10,12 +10,15 @@ from core.models import Preference
 
 
 class PreferenceTests(TestCase):
+    """Test cases for preference."""
     def setUp(self):
+        """Set up shared test fixtures."""
         self.user = get_user_model().objects.create_user(
             username="testuser", password="password123", email="test@user.com"
         )
 
     def test_preference_helpers(self):
+        """Test preference helpers."""
         preference = Preference.objects.create(
             user=self.user,
             day_start=datetime.time(7, 0),
@@ -25,6 +28,7 @@ class PreferenceTests(TestCase):
         self.assertEqual(preference.get_break_time(), "07:00:00 - 23:00:00")
 
     def test_day_start_cannot_equal_day_end(self):
+        """Test day start cannot equal day end."""
         preference = Preference(
             user=self.user,
             day_start=datetime.time(8, 0),
@@ -35,18 +39,21 @@ class PreferenceTests(TestCase):
             preference.full_clean()
 
     def test_invalid_timezone(self):
+        """Test invalid timezone."""
         preference = Preference(user=self.user, timezone="Invalid/Timezone")
         with self.assertRaises(ValidationError) as cm:
             preference.full_clean()
         self.assertIn("timezone", cm.exception.message_dict)
 
     def test_day_schedule_not_list(self):
+        """Test day schedule not list."""
         preference = Preference(user=self.user, day_schedule="not a list")
         with self.assertRaises(ValidationError) as cm:
             preference.full_clean()
         self.assertIn("day_schedule", cm.exception.message_dict)
 
     def test_day_schedule_invalid_length(self):
+        """Test day schedule invalid length."""
         preference = Preference(
             user=self.user, day_schedule=[{"day": 1, "start": "08:00", "end": "22:00"}]
         )
@@ -55,6 +62,7 @@ class PreferenceTests(TestCase):
         self.assertIn("day_schedule", cm.exception.message_dict)
 
     def test_day_schedule_invalid_entry_type(self):
+        """Test day schedule invalid entry type."""
         sched = [None] * 7
         preference = Preference(user=self.user, day_schedule=sched)
         with self.assertRaises(ValidationError) as cm:
@@ -62,6 +70,7 @@ class PreferenceTests(TestCase):
         self.assertIn("day_schedule", cm.exception.message_dict)
 
     def test_day_schedule_invalid_day_value(self):
+        """Test day schedule invalid day value."""
         sched = [
             {"day": i, "start": "08:00", "end": "22:00"} for i in range(7)
         ]  # 0 to 6
@@ -71,6 +80,7 @@ class PreferenceTests(TestCase):
         self.assertIn("day_schedule", cm.exception.message_dict)
 
     def test_day_schedule_duplicate_day(self):
+        """Test day schedule duplicate day."""
         sched = [{"day": 1, "start": "08:00", "end": "22:00"}] * 7
         preference = Preference(user=self.user, day_schedule=sched)
         with self.assertRaises(ValidationError) as cm:
@@ -78,6 +88,7 @@ class PreferenceTests(TestCase):
         self.assertIn("day_schedule", cm.exception.message_dict)
 
     def test_day_schedule_invalid_time_format(self):
+        """Test day schedule invalid time format."""
         sched = [{"day": i, "start": "invalid", "end": "22:00"} for i in range(1, 8)]
         preference = Preference(user=self.user, day_schedule=sched)
         with self.assertRaises(ValidationError) as cm:
@@ -85,6 +96,7 @@ class PreferenceTests(TestCase):
         self.assertIn("day_schedule", cm.exception.message_dict)
 
     def test_day_schedule_start_equals_end(self):
+        """Test day schedule start equals end."""
         sched = [{"day": i, "start": "08:00", "end": "08:00"} for i in range(1, 8)]
         preference = Preference(user=self.user, day_schedule=sched)
         with self.assertRaises(ValidationError) as cm:
@@ -92,6 +104,7 @@ class PreferenceTests(TestCase):
         self.assertIn("day_schedule", cm.exception.message_dict)
 
     def test_max_hours_exceeds_available(self):
+        """Test max hours exceeds available."""
         # 2 hours available, but max_hours_study_per_day = 4
         sched = [{"day": i, "start": "08:00", "end": "10:00"} for i in range(1, 8)]
         preference = Preference(
@@ -105,6 +118,7 @@ class PreferenceTests(TestCase):
         self.assertIn("max_hours_study_per_day", cm.exception.message_dict)
 
     def test_get_day_window_valid(self):
+        """Test get day window valid."""
         preference = Preference.objects.create(user=self.user)
         # Friday is weekday 4, so day 5 in our 1-7 scheme
         target_date = datetime.date(2026, 3, 20)  # Friday
@@ -113,6 +127,7 @@ class PreferenceTests(TestCase):
         self.assertEqual(end, datetime.time(22, 0))
 
     def test_get_day_window_fallback(self):
+        """Test get day window fallback."""
         preference = Preference.objects.create(user=self.user, day_schedule=[])
         target_date = datetime.date(2026, 3, 20)
         start, end = preference.get_day_window(target_date)
@@ -121,6 +136,7 @@ class PreferenceTests(TestCase):
         self.assertEqual(str(end), "22:00")
 
     def test_get_day_window_malformed_entry(self):
+        """Test get day window malformed entry."""
         preference = Preference.objects.create(
             user=self.user,
             day_schedule=[{"day": 5, "start": "invalid", "end": "22:00"}]

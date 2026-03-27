@@ -16,6 +16,7 @@ class UserFactory(factory.django.DjangoModelFactory):
     """Create test users with an associated profile by default."""
 
     class Meta:
+        """Test cases for meta."""
         model = User
 
     username = factory.Sequence(lambda n: f"user_{n}")
@@ -35,6 +36,7 @@ class AssessmentFactory(factory.django.DjangoModelFactory):
     """Create assessments with sensible default scheduling values."""
 
     class Meta:
+        """Test cases for meta."""
         model = Assessment
 
     user = factory.SubFactory(UserFactory)
@@ -51,6 +53,7 @@ class CategoryFactory(factory.django.DjangoModelFactory):
     """Create categories scoped to the generated test user."""
 
     class Meta:
+        """Test cases for meta."""
         model = Category
 
     user = factory.SubFactory(UserFactory)
@@ -62,6 +65,7 @@ class TaskFactory(factory.django.DjangoModelFactory):
     """Create tasks with short default scheduling windows for tests."""
 
     class Meta:
+        """Test cases for meta."""
         model = Task
 
     user = factory.SubFactory(UserFactory)

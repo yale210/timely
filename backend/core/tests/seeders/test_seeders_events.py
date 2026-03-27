@@ -16,9 +16,11 @@ from .common import SeederTestCase
 
 
 class SeederEventTests(SeederTestCase):
+    """Test cases for seeder event."""
     def test_event_seeder_create_random_event_type_covers_recurring_and_nonrecurring_paths(
         self,
     ):
+        """Test event seeder create random event type covers recurring and nonrecurring paths."""
         user = get_user_model().objects.create_user(
             username="event-owner",
             email="event-owner@example.com",
@@ -76,6 +78,7 @@ class SeederEventTests(SeederTestCase):
         self.assertIsNone(single_event.recurrence_end)
 
     def test_event_seeder_create_recurring_event_and_random_time(self):
+        """Test event seeder create recurring event and random time."""
         user = get_user_model().objects.create_user(
             username="event-recurring-owner",
             email="event-recurring@example.com",
@@ -113,6 +116,7 @@ class SeederEventTests(SeederTestCase):
             self.assertEqual(seeder._random_time(), time(8, 45))
 
     def test_event_seeder_populate_random_event_and_fallback_helpers(self):
+        """Test event seeder populate random event and fallback helpers."""
         seeder = EventSeeder()
         user = get_user_model().objects.create_user(
             username="event-helper-owner",
@@ -151,6 +155,7 @@ class SeederEventTests(SeederTestCase):
         self.assertEqual(fallback_category.user, fallback_user)
 
     def test_assessment_seeder_random_helpers_create_missing_user_and_category(self):
+        """Test assessment seeder random helpers create missing user and category."""
         seeder = AssessmentSeeder()
 
         with patch.object(seeder, "faker") as faker:
@@ -167,6 +172,7 @@ class SeederEventTests(SeederTestCase):
         self.assertEqual(category.colour, "#445566")
 
     def test_assessment_seeder_populate_random_assessment_links_unassigned_event(self):
+        """Test assessment seeder populate random assessment links unassigned event."""
         user = get_user_model().objects.create_user(
             username="assessment-owner",
             email="assessment-owner@example.com",
@@ -204,6 +210,7 @@ class SeederEventTests(SeederTestCase):
     def test_assessment_seeder_populate_random_assessment_event_creates_event_with_category(
         self,
     ):
+        """Test assessment seeder populate random assessment event creates event with category."""
         user = get_user_model().objects.create_user(
             username="assessment-event-owner",
             email="assessment-event@example.com",
@@ -234,6 +241,7 @@ class SeederEventTests(SeederTestCase):
         self.assertEqual(event.end_time, timezone.make_aware(start))
 
     def test_task_seeder_populate_random_task_can_link_parent_task(self):
+        """Test task seeder populate random task can link parent task."""
         user = get_user_model().objects.create_user(
             username="task-owner",
             email="task-owner@example.com",
@@ -279,6 +287,7 @@ class SeederEventTests(SeederTestCase):
         self.assertEqual(task.categories.get(), category)
 
     def test_task_seeder_fallback_helpers_create_user_and_category(self):
+        """Test task seeder fallback helpers create user and category."""
         seeder = TaskSeeder()
 
         with patch.object(seeder, "faker") as faker:
@@ -296,6 +305,7 @@ class SeederEventTests(SeederTestCase):
     def test_friendship_seeder_updates_existing_friendship_and_creates_users_if_missing(
         self,
     ):
+        """Test friendship seeder updates existing friendship and creates users if missing."""
         sender = get_user_model().objects.create_user(
             username="sender",
             email="sender@example.com",

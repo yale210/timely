@@ -7,13 +7,16 @@ from django.core.files.uploadedfile import SimpleUploadedFile
 
 
 class ImportViewTests(TestCase):
+    """Test cases for import view."""
     def setUp(self):
+        """Set up shared test fixtures."""
         self.client = APIClient()
         self.user = get_user_model().objects.create_user(
             username="testuser", password="password", email="test@user.com"
         )
 
     def test_success_if_logged_in(self):
+        """Test success if logged in."""
         self.client.login(username="testuser", password="password")
 
         importing_file_content = (
@@ -45,6 +48,7 @@ class ImportViewTests(TestCase):
         self.assertEqual(response.status_code, 200)
 
     def test_success_if_logged_in_r(self):
+        """Test success if logged in r."""
         self.client.login(username="testuser", password="password")
 
         importing_file_content = (
@@ -74,6 +78,7 @@ class ImportViewTests(TestCase):
         self.assertEqual(response.status_code, 200)
 
     def test_success_if_logged_in_r2(self):
+        """Test success if logged in r2."""
         self.client.login(username="testuser", password="password")
 
         importing_file_content = (
@@ -103,6 +108,7 @@ class ImportViewTests(TestCase):
         self.assertEqual(response.status_code, 200)
 
     def test_success_x2_no_change(self):
+        """Test success x2 no change."""
         self.client.login(username="testuser", password="password")
 
         importing_file_content = (
@@ -145,11 +151,13 @@ class ImportViewTests(TestCase):
         )
 
     def test_failure_if_no_file(self):
+        """Test failure if no file."""
         self.client.login(username="testuser", password="password")
         response = self.client.post("/api/import/", {})
         self.assertContains(response, "No file uploaded")
 
     def test_failure_if_wrong_file_type(self):
+        """Test failure if wrong file type."""
         self.client.login(username="testuser", password="password")
 
         importing_file_content = (
@@ -180,6 +188,7 @@ class ImportViewTests(TestCase):
         self.assertContains(response, "File type is not .txt")
 
     def test_failure_if_empty_file(self):
+        """Test failure if empty file."""
         self.client.login(username="testuser", password="password")
         importing_file_content = (b"").strip()
 
@@ -194,6 +203,7 @@ class ImportViewTests(TestCase):
         self.assertContains(response, "Empty file")
 
     def test_failure_if_no_begin(self):
+        """Test failure if no begin."""
         self.client.login(username="testuser", password="password")
         importing_file_content = (
             b"VERSION:2.0\n"
@@ -223,6 +233,7 @@ class ImportViewTests(TestCase):
         self.assertContains(response, "File requires: BEGIN:VCALENDAR")
 
     def test_failure_if_no_end(self):
+        """Test failure if no end."""
         self.client.login(username="testuser", password="password")
         importing_file_content = (
             b"BEGIN:VCALENDAR\n"
@@ -252,6 +263,7 @@ class ImportViewTests(TestCase):
         self.assertContains(response, "File requires: END:VCALENDAR")
 
     def test_failure_if_begin_x2_before_end(self):
+        """Test failure if begin x2 before end."""
         self.client.login(username="testuser", password="password")
         importing_file_content = (
             b"BEGIN:VCALENDAR\n"
@@ -283,6 +295,7 @@ class ImportViewTests(TestCase):
         self.assertContains(response, "Event indentation error")
 
     def test_failure_if_end_before_begin(self):
+        """Test failure if end before begin."""
         self.client.login(username="testuser", password="password")
         importing_file_content = (
             b"BEGIN:VCALENDAR\n"
@@ -314,6 +327,7 @@ class ImportViewTests(TestCase):
         self.assertContains(response, "No event to end")
 
     def test_failure_if_missing_summary(self):
+        """Test failure if missing summary."""
         self.client.login(username="testuser", password="password")
 
         importing_file_content = (
@@ -344,6 +358,7 @@ class ImportViewTests(TestCase):
         self.assertContains(response, "One or more events don't have a summary")
 
     def test_failure_if_missing_start(self):
+        """Test failure if missing start."""
         self.client.login(username="testuser", password="password")
 
         importing_file_content = (
@@ -374,6 +389,7 @@ class ImportViewTests(TestCase):
         self.assertContains(response, "One or more events don't have a DTSTART")
 
     def test_failure_if_missing_end(self):
+        """Test failure if missing end."""
         self.client.login(username="testuser", password="password")
 
         importing_file_content = (

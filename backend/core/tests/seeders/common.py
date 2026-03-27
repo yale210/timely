@@ -31,7 +31,9 @@ from profiles.models import Profile
 
 
 class SeederTestCase(TestCase):
+    """Shared base test case for core seeder tests."""
     def assert_seed_calls(self, seeder, fixture_method, random_method, random_calls):
+        """Assert seed calls."""
         from unittest.mock import patch
 
         with (
@@ -44,6 +46,7 @@ class SeederTestCase(TestCase):
         self.assertEqual(random_mock.call_count, random_calls)
 
     def seed_fixture_data(self):
+        """Seed fixture data."""
         UserSeeder()._create_fixture_user()
         CategorySeeder()._create_fixture_category()
         CommuteSeeder()._create_fixture_commute()
@@ -59,6 +62,7 @@ class SeederTestCase(TestCase):
         AssessmentSeeder()._create_fixture_assessment()
 
     def assert_fixture_counts_unchanged(self, initial_counts):
+        """Assert fixture counts unchanged."""
         self.assertEqual(get_user_model().objects.count(), initial_counts["users"])
         self.assertEqual(Category.objects.count(), initial_counts["categories"])
         self.assertEqual(Commute.objects.count(), initial_counts["commutes"])

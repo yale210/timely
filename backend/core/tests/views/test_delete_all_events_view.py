@@ -10,22 +10,27 @@ from core.models import Event
 
 
 class DeleteAllEventsViewTests(TestCase):
+    """Test cases for delete all events view."""
     def setUp(self):
+        """Set up shared test fixtures."""
         self.client = APIClient()
         self.user = get_user_model().objects.create_user(
             username="testuser", password="password", email="test@user.com"
         )
 
     def test_fail_if_not_logged_in(self):
+        """Test fail if not logged in."""
         response = self.client.delete("/api/delete_events/")
         self.assertEqual(response.status_code, 401)
 
     def test_success_if_logged_in(self):
+        """Test success if logged in."""
         self.client.login(username="testuser", password="password")
         response = self.client.delete("/api/delete_events/")
         self.assertEqual(response.status_code, 200)
 
     def test_delete_0_events(self):
+        """Test delete 0 events."""
         self.client.login(username="testuser", password="password")
 
         self.assertFalse(Event.objects.filter(title="Title Event 1").exists())
@@ -41,6 +46,7 @@ class DeleteAllEventsViewTests(TestCase):
         self.assertEqual(response.status_code, 200)
 
     def test_delete_1_event(self):
+        """Test delete 1 event."""
         self.client.login(username="testuser", password="password")
         self.assertFalse(Event.objects.filter(title="Title Event 1").exists())
         self.assertEqual(Event.objects.count(), 0)
@@ -66,6 +72,7 @@ class DeleteAllEventsViewTests(TestCase):
         self.assertEqual(response.status_code, 200)
 
     def test_delete_2_events(self):
+        """Test delete 2 events."""
         self.client.login(username="testuser", password="password")
         self.assertFalse(Event.objects.filter(title="Title Event 1").exists())
         self.assertFalse(Event.objects.filter(title="Title Event 2").exists())
@@ -104,6 +111,7 @@ class DeleteAllEventsViewTests(TestCase):
         self.assertEqual(response.status_code, 200)
 
     def test_delete_3_events(self):
+        """Test delete 3 events."""
         self.client.login(username="testuser", password="password")
         self.assertFalse(Event.objects.filter(title="Title Event 1").exists())
         self.assertFalse(Event.objects.filter(title="Title Event 2").exists())
@@ -157,6 +165,7 @@ class DeleteAllEventsViewTests(TestCase):
     # Delete -> Create objects with the same data -> Delete again
     # (IDs are different)
     def test_delete_create_delete_events(self):
+        """Test delete create delete events."""
         self.client.login(username="testuser", password="password")
         self.assertEqual(Event.objects.count(), 0)
 
@@ -218,6 +227,7 @@ class DeleteAllEventsViewTests(TestCase):
 
     # Test for  when the user is actively sharing an event with someoene
     def test_delete_events_while_pending_outgoing_share_request(self):
+        """Test delete events while pending outgoing share request."""
         self.client.login(username="testuser", password="password")
         self.assertEqual(get_user_model().objects.count(), 1)
 
@@ -266,6 +276,7 @@ class DeleteAllEventsViewTests(TestCase):
 
     # Test for  when the user is actively sharing an event with someoene
     def test_delete_events_while_pending_incoming_share_request(self):
+        """Test delete events while pending incoming share request."""
         self.client.login(username="testuser", password="password")
         self.assertEqual(get_user_model().objects.count(), 1)
 

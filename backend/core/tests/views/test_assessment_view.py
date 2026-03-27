@@ -12,7 +12,9 @@ from core.models import Assessment, Category
 
 
 class AssessmentViewTests(TestCase):
+    """Test cases for assessment view."""
     def setUp(self):
+        """Set up shared test fixtures."""
         self.client = APIClient()
         self.user = get_user_model().objects.create_user(
             username="assessment-view-user",
@@ -26,6 +28,7 @@ class AssessmentViewTests(TestCase):
         )
 
     def test_retrieve_only_own_assessments(self):
+        """Test retrieve only own assessments."""
         Assessment.objects.create(
             user=self.other,
             title="Other assessment",
@@ -49,6 +52,7 @@ class AssessmentViewTests(TestCase):
         self.assertEqual(response.data[0]["id"], mine.id)
 
     def test_create_assessment_with_category_and_event(self):
+        """Test create assessment with category and event."""
         category = Category.objects.create(user=self.user, text="Exam")
         module_category = Category.objects.create(user=self.user, text="Algorithms")
         due_date = timezone.now() + datetime.timedelta(days=3)
@@ -84,6 +88,7 @@ class AssessmentViewTests(TestCase):
         self.assertIsNotNone(assessment.linked_event)
 
     def test_delete_assessment_removes_linked_event(self):
+        """Test delete assessment removes linked event."""
         due_date = timezone.now() + datetime.timedelta(days=3)
         assessment = Assessment.objects.create(
             user=self.user,
