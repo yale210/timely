@@ -31,7 +31,7 @@ vi.mock("@/components/settings/PrivacySection", () => ({
   <div>privacy-section</div>
   <button onClick={onDeleteEvents}>Delete Events</button>
   <button onClick={onDeleteTasks}>Delete Tasks</button>
-  <button onClick={onDeleteAccount}>Delete Tasks</button>
+  <button onClick={onDeleteAccount}>Delete Account</button>
   </div>
   ),
 }));
