@@ -445,9 +445,8 @@ class EventScopeMutationServiceTests(TestCase):
 
     def test_make_aware_naive(self):
         from core.services.event_scope_mutations import _make_aware
-        import datetime
 
-        now = datetime.datetime.now()
+        now = timezone.now()
         # Should become aware
         self.assertTrue(timezone.is_aware(_make_aware(now)))
 

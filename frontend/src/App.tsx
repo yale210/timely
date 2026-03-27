@@ -32,7 +32,10 @@ import { AdminNotificationHistoryDetail } from "@/pages/Admin/Notifications/Admi
 import CourseManagement from "@/pages/Course/CourseManagement.tsx";
 import RequireTeacher from "@/context/auth/RequireTeacher.tsx";
 import CourseCreate from "@/pages/Course/CourseCreate.tsx";
+import { AUTH_CHANGE_EVENT, authStore } from "@/services/authService";
+import { preferenceService } from "@/services/preferenceService";
 import { setDocumentTheme } from "@/utils/themeSettings"
+import { resetStoredUserTimezone, setStoredUserTimezone } from "@/utils/userTimezone";
 
 const PUBLIC_ROUTES = ["/login", "/signup", "/", "/about"]
 
@@ -61,6 +64,40 @@ export default function App() {
       document.documentElement.dataset.font = "poppins"
     }
   }, [location.pathname])
+
+  useEffect(() => {
+    let isMounted = true;
+
+    const syncUserTimezone = async () => {
+      if (!authStore.getToken()) {
+        resetStoredUserTimezone();
+        return;
+      }
+
+      try {
+        const preference = await preferenceService.getMyPreference();
+        if (isMounted) {
+          setStoredUserTimezone(preference.timezone);
+        }
+      } catch {
+        if (isMounted) {
+          resetStoredUserTimezone();
+        }
+      }
+    };
+
+    const handleAuthChange = () => {
+      void syncUserTimezone();
+    };
+
+    void syncUserTimezone();
+    window.addEventListener(AUTH_CHANGE_EVENT, handleAuthChange);
+
+    return () => {
+      isMounted = false;
+      window.removeEventListener(AUTH_CHANGE_EVENT, handleAuthChange);
+    };
+  }, []);
 
   return (
     <Routes>

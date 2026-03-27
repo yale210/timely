@@ -11,6 +11,7 @@ import { formatDjangoFormError } from "@/utils/apiErrors";
 import { validatePreference } from "@/utils/preferenceValidation";
 import { getSchedulingDayMaxMinutes } from "@/utils/schedulingLimits";
 import { applyFont, applyTheme } from "@/utils/themeSettings";
+import { setStoredUserTimezone } from "@/utils/userTimezone";
 
 interface SettingsState {
   activeSection: SettingsSection;
@@ -121,6 +122,7 @@ export const useSettings = (): UseSettingsReturn => {
     try {
       const nextPreference = await preferenceService.getMyPreference();
       setPreference(nextPreference);
+      setStoredUserTimezone(nextPreference.timezone);
       localStorage.setItem(
         "disable_sound_effects",
         String(nextPreference.disable_sound_effects ?? false),
@@ -203,6 +205,7 @@ export const useSettings = (): UseSettingsReturn => {
         day_start: preference.day_start.slice(0, 5),
         day_end: preference.day_end.slice(0, 5),
         day_schedule: preference.day_schedule,
+        timezone: preference.timezone,
         max_hours_study_per_day: preference.max_hours_study_per_day,
         max_days_ahead: preference.max_days_ahead,
         drag_snap_minutes: preference.drag_snap_minutes,
@@ -211,6 +214,7 @@ export const useSettings = (): UseSettingsReturn => {
         days_off: preference.days_off,
       });
       setPreference(updatedPreference);
+      setStoredUserTimezone(updatedPreference.timezone);
       localStorage.setItem(
         "disable_sound_effects",
         String(updatedPreference.disable_sound_effects ?? false),

@@ -24,6 +24,24 @@ const dayLabels: [number, string][] = [
   [7, "Sun"],
 ];
 
+const getTimezoneOptions = (): string[] => {
+  if (typeof Intl.supportedValuesOf === "function") {
+    return Intl.supportedValuesOf("timeZone");
+  }
+
+  return [
+    "UTC",
+    "Europe/London",
+    "Europe/Paris",
+    "America/New_York",
+    "America/Chicago",
+    "America/Denver",
+    "America/Los_Angeles",
+    "Asia/Tokyo",
+    "Australia/Sydney",
+  ];
+};
+
 const buildDefaultSchedule = (start: string, end: string) =>
   dayLabels.map(([day]) => ({ day, start, end }));
 
@@ -42,6 +60,7 @@ const PreferencesSection = ({
   const [specialDateValue, setSpecialDateValue] = useState("");
   const [specialDateLabel, setSpecialDateLabel] = useState("");
   const [isAddingSpecialDate, setIsAddingSpecialDate] = useState(false);
+  const timezoneOptions = useMemo(() => getTimezoneOptions(), []);
   const isUniformSchedule = useMemo(() => {
     const schedule = pref?.day_schedule ?? [];
     if (schedule.length === 0) return false;
@@ -156,6 +175,39 @@ const PreferencesSection = ({
       {!prefLoading && pref && (
         <div className="mt-6 space-y-6">
           <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
+            <div className="sm:col-span-2">
+              <label htmlFor="pref-timezone" className="block text-sm font-medium text-gray-900">
+                Timezone
+              </label>
+              <p className="mt-1 text-xs text-gray-500">
+                Used for scheduling, reminders, and date/time display throughout the app.
+              </p>
+              <select
+                id="pref-timezone"
+                value={pref.timezone}
+                onChange={(event) => {
+                  onPrefChange({
+                    ...pref,
+                    timezone: event.target.value,
+                  });
+                }}
+                className={`mt-2 bg-white px-3 py-2 block outline w-full rounded-md ${
+                  fieldErrors.timezone ? "outline-red-300" : "outline-gray-300"
+                } focus:outline-2 focus:outline-turquoise-600`}
+              >
+                {timezoneOptions.map((timeZone) => (
+                  <option key={timeZone} value={timeZone}>
+                    {timeZone}
+                  </option>
+                ))}
+              </select>
+              {fieldErrors.timezone?.length ? (
+                <div className="mt-1 text-xs text-red-700">
+                  {fieldErrors.timezone.join(" ")}
+                </div>
+              ) : null}
+            </div>
+
             <div className="sm:col-span-2">
               <div className="text-sm font-medium text-gray-900">Daily hours</div>
               <p className="mt-1 text-xs text-gray-500">

@@ -374,3 +374,27 @@ class SeederFoundationTests(SeederTestCase):
         commute = Commute.objects.get()
         self.assertIsNotNone(commute.user)
         self.assertEqual(get_user_model().objects.count(), 1)
+
+    def test_category_seeder_populates_existing_random_user(self):
+        user = get_user_model().objects.create_user(
+            username="existing-category-user",
+            email="existing-category@example.com",
+            password="password123",
+        )
+        seeder = CategorySeeder()
+
+        seeder._populate_random_category()
+
+        category = Category.objects.get()
+        self.assertEqual(category.user, user)
+        self.assertIsNotNone(category.text)
+        self.assertIsNotNone(category.colour)
+
+    def test_category_seeder_creates_missing_random_user(self):
+        seeder = CategorySeeder()
+        self.assertEqual(get_user_model().objects.count(), 0)
+
+        seeder._populate_random_category()
+
+        self.assertEqual(get_user_model().objects.count(), 1)
+        self.assertEqual(Category.objects.count(), 1)

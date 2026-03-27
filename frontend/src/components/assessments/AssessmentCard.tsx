@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { hexToRgba } from "@/utils/colorUtils";
 import type { Assessment, Category } from "@/types";
+import { formatDateTimeInTimezone, useUserTimezone } from "@/utils/userTimezone";
 
 interface AssessmentCardProps {
   assessment: Assessment;
@@ -18,8 +19,7 @@ const getChipStyle = (category?: Category | null) => {
 };
 
 const formatCompactDateTime = (value: string): string => {
-  const date = new Date(value);
-  return date.toLocaleString([], {
+  return formatDateTimeInTimezone(value, {
     month: "short",
     day: "numeric",
     hour: "2-digit",
@@ -70,6 +70,7 @@ const AssessmentCard = ({
   onAddToGradebook,
   isGradebookEnabled,
 }: AssessmentCardProps) => {
+  useUserTimezone();
   const [currentTime, setCurrentTime] = useState(() => Date.now());
   const comparisonDate = assessment.linked_event_details?.end_time ?? assessment.due_date;
   const countdownDate = assessment.linked_event_details?.start_time ?? assessment.due_date;

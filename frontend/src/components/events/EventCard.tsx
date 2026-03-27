@@ -2,6 +2,7 @@ import { useState } from "react";
 import { type Event } from "@/types";
 import moment from "moment";
 import { getOverrideColour, hexToRgba } from "@/utils/colorUtils";
+import { formatTimeInTimezone, useUserTimezone } from "@/utils/userTimezone";
 
 interface EventCardProps {
   event: Event;
@@ -16,6 +17,7 @@ interface EventCardProps {
  * @returns The rendered event card component.
  */
 const EventCard = ({ event, onClick }: EventCardProps) => {
+  useUserTimezone();
   const [isHovered, setIsHovered] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
   
@@ -23,7 +25,7 @@ const EventCard = ({ event, onClick }: EventCardProps) => {
   const isPast = moment(event.start_time).isBefore(moment().startOf("day"));
 
   const formatTime = (isoString: string) => {
-    return new Date(isoString).toLocaleTimeString([], {
+    return formatTimeInTimezone(isoString, {
       hour: "2-digit",
       minute: "2-digit",
     });
@@ -151,4 +153,3 @@ const EventCard = ({ event, onClick }: EventCardProps) => {
 };
 
 export default EventCard;
-

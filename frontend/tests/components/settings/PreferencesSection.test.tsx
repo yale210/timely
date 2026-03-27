@@ -24,6 +24,7 @@ const preference: Preference = {
   id: 1,
   day_start: "08:00:00",
   day_end: "22:00:00",
+  timezone: "Europe/London",
   max_hours_study_per_day: 4,
   max_days_ahead: 7,
   drag_snap_minutes: 15,

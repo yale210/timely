@@ -4,6 +4,11 @@ import { Dialog, DialogPanel, DialogTitle, Transition, TransitionChild } from "@
 import { Tooltip } from "@/components";
 import { hexToRgba } from "@/utils/colorUtils";
 import type { Assessment, AssessmentSubmission, AssessmentType, Category } from "@/types";
+import {
+  getStoredUserTimezone,
+  timezoneDateTimeLocalToIso,
+  toTimezoneDateTimeLocalValue,
+} from "@/utils/userTimezone";
 
 interface AssessmentModalProps {
   isOpen: boolean;
@@ -18,17 +23,6 @@ interface AssessmentModalProps {
 }
 
 type AssessmentMode = "DEADLINE" | "EVENT";
-
-const toDateTimeLocal = (value?: string | null): string => {
-  if (!value) {
-    return "";
-  }
-  const date = new Date(value);
-  const offsetMs = date.getTimezoneOffset() * 60_000;
-  return new Date(date.getTime() - offsetMs).toISOString().slice(0, 16);
-};
-
-const toIsoString = (value: string): string => new Date(value).toISOString();
 
 const flattenErrorMessages = (value: unknown): string[] => {
   if (typeof value === "string") {
@@ -69,16 +63,17 @@ const AssessmentModal = ({
   onSubmit,
   onDelete,
 }: AssessmentModalProps) => {
+  const userTimezone = getStoredUserTimezone();
   const [title, setTitle] = useState(assessment?.title ?? "");
   const [assessmentType] = useState<AssessmentType>(assessment?.assessment_type ?? "OTHER");
-  const [dueDate, setDueDate] = useState(toDateTimeLocal(assessment?.due_date));
+  const [dueDate, setDueDate] = useState(toTimezoneDateTimeLocalValue(assessment?.due_date, userTimezone));
   const [weighting, setWeighting] = useState<number | "">(assessment?.weighting_of_assessment ?? "");
   const [notes, setNotes] = useState(assessment?.notes ?? "");
   const [assessmentCategoryId, setAssessmentCategoryId] = useState<number | "">(assessment?.assessment_category?.id ?? "");
   const [moduleCategoryId, setModuleCategoryId] = useState<number | "">(assessment?.module_category?.id ?? "");
   const [mode, setMode] = useState<AssessmentMode>(assessment?.linked_event_details ? "EVENT" : "DEADLINE");
-  const [eventStart, setEventStart] = useState(toDateTimeLocal(assessment?.linked_event_details?.start_time));
-  const [eventEnd, setEventEnd] = useState(toDateTimeLocal(assessment?.linked_event_details?.end_time));
+  const [eventStart, setEventStart] = useState(toTimezoneDateTimeLocalValue(assessment?.linked_event_details?.start_time, userTimezone));
+  const [eventEnd, setEventEnd] = useState(toTimezoneDateTimeLocalValue(assessment?.linked_event_details?.end_time, userTimezone));
   const [eventLocation, setEventLocation] = useState(assessment?.linked_event_details?.location ?? "");
   const [error, setError] = useState<string | null>(null);
   const formKey = assessment ? `${assessment.id}-${assessment.updated_at}` : "new";
@@ -141,7 +136,7 @@ const AssessmentModal = ({
       await onSubmit({
         title: title.trim(),
         assessment_type: assessmentType,
-        due_date: toIsoString(mode === "EVENT" ? eventStart : dueDate),
+        due_date: timezoneDateTimeLocalToIso(mode === "EVENT" ? eventStart : dueDate, userTimezone),
         length_of_assessment: null,
         weighting_of_assessment: typeof weighting === "number" ? weighting : 0,
         notes: notes.trim(),
@@ -152,8 +147,8 @@ const AssessmentModal = ({
         completed: assessment?.completed ?? false,
         event_details: mode === "EVENT"
           ? {
-              start_time: toIsoString(eventStart),
-              end_time: toIsoString(eventEnd),
+              start_time: timezoneDateTimeLocalToIso(eventStart, userTimezone),
+              end_time: timezoneDateTimeLocalToIso(eventEnd, userTimezone),
               location: eventLocation.trim(),
             }
           : null,

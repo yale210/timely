@@ -213,7 +213,8 @@ class SyncCalendarTests(TestCase):
             self.student_user, "external-1"
         )
 
-    def test_remove_calendar_event_returns_false_when_not_found(self):
+    @patch("courses.services.event.logger")
+    def test_remove_calendar_event_returns_false_when_not_found(self, mock_logger):
         self.provider.get_events.return_value = []
 
         result = self.sync_service.remove_calendar_event(
@@ -222,6 +223,9 @@ class SyncCalendarTests(TestCase):
 
         self.assertFalse(result)
         self.provider.delete_event.assert_not_called()
+        mock_logger.warning.assert_called_once_with(
+            f"Calendar event for course_event_id {self.course_event.id} not found"
+        )
 
     @patch("courses.services.event.logger")
     def test_sync_user_calendar_collects_provider_errors(self, mock_logger):

@@ -7,6 +7,7 @@ export interface Preference {
     day_start: string
     day_end: string
     day_schedule?: { day: number; start: string; end: string }[]
+    timezone: string
     max_hours_study_per_day: number
     max_days_ahead: number
     drag_snap_minutes: 5 | 10 | 15 | 20 | 30 | 60
@@ -19,5 +20,5 @@ export interface Preference {
  * @interface PreferenceUpdate
  */
 export type PreferenceUpdate = Partial<Pick<
-    Preference, "day_start"|"day_end"|"day_schedule"|"max_hours_study_per_day"|"max_days_ahead"|"drag_snap_minutes"|"limit_max_hours"|"disable_sound_effects"|"days_off"
+    Preference, "day_start"|"day_end"|"day_schedule"|"timezone"|"max_hours_study_per_day"|"max_days_ahead"|"drag_snap_minutes"|"limit_max_hours"|"disable_sound_effects"|"days_off"
 >>
