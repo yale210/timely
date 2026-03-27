@@ -1,9 +1,11 @@
+"""Serializers for assessments and their linked event payloads."""
+
 from django.db import transaction
 from rest_framework import serializers
 
 from core.models import Assessment, Category, Event, EventReminder
-from core.serializers.category import CategorySerializer
-from core.serializers.event import EventResponseSerializer
+from core.serializers.category_serializer import CategorySerializer
+from core.serializers.event_serializer import EventResponseSerializer
 
 
 class AssessmentEventInputSerializer(serializers.Serializer):
@@ -152,6 +154,8 @@ class AssessmentSerializer(serializers.ModelSerializer):
         return attrs
 
     def _sync_event_reminders(self, event, reminder_offset):
+        """Replace event reminders to match the assessment reminder offset."""
+
         event.reminders.all().delete()
         if reminder_offset is not None:
             EventReminder.objects.create(
@@ -162,6 +166,8 @@ class AssessmentSerializer(serializers.ModelSerializer):
             )
 
     def _sync_linked_event(self, assessment, categories, event_details):
+        """Create, update, or delete the event linked to an assessment."""
+
         if event_details is serializers.empty:
             if assessment.linked_event is None:
                 return

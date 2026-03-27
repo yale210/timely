@@ -27,6 +27,13 @@ class AuthenticatorTests(TestCase):
         )
         self.assertEqual(user, self.user)
 
+    def test_authenticate_valid_with_mixed_case_username(self):
+        """Verify mixed-case usernames are normalized before authentication."""
+        user = self.backend.authenticate(
+            None, username="  TESTUSER  ", password=self.password
+        )
+        self.assertEqual(user, self.user)
+
     def test_authenticate_invalid_username(self):
         """Verify unknown usernames return no authenticated user."""
         user = self.backend.authenticate(

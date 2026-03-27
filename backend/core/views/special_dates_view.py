@@ -2,7 +2,7 @@
 
 from rest_framework import permissions, viewsets
 from core.models import SpecialDates
-from core.serializers.special_dates import SpecialDatesSerializer
+from core.serializers.special_dates_serializer import SpecialDatesSerializer
 
 
 class SpecialDatesViewSet(viewsets.ModelViewSet):

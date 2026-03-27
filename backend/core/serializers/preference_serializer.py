@@ -1,3 +1,5 @@
+"""Serializer definitions for user preference resources."""
+
 from django.core.exceptions import ValidationError as DjangoValidationError
 from rest_framework import serializers
 from core.models import Preference

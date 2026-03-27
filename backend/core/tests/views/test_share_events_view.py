@@ -1,3 +1,5 @@
+"""Tests for share events view."""
+
 from django.test import TestCase
 from django.contrib.auth import get_user_model
 from rest_framework.test import APIClient
@@ -8,22 +10,28 @@ from core.models import Event
 
 
 class ShareEventsViewTests(TestCase):
+    """Test cases for share events view."""
+
     def setUp(self):
+        """Set up shared test fixtures."""
         self.client = APIClient()
         self.user = get_user_model().objects.create_user(
             username="testuser", password="password", email="test@user.com"
         )
 
     def test_fail_if_not_logged_in(self):
+        """Test fail if not logged in."""
         response = self.client.get("/api/share_events/")
         self.assertEqual(response.status_code, 401)
 
     def test_success_if_logged_in(self):
+        """Test success if logged in."""
         self.client.login(username="testuser", password="password")
         response = self.client.get("/api/share_events/")
         self.assertEqual(response.status_code, 200)
 
     def test_return_0_objects(self):
+        """Test return 0 objects."""
         Event.objects.create(
             user=self.user,
             title="Title Event 1",
@@ -38,6 +46,7 @@ class ShareEventsViewTests(TestCase):
         self.assertEqual(PendingShareEvent.objects.count(), 0)
 
     def test_return_1_object(self):
+        """Test return 1 object."""
         self.client.login(username="testuser", password="password")
         self.assertEqual(get_user_model().objects.count(), 1)
 
@@ -87,6 +96,7 @@ class ShareEventsViewTests(TestCase):
         self.assertEqual(len(share_value.data), 1)
 
     def test_return_2_objects(self):
+        """Test return 2 objects."""
         self.client.login(username="testuser", password="password")
         self.assertEqual(get_user_model().objects.count(), 1)
 

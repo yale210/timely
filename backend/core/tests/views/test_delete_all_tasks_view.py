@@ -10,22 +10,28 @@ from core.models import Task
 
 
 class DeleteAllTasksViewTests(TestCase):
+    """Test cases for delete all tasks view."""
+
     def setUp(self):
+        """Set up shared test fixtures."""
         self.client = APIClient()
         self.user = get_user_model().objects.create_user(
             username="testuser", password="password", email="test@user.com"
         )
 
     def test_fail_if_not_logged_in(self):
+        """Test fail if not logged in."""
         response = self.client.get("/api/export/")
         self.assertEqual(response.status_code, 401)
 
     def test_success_if_logged_in(self):
+        """Test success if logged in."""
         self.client.login(username="testuser", password="password")
         response = self.client.get("/api/export/")
         self.assertEqual(response.status_code, 200)
 
     def test_delete_0_tasks(self):
+        """Test delete 0 tasks."""
         self.client.login(username="testuser", password="password")
 
         self.assertEqual(Task.objects.count(), 0)
@@ -39,6 +45,7 @@ class DeleteAllTasksViewTests(TestCase):
         self.assertEqual(response.status_code, 200)
 
     def test_delete_1_task(self):
+        """Test delete 1 task."""
         self.client.login(username="testuser", password="password")
         self.assertFalse(Task.objects.filter(title="Title Task 1").exists())
         self.assertEqual(Task.objects.count(), 0)
@@ -66,6 +73,7 @@ class DeleteAllTasksViewTests(TestCase):
         self.assertEqual(response.status_code, 200)
 
     def test_delete_2_tasks(self):
+        """Test delete 2 tasks."""
         self.client.login(username="testuser", password="password")
         self.assertFalse(Task.objects.filter(title="Title Task 1").exists())
         self.assertEqual(Task.objects.count(), 0)
@@ -107,6 +115,7 @@ class DeleteAllTasksViewTests(TestCase):
         self.assertEqual(response.status_code, 200)
 
     def test_delete_3_tasks(self):
+        """Test delete 3 tasks."""
         self.client.login(username="testuser", password="password")
         self.assertFalse(Task.objects.filter(title="Title Task 1").exists())
         self.assertEqual(Task.objects.count(), 0)
@@ -164,6 +173,7 @@ class DeleteAllTasksViewTests(TestCase):
     # Delete -> Create objects with the same data -> Delete again
     # (IDs are different)
     def test_delete_create_delete_tasks(self):
+        """Test delete create delete tasks."""
         self.client.login(username="testuser", password="password")
         self.assertFalse(Task.objects.filter(title="Title Task 1").exists())
         self.assertEqual(Task.objects.count(), 0)
@@ -242,6 +252,7 @@ class DeleteAllTasksViewTests(TestCase):
 
     # Test to see see if the user can only delete their own tasks not the whole DB.
     def test_delete_tasks_is_local_to_user_only(self):
+        """Test delete tasks is local to user only."""
         self.client.login(username="testuser", password="password")
 
         get_user_model().objects.create_user(
