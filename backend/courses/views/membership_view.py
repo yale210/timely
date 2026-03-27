@@ -1,4 +1,8 @@
-"""Course membership view mixins."""
+"""View mixins for managing course membership and enrollments.
+
+Provides actions for users to join or leave courses, and for administrators
+to generate join codes to facilitate student self-enrollment.
+"""
 
 from django.utils import timezone
 from rest_framework import status
@@ -8,26 +12,32 @@ from secrets import token_urlsafe
 
 from courses.models.course import CourseEnrollment, CourseJoinCode
 from courses.models.student import Student
-from courses.serializers.course_serializer import (
+from courses.serializers.course import (
     CourseJoinCodeCreateSerializer,
     CourseJoinCodeSerializer,
 )
-from courses.views.base_view import CourseViewSetBase
+from courses.views.base import CourseViewSetBase
 
 
 class CourseMembershipMixin(CourseViewSetBase):
-    """Mixin for course membership actions."""
+    """Mixin providing membership-related actions for Course viewsets.
+
+    Handles direct enrollment, unenrollment, and enrollment via join codes.
+    """
 
     @action(detail=True, methods=["post"], url_path="join")
     def join(self, request, pk=None):
-        """Enroll the current user in the requested course.
+        """Allows the current user to enroll in the specified course.
+
+        Creates a CourseEnrollment instance for the user. If the enrollment
+        already exists but is inactive, it is reactivated.
 
         Args:
-            request: The incoming DRF request.
+            request: The current HttpRequest object.
             pk: The primary key of the course to join.
 
         Returns:
-            Response: A response describing the enrollment result.
+            A Response indicating success or failure if the course is inactive.
         """
         course = self.get_course(pk)
         student = Student.objects.get_or_create(user=request.user)[0]
@@ -51,14 +61,16 @@ class CourseMembershipMixin(CourseViewSetBase):
 
     @action(detail=True, methods=["post"], url_path="leave")
     def leave(self, request, pk=None):
-        """Leave the requested course.
+        """Allows the current user to leave (soft-delete enrollment) the course.
+
+        Sets the 'active' flag of the CourseEnrollment instance to False.
 
         Args:
-            request: The incoming DRF request.
+            request: The current HttpRequest.
             pk: The primary key of the course to leave.
 
         Returns:
-            Response: A response describing the leave result.
+            A Response confirming the user has left the course.
         """
         course = self.get_course(pk)
         student = Student.objects.filter(user=request.user).first()
@@ -86,13 +98,16 @@ class CourseMembershipMixin(CourseViewSetBase):
 
     @action(detail=False, methods=["post"], url_path="join-by-code")
     def join_by_code(self, request):
-        """Join a course using a join code.
+        """Enrolls a student into a course using a unique join code.
+
+        Validates the code's existence, activation status, and expiration
+        before creating or reactivating an enrollment.
 
         Args:
-            request: The incoming DRF request.
+            request: The current HttpRequest containing the 'code'.
 
         Returns:
-            Response: A response describing the enrollment result.
+            A Response indicating enrollment success or providing an error detail.
         """
         serializer = CourseJoinCodeSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -139,18 +154,21 @@ class CourseMembershipMixin(CourseViewSetBase):
 
     @action(detail=True, methods=["post"], url_path="join-code")
     def join_code(self, request, pk=None):
-        """Create a join code for the requested course.
+        """Generates a new, unique join code for a specific course.
+
+        Restricted to users with sufficient permissions (leads, admins, staff).
 
         Args:
-            request: The incoming DRF request.
-            pk: The primary key of the course to generate a join code for.
+            request: The current HttpRequest.
+            pk: The primary key of the course.
 
         Returns:
-            Response: A response containing the created join code payload.
+            A Response containing the details of the newly created join code.
         """
         course = self.get_course(pk)
         self.check_object_permissions(request, course)
 
+        # Generate a unique 5-character URL-safe token
         code = token_urlsafe(5)
         while CourseJoinCode.objects.filter(code=code).exists():
             code = token_urlsafe(5)

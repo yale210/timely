@@ -1,4 +1,8 @@
-"""Serializer definitions for teacher resources."""
+"""Serializers for teacher-related data structures.
+
+This module provides serializers for promoting users to teachers and for
+representing teacher profiles in the API.
+"""
 
 from django.contrib.auth import get_user_model
 from rest_framework import serializers
@@ -9,21 +13,21 @@ User = get_user_model()
 
 
 class TeacherCreateSerializer(serializers.Serializer):
-    """Serializer for creating teacher records."""
+    """Serializer for promoting a system user to a teacher role."""
 
     user_id = serializers.IntegerField()
 
     def validate_user_id(self, value):
-        """Validate that the provided user exists.
+        """Ensures the specified user ID corresponds to an existing system user.
 
         Args:
-            value: The submitted user identifier.
+            value: The integer ID of the user.
 
         Returns:
-            int: The validated user identifier.
+            The validated user ID.
 
         Raises:
-            ValidationError: If the user does not exist.
+            serializers.ValidationError: If no user matches the provided ID.
         """
         if not User.objects.filter(id=value).exists():
             raise serializers.ValidationError("User not found.")
@@ -31,7 +35,11 @@ class TeacherCreateSerializer(serializers.Serializer):
 
 
 class TeacherSerializer(serializers.ModelSerializer):
-    """Serializer for teacher responses."""
+    """Serializer for representing a Teacher profile.
+
+    Includes user metadata alongside the teacher's active status, flattening
+    the relationship with the underlying User model for the API.
+    """
 
     user_id = serializers.IntegerField(source="user.id", read_only=True)
     username = serializers.CharField(source="user.username", read_only=True)
@@ -39,5 +47,7 @@ class TeacherSerializer(serializers.ModelSerializer):
     last_name = serializers.CharField(source="user.last_name", read_only=True)
 
     class Meta:
+        """Meta options for TeacherSerializer."""
+
         model = Teacher
         fields = ("user_id", "username", "first_name", "last_name", "active")

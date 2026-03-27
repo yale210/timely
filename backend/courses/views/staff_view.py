@@ -1,4 +1,8 @@
-"""Course staff view mixins."""
+"""View mixins for managing course staff and teaching assistants.
+
+Provides administrative actions to list, add, and remove staff members
+from specific course instances.
+"""
 
 from django.contrib.auth import get_user_model
 from rest_framework import status
@@ -6,25 +10,32 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 
 from courses.models.course import CourseStaff
-from courses.serializers.course_serializer import CourseStaffAddSerializer
-from courses.views.base_view import CourseViewSetBase
+from courses.serializers.course import CourseStaffAddSerializer
+from courses.views.base import CourseViewSetBase
 
 User = get_user_model()
 
 
 class CourseStaffMixin(CourseViewSetBase):
-    """Mixin for course staff actions."""
+    """Mixin providing staff-related actions for Course viewsets.
+
+    Handles the management of teaching assistants and other staff members
+    assigned to a course.
+    """
 
     @action(detail=True, methods=["get", "post", "delete"], url_path="staff")
     def staff(self, request, pk=None):
-        """List, add, or remove course staff members.
+        """Manages the staff members associated with a specific course.
+
+        Supports listing active staff (GET), adding a new staff member (POST),
+        and removing a staff member (DELETE).
 
         Args:
-            request: The incoming DRF request.
-            pk: The primary key of the course whose staff is being managed.
+            request: The current HttpRequest.
+            pk: The primary key of the course.
 
         Returns:
-            Response: A response containing the staff payload or operation result.
+            A Response containing the staff list, success message, or no content.
         """
         course = self.get_course(pk)
         self.check_object_permissions(request, course)
