@@ -17,6 +17,8 @@ class CalendarSerializer(CalendarValidationMixin, serializers.ModelSerializer):
     remaining_minutes = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
+        """Define the task fields exposed by the editable calendar API."""
+
         model = Task
         fields = [
             "id",
@@ -124,6 +126,8 @@ class CalendarResponseSerializer(serializers.ModelSerializer):
     remaining_minutes = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
+        """Define the task fields exposed by the read-only calendar API."""
+
         model = Task
         fields = [
             "id",

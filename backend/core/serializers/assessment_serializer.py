@@ -50,6 +50,8 @@ class AssessmentSerializer(serializers.ModelSerializer):
     )
 
     class Meta:
+        """Declare the assessment payload shape used by the public API."""
+
         model = Assessment
         fields = [
             "id",
@@ -165,10 +167,23 @@ class AssessmentSerializer(serializers.ModelSerializer):
             )
 
     def _finalise_linked_event(self, event, categories, reminder_offset):
+        """Apply category and reminder state after a linked event mutation.
+
+        Args:
+            event (Event): The linked event being synchronized.
+            categories (list[Category]): Categories mirrored from the assessment.
+            reminder_offset (int | None): Minutes before start for reminders.
+        """
         event.categories.set(categories)
         self._sync_event_reminders(event, reminder_offset)
 
     def _sync_existing_linked_event(self, assessment, categories):
+        """Keep the existing linked event aligned with the assessment fields.
+
+        Args:
+            assessment (Assessment): The assessment being persisted.
+            categories (list[Category]): Categories to mirror onto the event.
+        """
         if assessment.linked_event is None:
             return
 
@@ -179,6 +194,7 @@ class AssessmentSerializer(serializers.ModelSerializer):
         self._finalise_linked_event(event, categories, assessment.reminder_offset)
 
     def _remove_linked_event(self, assessment):
+        """Detach and delete the event when the assessment stops linking one."""
         if assessment.linked_event is None:
             return
 
@@ -188,6 +204,15 @@ class AssessmentSerializer(serializers.ModelSerializer):
         linked_event.delete()
 
     def _build_linked_event_payload(self, assessment, event_details):
+        """Build the event payload used when creating or updating the linked event.
+
+        Args:
+            assessment (Assessment): The parent assessment.
+            event_details (dict): The user-provided event timing payload.
+
+        Returns:
+            dict: Event fields ready for `Event.objects.create()`.
+        """
         return {
             "title": assessment.title,
             "description": assessment.notes,
@@ -197,6 +222,13 @@ class AssessmentSerializer(serializers.ModelSerializer):
         }
 
     def _upsert_linked_event(self, assessment, categories, event_details):
+        """Create or update the linked event for an assessment.
+
+        Args:
+            assessment (Assessment): The assessment being persisted.
+            categories (list[Category]): Categories mirrored onto the event.
+            event_details (dict): The user-provided linked event payload.
+        """
         payload = self._build_linked_event_payload(assessment, event_details)
         if assessment.linked_event is None:
             event = Event.objects.create(user=assessment.user, colour=None, **payload)
