@@ -115,6 +115,7 @@ vi.mock("@/components/settings/PreferencesSection", () => ({
       );
     }
 
+    const maxTaskHoursLimit = 14;
     const isMondayOff = pref.days_off.includes(1);
 
     return (
@@ -123,15 +124,34 @@ vi.mock("@/components/settings/PreferencesSection", () => ({
         {prefError ? <div>{prefError}</div> : null}
         <input aria-label="Day start" value={pref.day_start.slice(0, 5)} readOnly />
         <input aria-label="Day end" value={pref.day_end.slice(0, 5)} readOnly />
+        <div>
+          <span>Set all days</span>
+          <button type="button">Toggle schedule mode</button>
+        </div>
         <label htmlFor="pref-max-hours">Max task time per day</label>
         <input
           id="pref-max-hours"
           type="number"
           value={pref.max_hours_study_per_day}
           onChange={(event) => {
+            const nextValue = event.target.value;
+            if (nextValue === "") {
+              onPrefChange({
+                ...pref,
+                max_hours_study_per_day: "" as unknown as number,
+              });
+              return;
+            }
+
+            const parsed = Number(nextValue);
+            if (Number.isNaN(parsed)) {
+              return;
+            }
+
+            const clampedValue = Math.min(Math.max(0, parsed), maxTaskHoursLimit);
             onPrefChange({
               ...pref,
-              max_hours_study_per_day: Number(event.target.value),
+              max_hours_study_per_day: clampedValue,
             });
           }}
         />
