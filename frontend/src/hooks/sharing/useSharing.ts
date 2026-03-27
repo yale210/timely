@@ -53,8 +53,6 @@ export function useSharing() {
           if (axios.isAxiosError(error)) {
             const data = error.response?.data as { detail?: string } | undefined;
             const message = data?.detail ?? "Please enter a valid username and ID.";
-            console.log(data?.detail)
-            console.log("AAAAA")
             setShareError(message)
           }
           
