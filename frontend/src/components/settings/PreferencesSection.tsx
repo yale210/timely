@@ -43,6 +43,8 @@ const getTimezoneOptions = (): string[] => {
   ];
 };
 
+const TIMEZONE_OPTIONS = getTimezoneOptions();
+
 const buildDefaultSchedule = (start: string, end: string) =>
   dayLabels.map(([day]) => ({ day, start, end }));
 

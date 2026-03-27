@@ -2,7 +2,7 @@ import type * as ReactRouterDom from "react-router-dom";
 import type * as CourseService from "@/services/courseService";
 
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
 import CourseDetail from "@/pages/Course/CourseDetail.tsx";
 import * as courseService from "@/services/courseService";
@@ -78,7 +78,7 @@ vi.mock("@/services/courseService", async () => {
 describe("CourseDetail page", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    cleanup();
+    vi.spyOn(console, "error").mockImplementation(() => undefined);
 
     mockGetUser.mockReturnValue({
       id: 10,

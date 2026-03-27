@@ -1,5 +1,5 @@
 import { act, renderHook, waitFor } from "@testing-library/react";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { useSharing } from "@/hooks/sharing/useSharing";
 
 import type { Share } from "@/types/";
@@ -20,6 +20,11 @@ describe("useSharing", () => {
     delete document.documentElement.dataset.theme;
     delete document.documentElement.dataset.font;
     vi.clearAllMocks();
+    vi.spyOn(console, "error").mockImplementation(() => undefined);
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
   });
 
   it("fetches share count", async() => {

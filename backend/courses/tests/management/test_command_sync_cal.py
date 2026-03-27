@@ -9,17 +9,15 @@ from django.test import TestCase
 
 
 class SyncCalCommandTests(TestCase):
-    """Test cases for sync cal command."""
-
-    def setUp(self):
-        """Set up shared test fixtures."""
-        self.User = get_user_model()
-        self.user = self.User.objects.create_user(
+    @classmethod
+    def setUpTestData(cls):
+        cls.User = get_user_model()
+        cls.user = cls.User.objects.create_user(
             username="student",
             password="password123",
             email="student@example.com",
         )
-        self.other_user = self.User.objects.create_user(
+        cls.other_user = cls.User.objects.create_user(
             username="other",
             password="password123",
             email="other@example.com",
