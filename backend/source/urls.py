@@ -26,6 +26,9 @@ from core.views.share_events_view import ShareEventsView
 from core.views.share_send_view import ShareSendView
 from courses.views import CourseViewSet
 from courses.views.teacher_view import TeacherView
+
+from core.views.delete_account_view import DeleteAccountView
+
 from scheduler.views import ScheduleTasksAPIView, UnscheduleTasksAPIView
 
 # Register the core REST resources under the shared ``/api/`` prefix.
@@ -57,6 +60,7 @@ urlpatterns = [
     path("api/share_events/", ShareEventsView.as_view()),
     path("api/delete_events/", DeleteAllEventsView.as_view()),
     path("api/delete_tasks/", DeleteAllTasksView.as_view()),
+    path("api/delete_account/", DeleteAccountView.as_view()),
     path("api/profiles/", include("profiles.urls")),
     path("api/pomo/", include("pomo.urls")),
 ]
