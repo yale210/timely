@@ -1,15 +1,22 @@
+"""Tests for admin notification endpoints."""
+
+from unittest.mock import patch
+
+from django.contrib.auth import get_user_model
 from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APITestCase
-from django.contrib.auth import get_user_model
-from unittest.mock import patch
+
 from notifications.models import BroadcastJob, BroadcastRecipient
 
 User = get_user_model()
 
 
 class AdminSendNotificationViewTests(APITestCase):
+    """Test cases for admin notification endpoints."""
+
     def setUp(self):
+        """Set up shared test fixtures."""
         self.admin_user = User.objects.create_superuser(
             username="admin", password="password", email="admin@test.com"
         )
@@ -19,6 +26,7 @@ class AdminSendNotificationViewTests(APITestCase):
         self.url = reverse("admin-send-notification")
 
     def test_post_as_admin_success(self):
+        """Test posting as an admin queues a broadcast successfully."""
         self.client.force_authenticate(user=self.admin_user)
         data = {"title": "Admin Note", "message": "Hello everyone", "target": "all"}
         with patch(
@@ -33,16 +41,19 @@ class AdminSendNotificationViewTests(APITestCase):
             self.assertEqual(response.data["status"], BroadcastJob.Status.QUEUED)
 
     def test_post_as_regular_user_forbidden(self):
+        """Test regular users cannot access the admin send endpoint."""
         self.client.force_authenticate(user=self.regular_user)
         response = self.client.post(self.url, {"title": "X", "message": "Y"})
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_post_missing_data(self):
+        """Test missing payload fields return a validation error."""
         self.client.force_authenticate(user=self.admin_user)
         response = self.client.post(self.url, {"title": ""})
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
     def test_post_invalid_target(self):
+        """Test an invalid broadcast target returns a validation error."""
         self.client.force_authenticate(user=self.admin_user)
         data = {"title": "Admin Note", "message": "Hello everyone", "target": "invalid"}
         response = self.client.post(self.url, data)
@@ -50,6 +61,7 @@ class AdminSendNotificationViewTests(APITestCase):
         self.assertEqual(response.data["error"]["code"], "VALIDATION_FAILED")
 
     def test_post_users_target_without_user_ids(self):
+        """Test the users target requires explicit recipient identifiers."""
         self.client.force_authenticate(user=self.admin_user)
         data = {"title": "Admin Note", "message": "Hello users", "target": "users"}
         response = self.client.post(self.url, data)
@@ -57,6 +69,7 @@ class AdminSendNotificationViewTests(APITestCase):
         self.assertEqual(response.data["error"]["code"], "VALIDATION_FAILED")
 
     def test_post_users_target_with_empty_user_ids(self):
+        """Test the users target rejects an empty recipient list."""
         self.client.force_authenticate(user=self.admin_user)
         data = {
             "title": "Admin Note",
@@ -69,6 +82,7 @@ class AdminSendNotificationViewTests(APITestCase):
         self.assertEqual(response.data["error"]["code"], "VALIDATION_FAILED")
 
     def test_audience_counts(self):
+        """Test the audience counts endpoint returns the expected buckets."""
         self.client.force_authenticate(user=self.admin_user)
         response = self.client.get("/api/admin/audience_counts/")
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -78,6 +92,7 @@ class AdminSendNotificationViewTests(APITestCase):
         self.assertIn("selected_users", response.data)
 
     def test_broadcast_history_and_status_endpoints(self):
+        """Test broadcast history, detail, and status endpoints return queued jobs."""
         self.client.force_authenticate(user=self.admin_user)
         with patch(
             "admin_panel.views.notification_actions_view.process_broadcast_job.delay"
@@ -105,6 +120,7 @@ class AdminSendNotificationViewTests(APITestCase):
         self.assertEqual(status_response.data["id"], broadcast_id)
 
     def test_retry_failed_endpoint(self):
+        """Test retrying failed broadcast deliveries re-queues the job."""
         self.client.force_authenticate(user=self.admin_user)
         broadcast = BroadcastJob.objects.create(
             sender=self.admin_user,

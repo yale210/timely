@@ -1,3 +1,5 @@
+"""Tests for pomo serializers."""
+
 from django.contrib.auth import get_user_model
 from django.test import TestCase
 from django.utils import timezone
@@ -9,7 +11,10 @@ from pomo.views.session_viewset import PomoSessionViewSet
 
 
 class PomoSerializerTests(TestCase):
+    """Test cases for pomo serializer behavior."""
+
     def setUp(self):
+        """Set up shared test fixtures."""
         self.user = get_user_model().objects.create_user(
             username="pomo-user",
             email="pomo@example.com",
@@ -18,6 +23,7 @@ class PomoSerializerTests(TestCase):
         self.request_factory = APIRequestFactory()
 
     def test_serializer_create_sets_user_completed_time_and_model_string(self):
+        """Test serializer create sets user and completion metadata correctly."""
         request = self.request_factory.post("/api/pomo/sessions/")
         request.user = self.user
 
@@ -35,6 +41,7 @@ class PomoSerializerTests(TestCase):
         self.assertIn("25 mins", str(session))
 
     def test_viewset_queryset_is_scoped_to_authenticated_user(self):
+        """Test the viewset queryset only returns sessions for the request user."""
         other_user = get_user_model().objects.create_user(
             username="other-pomo-user",
             email="other-pomo@example.com",
