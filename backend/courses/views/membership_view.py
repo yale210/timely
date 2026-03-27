@@ -3,6 +3,7 @@
 Provides actions for users to join or leave courses, and for administrators
 to generate join codes to facilitate student self-enrollment.
 """
+
 from secrets import token_urlsafe
 
 from django.utils import timezone

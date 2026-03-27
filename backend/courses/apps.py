@@ -3,6 +3,7 @@
 This module defines the configuration class for the courses app, which manages
 course entities, student enrollments, and teacher assignments.
 """
+
 from importlib import import_module
 from django.apps import AppConfig
 

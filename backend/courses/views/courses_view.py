@@ -13,7 +13,10 @@ from courses.models.course import Course, CourseEnrollment
 from courses.models.student import Student
 from courses.models.teacher import Teacher
 from courses.permissions.course_permission import CoursePermission
-from courses.serializers.course_serializer import CourseCreateSerializer, CourseSerializer
+from courses.serializers.course_serializer import (
+    CourseCreateSerializer,
+    CourseSerializer,
+)
 from courses.views.base_view import CourseViewSetBase
 
 

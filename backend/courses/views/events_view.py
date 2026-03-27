@@ -8,11 +8,10 @@ from rest_framework import status
 from rest_framework.decorators import action
 from rest_framework.response import Response
 
-from courses.models.course import CourseEvent, CourseEnrollment
+from courses.models.course import CourseEvent
 from courses.models.teacher import Teacher
 from courses.serializers.course_serializer import CourseEventSerializer
 from courses.views.base_view import CourseViewSetBase
-from notifications.models import Notification
 
 
 class CourseEventsMixin(CourseViewSetBase):
@@ -47,6 +46,5 @@ class CourseEventsMixin(CourseViewSetBase):
         serializer = CourseEventSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         serializer.save(course=course, created_by=teacher)
-    
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
 
+        return Response(serializer.data, status=status.HTTP_201_CREATED)

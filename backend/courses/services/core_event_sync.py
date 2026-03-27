@@ -92,7 +92,9 @@ class CourseEventSyncService:
         return updated
 
     @staticmethod
-    def _record_sync_error(stats: Dict[str, Any], course_event, username: str, exc: Exception) -> None:
+    def _record_sync_error(
+        stats: Dict[str, Any], course_event, username: str, exc: Exception
+    ) -> None:
         # Centralized error formatting keeps logs consistent.
         error_msg = (
             f"Failed to sync course_event {course_event.id} "
@@ -148,8 +150,10 @@ class CourseEventSyncService:
                             title=event_title,
                             start_time=course_event.start_time,
                         )
-                        updated = CourseEventSyncService._update_core_event_from_course_event(
-                            core_event, course_event
+                        updated = (
+                            CourseEventSyncService._update_core_event_from_course_event(
+                                core_event, course_event
+                            )
                         )
 
                         if updated:
@@ -204,10 +208,14 @@ class CourseEventSyncService:
         return user_enrollments
 
     @staticmethod
-    def _sync_single_user_course_event(user, course_event, stats: Dict[str, Any]) -> None:
+    def _sync_single_user_course_event(
+        user, course_event, stats: Dict[str, Any]
+    ) -> None:
         # User-specific title and description are used for personalized calendar entries.
         event_title = CourseEventSyncService._course_event_title(course_event)
-        event_description = CourseEventSyncService._course_event_description(course_event)
+        event_description = CourseEventSyncService._course_event_description(
+            course_event
+        )
 
         try:
             try:

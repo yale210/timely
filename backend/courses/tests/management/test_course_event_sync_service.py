@@ -1,7 +1,6 @@
 """Tests for course event sync services."""
 
 import datetime
-from unittest.mock import patch
 
 from django.contrib.auth import get_user_model
 from django.test import TestCase
@@ -178,5 +177,3 @@ class CourseEventSyncServiceTests(TestCase):
         self.assertEqual(stats["updated"], 0)
         self.assertEqual(stats["errors"], [])
         self.assertEqual(Event.objects.filter(user=self.other_user).count(), 0)
-
-
