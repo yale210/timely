@@ -96,6 +96,53 @@ class CourseMembershipMixin(CourseViewSetBase):
             status=status.HTTP_200_OK,
         )
 
+    @action(detail=True, methods=["post"], url_path="remove-user")
+    def remove_user(self, request, pk=None):
+        """Removes a user from the course by deactivating their enrollment.
+
+        Expected payload:
+            {
+                "user_id": 123
+            }
+        Args:
+            request: The current HttpRequest.
+            pk: The primary key of the course to leave.
+        Returns:
+            Response: API response indicating success or failure.
+        """
+        course = self.get_course(pk)
+        self.check_object_permissions(request, course)
+
+        user_id = request.data.get("user_id")
+        if not user_id:
+            return Response(
+                {"detail": "user_id is required."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        student = Student.objects.filter(user_id=user_id).first()
+        if not student:
+            return Response(
+                {"detail": "Student profile not found for this user."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        try:
+            enrollment = CourseEnrollment.objects.get(course=course, student=student)
+        except CourseEnrollment.DoesNotExist:
+            return Response(
+                {"detail": "User is not enrolled in this course."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        enrollment.active = False
+        enrollment.save(update_fields=["active"])
+
+        return Response(
+            {"message": "User removed from course."},
+            status=status.HTTP_200_OK,
+        )
+
     @action(detail=False, methods=["post"], url_path="join-by-code")
     def join_by_code(self, request):
         """Enrolls a student into a course using a unique join code.

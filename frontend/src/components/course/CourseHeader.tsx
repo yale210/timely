@@ -74,15 +74,6 @@ export default function CoursesHeader({
             {isTeacher && (
               <button
                 type="button"
-                onClick={onCreateCourse}
-                className="rounded-md  px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700 bg-primary"
-              >
-                Create course
-              </button>
-            )}
-            {isTeacher && (
-              <button
-                type="button"
                 onClick={onManageCourses}
                 className="rounded-md bg-indigo-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-indigo-700"
               >

@@ -242,6 +242,7 @@ class CoursePermission(BasePermission):
             "update",
             "partial_update",
             "destroy",
+            "remove_user",
         ]:
             return True
 
@@ -288,7 +289,8 @@ class CoursePermission(BasePermission):
 
         if action == "staff":
             return self._is_lead(request, obj) or self._is_admin(request)
-
+        if action == "remove_user":
+            return self._is_lead(request, obj) or self._is_admin(request)
         if action in ["join", "leave"]:
             return True
 
