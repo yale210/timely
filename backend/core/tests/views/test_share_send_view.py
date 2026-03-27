@@ -25,7 +25,7 @@ class ShareSendViewTests(TestCase):
         )
         self.assertEqual(response.status_code, 400)
         self.assertEqual(
-            response.data["error"], "Please provide a username and event ID"
+            response.data["message"], "Please provide a username and event ID"
         )
 
     def test_e_no_int(self):
@@ -40,7 +40,7 @@ class ShareSendViewTests(TestCase):
         )
         self.assertEqual(response.status_code, 400)
         self.assertEqual(
-            response.data["error"], "Please provide a valid username and event ID"
+            response.data["message"], "Please provide a valid username and event ID"
         )
 
     def test_no_e_no_int(self):
@@ -55,7 +55,7 @@ class ShareSendViewTests(TestCase):
         )
         self.assertEqual(response.status_code, 400)
         self.assertEqual(
-            response.data["error"], "Please provide a valid username and event ID"
+            response.data["message"], "Please provide a valid username and event ID"
         )
 
     def test_user_shares_event_they_do_not_own(self):
@@ -87,7 +87,7 @@ class ShareSendViewTests(TestCase):
 
         self.assertEqual(response.status_code, 400)
         self.assertEqual(
-            response.data["detail"], "Please provide an event ID that you own"
+            response.data["message"], "Please provide an event ID that you own"
         )
 
     def test_recipient_does_not_exist(self):
@@ -117,7 +117,7 @@ class ShareSendViewTests(TestCase):
 
         self.assertEqual(response.status_code, 400)
         self.assertEqual(
-            response.data["detail"], "Please provide a username that exists"
+            response.data["message"], "Please provide a username that exists"
         )
 
     def test_recipient_already_has_the_same_event(self):
@@ -158,7 +158,7 @@ class ShareSendViewTests(TestCase):
         )
 
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.data["detail"], "Event sent 0")
+        self.assertEqual(response.data["message"], "Event sent 0")
 
     def test_request_already_exists(self):
         self.client.login(username="testuser", password="password")
@@ -197,7 +197,7 @@ class ShareSendViewTests(TestCase):
 
         self.assertEqual(response.status_code, 400)
         self.assertEqual(
-            response.data["detail"],
+            response.data["message"],
             "You may not send more than 1 of the same event to the same person",
         )
 
@@ -229,4 +229,4 @@ class ShareSendViewTests(TestCase):
         )
 
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.data["detail"], "Event sent 1")
+        self.assertEqual(response.data["message"], "Event sent 1")

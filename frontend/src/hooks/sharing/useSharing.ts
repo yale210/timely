@@ -1,9 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import type { Share } from "@/types";
 import * as shareService from "@/services/shareService";
-import axios from "axios";
-
-
 
 /**
  * Manage gradebook data and gradebook page UI state.
@@ -15,9 +12,6 @@ export function useSharing() {
   const [shareError, setShareError] = useState<string | null>(null);
   const [shareProcessing, setshareProcessing] = useState<number | null>(null);
 
-    
-  
-    
     const fetchShares = useCallback(async () => {
         setIsSharesLoading(true);
         
@@ -49,16 +43,14 @@ export function useSharing() {
           await fetchShares();
         
         } catch (error) {
-
-          if (axios.isAxiosError(error)) {
-            const data = error.response?.data as { detail?: string } | undefined;
-            const message = data?.detail ?? "Please enter a valid username and ID.";
-            setShareError(message)
-          }
           
-          else {
-            setShareError("Please enter a valid username and ID.");
+          if (error instanceof Error) {      
+            setShareError(error.message);
           }
+          else {
+            setShareError("? Unkown Error");
+          } 
+          
           
         } finally {
           setIsSharing(false);
@@ -77,7 +69,7 @@ export function useSharing() {
         
         } catch (error) {
           console.error(error);
-          setShareError("Failed to share reply.");
+          setShareError("Failed to reply to the share request.");
         } finally {
           setshareProcessing(null);
         }

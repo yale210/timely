@@ -37,7 +37,7 @@ class ShareSendView(APIView):
 
         # Cannot be left empty
         if not (username and event_id and str(event_id).strip()):
-            response = {"error": "Please provide a username and event ID"}
+            response = {"message": "Please provide a username and event ID"}
             return Response(response, status=400)
 
         # Checks that events are in the correct format and then converts them e.g. e123 -> 123
@@ -48,7 +48,7 @@ class ShareSendView(APIView):
             else:
                 event_id_in_db = int(event_id_string)
         except (ValueError, TypeError):
-            response = {"error": "Please provide a valid username and event ID"}
+            response = {"message": "Please provide a valid username and event ID"}
             return Response(response, status=400)
 
         # Just because an event exists, it doesn't mean that the user can share it
@@ -58,14 +58,14 @@ class ShareSendView(APIView):
         ).exists()
 
         if not event_belongs_to_sharer:
-            response = {"detail": "Please provide an event ID that you own"}
+            response = {"message": "Please provide an event ID that you own"}
             return Response(response, status=400)
 
         # If the user owns the event, its details are stored
         try:
             event_to_share = Event.objects.get(pk=event_id_in_db)
         except Event.DoesNotExist:
-            response = {"detail": "Please provide an event ID that you own"}
+            response = {"message": "Please provide an event ID that you own"}
             return Response(response, status=400)
 
         event_summary = event_to_share.title
@@ -82,7 +82,7 @@ class ShareSendView(APIView):
             receiver_exists = False
 
         if not receiver_exists:
-            response = {"detail": "Please provide a username that exists"}
+            response = {"message": "Please provide a username that exists"}
             return Response(response, status=400)
 
         # This checks to make sure that the user doesn't already have the same event (duplicates not allowed)
@@ -96,7 +96,7 @@ class ShareSendView(APIView):
         # This is a special case: the user sends an event that the other person already has, but the user will not be told
         # that the event failed to save as this would reveal the receivers events in their calendar - privacy violation
         if event_belongs_to_receiver:
-            response = {"detail": "Event sent 0"}
+            response = {"message": "Event sent 0"}
             return Response(response)
 
         request_already_exists = PendingShareEvent.objects.filter(
@@ -109,7 +109,7 @@ class ShareSendView(APIView):
         # This ensures that the GUI is kept clean, and event share requests can't be spam sent
         if request_already_exists:
             response = {
-                "detail": "You may not send more than 1 of the same event to the same person"
+                "message": "You may not send more than 1 of the same event to the same person"
             }
             return Response(response, status=400)
 
@@ -120,5 +120,5 @@ class ShareSendView(APIView):
             event=event_to_share,
         )
 
-        response = {"detail": "Event sent 1"}
+        response = {"message": "Event sent 1"}
         return Response(response)

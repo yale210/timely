@@ -44,7 +44,7 @@ class ShareSendViewTests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(
             response.data,
-            {"error": "Please provide a username and event ID"},
+            {"message": "Please provide a username and event ID"},
         )
 
     def test_rejects_invalid_event_id(self):
@@ -58,7 +58,7 @@ class ShareSendViewTests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(
             response.data,
-            {"error": "Please provide a valid username and event ID"},
+            {"message": "Please provide a valid username and event ID"},
         )
 
     def test_rejects_event_not_owned_by_sender(self):
@@ -78,7 +78,7 @@ class ShareSendViewTests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(
             response.data,
-            {"detail": "Please provide an event ID that you own"},
+            {"message": "Please provide an event ID that you own"},
         )
 
     def test_rejects_missing_receiver(self):
@@ -92,7 +92,7 @@ class ShareSendViewTests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(
             response.data,
-            {"detail": "Please provide a username that exists"},
+            {"message": "Please provide a username that exists"},
         )
 
     def test_returns_success_without_creating_duplicate_when_receiver_already_has_event(
@@ -112,7 +112,7 @@ class ShareSendViewTests(APITestCase):
         )
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data, {"detail": "Event sent 0"})
+        self.assertEqual(response.data, {"message": "Event sent 0"})
         self.assertFalse(PendingShareEvent.objects.exists())
 
     def test_rejects_duplicate_pending_request(self):
@@ -132,7 +132,7 @@ class ShareSendViewTests(APITestCase):
         self.assertEqual(
             response.data,
             {
-                "detail": "You may not send more than 1 of the same event to the same person"
+                "message": "You may not send more than 1 of the same event to the same person"
             },
         )
 
@@ -145,7 +145,7 @@ class ShareSendViewTests(APITestCase):
         )
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data, {"detail": "Event sent 1"})
+        self.assertEqual(response.data, {"message": "Event sent 1"})
         self.assertTrue(
             PendingShareEvent.objects.filter(
                 sender=self.sender,
