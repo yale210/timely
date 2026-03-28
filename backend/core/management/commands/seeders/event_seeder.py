@@ -185,31 +185,40 @@ class EventSeeder(BaseSeeder):
     def _create_random_event_type(self, data):
         """Determine and create either a recurring or single random event.
 
+        Uses the caller-provided user and categories from ``data["fields"]``
+        so that ownership established by ``_populate_random_event`` is
+        preserved.
+
         Args:
             data (dict): A dictionary containing user and category metadata.
 
         """
-        user = self._get_or_create_random_user()
+        user = self.resolve_user(data["fields"]["user"])
+        categories = data["fields"]["categories"]
+
         if random.randint(0, 1) == 1:
-            self._create_random_recurring_event(user)
+            self._create_random_recurring_event(user, categories)
             return
 
-        self._create_random_single_event(user)
+        self._create_random_single_event(user, categories)
 
-    def _create_random_recurring_event(self, user):
-        """Generate a recurring event with randomized dates and recurrence.
+    def _create_random_recurring_event(self, user, categories):
+        """Generate a recurring event with randomised dates and recurrence.
 
         Args:
             user (User): The user that should own the generated event.
+            categories (list): Category IDs to assign to the event.
+
         """
-        start = timezone.make_aware(self.faker.date_time())
-        recurrence_end = (start + timedelta(random.randint(0, 100))).date()
+        start, end = self._random_event_datetimes(user, max_duration_minutes=100)
+        recurrence_end = (start + timedelta(days=random.randint(0, 100))).date()
         self._create_event(
             {
                 "fields": self._build_random_event_fields(
                     user=user,
+                    categories=categories,
                     start=start,
-                    end=start + timedelta(random.randint(0, 100)),
+                    end=end,
                     recurrence_interval=random.choice(
                         ["daily", "weekly", "monthly", "yearly"]
                     ),
@@ -218,19 +227,22 @@ class EventSeeder(BaseSeeder):
             }
         )
 
-    def _create_random_single_event(self, user):
+    def _create_random_single_event(self, user, categories):
         """Generate a one-off event with a bounded random duration.
 
         Args:
             user (User): The user that should own the generated event.
+            categories (list): Category IDs to assign to the event.
+
         """
-        start = timezone.make_aware(self.faker.date_time())
+        start, end = self._random_event_datetimes(user, max_duration_minutes=60)
         self._create_event(
             {
                 "fields": self._build_random_event_fields(
                     user=user,
+                    categories=categories,
                     start=start,
-                    end=start + timedelta(random.randint(0, 60)),
+                    end=end,
                     recurrence_interval=None,
                     recurrence_end=None,
                 )
@@ -238,12 +250,13 @@ class EventSeeder(BaseSeeder):
         )
 
     def _build_random_event_fields(
-        self, user, start, end, recurrence_interval, recurrence_end
+        self, user, categories, start, end, recurrence_interval, recurrence_end
     ):
         """Build the payload used to persist generated event fixtures.
 
         Args:
             user (User): The event owner.
+            categories (list): Category IDs to assign to the event.
             start (datetime): The event start datetime.
             end (datetime): The event end datetime.
             recurrence_interval (str | None): The recurrence cadence when the
@@ -253,10 +266,11 @@ class EventSeeder(BaseSeeder):
         Returns:
             dict: Event field values in the fixture format consumed by the create
                 helper.
+
         """
         return {
             "user": user.id,
-            "categories": [self._get_or_create_random_category(user).id],
+            "categories": categories,
             "title": self.faker.sentence(),
             "description": self.faker.sentence(),
             "location": self.faker.word(),
