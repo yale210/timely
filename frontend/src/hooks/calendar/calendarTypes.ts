@@ -2,6 +2,8 @@ import { type View, Views } from "react-big-calendar";
 import type { EventInteractionArgs } from "react-big-calendar/lib/addons/dragAndDrop";
 import type { Category, Event, EventMutationContext, EventSubmission, Preference, Task, TaskSubmission } from "@/types";
 import type { CalendarEntry } from "@/utils/calendarAdapter";
+import { getStoredUserTimezone } from "@/utils/userTimezone";
+import { getStoredWeekStartsOn } from "@/utils/userPreferences";
 import moment from "moment";
 
 interface CalendarState {
@@ -90,18 +92,22 @@ export interface UseCalendarReturn {
 export const getCalendarWindow = (
   currentView: View,
   currentDate: Date,
+  preference?: Preference | null,
 ): { start_date: string; end_date: string } => {
-  const anchor = moment(currentDate);
+  const activeTimezone = preference?.timezone ?? getStoredUserTimezone();
+  const weekStartsOn = preference?.week_starts_on ?? getStoredWeekStartsOn();
+  const anchor = moment(currentDate).tz(activeTimezone);
+  const startOfWeekUnit = weekStartsOn === "monday" ? "isoWeek" : "week";
   if (currentView === Views.MONTH) {
     return {
-      start_date: anchor.clone().startOf("month").startOf("week").format("YYYY-MM-DD"),
-      end_date: anchor.clone().endOf("month").endOf("week").format("YYYY-MM-DD"),
+      start_date: anchor.clone().startOf("month").startOf(startOfWeekUnit).format("YYYY-MM-DD"),
+      end_date: anchor.clone().endOf("month").endOf(startOfWeekUnit).format("YYYY-MM-DD"),
     };
   }
   if (currentView === Views.WEEK) {
     return {
-      start_date: anchor.clone().startOf("week").format("YYYY-MM-DD"),
-      end_date: anchor.clone().endOf("week").format("YYYY-MM-DD"),
+      start_date: anchor.clone().startOf(startOfWeekUnit).format("YYYY-MM-DD"),
+      end_date: anchor.clone().endOf(startOfWeekUnit).format("YYYY-MM-DD"),
     };
   }
   if (currentView === Views.DAY) {

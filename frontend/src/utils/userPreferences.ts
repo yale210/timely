@@ -1,3 +1,5 @@
+import { useSyncExternalStore } from "react";
+
 /** Local storage key for the user's default landing page. */
 export const USER_DEFAULT_LANDING_PAGE_STORAGE_KEY = "user_default_landing_page";
 /** Local storage key for the user's preferred week start. */
@@ -68,6 +70,26 @@ export const getStoredWeekStartsOn = (): WeekStartsOnPreference => {
   }
 
   return localStorage.getItem(USER_WEEK_STARTS_ON_STORAGE_KEY) === "sunday" ? "sunday" : "monday";
+};
+
+/**
+ * Subscribes React components to the stored week-start preference.
+ * @returns The preferred first day of the week.
+ */
+export const useStoredWeekStartsOn = (): WeekStartsOnPreference => {
+  if (typeof window === "undefined") {
+    return "monday";
+  }
+
+  return useSyncExternalStore(
+    (onStoreChange) => {
+      const handler = () => onStoreChange();
+      window.addEventListener(USER_PREFERENCES_CHANGE_EVENT, handler);
+      return () => window.removeEventListener(USER_PREFERENCES_CHANGE_EVENT, handler);
+    },
+    getStoredWeekStartsOn,
+    () => "monday",
+  );
 };
 
 /**

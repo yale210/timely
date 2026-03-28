@@ -66,7 +66,7 @@ export const useCalendarData = (view: View, date: Date) => {
   const fetchEvents = useCallback(async (activeView: View, activeDate: Date) => {
     setIsEventsLoading(true);
     try {
-      const nextEvents = await eventService.getEvents(getCalendarWindow(activeView, activeDate));
+      const nextEvents = await eventService.getEvents(getCalendarWindow(activeView, activeDate, preference));
       setEvents(nextEvents);
       setEventError(null);
     } catch (error) {
@@ -76,7 +76,7 @@ export const useCalendarData = (view: View, date: Date) => {
     } finally {
       setIsEventsLoading(false);
     }
-  }, []);
+  }, [preference]);
 
   const fetchPreference = useCallback(async () => {
     try {
@@ -117,7 +117,7 @@ export const useCalendarData = (view: View, date: Date) => {
       return;
     }
     void fetchEvents(view, date);
-  }, [date, fetchEvents, view]);
+  }, [date, fetchEvents, preference, view]);
 
   return {
     state: {

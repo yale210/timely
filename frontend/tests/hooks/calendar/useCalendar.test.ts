@@ -1,16 +1,17 @@
 import { act, renderHook, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { isOutsidePreferredDayWindow, useCalendar } from "@/hooks/calendar/useCalendar";
+import { Views } from "react-big-calendar";
+import { getCalendarWindow, isOutsidePreferredDayWindow } from "@/hooks/calendar/calendarTypes";
+import { useCalendarState } from "@/hooks/calendar/useCalendarState";
+import { useCalendar } from "@/hooks/calendar/useCalendar";
 import * as eventService from "@/services/eventService";
 import * as categoryService from "@/services/categoryService";
 import * as schedulerService from "@/services/schedulerService";
 import * as taskService from "@/services/taskService";
 import { preferenceService } from "@/services/preferenceService";
+import { setStoredUserTimezone } from "@/utils/userTimezone";
+import { setStoredWeekStartsOn } from "@/utils/userPreferences";
 import type { Category, Event, Task } from "@/types";
-
-vi.mock("react-big-calendar", () => ({
-  Views: { MONTH: "month", WEEK: "week", DAY: "day", AGENDA: "agenda" },
-}));
 
 vi.mock("@/services/categoryService", () => ({
   createCategory: vi.fn(),
@@ -188,6 +189,53 @@ describe("useCalendar", () => {
 
     expect(categoryService.deleteCategory).toHaveBeenCalledWith(7);
     expect(result.current.state.categories).toHaveLength(0);
+  });
+});
+
+describe("calendar preference helpers", () => {
+  beforeEach(() => {
+    localStorage.clear();
+    setStoredUserTimezone("America/Los_Angeles");
+    setStoredWeekStartsOn("monday");
+  });
+
+  it("uses the saved week-start when computing week fetch windows", () => {
+    const window = getCalendarWindow(Views.WEEK, new Date("2026-03-18T12:00:00.000Z"), {
+      id: 1,
+      timezone: "Europe/London",
+      week_starts_on: "monday",
+      day_start: "08:00:00",
+      day_end: "22:00:00",
+      max_hours_study_per_day: 4,
+      max_days_ahead: 7,
+      drag_snap_minutes: 15,
+      days_off: [],
+    });
+
+    expect(window).toEqual({
+      start_date: "2026-03-16",
+      end_date: "2026-03-22",
+    });
+  });
+
+  it("derives toolbar strip days from the saved timezone and week-start", () => {
+    const { result } = renderHook(() => useCalendarState());
+
+    act(() => {
+      result.current.actions.setView(Views.WEEK);
+      result.current.actions.setDate(new Date("2026-03-16T00:30:00.000Z"));
+    });
+
+    expect(result.current.state.currentLabel).toBe("March 2026");
+    expect(result.current.state.dateStripDays.map((day) => day.format("YYYY-MM-DD"))).toEqual([
+      "2026-03-09",
+      "2026-03-10",
+      "2026-03-11",
+      "2026-03-12",
+      "2026-03-13",
+      "2026-03-14",
+      "2026-03-15",
+    ]);
   });
 });
 
