@@ -85,7 +85,7 @@ describe('CategoryMultiSelect.utils', () => {
         height: 40,
         x: 100,
         y: 100,
-        toJSON: () => {}
+        toJSON: () => ({})
       });
 
       const result = getDropdownLayout(input);
@@ -107,7 +107,7 @@ describe('CategoryMultiSelect.utils', () => {
         height: 40,
         x: 100,
         y: 600,
-        toJSON: () => {}
+        toJSON: () => ({})
       });
 
       const result = getDropdownLayout(input);
@@ -131,7 +131,7 @@ describe('CategoryMultiSelect.utils', () => {
         height: 40,
         x: 500,
         y: 100,
-        toJSON: () => {}
+        toJSON: () => ({})
       });
 
       const result = getMenuPosition(button);

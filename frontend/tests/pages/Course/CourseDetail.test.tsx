@@ -6,7 +6,7 @@ import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
 import CourseDetail from "@/pages/Course/CourseDetail.tsx";
 import * as courseService from "@/services/courseService";
-import { authStore } from "@/services/authService";
+
 
 const mockNavigate = vi.fn();
 
@@ -58,7 +58,7 @@ vi.mock("@/components/course/CourseEventsCalendar.tsx", () => ({
 
 vi.mock("@/services/authService", () => ({
   authStore: {
-    getUser: mockGetUser,
+    getUser: () => mockGetUser() as { id: number; is_admin: boolean },
   },
 }));
 
@@ -110,8 +110,8 @@ describe("CourseDetail page", () => {
   });
 
   it("shows the leave button for non-lead non-admin users", async () => {
-    // eslint-disable-next-line @typescript-eslint/unbound-method
-    vi.mocked(authStore.getUser).mockReturnValue({
+
+    mockGetUser.mockReturnValue({
       id: 99,
       is_admin: false,
     } as never);
@@ -159,8 +159,8 @@ describe("CourseDetail page", () => {
   });
 
   it("navigates back when leaving the course succeeds", async () => {
-    // eslint-disable-next-line @typescript-eslint/unbound-method
-    vi.mocked(authStore.getUser).mockReturnValue({
+
+    mockGetUser.mockReturnValue({
       id: 99,
       is_admin: false,
     } as never);
@@ -186,7 +186,7 @@ describe("CourseDetail page", () => {
   });
 
   it("handles leave course error", async () => {
-    vi.mocked(authStore.getUser).mockReturnValue({ id: 99, is_admin: false } as never);
+    mockGetUser.mockReturnValue({ id: 99, is_admin: false } as never);
     vi.mocked(courseService.leaveCourse).mockRejectedValue(new Error("leave error"));
 
     render(

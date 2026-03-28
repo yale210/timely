@@ -132,7 +132,7 @@ describe("SettingsContent", () => {
   });
 
   it("renders general section and handles actions", () => {
-    const props = createProps("general" as any);
+    const props = createProps("general");
     render(<SettingsContent {...props} />);
 
     // Interactions
@@ -162,8 +162,8 @@ describe("SettingsContent", () => {
     expect(props.actions.setPreference).toHaveBeenCalledWith(expect.objectContaining({ drag_snap_minutes: 30 }));
   });
 
-  it("handles export and import events", async () => {
-    const props = createProps("general" as any);
+  it("handles export and import events", () => {
+    const props = createProps("general");
     render(<SettingsContent {...props} />);
 
     const exportBtn = screen.getByRole("button", { name: "Export events" });

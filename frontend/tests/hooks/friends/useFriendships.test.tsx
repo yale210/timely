@@ -2,7 +2,7 @@ import { renderHook, act } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { useFriendships } from '../../../src/hooks/friends/useFriendships';
 import * as friendshipService from '../../../src/services/friendshipService';
-import * as apiErrors from '../../../src/utils/apiErrors';
+import type { Friendship } from '../../../src/types';
 
 vi.mock('../../../src/services/friendshipService', () => ({
   getFriendships: vi.fn(),
@@ -17,7 +17,7 @@ vi.mock('../../../src/utils/apiErrors', () => ({
 }));
 
 describe('useFriendships Hook', () => {
-  const mockFriendship = { id: 1, state: 'PENDING', receiver: 'testuser' };
+const mockFriendship: Friendship = { id: 1, sender: 1, receiver: 2, state: 'PENDING' };
 
   beforeEach(() => {
     vi.clearAllMocks();
@@ -34,7 +34,7 @@ describe('useFriendships Hook', () => {
   };
 
   it('fetches friendships on mount', async () => {
-    vi.mocked(friendshipService.getFriendships).mockResolvedValue([mockFriendship as any]);
+    vi.mocked(friendshipService.getFriendships).mockResolvedValue([mockFriendship]);
 
     const { result } = renderHook(() => useFriendships());
 
@@ -60,8 +60,8 @@ describe('useFriendships Hook', () => {
 
   it('sends friend request successfully', async () => {
     vi.mocked(friendshipService.getFriendships).mockResolvedValue([]);
-    const newFriendship = { id: 2, state: 'PENDING', receiver: 'newuser' };
-    vi.mocked(friendshipService.sendFriendRequest).mockResolvedValue(newFriendship as any);
+    const newFriendship: Friendship = { id: 2, state: 'SENT', sender: 1, receiver: 2 };
+    vi.mocked(friendshipService.sendFriendRequest).mockResolvedValue(newFriendship);
 
     const { result } = renderHook(() => useFriendships());
 
@@ -93,14 +93,14 @@ describe('useFriendships Hook', () => {
   });
 
   it('accepts a friend request optimistically', async () => {
-    vi.mocked(friendshipService.getFriendships).mockResolvedValue([mockFriendship as any]);
-    vi.mocked(friendshipService.acceptFriendRequest).mockResolvedValue(undefined as any);
+    vi.mocked(friendshipService.getFriendships).mockResolvedValue([mockFriendship]);
+    vi.mocked(friendshipService.acceptFriendRequest).mockResolvedValue();
 
     const { result } = renderHook(() => useFriendships());
 
     await waitForEffects();
 
-    let actPromise: any;
+    let actPromise: Promise<void> | undefined;
     act(() => {
       actPromise = result.current.acceptRequest(1);
     });
@@ -118,7 +118,7 @@ describe('useFriendships Hook', () => {
   });
 
   it('rolls back on accept error', async () => {
-    vi.mocked(friendshipService.getFriendships).mockResolvedValue([mockFriendship as any]);
+    vi.mocked(friendshipService.getFriendships).mockResolvedValue([mockFriendship]);
     vi.mocked(friendshipService.acceptFriendRequest).mockRejectedValue(new Error('Accept error'));
 
     const { result } = renderHook(() => useFriendships());
@@ -134,8 +134,8 @@ describe('useFriendships Hook', () => {
   });
 
   it('declines a friend request optimistically', async () => {
-    vi.mocked(friendshipService.getFriendships).mockResolvedValue([mockFriendship as any]);
-    vi.mocked(friendshipService.declineFriendRequest).mockResolvedValue(undefined as any);
+    vi.mocked(friendshipService.getFriendships).mockResolvedValue([mockFriendship]);
+    vi.mocked(friendshipService.declineFriendRequest).mockResolvedValue();
 
     const { result } = renderHook(() => useFriendships());
 
@@ -150,8 +150,8 @@ describe('useFriendships Hook', () => {
   });
 
   it('removes a friend successfully', async () => {
-    vi.mocked(friendshipService.getFriendships).mockResolvedValue([mockFriendship as any]);
-    vi.mocked(friendshipService.deleteFriendship).mockResolvedValue(undefined as any);
+    vi.mocked(friendshipService.getFriendships).mockResolvedValue([mockFriendship]);
+    vi.mocked(friendshipService.deleteFriendship).mockResolvedValue();
 
     const { result } = renderHook(() => useFriendships());
 
@@ -166,7 +166,7 @@ describe('useFriendships Hook', () => {
   });
 
   it('handles remove friend error', async () => {
-    vi.mocked(friendshipService.getFriendships).mockResolvedValue([mockFriendship as any]);
+    vi.mocked(friendshipService.getFriendships).mockResolvedValue([mockFriendship]);
     vi.mocked(friendshipService.deleteFriendship).mockRejectedValue(new Error('Delete error'));
 
     const { result } = renderHook(() => useFriendships());
@@ -188,7 +188,7 @@ describe('useFriendships Hook', () => {
 
     await waitForEffects();
 
-    const newF = { id: 3, state: 'PENDING' };
+    const newF: Friendship = { id: 3, state: 'SENT', sender: 1, receiver: 3 };
     
     act(() => {
       window.dispatchEvent(new CustomEvent('friendships-changed', {
@@ -211,7 +211,7 @@ describe('useFriendships Hook', () => {
   });
 
   it('listens to custom events for remove', async () => {
-    vi.mocked(friendshipService.getFriendships).mockResolvedValue([mockFriendship as any]);
+    vi.mocked(friendshipService.getFriendships).mockResolvedValue([mockFriendship]);
     
     const { result } = renderHook(() => useFriendships());
 
@@ -246,7 +246,7 @@ describe('useFriendships Hook', () => {
   it('refreshes on window focus', async () => {
     vi.mocked(friendshipService.getFriendships).mockResolvedValue([]);
     
-    const { result } = renderHook(() => useFriendships());
+    renderHook(() => useFriendships());
 
     await waitForEffects();
 
@@ -263,7 +263,7 @@ describe('useFriendships Hook', () => {
   it('refreshes on custom event without detail', async () => {
     vi.mocked(friendshipService.getFriendships).mockResolvedValue([]);
     
-    const { result } = renderHook(() => useFriendships());
+    renderHook(() => useFriendships());
 
     await waitForEffects();
 
@@ -281,7 +281,7 @@ describe('useFriendships Hook', () => {
     vi.useFakeTimers();
     vi.mocked(friendshipService.getFriendships).mockResolvedValue([]);
     
-    const { result } = renderHook(() => useFriendships());
+    renderHook(() => useFriendships());
 
     await act(async () => {
       await vi.advanceTimersByTimeAsync(0);

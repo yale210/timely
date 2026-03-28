@@ -1,11 +1,25 @@
 import { renderHook, act } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { useCoursePermissions } from '../../../src/hooks/course/useCoursePermissions';
-import * as courseService from '../../../src/services/courseService';
+import { getCoursePermissions } from '../../../src/services/courseService';
+import type { CoursePermissions } from '../../../src/types/course';
 
 vi.mock('../../../src/services/courseService', () => ({
   getCoursePermissions: vi.fn(),
 }));
+
+const mockPermissions: CoursePermissions = {
+  can_view_course_details: true,
+  can_view_events: true,
+  can_create_join_code: true,
+  can_change_name: true,
+  can_change_description: true,
+  can_update_course: true,
+  can_destroy_course: true,
+  can_manage_staff: true,
+  can_join: true,
+  can_leave: true,
+};
 
 describe('useCoursePermissions Hook', () => {
   beforeEach(() => {
@@ -19,12 +33,11 @@ describe('useCoursePermissions Hook', () => {
     expect(result.current.error).toBeNull();
     // Assuming default is some object
     expect(result.current.permissions).toBeDefined();
-    expect(courseService.getCoursePermissions).not.toHaveBeenCalled();
+    expect(getCoursePermissions).not.toHaveBeenCalled();
   });
 
   it('fetches permissions when courseId is provided', async () => {
-    const mockPermissions = { can_edit: true };
-    vi.mocked(courseService.getCoursePermissions).mockResolvedValue(mockPermissions as any);
+    vi.mocked(getCoursePermissions).mockResolvedValue(mockPermissions);
 
     const { result } = renderHook(() => useCoursePermissions(1));
 
@@ -33,14 +46,14 @@ describe('useCoursePermissions Hook', () => {
       await new Promise(resolve => setTimeout(resolve, 0));
     });
 
-    expect(courseService.getCoursePermissions).toHaveBeenCalledWith(1);
+    expect(getCoursePermissions).toHaveBeenCalledWith(1);
     expect(result.current.permissions).toEqual(mockPermissions);
     expect(result.current.loading).toBe(false);
     expect(result.current.error).toBeNull();
   });
 
   it('handles fetch errors', async () => {
-    vi.mocked(courseService.getCoursePermissions).mockRejectedValue(new Error('Permission denied'));
+    vi.mocked(getCoursePermissions).mockRejectedValue(new Error('Permission denied'));
 
     const { result } = renderHook(() => useCoursePermissions(1));
 
@@ -54,8 +67,7 @@ describe('useCoursePermissions Hook', () => {
   });
 
   it('handles refresh', async () => {
-    const mockPermissions = { can_edit: true };
-    vi.mocked(courseService.getCoursePermissions).mockResolvedValue(mockPermissions as any);
+    vi.mocked(getCoursePermissions).mockResolvedValue(mockPermissions);
 
     const { result } = renderHook(() => useCoursePermissions(1));
 
@@ -63,14 +75,14 @@ describe('useCoursePermissions Hook', () => {
       await new Promise(resolve => setTimeout(resolve, 0));
     });
 
-    const mockPermissions2 = { can_edit: false };
-    vi.mocked(courseService.getCoursePermissions).mockResolvedValue(mockPermissions2 as any);
+    const mockPermissionsUpdated: CoursePermissions = { ...mockPermissions, can_update_course: false };
+    vi.mocked(getCoursePermissions).mockResolvedValue(mockPermissionsUpdated);
 
     await act(async () => {
       await result.current.refresh();
     });
 
-    expect(result.current.permissions).toEqual(mockPermissions2);
+    expect(result.current.permissions).toEqual(mockPermissionsUpdated);
   });
   
   it('does nothing on refresh if no courseId', async () => {
@@ -80,6 +92,6 @@ describe('useCoursePermissions Hook', () => {
       await result.current.refresh();
     });
     
-    expect(courseService.getCoursePermissions).not.toHaveBeenCalled();
+    expect(getCoursePermissions).not.toHaveBeenCalled();
   });
 });

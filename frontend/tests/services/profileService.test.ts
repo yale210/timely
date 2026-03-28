@@ -1,12 +1,16 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import * as profileService from '../../src/services/profileService';
-import api from '../../src/services/api';
+import type { Profile } from '../../src/types';
 
-vi.mock('../../src/services/api', () => ({
-  default: {
+const { mockApi } = vi.hoisted(() => ({
+  mockApi: {
     get: vi.fn(),
     patch: vi.fn(),
-  },
+  }
+}));
+
+vi.mock('../../src/services/api', () => ({
+  default: mockApi,
 }));
 
 describe('profileService', () => {
@@ -14,41 +18,50 @@ describe('profileService', () => {
     vi.clearAllMocks();
   });
 
-  const mockProfile = { bio: 'Hello', avatar: 'old.jpg' };
+  const mockProfile: Profile = { 
+    id: 1,
+    username: 'test',
+    email: 'test@example.com',
+    first_name: 'Test',
+    last_name: 'User',
+    bio: 'Hello', 
+    avatar: 'old.jpg',
+    is_staff: false
+  };
 
   describe('getMyProfile', () => {
     it('should call api.get with correct url', async () => {
-      vi.mocked(api.get).mockResolvedValue({ data: mockProfile });
+      vi.mocked(mockApi.get).mockResolvedValue({ data: mockProfile });
 
       const result = await profileService.getMyProfile();
 
-      expect(api.get).toHaveBeenCalledWith('/api/profiles/');
+      expect(mockApi.get).toHaveBeenCalledWith('/api/profiles/');
       expect(result).toEqual(mockProfile);
     });
   });
 
   describe('updateMyProfile', () => {
     it('should call api.patch without avatar', async () => {
-      vi.mocked(api.patch).mockResolvedValue({ data: mockProfile });
+      vi.mocked(mockApi.patch).mockResolvedValue({ data: mockProfile });
       
-      const payload = { bio: 'Updated bio', avatar: 'ignore.jpg' as any };
+      const payload = { bio: 'Updated bio', avatar: 'ignore.jpg' };
       const result = await profileService.updateMyProfile(payload);
 
-      expect(api.patch).toHaveBeenCalledWith('/api/profiles/', { bio: 'Updated bio' });
+      expect(mockApi.patch).toHaveBeenCalledWith('/api/profiles/', { bio: 'Updated bio' });
       expect(result).toEqual(mockProfile);
     });
 
     it('should call api.patch with FormData when avatarFile is provided', async () => {
-      vi.mocked(api.patch).mockResolvedValue({ data: mockProfile });
+      vi.mocked(mockApi.patch).mockResolvedValue({ data: mockProfile });
       
-      const payload = { bio: 'Updated bio', nullValue: null, undefinedValue: undefined, avatar: 'ignore.jpg' as any };
+      const payload = { bio: 'Updated bio', nullValue: null, undefinedValue: undefined, avatar: 'ignore.jpg' };
       const file = new File(['content'], 'avatar.png', { type: 'image/png' });
       
       const result = await profileService.updateMyProfile(payload, file);
 
-      expect(api.patch).toHaveBeenCalledWith('/api/profiles/', expect.any(FormData));
+      expect(mockApi.patch).toHaveBeenCalledWith('/api/profiles/', expect.any(FormData));
       
-      const formData = vi.mocked(api.patch).mock.calls[0][1] as FormData;
+      const formData = vi.mocked(mockApi.patch).mock.calls[0][1] as FormData;
       expect(formData.get('bio')).toBe('Updated bio');
       expect(formData.get('nullValue')).toBeNull(); // Should be skipped based on code
       expect(formData.get('undefinedValue')).toBeNull(); // Should be skipped

@@ -2,6 +2,7 @@ import { renderHook, act } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { usePublicProfile } from '../../../src/hooks/profiles/usePublicProfile';
 import * as publicProfileService from '../../../src/services/publicProfileService';
+import type { PublicProfile } from '../../../src/types';
 
 vi.mock('../../../src/services/publicProfileService', () => ({
   getPublicProfile: vi.fn(),
@@ -12,7 +13,7 @@ vi.mock('../../../src/utils/apiErrors', () => ({
 }));
 
 describe('usePublicProfile Hook', () => {
-  const mockProfile = { username: 'testuser', bio: 'Hello' };
+    const mockProfile: PublicProfile = { username: 'testuser', name: 'Test User', bio: 'Hello', avatar_url: null, joined_at: '2026-01-01' };
 
   beforeEach(() => {
     vi.clearAllMocks();
@@ -25,8 +26,7 @@ describe('usePublicProfile Hook', () => {
   };
 
   it('fetches profile when username is provided', async () => {
-    vi.mocked(publicProfileService.getPublicProfile).mockResolvedValue(mockProfile as any);
-
+      vi.mocked(publicProfileService.getPublicProfile).mockResolvedValue(mockProfile);
     const { result } = renderHook(() => usePublicProfile('testuser'));
 
     // Initially loading might be false before the microtask runs, but after microtask it's true
@@ -62,10 +62,10 @@ describe('usePublicProfile Hook', () => {
   });
 
   it('aborts state update if unmounted during fetch', async () => {
-    let resolveFetch: (val: any) => void;
+    let resolveFetch: (val: PublicProfile) => void;
     vi.mocked(publicProfileService.getPublicProfile).mockImplementation(() => {
-      return new Promise(resolve => {
-        resolveFetch = resolve;
+      return new Promise<PublicProfile>(_resolve => {
+        resolveFetch = _resolve;
       });
     });
 
@@ -90,10 +90,10 @@ describe('usePublicProfile Hook', () => {
   });
 
   it('aborts state update if unmounted during error', async () => {
-    let rejectFetch: (err: any) => void;
+    let rejectFetch: (err: unknown) => void;
     vi.mocked(publicProfileService.getPublicProfile).mockImplementation(() => {
-      return new Promise((_, reject) => {
-        rejectFetch = reject;
+      return new Promise<PublicProfile>((_, _reject) => {
+        rejectFetch = _reject;
       });
     });
 

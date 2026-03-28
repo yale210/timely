@@ -1,13 +1,16 @@
+import type React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { describe, it, expect, vi } from 'vitest';
 import GradebookHeader from '../../../src/components/gradebook/GradebookHeader';
 
 // Mock out @headlessui/react completely to avoid ResizeObserver issues
 vi.mock('@headlessui/react', () => ({
-  Menu: ({ children }: any) => <div>{children}</div>,
-  MenuButton: ({ children, onClick }: any) => <button onClick={onClick}>{children}</button>,
-  MenuItems: ({ children }: any) => <div>{children}</div>,
-  MenuItem: ({ children }: any) => <div>{children({ focus: false })}</div>,
+  Menu: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
+  MenuButton: ({ children, onClick }: { children: React.ReactNode; onClick?: React.MouseEventHandler }) => (
+    <button onClick={onClick}>{children}</button>
+  ),
+  MenuItems: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
+  MenuItem: ({ children }: { children: (props: { focus: boolean }) => React.ReactNode }) => <div>{children({ focus: false })}</div>,
 }));
 
 describe('GradebookHeader Component', () => {

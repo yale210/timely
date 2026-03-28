@@ -3,6 +3,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { useAssessments } from '../../../src/hooks/assessments/useAssessments';
 import * as assessmentService from '../../../src/services/assessmentService';
 import * as categoryService from '../../../src/services/categoryService';
+import type { Assessment, AssessmentSubmission, Category } from '../../../src/types';
 
 vi.mock('../../../src/services/assessmentService', () => ({
   getAssessments: vi.fn(),
@@ -18,15 +19,19 @@ vi.mock('../../../src/services/categoryService', () => ({
   deleteCategory: vi.fn(),
 }));
 
-const mockAssessment = {
+const mockAssessment: Assessment = {
   id: 1,
   title: 'Test Assessment',
+  assessment_type: 'COURSEWORK',
   due_date: '2100-03-28T10:00:00Z',
+  weighting_of_assessment: 0,
   completed: false,
   categories: [],
+  created_at: '2026-03-28T00:00:00Z',
+  updated_at: '2026-03-28T00:00:00Z',
 };
 
-const mockCategory = {
+const mockCategory: Category = {
   id: 1,
   text: 'Test Category',
   colour: '#000000',
@@ -36,8 +41,8 @@ const mockCategory = {
 describe('useAssessments Hook', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    vi.mocked(assessmentService.getAssessments).mockResolvedValue([mockAssessment as any]);
-    vi.mocked(categoryService.getCategories).mockResolvedValue([mockCategory as any]);
+    vi.mocked(assessmentService.getAssessments).mockResolvedValue([mockAssessment]);
+    vi.mocked(categoryService.getCategories).mockResolvedValue([mockCategory]);
     localStorage.clear();
   });
 
@@ -76,10 +81,10 @@ describe('useAssessments Hook', () => {
     });
 
     const newAssessment = { ...mockAssessment, id: 2, title: 'New Assessment' };
-    vi.mocked(assessmentService.createAssessment).mockResolvedValue(newAssessment as any);
+    vi.mocked(assessmentService.createAssessment).mockResolvedValue(newAssessment as Assessment);
 
     await act(async () => {
-      await result.current.actions.submitAssessment({ title: 'New Assessment' } as any);
+      await result.current.actions.submitAssessment({ title: 'New Assessment' } as AssessmentSubmission);
     });
 
     expect(assessmentService.createAssessment).toHaveBeenCalledWith({ title: 'New Assessment' });
@@ -87,14 +92,14 @@ describe('useAssessments Hook', () => {
     
     // Update assessment
     const updatedAssessment = { ...newAssessment, title: 'Updated Assessment' };
-    vi.mocked(assessmentService.updateAssessment).mockResolvedValue(updatedAssessment as any);
+    vi.mocked(assessmentService.updateAssessment).mockResolvedValue(updatedAssessment as Assessment);
 
     act(() => {
-      result.current.actions.openAssessment(newAssessment as any);
+      result.current.actions.openAssessment(newAssessment as Assessment);
     });
 
     await act(async () => {
-      await result.current.actions.submitAssessment({ title: 'Updated Assessment' } as any);
+      await result.current.actions.submitAssessment({ title: 'Updated Assessment' } as AssessmentSubmission);
     });
 
     expect(assessmentService.updateAssessment).toHaveBeenCalledWith(2, { title: 'Updated Assessment' });
@@ -108,10 +113,10 @@ describe('useAssessments Hook', () => {
       await result.current.actions.refresh();
     });
 
-    vi.mocked(assessmentService.deleteAssessment).mockResolvedValue(undefined as any);
+    vi.mocked(assessmentService.deleteAssessment).mockResolvedValue(undefined);
 
     act(() => {
-      result.current.actions.openAssessment(mockAssessment as any);
+      result.current.actions.openAssessment(mockAssessment);
       result.current.actions.setPendingDeleteId(1);
     });
 
@@ -125,7 +130,7 @@ describe('useAssessments Hook', () => {
     expect(result.current.state.selectedAssessment).toBeUndefined(); // Verify selected assessment is cleared
   });
 
-  it('handles UI actions', async () => {
+  it('handles UI actions', () => {
     const { result } = renderHook(() => useAssessments());
 
     act(() => {
@@ -140,7 +145,7 @@ describe('useAssessments Hook', () => {
     expect(result.current.state.selectedAssessment).toBeUndefined();
 
     act(() => {
-      result.current.actions.openAssessment(mockAssessment as any);
+      result.current.actions.openAssessment(mockAssessment);
     });
 
     expect(result.current.state.selectedAssessment).toEqual(mockAssessment);
@@ -153,7 +158,7 @@ describe('useAssessments Hook', () => {
     expect(result.current.state.selectedAssessment).toBeUndefined();
 
     act(() => {
-      result.current.actions.openGradebook(mockAssessment as any);
+      result.current.actions.openGradebook(mockAssessment);
     });
 
     expect(result.current.state.gradebookSource).toEqual(mockAssessment);
@@ -172,7 +177,7 @@ describe('useAssessments Hook', () => {
       module_category: { id: 2 },
       categories: [{ id: 2 }],
     };
-    vi.mocked(assessmentService.getAssessments).mockResolvedValue([assessmentWithCategory as any]);
+    vi.mocked(assessmentService.getAssessments).mockResolvedValue([assessmentWithCategory as Assessment]);
 
     const { result } = renderHook(() => useAssessments());
 
@@ -181,7 +186,7 @@ describe('useAssessments Hook', () => {
     });
 
     const newCategory = { id: 2, text: 'New Category' };
-    vi.mocked(categoryService.createCategory).mockResolvedValue(newCategory as any);
+    vi.mocked(categoryService.createCategory).mockResolvedValue(newCategory as Category);
 
     await act(async () => {
       await result.current.actions.createCategory('New Category');
@@ -191,7 +196,7 @@ describe('useAssessments Hook', () => {
     expect(result.current.state.categories).toContainEqual(newCategory);
 
     const updatedCategory = { ...newCategory, colour: '#ffffff' };
-    vi.mocked(categoryService.updateCategory).mockResolvedValue(updatedCategory as any);
+    vi.mocked(categoryService.updateCategory).mockResolvedValue(updatedCategory as Category);
 
     await act(async () => {
       await result.current.actions.updateCategory(2, { colour: '#ffffff' });
@@ -205,7 +210,7 @@ describe('useAssessments Hook', () => {
     expect(updatedAssessment.module_category?.colour).toBe('#ffffff');
     expect(updatedAssessment.categories[0].colour).toBe('#ffffff');
 
-    vi.mocked(categoryService.deleteCategory).mockResolvedValue(undefined as any);
+    vi.mocked(categoryService.deleteCategory).mockResolvedValue(undefined);
 
     act(() => {
       result.current.actions.setSelectedCategoryId(2);
@@ -230,7 +235,7 @@ describe('useAssessments Hook', () => {
 
     const pastAssessment = { ...mockAssessment, id: 3, title: 'Past', due_date: '2000-01-01T00:00:00Z', completed: true };
     const futureAssessment = { ...mockAssessment, id: 4, title: 'Future', due_date: '2100-01-01T00:00:00Z', completed: false, linked_event_details: { end_time: '2000-01-01T00:00:00Z' } }; // past linked event
-    vi.mocked(assessmentService.getAssessments).mockResolvedValue([pastAssessment, futureAssessment] as any);
+    vi.mocked(assessmentService.getAssessments).mockResolvedValue([pastAssessment, futureAssessment] as Assessment[]);
 
     const { result } = renderHook(() => useAssessments());
 
@@ -255,7 +260,7 @@ describe('useAssessments Hook', () => {
     const assessmentWithCat = { ...mockAssessment, id: 5, title: 'MatchMe', assessment_category: { id: 10 } };
     const assessmentWithoutCat = { ...mockAssessment, id: 6, title: 'NoMatch', assessment_category: null };
     
-    vi.mocked(assessmentService.getAssessments).mockResolvedValue([assessmentWithCat, assessmentWithoutCat] as any);
+    vi.mocked(assessmentService.getAssessments).mockResolvedValue([assessmentWithCat, assessmentWithoutCat] as Assessment[]);
 
     const { result } = renderHook(() => useAssessments());
 
