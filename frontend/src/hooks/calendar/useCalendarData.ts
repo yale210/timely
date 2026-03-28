@@ -119,7 +119,7 @@ export const useCalendarData = (view: View, date: Date) => {
       return;
     }
     void fetchEvents(view, date);
-  }, [date, fetchEvents, preference, view]);
+  }, [date, fetchEvents, view]);
 
   return {
     state: {
