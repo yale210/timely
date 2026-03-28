@@ -70,6 +70,9 @@ def _validate_calendar_attrs(serializer: Any, attrs: dict[str, Any]) -> dict[str
         attrs,
         state,
     )
+    if attrs.get("completed"):
+        state["allocation"] = []
+        attrs["allocation"] = []
     try:
         _validate_calendar_allocation(serializer, attrs, state)
     except serializers.ValidationError as exc:

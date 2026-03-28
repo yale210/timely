@@ -254,11 +254,13 @@ class Preference(models.Model):
         end_time = self._parse_schedule_time(entry.get("end"))
         if start_time == end_time:
             raise ValidationError({"day_schedule": "Start and end must be different."})
+        if end_time <= start_time:
+            raise ValidationError(
+                {"day_schedule": "Each day must end after it starts."}
+            )
 
         start_dt = datetime.combine(today, start_time, tzinfo=user_timezone)
         end_dt = datetime.combine(today, end_time, tzinfo=user_timezone)
-        if end_dt <= start_dt:
-            end_dt += timedelta(days=1)
 
         return int((end_dt - start_dt).total_seconds() // 60)
 
