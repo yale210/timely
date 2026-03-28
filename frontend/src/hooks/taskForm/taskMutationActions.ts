@@ -49,6 +49,7 @@ export function makeSubmitTask(
       await fetchTasks();
     } catch (submissionError) {
       console.error(submissionError);
+      throw submissionError;
     }
   };
 }

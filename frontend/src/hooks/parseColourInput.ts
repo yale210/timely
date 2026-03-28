@@ -1,5 +1,5 @@
 /**
- * Colour parsing logic shared for taks and events.
+ * Colour parsing logic shared for tasks and events.
  * @param value A string representing a colour in one of several formats.
  * @returns A string purely in the RGB format.
  */

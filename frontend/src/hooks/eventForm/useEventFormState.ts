@@ -32,7 +32,7 @@ function initialReminders(event?: Event): ReminderFormState[] {
 }
 
 /**
- * Geenerates states for EventForm
+ * Generates states for EventForm
  * @param defaultColour defaultColour (string)
  * @param initialData An optional initial Event.
  */

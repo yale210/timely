@@ -32,6 +32,8 @@ describe("TaskForm Component", () => {
     expect(screen.getByLabelText(/title/i)).toHaveValue("");
     expect(screen.getByLabelText(/importance/i)).toHaveValue(5);
     expect(screen.getByLabelText(/est. minutes/i)).toHaveValue(null);
+    expect(screen.getByLabelText(/importance/i)).toHaveValue(5);
+    expect(screen.getByLabelText(/progress/i)).toBeDefined();
   });
 
   it("handles input changes and submits", async () => {
@@ -54,6 +56,7 @@ describe("TaskForm Component", () => {
       title: "New Task",
       description: "Task description",
       categories: [1],
+      estimated_minutes: 30,
     }));
   });
 

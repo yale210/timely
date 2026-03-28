@@ -19,6 +19,7 @@ import {
   useTaskSubmissionChanges,
 } from "@/hooks/taskForm/useTaskFormDerivedState";
 import CategoryMultiSelect from "@/components/categories/CategoryMultiSelect";
+import TaskFormProgress from "@/components/tasks/TaskFormProgress";
 
 interface TaskFormProps {
   initialData?: Task;
@@ -144,12 +145,27 @@ export default function TaskForm({
     taskState.setShowPickerMenu((prev) => !prev);
   };
 
+  const handleFormSubmit = async () => {
+    try {
+      taskState.setIsSubmitting(true);
+      taskState.setSubmitError(null);
+
+      await onSubmit(derivedValues.submission);
+    } catch (error) {
+      taskState.setSubmitError("Failed to save task.");
+      console.error(error);
+    } finally {
+      taskState.setIsSubmitting(false);
+    }
+  };
+
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
     taskState.setHasSubmitted(true);
 
     if (derivedValues.hasBlockingErrors || !submissionData.hasChanges) return;
-    void onSubmit(derivedValues.submission);
+
+    void handleFormSubmit();
   };
 
   const errorClass =
@@ -278,47 +294,15 @@ export default function TaskForm({
           />
         </div>
 
-        <div>
-          <div className="mb-2">
-            <label
-              htmlFor="task-completed-minutes"
-              className="block text-sm font-medium text-gray-700"
-            >
-              Progress
-            </label>
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="h-2.5 min-w-0 flex-1 overflow-hidden rounded-full bg-gray-200">
-              <div
-                className="h-full rounded-full bg-primary transition-[width] duration-200"
-                style={{ width: `${derivedValues.progressPercent}%` }}
-              />
-            </div>
-            <input
-              id="task-completed-minutes"
-              className={`w-11 appearance-none rounded-md border border-gray-300 bg-white px-2 py-1 text-sm text-black shadow-sm focus:border-primary focus:ring-primary [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none ${
-                derivedValues.errors.completed_minutes ? errorClass : ""
-              }`}
-              type="number"
-              min="0"
-              max={Math.max(0, derivedValues.normalizedEstimatedMinutes)}
-              value={taskState.completedMinutes}
-              onChange={(e) => {
-                const nextValue = e.target.value;
-                taskState.setCompletedMinutes(nextValue === "" ? "" : parseInt(nextValue, 10));
-              }}
-            />
-            <span className="text-sm font-medium text-gray-700">
-              / {derivedValues.normalizedEstimatedMinutes} mins
-            </span>
-          </div>
-          {derivedValues.errors.completed_minutes ? (
-            <p className="mt-2 text-xs text-red-500">
-              Completed minutes must be between 0 and the estimated minutes.
-            </p>
-          ) : null}
-        </div>
-
+        <TaskFormProgress
+          completedMinutes={taskState.completedMinutes}
+          setCompletedMinutes={taskState.setCompletedMinutes}
+          normalizedEstimatedMinutes={derivedValues.normalizedEstimatedMinutes}
+          progressPercent={derivedValues.progressPercent}
+          errors={derivedValues.errors}
+          errorClass={errorClass}
+        />
+      </div>
       <TaskFormSave
         onCancel={onCancel}
         hasChanges={submissionData.hasChanges}
@@ -356,7 +340,6 @@ export default function TaskForm({
           taskState.setShowPickerMenu(false);
         }}
       />
-      </div>
     </form>
   );
 }

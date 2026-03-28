@@ -341,7 +341,7 @@ const EventForm = ({
           <div className="space-y-2">
             {eventState.reminders.map((reminder, index) => (
               <EventFormReminder
-                key={`${index}-${reminder.value}-${reminder.unit}-${reminder.send_email}-${reminder.send_push}`}
+                key={index}
                 index={index}
                 reminder={reminder}
                 toggleReminderChannel={eventReminderActions.toggleReminderChannel}

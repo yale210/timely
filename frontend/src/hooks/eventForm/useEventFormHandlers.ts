@@ -1,5 +1,6 @@
 import type { TimeUnit, NormalisedEventSubmission } from "@/hooks/eventForm/useEventFormTypes";
 import type { EventSubmission } from "@/types";
+import { toMinutesBefore, fromMinutesBefore } from "@/hooks/eventForm/eventFormReminderHelpers";
 /**
  * Safely convert a Date to ISO string, returning "" for invalid dates.
  * @param d - The date object to convert.
@@ -42,9 +43,6 @@ const toLocalDateInputValue = (value: Date): string => {
   return `${year}-${month}-${day}`;
 };
 
-const toMinutesBefore = (val: number, unit: TimeUnit): number =>
-  val * UNIT_TO_MINUTES[unit];
-
 /**
  * Helper functions to turn the logic of normaliseEventSubmission below 25 lines.
  * @param minutes_before Minutes before the reminder.
@@ -85,17 +83,6 @@ const isEventSubmissionEqual = (
   left: NormalisedEventSubmission,
   right: NormalisedEventSubmission,
 ): boolean => JSON.stringify(left) === JSON.stringify(right);
-
-const fromMinutesBefore = (minutes: number): { value: number; unit: TimeUnit } => {
-  const units: TimeUnit[] = ["years", "months", "weeks", "days", "hours", "minutes"];
-  for (const unit of units) {
-    const factor = UNIT_TO_MINUTES[unit];
-    if (minutes >= factor && minutes % factor === 0) {
-      return { value: minutes / factor, unit };
-    }
-  }
-  return { value: minutes, unit: "minutes" };
-};
 
 /**
  * Returns methods and constants used in EventForm

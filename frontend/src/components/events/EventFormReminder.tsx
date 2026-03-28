@@ -82,6 +82,7 @@ export default function EventFormReminder(props: Props) {
                     type="button"
                     onClick={() => props.removeReminder(props.index)}
                     className="ml-auto text-gray-400 hover:text-red-500"
+                    aria-label={`Delete reminder ${props.index+1}`}
                   >
                     <span className="material-icons text-sm">delete</span>
                   </button>
