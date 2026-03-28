@@ -13,7 +13,7 @@ from courses.models import (
     Student,
 )
 
-from .course_view_test_support import CourseViewTestSupport
+from .course_view_test_support import CourseViewTestSupport, User
 
 
 class CourseViewEventsMembershipTests(CourseViewTestSupport):

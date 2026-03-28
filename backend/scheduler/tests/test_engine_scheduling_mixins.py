@@ -7,6 +7,7 @@ from django.test import TestCase
 from django.utils.timezone import make_aware
 
 from core.models import Task
+from scheduler.scheduler_types import ScheduleResult
 
 from .scheduler_engine_mixins_support import FakeSchedulingScheduler
 

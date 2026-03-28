@@ -5,7 +5,7 @@ from datetime import date, datetime, time, timedelta
 from django.test import TestCase
 from django.utils import timezone
 
-from core.models import Event, Task
+from core.models import Category, Event, Task
 from scheduler.services import Scheduler
 
 from .scheduler_services_support import SchedulerServicesSupport
