@@ -4,7 +4,7 @@ from typing import Any, cast
 from django.utils import timezone
 from rest_framework import serializers
 
-from core.calendar_validation_helpers import (
+from .helpers import (
     _iter_other_blocked_slots,
     _validate_calendar_attrs,
 )
