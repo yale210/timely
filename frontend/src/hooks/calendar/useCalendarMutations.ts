@@ -122,6 +122,7 @@ export const useCalendarMutations = (props: UseCalendarMutationsProps) => {
         closeSidebar();
       } catch (error) {
         console.error(error);
+        throw error;
       }
     },
     [closeSidebar, date, fetchEvents, selectedItem, view],
@@ -130,7 +131,10 @@ export const useCalendarMutations = (props: UseCalendarMutationsProps) => {
   const deleteSelected = useCallback(
     async (context?: EventMutationContext) => {
       try {
-        if (!selectedItem?.id) return;
+        if (!selectedItem?.id) {
+          console.error("There is either no item, or its id is not valid.");
+          return;
+        }
 
         if ("end_time" in selectedItem) {
           await eventService.deleteEvent(selectedItem.id, context);
@@ -143,6 +147,7 @@ export const useCalendarMutations = (props: UseCalendarMutationsProps) => {
         closeSidebar();
       } catch (error) {
         console.error(error);
+        throw error;
       }
     },
     [closeSidebar, date, fetchEvents, fetchTasks, selectedItem, view],
@@ -158,6 +163,7 @@ export const useCalendarMutations = (props: UseCalendarMutationsProps) => {
         closeSidebar();
       } catch (error) {
         console.error(error);
+        throw error;
       }
     },
     [closeSidebar, date, fetchEvents, selectedItem, view],
@@ -187,12 +193,13 @@ export const useCalendarMutations = (props: UseCalendarMutationsProps) => {
           return {
             taskId: result.task_id,
             title: matchingTask?.title ?? `Task #${result.task_id}`,
-            reason: result.reason ?? "The scheduler could not find enough time.",
+            reason: result.reason ?? "The scheduler could not find enough time before the deadline.",
           };
         }),
       );
       await fetchTasks();
-    } catch {
+    } catch (error) {
+      console.error(error);
       setReschedulingError("Failed to reschedule tasks.");
     } finally {
       setIsRescheduling(false);
@@ -214,7 +221,8 @@ export const useCalendarMutations = (props: UseCalendarMutationsProps) => {
         link.click();
         document.body.removeChild(link);
       }
-    } catch {
+    } catch (error) {
+      console.error(error);
       setExportingError("Failed to export events.");
     } finally {
       setIsExporting(false);
@@ -227,7 +235,8 @@ export const useCalendarMutations = (props: UseCalendarMutationsProps) => {
 
     try {
       await importService.importEvents(file);
-    } catch {
+    } catch (error) {
+      console.error(error);
       setImportingError("Failed to import events.");
     } finally {
       setIsImporting(false);
@@ -275,7 +284,8 @@ export const useCalendarMutations = (props: UseCalendarMutationsProps) => {
       });
       try {
         await taskService.updateTask(id, { categories: nextCategoryIds });
-      } catch {
+      } catch (updateError) {
+        console.error(updateError);
         await fetchTasks();
       }
     },

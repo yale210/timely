@@ -222,3 +222,9 @@ export interface AdminUserListResponse {
   previous: string | null;
   results: AdminUserSummary[];
 }
+
+/**
+ * Browser notification permission state, or "unsupported" when the API
+ * is unavailable in the current environment.
+ */
+export type PushPermission = NotificationPermission | "unsupported";

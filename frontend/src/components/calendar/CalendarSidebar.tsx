@@ -36,15 +36,9 @@ const CalendarSidebar = ({
     initialData={state.selectedItem}
     initialMode={state.sidebarMode}
     onSubmitTask={actions.submitTask}
-    onSubmitEvent={(data, context) => {
-      void actions.submitEvent(data, context);
-    }}
-    onDelete={(context) => {
-      void actions.deleteSelected(context);
-    }}
-    onRevertToSeries={(context) => {
-      void actions.revertSelectedEvent(context);
-    }}
+    onSubmitEvent={(data, context) => actions.submitEvent(data, context)}
+    onDelete={(context) => actions.deleteSelected(context)}
+    onRevertToSeries={(context) => actions.revertSelectedEvent(context)}
   />
 );
 
