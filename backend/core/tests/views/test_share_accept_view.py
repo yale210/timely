@@ -32,7 +32,7 @@ class ShareAcceptViewTests(TestCase):
             "/api/share_accept/",
             data={"Event-ID": "1", "Decision": "accept"},
         )
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, 400)
 
     def test_no_decision_nor_eventID(self):
         """Test no decision nor event id."""

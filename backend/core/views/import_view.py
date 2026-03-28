@@ -54,12 +54,12 @@ class ImportView(APIView):
         # No file uploaded, this is an error
         if not uploaded_file:
             response = {"error": "No file uploaded"}
-            return Response(response)
+            return Response(response, status=400)
 
         # The file uploaded is not a .txt file, this is an error
         if uploaded_file.content_type != "text/plain":
             response = {"error": "File type is not .txt"}
-            return Response(response)
+            return Response(response, status=400)
 
         # Reading the file
         content = uploaded_file.read().decode("utf-8")
@@ -270,4 +270,4 @@ class ImportView(APIView):
         # File format incorrect, error response
         except Exception as e:
             response = {"error": str(e)}
-            return Response(response)
+            return Response(response, status=400)

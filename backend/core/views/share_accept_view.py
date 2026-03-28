@@ -34,19 +34,19 @@ class ShareAcceptView(APIView):
 
         if not decision and event_id:
             response = {"error": "Please provide a decision and event ID"}
-            return Response(response)
+            return Response(response, status=400)
 
         # The event must exist for it to be accepted
         try:
             pending_event = PendingShareEvent.objects.get(event=event_id)
         except PendingShareEvent.DoesNotExist:
             response = {"error": "Event does not exist, likely deleted"}
-            return Response(response)
+            return Response(response, status=400)
 
         # A user must be the intended recipient of the event
         if pending_event.receiver != request.user:
             response = {"error": "This event is not shared with you"}
-            return Response(response)
+            return Response(response, status=400)
 
         # Accepting creates a new event object for the user
         if decision == "accept":
