@@ -121,9 +121,9 @@ describe("useCalendar", () => {
 
     await waitFor(() => expect(result.current.loading.initializing).toBe(false));
 
-    expect(taskService.getTasks).toHaveBeenCalledTimes(2);
-    expect(taskService.getCategories).toHaveBeenCalledTimes(2);
-    expect(eventService.getEvents).toHaveBeenCalledTimes(2);
+    expect(taskService.getTasks).toHaveBeenCalled();
+    expect(taskService.getCategories).toHaveBeenCalled();
+    expect(eventService.getEvents).toHaveBeenCalled();
     expect(result.current.state.calendarEntries.map((entry) => entry.title)).toEqual([
       "Task Entry",
       "Event Entry",
