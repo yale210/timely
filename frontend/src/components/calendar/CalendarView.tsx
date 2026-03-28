@@ -64,6 +64,16 @@ const CalendarView = ({
   const timeFormat = state.preference?.time_format ?? getStoredTimeFormat();
   const weekStartsOn = state.preference?.week_starts_on ?? getStoredWeekStartsOn();
 
+  // Destructure so the React Compiler can track individual deps rather than the whole object.
+  const {
+    setTimeGutterWidth,
+    handleToggleTaskComplete,
+    handleEventDrop,
+    handleEventResize,
+    selectSlot,
+    selectEntry,
+  } = actions;
+
   useEffect(() => {
     moment.updateLocale("en", {
       week: { dow: weekStartsOn === "sunday" ? 0 : 1 },
@@ -87,7 +97,7 @@ const CalendarView = ({
       }
       const nextWidth = Math.ceil(gutter.getBoundingClientRect().width);
       if (nextWidth > 0) {
-        actions.setTimeGutterWidth(nextWidth);
+        setTimeGutterWidth(nextWidth);
       }
     };
 
@@ -97,7 +107,7 @@ const CalendarView = ({
       window.cancelAnimationFrame(frame);
       window.removeEventListener("resize", measureGutter);
     };
-  }, [actions.setTimeGutterWidth, state.date, state.calendarEntries.length, state.view]);
+  }, [setTimeGutterWidth, state.date, state.calendarEntries.length, state.view]);
 
   useEffect(() => {
     if (state.view !== Views.WEEK && state.view !== Views.DAY) {
@@ -224,7 +234,7 @@ const CalendarView = ({
               checked={Boolean(event.taskData?.completed)}
               onChange={(e) => {
                 e.stopPropagation();
-                void actions.handleToggleTaskComplete(event.sourceId);
+                void handleToggleTaskComplete(event.sourceId);
               }}
               onClick={(e) => e.stopPropagation()}
               className="mt-1 task-event-checkbox"
@@ -238,17 +248,17 @@ const CalendarView = ({
         );
       },
     }),
-    [actions.handleToggleTaskComplete, timeFormat],
+    [handleToggleTaskComplete, timeFormat],
   );
 
   const onEventDrop = useCallback(
-    (args: Parameters<typeof actions.handleEventDrop>[0]) => { void actions.handleEventDrop(args); },
-    [actions.handleEventDrop],
+    (args: Parameters<typeof handleEventDrop>[0]) => { void handleEventDrop(args); },
+    [handleEventDrop],
   );
 
   const onEventResize = useCallback(
-    (args: Parameters<typeof actions.handleEventResize>[0]) => { void actions.handleEventResize(args); },
-    [actions.handleEventResize],
+    (args: Parameters<typeof handleEventResize>[0]) => { void handleEventResize(args); },
+    [handleEventResize],
   );
 
   const eventPropGetter = useCallback((event: CalendarEntry) => {
@@ -334,8 +344,8 @@ const CalendarView = ({
             timeslots={dragSnapTimeslots}
             slotPropGetter={slotPropGetter}
             selectable="ignoreEvents"
-            onSelectSlot={actions.selectSlot}
-            onSelectEvent={actions.selectEntry}
+            onSelectSlot={selectSlot}
+            onSelectEvent={selectEntry}
             draggableAccessor={alwaysTrue}
             resizableAccessor={alwaysTrue}
             onEventDrop={onEventDrop}

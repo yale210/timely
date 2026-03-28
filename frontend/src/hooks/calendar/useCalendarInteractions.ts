@@ -1,4 +1,4 @@
-import { useCallback, useRef, type Dispatch, type SetStateAction } from "react";
+import { useCallback, useLayoutEffect, useRef, type Dispatch, type SetStateAction } from "react";
 import type { EventInteractionArgs } from "react-big-calendar/lib/addons/dragAndDrop";
 import { normalizeInteractionStart, normalizeInteractionEnd } from "./calendarTypes";
 import * as taskService from "@/services/taskService";
@@ -43,18 +43,22 @@ export const useCalendarInteractions = ({
 
   // Refs so callbacks don't need frequently-changing values as deps, which would
   // cause them to recreate on every data update and force CalendarView to re-render.
+  // Updated in useLayoutEffect (not during render) to satisfy react-hooks/refs.
   const isSidebarOpenRef = useRef(isSidebarOpen);
-  isSidebarOpenRef.current = isSidebarOpen;
   const tasksRef = useRef(tasks);
-  tasksRef.current = tasks;
   const eventsRef = useRef(events);
-  eventsRef.current = events;
   const viewRef = useRef(view);
-  viewRef.current = view;
   const dateRef = useRef(date);
-  dateRef.current = date;
   const scheduleOrderRef = useRef(scheduleOrder);
-  scheduleOrderRef.current = scheduleOrder;
+
+  useLayoutEffect(() => {
+    isSidebarOpenRef.current = isSidebarOpen;
+    tasksRef.current = tasks;
+    eventsRef.current = events;
+    viewRef.current = view;
+    dateRef.current = date;
+    scheduleOrderRef.current = scheduleOrder;
+  }, [isSidebarOpen, tasks, events, view, date, scheduleOrder]);
 
   const closeSidebar = useCallback(() => {
     setIsSidebarOpen(false);
