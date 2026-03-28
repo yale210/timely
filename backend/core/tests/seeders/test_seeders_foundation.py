@@ -47,6 +47,26 @@ from .common import SeederTestCase
 class SeederFoundationTests(SeederTestCase):
     """Test cases for seeder foundation."""
 
+    def _assert_fixture_creation_error(
+        self,
+        seeder,
+        fixture_method: str,
+        create_method: str,
+        module,
+        fixture_name: str,
+        message: str,
+    ) -> None:
+        """Assert that a fixture seeder prints the expected creation error."""
+        with self.subTest(fixture_method=fixture_method):
+            with (
+                patch.object(module, fixture_name, [{}]),
+                patch.object(seeder, create_method, side_effect=Exception("boom")),
+                patch("builtins.print") as print_mock,
+            ):
+                getattr(seeder, fixture_method)()
+
+            print_mock.assert_called_once_with(message)
+
     def test_fixture_seeders_are_idempotent(self):
         """Test fixture seeders are idempotent."""
         self.seed_fixture_data()
@@ -231,22 +251,8 @@ class SeederFoundationTests(SeederTestCase):
             ),
         ]
 
-        for (
-            seeder,
-            fixture_method,
-            create_method,
-            module,
-            fixture_name,
-            message,
-        ) in cases:
-            with self.subTest(fixture_method=fixture_method):
-                with (
-                    patch.object(module, fixture_name, [{}]),
-                    patch.object(seeder, create_method, side_effect=Exception("boom")),
-                    patch("builtins.print") as print_mock,
-                ):
-                    getattr(seeder, fixture_method)()
-                print_mock.assert_called_once_with(message)
+        for case in cases:
+            self._assert_fixture_creation_error(*case)
 
         assessment_cases = [
             (
@@ -267,22 +273,8 @@ class SeederFoundationTests(SeederTestCase):
             ),
         ]
 
-        for (
-            seeder,
-            fixture_method,
-            create_method,
-            module,
-            fixture_name,
-            message,
-        ) in assessment_cases:
-            with self.subTest(fixture_method=fixture_method):
-                with (
-                    patch.object(module, fixture_name, [{}]),
-                    patch.object(seeder, create_method, side_effect=Exception("boom")),
-                    patch("builtins.print") as print_mock,
-                ):
-                    getattr(seeder, fixture_method)()
-                print_mock.assert_called_once_with(message)
+        for case in assessment_cases:
+            self._assert_fixture_creation_error(*case)
 
         seeder = ProfileSeeder()
         with (
