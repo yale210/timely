@@ -38,6 +38,7 @@ export const useCalendarData = (view: View, date: Date) => {
   >([]);
 
   const hasInitialized = useRef(false);
+  const preferenceRef = useRef<Preference | null>(null);
 
   const fetchTasks = useCallback(async () => {
     setIsTasksLoading(true);
@@ -72,7 +73,7 @@ export const useCalendarData = (view: View, date: Date) => {
   const fetchEvents = useCallback(async (activeView: View, activeDate: Date) => {
     setIsEventsLoading(true);
     try {
-      const nextEvents = await eventService.getEvents(getCalendarWindow(activeView, activeDate, preference));
+      const nextEvents = await eventService.getEvents(getCalendarWindow(activeView, activeDate, preferenceRef.current));
       setEvents(nextEvents);
       setEventError(null);
     } catch (error) {
@@ -82,11 +83,12 @@ export const useCalendarData = (view: View, date: Date) => {
     } finally {
       setIsEventsLoading(false);
     }
-  }, [preference]);
+  }, []);
 
   const fetchPreference = useCallback(async () => {
     try {
       const nextPreference = await preferenceService.getMyPreference();
+      preferenceRef.current = nextPreference;
       setPreference(nextPreference);
     } catch (error) {
       console.error(error);
@@ -123,7 +125,7 @@ export const useCalendarData = (view: View, date: Date) => {
       return;
     }
     void fetchEvents(view, date);
-  }, [date, fetchEvents, preference, view]);
+  }, [date, fetchEvents, view]);
 
   return {
     state: {

@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type RefObject } from "react";
+import { memo, useEffect, useRef, useState, type RefObject } from "react";
 import moment from "moment-timezone";
 import { Views } from "react-big-calendar";
 import type { UseCalendarReturn } from "@/hooks/calendar/useCalendar";
@@ -214,4 +214,4 @@ const CalendarToolbar = ({
   );
 };
 
-export default CalendarToolbar;
+export default memo(CalendarToolbar);
