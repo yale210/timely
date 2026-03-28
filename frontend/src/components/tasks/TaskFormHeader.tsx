@@ -8,6 +8,8 @@ interface Props {
     title: string;
     setTitle: (value: string) => void;
     baseInputClass: string;
+    errorClass: string;
+    hasTitleError?: boolean;
 }
 
 interface ColourButtonProps {
@@ -42,6 +44,8 @@ function ColourButton({ locked, colour, onClick }: ColourButtonProps) {
  * @param props.title The current task title.
  * @param props.setTitle Updates the task title.
  * @param props.baseInputClass Base styling for the title input.
+ * @param props.errorClass Error styling for invalid title state.
+ * @param props.hasTitleError Indicates whether the title input has a server-side error.
  * @returns The title and colour header section of the task form.
  */
 export default function TaskFormHeader({
@@ -51,6 +55,8 @@ export default function TaskFormHeader({
     title,
     setTitle,
     baseInputClass,
+    errorClass,
+    hasTitleError = false,
 }: Props) {
     return (
         <div>
@@ -78,7 +84,7 @@ export default function TaskFormHeader({
 
         <input
             id="task-title"
-            className={baseInputClass}
+            className={`${baseInputClass} ${hasTitleError ? errorClass : ""}`}
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             placeholder="Task title"

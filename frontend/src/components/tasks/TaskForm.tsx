@@ -1,6 +1,13 @@
-import { useRef, type FormEvent, type MouseEvent as ReactMouseEvent } from "react";
+import {
+  useEffect,
+  useMemo,
+  useRef,
+  type FormEvent,
+  type MouseEvent as ReactMouseEvent,
+} from "react";
 import { CategoryColourPicker } from "@/components";
 import type { Category, Task, TaskSubmission } from "@/types";
+import { formatDjangoFormError } from "@/utils/apiErrors";
 import useTaskFormState from "@/hooks/taskForm/useTaskFormState";
 import useTaskFormDataChange from "@/hooks/taskForm/useTaskFormDataChange";
 import useTaskColourPickerEffect from "@/hooks/taskForm/useTaskFormColourPickerEffects";
@@ -77,6 +84,25 @@ function renderDeadlineError(deadline: string) {
     : "Please set a deadline.";
 }
 
+const TASK_SERVER_ERROR_LABELS: Record<string, string> = {
+  allocation: "Allocation",
+  buffer_after_minutes: "Buffer after",
+  buffer_before_minutes: "Buffer before",
+  categories: "Categories",
+  completed_minutes: "Completed minutes",
+  deadline: "Deadline",
+  description: "Description",
+  importance: "Importance",
+  max_split_minutes: "Maximum split block minutes",
+  min_split_minutes: "Minimum split block minutes",
+  start_time: "Start time",
+  title: "Title",
+};
+
+function getTaskServerFieldLabel(field: string): string {
+  return TASK_SERVER_ERROR_LABELS[field] ?? field.replaceAll("_", " ");
+}
+
 /**
  * A functional component that renders a form for creating or editing a task.
  * @param props - The properties for the TaskForm component.
@@ -109,6 +135,12 @@ export default function TaskForm({
     initialData,
     DEFAULT_MIN_SPLIT_MINUTES,
   );
+  const {
+    serverFieldErrors,
+    setServerFieldErrors,
+    setSubmitError,
+    submitError,
+  } = taskState;
 
   useTaskFormDataChange({
     onDataChange,
@@ -131,6 +163,65 @@ export default function TaskForm({
   );
 
   const submissionData = useTaskSubmissionChanges(derivedValues.submission);
+  const submissionSnapshot = JSON.stringify(
+    submissionData.normalisedCurrentSubmission,
+  );
+  const previousSubmissionSnapshotRef = useRef(submissionSnapshot);
+
+  useEffect(() => {
+    if (previousSubmissionSnapshotRef.current === submissionSnapshot) {
+      return;
+    }
+    previousSubmissionSnapshotRef.current = submissionSnapshot;
+    if (submitError) {
+      setSubmitError(null);
+    }
+    if (Object.keys(serverFieldErrors).length > 0) {
+      setServerFieldErrors({});
+    }
+    // Only clear backend errors after a real edit to the submission payload.
+  }, [
+    serverFieldErrors,
+    setServerFieldErrors,
+    setSubmitError,
+    submissionSnapshot,
+    submitError,
+  ]);
+
+  const formErrors = useMemo(
+    () => ({
+      ...derivedValues.errors,
+      deadline:
+        derivedValues.errors.deadline
+        || Boolean(serverFieldErrors.deadline?.length)
+        || Boolean(serverFieldErrors.allocation?.length),
+      start:
+        derivedValues.errors.start
+        || Boolean(serverFieldErrors.start_time?.length),
+      importance:
+        derivedValues.errors.importance
+        || Boolean(serverFieldErrors.importance?.length),
+      completed_minutes:
+        derivedValues.errors.completed_minutes
+        || Boolean(serverFieldErrors.completed_minutes?.length),
+      min_split_minutes:
+        derivedValues.errors.min_split_minutes
+        || Boolean(serverFieldErrors.min_split_minutes?.length),
+      max_split_minutes:
+        derivedValues.errors.max_split_minutes
+        || Boolean(serverFieldErrors.max_split_minutes?.length),
+      buffer_before_minutes:
+        derivedValues.errors.buffer_before_minutes
+        || Boolean(serverFieldErrors.buffer_before_minutes?.length),
+      buffer_after_minutes:
+        derivedValues.errors.buffer_after_minutes
+        || Boolean(serverFieldErrors.buffer_after_minutes?.length),
+    }),
+    [derivedValues.errors, serverFieldErrors],
+  );
+
+  const serverFieldErrorEntries = Object.entries(serverFieldErrors)
+    .filter(([, messages]) => messages.length > 0);
 
   const handleColourPickerToggle = (
     event: ReactMouseEvent<HTMLButtonElement>,
@@ -149,10 +240,13 @@ export default function TaskForm({
     try {
       taskState.setIsSubmitting(true);
       taskState.setSubmitError(null);
+      taskState.setServerFieldErrors({});
 
       await onSubmit(derivedValues.submission);
     } catch (error) {
-      taskState.setSubmitError("Failed to save task.");
+      const parsed = formatDjangoFormError(error);
+      taskState.setSubmitError(parsed.message);
+      taskState.setServerFieldErrors(parsed.fieldErrors);
       console.error(error);
     } finally {
       taskState.setIsSubmitting(false);
@@ -177,41 +271,60 @@ export default function TaskForm({
   return (
     <form
       onSubmit={handleSubmit}
-      className="flex flex-col h-full bg-white text-black"
-    >
-      <div className="grow overflow-y-auto p-6 space-y-6">
-        <TaskFormHeader
-          isColourLocked={derivedValues.isColourLocked}
-          displayColour={derivedValues.displayColour}
-          handleColourPickerToggle={handleColourPickerToggle}
-          title={taskState.title}
-          setTitle={taskState.setTitle}
-          baseInputClass={baseInputClass}
-        />
+        className="flex flex-col h-full bg-white text-black"
+      >
+        <div className="grow overflow-y-auto p-6 space-y-6">
+          {taskState.submitError ? (
+            <div className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+              <p>{taskState.submitError}</p>
+              {serverFieldErrorEntries.length > 0 ? (
+                <ul className="mt-2 list-disc space-y-1 pl-5 text-xs">
+                  {serverFieldErrorEntries.map(([field, messages]) => (
+                    <li key={field}>
+                      <span className="font-medium">
+                        {getTaskServerFieldLabel(field)}:
+                      </span>{" "}
+                      {messages.join(" ")}
+                    </li>
+                  ))}
+                </ul>
+              ) : null}
+            </div>
+          ) : null}
+          <TaskFormHeader
+            isColourLocked={derivedValues.isColourLocked}
+            displayColour={derivedValues.displayColour}
+            handleColourPickerToggle={handleColourPickerToggle}
+            title={taskState.title}
+            setTitle={taskState.setTitle}
+            baseInputClass={baseInputClass}
+            errorClass={errorClass}
+            hasTitleError={Boolean(taskState.serverFieldErrors.title?.length)}
+          />
 
-        <TaskFormStartTime
-          baseInputClass={baseInputClass}
-          errorClass={errorClass}
-          errors={derivedValues.errors}
-          date={taskState.date}
-          setDate={taskState.setDate}
-          startTime={taskState.startTime}
+          <TaskFormStartTime
+            baseInputClass={baseInputClass}
+            errorClass={errorClass}
+            errors={formErrors}
+            date={taskState.date}
+            setDate={taskState.setDate}
+            startTime={taskState.startTime}
           setStartTime={taskState.setStartTime}
           setHasTouchedTime={taskState.setHasTouchedTime}
         />
 
-        <TaskFormDeadline
-          baseInputClass={baseInputClass}
-          errorClass={errorClass}
-          errors={derivedValues.errors}
-          deadline={taskState.deadline}
-          setDeadline={taskState.setDeadline}
-          deadlineTime={taskState.deadlineTime}
+          <TaskFormDeadline
+            baseInputClass={baseInputClass}
+            errorClass={errorClass}
+            errors={formErrors}
+            deadline={taskState.deadline}
+            setDeadline={taskState.setDeadline}
+            deadlineTime={taskState.deadlineTime}
           setDeadlineTime={taskState.setDeadlineTime}
           setHasTouchedTime={taskState.setHasTouchedTime}
         />
 
-        {derivedValues.errors.deadline ? (
+        {formErrors.deadline ? (
           <p className="text-xs text-red-500 -mt-4">
             {renderDeadlineError(taskState.deadline)}
           </p>
@@ -220,7 +333,7 @@ export default function TaskForm({
         <TaskFormMinutes
           baseInputClass={baseInputClass}
           errorClass={errorClass}
-          errors={derivedValues.errors}
+          errors={formErrors}
           importance={taskState.importance}
           setImportance={taskState.setImportance}
           estimatedMinutes={taskState.estimatedMinutes}
@@ -242,7 +355,7 @@ export default function TaskForm({
           setMinSplitMinutes={taskState.setMinSplitMinutes}
           maxSplitMinutes={taskState.maxSplitMinutes}
           setMaxSplitMinutes={taskState.setMaxSplitMinutes}
-          errors={derivedValues.errors}
+          errors={formErrors}
         />
 
         <TaskFormErrorBuffers
@@ -250,7 +363,7 @@ export default function TaskForm({
           setBufferEnabled={taskState.setBufferEnabled}
           baseInputClass={baseInputClass}
           errorClass={errorClass}
-          errors={derivedValues.errors}
+          errors={formErrors}
           bufferBeforeMinutes={taskState.bufferBeforeMinutes}
           setBufferBeforeMinutes={taskState.setBufferBeforeMinutes}
           bufferAfterMinutes={taskState.bufferAfterMinutes}
@@ -287,7 +400,7 @@ export default function TaskForm({
           </label>
           <textarea
             id="task-description"
-            className={`${baseInputClass} resize-none`}
+            className={`${baseInputClass} resize-none ${taskState.serverFieldErrors.description?.length ? errorClass : ""}`}
             rows={4}
             value={taskState.description}
             onChange={(e) => taskState.setDescription(e.target.value)}
@@ -299,7 +412,7 @@ export default function TaskForm({
           setCompletedMinutes={taskState.setCompletedMinutes}
           normalizedEstimatedMinutes={derivedValues.normalizedEstimatedMinutes}
           progressPercent={derivedValues.progressPercent}
-          errors={derivedValues.errors}
+          errors={formErrors}
           errorClass={errorClass}
         />
       </div>
