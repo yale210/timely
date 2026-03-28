@@ -3,6 +3,7 @@ from typing import Any
 
 from django.contrib.auth.models import User
 from django.core.exceptions import ObjectDoesNotExist
+from django.utils import timezone
 
 from core.models.event import Event
 
@@ -39,7 +40,7 @@ def calendar_window(
     Returns:
         tuple[datetime, datetime]: Inclusive sync window bounds.
     """
-    return start_date or datetime.min, end_date or datetime.now()
+    return start_date or datetime.min, end_date or timezone.now()
 
 
 def calendar_event_map(
