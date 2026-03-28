@@ -130,9 +130,9 @@ export default function App() {
         </RedirectAuth>
       }/>
         <Route path="/course/create" element={
-
-                <CourseCreate />
-
+          <RequireAuth>
+            <CourseCreate />
+          </RequireAuth>
         }/>
       <Route path="/logout" element={<Logout />} />
 
