@@ -1,38 +1,88 @@
-import { render, screen, fireEvent } from "@testing-library/react";
-import { vi, describe, it, expect } from "vitest";
-import GradebookHeader from "@/components/gradebook/GradebookHeader";
+import { render, screen, fireEvent } from '@testing-library/react';
+import { describe, it, expect, vi } from 'vitest';
+import GradebookHeader from '../../../src/components/gradebook/GradebookHeader';
 
-describe("GradebookHeader Component", () => {
-  const baseProps = {
-    search: "",
-    sortBy: "date_desc" as const,
-    performanceFilter: "all" as const,
+// Mock out @headlessui/react completely to avoid ResizeObserver issues
+vi.mock('@headlessui/react', () => ({
+  Menu: ({ children }: any) => <div>{children}</div>,
+  MenuButton: ({ children, onClick }: any) => <button onClick={onClick}>{children}</button>,
+  MenuItems: ({ children }: any) => <div>{children}</div>,
+  MenuItem: ({ children }: any) => <div>{children({ focus: false })}</div>,
+}));
+
+describe('GradebookHeader Component', () => {
+  const defaultProps = {
+    setModalOpen: vi.fn(),
+    search: '',
+    sortBy: 'date_desc' as const,
+    performanceFilter: 'all' as const,
     selectedCategoryId: null,
-    categories: [],
+    categories: [
+      { id: 1, text: 'Homework' },
+      { id: 2, text: 'Exam' },
+    ],
     onSearchChange: vi.fn(),
     onSortChange: vi.fn(),
     onPerformanceFilterChange: vi.fn(),
     onCategoryChange: vi.fn(),
   };
 
-  it("renders correctly", () => {
-    const mockSetModalOpen = vi.fn();
-    render(<GradebookHeader setModalOpen={mockSetModalOpen} {...baseProps} />);
+  it('renders header elements correctly', () => {
+    render(<GradebookHeader {...defaultProps} />);
     
-    expect(screen.getByText("Gradebook")).toBeDefined();
-    expect(screen.getByPlaceholderText("Search grades")).toBeDefined();
-    expect(screen.getByRole("button", { name: /filter/i })).toBeDefined();
-    expect(screen.getByRole("button", { name: /sort/i })).toBeDefined();
-    expect(screen.getByRole("button", { name: /new/i })).toBeDefined();
+    expect(screen.getByText('Gradebook')).toBeTruthy();
+    expect(screen.getByPlaceholderText('Search grades')).toBeTruthy();
+    expect(screen.getByRole('button', { name: /Filter/i })).toBeTruthy();
+    expect(screen.getByRole('button', { name: /Sort/i })).toBeTruthy();
+    expect(screen.getByText('New')).toBeTruthy();
   });
 
-  it("calls setModalOpen(true) when button is clicked", () => {
-    const mockSetModalOpen = vi.fn();
-    render(<GradebookHeader setModalOpen={mockSetModalOpen} {...baseProps} />);
+  it('handles search input', () => {
+    render(<GradebookHeader {...defaultProps} />);
     
-    const button = screen.getByRole("button", { name: /new/i });
-    fireEvent.click(button);
+    const input = screen.getByPlaceholderText('Search grades');
+    fireEvent.change(input, { target: { value: 'math' } });
     
-    expect(mockSetModalOpen).toHaveBeenCalledWith(true);
+    expect(defaultProps.onSearchChange).toHaveBeenCalledWith('math');
+  });
+
+  it('opens new grade modal', () => {
+    render(<GradebookHeader {...defaultProps} />);
+    
+    fireEvent.click(screen.getByText('New'));
+    
+    expect(defaultProps.setModalOpen).toHaveBeenCalledWith(true);
+  });
+
+  it('handles performance filter changes', () => {
+    render(<GradebookHeader {...defaultProps} />);
+    
+    // Click 'Excellent (85%+)'
+    fireEvent.click(screen.getByText('Excellent (85%+)'));
+    
+    expect(defaultProps.onPerformanceFilterChange).toHaveBeenCalledWith('excellent');
+  });
+
+  it('handles category filter changes', () => {
+    render(<GradebookHeader {...defaultProps} />);
+    
+    // Click 'Exam' category
+    fireEvent.click(screen.getByText('Exam'));
+    
+    expect(defaultProps.onCategoryChange).toHaveBeenCalledWith(2);
+    
+    // Click 'All categories'
+    fireEvent.click(screen.getByText('All categories'));
+    
+    expect(defaultProps.onCategoryChange).toHaveBeenCalledWith(null);
+  });
+
+  it('handles sort changes', () => {
+    render(<GradebookHeader {...defaultProps} />);
+    
+    // Click 'Highest percentage'
+    fireEvent.click(screen.getByText('Highest percentage'));
+    
+    expect(defaultProps.onSortChange).toHaveBeenCalledWith('percentage_desc');
   });
 });
