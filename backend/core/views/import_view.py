@@ -1,6 +1,6 @@
 """Views for importing event data from iCalendar files."""
 
-from datetime import datetime
+from datetime import date, datetime
 
 from django.db import transaction
 from django.utils import timezone
@@ -61,7 +61,7 @@ class ImportView(APIView):
 
     def _parse_rrule(
         self, current_event: dict[str, str]
-    ) -> tuple[str | None, datetime.date | None]:
+    ) -> tuple[str | None, date | None]:
         """Extract recurrence details from the event payload."""
         r_rule = current_event.get("RRULE")
         if r_rule is None:
