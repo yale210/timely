@@ -6,6 +6,7 @@ from rest_framework import serializers
 
 from .helpers import (
     _iter_other_blocked_slots,
+    _validate_allocation_slots,
     _validate_calendar_attrs,
 )
 from core.models import Event, Task
@@ -281,6 +282,10 @@ class CalendarValidationMixin(serializers.Serializer):
             self._validate_task_conflicts(blocked_slot, other_tasks)
 
         self._validate_category_limits(user, categories, normalised_slots)
+
+    def _validate_allocation_slots(self, **state):
+        """Preserve the legacy allocation-validation entrypoint used by tests."""
+        _validate_allocation_slots(self, state)
 
     def _validate_event_conflicts(self, blocked_slot, events):
         """Reject allocation windows that overlap existing calendar events.
