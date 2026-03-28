@@ -275,7 +275,12 @@ class EventSeeder(BaseSeeder):
         *,
         max_duration_minutes: int,
     ) -> tuple[datetime.datetime, datetime.datetime]:
-        """Generate a same-day event within the user's daily availability window."""
+        """Generate a same-day event within the user's daily availability window.
+
+        Returns:
+            tuple[datetime.datetime, datetime.datetime]: Start and end datetimes
+            for the generated event.
+        """
         base_datetime = self.faker.date_time()
         target_date = base_datetime.date()
         day_start, day_end = self._daily_window_for_user(user, target_date)
@@ -306,6 +311,12 @@ class EventSeeder(BaseSeeder):
         user,
         target_date: datetime.date,
     ) -> tuple[datetime.time, datetime.time]:
+        """Resolve the user's availability window for a given date.
+
+        Returns:
+            tuple[datetime.time, datetime.time]: Start and end times for the
+            daily window.
+        """
         preference = getattr(user, "preference", None)
         if preference is None:
             return self.DEFAULT_DAY_START, self.DEFAULT_DAY_END
