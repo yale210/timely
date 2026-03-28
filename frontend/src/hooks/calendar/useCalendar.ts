@@ -1,11 +1,11 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import moment from "moment";
+import moment from "moment-timezone";
 import { type View, Views } from "react-big-calendar";
 import type { EventInteractionArgs } from "react-big-calendar/lib/addons/dragAndDrop";
 import * as eventService from "@/services/eventService";
 import * as schedulerService from "@/services/schedulerService";
-import * as exportService from "@/services/exportService"
-import * as importService from "@/services/importService"
+import * as exportService from "@/services/exportService";
+import * as importService from "@/services/importService";
 import * as categoryService from "@/services/categoryService";
 import * as taskService from "@/services/taskService";
 import { preferenceService } from "@/services/preferenceService";
@@ -20,6 +20,8 @@ import type {
 } from "@/types";
 import { buildCalendarEntries, type CalendarEntry } from "@/utils/calendarAdapter";
 import { hasTaskAllocationRescheduleConflict } from "@/utils/apiErrors";
+import { getStoredWeekStartsOn } from "@/utils/userPreferences";
+import { getStoredUserTimezone, getZonedDateParts } from "@/utils/userTimezone";
 import completeSoundUrl from "@/assets/sounds/task-complete.mp3";
 
 interface CalendarState {
@@ -67,6 +69,7 @@ interface CalendarActions {
   goToToday: () => void;
   goToPrevious: () => void;
   goToNext: () => void;
+  openCreateSidebar: () => void;
   selectSlot: (slot: { start: Date; end?: Date; slots?: Date[]; action?: "select" | "click" | "doubleClick" }) => void;
   selectEntry: (entry: CalendarEntry) => void;
   closeSidebar: () => void;
@@ -102,23 +105,26 @@ export interface UseCalendarReturn {
  * Computes the inclusive date window to load for the current calendar view.
  * @param currentView - Active calendar view.
  * @param currentDate - Anchor date for the view.
+ * @param weekStartsOn - Preferred first day of the week for weekly windows.
  * @returns Date window formatted for API queries.
  */
 export const getCalendarWindow = (
   currentView: View,
   currentDate: Date,
+  weekStartsOn: "monday" | "sunday" = getStoredWeekStartsOn(),
 ): { start_date: string; end_date: string } => {
   const anchor = moment(currentDate);
+  const weekUnit = weekStartsOn === "sunday" ? "week" : "isoWeek";
   if (currentView === Views.MONTH) {
     return {
-      start_date: anchor.clone().startOf("month").startOf("week").format("YYYY-MM-DD"),
-      end_date: anchor.clone().endOf("month").endOf("week").format("YYYY-MM-DD"),
+      start_date: anchor.clone().startOf("month").startOf(weekUnit).format("YYYY-MM-DD"),
+      end_date: anchor.clone().endOf("month").endOf(weekUnit).format("YYYY-MM-DD"),
     };
   }
   if (currentView === Views.WEEK) {
     return {
-      start_date: anchor.clone().startOf("week").format("YYYY-MM-DD"),
-      end_date: anchor.clone().endOf("week").format("YYYY-MM-DD"),
+      start_date: anchor.clone().startOf(weekUnit).format("YYYY-MM-DD"),
+      end_date: anchor.clone().endOf(weekUnit).format("YYYY-MM-DD"),
     };
   }
   if (currentView === Views.DAY) {
@@ -173,7 +179,11 @@ const normalizeInteractionEnd = (value: Date): Date => {
 };
 
 const getDayScheduleWindow = (preference: Preference, slotDate: Date): { start: string; end: string } => {
-  const dayKey = slotDate.getDay() === 0 ? 7 : slotDate.getDay();
+  const zonedParts = getZonedDateParts(slotDate, preference.timezone);
+  const dayKey = (() => {
+    const utcWeekday = new Date(Date.UTC(zonedParts.year, zonedParts.month - 1, zonedParts.day)).getUTCDay();
+    return utcWeekday === 0 ? 7 : utcWeekday;
+  })();
   const schedule = preference.day_schedule ?? [];
   const entry = schedule.find((item) => item.day === dayKey);
   if (entry?.start && entry?.end) {
@@ -198,7 +208,8 @@ export const isOutsidePreferredDayWindow = (slotDate: Date, preference: Preferen
   const { start, end } = getDayScheduleWindow(preference, slotDate);
   const startMinutes = parseClockMinutes(start);
   const endMinutes = parseClockMinutes(end);
-  const slotMinutes = (slotDate.getHours() * 60) + slotDate.getMinutes();
+  const zonedParts = getZonedDateParts(slotDate, preference.timezone);
+  const slotMinutes = (zonedParts.hour * 60) + zonedParts.minute;
 
   if (startMinutes === endMinutes) {
     return false;
@@ -248,6 +259,8 @@ export const useCalendar = (): UseCalendarReturn => {
   const [exportingError, setExportingError] = useState<string | null>(null);
   const [importingError, setImportingError] = useState<string | null>(null);
   const hasInitialized = useRef(false);
+  const activeTimezone = preference?.timezone ?? getStoredUserTimezone();
+  const weekStartsOn = preference?.week_starts_on ?? getStoredWeekStartsOn();
 
   const fetchTasks = useCallback(async () => {
     setIsTasksLoading(true);
@@ -282,7 +295,7 @@ export const useCalendar = (): UseCalendarReturn => {
   const fetchEvents = useCallback(async (activeView: View, activeDate: Date) => {
     setIsEventsLoading(true);
     try {
-      const nextEvents = await eventService.getEvents(getCalendarWindow(activeView, activeDate));
+      const nextEvents = await eventService.getEvents(getCalendarWindow(activeView, activeDate, weekStartsOn));
       setEvents(nextEvents);
       setEventError(null);
     } catch (error) {
@@ -292,7 +305,7 @@ export const useCalendar = (): UseCalendarReturn => {
     } finally {
       setIsEventsLoading(false);
     }
-  }, []);
+  }, [weekStartsOn]);
 
   const fetchPreference = useCallback(async () => {
     try {
@@ -342,25 +355,36 @@ export const useCalendar = (): UseCalendarReturn => {
     [events, scheduleOrder, tasks],
   );
 
-  const currentLabel = useMemo(() => moment(date).format("MMMM YYYY"), [date]);
+  const currentLabel = useMemo(
+    () => moment(date).tz(activeTimezone).format("MMMM YYYY"),
+    [activeTimezone, date],
+  );
 
   const dateStripDays = useMemo(() => {
     if (view === Views.WEEK) {
-      const startOfWeek = moment(date).startOf("week");
+      const startOfWeek = moment(date)
+        .tz(activeTimezone)
+        .startOf(weekStartsOn === "sunday" ? "week" : "isoWeek");
       return Array.from({ length: 7 }, (_, index) => startOfWeek.clone().add(index, "day"));
     }
 
     if (view === Views.DAY) {
-      return [moment(date)];
+      return [moment(date).tz(activeTimezone)];
     }
 
     return [];
-  }, [date, view]);
+  }, [activeTimezone, date, view, weekStartsOn]);
 
   const closeSidebar = useCallback(() => {
     setIsSidebarOpen(false);
     setSelectedItem(undefined);
     setSidebarMode("event");
+  }, []);
+
+  const openCreateSidebar = useCallback(() => {
+    setSelectedItem(undefined);
+    setSidebarMode("event");
+    setIsSidebarOpen(true);
   }, []);
 
   const selectSlot = useCallback(
@@ -908,6 +932,7 @@ export const useCalendar = (): UseCalendarReturn => {
       goToToday,
       goToPrevious,
       goToNext,
+      openCreateSidebar,
       selectSlot,
       selectEntry,
       closeSidebar,

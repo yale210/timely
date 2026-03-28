@@ -71,6 +71,7 @@ const CalendarContent = ({
           timeGutterWidth: state.timeGutterWidth,
           isRescheduling: state.isRescheduling,
           rescheduleWarnings: state.rescheduleWarnings,
+          preference: state.preference,
         }}
         actions={{
           setView: actions.setView,
@@ -78,8 +79,7 @@ const CalendarContent = ({
           goToPrevious: actions.goToPrevious,
           goToNext: actions.goToNext,
           rescheduleTasks: actions.rescheduleTasks,
-          exportEvents: actions.exportEvents,
-          importEvents: actions.importEvents,
+          openCreateSidebar: actions.openCreateSidebar,
         }}
       />
       <CalendarView

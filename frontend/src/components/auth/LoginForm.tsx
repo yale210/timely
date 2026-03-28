@@ -1,6 +1,7 @@
 import { useState, type FormEvent, type ReactNode } from "react"
 import { authService } from "@/services/authService"
 import { useNavigate } from "react-router-dom"
+import { getStoredDefaultLandingPagePath } from "@/utils/userPreferences";
 
 interface LoginFormProps {
     children?: ReactNode
@@ -28,7 +29,7 @@ export default function LoginForm({ children }: LoginFormProps ) {
     void authService
       .login({ username, password })
       .then(() => {
-        void navigate("/dashboard")
+        void navigate(getStoredDefaultLandingPagePath())
       })
       .catch((err: unknown) => {
         const message = err instanceof Error ? err.message : "Login failed"
@@ -101,5 +102,4 @@ export default function LoginForm({ children }: LoginFormProps ) {
       </div>
   )
 }
-
 

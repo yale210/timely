@@ -1,11 +1,26 @@
 import { useSyncExternalStore } from "react";
+import { getStoredTimeFormat } from "@/utils/userPreferences";
 
 export const USER_TIMEZONE_STORAGE_KEY = "user_timezone";
 export const USER_TIMEZONE_CHANGE_EVENT = "user-timezone-change";
 
+const isValidTimezone = (timeZone: string | null | undefined): timeZone is string => {
+  if (!timeZone) {
+    return false;
+  }
+
+  try {
+    new Intl.DateTimeFormat("en-GB", { timeZone });
+    return true;
+  } catch {
+    return false;
+  }
+};
+
 const getBrowserTimezone = (): string => {
   try {
-    return Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC";
+    const browserTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    return isValidTimezone(browserTimezone) ? browserTimezone : "UTC";
   } catch {
     return "UTC";
   }
@@ -46,7 +61,13 @@ const getFormatter = (
   ...options,
 });
 
-const getZonedParts = (date: Date, timeZone: string) => {
+/**
+ * Extracts date/time parts for a Date as seen in a given timezone.
+ * @param date - Source UTC date.
+ * @param timeZone - IANA timezone identifier to interpret the date in.
+ * @returns Numeric calendar/time parts in the target timezone.
+ */
+export const getZonedDateParts = (date: Date, timeZone: string) => {
   const parts = getFormatter(timeZone, {
     year: "numeric",
     month: "2-digit",
@@ -71,6 +92,17 @@ const getZonedParts = (date: Date, timeZone: string) => {
   };
 };
 
+/**
+ * Builds a UTC ISO string from date/time parts interpreted in a given timezone.
+ * @param parts - Calendar date and clock time in the target timezone.
+ * @param parts.year - Calendar year in the target timezone.
+ * @param parts.month - Calendar month in the target timezone.
+ * @param parts.day - Calendar day in the target timezone.
+ * @param parts.hour - Hour in the target timezone.
+ * @param parts.minute - Minute in the target timezone.
+ * @param timeZone - IANA timezone identifier used to resolve the UTC instant.
+ * @returns UTC ISO timestamp for the zoned local time.
+ */
 const buildIsoFromZonedParts = (parts: {
   year: number;
   month: number;
@@ -81,7 +113,7 @@ const buildIsoFromZonedParts = (parts: {
   let utcGuess = Date.UTC(parts.year, parts.month - 1, parts.day, parts.hour, parts.minute);
 
   for (let i = 0; i < 4; i += 1) {
-    const current = getZonedParts(new Date(utcGuess), timeZone);
+    const current = getZonedDateParts(new Date(utcGuess), timeZone);
     const desiredUtcEquivalent = Date.UTC(
       parts.year,
       parts.month - 1,
@@ -115,7 +147,16 @@ export const getStoredUserTimezone = (): string => {
     return "UTC";
   }
 
-  return localStorage.getItem(USER_TIMEZONE_STORAGE_KEY) ?? getBrowserTimezone();
+  const storedTimezone = localStorage.getItem(USER_TIMEZONE_STORAGE_KEY);
+  if (isValidTimezone(storedTimezone)) {
+    return storedTimezone;
+  }
+
+  if (storedTimezone != null) {
+    localStorage.removeItem(USER_TIMEZONE_STORAGE_KEY);
+  }
+
+  return getBrowserTimezone();
 };
 
 /**
@@ -127,7 +168,10 @@ export const setStoredUserTimezone = (timeZone: string) => {
     return;
   }
 
-  localStorage.setItem(USER_TIMEZONE_STORAGE_KEY, timeZone);
+  localStorage.setItem(
+    USER_TIMEZONE_STORAGE_KEY,
+    isValidTimezone(timeZone) ? timeZone : getBrowserTimezone(),
+  );
   dispatchTimezoneChange();
 };
 
@@ -174,6 +218,7 @@ export const formatDateTimeInTimezone = (
   timeZone = getStoredUserTimezone(),
 ): string => {
   const date = value instanceof Date ? value : new Date(value);
+  const timeFormat = getStoredTimeFormat();
   const hasCustomDateOrTimeOptions = (
     options.dateStyle != null
     || options.timeStyle != null
@@ -186,6 +231,9 @@ export const formatDateTimeInTimezone = (
   );
   return getFormatter(timeZone, {
     ...(hasCustomDateOrTimeOptions ? {} : { dateStyle: "medium", timeStyle: "short" }),
+    ...(options.hour12 == null && options.hourCycle == null
+      ? (timeFormat === "12h" ? { hour12: true } : { hourCycle: "h23" })
+      : {}),
     ...options,
   }).format(date);
 };
@@ -223,6 +271,7 @@ export const formatTimeInTimezone = (
   timeZone = getStoredUserTimezone(),
 ): string => {
   const date = value instanceof Date ? value : new Date(value);
+  const timeFormat = getStoredTimeFormat();
   const hasTimeOptions = (
     options.timeStyle != null
     || options.hour != null
@@ -230,7 +279,14 @@ export const formatTimeInTimezone = (
     || options.second != null
   );
   return getFormatter(timeZone, {
-    ...(hasTimeOptions ? {} : { hour: "2-digit", minute: "2-digit", hourCycle: "h23" }),
+    ...(hasTimeOptions ? {} : {
+      hour: "2-digit",
+      minute: "2-digit",
+      ...(timeFormat === "12h" ? { hour12: true } : { hourCycle: "h23" }),
+    }),
+    ...(options.hour12 == null && options.hourCycle == null
+      ? (timeFormat === "12h" ? { hour12: true } : { hourCycle: "h23" })
+      : {}),
     ...options,
   }).format(date);
 };
@@ -246,7 +302,7 @@ export const toTimezoneDateInputValue = (
   timeZone = getStoredUserTimezone(),
 ): string => {
   const date = value instanceof Date ? value : new Date(value);
-  const parts = getZonedParts(date, timeZone);
+  const parts = getZonedDateParts(date, timeZone);
   return `${String(parts.year).padStart(4, "0")}-${String(parts.month).padStart(2, "0")}-${String(parts.day).padStart(2, "0")}`;
 };
 
@@ -261,7 +317,7 @@ export const toTimezoneTimeInputValue = (
   timeZone = getStoredUserTimezone(),
 ): string => {
   const date = value instanceof Date ? value : new Date(value);
-  const parts = getZonedParts(date, timeZone);
+  const parts = getZonedDateParts(date, timeZone);
   return `${String(parts.hour).padStart(2, "0")}:${String(parts.minute).padStart(2, "0")}`;
 };
 
@@ -280,7 +336,7 @@ export const toTimezoneDateTimeLocalValue = (
   }
 
   const date = value instanceof Date ? value : new Date(value);
-  const parts = getZonedParts(date, timeZone);
+  const parts = getZonedDateParts(date, timeZone);
   return `${String(parts.year).padStart(4, "0")}-${String(parts.month).padStart(2, "0")}-${String(parts.day).padStart(2, "0")}T${String(parts.hour).padStart(2, "0")}:${String(parts.minute).padStart(2, "0")}`;
 };
 
@@ -322,7 +378,7 @@ export const timezoneDateTimeLocalToIso = (
   let utcGuess = Date.UTC(parsed.year, parsed.month - 1, parsed.day, parsed.hour, parsed.minute);
 
   for (let i = 0; i < 4; i += 1) {
-    const current = getZonedParts(new Date(utcGuess), timeZone);
+    const current = getZonedDateParts(new Date(utcGuess), timeZone);
     const desiredUtcEquivalent = Date.UTC(
       parsed.year,
       parsed.month - 1,

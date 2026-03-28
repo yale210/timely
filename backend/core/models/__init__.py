@@ -2,7 +2,6 @@
 
 from .assessment import Assessment
 from .category import Category
-from .commute import Commute
 from .day_of_week import DayOfWeek
 from .event import Event
 from .event_override import EventOverride
@@ -18,7 +17,6 @@ from .task import Task
 __all__ = [
     "Assessment",
     "Category",
-    "Commute",
     "DayOfWeek",
     "Event",
     "EventOverride",

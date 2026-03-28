@@ -8,7 +8,6 @@ from django.contrib.auth import get_user_model
 from core.management.commands.seeders import (
     assessment_seeder,
     category_seeder,
-    commute_seeder,
     event_seeder,
     friendship_seeder,
     grade_seeder,
@@ -19,7 +18,6 @@ from core.management.commands.seeders import (
 )
 from core.management.commands.seeders.assessment_seeder import AssessmentSeeder
 from core.management.commands.seeders.category_seeder import CategorySeeder
-from core.management.commands.seeders.commute_seeder import CommuteSeeder
 from core.management.commands.seeders.day_of_week_seeder import DayOfWeekSeeder
 from core.management.commands.seeders.event_seeder import EventSeeder
 from core.management.commands.seeders.friendship_seeder import FriendshipSeeder
@@ -31,7 +29,6 @@ from core.management.commands.seeders.user_seeder import UserSeeder
 from core.models import (
     Assessment,
     Category,
-    Commute,
     DayOfWeek,
     Event,
     Friendship,
@@ -56,7 +53,6 @@ class SeederFoundationTests(SeederTestCase):
         initial_counts = {
             "users": get_user_model().objects.count(),
             "categories": Category.objects.count(),
-            "commutes": Commute.objects.count(),
             "days": DayOfWeek.objects.count(),
             "events": Event.objects.count(),
             "grades": Grade.objects.count(),
@@ -176,14 +172,6 @@ class SeederFoundationTests(SeederTestCase):
                 category_seeder,
                 "categories",
                 "Error occurred while creating category: boom",
-            ),
-            (
-                CommuteSeeder(),
-                "_create_fixture_commute",
-                "_create_commute",
-                commute_seeder,
-                "commutes",
-                "Error occurred while creating commute: boom",
             ),
             (
                 EventSeeder(),
@@ -372,17 +360,6 @@ class SeederFoundationTests(SeederTestCase):
         self.assertEqual(preference.timezone, "Europe/London")
         self.assertEqual(preference.day_schedule, default_day_schedule())
         self.assertEqual(set(preference.days_off.values_list("day", flat=True)), {1, 3})
-
-    def test_commute_seeder_creates_missing_user_before_random_commute(self):
-        """Test commute seeder creates missing user before random commute."""
-        seeder = CommuteSeeder()
-        self.assertEqual(get_user_model().objects.count(), 0)
-
-        seeder._populate_random_commute()
-
-        commute = Commute.objects.get()
-        self.assertIsNotNone(commute.user)
-        self.assertEqual(get_user_model().objects.count(), 1)
 
     def test_category_seeder_populates_existing_random_user(self):
         """Test category seeder populates existing random user."""

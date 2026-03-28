@@ -9,7 +9,6 @@ from django.core.management.base import BaseCommand
 
 from core.models import (
     Category,
-    Commute,
     DayOfWeek,
     Event,
     Friendship,
@@ -58,7 +57,6 @@ class Command(BaseCommand):
         models = [
             User,
             Category,
-            Commute,
             DayOfWeek,
             Event,
             Task,

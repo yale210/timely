@@ -1,17 +1,17 @@
-import "react-big-calendar/lib/css/react-big-calendar.css";
-import "react-big-calendar/lib/addons/dragAndDrop/styles.css";
 import { useEffect, useLayoutEffect, useMemo, useRef, type CSSProperties } from "react";
 import moment from "moment";
-import { Calendar, momentLocalizer, type Components, Views } from "react-big-calendar";
+import { Calendar, type Components, type Formats, Views } from "react-big-calendar";
 import withDragAndDrop from "react-big-calendar/lib/addons/dragAndDrop";
 import { DndProvider } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
 import type { UseCalendarReturn } from "@/hooks/calendar/useCalendar";
 import { isOutsidePreferredDayWindow } from "@/hooks/calendar/useCalendar";
 import type { CalendarEntry } from "@/utils/calendarAdapter";
+import { useCalendarLocalizer } from "@/utils/calendarLocalizer";
 import { getOverrideColour, hexToRgba } from "@/utils/colorUtils";
+import { getStoredTimeFormat, getStoredWeekStartsOn } from "@/utils/userPreferences";
+import { getStoredUserTimezone, getZonedDateParts } from "@/utils/userTimezone";
 
-const localizer = momentLocalizer(moment);
 const DragAndDropCalendar = withDragAndDrop<CalendarEntry>(Calendar);
 const DEFAULT_DRAG_SNAP_MINUTES = 5;
 
@@ -26,7 +26,10 @@ interface CalendarViewProps {
   >;
 }
 
-const formatEventTime = (dateValue: Date) => {
+const formatEventTime = (dateValue: Date, timeFormat: "24h" | "12h") => {
+  if (timeFormat === "24h") {
+    return `${String(dateValue.getHours()).padStart(2, "0")}:${String(dateValue.getMinutes()).padStart(2, "0")}`;
+  }
   const hours24 = dateValue.getHours();
   const minutes = dateValue.getMinutes();
   const isPm = hours24 >= 12;
@@ -51,8 +54,18 @@ const CalendarView = ({
   actions,
 }: CalendarViewProps) => {
   const calendarShellRef = useRef<HTMLDivElement | null>(null);
+  const localizer = useCalendarLocalizer();
+  const activeTimezone = state.preference?.timezone ?? getStoredUserTimezone();
   const dragSnapMinutes = state.preference?.drag_snap_minutes ?? DEFAULT_DRAG_SNAP_MINUTES;
   const dragSnapTimeslots = 60 / dragSnapMinutes;
+  const timeFormat = state.preference?.time_format ?? getStoredTimeFormat();
+  const weekStartsOn = state.preference?.week_starts_on ?? getStoredWeekStartsOn();
+
+  useEffect(() => {
+    moment.updateLocale("en", {
+      week: { dow: weekStartsOn === "sunday" ? 0 : 1 },
+    });
+  }, [weekStartsOn]);
 
   useLayoutEffect(() => {
     if (state.view !== Views.WEEK && state.view !== Views.DAY) {
@@ -115,7 +128,7 @@ const CalendarView = ({
         return;
       }
 
-      const currentHour = new Date().getHours();
+      const currentHour = getZonedDateParts(new Date(), activeTimezone).hour;
       const targetIndex = Math.min(Math.max(currentHour, 0), slotGroups.length - 1);
       const targetSlot = slotGroups[targetIndex];
       if (!(targetSlot instanceof HTMLElement)) {
@@ -138,7 +151,7 @@ const CalendarView = ({
       window.cancelAnimationFrame(frame);
       window.clearTimeout(timer);
     };
-  }, [state.date, state.calendarEntries.length, state.view]);
+  }, [activeTimezone, state.date, state.calendarEntries.length, state.view]);
 
   useEffect(() => {
     const shell = calendarShellRef.current;
@@ -185,7 +198,7 @@ const CalendarView = ({
     () => ({
       event: ({ event }: { event: CalendarEntry }) => {
         const actualEnd = event.actualEnd ?? event.end;
-        const timeLabel = `${formatEventTime(event.start)} - ${formatEventTime(actualEnd)}`;
+        const timeLabel = `${formatEventTime(event.start, timeFormat)} - ${formatEventTime(actualEnd, timeFormat)}`;
         if (event.kind !== "task") {
           return (
             <div className="flex h-full w-full items-start gap-2">
@@ -222,8 +235,24 @@ const CalendarView = ({
         );
       },
     }),
-    [actions],
+    [actions, timeFormat],
   );
+
+  const formats = useMemo<Formats>(() => {
+    const timeLabel = timeFormat === "24h" ? "HH:mm" : "h:mm A";
+    return {
+      timeGutterFormat: timeLabel,
+      agendaTimeFormat: timeLabel,
+      agendaHeaderFormat: ({ start, end }, culture, nextLocalizer) =>
+        `${nextLocalizer?.format(start, "DD MMM", culture)} - ${nextLocalizer?.format(end, "DD MMM", culture)}`,
+      agendaTimeRangeFormat: ({ start, end }, culture, nextLocalizer) =>
+        `${nextLocalizer?.format(start, timeLabel, culture)} - ${nextLocalizer?.format(end, timeLabel, culture)}`,
+      dayRangeHeaderFormat: ({ start, end }, culture, nextLocalizer) =>
+        `${nextLocalizer?.format(start, "DD MMM", culture)} - ${nextLocalizer?.format(end, "DD MMM", culture)}`,
+      dayHeaderFormat: "dddd DD MMM",
+      dayFormat: "ddd DD/MM",
+    };
+  }, [timeFormat]);
 
   return (
     <main
@@ -266,6 +295,7 @@ const CalendarView = ({
             onEventResize={(args) => {
               void actions.handleEventResize(args);
             }}
+            formats={formats}
             showMultiDayTimes
             toolbar={false}
             className="h-full"

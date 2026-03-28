@@ -3,6 +3,7 @@ export type SettingsSection =
   | "profile"
   | "general"
   | "preferences"
+  | "overrides"
   | "themes"
   | "fonts"
   | "features"

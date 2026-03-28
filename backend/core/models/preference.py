@@ -1,6 +1,6 @@
 """Preference model definitions."""
 
-from datetime import datetime, timedelta
+from datetime import datetime
 from zoneinfo import ZoneInfo, available_timezones
 
 from django.conf import settings
@@ -34,6 +34,29 @@ class Preference(models.Model):
     Preferences are used to help customise their scheduling.
     """
 
+    LANDING_PAGE_DASHBOARD = "dashboard"
+    LANDING_PAGE_CALENDAR = "calendar"
+    LANDING_PAGE_TASKS = "tasks"
+    LANDING_PAGE_CHOICES = [
+        (LANDING_PAGE_DASHBOARD, "Dashboard"),
+        (LANDING_PAGE_CALENDAR, "Calendar"),
+        (LANDING_PAGE_TASKS, "Tasks"),
+    ]
+
+    WEEK_STARTS_ON_MONDAY = "monday"
+    WEEK_STARTS_ON_SUNDAY = "sunday"
+    WEEK_STARTS_ON_CHOICES = [
+        (WEEK_STARTS_ON_MONDAY, "Monday"),
+        (WEEK_STARTS_ON_SUNDAY, "Sunday"),
+    ]
+
+    TIME_FORMAT_24H = "24h"
+    TIME_FORMAT_12H = "12h"
+    TIME_FORMAT_CHOICES = [
+        (TIME_FORMAT_24H, "24-hour"),
+        (TIME_FORMAT_12H, "12-hour"),
+    ]
+
     user = models.OneToOneField(
         settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="preference"
     )
@@ -58,6 +81,21 @@ class Preference(models.Model):
     drag_snap_minutes = models.PositiveSmallIntegerField(default=5)
     limit_max_hours = models.BooleanField(default=True)
     disable_sound_effects = models.BooleanField(default=False)
+    default_landing_page = models.CharField(
+        max_length=20,
+        choices=LANDING_PAGE_CHOICES,
+        default=LANDING_PAGE_DASHBOARD,
+    )
+    week_starts_on = models.CharField(
+        max_length=10,
+        choices=WEEK_STARTS_ON_CHOICES,
+        default=WEEK_STARTS_ON_MONDAY,
+    )
+    time_format = models.CharField(
+        max_length=3,
+        choices=TIME_FORMAT_CHOICES,
+        default=TIME_FORMAT_24H,
+    )
 
     # Store as IANA timezone. Enables us to use timezone aware features (like adjusting for the clocks going forward or back).
     timezone = models.CharField(max_length=100, default="Europe/London")
@@ -78,6 +116,48 @@ class Preference(models.Model):
                 }
             )
 
+    def _validate_landing_page(self):
+        """Ensure the default landing page is one of the allowed values.
+
+        Raises:
+            ValidationError: If the landing page is not valid.
+        """
+        allowed_landing_pages = {
+            self.LANDING_PAGE_DASHBOARD,
+            self.LANDING_PAGE_CALENDAR,
+            self.LANDING_PAGE_TASKS,
+        }
+        if self.default_landing_page not in allowed_landing_pages:
+            raise ValidationError(
+                {"default_landing_page": "Default landing page is not valid."}
+            )
+
+    def _validate_week_starts_on(self):
+        """Ensure the week start day is one of the allowed values.
+
+        Raises:
+            ValidationError: If the week start day is not valid.
+        """
+        allowed_week_starts_on = {
+            self.WEEK_STARTS_ON_MONDAY,
+            self.WEEK_STARTS_ON_SUNDAY,
+        }
+        if self.week_starts_on not in allowed_week_starts_on:
+            raise ValidationError({"week_starts_on": "Week start is not valid."})
+
+    def _validate_time_format(self):
+        """Ensure the time format is one of the allowed values.
+
+        Raises:
+            ValidationError: If the time format is not valid.
+        """
+        allowed_time_formats = {
+            self.TIME_FORMAT_24H,
+            self.TIME_FORMAT_12H,
+        }
+        if self.time_format not in allowed_time_formats:
+            raise ValidationError({"time_format": "Time format is not valid."})
+
     def _validate_timezone(self):
         """Reject timezone values that are not valid IANA identifiers.
 
@@ -88,13 +168,13 @@ class Preference(models.Model):
             raise ValidationError({"timezone": "Timezone is not valid"})
 
     def _validate_day_bounds(self):
-        """Prevent identical start and end times from collapsing the day window.
+        """Ensure the day end is strictly after the day start.
 
         Raises:
-            ValidationError: If the day start and end are equal.
+            ValidationError: If the day end is not after day start.
         """
-        if self.day_start == self.day_end:
-            raise ValidationError({"day_end": "Day start and end must be different."})
+        if self.day_end <= self.day_start:
+            raise ValidationError({"day_end": "Day end must be after day start."})
 
     def _get_day_schedule_entries(self):
         """Return the seven scheduled day entries after validating the payload shape.
@@ -215,6 +295,9 @@ class Preference(models.Model):
         """
         super().clean()
         self._validate_drag_snap_minutes()
+        self._validate_landing_page()
+        self._validate_week_starts_on()
+        self._validate_time_format()
         self._validate_timezone()
         self._validate_day_bounds()
         self._validate_day_schedule()

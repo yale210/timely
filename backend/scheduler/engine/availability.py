@@ -36,7 +36,6 @@ class SchedulerAvailabilityMixin:
         occupied.extend(self._event_slots(target_date, day_start, day_end))
         occupied.extend(self._scheduled_task_slots(day_start, day_end))
         occupied.extend(self._scheduled_block_slots(day_start, day_end))
-        occupied.extend(self._commute_slots(target_date))
         return occupied
 
     def _event_slots(
@@ -132,41 +131,6 @@ class SchedulerAvailabilityMixin:
             for start, end in self._scheduled_blocks
             if start < day_end and end > day_start
         ]
-
-    def _commute_slots(self, target_date: date) -> list[tuple[datetime, datetime]]:
-        """Calculate occupied slots from commutes for a given date.
-
-        Args:
-            target_date: The date to process.
-
-        Returns:
-            A list of commute-based occupied slots.
-        """
-        occupied: list[tuple[datetime, datetime]] = []
-        for commute in self.commutes:
-            if not self._commute_applies(commute, target_date):
-                continue
-            start = self._aware(datetime.combine(target_date, commute.commute_start))
-            end = self._aware(datetime.combine(target_date, commute.commute_end))
-            occupied.append((start, end))
-        return occupied
-
-    @staticmethod
-    def _commute_applies(commute, target_date: date) -> bool:
-        """Determine if a commute applies to a given date.
-
-        Args:
-            commute: The commute object to check.
-            target_date: The date to check against.
-
-        Returns:
-            True if the commute applies, False otherwise.
-        """
-        day_attr = getattr(commute, "day_of_week", None)
-        if not day_attr or not hasattr(day_attr, "all"):
-            return True
-        commute_days = [day.day for day in day_attr.all()]
-        return (target_date.weekday() + 1) in commute_days
 
     def get_available_slots(
         self,

@@ -36,6 +36,12 @@ import { AUTH_CHANGE_EVENT, authStore } from "@/services/authService";
 import { preferenceService } from "@/services/preferenceService";
 import { setDocumentTheme } from "@/utils/themeSettings"
 import { resetStoredUserTimezone, setStoredUserTimezone } from "@/utils/userTimezone";
+import {
+  resetStoredUserPreferences,
+  setStoredDefaultLandingPage,
+  setStoredTimeFormat,
+  setStoredWeekStartsOn,
+} from "@/utils/userPreferences";
 
 const PUBLIC_ROUTES = ["/login", "/signup", "/", "/about"]
 
@@ -71,6 +77,7 @@ export default function App() {
     const syncUserTimezone = async () => {
       if (!authStore.getToken()) {
         resetStoredUserTimezone();
+        resetStoredUserPreferences();
         return;
       }
 
@@ -78,10 +85,14 @@ export default function App() {
         const preference = await preferenceService.getMyPreference();
         if (isMounted) {
           setStoredUserTimezone(preference.timezone);
+          setStoredDefaultLandingPage(preference.default_landing_page ?? "dashboard");
+          setStoredWeekStartsOn(preference.week_starts_on ?? "monday");
+          setStoredTimeFormat(preference.time_format ?? "24h");
         }
       } catch {
         if (isMounted) {
           resetStoredUserTimezone();
+          resetStoredUserPreferences();
         }
       }
     };

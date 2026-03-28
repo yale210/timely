@@ -4,6 +4,7 @@ import ConfirmationModal from "@/components/modals/ConfirmationModal";
 import { useCourses } from "@/hooks/course/useCourse";
 import { getCourseStudents } from "@/services/courseService";
 import type { Course, CourseCreation, CourseStudent, CourseUpdate } from "@/types/course";
+import { formatDateInTimezone } from "@/utils/userTimezone";
 
 /**
  * Course management page for teachers and staff.
@@ -250,7 +251,7 @@ export default function CourseManagement() {
                         </span>
                       </td>
                       <td className="whitespace-nowrap px-4 py-4 text-sm text-gray-500">
-                        {new Date(course.created_at).toLocaleDateString()}
+                        {formatDateInTimezone(course.created_at)}
                       </td>
                       <td className="whitespace-nowrap px-4 py-4 text-right">
                         <div className="flex justify-end gap-2">

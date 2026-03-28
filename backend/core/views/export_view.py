@@ -38,7 +38,7 @@ class ExportView(APIView):
             lines.append("BEGIN:VEVENT")
             # Event ID, this is just e + the event id in the DB e.g. e123
             lines.append(f"UID:e{event.id}")
-            lines.append(f"DTSTAMP:{event.last_edited.strftime('%Y%m%dT%H%M%S')}")
+            lines.append(f"DTSTAMP:{event.last_edited.strftime('%Y%m%dT%H%M%S')}Z")
             lines.append(
                 f"DTSTART;TZID=Europe/London:{event.start_time.strftime('%Y%m%dT%H%M%S')}"
             )
@@ -53,13 +53,14 @@ class ExportView(APIView):
             if event.recurrence_interval is not None:
                 # None means repeat forever
                 if event.recurrence_end is None:
-                    until = None
+                    # Timely allows events to never end but iCal doesn't, these events will repeat until 2046
+                    until = "20460101T200000"
                 # Not none means repeat until a specified date
                 else:
                     until = event.recurrence_end.strftime("%Y%m%dT%H%M%S")
                 # Recurrance rule standard format
                 lines.append(
-                    f"RRULE:FREQ={event.recurrence_interval.upper()};UNTIL={until}"
+                    f"RRULE:FREQ={event.recurrence_interval.upper()};UNTIL={until}Z"
                 )
 
             lines.append("END:VEVENT")

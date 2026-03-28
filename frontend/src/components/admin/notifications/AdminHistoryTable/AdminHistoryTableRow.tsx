@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 import { type BroadcastJobSummary } from "@/types";
+import { formatDateTimeInTimezone } from "@/utils/userTimezone";
 
 interface AdminHistoryTableRowProps {
   /**
@@ -24,7 +25,7 @@ export const AdminHistoryTableRow = (
   const { item, onSelectItem } = props;
   const sender = item.sender_username ?? "System";
   const deliverySummary = `Delivered ${item.delivered_count}/${item.recipient_count}`;
-  const queuedAt = new Date(item.queued_at).toLocaleString();
+  const queuedAt = formatDateTimeInTimezone(item.queued_at);
 
   return (
     <tr key={item.id} className="cursor-pointer hover:bg-gray-50" onClick={() => onSelectItem(item.id)}>
