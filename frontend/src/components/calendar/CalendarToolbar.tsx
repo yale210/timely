@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, type RefObject } from "react";
-import moment from "moment";
+import moment from "moment-timezone";
 import { Views } from "react-big-calendar";
 import type { UseCalendarReturn } from "@/hooks/calendar/useCalendar";
 
@@ -8,11 +8,11 @@ interface CalendarToolbarProps {
   calendarHeaderTopClass: string;
   state: Pick<
     UseCalendarReturn["state"],
-    "view" | "date" | "currentLabel" | "dateStripDays" | "timeGutterWidth" | "isRescheduling" | "rescheduleWarnings"
+    "view" | "date" | "currentLabel" | "dateStripDays" | "timeGutterWidth" | "isRescheduling" | "rescheduleWarnings" | "preference"
   >;
   actions: Pick<
     UseCalendarReturn["actions"],
-    "setView" | "goToToday" | "goToPrevious" | "goToNext" | "rescheduleTasks" | "exportEvents" | "importEvents"
+    "setView" | "goToToday" | "goToPrevious" | "goToNext" | "rescheduleTasks" | "openCreateSidebar"
   >;
 }
 
@@ -34,6 +34,7 @@ const CalendarToolbar = ({
   const [isWarningsOpen, setIsWarningsOpen] = useState(false);
   const warningPanelRef = useRef<HTMLDivElement | null>(null);
   const rescheduleWarnings = state.rescheduleWarnings ?? [];
+  const activeTimezone = state.preference?.timezone ?? "UTC";
 
   useEffect(() => {
     if (!isWarningsOpen) {
@@ -139,38 +140,14 @@ const CalendarToolbar = ({
             </button>
 
             <button
-            type="button"
-            onClick={() => {
-              const input = document.createElement("input")
-              input.type = "file"
-              input.onchange = async (event) => {
-                const target = event.target
-                
-                if (target instanceof HTMLInputElement && target.files) {
-                  const file = target.files[0]
-                  await actions.importEvents(file)
-                }
-              }
-              input.click()
-            }}
-            
-            className= "px-2 py-1 rounded-md text-xs flex items-center shadow-sm transition-colors"
-          >
-            <span className="material-icons mr-1 text-lg">upload</span>
-            Import
-          </button>
-
-          <button
-            type="button"
-            onClick={() => {
-              void actions.exportEvents();
-            }}
-            
-            className="px-2 py-1 rounded-md text-xs flex items-center shadow-sm transition-colors"
-          >
-            <span className="material-icons mr-1 text-lg">download</span>
-            Export
-          </button>
+              type="button"
+              onClick={actions.openCreateSidebar}
+              className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary text-white shadow-sm transition-colors hover:bg-blue-300"
+              aria-label="Add task or event"
+              title="Add task or event"
+            >
+              <span className="material-icons text-xl">add</span>
+            </button>
 
           
           </div>
@@ -211,8 +188,8 @@ const CalendarToolbar = ({
         >
           <div className="border-r border-gray-200 bg-gray-50" />
           {state.dateStripDays.map((dayMoment) => {
-            const isToday = dayMoment.isSame(moment(), "day");
-            const isActiveDay = state.view === Views.DAY && dayMoment.isSame(moment(state.date), "day");
+            const isToday = dayMoment.isSame(moment().tz(activeTimezone), "day");
+            const isActiveDay = state.view === Views.DAY && dayMoment.isSame(moment(state.date).tz(activeTimezone), "day");
             return (
               <div
                 key={dayMoment.format("YYYY-MM-DD")}

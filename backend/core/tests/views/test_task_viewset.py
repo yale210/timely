@@ -361,6 +361,34 @@ class TaskViewSetTests(TestCase):
         self.assertEqual(self.task1.completed_minutes, 20)
         self.assertFalse(self.task1.completed)
 
+    def test_patch_task_completed_true_clears_existing_allocation(self):
+        self.client.force_authenticate(user=self.user)
+        allocation_start = self.now + datetime.timedelta(days=1, hours=2)
+        allocation_end = allocation_start + datetime.timedelta(minutes=30)
+        self.task1.allocation = [
+            {
+                "start": allocation_start.isoformat(),
+                "end": allocation_end.isoformat(),
+            }
+        ]
+        self.task1.total_task_allocations = 1
+        self.task1.save(update_fields=["allocation", "total_task_allocations"])
+
+        response = self.client.patch(
+            f"/api/tasks/{self.task1.id}/",
+            {
+                "completed": True,
+            },
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.task1.refresh_from_db()
+        self.assertTrue(self.task1.completed)
+        self.assertEqual(self.task1.completed_minutes, self.task1.estimated_minutes)
+        self.assertEqual(self.task1.allocation, [])
+        self.assertEqual(self.task1.total_task_allocations, 0)
+
     def test_patch_task_buffer_only_shows_reschedule_message_when_existing_schedule_conflicts(
         self,
     ):

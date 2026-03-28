@@ -2,9 +2,9 @@
 
 from datetime import datetime, time
 
-from django.db import models
 from django.conf import settings
 from django.core.validators import MinValueValidator
+from django.db import models
 from django.utils import timezone
 
 from .category import Category

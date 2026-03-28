@@ -1,6 +1,7 @@
 import { Navigate, useLocation } from "react-router-dom"
 import { authStore } from "@/services/authService"
 import type { ReactNode } from "react"
+import { getStoredDefaultLandingPagePath } from "@/utils/userPreferences";
 
 /**
  * Redirects authenticated users to the dashboard; otherwise renders children.
@@ -12,7 +13,7 @@ export default function RedirectIfAuth({ children }: { children: ReactNode}) {
     const location = useLocation()
 
     if (user) {
-        return <Navigate to="/dashboard" replace state={{ from: location}}/>
+        return <Navigate to={getStoredDefaultLandingPagePath()} replace state={{ from: location}}/>
     }
     else {
         return <>{ children }</>

@@ -13,9 +13,10 @@ https://docs.djangoproject.com/en/6.0/ref/settings/
 import os
 import sys
 from datetime import timedelta
+from pathlib import Path
+
 from celery.schedules import crontab
 from django.core.exceptions import ImproperlyConfigured
-from pathlib import Path
 from dotenv import load_dotenv
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -272,6 +273,10 @@ CELERY_BEAT_SCHEDULE = {
     "cleanup_old_notifications": {
         "task": "notifications.tasks.maintenance.cleanup_old_notifications",
         "schedule": crontab(hour=3, minute=0),
+    },
+    "sync_course_calendar": {
+        "task": "courses.tasks.run_sync_cal_command",
+        "schedule": crontab(minute=5),
     },
 }
 

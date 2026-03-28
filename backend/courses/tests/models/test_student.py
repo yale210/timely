@@ -1,8 +1,7 @@
-"""Tests for the student model."""
-
-from courses.models import Student
 from django.contrib.auth import get_user_model
 from django.test import TestCase
+
+from courses.models import Student
 
 User = get_user_model()
 

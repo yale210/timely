@@ -7,11 +7,14 @@ application.
 """
 
 import random
-from core.models import Friendship
-from django.db.models import Q
-from .fixtures.friendship_fixtures import friendships
+
 from django.contrib.auth import get_user_model
+from django.db.models import Q
+
 from core.management.commands.seeders.base import BaseSeeder
+from core.models import Friendship
+
+from .fixtures.friendship_fixtures import friendships
 
 
 class FriendshipSeeder(BaseSeeder):
@@ -107,10 +110,12 @@ class FriendshipSeeder(BaseSeeder):
             temporary_receiver (User): The user receiving the request.
 
         """
-        Friendship.objects.get_or_create(
+        Friendship.objects.update_or_create(
             sender=temporary_sender,
             receiver=temporary_receiver,
-            state=random.choice(["SENT", "ACCEPTED", "REJECTED"]),
+            defaults={
+                "state": random.choice(["SENT", "ACCEPTED", "DECLINED"]),
+            },
         )
 
     def _get_or_create_two_random_users(self):

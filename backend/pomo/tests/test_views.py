@@ -1,5 +1,3 @@
-"""Tests for pomo views."""
-
 from django.contrib.auth import get_user_model
 from django.utils import timezone
 from rest_framework import status

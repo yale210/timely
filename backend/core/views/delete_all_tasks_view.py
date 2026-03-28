@@ -13,7 +13,7 @@ class DeleteAllTasksView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def delete(self, request):
-        """Delete all tasks for the current user.
+        """Delete all tasks for the current authenticated user.
 
         Args:
             request (Request): The DRF request object.

@@ -1,62 +1,83 @@
-"""Serializer definitions for course resources."""
+"""Serializers for course-related data transfer objects.
+
+This module provides DRF serializers for creating courses, managing enrollments,
+handling course events, and processing join codes and staff assignments.
+"""
 
 from django.contrib.auth import get_user_model
 from rest_framework import serializers
 
-from courses.models.course import Course, CourseEvent, CourseJoinCode, CourseEnrollment
+from courses.models.course import Course, CourseEnrollment, CourseEvent, CourseJoinCode
 
 User = get_user_model()
 
 
 class CourseCreateSerializer(serializers.ModelSerializer):
-    """Serializer for creating courses."""
+    """Serializer for initial course creation.
+
+    Specifically handles the assignment of the creator as the course lead
+    during the creation process.
+    """
 
     class Meta:
+        """Meta options for CourseCreateSerializer."""
+
         model = Course
         fields = ("id", "name", "description")
         read_only_fields = ("id",)
 
     def create(self, validated_data):
-        """Create a course for the teacher provided in serializer context.
+        """Creates a new course and assigns the requesting teacher as lead.
 
         Args:
-            validated_data: The validated course payload.
+            validated_data: Dictionary of validated field values.
 
         Returns:
-            Course: The created course instance.
+            The newly created Course instance.
         """
         teacher = self.context["teacher"]
         return Course.objects.create(**validated_data, lead=teacher)
 
 
 class CourseSerializer(serializers.ModelSerializer):
-    """Serializer for course responses."""
+    """General purpose serializer for Course objects.
+
+    Provides a comprehensive read/write representation of the course entity,
+    including its administrative metadata.
+    """
 
     class Meta:
+        """Meta options for CourseSerializer."""
+
         model = Course
         fields = ("id", "name", "description", "created_at", "active", "lead")
         read_only_fields = ("id", "created_at", "active", "lead")
 
 
 class CourseEventSerializer(serializers.ModelSerializer):
-    """Serializer for course events."""
+    """Serializer for events specifically tied to a course.
+
+    Ensures that event durations are valid by checking start and end times.
+    """
 
     class Meta:
+        """Meta options for CourseEventSerializer."""
+
         model = CourseEvent
         fields = "__all__"
         read_only_fields = ("id", "course", "created_by", "created_at", "updated_at")
 
     def validate(self, data):
-        """Validate the provided course event payload.
+        """Validates that the event's end time follows its start time.
 
         Args:
-            data: The incoming validated event data.
+            data: Dictionary of input field values.
 
         Returns:
-            dict: The validated event data.
+            The validated data dictionary.
 
         Raises:
-            ValidationError: If the event end time is not after the start time.
+            serializers.ValidationError: If end_time is not after start_time.
         """
         if data["start_time"] >= data["end_time"]:
             raise serializers.ValidationError("End time must be after start time.")
@@ -64,96 +85,102 @@ class CourseEventSerializer(serializers.ModelSerializer):
 
 
 class CourseNameSerializer(serializers.ModelSerializer):
-    """Serializer for course name updates."""
+    """Lightweight serializer for updating only the course name."""
 
     class Meta:
+        """Meta options for CourseNameSerializer."""
+
         model = Course
         fields = ("name",)
 
 
 class CourseDescriptionSerializer(serializers.ModelSerializer):
-    """Serializer for course description updates."""
+    """Lightweight serializer for updating only the course description."""
 
     class Meta:
+        """Meta options for CourseDescriptionSerializer."""
+
         model = Course
         fields = ("description",)
 
 
 class CourseJoinCodeSerializer(serializers.Serializer):
-    """Serializer for joining a course by code."""
+    """Serializer for students joining a course via a code.
+
+    Handles the validation of the code string and performs the enrollment
+    operation upon creation.
+    """
 
     code = serializers.CharField(max_length=64)
 
     def validate_code(self, value):
-        """Validate that the supplied join code exists.
+        """Checks if the provided join code exists in the database.
 
         Args:
-            value: The join code submitted by the caller.
+            value: The code string to validate.
 
         Returns:
-            str: The validated join code.
+            The validated code string.
 
         Raises:
-            ValidationError: If the join code does not exist.
+            serializers.ValidationError: If the code does not exist.
         """
         if not CourseJoinCode.objects.filter(code=value).exists():
             raise serializers.ValidationError("Invalid join code.")
         return value
 
     def create(self, validated_data):
-        """Create or reactivate an enrollment for the supplied join code.
+        """Enrolls the requesting user into the course identified by the code.
 
         Args:
-            validated_data: The validated join code payload.
-
-        Returns:
-            CourseEnrollment: The created or existing enrollment instance.
+            validated_data: Dictionary containing the validated 'code'.
         """
         code = validated_data["code"]
         course = Course.objects.get(join_code__code=code)
-        enrollment, _ = CourseEnrollment.objects.get_or_create(
+        CourseEnrollment.objects.get_or_create(
             course=course, student=self.context["request"].user
         )
-        return enrollment
 
 
 class CourseJoinCodeCreateSerializer(serializers.ModelSerializer):
-    """Serializer for creating course join codes."""
+    """Serializer for administrative creation of new course join codes."""
 
     class Meta:
+        """Meta options for CourseJoinCodeCreateSerializer."""
+
         model = CourseJoinCode
         fields = ("id", "code", "expires_at", "active")
         read_only_fields = ("id",)
 
     def create(self, validated_data):
-        """Create a join code for the course in serializer context.
+        """Creates a new join code associated with a specific course.
 
         Args:
-            validated_data: The validated join code payload.
+            validated_data: Validated configuration for the new join code.
 
         Returns:
-            CourseJoinCode: The created join code instance.
+            The newly created CourseJoinCode instance.
         """
         course = self.context["course"]
         return CourseJoinCode.objects.create(course=course, **validated_data)
 
 
 class CourseStaffAddSerializer(serializers.Serializer):
-    """Serializer for adding course staff members."""
+    """Serializer for identifying a user to be added as course staff."""
 
     user_id = serializers.IntegerField()
 
     def validate_user_id(self, value):
-        """Validate that the provided user exists.
+        """Ensures the provided user ID corresponds to an existing system user.
 
         Args:
-            value: The submitted user identifier.
+            value: The integer ID of the user.
 
         Returns:
-            int: The validated user identifier.
+            The validated user ID.
 
         Raises:
-            ValidationError: If no user exists for the supplied identifier.
+            serializers.ValidationError: If no user matches the provided ID.
         """
         if not User.objects.filter(id=value).exists():
             raise serializers.ValidationError("User not found.")

@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import { formatDateTimeInTimezone } from "@/utils/userTimezone";
 
 interface AdminNotificationHistoryDetailHeaderProps {
   /**
@@ -40,7 +41,7 @@ export const AdminNotificationHistoryDetailHeader = (
         </Link>
         <h1 className="mt-2 text-2xl font-semibold text-gray-900">{title}</h1>
         <p className="mt-1 text-sm text-gray-500">
-          Queued {new Date(queuedAt).toLocaleString()}
+          Queued {formatDateTimeInTimezone(queuedAt)}
         </p>
       </div>
       <button

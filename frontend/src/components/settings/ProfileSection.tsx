@@ -1,25 +1,52 @@
+import { Tooltip } from "@/components/ui";
 import type { Profile } from "@/types";
 
 interface ProfileSectionProps {
   profile: Profile | null;
   loading: boolean;
   saving: boolean;
+  isDirty?: boolean;
   error: string | null;
   fieldErrors: Record<string, string[]>;
+  teacherActionLoading?: {
+    makingTeacher: boolean;
+    unregisteringTeacher: boolean;
+    teacherStatus: boolean;
+  };
+  teacherActionState?: {
+    error: string | null;
+    success: string | null;
+  };
+  isTeacher?: boolean;
   onChange: (nextProfile: Profile) => void;
   onSave: () => void;
   onAvatarChange: (file: File | null) => void;
+  onToggleTeacher?: (nextValue: boolean) => void;
 }
+
+const noopToggleTeacher = (_nextValue: boolean): void => undefined;
 
 const ProfileSection = ({
   profile,
   loading,
   saving,
+  isDirty = false,
   error,
   fieldErrors,
+  teacherActionLoading = {
+    makingTeacher: false,
+    unregisteringTeacher: false,
+    teacherStatus: false,
+  },
+  teacherActionState = {
+    error: null,
+    success: null,
+  },
+  isTeacher = false,
   onChange,
   onSave,
   onAvatarChange,
+  onToggleTeacher = noopToggleTeacher,
 }: ProfileSectionProps) => {
   if (loading) {
     return <p className="text-sm text-gray-500">Loading...</p>;
@@ -31,6 +58,9 @@ const ProfileSection = ({
 
   const updateField = <K extends keyof Profile>(key: K, value: Profile[K]) => {
     onChange({ ...profile, [key]: value });
+  };
+  const handleTeacherToggle = () => {
+    onToggleTeacher(!isTeacher);
   };
 
   const today = new Date();
@@ -116,16 +146,68 @@ const ProfileSection = ({
           )}
         </label>
 
+        <div className="rounded-lg border border-gray-200 bg-white px-4 py-4 shadow-sm">
+          <div className="flex items-center gap-2">
+            <h3 className="text-sm font-semibold text-gray-900">Teacher profile</h3>
+            <Tooltip content="Manage whether your account is registered as a teacher.">
+              <button
+                type="button"
+                className="inline-flex h-5 w-5 items-center justify-center rounded-full border border-gray-300 text-xs text-gray-500 hover:bg-gray-100"
+                aria-label="Explain teacher profile"
+              >
+                ?
+              </button>
+            </Tooltip>
+          </div>
+
+          {teacherActionState.error ? (
+            <div className="mt-3 rounded-md bg-red-50 px-4 py-3 text-sm text-red-700">
+              {teacherActionState.error}
+            </div>
+          ) : null}
+
+          <div className="mt-4 flex flex-wrap gap-3">
+            <div className="flex items-center gap-3">
+              <div className="text-xs font-medium text-gray-600">
+                {teacherActionLoading.teacherStatus
+                  ? "Checking status"
+                  : isTeacher
+                    ? "Registered"
+                    : "Not registered"}
+              </div>
+              <button
+                type="button"
+                onClick={handleTeacherToggle}
+                disabled={
+                  teacherActionLoading.teacherStatus
+                  || teacherActionLoading.makingTeacher
+                  || teacherActionLoading.unregisteringTeacher
+                }
+                className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${
+                  isTeacher ? "bg-primary" : "bg-gray-300"
+                } disabled:cursor-not-allowed disabled:opacity-60`}
+                aria-pressed={isTeacher}
+              >
+                <span
+                  className={`inline-block h-4 w-4 transform rounded-full bg-white shadow-sm transition-transform ${
+                    isTeacher ? "translate-x-4" : "translate-x-1"
+                  }`}
+                />
+              </button>
+            </div>
+          </div>
+
+        </div>
       </div>
 
       <div className="flex justify-end">
         <button
           type="button"
           onClick={onSave}
-          disabled={saving}
+          disabled={saving || !isDirty}
           className={`rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
-            saving
-              ? "bg-gray-200 text-gray-500 cursor-not-allowed"
+            saving || !isDirty
+              ? "cursor-not-allowed bg-gray-200 text-gray-500"
               : "bg-primary text-white hover:bg-blue-300"
           }`}
         >

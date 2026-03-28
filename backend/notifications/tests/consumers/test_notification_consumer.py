@@ -1,16 +1,21 @@
-from channels.testing import WebsocketCommunicator
+import asyncio
+
+from channels.layers import get_channel_layer
 from channels.routing import URLRouter
+from channels.testing import WebsocketCommunicator
+from django.contrib.auth import get_user_model
 from django.contrib.auth.models import AnonymousUser
 from django.test import TransactionTestCase
+from django.test.testcases import SerializeMixin
+
 from notifications.routing import websocket_urlpatterns
-from django.contrib.auth import get_user_model
-from channels.layers import get_channel_layer
-import asyncio
 
 User = get_user_model()
 
 
-class NotificationConsumerTest(TransactionTestCase):
+class NotificationConsumerTest(SerializeMixin, TransactionTestCase):
+    lockfile = __file__
+
     async def _test_connect_authenticated(self):
         user = await User.objects.acreate(username="testuser", email="test@example.com")
 

@@ -1,7 +1,7 @@
 """Type definitions for the scheduler application."""
 
-from datetime import datetime
 import dataclasses
+from datetime import datetime
 
 
 @dataclasses.dataclass

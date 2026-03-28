@@ -1,8 +1,8 @@
 """Tests for preferences me."""
 
 from django.contrib.auth import get_user_model
-from rest_framework.test import APITestCase
 from rest_framework import status
+from rest_framework.test import APITestCase
 
 User = get_user_model()
 
@@ -66,3 +66,54 @@ class PreferenceMeTests(APITestCase):
             "day_end" in body or "non_field_errors" in body,
             f"Expected day_end or non_field_errors, got {body}",
         )
+
+    def test_me_patch_validation_day_start_after_day_end(self):
+        self.client.force_authenticate(user=self.user)
+
+        res = self.client.patch(
+            "/api/preferences/me/",
+            {"day_start": "22:00", "day_end": "08:00"},
+            format="json",
+        )
+        self.assertEqual(res.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("day_end", res.json())
+
+    def test_me_patch_validation_day_schedule_rejects_reverse_window(self):
+        self.client.force_authenticate(user=self.user)
+
+        res = self.client.patch(
+            "/api/preferences/me/",
+            {
+                "day_schedule": [
+                    {"day": 1, "start": "22:00", "end": "08:00"},
+                    {"day": 2, "start": "08:00", "end": "22:00"},
+                    {"day": 3, "start": "08:00", "end": "22:00"},
+                    {"day": 4, "start": "08:00", "end": "22:00"},
+                    {"day": 5, "start": "08:00", "end": "22:00"},
+                    {"day": 6, "start": "08:00", "end": "22:00"},
+                    {"day": 7, "start": "08:00", "end": "22:00"},
+                ]
+            },
+            format="json",
+        )
+        self.assertEqual(res.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("day_schedule", res.json())
+
+    def test_me_patch_accepts_new_general_preferences(self):
+        self.client.force_authenticate(user=self.user)
+
+        res = self.client.patch(
+            "/api/preferences/me/",
+            {
+                "default_landing_page": "calendar",
+                "week_starts_on": "sunday",
+                "time_format": "12h",
+            },
+            format="json",
+        )
+
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+        body = res.json()
+        self.assertEqual(body["default_landing_page"], "calendar")
+        self.assertEqual(body["week_starts_on"], "sunday")
+        self.assertEqual(body["time_format"], "12h")
