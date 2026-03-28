@@ -76,21 +76,19 @@ export const getStoredWeekStartsOn = (): WeekStartsOnPreference => {
  * Subscribes React components to the stored week-start preference.
  * @returns The preferred first day of the week.
  */
-export const useStoredWeekStartsOn = (): WeekStartsOnPreference => {
-  if (typeof window === "undefined") {
-    return "monday";
-  }
+export const useStoredWeekStartsOn = (): WeekStartsOnPreference => useSyncExternalStore(
+  (onStoreChange) => {
+    if (typeof window === "undefined") {
+      return () => undefined;
+    }
 
-  return useSyncExternalStore(
-    (onStoreChange) => {
-      const handler = () => onStoreChange();
-      window.addEventListener(USER_PREFERENCES_CHANGE_EVENT, handler);
-      return () => window.removeEventListener(USER_PREFERENCES_CHANGE_EVENT, handler);
-    },
-    getStoredWeekStartsOn,
-    () => "monday",
-  );
-};
+    const handler = () => onStoreChange();
+    window.addEventListener(USER_PREFERENCES_CHANGE_EVENT, handler);
+    return () => window.removeEventListener(USER_PREFERENCES_CHANGE_EVENT, handler);
+  },
+  getStoredWeekStartsOn,
+  () => "monday",
+);
 
 /**
  * Stores the preferred week-start value.

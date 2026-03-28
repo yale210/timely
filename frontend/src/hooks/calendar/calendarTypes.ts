@@ -87,6 +87,7 @@ export interface UseCalendarReturn {
  * Computes the inclusive date window to load for the current calendar view.
  * @param currentView - Active calendar view.
  * @param currentDate - Anchor date for the view.
+ * @param preference - Optional saved calendar preferences used for timezone and week-start handling.
  * @returns Date window formatted for API queries.
  */
 export const getCalendarWindow = (
