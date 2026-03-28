@@ -48,7 +48,7 @@ export interface EventFormProps {
     onCreateCategory: (text: string) => Promise<Category>;
     onUpdateCategory: (id: number, patch: { colour?: string | null; colour_override?: boolean }) => Promise<Category>;
     onDeleteCategory: (id: number) => Promise<void>;
-    onSubmit: (data: EventSubmission) => void;
+    onSubmit: (data: EventSubmission) => Promise<void> | void;
     onCancel: () => void;
     onDataChange?: (data: Partial<Event>) => void;
 }

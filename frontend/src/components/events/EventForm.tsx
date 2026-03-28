@@ -1,4 +1,10 @@
-import { useState, useRef, type FormEvent, type MouseEvent as ReactMouseEvent,} from "react";
+import {
+  useEffect,
+  useRef,
+  useState,
+  type FormEvent,
+  type MouseEvent as ReactMouseEvent,
+} from "react";
 import { CategoryColourPicker, CategoryMultiSelect, Tooltip } from "@/components";
 import { usePushSubscription } from "@/hooks/notifications/usePushSubscription";
 import type { EventFormProps, NormalisedEventSubmission } from "@/hooks/eventForm/useEventFormTypes";
@@ -14,6 +20,7 @@ import { useEventFormState } from "@/hooks/eventForm/useEventFormState";
 import { useEventFormDerivedState, buildSubmission } from "@/hooks/eventForm/useEventFormDerivedState";
 import { parseColourInput } from "@/hooks/parseColourInput";
 import { useEventReminderActions } from "@/hooks/eventForm/useEventFormReminderActions";
+import { formatDjangoFormError } from "@/utils/apiErrors";
 import {
   useEventFormDataChange,
   useEventFormServerTimeSync,
@@ -142,14 +149,40 @@ const EventForm = ({
     normalisedCurrentSubmission,
     initialSubmission,
   );
+  const submissionSnapshot = JSON.stringify(normalisedCurrentSubmission);
+  const previousSubmissionSnapshotRef = useRef(submissionSnapshot);
+
+  useEffect(() => {
+    if (previousSubmissionSnapshotRef.current === submissionSnapshot) {
+      return;
+    }
+    previousSubmissionSnapshotRef.current = submissionSnapshot;
+    if (eventState.submitError) {
+      eventState.setSubmitError(null);
+    }
+  }, [eventState, submissionSnapshot]);
+
+  const handleFormSubmit = async () => {
+    const data: EventSubmission = buildSubmission(buildArgs());
+
+    try {
+      eventState.setIsSubmitting(true);
+      eventState.setSubmitError(null);
+      await onSubmit(data);
+    } catch (error) {
+      eventState.setSubmitError(formatDjangoFormError(error).message);
+      console.error(error);
+    } finally {
+      eventState.setIsSubmitting(false);
+    }
+  };
 
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
 
     if (derivedValues.hasErrors || !hasChanges) return;
 
-    const data: EventSubmission = buildSubmission(buildArgs());
-    void onSubmit(data);
+    void handleFormSubmit();
   };
 
   const handleColourPickerToggle = (
@@ -171,6 +204,11 @@ const EventForm = ({
   return (
     <form onSubmit={handleSubmit} className="flex flex-col h-full bg-white text-black">
       <div className="grow overflow-y-auto p-6 space-y-6">
+        {eventState.submitError ? (
+          <div className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+            {eventState.submitError}
+          </div>
+        ) : null}
         {eventState.clockSkewWarning && (
           <div className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800">
             {eventState.clockSkewWarning}
@@ -364,6 +402,7 @@ const EventForm = ({
         onCancel={onCancel}
         hasErrors={derivedValues.hasErrors}
         hasChanges={hasChanges}
+        isSubmitting={eventState.isSubmitting}
       />
       <CategoryColourPicker
         isOpen={eventState.showPickerMenu}

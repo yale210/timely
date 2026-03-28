@@ -75,6 +75,8 @@ export function useEventFormState(defaultColour: string, initialData?: Event) {
     );
     const [serverTimeOffsetMs, setServerTimeOffsetMs] = useState<number | null>(null);
     const [clockSkewWarning, setClockSkewWarning] = useState<string | null>(null);
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const [submitError, setSubmitError] = useState<string | null>(null);
 
     return {
         title, setTitle,
@@ -98,5 +100,7 @@ export function useEventFormState(defaultColour: string, initialData?: Event) {
         validationNowMs, setValidationNowMs,
         serverTimeOffsetMs, setServerTimeOffsetMs,
         clockSkewWarning, setClockSkewWarning,
+        isSubmitting, setIsSubmitting,
+        submitError, setSubmitError,
     };
 }
