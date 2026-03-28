@@ -27,6 +27,18 @@ interface CourseJoinCodeForm {
   expires_at: string;
 }
 
+const getLeadLabel = async (lead: string | null | undefined): Promise<string> => {
+  if (!lead) {
+    return "Unassigned";
+  }
+
+  try {
+    return await getUsernameById(Number(lead));
+  } catch {
+    return lead;
+  }
+};
+
 /**
  * Renders a single course detail page.
  */
@@ -124,31 +136,23 @@ export default function CourseDetail() {
     }
 
     const loadCourse = async () => {
-      setLoading(true);
-      setError(null);
-
-      try {
-        const courseData = await courseService.getCourse(courseId);
+      const applyCourseState = async (courseData: Course) => {
         setCourse(courseData);
-
-        if (courseData.lead) {
-          try {
-            const username = await getUsernameById(Number(courseData.lead));
-            setLeadUsername(username);
-          } catch {
-            setLeadUsername(courseData.lead);
-          }
-        } else {
-          setLeadUsername("Unassigned");
-        }
-
+        setLeadUsername(await getLeadLabel(courseData.lead));
         setEditForm({
           name: courseData.name,
           description: courseData.description,
           active: courseData.active !== false,
         });
-
         await refreshEvents(courseId);
+      };
+
+      setLoading(true);
+      setError(null);
+
+      try {
+        const courseData = await courseService.getCourse(courseId);
+        await applyCourseState(courseData);
       } catch (courseError) {
         console.error(courseError);
         setError("Course not found.");

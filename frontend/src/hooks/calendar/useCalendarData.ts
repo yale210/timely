@@ -6,6 +6,12 @@ import * as taskService from "@/services/taskService";
 import { preferenceService } from "@/services/preferenceService";
 import type { Category, Event, Preference, Task } from "@/types";
 
+/**
+ * Loads calendar entities, preferences, and loading/error state.
+ * @param view - Active calendar view.
+ * @param date - Active calendar date.
+ * @returns Calendar data state and fetch helpers.
+ */
 export const useCalendarData = (view: View, date: Date) => {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);

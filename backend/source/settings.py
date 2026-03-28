@@ -91,7 +91,7 @@ CSRF_TRUSTED_ORIGINS = [
 
 
 if DEBUG:
-    ALLOWED_HOSTS.extend(["127.0.0.1", "localhost", "0.0.0.0", "[::1]"])
+    ALLOWED_HOSTS.extend(["127.0.0.1", "localhost", "0.0.0.0", "[::1]", "testserver"])
 else:
     ALLOWED_HOSTS.append("timely.subhan.work")
     CSRF_TRUSTED_ORIGINS = ["https://timely.subhan.work"]
@@ -284,6 +284,8 @@ CELERY_BEAT_SCHEDULE = {
 TESTING = "test" in sys.argv or os.getenv("TESTING") == "True"
 
 if TESTING:
+    if "testserver" not in ALLOWED_HOSTS:
+        ALLOWED_HOSTS.append("testserver")
     CELERY_TASK_ALWAYS_EAGER = True
     CELERY_TASK_EAGER_PROPAGATES = True
     CHANNEL_LAYERS = {

@@ -29,6 +29,14 @@ const getCurrentUserId = (): number | string | null => {
   return authStore.getUser()?.id ?? null;
 };
 
+const clearCourseCacheEntries = (courseId: number) => {
+  for (const key of coursePermissionsCache.keys()) {
+    if (key.startsWith(`course:${courseId}:user:`)) {
+      coursePermissionsCache.delete(key);
+    }
+  }
+};
+
 /**
  * Clears cached permissions for a course and/or a specific user.
  * The function provides the capability to remove permission entries from the
@@ -49,11 +57,7 @@ export const clearCoursePermissionsCache = (courseId?: number, userId?: number |
   }
 
   if (typeof courseId === "number") {
-    for (const key of coursePermissionsCache.keys()) {
-      if (key.startsWith(`course:${courseId}:user:`)) {
-        coursePermissionsCache.delete(key);
-      }
-    }
+    clearCourseCacheEntries(courseId);
     return;
   }
 
