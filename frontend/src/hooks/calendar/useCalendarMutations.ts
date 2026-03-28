@@ -56,6 +56,11 @@ export const useCalendarMutations = ({
     typeof Audio === "undefined" ? null : new Audio(completeSoundUrl),
   );
 
+  // Ref so handleToggleTaskComplete doesn't need `tasks` as a dep (which would
+  // cause it to recreate on every data update and cascade re-renders downstream).
+  const tasksRef = useRef(tasks);
+  tasksRef.current = tasks;
+
   const submitTask = useCallback(
     async (data: TaskSubmission) => {
       try {
@@ -262,11 +267,11 @@ export const useCalendarMutations = ({
 
   const handleToggleTaskComplete = useCallback(
     async (taskId: number) => {
-      const task = tasks.find((entry) => entry.id === taskId);
+      const task = tasksRef.current.find((entry) => entry.id === taskId);
       if (!task) return;
-      
+
       const isSoundDisabled = preference?.disable_sound_effects ?? (typeof window !== "undefined" && localStorage.getItem("disable_sound_effects") === "true");
-      
+
       try {
         if (!task.completed && completeSoundRef.current && !isSoundDisabled) {
           completeSoundRef.current.currentTime = 0;
@@ -282,7 +287,7 @@ export const useCalendarMutations = ({
         console.error(error);
       }
     },
-    [fetchTasks, preference?.disable_sound_effects, tasks],
+    [fetchTasks, preference?.disable_sound_effects],
   );
 
   return {

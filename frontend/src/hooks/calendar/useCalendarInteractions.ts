@@ -1,4 +1,4 @@
-import { useCallback, type Dispatch, type SetStateAction } from "react";
+import { useCallback, useRef, type Dispatch, type SetStateAction } from "react";
 import type { EventInteractionArgs } from "react-big-calendar/lib/addons/dragAndDrop";
 import { normalizeInteractionStart, normalizeInteractionEnd } from "./calendarTypes";
 import * as taskService from "@/services/taskService";
@@ -41,6 +41,21 @@ export const useCalendarInteractions = ({
   fetchEvents,
 }: UseCalendarInteractionsProps) => {
 
+  // Refs so callbacks don't need frequently-changing values as deps, which would
+  // cause them to recreate on every data update and force CalendarView to re-render.
+  const isSidebarOpenRef = useRef(isSidebarOpen);
+  isSidebarOpenRef.current = isSidebarOpen;
+  const tasksRef = useRef(tasks);
+  tasksRef.current = tasks;
+  const eventsRef = useRef(events);
+  eventsRef.current = events;
+  const viewRef = useRef(view);
+  viewRef.current = view;
+  const dateRef = useRef(date);
+  dateRef.current = date;
+  const scheduleOrderRef = useRef(scheduleOrder);
+  scheduleOrderRef.current = scheduleOrder;
+
   const closeSidebar = useCallback(() => {
     setIsSidebarOpen(false);
     setSelectedItem(undefined);
@@ -49,7 +64,7 @@ export const useCalendarInteractions = ({
 
   const selectSlot = useCallback(
     (slot: { start: Date; end?: Date; slots?: Date[]; action?: "select" | "click" | "doubleClick" }) => {
-      if (isSidebarOpen && slot.action !== "select") return;
+      if (isSidebarOpenRef.current && slot.action !== "select") return;
       if (!slot.start) return;
 
       const slotStart = slot.slots && slot.slots.length > 0 ? slot.slots[0] : slot.start;
@@ -81,13 +96,13 @@ export const useCalendarInteractions = ({
       });
       setIsSidebarOpen(true);
     },
-    [isSidebarOpen, setSidebarMode, setSelectedItem, setIsSidebarOpen],
+    [setSidebarMode, setSelectedItem, setIsSidebarOpen],
   );
 
   const selectEntry = useCallback(
     (entry: CalendarEntry) => {
       if (entry.kind === "task") {
-        const task = entry.taskData ?? tasks.find((item) => item.id === entry.sourceId);
+        const task = entry.taskData ?? tasksRef.current.find((item) => item.id === entry.sourceId);
         if (task) {
           setSidebarMode("task");
           setSelectedItem(task);
@@ -102,14 +117,14 @@ export const useCalendarInteractions = ({
         setIsSidebarOpen(true);
       }
     },
-    [tasks, setSidebarMode, setSelectedItem, setIsSidebarOpen],
+    [setSidebarMode, setSelectedItem, setIsSidebarOpen],
   );
 
   const updateTaskAllocation = useCallback(
     async (entry: CalendarEntry, start: Date, end: Date) => {
       if (typeof entry.allocationIndex !== "number") return;
-      
-      const task = tasks.find((item) => item.id === entry.sourceId);
+
+      const task = tasksRef.current.find((item) => item.id === entry.sourceId);
       if (!task) return;
       
       setScheduleOrder((prev) => {
@@ -136,12 +151,12 @@ export const useCalendarInteractions = ({
         await fetchTasks();
       }
     },
-    [fetchTasks, tasks, setScheduleOrder, setTasks],
+    [fetchTasks, setScheduleOrder, setTasks],
   );
 
   const updateCalendarEvent = useCallback(
     async (entry: CalendarEntry, start: Date, end: Date) => {
-      const eventData = entry.eventData ?? events.find(
+      const eventData = entry.eventData ?? eventsRef.current.find(
         (item) => item.id === entry.sourceId && item.start_time === entry.start.toISOString(),
       );
 
@@ -173,18 +188,18 @@ export const useCalendarInteractions = ({
 
       try {
         await eventService.updateEvent(eventData.id, payload, context);
-        await fetchEvents(view, date);
+        await fetchEvents(viewRef.current, dateRef.current);
       } catch (updateError) {
         console.error(updateError);
-        await fetchEvents(view, date);
+        await fetchEvents(viewRef.current, dateRef.current);
       }
     },
-    [date, events, fetchEvents, view, setEvents],
+    [fetchEvents, setEvents],
   );
 
   const handleEventDrop = useCallback(
     async ({ event, start, end }: EventInteractionArgs<CalendarEntry>) => {
-      if (Object.keys(scheduleOrder).length > 0) {
+      if (Object.keys(scheduleOrderRef.current).length > 0) {
         setScheduleOrder({});
       }
       const nextStart = normalizeInteractionStart(new Date(start));
@@ -195,12 +210,12 @@ export const useCalendarInteractions = ({
       }
       await updateCalendarEvent(event, nextStart, nextEnd);
     },
-    [scheduleOrder, updateCalendarEvent, updateTaskAllocation, setScheduleOrder],
+    [updateCalendarEvent, updateTaskAllocation, setScheduleOrder],
   );
 
   const handleEventResize = useCallback(
     async ({ event, start, end }: EventInteractionArgs<CalendarEntry>) => {
-      if (Object.keys(scheduleOrder).length > 0) {
+      if (Object.keys(scheduleOrderRef.current).length > 0) {
         setScheduleOrder({});
       }
       const nextStart = normalizeInteractionStart(new Date(start));
@@ -211,7 +226,7 @@ export const useCalendarInteractions = ({
       }
       await updateCalendarEvent(event, nextStart, nextEnd);
     },
-    [scheduleOrder, updateCalendarEvent, updateTaskAllocation, setScheduleOrder],
+    [updateCalendarEvent, updateTaskAllocation, setScheduleOrder],
   );
 
   const openCreateSidebar = useCallback(() => {
