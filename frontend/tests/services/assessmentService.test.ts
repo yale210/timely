@@ -23,14 +23,11 @@ describe('assessmentService', () => {
   const mockAssessment: Assessment = { 
     id: 1, 
     title: 'Test',
-    description: '',
-    course: 1,
-    course_name: 'Course',
+    assessment_type: 'COURSEWORK',
     due_date: '2026-01-01',
-    weight: 10,
-    category: 1,
-    category_name: 'Category',
-    is_completed: false,
+    weighting_of_assessment: 10,
+    categories: [],
+    completed: false,
     created_at: '',
     updated_at: ''
   };
@@ -59,7 +56,7 @@ describe('assessmentService', () => {
   describe('createAssessment', () => {
     it('should call api.post with correct data', async () => {
       vi.mocked(mockApi.post).mockResolvedValue({ data: mockAssessment });
-      const data: AssessmentSubmission = { title: 'New', description: '', course: 1, due_date: '', weight: 0, category: 1 };
+      const data: AssessmentSubmission = { title: 'New', assessment_type: 'COURSEWORK', due_date: '', weighting_of_assessment: 0, categories: [1] };
 
       const result = await assessmentService.createAssessment(data);
 
@@ -71,7 +68,7 @@ describe('assessmentService', () => {
   describe('updateAssessment', () => {
     it('should call api.patch with correct url and data', async () => {
       vi.mocked(mockApi.patch).mockResolvedValue({ data: mockAssessment });
-      const data: AssessmentSubmission = { title: 'Updated', description: '', course: 1, due_date: '', weight: 0, category: 1 };
+      const data: AssessmentSubmission = { title: 'Updated', assessment_type: 'COURSEWORK', due_date: '', weighting_of_assessment: 0, categories: [1] };
 
       const result = await assessmentService.updateAssessment(1, data);
 

@@ -17,7 +17,7 @@ vi.mock('@/utils/apiErrors', () => ({
 }));
 
 describe('useFriendships Hook', () => {
-const mockFriendship: Friendship = { id: 1, sender: 1, receiver: 2, state: 'PENDING' };
+const mockFriendship: Friendship = { id: 1, sender: 1, receiver: 2, state: 'SENT' };
 
   beforeEach(() => {
     vi.clearAllMocks();

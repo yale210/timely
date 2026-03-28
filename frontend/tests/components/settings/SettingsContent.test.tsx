@@ -131,8 +131,8 @@ describe("SettingsContent", () => {
     expect(screen.getByText("theme-section")).toBeInTheDocument();
   });
 
-  it("renders general section and handles actions", () => {
-    const props = createProps("general");
+  it("renders preferences section and handles actions", () => {
+    const props = createProps("preferences");
     render(<SettingsContent {...props} />);
 
     // Interactions
@@ -163,7 +163,7 @@ describe("SettingsContent", () => {
   });
 
   it("handles export and import events", () => {
-    const props = createProps("general");
+    const props = createProps("preferences");
     render(<SettingsContent {...props} />);
 
     const exportBtn = screen.getByRole("button", { name: "Export events" });

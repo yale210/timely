@@ -19,14 +19,12 @@ describe('profileService', () => {
   });
 
   const mockProfile: Profile = { 
-    id: 1,
-    username: 'test',
-    email: 'test@example.com',
-    first_name: 'Test',
-    last_name: 'User',
+    name: 'Test User',
+    date_of_birth: null,
+    creation_date: '',
+    slogan: '',
     bio: 'Hello', 
-    avatar: 'old.jpg',
-    is_staff: false
+    avatar: 'old.jpg'
   };
 
   describe('getMyProfile', () => {
