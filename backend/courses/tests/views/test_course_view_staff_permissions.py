@@ -134,4 +134,3 @@ class CourseViewStaffPermissionsTests(CourseViewTestSupport):
     # -------------------------
     # join_code
     # -------------------------
-

@@ -263,4 +263,3 @@ class SchedulerServiceConstraintTests(SchedulerServicesSupport, TestCase):
             results[0].scheduled_end,
             timezone.make_aware(datetime.combine(start_day, time(10, 0))),
         )
-

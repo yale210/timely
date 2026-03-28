@@ -275,7 +275,6 @@ class CourseViewEventsMembershipTests(CourseViewTestSupport):
 
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
-
     def test_join_code_requires_permission(self):
         self.client.force_authenticate(user=self.student_user)
         response = self.client.post(

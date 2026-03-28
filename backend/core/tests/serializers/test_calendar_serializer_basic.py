@@ -163,4 +163,3 @@ class CalendarSerializerBasicTests(CalendarSerializerTestSupport):
 
         self.assertFalse(serializer.is_valid())
         self.assertIn("completed_minutes", serializer.errors)
-

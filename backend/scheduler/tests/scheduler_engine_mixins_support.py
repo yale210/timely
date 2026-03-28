@@ -111,5 +111,3 @@ class FakeSchedulingScheduler(SchedulerSchedulingMixin):
     @staticmethod
     def _expand_task_segment(task, start, end):
         return start, end
-
-

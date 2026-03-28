@@ -241,4 +241,3 @@ class CalendarSerializerAllocationParsingTests(CalendarSerializerTestSupport):
                 estimated_minutes=120,
                 completed_minutes=0,
             )
-

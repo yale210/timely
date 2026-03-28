@@ -190,4 +190,3 @@ class SchedulerServiceBasicsTests(SchedulerServicesSupport, TestCase):
 
         self.assertTrue(results[0].success)
         self.assertEqual(results[0].scheduled_start.date(), deadline_dt.date())
-

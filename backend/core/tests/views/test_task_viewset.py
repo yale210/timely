@@ -244,7 +244,9 @@ class TaskViewSetTests(TestCase):
         self.assertIn("allocation", response.data)
 
     def test_patch_task_buffer_fields_persist(self):
-        response = self.patch_task({"buffer_before_minutes": 25, "buffer_after_minutes": 35})
+        response = self.patch_task(
+            {"buffer_before_minutes": 25, "buffer_after_minutes": 35}
+        )
         self.assertEqual(response.status_code, 200)
         self.task1.refresh_from_db()
         self.assertEqual(self.task1.buffer_before_minutes, 25)

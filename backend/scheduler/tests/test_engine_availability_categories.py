@@ -272,5 +272,3 @@ class SchedulerEngineMixinTests(TestCase):
             self.scheduler._apply_daily_capacity(window, free_slots),
             free_slots,
         )
-
-

@@ -458,4 +458,3 @@ class EventScopeMutationServiceTests(TestCase):
         )
         self.assertEqual(child.categories.count(), 1)
         self.assertEqual(child.reminders.count(), 1)
-

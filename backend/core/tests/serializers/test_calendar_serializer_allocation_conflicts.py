@@ -202,4 +202,3 @@ class CalendarSerializerAllocationConflictTests(CalendarSerializerTestSupport):
         updated = update_serializer.save()
         self.assertFalse(updated.completed)
         self.assertEqual(updated.completed_minutes, 0)
-
