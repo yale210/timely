@@ -224,8 +224,7 @@ export interface AdminUserListResponse {
 }
 
 /**
- * Returns the permissions of a notification if they exist,
- * otherwise returns the string "unsopported" if there is no such
- * NotificationPermission object.
+ * Browser notification permission state, or "unsupported" when the API
+ * is unavailable in the current environment.
  */
 export type PushPermission = NotificationPermission | "unsupported";
