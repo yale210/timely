@@ -5,7 +5,7 @@ import {
   type FormEvent,
   type MouseEvent as ReactMouseEvent,
 } from "react";
-import { CategoryColourPicker, CategoryMultiSelect, Tooltip } from "@/components";
+import { CategoryColourPicker, CategoryMultiSelect } from "@/components";
 import { usePushSubscription } from "@/hooks/notifications/usePushSubscription";
 import type { EventFormProps, NormalisedEventSubmission } from "@/hooks/eventForm/useEventFormTypes";
 import type { EventSubmission } from "@/types";
@@ -14,8 +14,7 @@ import EventFormSave from "@/components/events/EventFormSave";
 import EventFormColour from "@/components/events/EventFormColour";
 import EventFormStartTime from "@/components/events/EventFormStartTime";
 import EventFormEndTime from "@/components/events/EventFormEndTime";
-import EventFormRecurrence from "@/components/events/EventFormRecurrence";
-import EventFormReminder from "@/components/events/EventFormReminder";
+import EventFormRecurrenceReminders from "@/components/events/EventFormRecurrenceReminders";
 import { useEventFormState } from "@/hooks/eventForm/useEventFormState";
 import { useEventFormDerivedState, buildSubmission } from "@/hooks/eventForm/useEventFormDerivedState";
 import { parseColourInput } from "@/hooks/parseColourInput";
@@ -300,103 +299,27 @@ const EventForm = ({
           />
         </div>
 
-        <div className="rounded-xl border border-gray-200 bg-transparent p-3">
-          <div className="flex items-center justify-between gap-4">
-            <label
-              htmlFor="event-recurring"
-              className="text-sm font-medium text-gray-700"
-            >
-              Recurring
-            </label>
-            <button
-              id="event-recurring"
-              type="button"
-              onClick={() => {
-                const nextValue = !eventState.recurrenceEnabled;
-                eventState.setRecurrenceEnabled(nextValue);
-
-                if (!nextValue) {
-                  eventState.setRecurrenceInterval(null);
-                  eventState.setRecurrenceEnd("");
-                } else if (!eventState.recurrenceInterval) {
-                  eventState.setRecurrenceInterval("weekly");
-                }
-              }}
-              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                eventState.recurrenceEnabled ? "bg-primary" : "bg-gray-300"
-              }`}
-              aria-pressed={eventState.recurrenceEnabled}
-            >
-              <span
-                className={`inline-block h-5 w-5 transform rounded-full bg-white shadow-sm transition-transform ${
-                  eventState.recurrenceEnabled ? "translate-x-5" : "translate-x-1"
-                }`}
-              />
-            </button>
-          </div>
-          {eventState.recurrenceEnabled && (
-            <EventFormRecurrence
-              baseInputClass={baseInputClass}
-              recurrenceInterval={eventState.recurrenceInterval}
-              setRecurrenceInterval={eventState.setRecurrenceInterval}
-              recurrenceEnd={eventState.recurrenceEnd}
-              setRecurrenceEnd={eventState.setRecurrenceEnd}
-            />
-          )}
-        </div>
-
-        <div className="rounded-xl border border-gray-200 bg-transparent p-3">
-          <div
-            className={`${
-              eventState.reminders.length > 0 ? "mb-2" : ""
-            } flex items-center justify-between`}
-          >
-            <div className="flex items-center gap-2">
-              <h3 className="text-sm font-medium text-gray-900">
-                Reminders ({eventState.reminders.length}/{MAX_REMINDERS})
-              </h3>
-              <Tooltip content="In-app notifications are always sent. Select additional channels below.">
-                <span className="inline-flex h-5 w-5 items-center justify-center rounded-full border border-gray-300 text-[10px] text-gray-500 cursor-help">
-                  ?
-                </span>
-              </Tooltip>
-            </div>
-
-            <button
-              type="button"
-              onClick={eventReminderActions.addReminder}
-              disabled={!canAddReminder}
-              className={`text-sm font-medium flex items-center gap-1 ${
-                canAddReminder
-                  ? "text-orange-600 hover:text-orange-700"
-                  : "text-gray-400 cursor-not-allowed"
-              }`}
-            >
-              <span className="material-icons text-sm">add</span> Add Reminder
-            </button>
-          </div>
-
-          <div className="space-y-2">
-            {eventState.reminders.map((reminder, index) => (
-              <EventFormReminder
-                key={index}
-                index={index}
-                reminder={reminder}
-                toggleReminderChannel={eventReminderActions.toggleReminderChannel}
-                handleTogglePush={() => {
-                  const nextValue = !reminder.send_push;
-                  void eventReminderActions.handleTogglePush(index, nextValue);
-                }}
-                updateReminder={eventReminderActions.updateReminder}
-                removeReminder={eventReminderActions.removeReminder}
-                permission={permission}
-                pushLoading={pushLoading}
-                pastReminderIndices={pastReminderIndices}
-                pushDeniedNotice={eventState.pushDeniedNotice}
-              />
-            ))}
-          </div>
-        </div>
+        <EventFormRecurrenceReminders
+          baseInputClass={baseInputClass}
+          recurrenceEnabled={eventState.recurrenceEnabled}
+          setRecurrenceEnabled={eventState.setRecurrenceEnabled}
+          recurrenceInterval={eventState.recurrenceInterval}
+          setRecurrenceInterval={eventState.setRecurrenceInterval}
+          recurrenceEnd={eventState.recurrenceEnd}
+          setRecurrenceEnd={eventState.setRecurrenceEnd}
+          reminders={eventState.reminders}
+          maxReminders={MAX_REMINDERS}
+          canAddReminder={canAddReminder}
+          addReminder={eventReminderActions.addReminder}
+          toggleReminderChannel={eventReminderActions.toggleReminderChannel}
+          handleTogglePush={eventReminderActions.handleTogglePush}
+          updateReminder={eventReminderActions.updateReminder}
+          removeReminder={eventReminderActions.removeReminder}
+          permission={permission}
+          pushLoading={pushLoading}
+          pastReminderIndices={pastReminderIndices}
+          pushDeniedNotice={eventState.pushDeniedNotice}
+        />
       </div>
       <EventFormSave
         onCancel={onCancel}
