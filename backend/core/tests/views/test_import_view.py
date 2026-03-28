@@ -28,12 +28,9 @@ class ImportViewTests(TestCase):
             b"METHOD:PUBLISH\n"
             b"BEGIN:VEVENT\n"
             b"UID:e1\n"
-            b"DTSTAMP:20260205T120548Z\n"
             b"DTSTART;TZID=Europe/London:20260325T200000\n"
             b"DTEND;TZID=Europe/London:20260325T210000\n"
             b"SUMMARY:Title Event 1\n"
-            b"DESCRIPTION:Description Event 1\n"
-            b"LOCATION:Location Event 1\n"
             b"END:VEVENT\n"
             b"END:VCALENDAR\n"
         ).strip()
@@ -155,7 +152,7 @@ class ImportViewTests(TestCase):
         """Test failure if no file."""
         self.client.login(username="testuser", password="password")
         response = self.client.post("/api/import/", {})
-        self.assertContains(response, "No file uploaded")
+        self.assertContains(response, "No file uploaded", status_code=400)
 
     def test_failure_if_wrong_file_type(self):
         """Test failure if wrong file type."""
@@ -169,12 +166,9 @@ class ImportViewTests(TestCase):
             b"METHOD:PUBLISH\n"
             b"BEGIN:VEVENT\n"
             b"UID:e1\n"
-            b"DTSTAMP:20260205T120548Z\n"
             b"DTSTART;TZID=Europe/London:20260325T200000\n"
             b"DTEND;TZID=Europe/London:20260325T210000\n"
             b"SUMMARY:Title Event 1\n"
-            b"DESCRIPTION:Description Event 1\n"
-            b"LOCATION:Location Event 1\n"
             b"END:VEVENT\n"
             b"END:VCALENDAR\n"
         ).strip()
@@ -186,7 +180,7 @@ class ImportViewTests(TestCase):
         )
 
         response = self.client.post("/api/import/", {"file": importing_file})
-        self.assertContains(response, "File type is not .txt")
+        self.assertContains(response, "File type is not .txt", status_code=400)
 
     def test_failure_if_empty_file(self):
         """Test failure if empty file."""
@@ -201,7 +195,7 @@ class ImportViewTests(TestCase):
 
         response = self.client.post("/api/import/", {"file": importing_file})
 
-        self.assertContains(response, "Empty file")
+        self.assertContains(response, "Empty file", status_code=400)
 
     def test_failure_if_no_begin(self):
         """Test failure if no begin."""
@@ -213,12 +207,9 @@ class ImportViewTests(TestCase):
             b"METHOD:PUBLISH\n"
             b"BEGIN:VEVENT\n"
             b"UID:e1\n"
-            b"DTSTAMP:20260205T120548Z\n"
             b"DTSTART;TZID=Europe/London:20260325T200000\n"
             b"DTEND;TZID=Europe/London:20260325T210000\n"
             b"SUMMARY:Title Event 1\n"
-            b"DESCRIPTION:Description Event 1\n"
-            b"LOCATION:Location Event 1\n"
             b"END:VEVENT\n"
             b"END:VCALENDAR\n"
         ).strip()
@@ -231,7 +222,7 @@ class ImportViewTests(TestCase):
 
         response = self.client.post("/api/import/", {"file": importing_file})
 
-        self.assertContains(response, "File requires: BEGIN:VCALENDAR")
+        self.assertContains(response, "File requires: BEGIN:VCALENDAR", status_code=400)
 
     def test_failure_if_no_end(self):
         """Test failure if no end."""
@@ -244,12 +235,9 @@ class ImportViewTests(TestCase):
             b"METHOD:PUBLISH\n"
             b"BEGIN:VEVENT\n"
             b"UID:e1\n"
-            b"DTSTAMP:20260205T120548Z\n"
             b"DTSTART;TZID=Europe/London:20260325T200000\n"
             b"DTEND;TZID=Europe/London:20260325T210000\n"
             b"SUMMARY:Title Event 1\n"
-            b"DESCRIPTION:Description Event 1\n"
-            b"LOCATION:Location Event 1\n"
             b"END:VEVENT\n"
         ).strip()
 
@@ -261,7 +249,7 @@ class ImportViewTests(TestCase):
 
         response = self.client.post("/api/import/", {"file": importing_file})
 
-        self.assertContains(response, "File requires: END:VCALENDAR")
+        self.assertContains(response, "File requires: END:VCALENDAR", status_code=400)
 
     def test_failure_if_begin_x2_before_end(self):
         """Test failure if begin x2 before end."""
@@ -274,12 +262,9 @@ class ImportViewTests(TestCase):
             b"METHOD:PUBLISH\n"
             b"BEGIN:VEVENT\n"
             b"UID:e1\n"
-            b"DTSTAMP:20260205T120548Z\n"
             b"DTSTART;TZID=Europe/London:20260325T200000\n"
             b"DTEND;TZID=Europe/London:20260325T210000\n"
             b"SUMMARY:Title Event 1\n"
-            b"DESCRIPTION:Description Event 1\n"
-            b"LOCATION:Location Event 1\n"
             b"BEGIN:VEVENT\n"
             b"END:VEVENT\n"
             b"END:VCALENDAR\n"
@@ -293,7 +278,7 @@ class ImportViewTests(TestCase):
 
         response = self.client.post("/api/import/", {"file": importing_file})
 
-        self.assertContains(response, "Event indentation error")
+        self.assertContains(response, "Event indentation error", status_code=400)
 
     def test_failure_if_end_before_begin(self):
         """Test failure if end before begin."""
@@ -307,12 +292,9 @@ class ImportViewTests(TestCase):
             b"END:VEVENT\n"
             b"BEGIN:VEVENT\n"
             b"UID:e1\n"
-            b"DTSTAMP:20260205T120548Z\n"
             b"DTSTART;TZID=Europe/London:20260325T200000\n"
             b"DTEND;TZID=Europe/London:20260325T210000\n"
             b"SUMMARY:Title Event 1\n"
-            b"DESCRIPTION:Description Event 1\n"
-            b"LOCATION:Location Event 1\n"
             b"END:VEVENT\n"
             b"END:VCALENDAR\n"
         ).strip()
@@ -325,7 +307,7 @@ class ImportViewTests(TestCase):
 
         response = self.client.post("/api/import/", {"file": importing_file})
 
-        self.assertContains(response, "No event to end")
+        self.assertContains(response, "No event to end", status_code=400)
 
     def test_failure_if_missing_summary(self):
         """Test failure if missing summary."""
@@ -339,11 +321,8 @@ class ImportViewTests(TestCase):
             b"METHOD:PUBLISH\n"
             b"BEGIN:VEVENT\n"
             b"UID:e1\n"
-            b"DTSTAMP:20260205T120548Z\n"
             b"DTSTART;TZID=Europe/London:20260325T200000\n"
             b"DTEND;TZID=Europe/London:20260325T210000\n"
-            b"DESCRIPTION:Description Event 1\n"
-            b"LOCATION:Location Event 1\n"
             b"END:VEVENT\n"
             b"END:VCALENDAR\n"
         ).strip()
@@ -356,7 +335,9 @@ class ImportViewTests(TestCase):
 
         response = self.client.post("/api/import/", {"file": importing_file})
 
-        self.assertContains(response, "One or more events don't have a summary")
+        self.assertContains(
+            response, "One or more events don't have a summary", status_code=400
+        )
 
     def test_failure_if_missing_start(self):
         """Test failure if missing start."""
@@ -370,11 +351,8 @@ class ImportViewTests(TestCase):
             b"METHOD:PUBLISH\n"
             b"BEGIN:VEVENT\n"
             b"UID:e1\n"
-            b"DTSTAMP:20260205T120548Z\n"
             b"DTEND;TZID=Europe/London:20260325T210000\n"
             b"SUMMARY:Title Event 1\n"
-            b"DESCRIPTION:Description Event 1\n"
-            b"LOCATION:Location Event 1\n"
             b"END:VEVENT\n"
             b"END:VCALENDAR\n"
         ).strip()
@@ -387,7 +365,9 @@ class ImportViewTests(TestCase):
 
         response = self.client.post("/api/import/", {"file": importing_file})
 
-        self.assertContains(response, "One or more events don't have a DTSTART")
+        self.assertContains(
+            response, "One or more events don't have a DTSTART", status_code=400
+        )
 
     def test_failure_if_missing_end(self):
         """Test failure if missing end."""
@@ -401,11 +381,8 @@ class ImportViewTests(TestCase):
             b"METHOD:PUBLISH\n"
             b"BEGIN:VEVENT\n"
             b"UID:e1\n"
-            b"DTSTAMP:20260205T120548Z\n"
             b"DTSTART;TZID=Europe/London:20260325T200000\n"
             b"SUMMARY:Title Event 1\n"
-            b"DESCRIPTION:Description Event 1\n"
-            b"LOCATION:Location Event 1\n"
             b"END:VEVENT\n"
             b"END:VCALENDAR\n"
         ).strip()
@@ -417,5 +394,6 @@ class ImportViewTests(TestCase):
         )
 
         response = self.client.post("/api/import/", {"file": importing_file})
-
-        self.assertContains(response, "One or more events don't have a DTEND")
+        self.assertContains(
+            response, "One or more events don't have a DTEND", status_code=400
+        )
