@@ -248,14 +248,15 @@ const UnifiedSidebar = ({
                             onCreateCategory={onCreateCategory}
                             onUpdateCategory={onUpdateCategory}
                             onDeleteCategory={onDeleteCategory}
-                            onCategoryChange={(nextCategories) => {
+                            onCategoryChange={(nextCategories : number[]) => {
                               if (initialData?.id && onTaskCategoryChange) {
                                 onTaskCategoryChange(initialData.id, nextCategories);
                               }
                             }}
-                            onSubmit={async (data) => {
-                              await onSubmitTask(data);
-                              onClose();
+                            onSubmit={(data) => {
+                              void Promise.resolve(onSubmitTask(data)).then(() => {
+                                onClose();
+                              });
                             }}
                             onCancel={onClose}
                           />

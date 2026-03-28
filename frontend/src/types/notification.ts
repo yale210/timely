@@ -222,3 +222,10 @@ export interface AdminUserListResponse {
   previous: string | null;
   results: AdminUserSummary[];
 }
+
+/**
+ * Returns the permissions of a notification if they exist,
+ * otherwise returns the string "unsopported" if there is no such
+ * NotificationPermission object.
+ */
+export type PushPermission = NotificationPermission | "unsupported";

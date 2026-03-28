@@ -56,3 +56,18 @@ export interface TaskUpdatedResponse extends Task {
 export interface TaskSubmission extends Omit<Partial<Task>, "categories"> {
   categories?: number[];
 }
+
+/**
+ * Represents the data structure used to store errors in TaskForm
+ * @interface TaskFormErrors
+ * 
+ * Note: The data structure was initially of type
+ * Partial<
+  Record<
+    "start" | "deadline" | "importance", boolean
+  >>;
+  but has been kept here for consistency to avoid changing
+  all instances of it in the rest of the codebase
+  and so that its functionality can be reverted if desired.
+ */
+export type TaskFormErrors = Record<string, boolean>;
