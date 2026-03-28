@@ -1,4 +1,4 @@
-import { useCallback, useRef } from "react";
+import { useCallback, useRef, type Dispatch, type SetStateAction } from "react";
 import moment from "moment";
 import type { View } from "react-big-calendar";
 import { hasTaskAllocationRescheduleConflict } from "@/utils/apiErrors";
@@ -26,19 +26,18 @@ interface UseCalendarMutationsProps {
   view: View;
   tasks: Task[];
   categories: Category[];
-  events: Event[];
   preference: Preference | null;
   fetchTasks: () => Promise<void>;
   fetchEvents: (view: View, date: Date) => Promise<void>;
   closeSidebar: () => void;
-  setCategories: React.Dispatch<React.SetStateAction<Category[]>>;
-  setTasks: React.Dispatch<React.SetStateAction<Task[]>>;
-  setEvents: React.Dispatch<React.SetStateAction<Event[]>>;
-  setSelectedItem: React.Dispatch<React.SetStateAction<Task | Event | undefined>>;
-  setScheduleOrder: React.Dispatch<React.SetStateAction<Record<number, number>>>;
+  setCategories:Dispatch<SetStateAction<Category[]>>;
+  setTasks: Dispatch<SetStateAction<Task[]>>;
+  setEvents: Dispatch<SetStateAction<Event[]>>;
+  setSelectedItem: Dispatch<SetStateAction<Task | Event | undefined>>;
+  setScheduleOrder: Dispatch<SetStateAction<Record<number, number>>>;
   setIsRescheduling: (val: boolean) => void;
   setReschedulingError: (val: string | null) => void;
-  setRescheduleWarnings: (val: any[]) => void;
+  setRescheduleWarnings: (val: { taskId: number; title: string; reason: string }[]) => void;
   setIsExporting: (val: boolean) => void;
   setExportingError: (val: string | null) => void;
   setIsImporting: (val: boolean) => void;
@@ -46,7 +45,7 @@ interface UseCalendarMutationsProps {
 }
 
 export const useCalendarMutations = ({
-  selectedItem, date, view, tasks, categories, events, preference,
+  selectedItem, date, view, tasks, categories, preference,
   fetchTasks, fetchEvents, closeSidebar, setCategories, setTasks,
   setEvents, setSelectedItem, setScheduleOrder, setIsRescheduling,
   setReschedulingError, setRescheduleWarnings, setIsExporting,

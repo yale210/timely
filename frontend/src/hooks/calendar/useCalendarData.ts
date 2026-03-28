@@ -1,7 +1,7 @@
 import { useState, useCallback, useEffect, useRef } from "react";
 import type { View } from "react-big-calendar";
 import { getCalendarWindow } from "./calendarTypes";
-import * as eventService from "@/services/eventService";;
+import * as eventService from "@/services/eventService";
 import * as taskService from "@/services/taskService";
 import { preferenceService } from "@/services/preferenceService";
 import type { Category, Event, Preference, Task } from "@/types";

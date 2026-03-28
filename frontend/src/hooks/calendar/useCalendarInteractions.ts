@@ -1,4 +1,4 @@
-import { useCallback } from "react";
+import { useCallback, type Dispatch, type SetStateAction } from "react";
 import type { EventInteractionArgs } from "react-big-calendar/lib/addons/dragAndDrop";
 import { normalizeInteractionStart, normalizeInteractionEnd } from "./calendarTypes";
 import * as taskService from "@/services/taskService";
@@ -14,12 +14,12 @@ interface UseCalendarInteractionsProps {
   scheduleOrder: Record<number, number>;
   view: View;
   date: Date;
-  setTasks: React.Dispatch<React.SetStateAction<Task[]>>;
-  setEvents: React.Dispatch<React.SetStateAction<Event[]>>;
+  setTasks: Dispatch<SetStateAction<Task[]>>;
+  setEvents: Dispatch<SetStateAction<Event[]>>;
   setIsSidebarOpen: (val: boolean) => void;
   setSidebarMode: (val: "task" | "event") => void;
-  setSelectedItem: React.Dispatch<React.SetStateAction<Task | Event | undefined>>;
-  setScheduleOrder: React.Dispatch<React.SetStateAction<Record<number, number>>>;
+  setSelectedItem: Dispatch<SetStateAction<Task | Event | undefined>>;
+  setScheduleOrder: Dispatch<SetStateAction<Record<number, number>>>;
   fetchTasks: () => Promise<void>;
   fetchEvents: (view: View, date: Date) => Promise<void>;
 }

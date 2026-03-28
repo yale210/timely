@@ -2,11 +2,10 @@ import { useState, useMemo, useCallback } from 'react';
 import moment from "moment";
 import { type View, Views } from "react-big-calendar";
 import type { Event, Task } from "@/types";
-import { buildCalendarEntries } from "@/utils/calendarAdapter";
 import { getNavigationUnit } from "./calendarTypes";
 
 
-export const useCalendarState = (tasks: Task[], events: Event[]) => {
+export const useCalendarState = () => {
 
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     const [sidebarMode, setSidebarMode] = useState<"task" | "event">("event");
@@ -16,8 +15,6 @@ export const useCalendarState = (tasks: Task[], events: Event[]) => {
     const [scheduleOrder, setScheduleOrder] = useState<Record<number, number>>({});
     const [headerHeight, setHeaderHeight] = useState(0);
     const [timeGutterWidth, setTimeGutterWidth] = useState(56);
-
-    const calendarEntries = useMemo(() => buildCalendarEntries({ tasks, events, scheduleOrder }), [events, scheduleOrder, tasks],);
 
     const currentLabel = useMemo(() => moment(date).format("MMMM YYYY"), [date]);
 
@@ -56,7 +53,6 @@ export const useCalendarState = (tasks: Task[], events: Event[]) => {
             scheduleOrder,
             headerHeight,
             timeGutterWidth,
-            calendarEntries,
             currentLabel,
             dateStripDays
         },
