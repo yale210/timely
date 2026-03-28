@@ -6,7 +6,7 @@ from unittest.mock import patch
 from django.test import TestCase
 from django.utils import timezone
 
-from core.models import Category, DayOfWeek, Event, SpecialDates, Task
+from core.models import DayOfWeek, Event, SpecialDates, Task
 from scheduler.services import Scheduler
 
 from .scheduler_services_support import SchedulerServicesSupport

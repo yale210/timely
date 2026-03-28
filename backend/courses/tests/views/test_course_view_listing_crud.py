@@ -1,21 +1,15 @@
 """Tests for course view behaviour."""
 
-import datetime
-
 from django.urls import reverse
-from django.utils import timezone
 from rest_framework import status
 
 from courses.models import (
     Course,
     CourseEnrollment,
-    CourseEvent,
-    CourseJoinCode,
     CourseStaff,
-    Student,
 )
 
-from .course_view_test_support import CourseViewTestSupport, User
+from .course_view_test_support import CourseViewTestSupport
 
 
 class CourseViewListingCrudTests(CourseViewTestSupport):

@@ -1,18 +1,12 @@
 """Shared support for scheduler engine mixin tests."""
 
-from datetime import date, datetime, time, timedelta
-from unittest.mock import patch
+from datetime import datetime, time, timedelta
 
-from django.contrib.auth import get_user_model
-from django.test import TestCase
 from django.utils import timezone
-from django.utils.timezone import make_aware
 
-from core.models import Category, Preference, Task
 from scheduler.engine.availability import SchedulerAvailabilityMixin
 from scheduler.engine.categories import SchedulerCategoryMixin
 from scheduler.engine.scheduling import SchedulerSchedulingMixin
-from scheduler.scheduler_types import ScheduleResult
 
 
 class FakeScheduler(SchedulerAvailabilityMixin, SchedulerCategoryMixin):

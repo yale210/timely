@@ -6,7 +6,6 @@ from django.utils import timezone
 from django.utils.timezone import make_aware
 from rest_framework import serializers
 
-from core.models import Category, Event, Task
 from core.serializers import CalendarSerializer
 
 from .calendar_serializer_test_support import CalendarSerializerTestSupport

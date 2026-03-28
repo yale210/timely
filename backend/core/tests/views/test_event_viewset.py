@@ -1,7 +1,6 @@
 """Tests for event viewset."""
 
 import datetime
-from unittest.mock import patch
 
 from django.contrib.auth import get_user_model
 from django.test import override_settings
@@ -209,8 +208,6 @@ class EventViewSetTests(APITestCase):
         )
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
-    from django.test import override_settings
-
     @override_settings(ENABLE_RECURRENCE_OVERRIDES=False)
     def test_update_recurring_scope_disabled(self):
         now = timezone.now()
@@ -277,8 +274,6 @@ class EventViewSetTests(APITestCase):
         response = self.client.post(url)
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
-        from unittest.mock import patch
-
         with patch("core.views.event_view.revert_override_instance") as mock_revert:
             response = self.client.post(
                 url, QUERY_STRING="original_start_time=2023-01-01T10:00:00Z"
@@ -333,8 +328,6 @@ class EventViewSetTests(APITestCase):
             recurrence_interval="daily",
         )
         url = reverse("event-detail", args=[event.id])
-        from unittest.mock import patch
-
         with patch("core.views.event_view.apply_update_scope") as mock_update:
             mock_update.return_value = event
             response = self.client.patch(
@@ -356,8 +349,6 @@ class EventViewSetTests(APITestCase):
             recurrence_interval="daily",
         )
         url = reverse("event-detail", args=[event.id])
-        from unittest.mock import patch
-
         with patch("core.views.event_view.apply_update_scope") as mock_update:
             mock_update.side_effect = ValueError("Test error")
             response = self.client.patch(
@@ -394,8 +385,6 @@ class EventViewSetTests(APITestCase):
             recurrence_interval="daily",
         )
         url = reverse("event-detail", args=[event.id])
-        from unittest.mock import patch
-
         with patch("core.views.event_view.apply_delete_scope") as mock_delete:
             response = self.client.delete(
                 url, QUERY_STRING="scope=this&original_start_time=2023-01-01T10:00:00Z"
@@ -414,8 +403,6 @@ class EventViewSetTests(APITestCase):
             recurrence_interval="daily",
         )
         url = reverse("event-revert-instance", args=[event.id])
-        from unittest.mock import patch
-
         with patch("core.views.event_view.revert_override_instance") as mock_revert:
             mock_revert.side_effect = ValueError("Not found")
             response = self.client.post(
