@@ -75,6 +75,29 @@ class CourseStaffViewTests(TestCase):
             ).exists()
         )
 
+    def test_staff_post_reactivates_existing_inactive_staff_member(self):
+        CourseStaff.objects.create(
+            course=self.course,
+            student=self.staff_user,
+            active=False,
+        )
+        view = CourseViewSet.as_view({"post": "staff"})
+        request = self.factory.post(
+            f"/courses/{self.course.pk}/staff/",
+            {"user_id": self.staff_user.id},
+            format="json",
+        )
+        force_authenticate(request, user=self.teacher_user)
+
+        response = view(request, pk=self.course.pk)
+
+        staff_member = CourseStaff.objects.get(
+            course=self.course,
+            student=self.staff_user,
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertTrue(staff_member.active)
+
     def test_staff_delete_removes_staff_member(self):
         """Test staff DELETE removes the requested staff member."""
         CourseStaff.objects.create(

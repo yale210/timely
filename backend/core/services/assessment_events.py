@@ -4,7 +4,12 @@ from core.models import Assessment, Event
 
 
 def create_assessment_event(assessment: Assessment) -> Event:
-    """Creates an event for a given assessment."""
+    """Create an event for a given assessment.
+
+    Returns:
+        Event: The created linked event.
+
+    """
     event = Event.objects.create(
         user=assessment.user,
         title=assessment.title,
@@ -29,7 +34,12 @@ def delete_assessment_event(assessment: Assessment) -> None:
 
 
 def update_assessment_event(assessment: Assessment) -> Event:
-    """Updates the event linked to an assessment."""
+    """Update the event linked to an assessment.
+
+    Returns:
+        Event: The updated linked event.
+
+    """
     if assessment.linked_event:
         event = assessment.linked_event
         event.title = assessment.title

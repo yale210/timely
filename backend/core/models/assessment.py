@@ -9,7 +9,8 @@ from .category import Category
 
 
 class Assessment(models.Model):
-    """Model used to allow for users to create assessments,
+    """Model used to allow for users to create assessments.
+
     which enable them to keep on top of their upcoming assessments and deadlines.
     """
 
@@ -87,6 +88,8 @@ class Assessment(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
+        """Database ordering for assessment timelines and review queues."""
+
         ordering = ["due_date"]
 
     def __str__(self):

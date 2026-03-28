@@ -12,6 +12,8 @@ class PreferenceSerializer(serializers.ModelSerializer):
     user = serializers.HiddenField(default=serializers.CurrentUserDefault())
 
     class Meta:
+        """Describe the preference payload that drives scheduler behavior."""
+
         model = Preference
         fields = [
             "id",

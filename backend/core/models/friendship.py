@@ -42,6 +42,8 @@ class Friendship(models.Model):
     updated_at = models.DateTimeField(null=True, blank=True)
 
     class Meta:
+        """Enforce one canonical friendship record per user pair."""
+
         constraints = [
             models.UniqueConstraint(
                 fields=["sender", "receiver"], name="unique_friend_request"
@@ -66,8 +68,67 @@ class Friendship(models.Model):
             raise ValidationError("A user cannot friend themselves.")
 
     @classmethod
+    def _get_existing_request(cls, sender, receiver):
+        """Return the existing friend-request record for either direction.
+
+        Args:
+            sender (User): The user requesting the friendship.
+            receiver (User): The user receiving the request.
+
+        Returns:
+            Friendship | None: The matching request if it already exists.
+        """
+        return cls.objects.filter(
+            Q(sender=sender, receiver=receiver) | Q(sender=receiver, receiver=sender)
+        ).first()
+
+    @classmethod
+    def _resend_declined_request(cls, request_exists, sender, receiver):
+        """Reopen a previously declined request with the current direction.
+
+        Args:
+            request_exists (Friendship): The declined request being revived.
+            sender (User): The user sending the request now.
+            receiver (User): The user receiving the request now.
+
+        Returns:
+            Friendship: The updated request instance.
+        """
+        request_exists.state = cls.State.SENT
+        if request_exists.sender != sender or request_exists.receiver != receiver:
+            request_exists.sender = sender
+            request_exists.receiver = receiver
+        request_exists.save()
+        return request_exists
+
+    @classmethod
+    def _handle_existing_request(cls, request_exists, sender, receiver):
+        """Resolve request collisions before creating a new friendship row.
+
+        Args:
+            request_exists (Friendship): The existing record discovered.
+            sender (User): The user sending the request now.
+            receiver (User): The user receiving the request now.
+
+        Returns:
+            Friendship: The revived request when the prior state was declined.
+
+        Raises:
+            ValidationError: If the users are already connected or a pending
+                request already exists.
+        """
+        if request_exists.state == cls.State.ACCEPTED:
+            raise ValidationError("Users are already friends.")
+
+        if request_exists.state == cls.State.SENT:
+            raise ValidationError("Request already sent.")
+
+        return cls._resend_declined_request(request_exists, sender, receiver)
+
+    @classmethod
     def send_request(cls, sender, receiver):
         """Send a friend request from a sender to a receiver.
+
         If a request already exists, it becomes SENT if it was previously declined.
 
         Otherwise, an error is raised if the users are already friends or a request is pending.
@@ -85,36 +146,13 @@ class Friendship(models.Model):
         if sender == receiver:
             raise ValidationError("A user cannot friend themselves.")
 
-        # Check for existing friendship
-        request_exists = (
-            cls.objects.filter(
-                Q(sender=sender, receiver=receiver)
-                | Q(sender=receiver, receiver=sender)
-            )
-        ).first()
+        request_exists = cls._get_existing_request(sender, receiver)
+        if request_exists is not None:
+            return cls._handle_existing_request(request_exists, sender, receiver)
 
-        if request_exists:
-            if request_exists.state == cls.State.ACCEPTED:
-                raise ValidationError("Users are already friends.")
-
-            elif request_exists.state == cls.State.SENT:
-                raise ValidationError("Request already sent.")
-            # User has had their request declined. Send it again.
-            else:
-                request_exists.state = cls.State.SENT
-                if (
-                    request_exists.sender != sender
-                    or request_exists.receiver != receiver
-                ):
-                    request_exists.sender = sender
-                    request_exists.receiver = receiver
-                request_exists.save()
-                return request_exists
-        else:
-            # No request existed so make one.
-            return cls.objects.create(
-                sender=sender, receiver=receiver, state=cls.State.SENT
-            )
+        return cls.objects.create(
+            sender=sender, receiver=receiver, state=cls.State.SENT
+        )
 
     def accept_friend_request(self):
         """Accept a friend request.

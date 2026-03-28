@@ -17,6 +17,8 @@ class GradeSerializer(serializers.ModelSerializer):
     time_spent_minutes = serializers.SerializerMethodField()
 
     class Meta:
+        """Expose grade scoring and category metadata to client consumers."""
+
         model = Grade
         fields = [
             "id",

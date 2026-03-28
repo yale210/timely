@@ -24,6 +24,8 @@ class EventOverride(BaseEventModel):
     reminders_snapshot = models.JSONField(default=list, blank=True)
 
     class Meta:
+        """Prevent duplicate overrides for the same recurring occurrence."""
+
         constraints = [
             models.UniqueConstraint(
                 fields=["parent_event", "original_start_time"],

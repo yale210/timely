@@ -100,6 +100,67 @@ class CourseMembershipViewTests(TestCase):
             ).exists()
         )
 
+    def test_join_by_code_creates_student_profile_when_missing(self):
+        new_user = User.objects.create_user(
+            username="new-membership-student",
+            password="password123",
+            email="new-membership-student@example.com",
+        )
+        join_code = CourseJoinCode.objects.create(
+            course=self.course,
+            code="JOINME234",
+            active=True,
+            expires_at=timezone.now() + timedelta(days=1),
+        )
+        view = CourseViewSet.as_view({"post": "join_by_code"})
+        request = self.factory.post(
+            "/courses/join-by-code/",
+            {"code": join_code.code},
+            format="json",
+        )
+        force_authenticate(request, user=new_user)
+
+        response = view(request)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertTrue(Student.objects.filter(user=new_user).exists())
+        self.assertTrue(
+            CourseEnrollment.objects.filter(
+                course=self.course,
+                student__user=new_user,
+                active=True,
+            ).exists()
+        )
+
+    def test_join_by_code_reactivates_existing_inactive_enrollment(self):
+        CourseEnrollment.objects.create(
+            course=self.course,
+            student=self.student,
+            active=False,
+        )
+        join_code = CourseJoinCode.objects.create(
+            course=self.course,
+            code="JOINME345",
+            active=True,
+            expires_at=timezone.now() + timedelta(days=1),
+        )
+        view = CourseViewSet.as_view({"post": "join_by_code"})
+        request = self.factory.post(
+            "/courses/join-by-code/",
+            {"code": join_code.code},
+            format="json",
+        )
+        force_authenticate(request, user=self.student_user)
+
+        response = view(request)
+
+        enrollment = CourseEnrollment.objects.get(
+            course=self.course,
+            student=self.student,
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertTrue(enrollment.active)
+
     def test_join_code_creates_join_code_for_lead_teacher(self):
         """Test join_code creates a join code for the course."""
         view = CourseViewSet.as_view({"post": "join_code"})
