@@ -3,6 +3,7 @@ import { Link, useParams } from "react-router-dom";
 import AppLayout from "@/layouts/AppLayout";
 import { usePublicProfile } from "@/hooks/profiles/usePublicProfile";
 import { authStore } from "@/services/authService";
+import { formatDateInTimezone } from "@/utils/userTimezone";
 
 /**
  * Returns a single-letter avatar fallback for the profile header.
@@ -33,7 +34,7 @@ export default function ProfilePage() {
   const joinedDate = useMemo(() => {
     if (!profile?.joined_at) return null;
     const date = new Date(profile.joined_at);
-    return date.toLocaleDateString([], {
+    return formatDateInTimezone(date, {
       year: "numeric",
       month: "short",
       day: "numeric",

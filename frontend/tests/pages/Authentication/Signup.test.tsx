@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest"
-import { render, screen, fireEvent, waitFor, cleanup } from "@testing-library/react"
+import { render, screen, fireEvent, waitFor } from "@testing-library/react"
 import { MemoryRouter } from "react-router-dom"
 import Signup from "@/pages/Authentication/Signup"
 import type * as ComponentsIndexModule from "@/components/index"
@@ -40,16 +40,18 @@ describe("Signup page", () => {
   })
 
   afterEach(() => {
-    cleanup()
     vi.restoreAllMocks()
   })
 
   function fillForm() {
+    fireEvent.change(screen.getByLabelText(/^name$/i), {
+      target: { value: "Alice Example" },
+    })
     fireEvent.change(screen.getByLabelText(/username/i), {
-      target: { value: "alice"},
+      target: { value: "alice" },
     })
     fireEvent.change(screen.getByLabelText(/email address/i), {
-      target: { value: "alice@example.com"},
+      target: { value: "alice@example.com" },
     })
     fireEvent.change(screen.getByLabelText(/^password$/i), {
       target: { value: "Secret123" },
@@ -59,10 +61,10 @@ describe("Signup page", () => {
     })
   }
 
-  it("submits details and navigates to login on success", async () => {
+  it("submits details and navigates to the dashboard on success", async () => {
     const registerSpy = vi
-    .spyOn(authService, "register")
-    .mockResolvedValue({} as never)
+      .spyOn(authService, "register")
+      .mockResolvedValue({} as never)
 
     const { container } = render(
       <MemoryRouter>
@@ -70,16 +72,12 @@ describe("Signup page", () => {
       </MemoryRouter>
     )
 
-    //Replaced with one function to save space and alow it to be changed later.
-    fireEvent.change(screen.getByLabelText(/username/i), { target: { value: "alice" } })
-    fireEvent.change(screen.getByLabelText(/email address/i), { target: { value: "alice@example.com" } })
-    fireEvent.change(screen.getByLabelText(/^password$/i), { target: { value: "Secret123" } })
-    fireEvent.change(screen.getByLabelText(/confirm password/i), { target: { value: "Secret123" } })
     fillForm()
     fireEvent.click(screen.getByRole("button", { name: /sign up/i }))
 
     await waitFor(() =>
       expect(registerSpy).toHaveBeenCalledWith({
+        name: "Alice Example",
         username: "alice",
         email: "alice@example.com",
         password: "Secret123",
@@ -87,7 +85,7 @@ describe("Signup page", () => {
       })
     )
     await waitFor(() => {
-      expect(navigateMock).toHaveBeenCalledWith("/login")
+      expect(navigateMock).toHaveBeenCalledWith("/dashboard")
     })
     expect(container.querySelector(".bg-red-50")).toBeNull()
   })
@@ -103,6 +101,7 @@ describe("Signup page", () => {
       </MemoryRouter>
     )
 
+    fireEvent.change(screen.getByLabelText(/^name$/i), { target: { value: "Bob Example" } })
     fireEvent.change(screen.getByLabelText(/username/i), { target: { value: "bob" } })
     fireEvent.change(screen.getByLabelText(/email address/i), { target: { value: "bob@example.com" } })
     fireEvent.change(screen.getByLabelText(/^password$/i), { target: { value: "pass" } })
@@ -128,6 +127,7 @@ describe("Signup page", () => {
       </MemoryRouter>
     )
 
+    fireEvent.change(screen.getByLabelText(/^name$/i), { target: { value: "Carol Example" } })
     fireEvent.change(screen.getByLabelText(/username/i), { target: { value: "carol" } })
     fireEvent.change(screen.getByLabelText(/email address/i), { target: { value: "carol@example.com" } })
     fireEvent.change(screen.getByLabelText(/^password$/i), { target: { value: "pw" } })

@@ -37,6 +37,9 @@ describe("SignupForm", () => {
     fireEvent.change(screen.getByLabelText("Username"), {
       target: { value: "alice" },
     });
+    fireEvent.change(screen.getByLabelText("Name"), {
+      target: { value: "Alice Example" },
+    });
     fireEvent.change(screen.getByLabelText("Email address"), {
       target: { value: "alice@example.com" },
     });
@@ -54,7 +57,7 @@ describe("SignupForm", () => {
     expect(registerMock).not.toHaveBeenCalled();
   });
 
-  it("registers and navigates to login", async () => {
+  it("registers and navigates to the dashboard", async () => {
     registerMock.mockResolvedValue({} as never);
 
     render(
@@ -65,6 +68,9 @@ describe("SignupForm", () => {
 
     fireEvent.change(screen.getByLabelText("Username"), {
       target: { value: "alice" },
+    });
+    fireEvent.change(screen.getByLabelText("Name"), {
+      target: { value: "Alice Example" },
     });
     fireEvent.change(screen.getByLabelText("Email address"), {
       target: { value: "alice@example.com" },
@@ -80,12 +86,13 @@ describe("SignupForm", () => {
     await waitFor(() =>
       expect(registerMock).toHaveBeenCalledWith({
         username: "alice",
+        name: "Alice Example",
         email: "alice@example.com",
         password: "secret",
         password2: "secret",
       }),
     );
-    expect(navigateMock).toHaveBeenCalledWith("/login");
+    expect(navigateMock).toHaveBeenCalledWith("/dashboard");
   });
 
   it("renders backend validation errors as field-labelled lines", async () => {
@@ -106,6 +113,9 @@ describe("SignupForm", () => {
 
     fireEvent.change(screen.getByLabelText("Username"), {
       target: { value: "alice" },
+    });
+    fireEvent.change(screen.getByLabelText("Name"), {
+      target: { value: "Alice Example" },
     });
     fireEvent.change(screen.getByLabelText("Email address"), {
       target: { value: "alice@example.com" },

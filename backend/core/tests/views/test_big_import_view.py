@@ -1,9 +1,10 @@
 """A single scenario test for the import view, simulating a realistic import file"""
 
-from django.test import TestCase
 from django.contrib.auth import get_user_model
-from rest_framework.test import APIClient
 from django.core.files.uploadedfile import SimpleUploadedFile
+from django.test import TestCase
+from rest_framework.test import APIClient
+
 from core.models import Event
 
 

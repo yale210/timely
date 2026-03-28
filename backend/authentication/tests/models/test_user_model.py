@@ -1,6 +1,7 @@
 """Tests for the custom user model."""
 
 from django.test import TestCase
+
 from ...models import User
 
 

@@ -8,7 +8,6 @@ from django.contrib.auth import get_user_model
 from core.management.commands.seeders import (
     assessment_seeder,
     category_seeder,
-    commute_seeder,
     event_seeder,
     friendship_seeder,
     grade_seeder,
@@ -19,7 +18,6 @@ from core.management.commands.seeders import (
 )
 from core.management.commands.seeders.assessment_seeder import AssessmentSeeder
 from core.management.commands.seeders.category_seeder import CategorySeeder
-from core.management.commands.seeders.commute_seeder import CommuteSeeder
 from core.management.commands.seeders.day_of_week_seeder import DayOfWeekSeeder
 from core.management.commands.seeders.event_seeder import EventSeeder
 from core.management.commands.seeders.friendship_seeder import FriendshipSeeder
@@ -31,7 +29,6 @@ from core.management.commands.seeders.user_seeder import UserSeeder
 from core.models import (
     Assessment,
     Category,
-    Commute,
     DayOfWeek,
     Event,
     Friendship,
@@ -50,13 +47,32 @@ from .common import SeederTestCase
 class SeederFoundationTests(SeederTestCase):
     """Test cases for seeder foundation."""
 
+    def _assert_fixture_creation_error(
+        self,
+        seeder,
+        fixture_method: str,
+        create_method: str,
+        module,
+        fixture_name: str,
+        message: str,
+    ) -> None:
+        """Assert that a fixture seeder prints the expected creation error."""
+        with self.subTest(fixture_method=fixture_method):
+            with (
+                patch.object(module, fixture_name, [{}]),
+                patch.object(seeder, create_method, side_effect=Exception("boom")),
+                patch("builtins.print") as print_mock,
+            ):
+                getattr(seeder, fixture_method)()
+
+            print_mock.assert_called_once_with(message)
+
     def test_fixture_seeders_are_idempotent(self):
         """Test fixture seeders are idempotent."""
         self.seed_fixture_data()
         initial_counts = {
             "users": get_user_model().objects.count(),
             "categories": Category.objects.count(),
-            "commutes": Commute.objects.count(),
             "days": DayOfWeek.objects.count(),
             "events": Event.objects.count(),
             "grades": Grade.objects.count(),
@@ -109,11 +125,9 @@ class SeederFoundationTests(SeederTestCase):
             "_populate_random_category",
             200,
         )
+
         self.assert_seed_calls(
-            CommuteSeeder(), "_create_fixture_commute", "_populate_random_commute", 200
-        )
-        self.assert_seed_calls(
-            EventSeeder(), "_create_fixture_event", "_populate_random_event", 200
+            EventSeeder(), "_create_fixture_event", "_populate_random_event", 750
         )
         self.assert_seed_calls(
             GradeSeeder(), "_create_fixture_grade", "_populate_random_grade", 200
@@ -131,7 +145,7 @@ class SeederFoundationTests(SeederTestCase):
             200,
         )
         self.assert_seed_calls(
-            TaskSeeder(), "_create_fixture_task", "_populate_random_task", 200
+            TaskSeeder(), "_create_fixture_task", "_populate_random_task", 750
         )
         self.assert_seed_calls(
             FriendshipSeeder(),
@@ -140,7 +154,7 @@ class SeederFoundationTests(SeederTestCase):
             200,
         )
         self.assert_seed_calls(
-            UserSeeder(), "_create_fixture_user", "_populate_random_user", 1000
+            UserSeeder(), "_create_fixture_user", "_populate_random_user", 250
         )
         self.assert_seed_calls(
             ProfileSeeder(), "_create_fixture_profile", "_populate_random_profile", 200
@@ -178,14 +192,6 @@ class SeederFoundationTests(SeederTestCase):
                 category_seeder,
                 "categories",
                 "Error occurred while creating category: boom",
-            ),
-            (
-                CommuteSeeder(),
-                "_create_fixture_commute",
-                "_create_commute",
-                commute_seeder,
-                "commutes",
-                "Error occurred while creating commute: boom",
             ),
             (
                 EventSeeder(),
@@ -245,22 +251,8 @@ class SeederFoundationTests(SeederTestCase):
             ),
         ]
 
-        for (
-            seeder,
-            fixture_method,
-            create_method,
-            module,
-            fixture_name,
-            message,
-        ) in cases:
-            with self.subTest(fixture_method=fixture_method):
-                with (
-                    patch.object(module, fixture_name, [{}]),
-                    patch.object(seeder, create_method, side_effect=Exception("boom")),
-                    patch("builtins.print") as print_mock,
-                ):
-                    getattr(seeder, fixture_method)()
-                print_mock.assert_called_once_with(message)
+        for case in cases:
+            self._assert_fixture_creation_error(*case)
 
         assessment_cases = [
             (
@@ -281,22 +273,8 @@ class SeederFoundationTests(SeederTestCase):
             ),
         ]
 
-        for (
-            seeder,
-            fixture_method,
-            create_method,
-            module,
-            fixture_name,
-            message,
-        ) in assessment_cases:
-            with self.subTest(fixture_method=fixture_method):
-                with (
-                    patch.object(module, fixture_name, [{}]),
-                    patch.object(seeder, create_method, side_effect=Exception("boom")),
-                    patch("builtins.print") as print_mock,
-                ):
-                    getattr(seeder, fixture_method)()
-                print_mock.assert_called_once_with(message)
+        for case in assessment_cases:
+            self._assert_fixture_creation_error(*case)
 
         seeder = ProfileSeeder()
         with (
@@ -374,17 +352,6 @@ class SeederFoundationTests(SeederTestCase):
         self.assertEqual(preference.timezone, "Europe/London")
         self.assertEqual(preference.day_schedule, default_day_schedule())
         self.assertEqual(set(preference.days_off.values_list("day", flat=True)), {1, 3})
-
-    def test_commute_seeder_creates_missing_user_before_random_commute(self):
-        """Test commute seeder creates missing user before random commute."""
-        seeder = CommuteSeeder()
-        self.assertEqual(get_user_model().objects.count(), 0)
-
-        seeder._populate_random_commute()
-
-        commute = Commute.objects.get()
-        self.assertIsNotNone(commute.user)
-        self.assertEqual(get_user_model().objects.count(), 1)
 
     def test_category_seeder_populates_existing_random_user(self):
         """Test category seeder populates existing random user."""

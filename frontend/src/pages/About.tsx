@@ -9,11 +9,11 @@ export default function About() {
   return (
     <>
       <HomeNavbar />
-      <AboutHero />
-      {FEATURES.map((feature, i) => (
-        <AboutFeatureSection key={feature.id} feature={feature} index={i} />
-      ))}
-      <AboutCta />
+        <AboutHero />
+          {FEATURES.map((feature, i) => (
+            <AboutFeatureSection key={feature.id} feature={feature} index={i} />
+          ))}
+        <AboutCta />
       <Footer />
     </>
   )

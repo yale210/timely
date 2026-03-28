@@ -1,9 +1,10 @@
 """Tests for calendar view."""
 
-from rest_framework.test import APITestCase
 from rest_framework import status
-from core.tests.factories import UserFactory, TaskFactory, CategoryFactory
-from core.models import Task, Category
+from rest_framework.test import APITestCase
+
+from core.models import Category, Task
+from core.tests.factories import CategoryFactory, TaskFactory, UserFactory
 
 
 class CalendarViewTests(APITestCase):

@@ -1,10 +1,10 @@
 """View for accepting or rejecting shared event requests."""
 
 from rest_framework import permissions
-from rest_framework.views import APIView
 from rest_framework.response import Response
-from core.models import Event
-from core.models import PendingShareEvent
+from rest_framework.views import APIView
+
+from core.models import Event, PendingShareEvent
 
 
 class ShareAcceptView(APIView):
@@ -34,19 +34,19 @@ class ShareAcceptView(APIView):
 
         if not decision and event_id:
             response = {"error": "Please provide a decision and event ID"}
-            return Response(response)
+            return Response(response, status=400)
 
         # The event must exist for it to be accepted
         try:
             pending_event = PendingShareEvent.objects.get(event=event_id)
         except PendingShareEvent.DoesNotExist:
             response = {"error": "Event does not exist, likely deleted"}
-            return Response(response)
+            return Response(response, status=400)
 
         # A user must be the intended recipient of the event
         if pending_event.receiver != request.user:
             response = {"error": "This event is not shared with you"}
-            return Response(response)
+            return Response(response, status=400)
 
         # Accepting creates a new event object for the user
         if decision == "accept":

@@ -2,8 +2,8 @@
 
 from typing import Any
 
-from rest_framework import serializers
 from drf_spectacular.utils import extend_schema_field
+from rest_framework import serializers
 
 from core.models import Grade
 
@@ -17,6 +17,8 @@ class GradeSerializer(serializers.ModelSerializer):
     time_spent_minutes = serializers.SerializerMethodField()
 
     class Meta:
+        """Expose grade scoring and category metadata to client consumers."""
+
         model = Grade
         fields = [
             "id",

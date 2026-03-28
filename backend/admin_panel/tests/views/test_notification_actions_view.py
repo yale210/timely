@@ -15,33 +15,35 @@ User = get_user_model()
 class AdminNotificationActionTests(APITestCase):
     """Test admin notification action endpoints."""
 
-    def setUp(self):
-        """Create users and route paths for notification action tests."""
-        self.admin_user = User.objects.create_superuser(
+    @classmethod
+    def setUpTestData(cls):
+        cls.admin_user = User.objects.create_superuser(
             username="admin",
             password="password",
             email="admin@test.com",
         )
-        self.staff_user = User.objects.create_user(
+        cls.staff_user = User.objects.create_user(
             username="staff",
             password="password",
             email="staff@test.com",
         )
-        self.staff_user.is_staff = True
-        self.staff_user.save(update_fields=["is_staff"])
-        self.regular_user = User.objects.create_user(
+        cls.staff_user.is_staff = True
+        cls.staff_user.save(update_fields=["is_staff"])
+        cls.regular_user = User.objects.create_user(
             username="regular",
             password="password",
             email="regular@test.com",
         )
-        self.inactive_user = User.objects.create_user(
+        cls.inactive_user = User.objects.create_user(
             username="inactive",
             password="password",
             email="inactive@test.com",
         )
-        self.inactive_user.is_active = False
-        self.inactive_user.save(update_fields=["is_active"])
+        cls.inactive_user.is_active = False
+        cls.inactive_user.save(update_fields=["is_active"])
 
+    def setUp(self):
+        """Create users and route paths for notification action tests."""
         self.send_url = reverse("admin-send-notification")
         self.audience_counts_url = reverse("admin-audience-counts")
 

@@ -87,31 +87,26 @@ const CreateGradeModalForm = ({
     });
   };
 
-  const submit = async (event: FormEvent) => {
-    event.preventDefault();
-    setError(null);
-
+  const validateAndGetPayload = () => {
     if (typeof score !== "number" || typeof total !== "number") {
       setError("Please provide numeric values for score and total.");
-      return;
+      return null;
     }
     if (score > total) {
       setError("Score must be less than or equal to total.");
-      return;
+      return null;
     }
 
-    const payload = {
+    return {
       name: name.trim(),
       category: categoryId,
       score,
       total_possible: total,
       date_achieved: date,
     };
+  };
 
-    const response = typeof initialData?.id === "number"
-      ? await updateGrade(initialData.id, payload)
-      : await createGrade(payload);
-
+  const handleResponse = async (response: Response) => {
     if (response.ok) {
       if (typeof initialData?.id === "number") {
         void onUpdated?.();
@@ -128,6 +123,22 @@ const CreateGradeModalForm = ({
     } catch {
       setError(typeof initialData?.id === "number" ? "Failed to update grade." : "Failed to create grade.");
     }
+  };
+
+  const submit = async (event: FormEvent) => {
+    event.preventDefault();
+    setError(null);
+
+    const payload = validateAndGetPayload();
+    if (!payload) {
+      return;
+    }
+
+    const response = typeof initialData?.id === "number"
+      ? await updateGrade(initialData.id, payload)
+      : await createGrade(payload);
+
+    await handleResponse(response);
   };
 
   return (

@@ -13,9 +13,10 @@ https://docs.djangoproject.com/en/6.0/ref/settings/
 import os
 import sys
 from datetime import timedelta
+from pathlib import Path
+
 from celery.schedules import crontab
 from django.core.exceptions import ImproperlyConfigured
-from pathlib import Path
 from dotenv import load_dotenv
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -90,7 +91,7 @@ CSRF_TRUSTED_ORIGINS = [
 
 
 if DEBUG:
-    ALLOWED_HOSTS.extend(["127.0.0.1", "localhost", "0.0.0.0", "[::1]"])
+    ALLOWED_HOSTS.extend(["127.0.0.1", "localhost", "0.0.0.0", "[::1]", "testserver"])
 else:
     ALLOWED_HOSTS.append("timely.subhan.work")
     CSRF_TRUSTED_ORIGINS = ["https://timely.subhan.work"]
@@ -273,21 +274,28 @@ CELERY_BEAT_SCHEDULE = {
         "task": "notifications.tasks.maintenance.cleanup_old_notifications",
         "schedule": crontab(hour=3, minute=0),
     },
+    "sync_course_calendar": {
+        "task": "courses.tasks.run_sync_cal_command",
+        "schedule": crontab(minute=5),
+    },
 }
 
 # Test detection
 TESTING = "test" in sys.argv or os.getenv("TESTING") == "True"
 
 if TESTING:
+    if "testserver" not in ALLOWED_HOSTS:
+        ALLOWED_HOSTS.append("testserver")
     CELERY_TASK_ALWAYS_EAGER = True
     CELERY_TASK_EAGER_PROPAGATES = True
-
-if TESTING:
     CHANNEL_LAYERS = {
         "default": {
             "BACKEND": "channels.layers.InMemoryChannelLayer",
         },
     }
+    PASSWORD_HASHERS = [
+        "django.contrib.auth.hashers.MD5PasswordHasher",
+    ]
 else:
     CHANNEL_LAYERS = {
         "default": {

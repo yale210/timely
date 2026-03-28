@@ -11,18 +11,21 @@ User = get_user_model()
 class AdminUsersActionTests(APITestCase):
     """Test admin user list and filter actions."""
 
-    def setUp(self):
-        """Create base users for admin user action tests."""
-        self.admin_user = User.objects.create_superuser(
+    @classmethod
+    def setUpTestData(cls):
+        cls.admin_user = User.objects.create_superuser(
             username="admin",
             password="password",
             email="admin@example.com",
         )
-        self.regular_user = User.objects.create_user(
+        cls.regular_user = User.objects.create_user(
             username="regular",
             password="password",
             email="regular@example.com",
         )
+
+    def setUp(self):
+        """Create base users for admin user action tests."""
         self.url = reverse("admin-users")
 
     def test_admin_can_list_users(self):

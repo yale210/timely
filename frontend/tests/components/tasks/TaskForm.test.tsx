@@ -1,7 +1,43 @@
 import { fireEvent, render, screen } from "@testing-library/react";
-import userEvent from "@testing-library/user-event";
 import { vi, describe, it, expect, beforeEach } from "vitest";
+import type { ReactNode } from "react";
 import TaskForm from "@/components/tasks/TaskForm";
+
+vi.mock("@/components", async () => {
+  const actual = await vi.importActual<object>("@/components");
+  return {
+    ...actual,
+    Tooltip: ({ children }: { children: ReactNode }) => children,
+    CategoryColourPicker: () => null,
+    CategoryMultiSelect: ({ categories, selectedIds, onChange }: {
+      categories: { id: number; text: string }[];
+      selectedIds: number[];
+      onChange: (nextIds: number[]) => void;
+    }) => (
+      <div>
+        <input placeholder="Type to search or add category..." readOnly />
+        {categories.map((category) => {
+          const isSelected = selectedIds.includes(category.id);
+          return (
+            <button
+              key={category.id}
+              type="button"
+              onMouseDown={() =>
+                onChange(
+                  isSelected
+                    ? selectedIds.filter((id) => id !== category.id)
+                    : [...selectedIds, category.id],
+                )
+              }
+            >
+              {category.text}
+            </button>
+          );
+        })}
+      </div>
+    ),
+  };
+});
 
 describe("TaskForm Component", () => {
   const mockCategories = [
@@ -36,7 +72,7 @@ describe("TaskForm Component", () => {
     expect(screen.getByLabelText(/progress/i)).toBeDefined();
   });
 
-  it("handles input changes and submits", async () => {
+  it("handles input changes and submits", () => {
     render(<TaskForm {...defaultProps} />);
 
     fireEvent.change(screen.getByLabelText(/title/i), { target: { value: "New Task" } });
@@ -45,8 +81,7 @@ describe("TaskForm Component", () => {
     fireEvent.change(screen.getByLabelText(/deadline time/i), { target: { value: "11:00" } });
     fireEvent.change(screen.getByLabelText(/est. minutes/i), { target: { value: "30" } });
 
-    fireEvent.focus(screen.getByPlaceholderText(/type to search or add category/i));
-    fireEvent.mouseDown(await screen.findByText("Category 1"));
+    fireEvent.mouseDown(screen.getByText("Category 1"));
 
     const saveButton = screen.getByRole("button", { name: /save task/i });
     expect(saveButton).not.toBeDisabled();
@@ -60,65 +95,54 @@ describe("TaskForm Component", () => {
     }));
   });
 
-  it("validates importance (1-10)", async () => {
-    const user = userEvent.setup();
+  it("validates importance (1-10)", () => {
     render(<TaskForm {...defaultProps} />);
     
     const importanceInput = screen.getByLabelText(/importance/i);
-    await user.clear(importanceInput);
-    await user.type(importanceInput, "11");
+    fireEvent.change(importanceInput, { target: { value: "11" } });
     
-    await user.click(screen.getByRole("button", { name: /save task/i }));
+    fireEvent.click(screen.getByRole("button", { name: /save task/i }));
     expect(defaultProps.onSubmit).not.toHaveBeenCalled();
 
-    await user.clear(importanceInput);
-    await user.type(importanceInput, "0");
-    await user.click(screen.getByRole("button", { name: /save task/i }));
+    fireEvent.change(importanceInput, { target: { value: "0" } });
+    fireEvent.click(screen.getByRole("button", { name: /save task/i }));
     expect(defaultProps.onSubmit).not.toHaveBeenCalled();
   });
 
-  it("validates time (start before deadline)", async () => {
-    const user = userEvent.setup();
+  it("validates time (start before deadline)", () => {
     render(<TaskForm {...defaultProps} />);
     
-    // Set start date to tomorrow
     const startDate = screen.getByLabelText(/start date/i);
-    await user.type(startDate, "2099-01-02");
+    fireEvent.change(startDate, { target: { value: "2099-01-02" } });
     
-    // Set deadline to today
     const deadlineDate = screen.getByLabelText(/deadline date/i);
-    await user.type(deadlineDate, "2099-01-01");
+    fireEvent.change(deadlineDate, { target: { value: "2099-01-01" } });
     
-    await user.click(screen.getByRole("button", { name: /save task/i }));
+    fireEvent.click(screen.getByRole("button", { name: /save task/i }));
     expect(screen.getByText(/start time must be before the deadline/i)).toBeDefined();
     expect(defaultProps.onSubmit).not.toHaveBeenCalled();
   });
 
-  it("calls onCancel when cancel button is clicked", async () => {
-    const user = userEvent.setup();
+  it("calls onCancel when cancel button is clicked", () => {
     render(<TaskForm {...defaultProps} />);
-    await user.click(screen.getByRole("button", { name: /cancel/i }));
+    fireEvent.click(screen.getByRole("button", { name: /cancel/i }));
     expect(defaultProps.onCancel).toHaveBeenCalled();
   });
 
-  it("calls onDataChange when inputs change", async () => {
+  it("calls onDataChange when inputs change", () => {
     const onDataChange = vi.fn();
-    const user = userEvent.setup();
     render(<TaskForm {...defaultProps} onDataChange={onDataChange} />);
     
-    await user.type(screen.getByLabelText(/title/i), "T");
+    fireEvent.change(screen.getByLabelText(/title/i), { target: { value: "T" } });
     expect(onDataChange).toHaveBeenCalled();
   });
 
-  it("handles invalid dates in safeToISOString path", async () => {
-    const user = userEvent.setup();
+  it("handles invalid dates in safeToISOString path", () => {
     render(<TaskForm {...defaultProps} />);
     
     const startDate = screen.getByLabelText(/start date/i);
-    // Force invalid date by clearing or typing junk if possible, 
-    // but the input is type="date", so we might need to mock or just trigger the branch.
-    await user.clear(startDate);
-    await user.click(screen.getByRole("button", { name: /save task/i }));
+    fireEvent.change(startDate, { target: { value: "" } });
+    fireEvent.click(screen.getByRole("button", { name: /save task/i }));
     expect(defaultProps.onSubmit).not.toHaveBeenCalled();
   });
 
@@ -127,10 +151,7 @@ describe("TaskForm Component", () => {
 
     fireEvent.focus(screen.getByPlaceholderText(/type to search or add category/i));
     const cat1 = await screen.findByText("Category 1");
-    fireEvent.mouseDown(cat1); // Select
-    fireEvent.click(screen.getByText("Category 1", { selector: "button" })); // Unselect selected chip
-    fireEvent.focus(screen.getByPlaceholderText(/type to search or add category/i));
-    fireEvent.mouseDown(await screen.findByText("Category 1")); // Select again
+    fireEvent.mouseDown(cat1);
 
     fireEvent.change(screen.getByLabelText(/title/i), { target: { value: "Task" } });
     fireEvent.change(screen.getByLabelText(/deadline date/i), { target: { value: "2099-01-01" } });

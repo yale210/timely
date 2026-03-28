@@ -11,6 +11,8 @@ class CategorySerializer(serializers.ModelSerializer):
     user = serializers.HiddenField(default=serializers.CurrentUserDefault())
 
     class Meta:
+        """Expose only user-scoped category fields required by the API."""
+
         model = Category
         fields = [
             "id",

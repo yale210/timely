@@ -6,12 +6,15 @@ for testing and demonstration purposes.
 """
 
 import random
-from core.models import Task, Category
+import datetime
+
+from django.contrib.auth import get_user_model
+from django.utils import timezone
+
+from core.management.commands.seeders.base import BaseSeeder
+from core.models import Category, Task
 
 from .fixtures.task_fixtures import tasks
-from django.contrib.auth import get_user_model
-from core.management.commands.seeders.base import BaseSeeder
-from django.utils import timezone
 
 
 class TaskSeeder(BaseSeeder):
@@ -35,7 +38,7 @@ class TaskSeeder(BaseSeeder):
         random tasks to provide a diverse dataset.
         """
         self._create_fixture_task()
-        for i in range(200):
+        for i in range(750):
             self._populate_random_task()
 
     def _create_fixture_task(self):
@@ -89,6 +92,9 @@ class TaskSeeder(BaseSeeder):
         """
         temporary_user = self._get_or_create_random_user()
         temporary_category = self._get_or_create_random_category(temporary_user)
+        start = self.faker.date_time()
+        if timezone.is_naive(start):
+            start = timezone.make_aware(start)
         self._create_task(
             {
                 "fields": {
@@ -97,8 +103,9 @@ class TaskSeeder(BaseSeeder):
                     "description": self.faker.sentence(),
                     "categories": [temporary_category.id],
                     "estimated_minutes": random.randint(1, 60 * 24),
-                    "start_time": timezone.make_aware(self.faker.date_time()),
-                    "deadline": timezone.make_aware(self.faker.date_time()),
+                    "start_time": start,
+                    "deadline": start
+                    + datetime.timedelta(minutes=random.randint(1, 60 * 24 * 10)),
                     "completed": random.randint(0, 1) == 1,
                     "parent_task": Task.objects.order_by("?").first().id
                     if Task.objects.exists() and random.randint(0, 3) == 1

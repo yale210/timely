@@ -110,7 +110,6 @@ export default function Courses() {
         onRefresh={() => void actions.refresh()}
         isTeacher={isTeacher}
         onManageCourses={() => void navigate("/courses/manage")}
-        onCreateCourse={() => void navigate("/course/create")}
       />
 
       {joinError && (

@@ -1,6 +1,6 @@
 """Views for importing event data from iCalendar files."""
 
-from datetime import datetime
+from datetime import date, datetime
 
 from django.db import transaction
 from django.utils import timezone
@@ -32,6 +32,176 @@ class ImportView(APIView):
             return timezone.make_aware(parsed)
         return parsed
 
+    @staticmethod
+    def _read_uploaded_file(uploaded_file) -> str:
+        """Validate the uploaded file object and return decoded content."""
+        if not uploaded_file:
+            raise ValueError("No file uploaded")
+        if uploaded_file.content_type != "text/plain":
+            raise ValueError("File type is not .txt")
+        return uploaded_file.read().decode("utf-8")
+
+    @staticmethod
+    def _validate_calendar(lines: list[str]) -> None:
+        """Validate the surrounding VCALENDAR wrapper."""
+        if not lines:
+            raise ValueError("Empty file")
+        if lines[0] != "BEGIN:VCALENDAR":
+            raise ValueError("File requires: BEGIN:VCALENDAR")
+        if lines[-1] != "END:VCALENDAR":
+            raise ValueError("File requires: END:VCALENDAR")
+
+    @staticmethod
+    def _matching_field(current_event: dict[str, str], prefix: str) -> str | None:
+        """Return the first event field that matches a given key prefix."""
+        for key, value in current_event.items():
+            if prefix in key:
+                return value
+        return None
+
+    def _parse_rrule(
+        self, current_event: dict[str, str]
+    ) -> tuple[str | None, date | None]:
+        """Extract recurrence details from the event payload."""
+        r_rule = current_event.get("RRULE")
+        if r_rule is None:
+            return None, None
+
+        left, right = r_rule.split(";")
+        _, frequency_interval = left.split("=")
+        _, until_date = right.split("=")
+        frequency_interval_final = Event.RecurrenceInterval[frequency_interval]
+
+        if until_date == "None":
+            return frequency_interval_final, None
+
+        until_date_final = datetime.strptime(until_date[:-1], "%Y%m%dT%H%M%S").date()
+        return frequency_interval_final, until_date_final
+
+    def _build_event_to_import(
+        self, current_event: dict[str, str], user
+    ) -> dict[str, object] | None:
+        """Validate a VEVENT block and build its import payload."""
+        summary = current_event.get("SUMMARY")
+        if summary is None:
+            raise ValueError("One or more events don't have a summary")
+
+        dt_start = self._matching_field(current_event, "DTSTART")
+        if dt_start is None:
+            raise ValueError("One or more events don't have a DTSTART")
+
+        dt_end = self._matching_field(current_event, "DTEND")
+        if dt_end is None:
+            raise ValueError("One or more events don't have a DTEND")
+
+        dt_stamp = current_event.get("DTSTAMP")
+        if dt_stamp is not None:
+            dt_stamp = dt_stamp[:-1]
+        else:
+            dt_stamp = timezone.now().strftime("%Y%m%dT%H%M%S")
+
+        recurrence_interval, recurrence_end = self._parse_rrule(current_event)
+        start_time = self._parse_ical_datetime(dt_start)
+        end_time = self._parse_ical_datetime(dt_end)
+
+        event_exists = Event.objects.filter(
+            user=user,
+            title=summary,
+            start_time=start_time,
+            end_time=end_time,
+        ).exists()
+        if event_exists:
+            return None
+
+        return {
+            "title": summary,
+            "description": current_event.get("DESCRIPTION") or "",
+            "location": current_event.get("LOCATION") or "",
+            "dt_stamp": dt_stamp,
+            "start_time": start_time,
+            "end_time": end_time,
+            "r_rule_freq": recurrence_interval,
+            "r_rule_until": recurrence_end,
+        }
+
+    def _persist_imported_event(self, request_user, event: dict[str, object]) -> None:
+        """Create one imported event in the database."""
+        common_fields = {
+            "user": request_user,
+            "title": event["title"],
+            "description": event["description"],
+            "location": event["location"],
+            "start_time": event["start_time"],
+            "end_time": event["end_time"],
+        }
+
+        if event.get("r_rule_freq") and event["r_rule_freq"] != "None":
+            Event.objects.create(
+                **common_fields,
+                recurrence_interval=event["r_rule_freq"],
+                recurrence_end=event["r_rule_until"],
+            )
+            return
+
+        Event.objects.create(**common_fields)
+
+    def _handle_calendar_line(
+        self,
+        line: str,
+        current_event: dict[str, str] | None,
+        events: list[dict[str, object]],
+        request_user,
+    ) -> dict[str, str] | None:
+        """Handle one iCalendar line and update parsing state."""
+        if line == "BEGIN:VEVENT":
+            if current_event is not None:
+                raise ValueError("Event indentation error")
+            return {}
+
+        if line == "END:VEVENT":
+            if current_event is None:
+                raise ValueError("No event to end")
+
+            new_event = self._build_event_to_import(current_event, request_user)
+            if new_event is not None:
+                events.append(new_event)
+            return None
+
+        if current_event is None:
+            return current_event
+
+        key, value = line.split(":", 1)
+        current_event[key] = value
+        return current_event
+
+    def _parse_import_events(
+        self, lines: list[str], request_user
+    ) -> list[dict[str, object]]:
+        """Parse and queue all importable events from iCalendar lines."""
+        events: list[dict[str, object]] = []
+        current_event: dict[str, str] | None = None
+
+        with transaction.atomic():
+            for line in lines:
+                current_event = self._handle_calendar_line(
+                    line, current_event, events, request_user
+                )
+
+        return events
+
+    def _build_import_response(self, event_count: int) -> Response:
+        """Build the final API response for an import run."""
+        if event_count == 0:
+            return Response(
+                {
+                    "message": "0 Events were imported, but the file is correctly formatted. Check for duplicates?"
+                }
+            )
+
+        return Response(
+            {"message": f"Import successful! Imported: {event_count} event(s)."}
+        )
+
     def post(self, request):
         """Handle the import of events from a .txt file in iCalendar format.
 
@@ -48,224 +218,19 @@ class ImportView(APIView):
             ValueError: If the file format is invalid or contains errors.
 
         """
-        # The file that the user uploaded
         uploaded_file = request.FILES.get("file")
-
-        # No file uploaded, this is an error
-        if not uploaded_file:
-            response = {"error": "No file uploaded"}
-            return Response(response)
-
-        # The file uploaded is not a .txt file, this is an error
-        if uploaded_file.content_type != "text/plain":
-            response = {"error": "File type is not .txt"}
-            return Response(response)
-
-        # Reading the file
-        content = uploaded_file.read().decode("utf-8")
-
-        lines = content.splitlines()
-
-        events = []
-
-        # Tracks the current event being added, events will be added one-by-one
-        current_event = None
-
         try:
-            with transaction.atomic():
-                # Empty .txt file -> nothing to import
-                if len(lines) == 0:
-                    raise ValueError("Empty file")
+            content = self._read_uploaded_file(uploaded_file)
+            lines = content.splitlines()
+            self._validate_calendar(lines)
+            events = self._parse_import_events(lines, request.user)
 
-                # File must begin with "BEGIN:VCALENDAR" -> otherwise it is not the correct format
-                if lines[0] != "BEGIN:VCALENDAR":
-                    raise ValueError("File requires: BEGIN:VCALENDAR")
-
-                # File must end with "END:VCALENDAR" -> otherwise it is not the correct format
-                if lines[-1] != "END:VCALENDAR":
-                    raise ValueError("File requires: END:VCALENDAR")
-
-                # Line number tracker
-                count = 0
-
-                for line in lines:
-                    count = count + 1
-
-                    # This signifies that every line below it is information about the event
-                    if line == "BEGIN:VEVENT":
-                        if current_event is None:
-                            current_event = {}
-                        # This error means that a new event was started before the previous one was ended
-                        else:
-                            raise ValueError("Event indentation error")
-
-                    # This signifies that all the information about the event has been provided
-                    elif line == "END:VEVENT":
-                        # No event being worked on currently, so ending an event is an error
-                        if current_event is None:
-                            raise ValueError("No event to end")
-
-                        # If everything is correct so far, the event itself needs to be checked
-                        # Summary is the name of the event, this is required
-                        if "SUMMARY" in current_event:
-                            summary = current_event["SUMMARY"]
-
-                        else:
-                            raise ValueError("One or more events don't have a summary")
-
-                        # Assume that the event is invalid
-                        dt_start = None
-                        # Search every key
-                        for key in current_event:
-                            if "DTSTART" in key:
-                                # The actual date/time of the event
-                                dt_start = current_event[key]
-
-                        # Start date/time is required
-                        if dt_start is None:
-                            raise ValueError("One or more events don't have a DTSTART")
-
-                        # Assume that the event is invalid
-                        dt_end = None
-                        # Search every key
-                        for key in current_event:
-                            if "DTEND" in key:
-                                # The actual date/time of the event
-                                dt_end = current_event[key]
-
-                        # End date/time is required
-                        if dt_end is None:
-                            raise ValueError("One or more events don't have a DTEND")
-
-                        # A description is optional, no error for it not existing
-                        description = current_event.get("DESCRIPTION")
-
-                        # A location is optional, no error for it not existing
-                        location = current_event.get("LOCATION")
-
-                        # A DTSTAMP is optional, no error for it not existing,
-                        if "DTSTAMP" in current_event:
-                            dt_stamp = current_event["DTSTAMP"]
-                        else:
-                            # Current date/time
-                            current_date_time_unformatted = timezone.now()
-
-                            # This is the format that is required by iCalendar
-                            current_date_time = current_date_time_unformatted.strftime(
-                                "%Y%m%dT%H%M%S"
-                            )
-
-                            dt_stamp = current_date_time
-
-                        if "RRULE" in current_event:
-                            r_rule = current_event["RRULE"]
-
-                            left, right = r_rule.split(";")
-
-                            _, frequency_interval = left.split("=")
-
-                            _, until_date = right.split("=")
-
-                            # E.g. DAILY
-                            frequency_interval_final = Event.RecurrenceInterval[
-                                frequency_interval
-                            ]
-
-                            # None means repeat indefinitely, else a date will be specified
-                            if until_date == "None":
-                                until_date_final = None
-                            else:
-                                until_date_final = datetime.strptime(
-                                    until_date, "%Y%m%dT%H%M%S"
-                                ).date()
-
-                        else:
-                            frequency_interval_final = None
-                            until_date_final = None
-
-                        # True / False, does this event already exist?
-                        start_date_time_django_format = self._parse_ical_datetime(
-                            dt_start
-                        )
-                        end_date_time_django_format = self._parse_ical_datetime(dt_end)
-
-                        event_exists_pre_import = Event.objects.filter(
-                            user=request.user,
-                            title=summary,
-                            start_time=start_date_time_django_format,
-                            end_time=end_date_time_django_format,
-                        ).exists()
-
-                        # This event is a new event, so it will be added to the DB, this event will be added to the list
-                        # This approach ensures that if the file is broken halfway through, there will not be a scenario where half
-                        # of the events are imported but the other half are not
-                        if not event_exists_pre_import:
-                            # Event data to add
-                            new_event_to_import_data = {
-                                "title": f"{summary}",
-                                "description": f"{description}",
-                                "location": f"{location}",
-                                "dt_stamp": f"{dt_stamp}",
-                                "start_time": start_date_time_django_format,
-                                "end_time": end_date_time_django_format,
-                                "r_rule_freq": frequency_interval_final,
-                                "r_rule_until": until_date_final,
-                            }
-
-                            # This is the list of events to import at the very end, this current event is added to it
-                            events.append(new_event_to_import_data)
-
-                        current_event = None
-
-                    # Every line that is not a begin or end event contains information about the event
-                    # All these lines follow the format of "variable:detail", e.g. LOCATION:London
-                    elif current_event is not None:
-                        key, value = line.split(":", 1)
-                        current_event[key] = value
-
-            # Every event is added to the DB
             for event in events:
-                # Recurring event
-                if event.get("r_rule_freq") and event["r_rule_freq"] != "None":
-                    until_date = event["r_rule_until"]
-                    if until_date == "None":
-                        until_date = None
+                self._persist_imported_event(request.user, event)
 
-                    Event.objects.create(
-                        user=request.user,
-                        title=event["title"],
-                        description=event["description"],
-                        location=event["location"],
-                        start_time=event["start_time"],
-                        end_time=event["end_time"],
-                        recurrence_interval=event["r_rule_freq"],
-                        recurrence_end=until_date,
-                    )
-
-                # One-time event
-                else:
-                    Event.objects.create(
-                        user=request.user,
-                        title=event["title"],
-                        description=event["description"],
-                        location=event["location"],
-                        start_time=event["start_time"],
-                        end_time=event["end_time"],
-                    )
-
-            # Response letting the user know that the import was successful
-            if len(events) == 0:
-                # 0 events is not strictly an error, as an error is wrong file type
-                response = {
-                    "message": "0 Events were imported, but the file is correctly formatted. Check for duplicates?"
-                }
-            else:
-                response = {
-                    "message": f"Import successful! Imported: {len(events)} event(s)."
-                }
-            return Response(response)
+            return self._build_import_response(len(events))
 
         # File format incorrect, error response
         except Exception as e:
             response = {"error": str(e)}
-            return Response(response)
+            return Response(response, status=400)

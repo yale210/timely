@@ -29,6 +29,14 @@ const getCurrentUserId = (): number | string | null => {
   return authStore.getUser()?.id ?? null;
 };
 
+const clearCourseCacheEntries = (courseId: number) => {
+  for (const key of coursePermissionsCache.keys()) {
+    if (key.startsWith(`course:${courseId}:user:`)) {
+      coursePermissionsCache.delete(key);
+    }
+  }
+};
+
 /**
  * Clears cached permissions for a course and/or a specific user.
  * The function provides the capability to remove permission entries from the
@@ -49,11 +57,7 @@ export const clearCoursePermissionsCache = (courseId?: number, userId?: number |
   }
 
   if (typeof courseId === "number") {
-    for (const key of coursePermissionsCache.keys()) {
-      if (key.startsWith(`course:${courseId}:user:`)) {
-        coursePermissionsCache.delete(key);
-      }
-    }
+    clearCourseCacheEntries(courseId);
     return;
   }
 
@@ -247,6 +251,24 @@ export const getCourseStudents = async (id: number): Promise<CourseStudent[]> =>
       throw new Error(`Course with ID ${id} not found.`);
     }
     return course.students;
+  });
+};
+
+/**
+ * Removes a user from a course.
+ * This function sends a POST request to the backend to remove a specified user
+ * from a given course by their respective IDs. Once the request is successfully
+ * completed, the user will no longer be associated with the course.
+ * @param courseId - The unique identifier of the course from which the user is to be removed.
+ * @param userId - The unique identifier of the user to be removed from the course.
+ * @returns A promise that resolves when the user is successfully removed from the course.
+ */
+export const removeUserFromCourse = async (
+  courseId: number,
+  userId: number,
+): Promise<void> => {
+  await api.post(`/api/courses/${courseId}/remove-user/`, {
+    user_id: userId,
   });
 };
 

@@ -169,6 +169,176 @@ class TaskViewSet(viewsets.ModelViewSet):
             response, profile, user_profile_level_before
         )
 
+    def _prepare_save_and_reschedule_serializer(self, task, payload):
+        """Build a partial serializer that clears allocations before rescheduling.
+
+        Returns:
+            Serializer: A validated partial serializer for the task update.
+        """
+        mutable_payload = payload.copy()
+        mutable_payload["allocation"] = []
+        serializer = self.get_serializer(task, data=mutable_payload, partial=True)
+        serializer.is_valid(raise_exception=True)
+        return serializer
+
+    def _parse_reschedule_start_date(self, raw_start_date):
+        """Parse the optional reschedule anchor date from request input.
+
+        Returns:
+            date: The parsed date or today's local date when omitted.
+
+        Raises:
+            ValidationError: If the provided date is not valid ISO format.
+        """
+        if not raw_start_date:
+            return timezone.localdate()
+
+        try:
+            return timezone.datetime.fromisoformat(raw_start_date).date()
+        except ValueError as exc:
+            raise serializers.ValidationError(
+                {"start_date": "Start date must be a valid YYYY-MM-DD date."}
+            ) from exc
+
+    @staticmethod
+    def _get_max_days_ahead(user):
+        """Read the user's scheduling horizon with a safe default.
+
+        Returns:
+            int: The user's scheduling horizon in days.
+        """
+        preference = getattr(user, "preference", None)
+        return getattr(preference, "max_days_ahead", 30)
+
+    @staticmethod
+    def _clear_reschedulable_allocations(user, task_id):
+        """Reset eligible task allocations before the scheduler recomputes them."""
+        Task.objects.filter(user=user).exclude(allocation=[]).filter(
+            completed=False
+        ).filter(Q(locked=False) | Q(id=task_id)).update(
+            allocation=[], total_task_allocations=0
+        )
+
+    @staticmethod
+    def _build_scheduler(user, task_id, max_days_ahead):
+        """Instantiate the scheduler with the calendar rescheduling constraints.
+
+        Returns:
+            Scheduler: The configured scheduler instance.
+        """
+        return Scheduler(
+            user,
+            max_days_ahead=max_days_ahead,
+            allow_split=True,
+            min_block_minutes=30,
+            include_locked_task_ids=[task_id],
+        )
+
+    @staticmethod
+    def _get_schedule_result(results, task_id):
+        """Find the scheduler result that corresponds to the edited task.
+
+        Returns:
+            ScheduleResult | None: The matching result or None.
+        """
+        return next(
+            (
+                schedule_result
+                for schedule_result in results
+                if schedule_result.task_id == task_id
+            ),
+            None,
+        )
+
+    @staticmethod
+    def _get_reschedule_warning(result):
+        """Convert a scheduler result into a human-readable warning message.
+
+        Returns:
+            str | None: The warning text, or None when scheduling succeeded.
+        """
+        if result and result.success and result.segments:
+            return None
+        if result and result.reason:
+            return result.reason
+        return "Could not reschedule the task."
+
+    @staticmethod
+    def _serialise_allocation(segments):
+        """Convert scheduled segments into the API allocation payload shape.
+
+        Returns:
+            list[dict[str, str]]: The serialised start/end segments.
+        """
+        return [
+            {"start": start.isoformat(), "end": end.isoformat()}
+            for start, end in segments
+        ]
+
+    def _persist_schedule_results(self, user, task, results):
+        """Persist successful scheduler output back onto task rows.
+
+        Returns:
+            Task: The task instance after persistence.
+        """
+        for schedule_result in results:
+            segments = schedule_result.segments or []
+            if not schedule_result.success or not segments:
+                continue
+            try:
+                scheduled_task = Task.objects.get(id=schedule_result.task_id, user=user)
+            except Task.DoesNotExist:
+                continue
+
+            allocation = self._serialise_allocation(segments)
+            scheduled_task.allocation = allocation
+            scheduled_task.total_task_allocations = len(allocation)
+            scheduled_task.save(update_fields=["allocation", "total_task_allocations"])
+            if scheduled_task.id == task.id:
+                task = scheduled_task
+
+        return task
+
+    def _reschedule_task_allocations(self, user, task, start_date, max_days_ahead):
+        """Clear and recompute all eligible allocations for the current user.
+
+        Returns:
+            tuple[Task, str | None]: The updated task and any scheduler warning.
+        """
+        self._clear_reschedulable_allocations(user, task.id)
+        task.allocation = []
+        task.total_task_allocations = 0
+
+        scheduler = self._build_scheduler(user, task.id, max_days_ahead)
+        results = scheduler.schedule_tasks(start_date=start_date)
+        warning = self._get_reschedule_warning(
+            self._get_schedule_result(results, task.id)
+        )
+        task = self._persist_schedule_results(user, task, results)
+        return task, warning
+
+    def _build_save_and_reschedule_response(
+        self,
+        task,
+        profile,
+        user_profile_level_before,
+        reschedule_warning,
+    ):
+        """Build the response payload for a save-and-reschedule action.
+
+        Returns:
+            Response: The DRF response containing task and metadata payloads.
+        """
+        response = Response(
+            CalendarResponseSerializer(task).data,
+            status=status.HTTP_200_OK,
+        )
+        if reschedule_warning:
+            response.data["reschedule_warning"] = reschedule_warning
+        return self._append_profile_metadata(
+            response, profile, user_profile_level_before
+        )
+
     @action(detail=True, methods=["post"], url_path="save-and-reschedule")
     def save_and_reschedule(self, request, *args, **kwargs):
         """Save task changes and trigger a full reschedule for the user.
@@ -181,98 +351,30 @@ class TaskViewSet(viewsets.ModelViewSet):
         Returns:
             Response: A DRF response with the updated task and reschedule status.
 
-        Raises:
-            ValidationError: If the start_date provided is invalid.
-
         """
         profile = request.user.user_profile
         user_profile_level_before = profile.level
         task = self.get_object()
-        reschedule_warning = None
-
-        payload = request.data.copy()
-        payload["allocation"] = []
-        serializer = self.get_serializer(task, data=payload, partial=True)
-        serializer.is_valid(raise_exception=True)
-
-        raw_start_date = request.data.get("start_date")
-        if raw_start_date:
-            try:
-                start_date = timezone.datetime.fromisoformat(raw_start_date).date()
-            except ValueError as exc:
-                raise serializers.ValidationError(
-                    {"start_date": "Start date must be a valid YYYY-MM-DD date."}
-                ) from exc
-        else:
-            start_date = timezone.localdate()
-
-        preference = getattr(request.user, "preference", None)
-        max_days_ahead = getattr(preference, "max_days_ahead", 30)
+        serializer = self._prepare_save_and_reschedule_serializer(task, request.data)
+        start_date = self._parse_reschedule_start_date(request.data.get("start_date"))
+        max_days_ahead = self._get_max_days_ahead(request.user)
 
         with transaction.atomic():
             task = serializer.save()
 
         with transaction.atomic():
-            Task.objects.filter(user=request.user).exclude(allocation=[]).filter(
-                completed=False
-            ).filter(Q(locked=False) | Q(id=task.id)).update(
-                allocation=[], total_task_allocations=0
-            )
-            task.allocation = []
-            task.total_task_allocations = 0
-            scheduler = Scheduler(
+            task, reschedule_warning = self._reschedule_task_allocations(
                 request.user,
-                max_days_ahead=max_days_ahead,
-                allow_split=True,
-                min_block_minutes=30,
-                include_locked_task_ids=[task.id],
+                task,
+                start_date,
+                max_days_ahead,
             )
-            results = scheduler.schedule_tasks(start_date=start_date)
-            result = next(
-                (
-                    schedule_result
-                    for schedule_result in results
-                    if schedule_result.task_id == task.id
-                ),
-                None,
-            )
-            if not result or not result.success or not result.segments:
-                reschedule_warning = (
-                    result.reason
-                    if result and result.reason
-                    else "Could not reschedule the task."
-                )
 
-            for schedule_result in results:
-                segments = schedule_result.segments or []
-                if not schedule_result.success or not segments:
-                    continue
-                try:
-                    scheduled_task = Task.objects.get(
-                        id=schedule_result.task_id, user=request.user
-                    )
-                except Task.DoesNotExist:
-                    continue
-                allocation = [
-                    {"start": start.isoformat(), "end": end.isoformat()}
-                    for start, end in segments
-                ]
-                scheduled_task.allocation = allocation
-                scheduled_task.total_task_allocations = len(allocation)
-                scheduled_task.save(
-                    update_fields=["allocation", "total_task_allocations"]
-                )
-                if scheduled_task.id == task.id:
-                    task = scheduled_task
-
-        response = Response(
-            CalendarResponseSerializer(task).data,
-            status=status.HTTP_200_OK,
-        )
-        if reschedule_warning:
-            response.data["reschedule_warning"] = reschedule_warning
-        return self._append_profile_metadata(
-            response, profile, user_profile_level_before
+        return self._build_save_and_reschedule_response(
+            task,
+            profile,
+            user_profile_level_before,
+            reschedule_warning,
         )
 
 

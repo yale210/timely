@@ -45,6 +45,7 @@ const SettingsSidebar = ({
       items: [
         { label: "Scheduling", value: "preferences", icon: "schedule" },
         { label: "Categories", value: "categories", icon: "category" },
+        { label: "Overrides", value: "overrides", icon: "event_busy" },
       ],
     },
     {

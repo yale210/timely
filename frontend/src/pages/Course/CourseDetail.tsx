@@ -7,6 +7,7 @@ import * as courseService from "@/services/courseService";
 import { getUsernameById } from "@/services/authService.ts";
 import type { Course } from "@/types/course.ts";
 import type { Event } from "@/types/event.ts";
+import { formatDateTimeInTimezone, timezoneDateTimeLocalToIso } from "@/utils/userTimezone";
 
 interface CourseEditForm {
   name: string;
@@ -25,6 +26,18 @@ interface CourseEventForm {
 interface CourseJoinCodeForm {
   expires_at: string;
 }
+
+const getLeadLabel = async (lead: string | null | undefined): Promise<string> => {
+  if (!lead) {
+    return "Unassigned";
+  }
+
+  try {
+    return await getUsernameById(Number(lead));
+  } catch {
+    return lead;
+  }
+};
 
 /**
  * Renders a single course detail page.
@@ -94,8 +107,8 @@ export default function CourseDetail() {
   };
 
   const toIsoString = (value: string) => {
-    const parsed = new Date(value);
-    return Number.isNaN(parsed.getTime()) ? value : parsed.toISOString();
+    const isoValue = timezoneDateTimeLocalToIso(value);
+    return isoValue || value;
   };
 
   const openEditModal = () => {
@@ -123,31 +136,23 @@ export default function CourseDetail() {
     }
 
     const loadCourse = async () => {
-      setLoading(true);
-      setError(null);
-
-      try {
-        const courseData = await courseService.getCourse(courseId);
+      const applyCourseState = async (courseData: Course) => {
         setCourse(courseData);
-
-        if (courseData.lead) {
-          try {
-            const username = await getUsernameById(Number(courseData.lead));
-            setLeadUsername(username);
-          } catch {
-            setLeadUsername(courseData.lead);
-          }
-        } else {
-          setLeadUsername("Unassigned");
-        }
-
+        setLeadUsername(await getLeadLabel(courseData.lead));
         setEditForm({
           name: courseData.name,
           description: courseData.description,
           active: courseData.active !== false,
         });
-
         await refreshEvents(courseId);
+      };
+
+      setLoading(true);
+      setError(null);
+
+      try {
+        const courseData = await courseService.getCourse(courseId);
+        await applyCourseState(courseData);
       } catch (courseError) {
         console.error(courseError);
         setError("Course not found.");
@@ -337,7 +342,7 @@ export default function CourseDetail() {
                 <div>
                   <dt className="text-sm font-medium text-gray-500">Created</dt>
                   <dd className="mt-1 text-sm text-gray-900">
-                    {new Date(course.created_at).toLocaleString()}
+                    {formatDateTimeInTimezone(course.created_at)}
                   </dd>
                 </div>
                 <div>

@@ -1,12 +1,13 @@
 """Seed profile records for local development and test data."""
 
+from django.contrib.auth import get_user_model
 from django.utils import timezone
 from django.utils.dateparse import parse_datetime
+
+from core.management.commands.seeders.base import BaseSeeder
 from profiles.models import Profile
 
 from .fixtures.profile_fixtures import profiles
-from django.contrib.auth import get_user_model
-from core.management.commands.seeders.base import BaseSeeder
 
 
 class ProfileSeeder(BaseSeeder):

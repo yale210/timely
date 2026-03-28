@@ -6,10 +6,13 @@ and randomly generated grades to test academic performance tracking.
 """
 
 import random
-from core.models import Grade, Category
-from .fixtures.grade_fixtures import grades
+
 from django.contrib.auth import get_user_model
+
 from core.management.commands.seeders.base import BaseSeeder
+from core.models import Category, Grade
+
+from .fixtures.grade_fixtures import grades
 
 
 class GradeSeeder(BaseSeeder):
@@ -89,13 +92,21 @@ class GradeSeeder(BaseSeeder):
                 password="thomas123",
             )
 
+        category = Category.objects.filter(user=temporary_user).order_by("?").first()
+        if category is None:
+            category = Category.objects.create(
+                user=temporary_user,
+                text=self.faker.word(),
+                colour=self.faker.hex_color(),
+            )
+
         # Construct and persist the random grade
         self._create_grade(
             {
                 "fields": {
                     "user": temporary_user.id,
                     "name": self.faker.sentence(),
-                    "category": Category.objects.order_by("?").first().id,
+                    "category": category.id,
                     "score": random.randint(0, 100),
                     "total_possible": 100,
                     "date_achieved": self.faker.date(),

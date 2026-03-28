@@ -9,8 +9,8 @@ from .username_view import UsernameView
 
 __all__ = [
     "LoginAPIView",
-    "LogoutAllAPIView",
     "LogoutAPIView",
+    "LogoutAllAPIView",
     "RegisterView",
     "TestPermissionView",
     "UsernameView",

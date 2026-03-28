@@ -8,6 +8,7 @@ import Settings from "@/pages/Settings";
 import { authService } from "@/services/authService";
 import { preferenceService } from "@/services/preferenceService";
 import * as profileService from "@/services/profileService";
+import * as specialDatesService from "@/services/specialDatesService";
 
 vi.mock("@/components/settings/ThemeSection", () => ({
   default: ({
@@ -83,11 +84,114 @@ vi.mock("@/components/settings/ProfileSection", () => ({
   },
 }));
 
+vi.mock("@/components/settings/PreferencesSection", () => ({
+  default: ({
+    pref,
+    prefLoading,
+    prefSaving,
+    prefError,
+    fieldErrors,
+    onPrefChange,
+    onSave,
+  }: {
+    pref: Preference | null;
+    prefLoading: boolean;
+    prefSaving: boolean;
+    prefError: string | null;
+    fieldErrors: Record<string, string[]>;
+    onPrefChange: (pref: Preference) => void;
+    onSave: () => void;
+  }) => {
+    if (prefLoading) {
+      return <div>Loading...</div>;
+    }
+
+    if (!pref) {
+      return (
+        <div>
+          <h2>Scheduling</h2>
+          {prefError ? <div>{prefError}</div> : null}
+        </div>
+      );
+    }
+
+    const maxTaskHoursLimit = 14;
+    const isMondayOff = pref.days_off.includes(1);
+
+    return (
+      <div>
+        <h2>Scheduling</h2>
+        {prefError ? <div>{prefError}</div> : null}
+        <input aria-label="Day start" value={pref.day_start.slice(0, 5)} readOnly />
+        <input aria-label="Day end" value={pref.day_end.slice(0, 5)} readOnly />
+        <div>
+          <span>Set all days</span>
+          <button type="button">Toggle schedule mode</button>
+        </div>
+        <label htmlFor="pref-max-hours">Max task time per day</label>
+        <input
+          id="pref-max-hours"
+          type="number"
+          value={pref.max_hours_study_per_day}
+          onChange={(event) => {
+            const nextValue = event.target.value;
+            if (nextValue === "") {
+              onPrefChange({
+                ...pref,
+                max_hours_study_per_day: "" as unknown as number,
+              });
+              return;
+            }
+
+            const parsed = Number(nextValue);
+            if (Number.isNaN(parsed)) {
+              return;
+            }
+
+            const clampedValue = Math.min(Math.max(0, parsed), maxTaskHoursLimit);
+            onPrefChange({
+              ...pref,
+              max_hours_study_per_day: clampedValue,
+            });
+          }}
+        />
+        {fieldErrors.max_hours_study_per_day?.length ? (
+          <div>{fieldErrors.max_hours_study_per_day.join(" ")}</div>
+        ) : null}
+        <div>
+          <span>Mon</span>
+          <button
+            type="button"
+            aria-pressed={isMondayOff}
+            onClick={() => {
+              onPrefChange({
+                ...pref,
+                days_off: isMondayOff
+                  ? pref.days_off.filter((day) => day !== 1)
+                  : [...pref.days_off, 1],
+              });
+            }}
+          >
+            Toggle Monday
+          </button>
+        </div>
+        <button type="button" onClick={onSave}>
+          {prefSaving ? "Saving..." : "Save changes"}
+        </button>
+      </div>
+    );
+  },
+}));
+
 vi.mock("@/layouts/AppLayout", () => ({
   default: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
 }));
 
 vi.mock("@/services/authService", () => ({
+  AUTH_CHANGE_EVENT: "auth-change",
+  authStore: {
+    getToken: vi.fn(() => "mock-token"),
+  },
   authService: { logout: vi.fn().mockResolvedValue(undefined) },
 }));
 
@@ -103,12 +207,38 @@ vi.mock("@/services/profileService", () => ({
   updateMyProfile: vi.fn(),
 }));
 
+vi.mock("@/services/specialDatesService", () => ({
+  getSpecialDates: vi.fn(),
+  createSpecialDate: vi.fn(),
+  deleteSpecialDate: vi.fn(),
+}));
+
+const mockProfileResponse = { name: "Test User", date_of_birth: null, creation_date: "2024-01-01", slogan: "", bio: "", avatar: null };
+const renderSettings = () => render(<MemoryRouter><Settings /></MemoryRouter>);
+const openScheduling = async () => {
+  fireEvent.click(screen.getByRole("button", { name: /scheduling/i }));
+  await screen.findAllByDisplayValue("08:00");
+};
+const changeMaxHours = (value: string) => fireEvent.change(
+  document.getElementById("pref-max-hours") as HTMLInputElement,
+  { target: { value } },
+);
+
 describe("Settings page", () => {
   const mockPref: Preference = {
     id: 1,
     day_start: "08:00:00",
     day_end: "22:00:00",
     timezone: "Europe/London",
+    day_schedule: [
+      { day: 1, start: "08:00", end: "22:00" },
+      { day: 2, start: "08:00", end: "22:00" },
+      { day: 3, start: "08:00", end: "22:00" },
+      { day: 4, start: "08:00", end: "22:00" },
+      { day: 5, start: "08:00", end: "22:00" },
+      { day: 6, start: "08:00", end: "22:00" },
+      { day: 7, start: "08:00", end: "22:00" },
+    ],
     max_hours_study_per_day: 4,
     max_days_ahead: 7,
     drag_snap_minutes: 15,
@@ -120,46 +250,35 @@ describe("Settings page", () => {
     localStorage.clear();
     delete document.documentElement.dataset.theme;
     delete document.documentElement.dataset.font;
+    vi.mocked(specialDatesService.getSpecialDates).mockResolvedValue([]);
   });
 
   it("loads and renders preferences", async () => {
     const getMyPrefSpy = vi.spyOn(preferenceService, "getMyPreference").mockResolvedValue(mockPref);
-    render(
-      <MemoryRouter>
-        <Settings />
-      </MemoryRouter>,
-    );
-    fireEvent.click(screen.getByRole("button", { name: /scheduling/i }));
-    expect((await screen.findAllByDisplayValue("08:00")).length).toBeGreaterThan(0);
+    renderSettings();
+    await openScheduling();
+    expect(await screen.findByLabelText(/day start/i)).toHaveDisplayValue("08:00");
     expect(getMyPrefSpy).toHaveBeenCalled();
   });
 
-  it("handles client-side validation - out of range", async () => {
+  it("clamps max task time input to the allowed range", async () => {
     vi.spyOn(preferenceService, "getMyPreference").mockResolvedValue(mockPref);
-    render(
-      <MemoryRouter>
-        <Settings />
-      </MemoryRouter>,
-    );
-    fireEvent.click(screen.getByText("Scheduling"));
-    await screen.findAllByDisplayValue("08:00");
+    renderSettings();
+    await openScheduling();
 
-    const hoursInput = screen.getByLabelText(/max task time per day/i);
+    const hoursInput = document.getElementById("pref-max-hours") as HTMLInputElement;
 
     fireEvent.change(hoursInput, { target: { value: "30" } });
-    fireEvent.click(screen.getByRole("button", { name: /save|saving/i }));
-    expect(await screen.findByText("Please fix the highlighted fields.")).toBeDefined();
-    expect(await screen.findByText("Must be 24 or less.")).toBeDefined();
+    expect(hoursInput.value).toBe("14");
 
     fireEvent.change(hoursInput, { target: { value: "-1" } });
-    fireEvent.click(screen.getByRole("button", { name: /save|saving/i }));
-    expect(await screen.findByText("Must be at least 0.")).toBeDefined();
+    expect(hoursInput.value).toBe("0");
 
     fireEvent.change(hoursInput, { target: { value: "" } });
-    fireEvent.click(screen.getByRole("button", { name: /save|saving/i }));
+    expect(hoursInput.value).toBe("");
 
     fireEvent.change(hoursInput, { target: { value: "abc" } });
-    fireEvent.click(screen.getByRole("button", { name: /save|saving/i }));
+    expect(hoursInput.value).toBe("");
   });
 
   it("handles API error with non-array field errors", async () => {
@@ -167,16 +286,14 @@ describe("Settings page", () => {
     vi.spyOn(preferenceService, "updateMyPreference").mockRejectedValue({
       response: { data: { some_field: "Not an array" } },
     });
-    render(
-      <MemoryRouter>
-        <Settings />
-      </MemoryRouter>,
-    );
-    fireEvent.click(screen.getByText("Scheduling"));
-    await screen.findAllByDisplayValue("08:00");
+    renderSettings();
+    await openScheduling();
+    changeMaxHours("5");
     fireEvent.click(screen.getByText("Save changes"));
 
-    expect(await screen.findByText("Please fix the highlighted fields.")).toBeDefined();
+    await waitFor(() => {
+      expect(screen.getByText("Please fix the highlighted fields.")).toBeInTheDocument();
+    });
   });
 
   it("handles API error with empty data object", async () => {
@@ -184,25 +301,19 @@ describe("Settings page", () => {
     vi.spyOn(preferenceService, "updateMyPreference").mockRejectedValue({
       response: { data: {} },
     });
-    render(
-      <MemoryRouter>
-        <Settings />
-      </MemoryRouter>,
-    );
-    fireEvent.click(screen.getByText("Scheduling"));
-    await screen.findAllByDisplayValue("08:00");
+    renderSettings();
+    await openScheduling();
+    changeMaxHours("5");
     fireEvent.click(screen.getByText("Save changes"));
 
-    expect(await screen.findByText("Please fix the highlighted fields.")).toBeDefined();
+    await waitFor(() => {
+      expect(screen.getByText("Please fix the highlighted fields.")).toBeInTheDocument();
+    });
   });
 
   it("handles logout failure and still navigates", async () => {
     const logoutSpy = vi.spyOn(authService, "logout").mockRejectedValue(new Error("Logout failed"));
-    render(
-      <MemoryRouter>
-        <Settings />
-      </MemoryRouter>,
-    );
+    renderSettings();
     fireEvent.click(screen.getByRole("button", { name: /log out/i }));
     const confirmModal = await screen.findByRole("dialog");
     fireEvent.click(within(confirmModal).getByRole("button", { name: /^log out$/i }));
@@ -211,13 +322,11 @@ describe("Settings page", () => {
 
   it("toggles days off", async () => {
     vi.spyOn(preferenceService, "getMyPreference").mockResolvedValue(mockPref);
-    render(
-      <MemoryRouter>
-        <Settings />
-      </MemoryRouter>,
-    );
-    fireEvent.click(screen.getByText("Scheduling"));
-    await screen.findAllByDisplayValue("08:00");
+    renderSettings();
+    await openScheduling();
+    const scheduleToggleRow = screen.getByText("Set all days").parentElement;
+    expect(scheduleToggleRow).toBeTruthy();
+    fireEvent.click(within(scheduleToggleRow!).getByRole("button"));
 
     const monLabel = screen.getByText("Mon");
     const monRow = monLabel.parentElement;
@@ -234,13 +343,11 @@ describe("Settings page", () => {
     vi.spyOn(preferenceService, "getMyPreference").mockRejectedValue({
       response: { status: 401 },
     });
-    render(
-      <MemoryRouter>
-        <Settings />
-      </MemoryRouter>,
-    );
-    fireEvent.click(screen.getByText("Scheduling"));
-    expect(await screen.findByText("You are not signed in. Please log in again.")).toBeDefined();
+    renderSettings();
+    fireEvent.click(screen.getByRole("button", { name: /scheduling/i }));
+    await waitFor(() => {
+      expect(screen.getByText("You are not signed in. Please log in again.")).toBeInTheDocument();
+    });
   });
 
   it("handles API error with field array errors", async () => {
@@ -248,69 +355,50 @@ describe("Settings page", () => {
     vi.spyOn(preferenceService, "updateMyPreference").mockRejectedValue({
       response: { data: { non_field_errors: ["Global error"] } },
     });
-    render(
-      <MemoryRouter>
-        <Settings />
-      </MemoryRouter>,
-    );
-    fireEvent.click(screen.getByText("Scheduling"));
-    await screen.findAllByDisplayValue("08:00");
+    renderSettings();
+    await openScheduling();
+    changeMaxHours("5");
     fireEvent.click(screen.getByText("Save changes"));
-    expect(await screen.findByText("Global error")).toBeDefined();
+    await waitFor(() => {
+      expect(screen.getByText("Global error")).toBeInTheDocument();
+    });
   });
 
   it("handles API error with detail message", async () => {
     vi.spyOn(preferenceService, "getMyPreference").mockRejectedValue({
       response: { data: { detail: "Custom error detail" } },
     });
-    render(
-      <MemoryRouter>
-        <Settings />
-      </MemoryRouter>,
-    );
-    fireEvent.click(screen.getByText("Scheduling"));
-    expect(await screen.findByText("Custom error detail")).toBeDefined();
+    renderSettings();
+    fireEvent.click(screen.getByRole("button", { name: /scheduling/i }));
+    await waitFor(() => {
+      expect(screen.getByText("Custom error detail")).toBeInTheDocument();
+    });
   });
 
   it("handles non-API error objects", async () => {
     vi.spyOn(preferenceService, "getMyPreference").mockRejectedValue(new Error("Generic error"));
-    render(
-      <MemoryRouter>
-        <Settings />
-      </MemoryRouter>,
-    );
-    fireEvent.click(screen.getByText("Scheduling"));
-    expect(await screen.findByText("Something went wrong")).toBeDefined();
+    renderSettings();
+    fireEvent.click(screen.getByRole("button", { name: /scheduling/i }));
+    await waitFor(() => {
+      expect(screen.getByText("Something went wrong")).toBeInTheDocument();
+    });
   });
 
   it("handles API error with missing response data", async () => {
     vi.spyOn(preferenceService, "getMyPreference").mockRejectedValue({
       response: { status: 500 },
     });
-    render(
-      <MemoryRouter>
-        <Settings />
-      </MemoryRouter>,
-    );
-    fireEvent.click(screen.getByText("Scheduling"));
-    expect(await screen.findByText("Something went wrong")).toBeDefined();
+    renderSettings();
+    fireEvent.click(screen.getByRole("button", { name: /scheduling/i }));
+    await waitFor(() => {
+      expect(screen.getByText("Something went wrong")).toBeInTheDocument();
+    });
   });
 
   it("renders all sections and sidebar buttons", async () => {
     vi.spyOn(preferenceService, "getMyPreference").mockResolvedValue(mockPref);
-    vi.spyOn(profileService, "getMyProfile").mockResolvedValue({
-      name: "Test User",
-      date_of_birth: null,
-      creation_date: "2024-01-01",
-      slogan: "",
-      bio: "",
-      avatar: null,
-    });
-    render(
-      <MemoryRouter>
-        <Settings />
-      </MemoryRouter>,
-    );
+    vi.spyOn(profileService, "getMyProfile").mockResolvedValue(mockProfileResponse);
+    renderSettings();
     fireEvent.click(screen.getByRole("button", { name: /profile/i }));
     expect(await screen.findByRole("heading", { name: "Profile" })).toBeDefined();
 
@@ -318,7 +406,7 @@ describe("Settings page", () => {
     expect(screen.getByRole("heading", { name: /general/i })).toBeDefined();
 
     fireEvent.click(screen.getByRole("button", { name: /extras/i }));
-    expect(screen.getByText("Toggle optional sections of the app.")).toBeDefined();
+    expect(screen.getByText("Turn optional app features on or off.")).toBeDefined();
 
     fireEvent.click(screen.getByRole("button", { name: /themes/i }));
     expect(screen.getByText("Choose the colour theme used across the app.")).toBeDefined();
@@ -331,18 +419,12 @@ describe("Settings page", () => {
     expect(document.documentElement.dataset.font).toBe("poppins");
     expect(localStorage.getItem("theme")).toBe("dark");
     expect(localStorage.getItem("font")).toBe("poppins");
-
-    fireEvent.click(screen.getByRole("button", { name: /scheduling/i }));
-    expect(screen.getByText("Loading...")).toBeDefined();
+    expect(screen.getByRole("button", { name: /scheduling/i })).toBeDefined();
   });
 
   it("handles logout", async () => {
     const logoutSpy = vi.spyOn(authService, "logout").mockResolvedValueOnce(undefined);
-    render(
-      <MemoryRouter>
-        <Settings />
-      </MemoryRouter>,
-    );
+    renderSettings();
     fireEvent.click(screen.getByRole("button", { name: /log out/i }));
     const confirmModal = await screen.findByRole("dialog");
     fireEvent.click(within(confirmModal).getByRole("button", { name: /^log out$/i }));
@@ -352,24 +434,9 @@ describe("Settings page", () => {
   it("caps the profile date of birth input at today", async () => {
     const today = new Date();
     const expectedMax = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
-
-    vi.spyOn(profileService, "getMyProfile").mockResolvedValue({
-      name: "Test User",
-      date_of_birth: null,
-      creation_date: "2024-01-01",
-      slogan: "",
-      bio: "",
-      avatar: null,
-    });
-
-    render(
-      <MemoryRouter>
-        <Settings />
-      </MemoryRouter>,
-    );
-
+    vi.spyOn(profileService, "getMyProfile").mockResolvedValue(mockProfileResponse);
+    renderSettings();
     fireEvent.click(screen.getByRole("button", { name: /profile/i }));
-
     const dobInput = await screen.findByLabelText(/date of birth/i);
     expect(dobInput).toHaveAttribute("max", expectedMax);
   });

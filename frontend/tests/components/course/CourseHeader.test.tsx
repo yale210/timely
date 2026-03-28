@@ -7,7 +7,6 @@ describe("CoursesHeader", () => {
   const onJoinCourseIdChange = vi.fn();
   const onJoinCourse = vi.fn();
   const onRefresh = vi.fn();
-  const onCreateCourse = vi.fn();
   const onManageCourses = vi.fn();
 
   beforeEach(() => {
@@ -24,7 +23,6 @@ describe("CoursesHeader", () => {
         onJoinCourse={onJoinCourse}
         onRefresh={onRefresh}
         isTeacher={false}
-        onCreateCourse={onCreateCourse}
         onManageCourses={onManageCourses}
       />
     );
@@ -48,7 +46,6 @@ describe("CoursesHeader", () => {
         onJoinCourse={onJoinCourse}
         onRefresh={onRefresh}
         isTeacher={true}
-        onCreateCourse={onCreateCourse}
         onManageCourses={onManageCourses}
       />
     );
@@ -62,14 +59,12 @@ describe("CoursesHeader", () => {
 
     fireEvent.click(screen.getByRole("button", { name: "Join" }));
     fireEvent.click(screen.getByRole("button", { name: "Refresh" }));
-    fireEvent.click(screen.getByRole("button", { name: "Create course" }));
     fireEvent.click(screen.getByRole("button", { name: "Manage" }));
 
     expect(onSearchChange).toHaveBeenCalledWith("python");
     expect(onJoinCourseIdChange).toHaveBeenCalledWith("123");
     expect(onJoinCourse).toHaveBeenCalledTimes(1);
     expect(onRefresh).toHaveBeenCalledTimes(1);
-    expect(onCreateCourse).toHaveBeenCalledTimes(1);
     expect(onManageCourses).toHaveBeenCalledTimes(1);
   });
 
@@ -83,7 +78,6 @@ describe("CoursesHeader", () => {
         onJoinCourse={onJoinCourse}
         onRefresh={onRefresh}
         isTeacher={false}
-        onCreateCourse={onCreateCourse}
         onManageCourses={onManageCourses}
       />
     );

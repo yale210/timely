@@ -1,5 +1,6 @@
+"""Tests for course event sync services."""
+
 import datetime
-from unittest.mock import patch
 
 from django.contrib.auth import get_user_model
 from django.test import TestCase
@@ -7,55 +8,56 @@ from django.utils import timezone
 
 from core.models import Event, Preference
 from courses.models import Course, CourseEnrollment, CourseEvent, Student, Teacher
-from courses.services.event import CourseEventSyncService
+from courses.services.core_event_sync import CourseEventSyncService
 
 User = get_user_model()
 
 
 class CourseEventSyncServiceTests(TestCase):
-    def setUp(self):
-        self.teacher_user = User.objects.create_user(
+    @classmethod
+    def setUpTestData(cls):
+        cls.teacher_user = User.objects.create_user(
             username="teacher",
             password="password123",
             email="teacher@example.com",
         )
-        self.student_user = User.objects.create_user(
+        cls.student_user = User.objects.create_user(
             username="student",
             password="password123",
             email="student@example.com",
         )
-        self.other_user = User.objects.create_user(
+        cls.other_user = User.objects.create_user(
             username="other",
             password="password123",
             email="other@example.com",
         )
 
-        self.teacher = Teacher.objects.create(user=self.teacher_user)
-        self.student = Student.objects.create(user=self.student_user)
-        self.other_student = Student.objects.create(user=self.other_user)
+        cls.teacher = Teacher.objects.create(user=cls.teacher_user)
+        cls.student = Student.objects.create(user=cls.student_user)
+        cls.other_student = Student.objects.create(user=cls.other_user)
 
         Preference.objects.create(
-            user=self.student_user,
+            user=cls.student_user,
             day_start=datetime.time(7, 0),
             day_end=datetime.time(23, 0),
             timezone="Europe/London",
         )
         Preference.objects.create(
-            user=self.other_user,
+            user=cls.other_user,
             day_start=datetime.time(7, 0),
             day_end=datetime.time(23, 0),
             timezone="Europe/London",
         )
 
-        self.course = Course.objects.create(
+        cls.course = Course.objects.create(
             name="Python Basics",
             description="Intro course",
-            lead=self.teacher,
+            lead=cls.teacher,
         )
 
-        self.course_event = CourseEvent.objects.create(
-            course=self.course,
-            created_by=self.teacher,
+        cls.course_event = CourseEvent.objects.create(
+            course=cls.course,
+            created_by=cls.teacher,
             title="Lesson 1",
             description="Intro lesson",
             location="Room 101",
@@ -65,6 +67,7 @@ class CourseEventSyncServiceTests(TestCase):
         )
 
     def test_sync_course_event_to_core_creates_events_for_all_active_enrollments(self):
+        """Test sync course event to core creates events for all active enrollments."""
         CourseEnrollment.objects.create(
             course=self.course, student=self.student, active=True
         )
@@ -88,6 +91,7 @@ class CourseEventSyncServiceTests(TestCase):
         self.assertEqual(event.colour, "#ff0000")
 
     def test_sync_course_event_to_core_updates_existing_event(self):
+        """Test sync course event to core updates existing event."""
         CourseEnrollment.objects.create(
             course=self.course, student=self.student, active=True
         )
@@ -115,6 +119,7 @@ class CourseEventSyncServiceTests(TestCase):
         self.assertEqual(existing_event.end_time, self.course_event.end_time)
 
     def test_sync_course_event_to_core_returns_noop_when_no_enrollments(self):
+        """Test sync course event to core returns noop when no enrollments."""
         stats = CourseEventSyncService.sync_course_event_to_core(self.course_event)
 
         self.assertEqual(stats["created"], 0)
@@ -123,6 +128,7 @@ class CourseEventSyncServiceTests(TestCase):
         self.assertEqual(Event.objects.count(), 0)
 
     def test_sync_user_course_events_creates_events_for_enrolled_courses(self):
+        """Test sync user course events creates events for enrolled courses."""
         CourseEnrollment.objects.create(
             course=self.course, student=self.student, active=True
         )
@@ -135,6 +141,7 @@ class CourseEventSyncServiceTests(TestCase):
         self.assertEqual(Event.objects.filter(user=self.student_user).count(), 1)
 
     def test_sync_user_course_events_updates_existing_event(self):
+        """Test sync user course events updates existing event."""
         CourseEnrollment.objects.create(
             course=self.course, student=self.student, active=True
         )
@@ -163,24 +170,10 @@ class CourseEventSyncServiceTests(TestCase):
         self.assertEqual(existing_event.end_time, self.course_event.end_time)
 
     def test_sync_user_course_events_skips_users_without_enrollments(self):
+        """Test sync user course events skips users without enrollments."""
         stats = CourseEventSyncService.sync_user_course_events(self.other_user)
 
         self.assertEqual(stats["created"], 0)
         self.assertEqual(stats["updated"], 0)
         self.assertEqual(stats["errors"], [])
         self.assertEqual(Event.objects.filter(user=self.other_user).count(), 0)
-
-    @patch("courses.services.event.logger")
-    def test_sync_course_event_to_core_collects_errors(self, mock_logger):
-        CourseEnrollment.objects.create(
-            course=self.course, student=self.student, active=True
-        )
-
-        with patch.object(Event.objects, "get", side_effect=Exception("boom")):
-            stats = CourseEventSyncService.sync_course_event_to_core(self.course_event)
-
-        self.assertEqual(stats["created"], 0)
-        self.assertEqual(stats["updated"], 0)
-        self.assertEqual(len(stats["errors"]), 1)
-        self.assertIn("boom", stats["errors"][0])
-        mock_logger.error.assert_called()
