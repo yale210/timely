@@ -1,5 +1,5 @@
 import api from "@/services/api"
-import type { AuthResponse, User } from "@/types"
+import type { AuthResponse, User, DeleteResponse } from "@/types"
 
 // Create custom browser event, app is notified when user data changes
 export const AUTH_CHANGE_EVENT = "auth-change"
@@ -93,6 +93,12 @@ export const authService = {
     } finally {
       authStore.clear()
     }
+  },
+
+  //Deletes the user's account
+  async deleteAccount(): Promise<string> {
+    const response = await api.delete<DeleteResponse>("/api/delete_account/");
+    return response.data.message;
   },
 }
 /**

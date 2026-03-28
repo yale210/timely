@@ -22,3 +22,11 @@ export interface AuthResponse {
   user?: User
   [key: string]: unknown
 }
+
+/**
+ * Represents the object returned after an account is deleted.
+ * @interface DeleteResponse
+ */
+export interface DeleteResponse {
+  message: string;
+}
