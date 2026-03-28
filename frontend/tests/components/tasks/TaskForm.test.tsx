@@ -9,35 +9,38 @@ vi.mock("@/components", async () => {
     ...actual,
     Tooltip: ({ children }: { children: ReactNode }) => children,
     CategoryColourPicker: () => null,
-    CategoryMultiSelect: ({ categories, selectedIds, onChange }: {
-      categories: { id: number; text: string }[];
-      selectedIds: number[];
-      onChange: (nextIds: number[]) => void;
-    }) => (
-      <div>
-        <input placeholder="Type to search or add category..." readOnly />
-        {categories.map((category) => {
-          const isSelected = selectedIds.includes(category.id);
-          return (
-            <button
-              key={category.id}
-              type="button"
-              onMouseDown={() =>
-                onChange(
-                  isSelected
-                    ? selectedIds.filter((id) => id !== category.id)
-                    : [...selectedIds, category.id],
-                )
-              }
-            >
-              {category.text}
-            </button>
-          );
-        })}
-      </div>
-    ),
   };
 });
+
+vi.mock("@/components/categories/CategoryMultiSelect", () => ({
+  default: ({ categories, selectedIds, onChange }: {
+    categories: { id: number; text: string }[];
+    selectedIds: number[];
+    onChange: (nextIds: number[]) => void;
+  }) => (
+    <div>
+      <input placeholder="Type to search or add category..." readOnly />
+      {categories.map((category) => {
+        const isSelected = selectedIds.includes(category.id);
+        return (
+          <button
+            key={category.id}
+            type="button"
+            onMouseDown={() =>
+              onChange(
+                isSelected
+                  ? selectedIds.filter((id) => id !== category.id)
+                  : [...selectedIds, category.id],
+              )
+            }
+          >
+            {category.text}
+          </button>
+        );
+      })}
+    </div>
+  ),
+}));
 
 describe("TaskForm Component", () => {
   const mockCategories = [

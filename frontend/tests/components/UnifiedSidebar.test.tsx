@@ -1,4 +1,4 @@
-import { render, screen, fireEvent } from "@testing-library/react";
+import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { describe, it, expect, vi, afterEach } from "vitest";
 import type { ReactNode } from "react";
 import '@testing-library/jest-dom'
@@ -381,7 +381,7 @@ describe("UnifiedSidebar", () => {
     ).toBeInTheDocument();
   });
 
-  it("uses in-app scope confirmation for recurring delete", () => {
+  it("uses in-app scope confirmation for recurring delete", async () => {
     const onDelete = vi.fn();
     const onClose = vi.fn();
     const event: Event = {
@@ -419,10 +419,12 @@ describe("UnifiedSidebar", () => {
     expect(screen.getByText("Delete all events in this series?")).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "Delete All Events" }));
 
-    expect(onDelete).toHaveBeenCalledWith({
-      scope: "all",
-      original_start_time: event.original_start_time,
+    await waitFor(() => {
+      expect(onDelete).toHaveBeenCalledWith({
+        scope: "all",
+        original_start_time: event.original_start_time,
+      });
+      expect(onClose).toHaveBeenCalled();
     });
-    expect(onClose).toHaveBeenCalled();
   });
 });
