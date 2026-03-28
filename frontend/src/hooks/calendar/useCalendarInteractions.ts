@@ -24,22 +24,28 @@ interface UseCalendarInteractionsProps {
   fetchEvents: (view: View, date: Date) => Promise<void>;
 }
 
-export const useCalendarInteractions = ({
-  tasks,
-  events,
-  isSidebarOpen,
-  scheduleOrder,
-  view,
-  date,
-  setTasks,
-  setEvents,
-  setIsSidebarOpen,
-  setSidebarMode,
-  setSelectedItem,
-  setScheduleOrder,
-  fetchTasks,
-  fetchEvents,
-}: UseCalendarInteractionsProps) => {
+/**
+ * Builds user interaction handlers for the calendar surface.
+ * @param props - Interaction dependencies and state setters.
+ * @returns Calendar selection and drag/drop handlers.
+ */
+export const useCalendarInteractions = (props: UseCalendarInteractionsProps) => {
+  const {
+    tasks,
+    events,
+    isSidebarOpen,
+    scheduleOrder,
+    view,
+    date,
+    setTasks,
+    setEvents,
+    setIsSidebarOpen,
+    setSidebarMode,
+    setSelectedItem,
+    setScheduleOrder,
+    fetchTasks,
+    fetchEvents,
+  } = props;
 
   const closeSidebar = useCallback(() => {
     setIsSidebarOpen(false);

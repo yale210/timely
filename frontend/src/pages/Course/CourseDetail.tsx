@@ -126,17 +126,6 @@ export default function CourseDetail() {
     setJoinCodeOpen(true);
   };
 
-  const applyCourseState = async (courseData: Course, courseId: number) => {
-    setCourse(courseData);
-    setLeadUsername(await getLeadLabel(courseData.lead));
-    setEditForm({
-      name: courseData.name,
-      description: courseData.description,
-      active: courseData.active !== false,
-    });
-    await refreshEvents(courseId);
-  };
-
   useEffect(() => {
     const courseId = Number(id);
 
@@ -147,12 +136,23 @@ export default function CourseDetail() {
     }
 
     const loadCourse = async () => {
+      const applyCourseState = async (courseData: Course) => {
+        setCourse(courseData);
+        setLeadUsername(await getLeadLabel(courseData.lead));
+        setEditForm({
+          name: courseData.name,
+          description: courseData.description,
+          active: courseData.active !== false,
+        });
+        await refreshEvents(courseId);
+      };
+
       setLoading(true);
       setError(null);
 
       try {
         const courseData = await courseService.getCourse(courseId);
-        await applyCourseState(courseData, courseId);
+        await applyCourseState(courseData);
       } catch (courseError) {
         console.error(courseError);
         setError("Course not found.");

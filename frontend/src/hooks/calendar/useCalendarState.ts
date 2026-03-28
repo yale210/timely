@@ -6,7 +6,10 @@ import { getNavigationUnit } from "./calendarTypes";
 import { useStoredWeekStartsOn } from "@/utils/userPreferences";
 import { useUserTimezone } from "@/utils/userTimezone";
 
-
+/**
+ * Stores local calendar UI state derived from user preferences.
+ * @returns Calendar state plus navigation and layout actions.
+ */
 export const useCalendarState = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [sidebarMode, setSidebarMode] = useState<"task" | "event">("event");

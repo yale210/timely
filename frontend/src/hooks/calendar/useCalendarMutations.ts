@@ -44,13 +44,35 @@ interface UseCalendarMutationsProps {
   setImportingError: (val: string | null) => void;
 }
 
-export const useCalendarMutations = ({
-  selectedItem, date, view, tasks, categories, preference,
-  fetchTasks, fetchEvents, closeSidebar, setCategories, setTasks,
-  setEvents, setSelectedItem, setScheduleOrder, setIsRescheduling,
-  setReschedulingError, setRescheduleWarnings, setIsExporting,
-  setExportingError, setIsImporting, setImportingError
-}: UseCalendarMutationsProps) => {
+/**
+ * Provides task, event, category, import, export, and reschedule mutations.
+ * @param props - Mutation dependencies and state setters.
+ * @returns Calendar mutation handlers.
+ */
+export const useCalendarMutations = (props: UseCalendarMutationsProps) => {
+  const {
+    selectedItem,
+    date,
+    view,
+    tasks,
+    categories,
+    preference,
+    fetchTasks,
+    fetchEvents,
+    closeSidebar,
+    setCategories,
+    setTasks,
+    setEvents,
+    setSelectedItem,
+    setScheduleOrder,
+    setIsRescheduling,
+    setReschedulingError,
+    setRescheduleWarnings,
+    setIsExporting,
+    setExportingError,
+    setIsImporting,
+    setImportingError,
+  } = props;
 
   const completeSoundRef = useRef<HTMLAudioElement | null>(
     typeof Audio === "undefined" ? null : new Audio(completeSoundUrl),
@@ -170,7 +192,7 @@ export const useCalendarMutations = ({
         }),
       );
       await fetchTasks();
-    } catch (error) {
+    } catch {
       setReschedulingError("Failed to reschedule tasks.");
     } finally {
       setIsRescheduling(false);
@@ -192,7 +214,7 @@ export const useCalendarMutations = ({
         link.click();
         document.body.removeChild(link);
       }
-    } catch (error) {
+    } catch {
       setExportingError("Failed to export events.");
     } finally {
       setIsExporting(false);
@@ -205,7 +227,7 @@ export const useCalendarMutations = ({
 
     try {
       await importService.importEvents(file);
-    } catch (error) {
+    } catch {
       setImportingError("Failed to import events.");
     } finally {
       setIsImporting(false);
@@ -253,7 +275,7 @@ export const useCalendarMutations = ({
       });
       try {
         await taskService.updateTask(id, { categories: nextCategoryIds });
-      } catch (error) {
+      } catch {
         await fetchTasks();
       }
     },

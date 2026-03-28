@@ -123,6 +123,11 @@ export const getCalendarWindow = (
   };
 };
 
+/**
+ * Maps the active calendar view to its navigation step size.
+ * @param view - Active calendar view.
+ * @returns Unit used for previous/next navigation.
+ */
 export const getNavigationUnit = (view: View): "month" | "week" | "day" => {
   if (view === Views.MONTH) {
     return "month";
@@ -133,6 +138,11 @@ export const getNavigationUnit = (view: View): "month" | "week" | "day" => {
   return "week";
 };
 
+/**
+ * Parses an `HH:mm` clock string into total minutes.
+ * @param value - Time string to parse.
+ * @returns Minute count from midnight.
+ */
 const parseClockMinutes = (value: string): number => {
   const [hourRaw, minuteRaw] = value.split(":");
   const hour = Number.parseInt(hourRaw ?? "0", 10);
@@ -145,12 +155,22 @@ const parseClockMinutes = (value: string): number => {
   return (hour * 60) + minute;
 };
 
+/**
+ * Normalizes an interaction start time to minute precision.
+ * @param value - Raw interaction start date.
+ * @returns Clamped start date.
+ */
 export const normalizeInteractionStart = (value: Date): Date => {
   const next = new Date(value);
   next.setSeconds(0, 0);
   return next;
 };
 
+/**
+ * Normalizes an interaction end time to minute precision.
+ * @param value - Raw interaction end date.
+ * @returns Clamped end date.
+ */
 export const normalizeInteractionEnd = (value: Date): Date => {
   const next = new Date(value);
   if (next.getSeconds() === 0 && next.getMilliseconds() === 0) {
@@ -162,6 +182,12 @@ export const normalizeInteractionEnd = (value: Date): Date => {
   return next;
 };
 
+/**
+ * Extracts weekday and time-of-day values in the target timezone.
+ * @param slotDate - Slot date being inspected.
+ * @param timezone - IANA timezone used for formatting.
+ * @returns Weekday index and minutes-from-midnight pair.
+ */
 const getSlotTzParts = (slotDate: Date, timezone: string): { dayOfWeek: number; minutes: number } => {
   try {
     const parts = new Intl.DateTimeFormat("en-US", {
@@ -188,6 +214,12 @@ const getSlotTzParts = (slotDate: Date, timezone: string): { dayOfWeek: number; 
   }
 };
 
+/**
+ * Resolves the preferred schedule window for a specific day.
+ * @param preference - User scheduling preference.
+ * @param dayOfWeek - JavaScript weekday index.
+ * @returns Start and end clock values for that day.
+ */
 const getDayScheduleWindow = (preference: Preference, dayOfWeek: number): { start: string; end: string } => {
   const dayKey = dayOfWeek === 0 ? 7 : dayOfWeek;
   const schedule = preference.day_schedule ?? [];
