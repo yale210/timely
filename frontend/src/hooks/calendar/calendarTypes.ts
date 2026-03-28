@@ -154,8 +154,34 @@ export const normalizeInteractionEnd = (value: Date): Date => {
   return next;
 };
 
-const getDayScheduleWindow = (preference: Preference, slotDate: Date): { start: string; end: string } => {
-  const dayKey = slotDate.getDay() === 0 ? 7 : slotDate.getDay();
+const getSlotTzParts = (slotDate: Date, timezone: string): { dayOfWeek: number; minutes: number } => {
+  try {
+    const parts = new Intl.DateTimeFormat("en-US", {
+      timeZone: timezone,
+      weekday: "short",
+      hour: "numeric",
+      minute: "2-digit",
+      hour12: false,
+    }).formatToParts(slotDate);
+    const weekdayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+    const weekday = parts.find((p) => p.type === "weekday")?.value ?? "";
+    const dayOfWeek = weekdayNames.indexOf(weekday);
+    const hour = parseInt(parts.find((p) => p.type === "hour")?.value ?? "0", 10) % 24;
+    const minute = parseInt(parts.find((p) => p.type === "minute")?.value ?? "0", 10);
+    return {
+      dayOfWeek: dayOfWeek === -1 ? slotDate.getDay() : dayOfWeek,
+      minutes: (hour * 60) + minute,
+    };
+  } catch {
+    return {
+      dayOfWeek: slotDate.getDay(),
+      minutes: (slotDate.getHours() * 60) + slotDate.getMinutes(),
+    };
+  }
+};
+
+const getDayScheduleWindow = (preference: Preference, dayOfWeek: number): { start: string; end: string } => {
+  const dayKey = dayOfWeek === 0 ? 7 : dayOfWeek;
   const schedule = preference.day_schedule ?? [];
   const entry = schedule.find((item) => item.day === dayKey);
   if (entry?.start && entry?.end) {
@@ -177,10 +203,10 @@ export const isOutsidePreferredDayWindow = (slotDate: Date, preference: Preferen
     return false;
   }
 
-  const { start, end } = getDayScheduleWindow(preference, slotDate);
+  const { dayOfWeek, minutes: slotMinutes } = getSlotTzParts(slotDate, preference.timezone);
+  const { start, end } = getDayScheduleWindow(preference, dayOfWeek);
   const startMinutes = parseClockMinutes(start);
   const endMinutes = parseClockMinutes(end);
-  const slotMinutes = (slotDate.getHours() * 60) + slotDate.getMinutes();
 
   if (startMinutes === endMinutes) {
     return false;
