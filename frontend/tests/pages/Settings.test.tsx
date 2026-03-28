@@ -213,6 +213,17 @@ vi.mock("@/services/specialDatesService", () => ({
   deleteSpecialDate: vi.fn(),
 }));
 
+const mockProfileResponse = { name: "Test User", date_of_birth: null, creation_date: "2024-01-01", slogan: "", bio: "", avatar: null };
+const renderSettings = () => render(<MemoryRouter><Settings /></MemoryRouter>);
+const openScheduling = async () => {
+  fireEvent.click(screen.getByRole("button", { name: /scheduling/i }));
+  await screen.findAllByDisplayValue("08:00");
+};
+const changeMaxHours = (value: string) => fireEvent.change(
+  document.getElementById("pref-max-hours") as HTMLInputElement,
+  { target: { value } },
+);
+
 describe("Settings page", () => {
   const mockPref: Preference = {
     id: 1,
@@ -244,25 +255,16 @@ describe("Settings page", () => {
 
   it("loads and renders preferences", async () => {
     const getMyPrefSpy = vi.spyOn(preferenceService, "getMyPreference").mockResolvedValue(mockPref);
-    render(
-      <MemoryRouter>
-        <Settings />
-      </MemoryRouter>,
-    );
-    fireEvent.click(screen.getByRole("button", { name: /scheduling/i }));
+    renderSettings();
+    await openScheduling();
     expect(await screen.findByLabelText(/day start/i)).toHaveDisplayValue("08:00");
     expect(getMyPrefSpy).toHaveBeenCalled();
   });
 
   it("clamps max task time input to the allowed range", async () => {
     vi.spyOn(preferenceService, "getMyPreference").mockResolvedValue(mockPref);
-    render(
-      <MemoryRouter>
-        <Settings />
-      </MemoryRouter>,
-    );
-    fireEvent.click(screen.getByText("Scheduling"));
-    await screen.findAllByDisplayValue("08:00");
+    renderSettings();
+    await openScheduling();
 
     const hoursInput = document.getElementById("pref-max-hours") as HTMLInputElement;
 
@@ -284,16 +286,9 @@ describe("Settings page", () => {
     vi.spyOn(preferenceService, "updateMyPreference").mockRejectedValue({
       response: { data: { some_field: "Not an array" } },
     });
-    render(
-      <MemoryRouter>
-        <Settings />
-      </MemoryRouter>,
-    );
-    fireEvent.click(screen.getByText("Scheduling"));
-    await screen.findAllByDisplayValue("08:00");
-    fireEvent.change(document.getElementById("pref-max-hours") as HTMLInputElement, {
-      target: { value: "5" },
-    });
+    renderSettings();
+    await openScheduling();
+    changeMaxHours("5");
     fireEvent.click(screen.getByText("Save changes"));
 
     await waitFor(() => {
@@ -306,16 +301,9 @@ describe("Settings page", () => {
     vi.spyOn(preferenceService, "updateMyPreference").mockRejectedValue({
       response: { data: {} },
     });
-    render(
-      <MemoryRouter>
-        <Settings />
-      </MemoryRouter>,
-    );
-    fireEvent.click(screen.getByText("Scheduling"));
-    await screen.findAllByDisplayValue("08:00");
-    fireEvent.change(document.getElementById("pref-max-hours") as HTMLInputElement, {
-      target: { value: "5" },
-    });
+    renderSettings();
+    await openScheduling();
+    changeMaxHours("5");
     fireEvent.click(screen.getByText("Save changes"));
 
     await waitFor(() => {
@@ -325,11 +313,7 @@ describe("Settings page", () => {
 
   it("handles logout failure and still navigates", async () => {
     const logoutSpy = vi.spyOn(authService, "logout").mockRejectedValue(new Error("Logout failed"));
-    render(
-      <MemoryRouter>
-        <Settings />
-      </MemoryRouter>,
-    );
+    renderSettings();
     fireEvent.click(screen.getByRole("button", { name: /log out/i }));
     const confirmModal = await screen.findByRole("dialog");
     fireEvent.click(within(confirmModal).getByRole("button", { name: /^log out$/i }));
@@ -338,13 +322,8 @@ describe("Settings page", () => {
 
   it("toggles days off", async () => {
     vi.spyOn(preferenceService, "getMyPreference").mockResolvedValue(mockPref);
-    render(
-      <MemoryRouter>
-        <Settings />
-      </MemoryRouter>,
-    );
-    fireEvent.click(screen.getByText("Scheduling"));
-    await screen.findAllByDisplayValue("08:00");
+    renderSettings();
+    await openScheduling();
     const scheduleToggleRow = screen.getByText("Set all days").parentElement;
     expect(scheduleToggleRow).toBeTruthy();
     fireEvent.click(within(scheduleToggleRow!).getByRole("button"));
@@ -364,12 +343,8 @@ describe("Settings page", () => {
     vi.spyOn(preferenceService, "getMyPreference").mockRejectedValue({
       response: { status: 401 },
     });
-    render(
-      <MemoryRouter>
-        <Settings />
-      </MemoryRouter>,
-    );
-    fireEvent.click(screen.getByText("Scheduling"));
+    renderSettings();
+    fireEvent.click(screen.getByRole("button", { name: /scheduling/i }));
     await waitFor(() => {
       expect(screen.getByText("You are not signed in. Please log in again.")).toBeInTheDocument();
     });
@@ -380,16 +355,9 @@ describe("Settings page", () => {
     vi.spyOn(preferenceService, "updateMyPreference").mockRejectedValue({
       response: { data: { non_field_errors: ["Global error"] } },
     });
-    render(
-      <MemoryRouter>
-        <Settings />
-      </MemoryRouter>,
-    );
-    fireEvent.click(screen.getByText("Scheduling"));
-    await screen.findAllByDisplayValue("08:00");
-    fireEvent.change(document.getElementById("pref-max-hours") as HTMLInputElement, {
-      target: { value: "5" },
-    });
+    renderSettings();
+    await openScheduling();
+    changeMaxHours("5");
     fireEvent.click(screen.getByText("Save changes"));
     await waitFor(() => {
       expect(screen.getByText("Global error")).toBeInTheDocument();
@@ -400,12 +368,8 @@ describe("Settings page", () => {
     vi.spyOn(preferenceService, "getMyPreference").mockRejectedValue({
       response: { data: { detail: "Custom error detail" } },
     });
-    render(
-      <MemoryRouter>
-        <Settings />
-      </MemoryRouter>,
-    );
-    fireEvent.click(screen.getByText("Scheduling"));
+    renderSettings();
+    fireEvent.click(screen.getByRole("button", { name: /scheduling/i }));
     await waitFor(() => {
       expect(screen.getByText("Custom error detail")).toBeInTheDocument();
     });
@@ -413,12 +377,8 @@ describe("Settings page", () => {
 
   it("handles non-API error objects", async () => {
     vi.spyOn(preferenceService, "getMyPreference").mockRejectedValue(new Error("Generic error"));
-    render(
-      <MemoryRouter>
-        <Settings />
-      </MemoryRouter>,
-    );
-    fireEvent.click(screen.getByText("Scheduling"));
+    renderSettings();
+    fireEvent.click(screen.getByRole("button", { name: /scheduling/i }));
     await waitFor(() => {
       expect(screen.getByText("Something went wrong")).toBeInTheDocument();
     });
@@ -428,12 +388,8 @@ describe("Settings page", () => {
     vi.spyOn(preferenceService, "getMyPreference").mockRejectedValue({
       response: { status: 500 },
     });
-    render(
-      <MemoryRouter>
-        <Settings />
-      </MemoryRouter>,
-    );
-    fireEvent.click(screen.getByText("Scheduling"));
+    renderSettings();
+    fireEvent.click(screen.getByRole("button", { name: /scheduling/i }));
     await waitFor(() => {
       expect(screen.getByText("Something went wrong")).toBeInTheDocument();
     });
@@ -441,19 +397,8 @@ describe("Settings page", () => {
 
   it("renders all sections and sidebar buttons", async () => {
     vi.spyOn(preferenceService, "getMyPreference").mockResolvedValue(mockPref);
-    vi.spyOn(profileService, "getMyProfile").mockResolvedValue({
-      name: "Test User",
-      date_of_birth: null,
-      creation_date: "2024-01-01",
-      slogan: "",
-      bio: "",
-      avatar: null,
-    });
-    render(
-      <MemoryRouter>
-        <Settings />
-      </MemoryRouter>,
-    );
+    vi.spyOn(profileService, "getMyProfile").mockResolvedValue(mockProfileResponse);
+    renderSettings();
     fireEvent.click(screen.getByRole("button", { name: /profile/i }));
     expect(await screen.findByRole("heading", { name: "Profile" })).toBeDefined();
 
@@ -479,11 +424,7 @@ describe("Settings page", () => {
 
   it("handles logout", async () => {
     const logoutSpy = vi.spyOn(authService, "logout").mockResolvedValueOnce(undefined);
-    render(
-      <MemoryRouter>
-        <Settings />
-      </MemoryRouter>,
-    );
+    renderSettings();
     fireEvent.click(screen.getByRole("button", { name: /log out/i }));
     const confirmModal = await screen.findByRole("dialog");
     fireEvent.click(within(confirmModal).getByRole("button", { name: /^log out$/i }));
@@ -493,24 +434,9 @@ describe("Settings page", () => {
   it("caps the profile date of birth input at today", async () => {
     const today = new Date();
     const expectedMax = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
-
-    vi.spyOn(profileService, "getMyProfile").mockResolvedValue({
-      name: "Test User",
-      date_of_birth: null,
-      creation_date: "2024-01-01",
-      slogan: "",
-      bio: "",
-      avatar: null,
-    });
-
-    render(
-      <MemoryRouter>
-        <Settings />
-      </MemoryRouter>,
-    );
-
+    vi.spyOn(profileService, "getMyProfile").mockResolvedValue(mockProfileResponse);
+    renderSettings();
     fireEvent.click(screen.getByRole("button", { name: /profile/i }));
-
     const dobInput = await screen.findByLabelText(/date of birth/i);
     expect(dobInput).toHaveAttribute("max", expectedMax);
   });

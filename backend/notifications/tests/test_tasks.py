@@ -41,15 +41,6 @@ class TasksTests(TestCase):
         EventReminder.objects.filter(id=reminder.id).update(
             trigger_at=timezone.now() - timezone.timedelta(minutes=1)
         )
-
-        EventReminder.objects.filter(id=reminder.id).update(
-            trigger_at=timezone.now() - timezone.timedelta(minutes=1)
-        )
-
-        # Manually set trigger_at to past to ensure it's picked up
-        EventReminder.objects.filter(id=reminder.id).update(
-            trigger_at=timezone.now() - timezone.timedelta(minutes=1)
-        )
         check_reminders()
 
         reminder.refresh_from_db()
