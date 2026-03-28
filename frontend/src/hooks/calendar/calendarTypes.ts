@@ -51,6 +51,7 @@ interface CalendarActions {
   goToNext: () => void;
   selectSlot: (slot: { start: Date; end?: Date; slots?: Date[]; action?: "select" | "click" | "doubleClick" }) => void;
   selectEntry: (entry: CalendarEntry) => void;
+  openCreateSidebar: () => void;
   closeSidebar: () => void;
   submitTask: (data: TaskSubmission) => Promise<void>;
   submitEvent: (data: EventSubmission, context?: EventMutationContext) => Promise<void>;

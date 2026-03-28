@@ -73,6 +73,7 @@ export const useCalendar = (): UseCalendarReturn => {
       // UI Interactions
       selectSlot: interactionsHook.selectSlot,
       selectEntry: interactionsHook.selectEntry,
+      openCreateSidebar: interactionsHook.openCreateSidebar,
       closeSidebar: interactionsHook.closeSidebar,
       handleEventDrop: interactionsHook.handleEventDrop,
       handleEventResize: interactionsHook.handleEventResize,

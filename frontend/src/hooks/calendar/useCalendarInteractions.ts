@@ -214,9 +214,35 @@ export const useCalendarInteractions = ({
     [scheduleOrder, updateCalendarEvent, updateTaskAllocation, setScheduleOrder],
   );
 
+  const openCreateSidebar = useCallback(() => {
+    const now = new Date();
+    now.setSeconds(0, 0);
+    const end = new Date(now.getTime() + 60 * 60 * 1000);
+    setSidebarMode("event");
+    setSelectedItem({
+      id: 0,
+      title: "",
+      description: "",
+      start_time: now.toISOString(),
+      end_time: end.toISOString(),
+      location: "",
+      recurrence_interval: null,
+      recurrence_end: null,
+      reminders: [],
+      is_override: false,
+      is_split_series: false,
+      source_event_id: undefined,
+      split_from_event_id: null,
+      original_start_time: null,
+      categories: [],
+    });
+    setIsSidebarOpen(true);
+  }, [setSidebarMode, setSelectedItem, setIsSidebarOpen]);
+
   return {
     selectSlot,
     selectEntry,
+    openCreateSidebar,
     closeSidebar,
     handleEventDrop,
     handleEventResize,
