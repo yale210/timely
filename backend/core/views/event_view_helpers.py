@@ -81,7 +81,7 @@ def parse_list_window(request):
     if month_end < month_start:
         raise ValidationError("end_date must be on or after start_date.")
     if (month_end - month_start).days > 365:
-        raise ValidationError("Date range cannot exceed 366 days.")
+        raise ValidationError("Date range cannot exceed 365 days.")
     timezone_info = timezone.get_current_timezone()
     range_start = timezone.make_aware(
         datetime.combine(month_start, time.min),
