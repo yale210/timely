@@ -9,7 +9,7 @@ from core.models import Event
 from core.models import Task
 
 
-class ShareSendViewTests(TestCase):
+class DeleteAccountViewTests(TestCase):
     """Test cases for delete account view."""
 
     def setUp(self):

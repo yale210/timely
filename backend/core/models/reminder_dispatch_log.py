@@ -18,6 +18,8 @@ class ReminderDispatchLog(models.Model):
     dispatched_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
+        """Deduplicate reminder dispatches for a single event occurrence."""
+
         constraints = [
             models.UniqueConstraint(
                 fields=["source_event", "original_start_time", "reminder_signature"],

@@ -14,6 +14,7 @@ from core.serializers import FriendshipSerializer
 
 class FriendshipViewSet(viewsets.ModelViewSet):
     """Manage friendship requests for the authenticated user.
+
     Users can send, accept, and decline friend requests.
     """
 

@@ -11,5 +11,7 @@ class SpecialDatesSerializer(serializers.ModelSerializer):
     user = serializers.HiddenField(default=serializers.CurrentUserDefault())
 
     class Meta:
+        """Expose the special-date fields needed by the calendar planner."""
+
         model = SpecialDates
         fields = ["id", "date", "text", "user"]
