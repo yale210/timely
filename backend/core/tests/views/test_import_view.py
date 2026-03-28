@@ -28,12 +28,9 @@ class ImportViewTests(TestCase):
             b"METHOD:PUBLISH\n"
             b"BEGIN:VEVENT\n"
             b"UID:e1\n"
-            b"DTSTAMP:20260205T120548Z\n"
             b"DTSTART;TZID=Europe/London:20260325T200000\n"
             b"DTEND;TZID=Europe/London:20260325T210000\n"
             b"SUMMARY:Title Event 1\n"
-            b"DESCRIPTION:Description Event 1\n"
-            b"LOCATION:Location Event 1\n"
             b"END:VEVENT\n"
             b"END:VCALENDAR\n"
         ).strip()
