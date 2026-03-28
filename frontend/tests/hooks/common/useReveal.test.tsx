@@ -1,6 +1,6 @@
 import { render, act, screen } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach, afterEach, type Mock } from 'vitest';
-import useReveal from '../../../src/hooks/common/useReveal';
+import useReveal from '@/hooks/common/useReveal';
 
 describe('useReveal Hook', () => {
   let intersectionCallback: IntersectionObserverCallback;

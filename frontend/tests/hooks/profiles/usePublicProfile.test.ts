@@ -1,14 +1,14 @@
 import { renderHook, act } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { usePublicProfile } from '../../../src/hooks/profiles/usePublicProfile';
-import * as publicProfileService from '../../../src/services/publicProfileService';
-import type { PublicProfile } from '../../../src/types';
+import { usePublicProfile } from '@/hooks/profiles/usePublicProfile';
+import * as publicProfileService from '@/services/publicProfileService';
+import type { PublicProfile } from '@/types';
 
-vi.mock('../../../src/services/publicProfileService', () => ({
+vi.mock('@/services/publicProfileService', () => ({
   getPublicProfile: vi.fn(),
 }));
 
-vi.mock('../../../src/utils/apiErrors', () => ({
+vi.mock('@/utils/apiErrors', () => ({
   formatDjangoFormError: vi.fn((err) => ({ message: err.message })),
 }));
 

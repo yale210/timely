@@ -1,7 +1,7 @@
 import type React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { describe, it, expect, vi } from 'vitest';
-import GradebookHeader from '../../../src/components/gradebook/GradebookHeader';
+import GradebookHeader from '@/components/gradebook/GradebookHeader';
 
 // Mock out @headlessui/react completely to avoid ResizeObserver issues
 vi.mock('@headlessui/react', () => ({

@@ -1,10 +1,10 @@
 import { render, screen } from '@testing-library/react';
 import { describe, it, expect, vi } from 'vitest';
-import AboutCta from '../../../src/components/about/AboutCta';
+import AboutCta from '@/components/about/AboutCta';
 import { MemoryRouter } from 'react-router-dom';
-import useReveal from '../../../src/hooks/common/useReveal';
+import useReveal from '@/hooks/common/useReveal';
 
-vi.mock('../../../src/hooks/common/useReveal', () => ({
+vi.mock('@/hooks/common/useReveal', () => ({
   default: vi.fn(),
 }));
 

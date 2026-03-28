@@ -1,10 +1,10 @@
 import { renderHook, act } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { useFriendships } from '../../../src/hooks/friends/useFriendships';
-import * as friendshipService from '../../../src/services/friendshipService';
-import type { Friendship } from '../../../src/types';
+import { useFriendships } from '@/hooks/friends/useFriendships';
+import * as friendshipService from '@/services/friendshipService';
+import type { Friendship } from '@/types';
 
-vi.mock('../../../src/services/friendshipService', () => ({
+vi.mock('@/services/friendshipService', () => ({
   getFriendships: vi.fn(),
   sendFriendRequest: vi.fn(),
   acceptFriendRequest: vi.fn(),
@@ -12,7 +12,7 @@ vi.mock('../../../src/services/friendshipService', () => ({
   deleteFriendship: vi.fn(),
 }));
 
-vi.mock('../../../src/utils/apiErrors', () => ({
+vi.mock('@/utils/apiErrors', () => ({
   formatDjangoFormError: vi.fn((err) => ({ message: err.message })),
 }));
 

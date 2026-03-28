@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import * as friendshipService from '../../src/services/friendshipService';
+import * as friendshipService from '@/services/friendshipService';
 
 const { mockApi } = vi.hoisted(() => ({
   mockApi: {
@@ -10,7 +10,7 @@ const { mockApi } = vi.hoisted(() => ({
   }
 }));
 
-vi.mock('../../src/services/api', () => ({
+vi.mock('@/services/api', () => ({
   default: mockApi,
 }));
 

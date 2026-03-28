@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import * as profileService from '../../src/services/profileService';
-import type { Profile } from '../../src/types';
+import * as profileService from '@/services/profileService';
+import type { Profile } from '@/types';
 
 const { mockApi } = vi.hoisted(() => ({
   mockApi: {
@@ -9,7 +9,7 @@ const { mockApi } = vi.hoisted(() => ({
   }
 }));
 
-vi.mock('../../src/services/api', () => ({
+vi.mock('@/services/api', () => ({
   default: mockApi,
 }));
 

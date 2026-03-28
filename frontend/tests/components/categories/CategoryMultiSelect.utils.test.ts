@@ -7,7 +7,7 @@ import {
   getMenuPosition,
   getPickerPosition,
   parseColourInput,
-} from '../../../src/components/categories/CategoryMultiSelect.utils';
+} from '@/components/categories/CategoryMultiSelect.utils';
 
 describe('CategoryMultiSelect.utils', () => {
   beforeEach(() => {

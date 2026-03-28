@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import * as AnalyticsExports from '../../../src/components/analytics';
-import AnalyticsBackground from '../../../src/components/analytics/AnalyticsBackground';
+import * as AnalyticsExports from '@/components/analytics';
+import AnalyticsBackground from '@/components/analytics/AnalyticsBackground';
 
 describe('Analytics index', () => {
   it('should export AnalyticsBackground', () => {

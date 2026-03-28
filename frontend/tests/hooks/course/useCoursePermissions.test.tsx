@@ -1,10 +1,10 @@
 import { renderHook, act } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { useCoursePermissions } from '../../../src/hooks/course/useCoursePermissions';
-import { getCoursePermissions } from '../../../src/services/courseService';
-import type { CoursePermissions } from '../../../src/types/course';
+import { useCoursePermissions } from '@/hooks/course/useCoursePermissions';
+import { getCoursePermissions } from '@/services/courseService';
+import type { CoursePermissions } from '@/types/course';
 
-vi.mock('../../../src/services/courseService', () => ({
+vi.mock('@/services/courseService', () => ({
   getCoursePermissions: vi.fn(),
 }));
 

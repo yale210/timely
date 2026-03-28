@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import * as assessmentService from '../../src/services/assessmentService';
-import type { Assessment, AssessmentSubmission } from '../../src/types';
+import * as assessmentService from '@/services/assessmentService';
+import type { Assessment, AssessmentSubmission } from '@/types';
 
 const { mockApi } = vi.hoisted(() => ({
   mockApi: {
@@ -11,7 +11,7 @@ const { mockApi } = vi.hoisted(() => ({
   }
 }));
 
-vi.mock('../../src/services/api', () => ({
+vi.mock('@/services/api', () => ({
   default: mockApi,
 }));
 

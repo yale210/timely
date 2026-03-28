@@ -1,18 +1,18 @@
 import { renderHook, act } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { useAssessments } from '../../../src/hooks/assessments/useAssessments';
-import * as assessmentService from '../../../src/services/assessmentService';
-import * as categoryService from '../../../src/services/categoryService';
-import type { Assessment, AssessmentSubmission, Category } from '../../../src/types';
+import { useAssessments } from '@/hooks/assessments/useAssessments';
+import * as assessmentService from '@/services/assessmentService';
+import * as categoryService from '@/services/categoryService';
+import type { Assessment, AssessmentSubmission, Category } from '@/types';
 
-vi.mock('../../../src/services/assessmentService', () => ({
+vi.mock('@/services/assessmentService', () => ({
   getAssessments: vi.fn(),
   createAssessment: vi.fn(),
   updateAssessment: vi.fn(),
   deleteAssessment: vi.fn(),
 }));
 
-vi.mock('../../../src/services/categoryService', () => ({
+vi.mock('@/services/categoryService', () => ({
   getCategories: vi.fn(),
   createCategory: vi.fn(),
   updateCategory: vi.fn(),
