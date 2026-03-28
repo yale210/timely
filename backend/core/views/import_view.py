@@ -174,7 +174,9 @@ class ImportView(APIView):
         current_event[key] = value
         return current_event
 
-    def _parse_import_events(self, lines: list[str], request_user) -> list[dict[str, object]]:
+    def _parse_import_events(
+        self, lines: list[str], request_user
+    ) -> list[dict[str, object]]:
         """Parse and queue all importable events from iCalendar lines."""
         events: list[dict[str, object]] = []
         current_event: dict[str, str] | None = None

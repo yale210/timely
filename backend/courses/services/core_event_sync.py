@@ -138,7 +138,9 @@ class CourseEventSyncService:
         return updated
 
     @staticmethod
-    def _log_enrollment_sync_result(core_event, user, stats: Dict[str, Any], updated: bool) -> None:
+    def _log_enrollment_sync_result(
+        core_event, user, stats: Dict[str, Any], updated: bool
+    ) -> None:
         # Keep create/update bookkeeping out of the main sync loop.
         if updated:
             stats["updated"] += 1
@@ -149,7 +151,9 @@ class CourseEventSyncService:
         logger.info(f"Created Event {core_event.id} for user {user.username}")
 
     @staticmethod
-    def _sync_enrollment_core_event(course_event, user, stats: Dict[str, Any], event_title: str) -> None:
+    def _sync_enrollment_core_event(
+        course_event, user, stats: Dict[str, Any], event_title: str
+    ) -> None:
         # Sync one student's course event copy.
         try:
             core_event = CourseEventSyncService._get_core_event(
@@ -181,7 +185,9 @@ class CourseEventSyncService:
         ).select_related("student__user")
 
     @staticmethod
-    def _sync_active_enrollments(course_event, enrollments, stats: Dict[str, Any]) -> None:
+    def _sync_active_enrollments(
+        course_event, enrollments, stats: Dict[str, Any]
+    ) -> None:
         # Sync one course event across all active students.
         event_title = CourseEventSyncService._course_event_title(course_event)
 
