@@ -251,6 +251,24 @@ export const getCourseStudents = async (id: number): Promise<CourseStudent[]> =>
 };
 
 /**
+ * Removes a user from a course.
+ * This function sends a POST request to the backend to remove a specified user
+ * from a given course by their respective IDs. Once the request is successfully
+ * completed, the user will no longer be associated with the course.
+ * @param courseId - The unique identifier of the course from which the user is to be removed.
+ * @param userId - The unique identifier of the user to be removed from the course.
+ * @returns A promise that resolves when the user is successfully removed from the course.
+ */
+export const removeUserFromCourse = async (
+  courseId: number,
+  userId: number,
+): Promise<void> => {
+  await api.post(`/api/courses/${courseId}/remove-user/`, {
+    user_id: userId,
+  });
+};
+
+/**
  * Retrieves the staff members associated with a specific course.
  * @param id - The unique identifier of the course.
  * @returns A promise that resolves to an array of CourseStaff objects.
