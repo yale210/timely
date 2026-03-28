@@ -162,6 +162,7 @@ describe("CategoryLimitsSection", () => {
         maxDailyMinutes={120}
         loading={false}
         saving={false}
+        hasChanges
         error={null}
         onLimitChange={vi.fn()}
         onSave={onSave}

@@ -437,8 +437,6 @@ class CalendarSerializer(serializers.ModelSerializer):
             "buffer_after_minutes",
             getattr(self.instance, "buffer_after_minutes", 0),
         )
-        allocation = attrs.get("allocation", getattr(self.instance, "allocation", []))
-
         if start_time is not None:
             start_time = self._aware(start_time)
         if deadline is not None:
@@ -486,6 +484,11 @@ class CalendarSerializer(serializers.ModelSerializer):
             and completed_minutes is not None
             and completed_minutes >= estimated_minutes
         )
+
+        allocation = attrs.get("allocation", getattr(self.instance, "allocation", []))
+        if attrs["completed"]:
+            allocation = []
+            attrs["allocation"] = []
 
         if "categories" in attrs:
             categories = list(attrs["categories"])

@@ -274,6 +274,10 @@ CELERY_BEAT_SCHEDULE = {
         "task": "notifications.tasks.maintenance.cleanup_old_notifications",
         "schedule": crontab(hour=3, minute=0),
     },
+    "sync_course_calendar": {
+        "task": "courses.tasks.run_sync_cal_command",
+        "schedule": crontab(minute=5),
+    },
 }
 
 # Test detection

@@ -437,7 +437,8 @@ class CalendarSerializerTests(TestCase):
     ):
         """Test validate allocation slots rejects overlap with events other tasks and category limits."""
         serializer = CalendarSerializer(context=self._request_context())
-        now = timezone.now() + datetime.timedelta(days=1)
+        tomorrow = timezone.localdate() + datetime.timedelta(days=1)
+        now = make_aware(datetime.datetime.combine(tomorrow, datetime.time(9, 0)))
         category = Category.objects.create(
             user=self.user,
             text="Capped",

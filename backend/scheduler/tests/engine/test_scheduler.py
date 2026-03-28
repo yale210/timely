@@ -73,7 +73,6 @@ class SchedulerEngineClassTests(TestCase):
         self.assertEqual([loaded.id for loaded in scheduler.tasks], [task.id])
         self.assertEqual(scheduler.scheduled_tasks, [])
         self.assertEqual(scheduler.events, [])
-        self.assertEqual(scheduler.commutes, [])
         self.assertEqual(scheduler.special_dates, set())
         self.assertEqual(scheduler._scheduled_blocks, [])
         self.assertEqual(scheduler._scheduled_task_segments, [])

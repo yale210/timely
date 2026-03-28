@@ -1,11 +1,19 @@
-"""Teacher model definitions for courses."""
+"""Teacher model definition for the courses application.
+
+This module defines the Teacher entity, which identifies users with instructional
+and administrative leads over courses.
+"""
 
 from django.conf import settings
 from django.db import models
 
 
 class Teacher(models.Model):
-    """Model for teacher records in the courses app."""
+    """Represents a teacher in the educational system.
+
+    Teachers are primary leads for courses and have specific permissions to
+    manage course content, events, and enrollments.
+    """
 
     user = models.OneToOneField(
         settings.AUTH_USER_MODEL,
@@ -16,5 +24,5 @@ class Teacher(models.Model):
     active = models.BooleanField(default=True)
 
     def __str__(self):
-        """Return the string representation of the object."""
+        """Returns a string identifying the teacher by their username."""
         return f"Teacher: {self.user.username}"

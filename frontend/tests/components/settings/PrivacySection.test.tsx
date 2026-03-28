@@ -1,8 +1,8 @@
-import { fireEvent, render, screen } from "@testing-library/react";
+import { fireEvent, render, screen, within } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import PrivacySection from "@/components/settings/PrivacySection";
 
-describe("PreferencesSection", () => {
+describe("PrivacySection", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     vi.spyOn(window, "confirm").mockReturnValue(true);
@@ -39,6 +39,7 @@ describe("PreferencesSection", () => {
 
     const deleteEventsButton  = screen.getByRole("button", { name: /Delete Events/i });
     fireEvent.click(deleteEventsButton);
+    fireEvent.click(within(await screen.findByRole("dialog")).getByRole("button", { name: /delete events/i }));
 
     expect(onDeleteEvents).toHaveBeenCalled();
 
@@ -59,6 +60,7 @@ describe("PreferencesSection", () => {
 
     const deleteTasksButton  = screen.getByRole("button", { name: /Delete tasks/i });
     fireEvent.click(deleteTasksButton);
+    fireEvent.click(within(await screen.findByRole("dialog")).getByRole("button", { name: /delete tasks/i }));
 
     expect(onDeleteTasks).toHaveBeenCalled();
 
@@ -99,6 +101,7 @@ describe("PreferencesSection", () => {
 
     const deleteEventsButton  = screen.getByRole("button", { name: /Delete Events/i });
     fireEvent.click(deleteEventsButton);
+    fireEvent.click(within(await screen.findByRole("dialog")).getByRole("button", { name: /delete events/i }));
 
     expect(onDeleteEvents).toHaveBeenCalled();
 
@@ -119,6 +122,7 @@ describe("PreferencesSection", () => {
 
     const deleteTasksButton  = screen.getByRole("button", { name: /Delete Tasks/i });
     fireEvent.click(deleteTasksButton);
+    fireEvent.click(within(await screen.findByRole("dialog")).getByRole("button", { name: /delete tasks/i }));
 
     expect(onDeleteTasks).toHaveBeenCalled();
 

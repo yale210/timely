@@ -1,4 +1,10 @@
-"""Permission classes for course views and actions."""
+"""Detailed permission logic for course-related entities and actions.
+
+This module contains the `CoursePermission` class, which handles granular access
+checks for viewing, updating, joining, and managing staff or events within a course.
+It reconciles different user roles (admin, lead, staff, student) against specific
+DRF view actions.
+"""
 
 from rest_framework.permissions import BasePermission
 
@@ -7,16 +13,20 @@ from courses.permissions.teacher_permission import IsTeacher
 
 
 class CoursePermission(BasePermission):
-    """Permission class for course views and actions."""
+    """Main permission class for all Course-related API endpoints.
+
+    Evaluates permissions based on the user's relationship with a course instance.
+    Supports role-based access for teachers, students, and course-specific staff.
+    """
 
     def _is_admin(self, request):
-        """Return whether the request user has admin privileges.
+        """Checks if the user has administrative privileges (staff or superuser).
 
         Args:
-            request: The incoming DRF request.
+            request: The current HttpRequest object.
 
         Returns:
-            bool: ``True`` when the request user is staff or a superuser.
+            True if the user is an authenticated admin.
         """
         return bool(
             request.user.is_authenticated
@@ -24,14 +34,14 @@ class CoursePermission(BasePermission):
         )
 
     def _is_lead(self, request, course):
-        """Return whether the request user leads the course.
+        """Checks if the user is the primary lead teacher for the course.
 
         Args:
-            request: The incoming DRF request.
-            course: The course instance being evaluated.
+            request: The current HttpRequest object.
+            course: The Course instance to check against.
 
         Returns:
-            bool: ``True`` when the request user is the course lead.
+            True if the user is the lead of the course.
         """
         return bool(
             request.user.is_authenticated
@@ -40,14 +50,14 @@ class CoursePermission(BasePermission):
         )
 
     def _is_staff(self, request, course):
-        """Return whether the request user is active course staff.
+        """Checks if the user is assigned as staff for the specific course.
 
         Args:
-            request: The incoming DRF request.
-            course: The course instance being evaluated.
+            request: The current HttpRequest object.
+            course: The Course instance to check against.
 
         Returns:
-            bool: ``True`` when the request user is active course staff.
+            True if the user is an active staff member for the course.
         """
         return bool(
             request.user.is_authenticated
@@ -59,14 +69,14 @@ class CoursePermission(BasePermission):
         )
 
     def _is_enrolled(self, request, course):
-        """Return whether the request user is actively enrolled in the course.
+        """Checks if the user is currently enrolled as a student in the course.
 
         Args:
-            request: The incoming DRF request.
-            course: The course instance being evaluated.
+            request: The current HttpRequest object.
+            course: The Course instance to check against.
 
         Returns:
-            bool: ``True`` when the request user has an active enrollment.
+            True if the user is actively enrolled.
         """
         return bool(
             request.user.is_authenticated
@@ -78,25 +88,27 @@ class CoursePermission(BasePermission):
         )
 
     def _get_action(self, view):
-        """Return the current view action.
+        """Retrieves the current action name from the DRF view.
 
         Args:
-            view: The DRF view being evaluated.
+            view: The View instance being accessed.
 
         Returns:
-            str | None: The current view action, if present.
+            The string name of the action (e.g., 'list', 'retrieve').
         """
         return getattr(view, "action", None)
 
     def can_view_course_details(self, request, course):
-        """Return whether the request user can view course details.
+        """Determines if the user can see non-public details of a course.
+
+        Accessible by admins, leads, staff, and enrolled students.
 
         Args:
-            request: The incoming DRF request.
-            course: The course instance being evaluated.
+            request: The current HttpRequest object.
+            course: The Course instance.
 
         Returns:
-            bool: ``True`` when the request user can view course details.
+            True if access is granted.
         """
         return (
             self._is_admin(request)
@@ -106,26 +118,30 @@ class CoursePermission(BasePermission):
         )
 
     def can_view_events(self, request, course):
-        """Return whether the request user can view course events.
+        """Determines if the user can view scheduled events for the course.
+
+        Follows the same logic as viewing course details.
 
         Args:
-            request: The incoming DRF request.
-            course: The course instance being evaluated.
+            request: The current HttpRequest object.
+            course: The Course instance.
 
         Returns:
-            bool: ``True`` when the request user can view course events.
+            True if access is granted.
         """
         return self.can_view_course_details(request, course)
 
     def can_create_join_code(self, request, course):
-        """Return whether the request user can create join codes.
+        """Determines if the user has permission to generate new join codes.
+
+        Restricted to admins, course staff, and the course lead.
 
         Args:
-            request: The incoming DRF request.
-            course: The course instance being evaluated.
+            request: The current HttpRequest object.
+            course: The Course instance.
 
         Returns:
-            bool: ``True`` when the request user can create join codes.
+            True if access is granted.
         """
         return (
             self._is_admin(request)
@@ -134,26 +150,30 @@ class CoursePermission(BasePermission):
         )
 
     def can_change_name(self, request, course):
-        """Return whether the request user can change the course name.
+        """Determines if the user can rename the course.
+
+        Restricted to admins and the primary course lead.
 
         Args:
-            request: The incoming DRF request.
-            course: The course instance being evaluated.
+            request: The current HttpRequest object.
+            course: The Course instance.
 
         Returns:
-            bool: ``True`` when the request user can change the course name.
+            True if access is granted.
         """
         return self._is_admin(request) or self._is_lead(request, course)
 
     def can_change_description(self, request, course):
-        """Return whether the request user can change the course description.
+        """Determines if the user can update the course description.
+
+        Accessible by admins, staff, and leads.
 
         Args:
-            request: The incoming DRF request.
-            course: The course instance being evaluated.
+            request: The current HttpRequest object.
+            course: The Course instance.
 
         Returns:
-            bool: ``True`` when the request user can change the course description.
+            True if access is granted.
         """
         return (
             self._is_admin(request)
@@ -162,14 +182,16 @@ class CoursePermission(BasePermission):
         )
 
     def can_update_course(self, request, course):
-        """Return whether the request user can update the course.
+        """Determines if the user has general update permissions for the course.
+
+        Follows standard instructional management permission logic.
 
         Args:
-            request: The incoming DRF request.
-            course: The course instance being evaluated.
+            request: The current HttpRequest object.
+            course: The Course instance.
 
         Returns:
-            bool: ``True`` when the request user can update the course.
+            True if access is granted.
         """
         return (
             self._is_admin(request)
@@ -178,14 +200,17 @@ class CoursePermission(BasePermission):
         )
 
     def has_permission(self, request, view):
-        """Return whether the request can reach the current course action.
+        """Performs initial level permission checks for the given request and view.
+
+        Specifically handles global actions like 'create' and generic actions that
+        don't require an object instance yet (like 'list').
 
         Args:
-            request: The incoming DRF request.
-            view: The DRF view being evaluated.
+            request: The current HttpRequest object.
+            view: The View instance being accessed.
 
         Returns:
-            bool: ``True`` when the request passes non-object permission checks.
+            True if the initial access is allowed.
         """
         if self._get_action(view) in ["permissions"]:
             return True
@@ -217,21 +242,25 @@ class CoursePermission(BasePermission):
             "update",
             "partial_update",
             "destroy",
+            "remove_user",
         ]:
             return True
 
         return False
 
     def has_object_permission(self, request, view, obj):
-        """Return whether the request can act on the given course object.
+        """Performs instance-level permission checks.
+
+        Analyzes the specific action being performed on a Course object and
+        evaluates if the user's role satisfies the required level of access.
 
         Args:
-            request: The incoming DRF request.
-            view: The DRF view being evaluated.
-            obj: The course instance being accessed.
+            request: The current HttpRequest object.
+            view: The View instance.
+            obj: The specific Course object being accessed.
 
         Returns:
-            bool: ``True`` when the request has object-level permission.
+            True if the user is authorized to perform the action on this object.
         """
         if not request.user.is_authenticated:
             return False
@@ -260,7 +289,8 @@ class CoursePermission(BasePermission):
 
         if action == "staff":
             return self._is_lead(request, obj) or self._is_admin(request)
-
+        if action == "remove_user":
+            return self._is_lead(request, obj) or self._is_admin(request)
         if action in ["join", "leave"]:
             return True
 

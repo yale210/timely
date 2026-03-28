@@ -1,4 +1,5 @@
 import { useState } from "react"
+import ConfirmationModal from "@/components/modals/ConfirmationModal"
 
 interface PrivacySectionProps {
   deleting: boolean
@@ -54,6 +55,7 @@ const PrivacySection = ({
 }: PrivacySectionProps) => {
   const [message, setMessage] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [pendingAction, setPendingAction] = useState<"events" | "tasks" | null>(null)
 
   const handleDeleteEvents = () => {
     const confirmed = confirm("Are you sure you want to delete all of your events? This cannot be undone.")
@@ -103,7 +105,7 @@ const PrivacySection = ({
       <div>
         <h2 className="text-lg font-semibold text-gray-900">Privacy</h2>
         <p className="mt-1 text-sm text-gray-500">
-          Manage destructive actions for your personal data in the app.
+          Manage your personal data in the app.
         </p>
       </div>
 
@@ -125,14 +127,14 @@ const PrivacySection = ({
           description="Remove all calendar events from your account. This cannot be undone."
           icon="delete_forever"
           deleting={deleting}
-          onClick={handleDeleteEvents}
+          onClick={() => setPendingAction("events")}
         />
         <PrivacyActionCard
           title="Delete Tasks"
           description="Remove all tasks from your account. This cannot be undone."
           icon="delete_forever"
           deleting={deleting}
-          onClick={handleDeleteTasks}
+          onClick={() => setPendingAction("tasks")}
         />
         <PrivacyActionCard
           title="Delete Account"
@@ -142,6 +144,27 @@ const PrivacySection = ({
           onClick={handleDeleteAccount}
         />
       </div>
+
+      <ConfirmationModal
+        isOpen={pendingAction !== null}
+        onClose={() => setPendingAction(null)}
+        onConfirm={() => {
+          if (pendingAction === "events") {
+            handleDeleteEvents()
+            return
+          }
+          if (pendingAction === "tasks") {
+            handleDeleteTasks()
+          }
+        }}
+        title={pendingAction === "events" ? "Delete all events" : "Delete all tasks"}
+        message={
+          pendingAction === "events"
+            ? "This will permanently remove all calendar events from your account."
+            : "This will permanently remove all tasks from your account."
+        }
+        confirmText={pendingAction === "events" ? "Delete events" : "Delete tasks"}
+      />
     </div>
   )
 }

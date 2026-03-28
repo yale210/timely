@@ -95,12 +95,12 @@ describe("useSharing", () => {
   });
 
   it("handle share event error", async() => {
-    vi.mocked(shareService.sendShare).mockRejectedValue({ response: { data: { detail: "? Unkown Error",},},});
+    vi.mocked(shareService.sendShare).mockRejectedValue({ response: { data: { detail: "? Unknown Error",},},});
     const { result } = renderHook(() => useSharing());
    
 
     await act(async () => await result.current.shareEvent("e1", "2"));
-    expect(result.current.shareError).toBe("? Unkown Error")
+    expect(result.current.shareError).toBe("? Unknown Error")
 
   });
 
