@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import AppLayout from "@/layouts/AppLayout";
 import ConfirmationModal from "@/components/modals/ConfirmationModal";
 import { useCourses } from "@/hooks/course/useCourse";
-import { getCourseStudents } from "@/services/courseService";
+import { getCourseStudents, removeUserFromCourse } from "@/services/courseService";
 import type { Course, CourseCreation, CourseStudent, CourseUpdate } from "@/types/course";
 import { formatDateInTimezone } from "@/utils/userTimezone";
 
@@ -18,6 +18,7 @@ export default function CourseManagement() {
   const [studentsTarget, setStudentsTarget] = useState<Course | null>(null);
   const [students, setStudents] = useState<CourseStudent[]>([]);
   const [studentsLoading, setStudentsLoading] = useState(false);
+  const [removingStudentId, setRemovingStudentId] = useState<number | null>(null);
 
   const [createForm, setCreateForm] = useState<CourseCreation>({
     name: "",
@@ -126,7 +127,21 @@ export default function CourseManagement() {
     }
   };
 
+  const handleRemoveStudent = async (studentId: number) => {
+    if (!studentsTarget) return;
 
+    setRemovingStudentId(studentId);
+    try {
+      await removeUserFromCourse(studentsTarget.id, studentId);
+      const refreshedStudents = await getCourseStudents(studentsTarget.id);
+      setStudents(refreshedStudents);
+      await actions.refresh();
+    } catch (removeError) {
+      console.error(removeError);
+    } finally {
+      setRemovingStudentId(null);
+    }
+  };
 
   const courseCountText = useMemo(() => {
     const count = managedFilteredCourses.length;
@@ -491,8 +506,19 @@ export default function CourseManagement() {
                 ) : (
                   <ul className="divide-y divide-gray-200 rounded-lg border border-gray-200">
                     {students.map((student) => (
-                      <li key={student.id} className="px-4 py-3">
+                      <li
+                        key={student.id}
+                        className="flex items-center justify-between gap-3 px-4 py-3"
+                      >
                         <div className="font-medium text-gray-900">{student.username}</div>
+                        <button
+                          type="button"
+                          onClick={() => void handleRemoveStudent(student.id)}
+                          disabled={removingStudentId === student.id}
+                          className="rounded-md border border-red-300 px-3 py-1.5 text-sm text-red-600 transition-colors hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-50"
+                        >
+                          {removingStudentId === student.id ? "Removing..." : "Remove"}
+                        </button>
                       </li>
                     ))}
                   </ul>
