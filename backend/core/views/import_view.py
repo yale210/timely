@@ -115,8 +115,8 @@ class ImportView(APIView):
 
         return {
             "title": summary,
-            "description": current_event.get("DESCRIPTION"),
-            "location": current_event.get("LOCATION"),
+            "description": current_event.get("DESCRIPTION") or "",
+            "location": current_event.get("LOCATION") or "",
             "dt_stamp": dt_stamp,
             "start_time": start_time,
             "end_time": end_time,
