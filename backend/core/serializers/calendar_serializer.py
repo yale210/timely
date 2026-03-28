@@ -4,7 +4,7 @@ from rest_framework import serializers
 
 from core.models import Category, Task
 
-from ..calendar_validation import CalendarValidationMixin
+from .calendar_validation import CalendarValidationMixin
 from .category_serializer import CategorySerializer
 
 

@@ -9,7 +9,7 @@ from django.utils.timezone import make_aware
 from rest_framework import serializers
 from rest_framework.test import APIRequestFactory
 
-from core.calendar_validation_helpers import _validate_allocation_slots
+from core.serializers.calendar_validation import _validate_allocation_slots
 from core.models import Category, Event, Task
 from core.serializers import CalendarSerializer
 from core.serializers.calendar_serializer import CalendarResponseSerializer
