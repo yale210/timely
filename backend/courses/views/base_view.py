@@ -26,6 +26,7 @@ class CourseViewSetBase(ViewSet):
 
     serializer_class = CourseSerializer
     permission_classes = [IsAuthenticated, CoursePermission]
+    queryset = Course.objects.none()  # Enables path parameter type inference
 
     def get_course(self, pk):
         """Retrieves a Course instance by primary key or raises 404.
