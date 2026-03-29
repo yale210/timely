@@ -1,11 +1,11 @@
-import { useCallback, useLayoutEffect, useRef, type Dispatch, type SetStateAction } from "react";
+import { useCallback, useLayoutEffect, useRef, type Dispatch, type MutableRefObject, type SetStateAction } from "react";
+import type { View } from "react-big-calendar";
 import type { EventInteractionArgs } from "react-big-calendar/lib/addons/dragAndDrop";
-import { normalizeInteractionStart, normalizeInteractionEnd } from "./calendarTypes";
-import * as taskService from "@/services/taskService";
+import { normalizeInteractionEnd, normalizeInteractionStart } from "./calendarTypes";
 import * as eventService from "@/services/eventService";
+import * as taskService from "@/services/taskService";
 import type { CalendarEntry } from "@/utils/calendarAdapter";
 import type { Event, EventMutationContext, Task } from "@/types";
-import type { View } from "react-big-calendar";
 
 interface UseCalendarInteractionsProps {
   tasks: Task[];
@@ -24,136 +24,217 @@ interface UseCalendarInteractionsProps {
   fetchEvents: (view: View, date: Date) => Promise<void>;
 }
 
+interface CalendarSelectionSlot {
+  start: Date;
+  end?: Date;
+  slots?: Date[];
+  action?: "select" | "click" | "doubleClick";
+}
+
+interface InteractionStateSnapshot {
+  isSidebarOpen: boolean;
+  tasks: Task[];
+  events: Event[];
+  view: View;
+  date: Date;
+  scheduleOrder: Record<number, number>;
+}
+
+const createDraftEvent = (start: Date, end: Date): Event => ({
+  id: 0,
+  title: "",
+  description: "",
+  start_time: start.toISOString(),
+  end_time: end.toISOString(),
+  location: "",
+  recurrence_interval: null,
+  recurrence_end: null,
+  reminders: [],
+  is_override: false,
+  is_split_series: false,
+  source_event_id: undefined,
+  split_from_event_id: null,
+  original_start_time: null,
+  categories: [],
+});
+
+const getSlotRange = (slot: CalendarSelectionSlot): { start: Date; end: Date } => {
+  const start = slot.slots?.[0] ?? slot.start;
+  const selectedEnd = slot.slots?.at(-1) ?? slot.end ?? start;
+  const end = selectedEnd > start ? selectedEnd : new Date(start.getTime() + 60 * 60 * 1000);
+  return { start, end };
+};
+
+const clearScheduleOrderIfNeeded = (
+  scheduleOrder: Record<number, number>,
+  setScheduleOrder: Dispatch<SetStateAction<Record<number, number>>>,
+) => {
+  if (Object.keys(scheduleOrder).length > 0) {
+    setScheduleOrder({});
+  }
+};
+
+const clearTaskScheduleAnimation = (
+  taskId: number,
+  setScheduleOrder: Dispatch<SetStateAction<Record<number, number>>>,
+) => {
+  setScheduleOrder((previous) => {
+    if (!Object.prototype.hasOwnProperty.call(previous, taskId)) {
+      return previous;
+    }
+    const next = { ...previous };
+    delete next[taskId];
+    return next;
+  });
+};
+
+const findTaskByEntry = (tasks: Task[], entry: CalendarEntry): Task | undefined =>
+  tasks.find((item) => item.id === entry.sourceId);
+
+const findEventByEntry = (events: Event[], entry: CalendarEntry): Event | undefined =>
+  entry.eventData ??
+  events.find((item) => item.id === entry.sourceId && item.start_time === entry.start.toISOString());
+
+const buildEventMutationContext = (eventData: Event): EventMutationContext | undefined =>
+  eventData.recurrence_interval
+    ? { scope: "this", original_start_time: eventData.original_start_time ?? eventData.start_time }
+    : undefined;
+
+const buildEventTimePatch = (start: Date, end: Date): Pick<Event, "start_time" | "end_time"> => ({
+  start_time: start.toISOString(),
+  end_time: end.toISOString(),
+});
+
+const replaceTaskAllocationSlot = (
+  task: Task,
+  allocationIndex: number,
+  start: Date,
+  end: Date,
+): { start: string; end: string }[] => {
+  const nextAllocations = [...(task.allocation ?? [])];
+  nextAllocations[allocationIndex] = { start: start.toISOString(), end: end.toISOString() };
+  return nextAllocations;
+};
+
+const updateOptimisticEvents = (
+  previous: Event[],
+  eventData: Event,
+  payload: Pick<Event, "start_time" | "end_time">,
+): Event[] =>
+  previous.map((item) => {
+    const isRecurringInstance = Boolean(eventData.instance_id)
+      && item.instance_id === eventData.instance_id
+      && item.original_start_time === eventData.original_start_time;
+    const isSingleEvent = !eventData.instance_id && item.id === eventData.id && item.start_time === eventData.start_time;
+    return isRecurringInstance || isSingleEvent ? { ...item, ...payload } : item;
+  });
+
 /**
- * Builds user interaction handlers for the calendar surface.
- * @param props - Interaction dependencies and state setters.
- * @returns Calendar selection and drag/drop handlers.
+ * Builds an empty calendar event draft from a selected slot range.
+ * @param slot - Selected calendar slot payload.
+ * @returns Draft event for the sidebar form.
  */
-export const useCalendarInteractions = (props: UseCalendarInteractionsProps) => {
-  const {
-    tasks,
-    events,
-    isSidebarOpen,
-    scheduleOrder,
-    view,
-    date,
-    setTasks,
-    setEvents,
-    setIsSidebarOpen,
-    setSidebarMode,
-    setSelectedItem,
-    setScheduleOrder,
-    fetchTasks,
-    fetchEvents,
-  } = props;
+export const buildDraftCalendarEvent = (slot: CalendarSelectionSlot): Event => {
+  const range = getSlotRange(slot);
+  return createDraftEvent(range.start, range.end);
+};
 
-  // Refs so callbacks don't need frequently-changing values as deps, which would
-  // cause them to recreate on every data update and force CalendarView to re-render.
-  // Updated in useLayoutEffect (not during render) to satisfy react-hooks/refs.
-  const isSidebarOpenRef = useRef(isSidebarOpen);
-  const tasksRef = useRef(tasks);
-  const eventsRef = useRef(events);
-  const viewRef = useRef(view);
-  const dateRef = useRef(date);
-  const scheduleOrderRef = useRef(scheduleOrder);
-
+const useInteractionStateRef = ({
+  isSidebarOpen,
+  tasks,
+  events,
+  view,
+  date,
+  scheduleOrder,
+}: Pick<UseCalendarInteractionsProps, "isSidebarOpen" | "tasks" | "events" | "view" | "date" | "scheduleOrder">) => {
+  const stateRef = useRef<InteractionStateSnapshot>({ isSidebarOpen, tasks, events, view, date, scheduleOrder });
   useLayoutEffect(() => {
-    isSidebarOpenRef.current = isSidebarOpen;
-    tasksRef.current = tasks;
-    eventsRef.current = events;
-    viewRef.current = view;
-    dateRef.current = date;
-    scheduleOrderRef.current = scheduleOrder;
-  }, [isSidebarOpen, tasks, events, view, date, scheduleOrder]);
+    stateRef.current = { isSidebarOpen, tasks, events, view, date, scheduleOrder };
+  }, [date, events, isSidebarOpen, scheduleOrder, tasks, view]);
+  return stateRef;
+};
 
-  const closeSidebar = useCallback(() => {
+const useCloseSidebarAction = (
+  setIsSidebarOpen: UseCalendarInteractionsProps["setIsSidebarOpen"],
+  setSelectedItem: UseCalendarInteractionsProps["setSelectedItem"],
+  setSidebarMode: UseCalendarInteractionsProps["setSidebarMode"],
+) =>
+  useCallback(() => {
     setIsSidebarOpen(false);
     setSelectedItem(undefined);
     setSidebarMode("event");
   }, [setIsSidebarOpen, setSelectedItem, setSidebarMode]);
 
-  const selectSlot = useCallback(
-    (slot: { start: Date; end?: Date; slots?: Date[]; action?: "select" | "click" | "doubleClick" }) => {
-      if (isSidebarOpenRef.current && slot.action !== "select") return;
-      if (!slot.start) return;
-
-      const slotStart = slot.slots && slot.slots.length > 0 ? slot.slots[0] : slot.start;
-      let slotEnd = slot.end ?? slotStart;
-      if (slot.slots && slot.slots.length > 0) {
-        slotEnd = slot.slots[slot.slots.length - 1];
-      }
-      if (slotEnd <= slotStart) {
-        slotEnd = new Date(slotStart.getTime() + 60 * 60 * 1000);
-      }
-      
-      setSidebarMode("event");
-      setSelectedItem({
-        id: 0,
-        title: "",
-        description: "",
-        start_time: slotStart.toISOString(),
-        end_time: slotEnd.toISOString(),
-        location: "",
-        recurrence_interval: null,
-        recurrence_end: null,
-        reminders: [],
-        is_override: false,
-        is_split_series: false,
-        source_event_id: undefined,
-        split_from_event_id: null,
-        original_start_time: null,
-        categories: [],
-      });
-      setIsSidebarOpen(true);
-    },
-    [setSidebarMode, setSelectedItem, setIsSidebarOpen],
-  );
-
-  const selectEntry = useCallback(
-    (entry: CalendarEntry) => {
-      if (entry.kind === "task") {
-        const task = entry.taskData ?? tasksRef.current.find((item) => item.id === entry.sourceId);
-        if (task) {
-          setSidebarMode("task");
-          setSelectedItem(task);
-          setIsSidebarOpen(true);
-        }
+const useSlotSelectionAction = (
+  stateRef: MutableRefObject<InteractionStateSnapshot>,
+  setSidebarMode: UseCalendarInteractionsProps["setSidebarMode"],
+  setSelectedItem: UseCalendarInteractionsProps["setSelectedItem"],
+  setIsSidebarOpen: UseCalendarInteractionsProps["setIsSidebarOpen"],
+) =>
+  useCallback(
+    (slot: CalendarSelectionSlot) => {
+      if (stateRef.current.isSidebarOpen && slot.action !== "select") {
         return;
       }
-
-      if (entry.eventData) {
-        setSidebarMode("event");
-        setSelectedItem(entry.eventData);
-        setIsSidebarOpen(true);
-      }
+      setSidebarMode("event");
+      setSelectedItem(buildDraftCalendarEvent(slot));
+      setIsSidebarOpen(true);
     },
-    [setSidebarMode, setSelectedItem, setIsSidebarOpen],
+    [setIsSidebarOpen, setSelectedItem, setSidebarMode, stateRef],
   );
 
-  const updateTaskAllocation = useCallback(
+const useEntrySelectionAction = (
+  stateRef: MutableRefObject<InteractionStateSnapshot>,
+  setSidebarMode: UseCalendarInteractionsProps["setSidebarMode"],
+  setSelectedItem: UseCalendarInteractionsProps["setSelectedItem"],
+  setIsSidebarOpen: UseCalendarInteractionsProps["setIsSidebarOpen"],
+) =>
+  useCallback(
+    (entry: CalendarEntry) => {
+      const selected = entry.kind === "task"
+        ? entry.taskData ?? findTaskByEntry(stateRef.current.tasks, entry)
+        : findEventByEntry(stateRef.current.events, entry);
+      if (!selected) {
+        return;
+      }
+      setSidebarMode(entry.kind);
+      setSelectedItem(selected);
+      setIsSidebarOpen(true);
+    },
+    [setIsSidebarOpen, setSelectedItem, setSidebarMode, stateRef],
+  );
+
+const useCreateSidebarAction = (
+  setSidebarMode: UseCalendarInteractionsProps["setSidebarMode"],
+  setSelectedItem: UseCalendarInteractionsProps["setSelectedItem"],
+  setIsSidebarOpen: UseCalendarInteractionsProps["setIsSidebarOpen"],
+) =>
+  useCallback(() => {
+    const now = normalizeInteractionStart(new Date());
+    const end = new Date(now.getTime() + 60 * 60 * 1000);
+    setSidebarMode("event");
+    setSelectedItem(createDraftEvent(now, end));
+    setIsSidebarOpen(true);
+  }, [setIsSidebarOpen, setSelectedItem, setSidebarMode]);
+
+const useTaskAllocationUpdater = (
+  stateRef: MutableRefObject<InteractionStateSnapshot>,
+  setScheduleOrder: UseCalendarInteractionsProps["setScheduleOrder"],
+  setTasks: UseCalendarInteractionsProps["setTasks"],
+  fetchTasks: UseCalendarInteractionsProps["fetchTasks"],
+) =>
+  useCallback(
     async (entry: CalendarEntry, start: Date, end: Date) => {
-      if (typeof entry.allocationIndex !== "number") return;
-
-      const task = tasksRef.current.find((item) => item.id === entry.sourceId);
-      if (!task) return;
-      
-      setScheduleOrder((prev) => {
-        if (!Object.prototype.hasOwnProperty.call(prev, task.id)) return prev;
-        const next = { ...prev };
-        delete next[task.id];
-        return next;
-      });
-      
-      const nextAllocations = [...(task.allocation ?? [])];
-      nextAllocations[entry.allocationIndex] = {
-        start: start.toISOString(),
-        end: end.toISOString(),
-      };
-
-      setTasks((prev) =>
-        prev.map((item) => (item.id === task.id ? { ...item, allocation: nextAllocations } : item)),
-      );
-
+      if (typeof entry.allocationIndex !== "number") {
+        return;
+      }
+      const task = findTaskByEntry(stateRef.current.tasks, entry);
+      if (!task) {
+        return;
+      }
+      clearTaskScheduleAnimation(task.id, setScheduleOrder);
+      const nextAllocations = replaceTaskAllocationSlot(task, entry.allocationIndex, start, end);
+      setTasks((previous) => previous.map((item) => (item.id === task.id ? { ...item, allocation: nextAllocations } : item)));
       try {
         await taskService.updateTask(task.id, { allocation: nextAllocations });
       } catch (updateError) {
@@ -161,57 +242,41 @@ export const useCalendarInteractions = (props: UseCalendarInteractionsProps) => 
         await fetchTasks();
       }
     },
-    [fetchTasks, setScheduleOrder, setTasks],
+    [fetchTasks, setScheduleOrder, setTasks, stateRef],
   );
 
-  const updateCalendarEvent = useCallback(
+const useCalendarEventUpdater = (
+  stateRef: MutableRefObject<InteractionStateSnapshot>,
+  setEvents: UseCalendarInteractionsProps["setEvents"],
+  fetchEvents: UseCalendarInteractionsProps["fetchEvents"],
+) =>
+  useCallback(
     async (entry: CalendarEntry, start: Date, end: Date) => {
-      const eventData = entry.eventData ?? eventsRef.current.find(
-        (item) => item.id === entry.sourceId && item.start_time === entry.start.toISOString(),
-      );
-
-      if (!eventData) return;
-
-      const payload: Pick<Event, "start_time" | "end_time"> = {
-        start_time: start.toISOString(),
-        end_time: end.toISOString(),
-      };
-
-      const context: EventMutationContext | undefined = eventData.recurrence_interval
-        ? { scope: "this", original_start_time: eventData.original_start_time ?? eventData.start_time }
-        : undefined;
-
-      setEvents((prev) =>
-        prev.map((item) => {
-          const isRecurringInstance =
-            Boolean(eventData.instance_id) &&
-            item.instance_id === eventData.instance_id &&
-            item.original_start_time === eventData.original_start_time;
-          const isSingleEvent =
-            !eventData.instance_id &&
-            item.id === eventData.id &&
-            item.start_time === eventData.start_time;
-
-          return isRecurringInstance || isSingleEvent ? { ...item, ...payload } : item;
-        }),
-      );
-
+      const eventData = findEventByEntry(stateRef.current.events, entry);
+      if (!eventData) {
+        return;
+      }
+      const payload = buildEventTimePatch(start, end);
+      setEvents((previous) => updateOptimisticEvents(previous, eventData, payload));
       try {
-        await eventService.updateEvent(eventData.id, payload, context);
-        await fetchEvents(viewRef.current, dateRef.current);
+        await eventService.updateEvent(eventData.id, payload, buildEventMutationContext(eventData));
       } catch (updateError) {
         console.error(updateError);
-        await fetchEvents(viewRef.current, dateRef.current);
       }
+      await fetchEvents(stateRef.current.view, stateRef.current.date);
     },
-    [fetchEvents, setEvents],
+    [fetchEvents, setEvents, stateRef],
   );
 
-  const handleEventDrop = useCallback(
+const useCalendarEntryInteractionHandler = (
+  stateRef: MutableRefObject<InteractionStateSnapshot>,
+  setScheduleOrder: UseCalendarInteractionsProps["setScheduleOrder"],
+  updateTaskAllocation: (entry: CalendarEntry, start: Date, end: Date) => Promise<void>,
+  updateCalendarEvent: (entry: CalendarEntry, start: Date, end: Date) => Promise<void>,
+) =>
+  useCallback(
     async ({ event, start, end }: EventInteractionArgs<CalendarEntry>) => {
-      if (Object.keys(scheduleOrderRef.current).length > 0) {
-        setScheduleOrder({});
-      }
+      clearScheduleOrderIfNeeded(stateRef.current.scheduleOrder, setScheduleOrder);
       const nextStart = normalizeInteractionStart(new Date(start));
       const nextEnd = normalizeInteractionEnd(new Date(end));
       if (event.kind === "task") {
@@ -220,56 +285,35 @@ export const useCalendarInteractions = (props: UseCalendarInteractionsProps) => 
       }
       await updateCalendarEvent(event, nextStart, nextEnd);
     },
-    [updateCalendarEvent, updateTaskAllocation, setScheduleOrder],
+    [setScheduleOrder, stateRef, updateCalendarEvent, updateTaskAllocation],
   );
 
-  const handleEventResize = useCallback(
-    async ({ event, start, end }: EventInteractionArgs<CalendarEntry>) => {
-      if (Object.keys(scheduleOrderRef.current).length > 0) {
-        setScheduleOrder({});
-      }
-      const nextStart = normalizeInteractionStart(new Date(start));
-      const nextEnd = normalizeInteractionEnd(new Date(end));
-      if (event.kind === "task") {
-        await updateTaskAllocation(event, nextStart, nextEnd);
-        return;
-      }
-      await updateCalendarEvent(event, nextStart, nextEnd);
-    },
-    [updateCalendarEvent, updateTaskAllocation, setScheduleOrder],
+/**
+ * Builds user interaction handlers for the calendar surface.
+ * @param props - Interaction dependencies and state setters.
+ * @returns Calendar selection and drag/drop handlers.
+ */
+export const useCalendarInteractions = (props: UseCalendarInteractionsProps) => {
+  const stateRef = useInteractionStateRef(props);
+  const closeSidebar = useCloseSidebarAction(props.setIsSidebarOpen, props.setSelectedItem, props.setSidebarMode);
+  const selectSlot = useSlotSelectionAction(stateRef, props.setSidebarMode, props.setSelectedItem, props.setIsSidebarOpen);
+  const selectEntry = useEntrySelectionAction(stateRef, props.setSidebarMode, props.setSelectedItem, props.setIsSidebarOpen);
+  const openCreateSidebar = useCreateSidebarAction(props.setSidebarMode, props.setSelectedItem, props.setIsSidebarOpen);
+  const updateTaskAllocation = useTaskAllocationUpdater(stateRef, props.setScheduleOrder, props.setTasks, props.fetchTasks);
+  const updateCalendarEvent = useCalendarEventUpdater(stateRef, props.setEvents, props.fetchEvents);
+  const handleEntryInteraction = useCalendarEntryInteractionHandler(
+    stateRef,
+    props.setScheduleOrder,
+    updateTaskAllocation,
+    updateCalendarEvent,
   );
-
-  const openCreateSidebar = useCallback(() => {
-    const now = new Date();
-    now.setSeconds(0, 0);
-    const end = new Date(now.getTime() + 60 * 60 * 1000);
-    setSidebarMode("event");
-    setSelectedItem({
-      id: 0,
-      title: "",
-      description: "",
-      start_time: now.toISOString(),
-      end_time: end.toISOString(),
-      location: "",
-      recurrence_interval: null,
-      recurrence_end: null,
-      reminders: [],
-      is_override: false,
-      is_split_series: false,
-      source_event_id: undefined,
-      split_from_event_id: null,
-      original_start_time: null,
-      categories: [],
-    });
-    setIsSidebarOpen(true);
-  }, [setSidebarMode, setSelectedItem, setIsSidebarOpen]);
 
   return {
     selectSlot,
     selectEntry,
     openCreateSidebar,
     closeSidebar,
-    handleEventDrop,
-    handleEventResize,
+    handleEventDrop: handleEntryInteraction,
+    handleEventResize: handleEntryInteraction,
   };
 };
