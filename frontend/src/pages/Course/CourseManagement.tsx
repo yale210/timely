@@ -1,10 +1,10 @@
-import { useEffect, useMemo, useState } from "react";
 import AppLayout from "@/layouts/AppLayout";
 import ConfirmationModal from "@/components/modals/ConfirmationModal";
 import { useCourses } from "@/hooks/course/useCourse";
-import { getCourseStudents, removeUserFromCourse } from "@/services/courseService";
-import type { Course, CourseCreation, CourseStudent, CourseUpdate } from "@/types/course";
-import { formatDateInTimezone } from "@/utils/userTimezone";
+import { useCourseManagementState } from "@/hooks/course/useCourseManagementState";
+import { useCourseManagementHooks, openEditModal } from "@/hooks/course/useCourseManagementHooks";
+import CourseManagementHeader from "@/components/course/CourseManagementHeader";
+import CourseManagementTable from "@/components/course/CourseManagementTable";
 
 /**
  * Course management page for teachers and staff.
@@ -12,185 +12,22 @@ import { formatDateInTimezone } from "@/utils/userTimezone";
  */
 export default function CourseManagement() {
   const { state, managedFilteredCourses, loading, error, actions } = useCourses();
-
-  const [editingCourse, setEditingCourse] = useState<Course | null>(null);
-  const [deleteTarget, setDeleteTarget] = useState<Course | null>(null);
-  const [studentsTarget, setStudentsTarget] = useState<Course | null>(null);
-  const [students, setStudents] = useState<CourseStudent[]>([]);
-  const [studentsLoading, setStudentsLoading] = useState(false);
-  const [removingStudentId, setRemovingStudentId] = useState<number | null>(null);
-
-  const [createForm, setCreateForm] = useState<CourseCreation>({
-    name: "",
-    description: "",
-  });
-  const [editForm, setEditForm] = useState<CourseUpdate>({
-    name: "",
-    description: "",
-  });
-  const [formError, setFormError] = useState<string | null>(null);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [showCreateModal, setShowCreateModal] = useState(false);
-
-  const openCreateModal = () => {
-    setFormError(null);
-    setCreateForm({ name: "", description: "" });
-    setShowCreateModal(true);
-  };
-
-  const refreshCourses = () => {
-    void actions.refresh();
-  };
-
-  useEffect(() => {
-    if (!studentsTarget) {
-      setStudents([]);
-      return;
-    }
-
-    const loadStudents = async () => {
-      setStudentsLoading(true);
-      try {
-        const data = await getCourseStudents(studentsTarget.id);
-        setStudents(data);
-      } catch (loadError) {
-        console.error(loadError);
-        setStudents([]);
-      } finally {
-        setStudentsLoading(false);
-      }
-    };
-
-    void loadStudents();
-  }, [studentsTarget]);
-
-  const handleCreate = async () => {
-    if (!createForm.name.trim()) {
-      setFormError("Course name is required.");
-      return;
-    }
-
-    setFormError(null);
-    setIsSubmitting(true);
-
-    try {
-      const result = await actions.createCourse(createForm);
-      if (result) {
-        setShowCreateModal(false);
-        setCreateForm({ name: "", description: "" });
-      }
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  const openEditModal = (course: Course) => {
-    setEditingCourse(course);
-    setEditForm({
-      name: course.name,
-      description: course.description,
-    });
-    setFormError(null);
-  };
-
-  const handleUpdate = async () => {
-    if (!editingCourse) return;
-
-    if (!editForm.name?.trim()) {
-      setFormError("Course name is required.");
-      return;
-    }
-
-    setFormError(null);
-    setIsSubmitting(true);
-
-    try {
-      const result = await actions.updateCourse(editingCourse.id, editForm);
-      if (result) {
-        setEditingCourse(null);
-        setEditForm({ name: "", description: "" });
-      }
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  const handleDelete = async () => {
-    if (!deleteTarget) return;
-
-    setIsSubmitting(true);
-    try {
-      await actions.deleteCourse(deleteTarget.id);
-      setDeleteTarget(null);
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  const handleRemoveStudent = async (studentId: number) => {
-    if (!studentsTarget) return;
-
-    setRemovingStudentId(studentId);
-    try {
-      await removeUserFromCourse(studentsTarget.id, studentId);
-      const refreshedStudents = await getCourseStudents(studentsTarget.id);
-      setStudents(refreshedStudents);
-      await actions.refresh();
-    } catch (removeError) {
-      console.error(removeError);
-    } finally {
-      setRemovingStudentId(null);
-    }
-  };
-
-  const courseCountText = useMemo(() => {
-    const count = managedFilteredCourses.length;
-    return count === 1 ? "1 course" : `${count} courses`;
-  }, [managedFilteredCourses.length]);
+  const courseManagementState = useCourseManagementState();
+  const courseManagementHooks = useCourseManagementHooks(courseManagementState, actions, managedFilteredCourses);
 
   return (
     <AppLayout>
       <div className="min-h-screen bg-white">
-        <header className="border-b border-gray-200 bg-white px-6 py-4">
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-            <div>
-              <p className="text-sm font-semibold text-indigo-600">Teacher Tools</p>
-              <h1 className="text-2xl font-bold text-gray-900">Course Management</h1>
-              <p className="mt-1 text-sm text-gray-500">
-                Create, edit, and manage your courses and students.
-              </p>
-            </div>
-
-            <div className="flex items-center gap-3">
-              <input
-                type="text"
-                placeholder="Search courses..."
-                value={state.search}
-                onChange={(e) => actions.setSearch(e.target.value)}
-                className="w-64 rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
-              />
-              <button
-                type="button"
-                onClick={refreshCourses}
-                className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50"
-              >
-                Refresh
-              </button>
-              <button
-                type="button"
-                onClick={openCreateModal}
-                className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-indigo-700"
-              >
-                + New Course
-              </button>
-
-            </div>
-          </div>
-        </header>
+        <CourseManagementHeader
+          state={state}
+          actions={actions}
+          refreshCourses={courseManagementHooks.refreshCourses}
+          openCreateModal={courseManagementHooks.openCreateModal}
+        />
 
         <main className="p-6">
           <div className="mb-4 flex items-center justify-between">
-            <p className="text-sm text-gray-500">{courseCountText}</p>
+            <p className="text-sm text-gray-500">{courseManagementHooks.courseCountText}</p>
           </div>
 
           {error && (
@@ -212,7 +49,7 @@ export default function CourseManagement() {
               </p>
               <button
                 type="button"
-                onClick={openCreateModal}
+                onClick={courseManagementHooks.openCreateModal}
                 className="mt-4 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700"
               >
                 Create Course
@@ -221,92 +58,20 @@ export default function CourseManagement() {
           )}
 
           {managedFilteredCourses.length > 0 && (
-            <div className="overflow-hidden rounded-lg border border-gray-200 shadow-sm">
-              <table className="min-w-full divide-y divide-gray-200">
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">
-                      Course Name
-                    </th>
-                    <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">
-                      Description
-                    </th>
-                    <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">
-                      Status
-                    </th>
-                    <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">
-                      Created
-                    </th>
-                    <th className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wide text-gray-500">
-                      Actions
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-200 bg-white">
-                  {managedFilteredCourses.map((course) => (
-                    <tr key={course.id} className="transition-colors hover:bg-gray-50">
-                      <td className="whitespace-nowrap px-4 py-4">
-                        <div className="font-medium text-gray-900">{course.name}</div>
-                        <div className="text-xs text-gray-500">ID: {course.id}</div>
-                      </td>
-                      <td className="px-4 py-4">
-                        <p className="max-w-xs truncate text-sm text-gray-600">
-                          {course.description || "—"}
-                        </p>
-                      </td>
-                      <td className="whitespace-nowrap px-4 py-4">
-                        <span
-                          className={`inline-flex rounded-full px-2 py-1 text-xs font-medium ${
-                            course.active !== false
-                              ? "bg-green-100 text-green-700"
-                              : "bg-gray-100 text-gray-600"
-                          }`}
-                        >
-                          {course.active !== false ? "Active" : "Inactive"}
-                        </span>
-                      </td>
-                      <td className="whitespace-nowrap px-4 py-4 text-sm text-gray-500">
-                        {formatDateInTimezone(course.created_at)}
-                      </td>
-                      <td className="whitespace-nowrap px-4 py-4 text-right">
-                        <div className="flex justify-end gap-2">
-                          <button
-                            type="button"
-                            onClick={() => setStudentsTarget(course)}
-                            className="rounded-md border border-indigo-300 px-3 py-1.5 text-sm text-indigo-700 transition-colors hover:bg-indigo-50"
-                          >
-                            View students
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => openEditModal(course)}
-                            className="rounded-md border border-gray-300 px-3 py-1.5 text-sm text-gray-700 transition-colors hover:bg-gray-50"
-                          >
-                            Edit
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => setDeleteTarget(course)}
-                            className="rounded-md border border-red-300 px-3 py-1.5 text-sm text-red-600 transition-colors hover:bg-red-50"
-                          >
-                            Delete
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
+            <CourseManagementTable
+              courses={managedFilteredCourses}
+              courseManagementState={courseManagementState}
+              onOpenEditModal={(course) => openEditModal(courseManagementState, course)}
+            />
+            )}
         </main>
 
-        {showCreateModal && (
+        {courseManagementState.showCreateModal && (
           <div className="fixed inset-0 z-50 flex items-center justify-center">
             <button
               type="button"
               aria-label="Close create modal backdrop"
-              onClick={() => setShowCreateModal(false)}
+              onClick={() => courseManagementState.setShowCreateModal(false)}
               className="absolute inset-0 bg-black/40"
             />
             <div className="relative z-10 w-full max-w-md rounded-xl bg-white p-6 shadow-2xl">
@@ -315,9 +80,9 @@ export default function CourseManagement() {
                 Fill in the details for your new course.
               </p>
 
-              {formError && (
+              {courseManagementState.formError && (
                 <div className="mt-4 rounded-md bg-red-50 px-3 py-2 text-sm text-red-700">
-                  {formError}
+                  {courseManagementState.formError}
                 </div>
               )}
 
@@ -332,9 +97,9 @@ export default function CourseManagement() {
                   <input
                     id="create-name"
                     type="text"
-                    value={createForm.name}
+                    value={courseManagementState.createForm.name}
                     onChange={(e) =>
-                      setCreateForm((prev) => ({ ...prev, name: e.target.value }))
+                      courseManagementState.setCreateForm((prev) => ({ ...prev, name: e.target.value }))
                     }
                     className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
                     placeholder="Introduction to..."
@@ -351,9 +116,9 @@ export default function CourseManagement() {
                   <textarea
                     id="create-description"
                     rows={3}
-                    value={createForm.description}
+                    value={courseManagementState.createForm.description}
                     onChange={(e) =>
-                      setCreateForm((prev) => ({ ...prev, description: e.target.value }))
+                      courseManagementState.setCreateForm((prev) => ({ ...prev, description: e.target.value }))
                     }
                     className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
                     placeholder="A brief overview of the course..."
@@ -364,39 +129,39 @@ export default function CourseManagement() {
               <div className="mt-6 flex justify-end gap-3">
                 <button
                   type="button"
-                  onClick={() => setShowCreateModal(false)}
+                  onClick={() => courseManagementState.setShowCreateModal(false)}
                   className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
                 >
                   Cancel
                 </button>
                 <button
                   type="button"
-                  onClick={() => void handleCreate()}
-                  disabled={isSubmitting}
+                  onClick={() => void courseManagementHooks.handleCreate()}
+                  disabled={courseManagementState.isSubmitting}
                   className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-50"
                 >
-                  {isSubmitting ? "Creating..." : "Create Course"}
+                  {courseManagementState.isSubmitting ? "Creating..." : "Create Course"}
                 </button>
               </div>
             </div>
           </div>
         )}
 
-        {editingCourse && (
+        {courseManagementState.editingCourse && (
           <div className="fixed inset-0 z-50 flex items-center justify-center">
             <button
               type="button"
               aria-label="Close edit modal backdrop"
-              onClick={() => setEditingCourse(null)}
+              onClick={() => courseManagementState.setEditingCourse(null)}
               className="absolute inset-0 bg-black/40"
             />
             <div className="relative z-10 w-full max-w-md rounded-xl bg-white p-6 shadow-2xl">
               <h2 className="text-lg font-semibold text-gray-900">Edit Course</h2>
               <p className="mt-1 text-sm text-gray-500">Update the course details.</p>
 
-              {formError && (
+              {courseManagementState.formError && (
                 <div className="mt-4 rounded-md bg-red-50 px-3 py-2 text-sm text-red-700">
-                  {formError}
+                  {courseManagementState.formError}
                 </div>
               )}
 
@@ -411,9 +176,9 @@ export default function CourseManagement() {
                   <input
                     id="edit-name"
                     type="text"
-                    value={editForm.name ?? ""}
+                    value={courseManagementState.editForm.name ?? ""}
                     onChange={(e) =>
-                      setEditForm((prev) => ({ ...prev, name: e.target.value }))
+                      courseManagementState.setEditForm((prev) => ({ ...prev, name: e.target.value }))
                     }
                     className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
                   />
@@ -429,9 +194,9 @@ export default function CourseManagement() {
                   <textarea
                     id="edit-description"
                     rows={3}
-                    value={editForm.description ?? ""}
+                    value={courseManagementState.editForm.description ?? ""}
                     onChange={(e) =>
-                      setEditForm((prev) => ({ ...prev, description: e.target.value }))
+                      courseManagementState.setEditForm((prev) => ({ ...prev, description: e.target.value }))
                     }
                     className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
                   />
@@ -441,18 +206,18 @@ export default function CourseManagement() {
               <div className="mt-6 flex justify-end gap-3">
                 <button
                   type="button"
-                  onClick={() => setEditingCourse(null)}
+                  onClick={() => courseManagementState.setEditingCourse(null)}
                   className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
                 >
                   Cancel
                 </button>
                 <button
                   type="button"
-                  onClick={() => void handleUpdate()}
-                  disabled={isSubmitting}
+                  onClick={() => void courseManagementHooks.handleUpdate()}
+                  disabled={courseManagementState.isSubmitting}
                   className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-50"
                 >
-                  {isSubmitting ? "Saving..." : "Save Changes"}
+                  {courseManagementState.isSubmitting ? "Saving..." : "Save Changes"}
                 </button>
               </div>
             </div>
@@ -460,28 +225,28 @@ export default function CourseManagement() {
         )}
 
         <ConfirmationModal
-          isOpen={deleteTarget !== null}
-          onClose={() => setDeleteTarget(null)}
-          onConfirm={() => void handleDelete()}
+          isOpen={courseManagementState.deleteTarget !== null}
+          onClose={() => courseManagementState.setDeleteTarget(null)}
+          onConfirm={() => void courseManagementHooks.handleDelete()}
           title="Delete Course?"
-          message={`Are you sure you want to inactivate "${deleteTarget?.name}"? Students will miss out`}
+          message={`Are you sure you want to inactivate "${courseManagementState.deleteTarget?.name}"? Students will miss out`}
           confirmText="Delete"
           cancelText="Cancel"
         />
 
-        {studentsTarget && (
+        {courseManagementState.studentsTarget && (
           <div className="fixed inset-0 z-50 flex items-center justify-center">
             <button
               type="button"
               aria-label="Close students modal backdrop"
-              onClick={() => setStudentsTarget(null)}
+              onClick={() => courseManagementState.setStudentsTarget(null)}
               className="absolute inset-0 bg-black/40"
             />
             <div className="relative z-10 w-full max-w-2xl rounded-xl bg-white p-6 shadow-2xl">
               <div className="flex items-center justify-between gap-4">
                 <div>
                   <h2 className="text-lg font-semibold text-gray-900">
-                    Students in {studentsTarget.name}
+                    Students in {courseManagementState.studentsTarget.name}
                   </h2>
                   <p className="mt-1 text-sm text-gray-500">
                     All students enrolled in this course.
@@ -489,7 +254,7 @@ export default function CourseManagement() {
                 </div>
                 <button
                   type="button"
-                  onClick={() => setStudentsTarget(null)}
+                  onClick={() => courseManagementState.setStudentsTarget(null)}
                   className="rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50"
                 >
                   Close
@@ -497,15 +262,15 @@ export default function CourseManagement() {
               </div>
 
               <div className="mt-6">
-                {studentsLoading ? (
+                {courseManagementState.studentsLoading ? (
                   <p className="text-sm text-gray-500">Loading students...</p>
-                ) : students.length === 0 ? (
+                ) : courseManagementState.students.length === 0 ? (
                   <p className="text-sm text-gray-500">
                     No students are enrolled in this course.
                   </p>
                 ) : (
                   <ul className="divide-y divide-gray-200 rounded-lg border border-gray-200">
-                    {students.map((student) => (
+                    {courseManagementState.students.map((student) => (
                       <li
                         key={student.id}
                         className="flex items-center justify-between gap-3 px-4 py-3"
@@ -513,11 +278,11 @@ export default function CourseManagement() {
                         <div className="font-medium text-gray-900">{student.username}</div>
                         <button
                           type="button"
-                          onClick={() => void handleRemoveStudent(student.id)}
-                          disabled={removingStudentId === student.id}
+                          onClick={() => void courseManagementHooks.handleRemoveStudent(student.id)}
+                          disabled={courseManagementState.removingStudentId === student.id}
                           className="rounded-md border border-red-300 px-3 py-1.5 text-sm text-red-600 transition-colors hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-50"
                         >
-                          {removingStudentId === student.id ? "Removing..." : "Remove"}
+                          {courseManagementState.removingStudentId === student.id ? "Removing..." : "Remove"}
                         </button>
                       </li>
                     ))}

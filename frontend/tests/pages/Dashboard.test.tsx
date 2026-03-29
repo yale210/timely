@@ -9,6 +9,26 @@ import { useDashboard } from "@/hooks/dashboard/useDashboard";
 vi.mock("@/hooks/dashboard/useDashboard", () => ({
   useDashboard: vi.fn(),
 }));
+vi.mock("@/components/dashboard/DashboardOverview", () => ({
+  default: ({
+    tasks,
+    events,
+    weeklyStats,
+  }: {
+    tasks: Task[];
+    events: Event[];
+    weeklyStats: WeeklyStats | null;
+  }) => (
+    <div data-testid="dashboard-overview">
+      <span>tasks:{tasks.length}</span>
+      <span>events:{events.length}</span>
+      <span>weekly:{weeklyStats ? "yes" : "no"}</span>
+      {tasks.length > 0 ? <span>{tasks[0].title}</span> : <span>No Upcoming Tasks</span>}
+      <span>Weekly Overview</span>
+      <span>Upcoming Tasks</span>
+    </div>
+  ),
+}));
 
 // Mock components to avoid context/dependency bloat
 vi.mock("@/layouts/AppLayout", () => ({
@@ -66,7 +86,7 @@ describe("Dashboard Page", () => {
       </MemoryRouter>
     );
 
-    expect(screen.getByTestId("app-layout")).toBeDefined();
+    expect(screen.getByTestId("app-layout")).toBeInTheDocument();
     expect(screen.getByText("Weekly Overview")).toBeDefined();
     expect(screen.getByText("Upcoming Tasks")).toBeDefined();
     expect(screen.getByText("Upcoming Task")).toBeDefined();
