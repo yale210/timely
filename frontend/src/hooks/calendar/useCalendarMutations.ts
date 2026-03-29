@@ -94,7 +94,7 @@ export const useCalendarMutations = (props: UseCalendarMutationsProps) => {
           const completedMinutesChanged = typeof data.completed_minutes === "number" && data.completed_minutes !== (selectedItem.completed_minutes ?? 0);
           
           if (bufferBeforeChanged || bufferAfterChanged || completedMinutesChanged) {
-            await taskService.saveAndRescheduleTask(selectedItem.id, data, moment(date).format("YYYY-MM-DD"));
+            await taskService.saveAndRescheduleTask(selectedItem.id, data, todayStartDate);
           } else {
             await taskService.updateTask(selectedItem.id, data);
           }
@@ -105,7 +105,7 @@ export const useCalendarMutations = (props: UseCalendarMutationsProps) => {
         closeSidebar();
       } catch (error) {
         if (selectedItem && "deadline" in selectedItem && selectedItem.id !== 0 && (selectedItem.allocation?.length ?? 0) > 0 && hasTaskAllocationRescheduleConflict(error)) {
-          await taskService.saveAndRescheduleTask(selectedItem.id, data, moment(date).format("YYYY-MM-DD"));
+          await taskService.saveAndRescheduleTask(selectedItem.id, data, todayStartDate);
           await fetchTasks();
           closeSidebar();
           return;
@@ -114,7 +114,7 @@ export const useCalendarMutations = (props: UseCalendarMutationsProps) => {
         throw error;
       }
     },
-    [closeSidebar, date, fetchTasks, selectedItem],
+    [closeSidebar, fetchTasks, selectedItem, todayStartDate],
   );
 
   const submitEvent = useCallback(
