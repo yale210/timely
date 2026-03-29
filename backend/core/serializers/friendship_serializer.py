@@ -3,6 +3,8 @@
 from django.contrib.auth import get_user_model
 from rest_framework import serializers
 
+from drf_spectacular.utils import extend_schema_field
+
 from core.models import Friendship
 
 User = get_user_model()
@@ -100,6 +102,7 @@ class FriendshipSerializer(serializers.ModelSerializer):
         url = profile.avatar.url
         return request.build_absolute_uri(url) if request else url
 
+    @extend_schema_field(serializers.CharField())
     def get_sender_name(self, obj):
         """Get the profile name of the sender.
 
@@ -108,6 +111,7 @@ class FriendshipSerializer(serializers.ModelSerializer):
         """
         return self._get_profile_name(obj.sender)
 
+    @extend_schema_field(serializers.CharField())
     def get_receiver_name(self, obj):
         """Get the display name of the receiver.
 
@@ -116,6 +120,7 @@ class FriendshipSerializer(serializers.ModelSerializer):
         """
         return self._get_profile_name(obj.receiver)
 
+    @extend_schema_field(serializers.CharField(allow_null=True))
     def get_sender_avatar(self, obj):
         """Get the avatar URL of the sender.
 
@@ -124,6 +129,7 @@ class FriendshipSerializer(serializers.ModelSerializer):
         """
         return self._get_avatar_url(obj.sender)
 
+    @extend_schema_field(serializers.CharField(allow_null=True))
     def get_receiver_avatar(self, obj):
         """Get the avatar URL of the receiver.
 
