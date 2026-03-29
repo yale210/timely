@@ -14,12 +14,16 @@ from .course_view_test_support import CourseViewTestSupport
 
 
 class CourseViewStaffPermissionsTests(CourseViewTestSupport):
+    """Test cases for course view staff permissions."""
+
     def test_staff_get_requires_lead_or_admin(self):
+        """Test staff get requires lead or admin."""
         self.client.force_authenticate(user=self.student_user)
         response = self.client.get(self.staff_url)
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_staff_get_returns_active_staff(self):
+        """Test staff get returns active staff."""
         CourseStaff.objects.create(
             course=self.course, student=self.other_user, active=True
         )
@@ -32,6 +36,7 @@ class CourseViewStaffPermissionsTests(CourseViewTestSupport):
         self.assertEqual(response.data[0]["user_id"], self.other_user.id)
 
     def test_staff_post_adds_member(self):
+        """Test staff post adds member."""
         self.client.force_authenticate(user=self.teacher_user)
         response = self.client.post(
             self.staff_url, {"user_id": self.other_user.id}, format="json"
@@ -47,12 +52,14 @@ class CourseViewStaffPermissionsTests(CourseViewTestSupport):
         )
 
     def test_staff_post_validates_user_id(self):
+        """Test staff post validates user id."""
         self.client.force_authenticate(user=self.teacher_user)
         response = self.client.post(self.staff_url, {"user_id": 999999}, format="json")
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
     def test_staff_delete_requires_user_id(self):
+        """Test staff delete requires user id."""
         self.client.force_authenticate(user=self.teacher_user)
         response = self.client.delete(self.staff_url, {}, format="json")
 
@@ -60,6 +67,7 @@ class CourseViewStaffPermissionsTests(CourseViewTestSupport):
         self.assertIn("required", response.data["detail"])
 
     def test_staff_delete_removes_staff_member(self):
+        """Test staff delete removes staff member."""
         CourseStaff.objects.create(
             course=self.course, student=self.other_user, active=True
         )
@@ -77,6 +85,7 @@ class CourseViewStaffPermissionsTests(CourseViewTestSupport):
         )
 
     def test_staff_delete_returns_404_when_missing(self):
+        """Test staff delete returns 404 when missing."""
         self.client.force_authenticate(user=self.teacher_user)
         response = self.client.delete(
             self.staff_url, {"user_id": self.other_user.id}, format="json"
@@ -89,6 +98,7 @@ class CourseViewStaffPermissionsTests(CourseViewTestSupport):
     # -------------------------
 
     def test_students_get_returns_only_active_enrollments(self):
+        """Test students get returns only active enrollments."""
         older = CourseEnrollment.objects.create(
             course=self.course,
             student=self.student,
@@ -112,6 +122,7 @@ class CourseViewStaffPermissionsTests(CourseViewTestSupport):
         self.assertEqual(response.data[0]["email"], self.student_user.email)
 
     def test_permissions_get_returns_course_permission_flags(self):
+        """Test permissions get returns course permission flags."""
         self.client.force_authenticate(user=self.teacher_user)
         response = self.client.get(self.permissions_url)
 

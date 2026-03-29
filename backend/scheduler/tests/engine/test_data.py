@@ -61,6 +61,7 @@ class SchedulerDataMixinTests(TestCase):
         )
 
     def test_unscheduled_tasks_respect_locked_and_task_id_filters(self):
+        """Test unscheduled tasks respect locked and task id filters."""
         unlocked = self._task("Unlocked task")
         locked = self._task("Locked task", locked=True)
         ignored = self._task("Ignored task")
@@ -78,6 +79,7 @@ class SchedulerDataMixinTests(TestCase):
         self.assertNotIn(ignored.id, [task.id for task in scheduler.tasks])
 
     def test_scheduled_tasks_and_special_dates_are_loaded(self):
+        """Test scheduled tasks and special dates are loaded."""
         scheduled = self._task(
             "Scheduled task",
             allocation=[
@@ -112,6 +114,7 @@ class SchedulerDataMixinTests(TestCase):
         self.assertEqual(scheduler.special_dates, {self.reference_day})
 
     def test_data_helpers_cover_remaining_minutes_rounding_and_buffers(self):
+        """Test data helpers cover remaining minutes rounding and buffers."""
         scheduler = Scheduler(self.user)
         task = self._task(
             "Buffered task",
@@ -168,6 +171,7 @@ class SchedulerDataMixinTests(TestCase):
         )
 
     def test_working_window_bounds_and_search_dates_follow_preferences(self):
+        """Test working window bounds and search dates follow preferences."""
         scheduler = Scheduler(self.user, max_days_ahead=2)
         task_start = timezone.make_aware(
             datetime.combine(self.reference_day, time(10, 0))
@@ -198,6 +202,7 @@ class SchedulerDataMixinTests(TestCase):
         )
 
     def test_expanded_event_slots_are_cached_per_day(self):
+        """Test expanded event slots are cached per day."""
         scheduler = Scheduler(self.user)
         day_start = timezone.make_aware(datetime.combine(self.reference_day, time.min))
         day_end = timezone.make_aware(datetime.combine(self.reference_day, time.max))

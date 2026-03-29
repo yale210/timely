@@ -1,4 +1,4 @@
-import { renderHook, act } from "@testing-library/react";
+import { renderHook, act, waitFor } from "@testing-library/react";
 import { vi, describe, it, expect, beforeEach } from "vitest";
 import { useRecurrenceScopeActions } from "@/hooks/tasks/useRecurrenceScopeActions";
 import type { Event, EventSubmission, RecurrenceScope } from "@/types";
@@ -53,7 +53,7 @@ describe("useRecurrenceScopeActions Hook", () => {
     expect(result.current.hasRecurrencePatternChanged({ recurrence_interval: "daily", recurrence_end: "2024-01-01" } as EventSubmission)).toBe(true);
   });
 
-  it("handles saving with 'this' scope", () => {
+  it("handles saving with 'this' scope", async () => {
     const { result } = renderHook(() => useRecurrenceScopeActions({
       selectedEvent: mockEvent as unknown as Event,
       onSubmitEvent: mockOnSubmitEvent,
@@ -70,11 +70,13 @@ describe("useRecurrenceScopeActions Hook", () => {
       result.current.handleScopeSelect("this");
     });
 
-    expect(mockOnSubmitEvent).toHaveBeenCalledWith(
-      { title: "Updated" },
-      expect.objectContaining({ scope: "this" })
-    );
-    expect(mockOnClose).toHaveBeenCalled();
+    await waitFor(() => {
+      expect(mockOnSubmitEvent).toHaveBeenCalledWith(
+        { title: "Updated" },
+        expect.objectContaining({ scope: "this" })
+      );
+      expect(mockOnClose).toHaveBeenCalled();
+    });
   });
 
   it("handles saving with 'following' scope via advanced modal", () => {
@@ -147,7 +149,7 @@ describe("useRecurrenceScopeActions Hook", () => {
     vi.unstubAllGlobals();
   });
 
-  it("handles revert to series", () => {
+  it("handles revert to series", async () => {
     const { result } = renderHook(() => useRecurrenceScopeActions({
       selectedEvent: mockEvent as unknown as Event,
       onSubmitEvent: mockOnSubmitEvent,
@@ -160,8 +162,8 @@ describe("useRecurrenceScopeActions Hook", () => {
     });
     expect(result.current.isRevertModalOpen).toBe(true);
 
-    act(() => {
-      result.current.performRevert();
+    await act(async () => {
+      await result.current.performRevert();
     });
 
     expect(mockOnRevertToSeries).toHaveBeenCalledWith(expect.objectContaining({
@@ -203,14 +205,14 @@ describe("useRecurrenceScopeActions Hook", () => {
     expect(ctx).toEqual({ scope: "all" });
   });
 
-  it("performRevert does nothing if onRevertToSeries is missing or event has no anchor", () => {
+  it("performRevert does nothing if onRevertToSeries is missing or event has no anchor", async () => {
     const { result: noCallback } = renderHook(() => useRecurrenceScopeActions({
         selectedEvent: mockEvent as unknown as Event,
         onSubmitEvent: mockOnSubmitEvent,
         onClose: mockOnClose,
     }));
-    act(() => {
-        noCallback.current.performRevert();
+    await act(async () => {
+        await noCallback.current.performRevert();
     });
     expect(mockOnRevertToSeries).not.toHaveBeenCalled();
 
@@ -220,10 +222,9 @@ describe("useRecurrenceScopeActions Hook", () => {
         onRevertToSeries: mockOnRevertToSeries,
         onClose: mockOnClose,
     }));
-    act(() => {
-        noAnchor.current.performRevert();
+    await act(async () => {
+        await noAnchor.current.performRevert();
     });
     expect(mockOnRevertToSeries).not.toHaveBeenCalled();
   });
 });
-

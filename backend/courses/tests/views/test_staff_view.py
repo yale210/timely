@@ -76,6 +76,7 @@ class CourseStaffViewTests(TestCase):
         )
 
     def test_staff_post_reactivates_existing_inactive_staff_member(self):
+        """Test staff post reactivates existing inactive staff member."""
         CourseStaff.objects.create(
             course=self.course,
             student=self.staff_user,

@@ -6,6 +6,12 @@ import * as taskService from "@/services/taskService";
 import { preferenceService } from "@/services/preferenceService";
 import type { Category, Event, Preference, Task } from "@/types";
 
+/**
+ * Loads calendar entities, preferences, and loading/error state.
+ * @param view - Active calendar view.
+ * @param date - Active calendar date.
+ * @returns Calendar data state and fetch helpers.
+ */
 export const useCalendarData = (view: View, date: Date) => {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
@@ -32,6 +38,7 @@ export const useCalendarData = (view: View, date: Date) => {
   >([]);
 
   const hasInitialized = useRef(false);
+  const preferenceRef = useRef<Preference | null>(null);
 
   const fetchTasks = useCallback(async () => {
     setIsTasksLoading(true);
@@ -66,7 +73,7 @@ export const useCalendarData = (view: View, date: Date) => {
   const fetchEvents = useCallback(async (activeView: View, activeDate: Date) => {
     setIsEventsLoading(true);
     try {
-      const nextEvents = await eventService.getEvents(getCalendarWindow(activeView, activeDate, preference));
+      const nextEvents = await eventService.getEvents(getCalendarWindow(activeView, activeDate, preferenceRef.current));
       setEvents(nextEvents);
       setEventError(null);
     } catch (error) {
@@ -76,11 +83,12 @@ export const useCalendarData = (view: View, date: Date) => {
     } finally {
       setIsEventsLoading(false);
     }
-  }, [preference]);
+  }, []);
 
   const fetchPreference = useCallback(async () => {
     try {
       const nextPreference = await preferenceService.getMyPreference();
+      preferenceRef.current = nextPreference;
       setPreference(nextPreference);
     } catch (error) {
       console.error(error);
@@ -117,7 +125,7 @@ export const useCalendarData = (view: View, date: Date) => {
       return;
     }
     void fetchEvents(view, date);
-  }, [date, fetchEvents, preference, view]);
+  }, [date, fetchEvents, view]);
 
   return {
     state: {

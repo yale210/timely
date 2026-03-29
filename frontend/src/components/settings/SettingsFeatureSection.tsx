@@ -10,6 +10,13 @@ interface FeatureRow {
   value: boolean;
 }
 
+const FEATURE_STORAGE_KEYS: Record<FeatureKey, string> = {
+  assessments: "feature_assessments_enabled",
+  gradebook: "feature_gradebook_enabled",
+  pomodoro: "feature_pomodoro_enabled",
+  courses: "feature_courses_enabled",
+};
+
 const SettingsFeatureSection = () => {
   const [featureFlags, setFeatureFlags] = useState(() => ({
     courses: localStorage.getItem("feature_courses_enabled") !== "false",
@@ -52,15 +59,7 @@ const SettingsFeatureSection = () => {
   );
 
   const updateFeature = (key: FeatureKey, value: boolean) => {
-    if (key === "assessments") {
-      localStorage.setItem("feature_assessments_enabled", String(value));
-    } else if (key === "gradebook") {
-      localStorage.setItem("feature_gradebook_enabled", String(value));
-    } else if (key === "courses") {
-      localStorage.setItem("feature_courses_enabled", String(value));
-    } else {
-      localStorage.setItem("feature_pomodoro_enabled", String(value));
-    }
+    localStorage.setItem(FEATURE_STORAGE_KEYS[key], String(value));
     setFeatureFlags((prev) => ({ ...prev, [key]: value }));
     window.dispatchEvent(new Event("feature-flags-changed"));
   };

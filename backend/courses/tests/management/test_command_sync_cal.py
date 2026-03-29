@@ -9,6 +9,8 @@ from django.test import TestCase
 
 
 class SyncCalCommandTests(TestCase):
+    """Test cases for sync cal command."""
+
     @classmethod
     def setUpTestData(cls):
         cls.User = get_user_model()

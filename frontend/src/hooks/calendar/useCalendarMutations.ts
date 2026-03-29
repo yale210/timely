@@ -44,17 +44,46 @@ interface UseCalendarMutationsProps {
   setImportingError: (val: string | null) => void;
 }
 
-export const useCalendarMutations = ({
-  selectedItem, date, view, tasks, categories, preference,
-  fetchTasks, fetchEvents, closeSidebar, setCategories, setTasks,
-  setEvents, setSelectedItem, setScheduleOrder, setIsRescheduling,
-  setReschedulingError, setRescheduleWarnings, setIsExporting,
-  setExportingError, setIsImporting, setImportingError
-}: UseCalendarMutationsProps) => {
+/**
+ * Provides task, event, category, import, export, and reschedule mutations.
+ * @param props - Mutation dependencies and state setters.
+ * @returns Calendar mutation handlers.
+ */
+export const useCalendarMutations = (props: UseCalendarMutationsProps) => {
+  const {
+    selectedItem,
+    date,
+    view,
+    tasks,
+    categories,
+    preference,
+    fetchTasks,
+    fetchEvents,
+    closeSidebar,
+    setCategories,
+    setTasks,
+    setEvents,
+    setSelectedItem,
+    setScheduleOrder,
+    setIsRescheduling,
+    setReschedulingError,
+    setRescheduleWarnings,
+    setIsExporting,
+    setExportingError,
+    setIsImporting,
+    setImportingError,
+  } = props;
 
   const completeSoundRef = useRef<HTMLAudioElement | null>(
     typeof Audio === "undefined" ? null : new Audio(completeSoundUrl),
   );
+
+  // Ref so handleToggleTaskComplete doesn't need `tasks` as a dep (which would
+  // cause it to recreate on every data update and cascade re-renders downstream).
+  const tasksRef = useRef(tasks);
+  tasksRef.current = tasks;
+  const activeTimezone = preference?.timezone ?? moment.tz.guess();
+  const todayStartDate = moment().tz(activeTimezone).format("YYYY-MM-DD");
 
   const submitTask = useCallback(
     async (data: TaskSubmission) => {
@@ -100,6 +129,7 @@ export const useCalendarMutations = ({
         closeSidebar();
       } catch (error) {
         console.error(error);
+        throw error;
       }
     },
     [closeSidebar, date, fetchEvents, selectedItem, view],
@@ -108,7 +138,10 @@ export const useCalendarMutations = ({
   const deleteSelected = useCallback(
     async (context?: EventMutationContext) => {
       try {
-        if (!selectedItem?.id) return;
+        if (!selectedItem?.id) {
+          console.error("There is either no item, or its id is not valid.");
+          return;
+        }
 
         if ("end_time" in selectedItem) {
           await eventService.deleteEvent(selectedItem.id, context);
@@ -121,6 +154,7 @@ export const useCalendarMutations = ({
         closeSidebar();
       } catch (error) {
         console.error(error);
+        throw error;
       }
     },
     [closeSidebar, date, fetchEvents, fetchTasks, selectedItem, view],
@@ -136,6 +170,7 @@ export const useCalendarMutations = ({
         closeSidebar();
       } catch (error) {
         console.error(error);
+        throw error;
       }
     },
     [closeSidebar, date, fetchEvents, selectedItem, view],
@@ -148,7 +183,7 @@ export const useCalendarMutations = ({
 
     try {
       const response = await schedulerService.scheduleTasks({
-        start_date: moment(date).format("YYYY-MM-DD"),
+        start_date: todayStartDate,
         allow_split: true,
         replace_existing: true,
       });
@@ -165,17 +200,18 @@ export const useCalendarMutations = ({
           return {
             taskId: result.task_id,
             title: matchingTask?.title ?? `Task #${result.task_id}`,
-            reason: result.reason ?? "The scheduler could not find enough time.",
+            reason: result.reason ?? "The scheduler could not find enough time before the deadline.",
           };
         }),
       );
       await fetchTasks();
     } catch (error) {
+      console.error(error);
       setReschedulingError("Failed to reschedule tasks.");
     } finally {
       setIsRescheduling(false);
     }
-  }, [date, fetchTasks, tasks, setIsRescheduling, setReschedulingError, setRescheduleWarnings, setScheduleOrder]);
+  }, [fetchTasks, tasks, todayStartDate, setIsRescheduling, setReschedulingError, setRescheduleWarnings, setScheduleOrder]);
 
   const exportEvents = useCallback(async () => {
     setIsExporting(true);
@@ -193,6 +229,7 @@ export const useCalendarMutations = ({
         document.body.removeChild(link);
       }
     } catch (error) {
+      console.error(error);
       setExportingError("Failed to export events.");
     } finally {
       setIsExporting(false);
@@ -205,7 +242,9 @@ export const useCalendarMutations = ({
 
     try {
       await importService.importEvents(file);
+      importService.pageReloader.reload();
     } catch (error) {
+      console.error(error);
       setImportingError("Failed to import events.");
     } finally {
       setIsImporting(false);
@@ -253,7 +292,8 @@ export const useCalendarMutations = ({
       });
       try {
         await taskService.updateTask(id, { categories: nextCategoryIds });
-      } catch (error) {
+      } catch (updateError) {
+        console.error(updateError);
         await fetchTasks();
       }
     },
@@ -262,11 +302,11 @@ export const useCalendarMutations = ({
 
   const handleToggleTaskComplete = useCallback(
     async (taskId: number) => {
-      const task = tasks.find((entry) => entry.id === taskId);
+      const task = tasksRef.current.find((entry) => entry.id === taskId);
       if (!task) return;
-      
+
       const isSoundDisabled = preference?.disable_sound_effects ?? (typeof window !== "undefined" && localStorage.getItem("disable_sound_effects") === "true");
-      
+
       try {
         if (!task.completed && completeSoundRef.current && !isSoundDisabled) {
           completeSoundRef.current.currentTime = 0;
@@ -282,7 +322,7 @@ export const useCalendarMutations = ({
         console.error(error);
       }
     },
-    [fetchTasks, preference?.disable_sound_effects, tasks],
+    [fetchTasks, preference?.disable_sound_effects],
   );
 
   return {

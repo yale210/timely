@@ -20,6 +20,77 @@ from courses.serializers.course_serializer import (
 from courses.views.base_view import CourseViewSetBase
 
 
+def _inactive_course_response():
+    return Response({"detail": "Course is not active."}, status=400)
+
+
+def _missing_student_response():
+    return Response(
+        {"detail": "Student profile not found for the current user."},
+        status=404,
+    )
+
+
+def _user_student_not_found_response():
+    return Response(
+        {"detail": "Student profile not found for this user."},
+        status=status.HTTP_404_NOT_FOUND,
+    )
+
+
+def _unenrolled_response():
+    return Response(
+        {"detail": "You are not enrolled in this course."},
+        status=404,
+    )
+
+
+def _target_not_enrolled_response():
+    return Response(
+        {"detail": "User is not enrolled in this course."},
+        status=status.HTTP_404_NOT_FOUND,
+    )
+
+
+def _join_code_created_response(join_code):
+    return Response(
+        {
+            "id": join_code.id,
+            "code": join_code.code,
+            "expires_at": join_code.expires_at,
+            "active": join_code.active,
+            "created_at": join_code.created_at,
+        },
+        status=status.HTTP_201_CREATED,
+    )
+
+
+def _generate_unique_join_code() -> str:
+    code = token_urlsafe(5)
+    while CourseJoinCode.objects.filter(code=code).exists():
+        code = token_urlsafe(5)
+    return code
+
+
+def _get_enrollment_or_response(course, student, missing_response):
+    try:
+        return CourseEnrollment.objects.get(course=course, student=student), None
+    except CourseEnrollment.DoesNotExist:
+        return None, missing_response
+
+
+def _deactivate_enrollment(enrollment):
+    enrollment.active = False
+    enrollment.save(update_fields=["active"])
+
+
+def _get_target_student_for_course(user_id):
+    student = Student.objects.filter(user_id=user_id).first()
+    if student is None:
+        return None, _user_student_not_found_response()
+    return student, None
+
+
 class CourseMembershipMixin(CourseViewSetBase):
     """Mixin providing membership-related actions for Course viewsets.
 
@@ -74,7 +145,7 @@ class CourseMembershipMixin(CourseViewSetBase):
         student = self._get_student_for_user(request.user)
 
         if not course.active:
-            return Response({"detail": "Course is not active."}, status=400)
+            return _inactive_course_response()
 
         _, created = self._get_or_create_active_enrollment(course, student)
         return Response(
@@ -99,20 +170,17 @@ class CourseMembershipMixin(CourseViewSetBase):
         student = Student.objects.filter(user=request.user).first()
 
         if not student:
-            return Response(
-                {"detail": "Student profile not found for the current user."},
-                status=404,
-            )
+            return _missing_student_response()
 
-        try:
-            enrollment = CourseEnrollment.objects.get(course=course, student=student)
-        except CourseEnrollment.DoesNotExist:
-            return Response(
-                {"detail": "You are not enrolled in this course."}, status=404
-            )
+        enrollment, error_response = _get_enrollment_or_response(
+            course,
+            student,
+            _unenrolled_response(),
+        )
+        if error_response is not None:
+            return error_response
 
-        enrollment.active = False
-        enrollment.save(update_fields=["active"])
+        _deactivate_enrollment(enrollment)
 
         return Response(
             {"message": "Successfully left the course."},
@@ -143,23 +211,19 @@ class CourseMembershipMixin(CourseViewSetBase):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        student = Student.objects.filter(user_id=user_id).first()
-        if not student:
-            return Response(
-                {"detail": "Student profile not found for this user."},
-                status=status.HTTP_404_NOT_FOUND,
-            )
+        student, error_response = _get_target_student_for_course(user_id)
+        if error_response is not None:
+            return error_response
 
-        try:
-            enrollment = CourseEnrollment.objects.get(course=course, student=student)
-        except CourseEnrollment.DoesNotExist:
-            return Response(
-                {"detail": "User is not enrolled in this course."},
-                status=status.HTTP_404_NOT_FOUND,
-            )
+        enrollment, error_response = _get_enrollment_or_response(
+            course,
+            student,
+            _target_not_enrolled_response(),
+        )
+        if error_response is not None:
+            return error_response
 
-        enrollment.active = False
-        enrollment.save(update_fields=["active"])
+        _deactivate_enrollment(enrollment)
 
         return Response(
             {"message": "User removed from course."},
@@ -219,11 +283,7 @@ class CourseMembershipMixin(CourseViewSetBase):
         """
         course = self.get_course(pk)
         self.check_object_permissions(request, course)
-
-        # Generate a unique 5-character URL-safe token
-        code = token_urlsafe(5)
-        while CourseJoinCode.objects.filter(code=code).exists():
-            code = token_urlsafe(5)
+        code = _generate_unique_join_code()
 
         serializer = CourseJoinCodeCreateSerializer(
             data={
@@ -235,14 +295,4 @@ class CourseMembershipMixin(CourseViewSetBase):
         )
         serializer.is_valid(raise_exception=True)
         join_code = serializer.save()
-
-        return Response(
-            {
-                "id": join_code.id,
-                "code": join_code.code,
-                "expires_at": join_code.expires_at,
-                "active": join_code.active,
-                "created_at": join_code.created_at,
-            },
-            status=status.HTTP_201_CREATED,
-        )
+        return _join_code_created_response(join_code)

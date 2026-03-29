@@ -13,6 +13,8 @@ from .calendar_serializer_test_support import CalendarSerializerTestSupport
 
 
 class CalendarSerializerAllocationConflictTests(CalendarSerializerTestSupport):
+    """Test cases for calendar serializer allocation conflict."""
+
     def test_validate_allocation_slots_rejects_overlap_with_events_other_tasks_and_category_limits(
         self,
     ):

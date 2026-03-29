@@ -37,9 +37,7 @@ def _build_expanded_content(
         if overrides is not None
         else list(event.overrides.prefetch_related("categories").all())
     )
-    overrides_by_original = {
-        override.original_start_time: override for override in loaded_overrides
-    }
+    overrides_by_original = _index_overrides_by_original_start(loaded_overrides)
     return (
         range_start,
         range_end,
@@ -50,6 +48,13 @@ def _build_expanded_content(
         loaded_overrides,
         overrides_by_original,
     )
+
+
+def _index_overrides_by_original_start(
+    loaded_overrides: list[Any],
+) -> dict[datetime, Any]:
+    """Index overrides by their original occurrence anchor."""
+    return {override.original_start_time: override for override in loaded_overrides}
 
 
 def _should_include_base_occurrence(
@@ -142,11 +147,7 @@ def _build_occurrence_instance(
     override = overrides_by_original.get(occurrence_start)
     if override is not None:
         return _build_override_occurrence(
-            override,
-            event,
-            range_start,
-            range_end,
-            reminder_cache,
+            override, event, range_start, range_end, reminder_cache
         )
     return _build_base_or_skipped_occurrence(
         event,
@@ -210,6 +211,52 @@ def _build_standalone_override_instances(
     ]
 
 
+def _append_occurrence_instance(
+    instances: list[ExpandedEventInstance],
+    seen_override_ids: set[int],
+    instance: ExpandedEventInstance | None,
+    seen_override_id: int | None,
+) -> None:
+    """Append one built occurrence instance and track consumed overrides."""
+    if seen_override_id is not None:
+        seen_override_ids.add(seen_override_id)
+    if instance is not None:
+        instances.append(instance)
+
+
+def _consume_occurrence_start(
+    event: Any,
+    occurrence_start: datetime,
+    range_start: datetime,
+    range_end: datetime,
+    duration: Any,
+    exception_dates: set[str],
+    overrides_by_original: dict[datetime, Any],
+    category_cache: list[Any],
+    reminder_cache: list[dict[str, Any]],
+    instances: list[ExpandedEventInstance],
+    seen_override_ids: set[int],
+) -> None:
+    """Build and record one generated occurrence anchor."""
+    instance, seen_override_id = _build_occurrence_instance(
+        event,
+        occurrence_start,
+        range_start,
+        range_end,
+        duration,
+        exception_dates,
+        overrides_by_original,
+        category_cache,
+        reminder_cache,
+    )
+    _append_occurrence_instance(
+        instances,
+        seen_override_ids,
+        instance,
+        seen_override_id,
+    )
+
+
 def _collect_occurrence_instances(
     event: Any,
     range_start: datetime,
@@ -229,7 +276,7 @@ def _collect_occurrence_instances(
     instances: list[ExpandedEventInstance] = []
     seen_override_ids: set[int] = set()
     for occurrence_start in occurrence_generator(event, range_start, range_end):
-        instance, seen_override_id = _build_occurrence_instance(
+        _consume_occurrence_start(
             event,
             occurrence_start,
             range_start,
@@ -239,11 +286,9 @@ def _collect_occurrence_instances(
             overrides_by_original,
             category_cache,
             reminder_cache,
+            instances,
+            seen_override_ids,
         )
-        if seen_override_id is not None:
-            seen_override_ids.add(seen_override_id)
-        if instance is not None:
-            instances.append(instance)
     return instances, seen_override_ids
 
 

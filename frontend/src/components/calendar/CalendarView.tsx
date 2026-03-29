@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useMemo, useRef, type CSSProperties } from "react";
+import { memo, useCallback, useEffect, useLayoutEffect, useMemo, useRef, type CSSProperties } from "react";
 import moment from "moment";
 import { Calendar, type Components, type Formats, Views } from "react-big-calendar";
 import withDragAndDrop from "react-big-calendar/lib/addons/dragAndDrop";
@@ -14,6 +14,9 @@ import { getStoredUserTimezone, getZonedDateParts } from "@/utils/userTimezone";
 
 const DragAndDropCalendar = withDragAndDrop<CalendarEntry>(Calendar);
 const DEFAULT_DRAG_SNAP_MINUTES = 5;
+
+// Module-level stable references — never change, so they never cause re-renders.
+const alwaysTrue = () => true;
 
 interface CalendarViewProps {
   state: Pick<
@@ -61,6 +64,16 @@ const CalendarView = ({
   const timeFormat = state.preference?.time_format ?? getStoredTimeFormat();
   const weekStartsOn = state.preference?.week_starts_on ?? getStoredWeekStartsOn();
 
+  // Destructure so the React Compiler can track individual deps rather than the whole object.
+  const {
+    setTimeGutterWidth,
+    handleToggleTaskComplete,
+    handleEventDrop,
+    handleEventResize,
+    selectSlot,
+    selectEntry,
+  } = actions;
+
   useEffect(() => {
     moment.updateLocale("en", {
       week: { dow: weekStartsOn === "sunday" ? 0 : 1 },
@@ -84,7 +97,7 @@ const CalendarView = ({
       }
       const nextWidth = Math.ceil(gutter.getBoundingClientRect().width);
       if (nextWidth > 0) {
-        actions.setTimeGutterWidth(nextWidth);
+        setTimeGutterWidth(nextWidth);
       }
     };
 
@@ -94,7 +107,7 @@ const CalendarView = ({
       window.cancelAnimationFrame(frame);
       window.removeEventListener("resize", measureGutter);
     };
-  }, [actions, state.date, state.calendarEntries.length, state.view]);
+  }, [setTimeGutterWidth, state.date, state.calendarEntries.length, state.view]);
 
   useEffect(() => {
     if (state.view !== Views.WEEK && state.view !== Views.DAY) {
@@ -221,7 +234,7 @@ const CalendarView = ({
               checked={Boolean(event.taskData?.completed)}
               onChange={(e) => {
                 e.stopPropagation();
-                void actions.handleToggleTaskComplete(event.sourceId);
+                void handleToggleTaskComplete(event.sourceId);
               }}
               onClick={(e) => e.stopPropagation()}
               className="mt-1 task-event-checkbox"
@@ -235,8 +248,64 @@ const CalendarView = ({
         );
       },
     }),
-    [actions, timeFormat],
+    [handleToggleTaskComplete, timeFormat],
   );
+
+  const onEventDrop = useCallback(
+    (args: Parameters<typeof handleEventDrop>[0]) => { void handleEventDrop(args); },
+    [handleEventDrop],
+  );
+
+  const onEventResize = useCallback(
+    (args: Parameters<typeof handleEventResize>[0]) => { void handleEventResize(args); },
+    [handleEventResize],
+  );
+
+  const eventPropGetter = useCallback((event: CalendarEntry) => {
+    const className = [
+      "event-slot",
+      event.kind === "task" ? "task-event" : "",
+      event.repeat ? "is-repeat" : "",
+      event.split ? "is-split" : "",
+      event.oneGo ? "is-onego" : "",
+      event.kind === "event" ? "is-event" : "",
+      event.kind === "task" && typeof event.scheduleIndex === "number" ? "is-just-scheduled" : "",
+    ]
+      .filter(Boolean)
+      .join(" ");
+    const overrideColour =
+      event.kind === "task"
+        ? getOverrideColour(event.categories)
+        : getOverrideColour(event.eventData?.categories);
+    const fallbackColour =
+      event.kind === "task"
+        ? event.taskData?.colour ?? "#3b82f6"
+        : event.eventData?.colour ?? "#f97316";
+    const appliedColour = overrideColour ?? fallbackColour;
+
+    const style: CSSProperties = {};
+    if (event.kind === "task" && typeof event.scheduleIndex === "number") {
+      style.animationDelay = `${event.scheduleIndex * 120}ms`;
+    }
+    if (appliedColour) {
+      style.backgroundColor = hexToRgba(appliedColour, 0.5);
+      style.borderLeft = `4px solid ${appliedColour}`;
+      (style as Record<string, string>)["--event-stripe-color"] = hexToRgba(appliedColour, 0.6);
+      style.color = "#000000";
+    }
+
+    return { className, style };
+  }, []);
+
+  const slotPropGetter = useCallback((slotDate: Date) => {
+    if (
+      (state.view !== Views.WEEK && state.view !== Views.DAY) ||
+      !isOutsidePreferredDayWindow(slotDate, state.preference)
+    ) {
+      return {};
+    }
+    return { className: "calendar-off-hours-slot" };
+  }, [state.view, state.preference]);
 
   const formats = useMemo<Formats>(() => {
     const timeLabel = timeFormat === "24h" ? "HH:mm" : "h:mm A";
@@ -273,71 +342,20 @@ const CalendarView = ({
             onNavigate={actions.setDate}
             step={dragSnapMinutes}
             timeslots={dragSnapTimeslots}
-            slotPropGetter={(slotDate: Date) => {
-              if ((state.view !== Views.WEEK && state.view !== Views.DAY) || !isOutsidePreferredDayWindow(slotDate, state.preference)) {
-                return {};
-              }
-
-              return {
-                className: "calendar-off-hours-slot",
-              };
-            }}
+            slotPropGetter={slotPropGetter}
             selectable="ignoreEvents"
-            onSelectSlot={actions.selectSlot}
-            onSelectEvent={(entry) => {
-              actions.selectEntry(entry);
-            }}
-            draggableAccessor={() => true}
-            resizableAccessor={() => true}
-            onEventDrop={(args) => {
-              void actions.handleEventDrop(args);
-            }}
-            onEventResize={(args) => {
-              void actions.handleEventResize(args);
-            }}
+            onSelectSlot={selectSlot}
+            onSelectEvent={selectEntry}
+            draggableAccessor={alwaysTrue}
+            resizableAccessor={alwaysTrue}
+            onEventDrop={onEventDrop}
+            onEventResize={onEventResize}
             formats={formats}
             showMultiDayTimes
             toolbar={false}
             className="h-full"
             components={components}
-            eventPropGetter={(event: CalendarEntry) => {
-              const className = [
-                "event-slot",
-                event.kind === "task" ? "task-event" : "",
-                event.repeat ? "is-repeat" : "",
-                event.split ? "is-split" : "",
-                event.oneGo ? "is-onego" : "",
-                event.kind === "event" ? "is-event" : "",
-                event.kind === "task" && typeof event.scheduleIndex === "number" ? "is-just-scheduled" : "",
-              ]
-                .filter(Boolean)
-                .join(" ");
-              const overrideColour =
-                event.kind === "task"
-                  ? getOverrideColour(event.categories)
-                  : getOverrideColour(event.eventData?.categories);
-              const fallbackColour =
-                event.kind === "task"
-                  ? event.taskData?.colour ?? "#3b82f6"
-                  : event.eventData?.colour ?? "#f97316";
-              const appliedColour = overrideColour ?? fallbackColour;
-
-              const style: CSSProperties = {};
-              if (event.kind === "task" && typeof event.scheduleIndex === "number") {
-                style.animationDelay = `${event.scheduleIndex * 120}ms`;
-              }
-              if (appliedColour) {
-                style.backgroundColor = hexToRgba(appliedColour, 0.5);
-                style.borderLeft = `4px solid ${appliedColour}`;
-                (style as Record<string, string>)["--event-stripe-color"] = hexToRgba(
-                  appliedColour,
-                  0.6,
-                );
-                style.color = "#000000";
-              }
-
-              return { className, style };
-            }}
+            eventPropGetter={eventPropGetter}
           />
         </DndProvider>
       </div>
@@ -345,4 +363,4 @@ const CalendarView = ({
   );
 };
 
-export default CalendarView;
+export default memo(CalendarView);

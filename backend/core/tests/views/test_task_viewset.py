@@ -73,6 +73,7 @@ class TaskViewSetTests(TestCase):
         return self.client.patch(f"/api/tasks/{task.id}/", payload, format="json")
 
     def test_task_list_filters_by_user(self):
+        """Test task list filters by user."""
         self.create_task(
             user=self.other_user,
             title="Other user task",
@@ -85,6 +86,7 @@ class TaskViewSetTests(TestCase):
         self.assertEqual(len(response.data), 2)
 
     def test_filter_by_completed(self):
+        """Test filter by completed."""
         response = self.client.get("/api/tasks/?completed=true")
         self.assertEqual(len(response.data), 1)
         self.assertEqual(response.data[0]["id"], self.task2.id)
@@ -94,11 +96,13 @@ class TaskViewSetTests(TestCase):
         self.assertEqual(response.data[0]["id"], self.task1.id)
 
     def test_filter_by_category(self):
+        """Test filter by category."""
         response = self.client.get(f"/api/tasks/?categories={self.category1.id}")
         self.assertEqual(len(response.data), 1)
         self.assertEqual(response.data[0]["id"], self.task1.id)
 
     def test_ordering(self):
+        """Test ordering."""
         response = self.client.get("/api/tasks/?ordering=-importance")
         self.assertEqual(response.data[0]["id"], self.task2.id)
 
@@ -106,6 +110,7 @@ class TaskViewSetTests(TestCase):
         self.assertEqual(response.data[0]["id"], self.task1.id)
 
     def test_filter_by_date_range(self):
+        """Test filter by date range."""
         start_date = (self.now + datetime.timedelta(hours=12)).isoformat()
         import urllib.parse
 
@@ -115,10 +120,12 @@ class TaskViewSetTests(TestCase):
         self.assertEqual(response.data[0]["id"], self.task1.id)
 
     def test_task_list_requires_authentication(self):
+        """Test task list requires authentication."""
         response = APIClient().get("/api/tasks/")
         self.assertIn(response.status_code, {401, 403})
 
     def test_create_task_via_api(self):
+        """Test create task via api."""
         data = {
             "title": "New API Task",
             "estimated_minutes": 60,
@@ -136,6 +143,7 @@ class TaskViewSetTests(TestCase):
         self.assertEqual(new_task.importance, 7)
 
     def test_patch_task_allocation_rejects_overlap_with_event(self):
+        """Test patch task allocation rejects overlap with event."""
         event_start = self.now + datetime.timedelta(hours=2)
         event_end = event_start + datetime.timedelta(hours=1)
         Event.objects.create(
@@ -151,6 +159,7 @@ class TaskViewSetTests(TestCase):
         self.assertIn("allocation", response.data)
 
     def test_patch_task_allocation_rejects_buffer_overlap_with_event(self):
+        """Test patch task allocation rejects buffer overlap with event."""
         event_start = self.now + datetime.timedelta(hours=3)
         event_end = event_start + datetime.timedelta(hours=1)
         Event.objects.create(
@@ -171,6 +180,7 @@ class TaskViewSetTests(TestCase):
         self.assertIn("allocation", response.data)
 
     def test_patch_task_allocation_syncs_total_task_allocations(self):
+        """Test patch task allocation syncs total task allocations."""
         allocation_start = self.now + datetime.timedelta(days=1, hours=2)
         allocation_middle = allocation_start + datetime.timedelta(minutes=30)
         allocation_end = allocation_middle + datetime.timedelta(minutes=30)
@@ -189,6 +199,7 @@ class TaskViewSetTests(TestCase):
         self.assertEqual(self.task1.total_task_allocations, 2)
 
     def test_patch_task_allocation_rejects_category_daily_limit_overrun(self):
+        """Test patch task allocation rejects category daily limit overrun."""
         self.category1.max_daily_study_time = 60
         self.category1.save(update_fields=["max_daily_study_time"])
 
@@ -223,6 +234,7 @@ class TaskViewSetTests(TestCase):
         self.assertIn("allocation", response.data)
 
     def test_patch_task_allocation_rejects_buffer_overlap_with_other_task(self):
+        """Test patch task allocation rejects buffer overlap with other task."""
         other_start = self.now + datetime.timedelta(days=1, hours=4)
         other_end = other_start + datetime.timedelta(minutes=30)
         self.create_task(
@@ -244,6 +256,7 @@ class TaskViewSetTests(TestCase):
         self.assertIn("allocation", response.data)
 
     def test_patch_task_buffer_fields_persist(self):
+        """Test patch task buffer fields persist."""
         response = self.patch_task(
             {"buffer_before_minutes": 25, "buffer_after_minutes": 35}
         )
@@ -253,6 +266,7 @@ class TaskViewSetTests(TestCase):
         self.assertEqual(self.task1.buffer_after_minutes, 35)
 
     def test_patch_task_completed_minutes_persist(self):
+        """Test patch task completed minutes persist."""
         response = self.patch_task({"completed_minutes": 20})
         self.assertEqual(response.status_code, 200)
         self.task1.refresh_from_db()
@@ -260,6 +274,7 @@ class TaskViewSetTests(TestCase):
         self.assertFalse(self.task1.completed)
 
     def test_patch_task_completed_true_clears_existing_allocation(self):
+        """Test patch task completed true clears existing allocation."""
         allocation_start = self.now + datetime.timedelta(days=1, hours=2)
         allocation_end = allocation_start + datetime.timedelta(minutes=30)
         self.task1.allocation = [self.allocation_slot(allocation_start, allocation_end)]
@@ -277,6 +292,7 @@ class TaskViewSetTests(TestCase):
     def test_patch_task_buffer_only_shows_reschedule_message_when_existing_schedule_conflicts(
         self,
     ):
+        """Test patch task buffer only shows reschedule message when existing schedule conflicts."""
         allocation_start = self.now + datetime.timedelta(days=1, hours=1)
         allocation_end = allocation_start + datetime.timedelta(minutes=30)
         self.task1.allocation = [self.allocation_slot(allocation_start, allocation_end)]
@@ -306,6 +322,7 @@ class TaskViewSetTests(TestCase):
         )
 
     def test_save_and_reschedule_reoptimizes_all_tasks_for_new_buffer(self):
+        """Test save and reschedule reoptimizes all tasks for new buffer."""
         allocation_start = self.now + datetime.timedelta(days=1, hours=1)
         allocation_end = allocation_start + datetime.timedelta(minutes=30)
         self.task1.allocation = [self.allocation_slot(allocation_start, allocation_end)]
@@ -350,6 +367,7 @@ class TaskViewSetTests(TestCase):
         )
 
     def test_save_and_reschedule_keeps_task_changes_when_rescheduling_fails(self):
+        """Test save and reschedule keeps task changes when rescheduling fails."""
         allocation_start = self.now + datetime.timedelta(days=1, hours=1)
         allocation_end = allocation_start + datetime.timedelta(minutes=30)
         self.task1.allocation = [self.allocation_slot(allocation_start, allocation_end)]

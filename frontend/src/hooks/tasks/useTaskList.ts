@@ -1,41 +1,11 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
-import moment from "moment";
-import * as taskService from "@/services/taskService";
-import * as categoryService from "@/services/categoryService";
-import { type Category, type Task, type TaskSubmission, type TaskUpdatedResponse } from "@/types";
 import { useThemeFont } from "@/hooks/common/useThemeFont";
-import { emitXpGained } from "@/utils/xpEvents";
-import { emitLevelup } from "@/utils/levelUpEvent";
-import { hasTaskAllocationRescheduleConflict } from "@/utils/apiErrors";
-
-type TaskCompletionFilter = "all" | "completed" | "pending";
-
-interface TaskListSections {
-  pastTasks: Task[];
-  overdueTasks: Task[];
-  todayTasks: Task[];
-  upcomingTasks: Task[];
-  completedTasks: Task[];
-  groupedUpcomingTasks: Record<string, Task[]>;
-  sortedUpcomingDates: string[];
-}
-
-interface TaskListState {
-  tasks: Task[];
-  categories: Category[];
-  isSidebarOpen: boolean;
-  selectedTask: Task | undefined;
-  warning: string | null;
-  search: string;
-  sortBy: string;
-  filters: {
-    category: number | null;
-    completed: TaskCompletionFilter;
-    highImportance: boolean;
-    quickWins: boolean;
-  };
-  sections: TaskListSections;
-}
+import { useTaskListState } from "@/hooks/tasks/useTaskListState";
+import { useTaskListQueries } from "@/hooks/tasks/useTaskListQueries";
+import { useTaskListUiActions } from "@/hooks/tasks/useTaskListUiActions";
+import { useTaskListMutations } from "@/hooks/tasks/useTaskListMutations";
+import { useTaskListDerivedState } from "@/hooks/tasks/useTaskListDerivedState";
+import type { Category, Task, TaskSubmission } from "@/types";
+import type { TaskCompletionFilter, TaskListSections, TaskListState } from "@/hooks/tasks/taskListTypes";
 
 interface TaskListActions {
   setSearch: (value: string) => void;
@@ -65,360 +35,74 @@ interface UseTaskListReturn {
   actions: TaskListActions;
 }
 
+export type { TaskCompletionFilter, TaskListSections, TaskListState };
+
+function buildTaskListStateResult(
+  state: ReturnType<typeof useTaskListState>,
+  derived: ReturnType<typeof useTaskListDerivedState>,
+): UseTaskListReturn["state"] {
+  return {
+    tasks: state.tasks,
+    categories: state.categories,
+    isSidebarOpen: state.isSidebarOpen,
+    selectedTask: state.selectedTask,
+    warning: state.warning,
+    search: state.search,
+    sortBy: state.sortBy,
+    filters: {
+      category: state.filterCategory,
+      completed: state.filterCompleted,
+      highImportance: state.filterHighImportance,
+      quickWins: state.filterQuickWins,
+    },
+    sections: derived.sections,
+  };
+}
+
+function buildTaskListActionsResult(
+  queries: ReturnType<typeof useTaskListQueries>,
+  uiActions: ReturnType<typeof useTaskListUiActions>,
+  mutations: ReturnType<typeof useTaskListMutations>,
+  derived: ReturnType<typeof useTaskListDerivedState>,
+): UseTaskListReturn["actions"] {
+  return {
+    ...uiActions,
+    ...mutations,
+    refresh: queries.refresh,
+    formatDayLabel: derived.formatDayLabel,
+  };
+}
+
+function buildTaskListResult(
+  state: ReturnType<typeof useTaskListState>,
+  queries: ReturnType<typeof useTaskListQueries>,
+  uiActions: ReturnType<typeof useTaskListUiActions>,
+  mutations: ReturnType<typeof useTaskListMutations>,
+  derived: ReturnType<typeof useTaskListDerivedState>,
+): UseTaskListReturn {
+  return {
+    state: buildTaskListStateResult(state, derived),
+    loading: state.loading,
+    error: state.error,
+    actions: buildTaskListActionsResult(queries, uiActions, mutations, derived),
+  };
+}
+
 /**
  * Provides state and actions for the tasks page.
+ * @returns The structured task-list state, loading state, errors, and actions.
  */
 export const useTaskList = (): UseTaskListReturn => {
   useThemeFont();
-
-const [tasks, setTasks] = useState<Task[]>([]);
-const [categories, setCategories] = useState<Category[]>([]);
-const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-const [selectedTask, setSelectedTask] = useState<Task | undefined>(undefined);
-const [search, setSearch] = useState("");
-const [sortBy, setSortBy] = useState("deadline");
-const [filterCategory, setFilterCategory] = useState<number | null>(null);
-const [filterCompleted, setFilterCompleted] = useState<TaskCompletionFilter>("all");
-const [filterHighImportance, setFilterHighImportance] = useState(false);
-const [filterQuickWins, setFilterQuickWins] = useState(false);
-const [loading, setLoading] = useState(false);
-const [error, setError] = useState<string | null>(null);
-const [warning, setWarning] = useState<string | null>(null);
-
-const fetchTasks = useCallback(async () => {
-  setLoading(true);
-  try {
-    const params: Record<string, string | number> = {
-      ordering: sortBy,
-    };
-
-    if (filterCategory) {
-      params.categories = filterCategory;
-    }
-
-    if (filterCompleted === "completed") {
-      params.completed = "true";
-    } else if (filterCompleted === "pending") {
-      params.completed = "false";
-    }
-
-    const data = await taskService.getTasks(params);
-    setTasks(data);
-    setError(null);
-  } catch (fetchTasksError) {
-    console.error(fetchTasksError);
-    setError("Failed to load tasks.");
-  } finally {
-    setLoading(false);
-  }
-}, [filterCategory, filterCompleted, sortBy]);
-
-const fetchCategories = useCallback(async () => {
-  try {
-    const data = await taskService.getCategories();
-    setCategories(data);
-  } catch (fetchCategoriesError) {
-    console.error(fetchCategoriesError);
-  }
-}, []);
-
-const refresh = useCallback(async () => {
-  await fetchTasks();
-  await fetchCategories();
-}, [fetchCategories, fetchTasks]);
-
-useEffect(() => {
-  void refresh();
-}, [refresh]);
-
-  const toggleComplete = useCallback(
-    async (id: number) => {
-      const task = tasks.find((item) => item.id === id);
-      if (!task) {
-        return;
-      }
-
-      try {
-        const nextCompleted = !task.completed;
-        const response = await taskService.updateTask(
-          id,
-          {
-            completed: nextCompleted,
-            completed_minutes: nextCompleted ? task.estimated_minutes : 0,
-          },
-        )
-        if (nextCompleted && !task.completed) {
-          const expDelta = 10 + 2 * task.importance;
-          emitXpGained(expDelta);
-        }
-        if (response.level_up && response.new_level != null) {
-          emitLevelup(response.new_level)
-        }
-        await fetchTasks();
-      } catch (toggleError) {
-        console.error(toggleError);
-      }
-    },
-  [fetchTasks, tasks],
-);
-
-const submitTask = useCallback(
-  async (data: TaskSubmission) => {
-    try {
-      let savedTask: TaskUpdatedResponse | Task | null = null;
-      if (selectedTask) {
-        const bufferBeforeChanged =
-          typeof data.buffer_before_minutes === "number" &&
-          data.buffer_before_minutes !== (selectedTask.buffer_before_minutes ?? 0);
-        const bufferAfterChanged =
-          typeof data.buffer_after_minutes === "number" &&
-          data.buffer_after_minutes !== (selectedTask.buffer_after_minutes ?? 0);
-        const completedMinutesChanged =
-          typeof data.completed_minutes === "number" &&
-          data.completed_minutes !== (selectedTask.completed_minutes ?? 0);
-        savedTask = bufferBeforeChanged || bufferAfterChanged || completedMinutesChanged
-          ? await taskService.saveAndRescheduleTask(
-              selectedTask.id,
-              data,
-              moment().format("YYYY-MM-DD"),
-            )
-          : await taskService.updateTask(selectedTask.id, data);
-      } else {
-        savedTask = await taskService.createTask(data);
-      }
-      if (savedTask) {
-        setSelectedTask(savedTask);
-        setWarning(
-          "reschedule_warning" in savedTask ? savedTask.reschedule_warning ?? null : null,
-        );
-      }
-      await fetchTasks();
-    } catch (submitError) {
-      if (
-        selectedTask
-        && (selectedTask.allocation?.length ?? 0) > 0
-        && hasTaskAllocationRescheduleConflict(submitError)
-      ) {
-        const savedTask = await taskService.saveAndRescheduleTask(
-          selectedTask.id,
-          data,
-          moment().format("YYYY-MM-DD"),
-        );
-        setSelectedTask(savedTask);
-        setWarning(
-          "reschedule_warning" in savedTask ? savedTask.reschedule_warning ?? null : null,
-        );
-        await fetchTasks();
-        return;
-      }
-      console.error(submitError);
-      throw submitError;
-    }
-  },
-  [fetchTasks, selectedTask],
-);
-
-const deleteTask = useCallback(
-  async (id: number) => {
-    try {
-      await taskService.deleteTask(id);
-      await fetchTasks();
-    } catch (deleteError) {
-      console.error(deleteError);
-    }
-  },
-  [fetchTasks],
-);
-
-const updateTaskCategories = useCallback(
-  async (id: number, nextCategoryIds: number[]) => {
-    const nextCategoryObjects = categories.filter((category) => nextCategoryIds.includes(category.id));
-    setTasks((prev) => prev.map((task) => (
-      task.id === id ? { ...task, categories: nextCategoryObjects } : task
-    )));
-    setSelectedTask((prev) => (
-      prev?.id === id ? { ...prev, categories: nextCategoryObjects } : prev
-    ));
-    try {
-      await taskService.updateTask(id, { categories: nextCategoryIds });
-    } catch (updateError) {
-      console.error(updateError);
-      await fetchTasks();
-    }
-  },
-  [categories, fetchTasks],
-);
-
-const createCategory = useCallback(async (text: string) => {
-  const trimmed = text.trim();
-  if (!trimmed) {
-    throw new Error("Category name cannot be empty.");
-  }
-  const created = await categoryService.createCategory(trimmed);
-  setCategories((prev) => {
-    const exists = prev.some((category) => category.id === created.id);
-    const next = exists ? prev : [...prev, created];
-    return [...next].sort((a, b) => a.text.localeCompare(b.text));
+  const state = useTaskListState();
+  const queries = useTaskListQueries(state);
+  const uiActions = useTaskListUiActions(state);
+  const mutations = useTaskListMutations({ ...state, fetchTasks: queries.fetchTasks });
+  const derived = useTaskListDerivedState({
+    tasks: state.tasks,
+    search: state.search,
+    filterHighImportance: state.filterHighImportance,
+    filterQuickWins: state.filterQuickWins,
   });
-  return created;
-}, []);
-
-const updateCategory = useCallback(async (id: number, patch: { colour?: string | null; colour_override?: boolean }) => {
-  const updated = await categoryService.updateCategory(id, patch);
-  setCategories((prev) => prev.map((category) => (
-    category.id === id ? { ...category, ...updated } : category
-  )));
-  setTasks((prev) => prev.map((task) => ({
-    ...task,
-    categories: task.categories.map((category) =>
-      category.id === id ? { ...category, ...updated } : category
-    ),
-  })));
-  return updated;
-}, []);
-
-const deleteCategory = useCallback(async (id: number) => {
-  await categoryService.deleteCategory(id);
-  setCategories((prev) => prev.filter((category) => category.id !== id));
-  setTasks((prev) => prev.map((task) => ({
-    ...task,
-    categories: task.categories.filter((category) => category.id !== id),
-  })));
-  if (filterCategory === id) {
-    setFilterCategory(null);
-  }
-}, [filterCategory]);
-
-const openTask = useCallback((task: Task) => {
-  setWarning(null);
-  setSelectedTask(task);
-  setIsSidebarOpen(true);
-}, []);
-
-const openNewTask = useCallback(() => {
-  setWarning(null);
-  setSelectedTask(undefined);
-  setIsSidebarOpen(true);
-}, []);
-
-const closeSidebar = useCallback(() => {
-  setIsSidebarOpen(false);
-  setSelectedTask(undefined);
-}, []);
-
-const filteredTasks = useMemo(() => {
-  return tasks.filter((task) => {
-    const matchesSearch = task.title.toLowerCase().includes(search.toLowerCase());
-    const matchesHighImportance = !filterHighImportance || task.importance >= 8;
-    const matchesQuickWins =
-      !filterQuickWins || (task.estimated_minutes > 0 && task.estimated_minutes <= 30);
-    return matchesSearch && matchesHighImportance && matchesQuickWins;
-  });
-}, [filterHighImportance, filterQuickWins, search, tasks]);
-
-const sections = useMemo<TaskListSections>(() => {
-  const now = moment();
-  const sevenDaysAgo = moment().subtract(7, "days").startOf("day");
-
-  const pastTasks = filteredTasks.filter(
-    (task) => task.completed && moment(task.deadline).isBetween(sevenDaysAgo, now, undefined, "[]"),
-  );
-
-  const overdueTasks = filteredTasks.filter(
-    (task) => !task.completed && moment(task.deadline).isBefore(now),
-  );
-
-  const todayTasks = filteredTasks.filter(
-    (task) =>
-      moment(task.deadline).isSame(now, "day") &&
-      !overdueTasks.some((overdueTask) => overdueTask.id === task.id) &&
-      !pastTasks.some((pastTask) => pastTask.id === task.id),
-  );
-
-  const upcomingTasks = filteredTasks.filter(
-    (task) =>
-      !task.completed
-      && moment(task.deadline).isAfter(now)
-      && !moment(task.deadline).isSame(now, "day"),
-  );
-
-  const completedTasks = filteredTasks
-    .filter((task) => task.completed)
-    .sort((a, b) => moment(b.deadline).valueOf() - moment(a.deadline).valueOf());
-
-  const groupedUpcomingTasks = upcomingTasks.reduce<Record<string, Task[]>>((groups, task) => {
-    const date = moment(task.deadline).startOf("day").format("YYYY-MM-DD");
-    if (!groups[date]) {
-      groups[date] = [];
-    }
-    groups[date].push(task);
-    return groups;
-  }, {});
-
-  const sortedUpcomingDates = Object.keys(groupedUpcomingTasks).sort();
-
-  return {
-    pastTasks,
-    overdueTasks,
-    todayTasks,
-    upcomingTasks,
-    completedTasks,
-    groupedUpcomingTasks,
-    sortedUpcomingDates,
-  };
-}, [filteredTasks]);
-
-const formatDayLabel = useCallback((dateStr: string) => {
-  const date = moment(dateStr);
-  const tomorrow = moment().add(1, "day").startOf("day");
-  if (date.isSame(tomorrow, "day")) {
-    return "Tomorrow";
-  }
-  return date.format("ddd D MMM");
-}, []);
-
-return {
-  state: {
-    tasks,
-    categories,
-    isSidebarOpen,
-    selectedTask,
-    warning,
-    search,
-    sortBy,
-    filters: {
-      category: filterCategory,
-      completed: filterCompleted,
-      highImportance: filterHighImportance,
-      quickWins: filterQuickWins,
-    },
-    sections,
-  },
-  loading,
-  error,
-  actions: {
-    setSearch,
-    setSortBy,
-    setFilterCategory,
-    setFilterCompleted,
-    toggleFilterHighImportance: () => {
-      setFilterHighImportance((prev) => !prev);
-    },
-    toggleFilterQuickWins: () => {
-      setFilterQuickWins((prev) => !prev);
-    },
-    openTask,
-    openNewTask,
-    closeSidebar,
-    toggleComplete,
-    submitTask,
-    deleteTask,
-    createCategory,
-    updateCategory,
-    deleteCategory,
-    updateTaskCategories,
-    refresh,
-    formatDayLabel,
-  },
-};
+  return buildTaskListResult(state, queries, uiActions, mutations, derived);
 };

@@ -1,10 +1,11 @@
 import api from "@/services/api";
 
-import { type Category, type Task, type TaskUpdatedResponse,  type TaskSubmission } from "@/types";
-
-interface DeleteResponse {
-  message: string;
-}
+import type {
+  Category,
+  Task,
+  TaskUpdatedResponse,
+  TaskSubmission,
+  DeleteResponse } from "@/types";
 
 /**
  * Retrieves a list of tasks from the server, optionally filtered by the provided criteria.
@@ -87,13 +88,5 @@ export const deleteEvents = async (): Promise<string> => {
  */
 export const deleteTasks = async (): Promise<string> => {
   const response = await api.delete<DeleteResponse>("/api/delete_tasks/");
-  return response.data.message;
-};
-
-/**
- * Deletes the user's account
- */
-export const deleteAccount = async (): Promise<string> => {
-  const response = await api.delete<DeleteResponse>("/api/delete_account/");
   return response.data.message;
 };

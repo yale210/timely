@@ -27,9 +27,9 @@ interface UnifiedSidebarProps {
   onTaskCategoryChange?: (id: number, categories: number[]) => void;
   initialData?: Task | Event;
   onSubmitTask: (data: TaskSubmission) => Promise<void> | void;
-  onSubmitEvent: (data: EventSubmission, context?: EventMutationContext) => void;
-  onDelete?: (context?: EventMutationContext) => void;
-  onRevertToSeries?: (context: EventMutationContext) => void;
+  onSubmitEvent: (data: EventSubmission, context?: EventMutationContext) => Promise<void> | void;
+  onDelete?: (context?: EventMutationContext) => Promise<void> | void;
+  onRevertToSeries?: (context: EventMutationContext) => Promise<void> | void;
 }
 
 /**
@@ -167,17 +167,17 @@ const UnifiedSidebar = ({
                           <DialogTitle className="text-lg font-bold text-black">
                             {titleLabel}
                           </DialogTitle>
-          {mode === "event" && selectedEvent?.is_override && (
+          {effectiveMode === "event" && selectedEvent?.is_override && (
             <span className="rounded-full border border-orange-200 bg-orange-50 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-orange-700">
               Modified Instance
             </span>
           )}
-          {mode === "event" && selectedEvent?.is_split_series && (
+          {effectiveMode === "event" && selectedEvent?.is_split_series && (
             <span className="rounded-full border border-sky-200 bg-sky-50 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-sky-700">
               Split Series
             </span>
           )}
-          {mode === "event" && selectedEvent?.is_override && onRevertToSeries && (
+          {effectiveMode === "event" && selectedEvent?.is_override && onRevertToSeries && (
             <button
               type="button"
               onClick={openRevertModal}
@@ -248,7 +248,7 @@ const UnifiedSidebar = ({
                             onCreateCategory={onCreateCategory}
                             onUpdateCategory={onUpdateCategory}
                             onDeleteCategory={onDeleteCategory}
-                            onCategoryChange={(nextCategories) => {
+                            onCategoryChange={(nextCategories : number[]) => {
                               if (initialData?.id && onTaskCategoryChange) {
                                 onTaskCategoryChange(initialData.id, nextCategories);
                               }
@@ -267,12 +267,12 @@ const UnifiedSidebar = ({
                             onCreateCategory={onCreateCategory}
                             onUpdateCategory={onUpdateCategory}
                             onDeleteCategory={onDeleteCategory}
-                            onSubmit={(data) => {
+                            onSubmit={async (data) => {
                               if (isEditingRecurringEvent) {
                                 openSaveScope(data);
                                 return;
                               }
-                              onSubmitEvent(data);
+                              await onSubmitEvent(data);
                               onClose();
                             }}
                             onCancel={onClose}
@@ -292,8 +292,13 @@ const UnifiedSidebar = ({
         isOpen={isDeleteModalOpen}
         onClose={() => setIsDeleteModalOpen(false)}
         onConfirm={() => {
-          onDelete?.();
-          onClose();
+          void Promise.resolve(onDelete?.())
+            .then(() => {
+              onClose();
+            })
+            .catch((error) => {
+              console.error(error);
+            });
         }}
         title={`Delete ${effectiveMode === "task" ? "Task" : "Event"}`}
         message={`Are you sure you want to delete this ${effectiveMode === "task" ? "task" : "event"}? This action cannot be undone.`}

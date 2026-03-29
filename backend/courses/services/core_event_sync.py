@@ -1,6 +1,18 @@
 from typing import Dict, Any
 
 from core.models import Event
+from courses.services.core_event_sync_helpers import (
+    course_event_description,
+    course_event_title,
+    create_core_event_for_course_student,
+    get_core_event,
+    log_enrollment_sync_result,
+    log_sync_summary,
+    new_sync_stats,
+    record_sync_error,
+    update_core_event_from_course_event,
+    update_user_specific_core_event,
+)
 from courses.services.event import logger, User
 
 
@@ -11,104 +23,82 @@ class CourseEventSyncService:
     """
 
     @staticmethod
-    def _new_stats() -> Dict[str, Any]:
-        # Track sync outcome across the whole operation.
-        return {
-            "created": 0,
-            "updated": 0,
-            "errors": [],
-        }
-
-    @staticmethod
     def _course_event_title(course_event) -> str:
         # Build a consistent title used to match core events.
-        return f"{course_event.course.name} - {course_event.title}"
-
-    @staticmethod
-    def _course_event_description(course_event) -> str:
-        # Include course, title, description, and creator in the synced description.
-        return (
-            f"{course_event.course.name} - {course_event.title}"
-            + "'\n"
-            + (course_event.description or "")
-            + "\n"
-            + "By "
-            + course_event.created_by.user.username
-        )
+        return course_event_title(course_event)
 
     @staticmethod
     def _get_core_event(user, title: str, start_time):
         # Look up the target calendar event using the stable identity fields.
-        return Event.objects.get(
-            user=user,
-            title=title,
-            start_time=start_time,
-        )
+        return get_core_event(user, title, start_time)
 
     @staticmethod
     def _create_core_event_for_course_student(course_event, user):
         # Create a new core event copy for a specific enrolled student.
-        core_event = Event(
-            user=user,
-            title=CourseEventSyncService._course_event_title(course_event),
-            description=course_event.description or "",
-            location=course_event.location or "",
-            colour=course_event.colour,
-            start_time=course_event.start_time,
-            end_time=course_event.end_time,
-        )
-        core_event.save()
-        return core_event
+        return create_core_event_for_course_student(course_event, user)
 
     @staticmethod
     def _update_core_event_from_course_event(core_event, course_event) -> bool:
         # Update only the fields that can change over time.
-        updated = False
-
-        if core_event.description != (course_event.description or ""):
-            core_event.description = course_event.description or ""
-            updated = True
-        if core_event.location != (course_event.location or ""):
-            core_event.location = course_event.location or ""
-            updated = True
-        if core_event.colour != course_event.colour:
-            core_event.colour = course_event.colour
-            updated = True
-        if core_event.end_time != course_event.end_time:
-            core_event.end_time = course_event.end_time
-            updated = True
-
-        if updated:
-            # Persist only the fields that were actually changed.
-            core_event.save(
-                update_fields=[
-                    "description",
-                    "location",
-                    "colour",
-                    "end_time",
-                ]
-            )
-
-        return updated
+        return update_core_event_from_course_event(core_event, course_event)
 
     @staticmethod
     def _record_sync_error(
         stats: Dict[str, Any], course_event, username: str, exc: Exception
     ) -> None:
         # Centralized error formatting keeps logs consistent.
-        error_msg = (
-            f"Failed to sync course_event {course_event.id} "
-            f"for user {username}: {str(exc)}"
-        )
-        logger.error(error_msg, exc_info=True)
-        stats["errors"].append(error_msg)
+        record_sync_error(stats, course_event, username, exc)
 
     @staticmethod
-    def _log_sync_summary(prefix: str, created: int, updated: int, errors: int) -> None:
-        # Emit a compact summary for operational visibility.
-        logger.info(
-            f"{prefix}. Created: {created}, Updated: {updated}, Errors: {errors}"
-        )
+    def _sync_enrollment_core_event(
+        course_event, user, stats: Dict[str, Any], event_title: str
+    ) -> None:
+        # Sync one student's course event copy.
+        try:
+            core_event = CourseEventSyncService._get_core_event(
+                user=user,
+                title=event_title,
+                start_time=course_event.start_time,
+            )
+            updated = CourseEventSyncService._update_core_event_from_course_event(
+                core_event, course_event
+            )
+            log_enrollment_sync_result(core_event, user, stats, updated)
+        except Event.DoesNotExist:
+            core_event = CourseEventSyncService._create_core_event_for_course_student(
+                course_event, user
+            )
+            log_enrollment_sync_result(core_event, user, stats, updated=False)
+
+    @staticmethod
+    def _get_active_enrollments(course_event):
+        # Only active students should receive synced course events.
+        from courses.models import CourseEnrollment
+
+        return CourseEnrollment.objects.filter(
+            course=course_event.course, active=True
+        ).select_related("student__user")
+
+    @staticmethod
+    def _sync_active_enrollments(
+        course_event, enrollments, stats: Dict[str, Any]
+    ) -> None:
+        # Sync one course event across all active students.
+        event_title = CourseEventSyncService._course_event_title(course_event)
+
+        for enrollment in enrollments:
+            try:
+                user = enrollment.student.user
+                CourseEventSyncService._sync_enrollment_core_event(
+                    course_event, user, stats, event_title
+                )
+            except Exception as exc:
+                CourseEventSyncService._record_sync_error(
+                    stats,
+                    course_event,
+                    enrollment.student.user.username,
+                    exc,
+                )
 
     @staticmethod
     def sync_course_event_to_core(course_event) -> Dict[str, Any]:
@@ -120,15 +110,10 @@ class CourseEventSyncService:
         Returns:
             Dictionary with sync statistics (created, updated, errors).
         """
-        from courses.models import CourseEnrollment
-
-        stats = CourseEventSyncService._new_stats()
+        stats = new_sync_stats()
 
         try:
-            # Only active enrollments should receive synced events.
-            enrollments = CourseEnrollment.objects.filter(
-                course=course_event.course, active=True
-            ).select_related("student__user")
+            enrollments = CourseEventSyncService._get_active_enrollments(course_event)
 
             if not enrollments.exists():
                 logger.info(
@@ -136,52 +121,11 @@ class CourseEventSyncService:
                 )
                 return stats
 
-            # Reuse the same title for all students so we can match existing events.
-            event_title = CourseEventSyncService._course_event_title(course_event)
+            CourseEventSyncService._sync_active_enrollments(
+                course_event, enrollments, stats
+            )
 
-            for enrollment in enrollments:
-                try:
-                    user = enrollment.student.user
-
-                    try:
-                        # Update if the event already exists for this student.
-                        core_event = CourseEventSyncService._get_core_event(
-                            user=user,
-                            title=event_title,
-                            start_time=course_event.start_time,
-                        )
-                        updated = (
-                            CourseEventSyncService._update_core_event_from_course_event(
-                                core_event, course_event
-                            )
-                        )
-
-                        if updated:
-                            stats["updated"] += 1
-                            logger.info(
-                                f"Updated Event {core_event.id} for user {user.username}"
-                            )
-
-                    except Event.DoesNotExist:
-                        # Create a new event when no matching record is found.
-                        core_event = CourseEventSyncService._create_core_event_for_course_student(
-                            course_event, user
-                        )
-                        stats["created"] += 1
-                        logger.info(
-                            f"Created Event {core_event.id} for user {user.username}"
-                        )
-
-                except Exception as exc:
-                    # Keep syncing other users even if one fails.
-                    CourseEventSyncService._record_sync_error(
-                        stats,
-                        course_event,
-                        enrollment.student.user.username,
-                        exc,
-                    )
-
-            CourseEventSyncService._log_sync_summary(
+            log_sync_summary(
                 f"Course event sync completed for CourseEvent {course_event.id}",
                 stats["created"],
                 stats["updated"],
@@ -213,33 +157,16 @@ class CourseEventSyncService:
     ) -> None:
         # User-specific title and description are used for personalized calendar entries.
         event_title = CourseEventSyncService._course_event_title(course_event)
-        event_description = CourseEventSyncService._course_event_description(
-            course_event
-        )
+        event_description = course_event_description(course_event)
 
         try:
+            core_event = CourseEventSyncService._get_core_event(
+                user=user,
+                title=event_title,
+                start_time=course_event.start_time,
+            )
+        except Event.DoesNotExist:
             try:
-                # Prefer updating an existing event when possible.
-                core_event = CourseEventSyncService._get_core_event(
-                    user=user,
-                    title=event_title,
-                    start_time=course_event.start_time,
-                )
-
-                updated = False
-                if core_event.description != event_description:
-                    core_event.description = event_description
-                    updated = True
-                if core_event.end_time != course_event.end_time:
-                    core_event.end_time = course_event.end_time
-                    updated = True
-
-                if updated:
-                    core_event.save(update_fields=["description", "end_time"])
-                    stats["updated"] += 1
-
-            except Event.DoesNotExist:
-                # Fall back to creating the user's event copy.
                 core_event = Event(
                     user=user,
                     title=event_title,
@@ -251,15 +178,18 @@ class CourseEventSyncService:
                 )
                 core_event.save()
                 stats["created"] += 1
+            except Exception as exc:
+                record_sync_error(stats, course_event, user.username, exc)
+            return
 
-        except Exception as exc:
-            # Record the error without stopping the whole sync job.
-            error_msg = (
-                f"Failed to sync course_event {course_event.id} "
-                f"for user {user.username}: {str(exc)}"
+        try:
+            updated = update_user_specific_core_event(
+                core_event, event_description, course_event
             )
-            logger.error(error_msg, exc_info=True)
-            stats["errors"].append(error_msg)
+            if updated:
+                stats["updated"] += 1
+        except Exception as exc:
+            record_sync_error(stats, course_event, user.username, exc)
 
     @staticmethod
     def sync_user_course_events(user: User) -> Dict[str, Any]:
@@ -273,7 +203,7 @@ class CourseEventSyncService:
         """
         from courses.models import CourseEnrollment, CourseEvent
 
-        stats = CourseEventSyncService._new_stats()
+        stats = new_sync_stats()
 
         try:
             # Collect the courses the user is actively enrolled in.
@@ -297,7 +227,7 @@ class CourseEventSyncService:
                     user, course_event, stats
                 )
 
-            CourseEventSyncService._log_sync_summary(
+            log_sync_summary(
                 f"User event sync completed for {user.username}",
                 stats["created"],
                 stats["updated"],

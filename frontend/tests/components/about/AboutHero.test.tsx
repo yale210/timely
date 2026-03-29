@@ -1,30 +1,38 @@
-import { render, screen } from "@testing-library/react"
-import { MemoryRouter } from "react-router-dom"
-import { describe, expect, it, vi } from "vitest"
-import AboutHero from "@/components/about/AboutHero"
+import { render, screen } from '@testing-library/react';
+import { describe, it, expect, vi } from 'vitest';
+import AboutHero from '@/components/about/AboutHero';
+import { MemoryRouter } from 'react-router-dom';
+import useReveal from '@/hooks/common/useReveal';
 
-vi.mock("@/hooks/common/useReveal", () => ({
-  default: () => [null, true] as const,
-}))
+vi.mock('@/hooks/common/useReveal', () => ({
+  default: vi.fn(),
+}));
 
-vi.mock("@/components/layout/BlurBackground", () => ({
-  default: () => <div data-testid="blur-background" />,
-}))
-
-describe("AboutHero", () => {
-  it("renders hero copy, background, and auth links", () => {
-    render(
+describe('AboutHero Component', () => {
+  it('renders correctly when not visible', () => {
+    vi.mocked(useReveal).mockReturnValue([{ current: null }, false]);
+    
+    const { container } = render(
       <MemoryRouter>
         <AboutHero />
-      </MemoryRouter>,
-    )
+      </MemoryRouter>
+    );
 
-    expect(screen.getByTestId("blur-background")).toBeInTheDocument()
-    expect(
-      screen.getByRole("heading", { name: /everything you need to study smarter/i }),
-    ).toBeInTheDocument()
-    expect(screen.getByText(/timely brings together task management/i)).toBeInTheDocument()
-    expect(screen.getByRole("link", { name: /^get started$/i })).toHaveAttribute("href", "/signup")
-    expect(screen.getByRole("link", { name: /log in/i })).toHaveAttribute("href", "/login")
-  })
-})
+    const div = container.querySelector('div.mx-auto.max-w-3xl.text-center');
+    expect(div).toHaveStyle({ opacity: '0', transform: 'translateY(20px)' });
+    expect(screen.getByText('study smarter')).toBeTruthy();
+  });
+
+  it('renders correctly when visible', () => {
+    vi.mocked(useReveal).mockReturnValue([{ current: null }, true]);
+    
+    const { container } = render(
+      <MemoryRouter>
+        <AboutHero />
+      </MemoryRouter>
+    );
+
+    const div = container.querySelector('div.mx-auto.max-w-3xl.text-center');
+    expect(div).toHaveStyle({ opacity: '1', transform: 'none' });
+  });
+});

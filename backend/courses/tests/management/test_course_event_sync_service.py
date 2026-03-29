@@ -14,6 +14,8 @@ User = get_user_model()
 
 
 class CourseEventSyncServiceTests(TestCase):
+    """Test cases for course event sync service."""
+
     @classmethod
     def setUpTestData(cls):
         cls.teacher_user = User.objects.create_user(

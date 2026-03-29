@@ -25,6 +25,7 @@ class DeleteAccountViewTests(TestCase):
         self.assertEqual(response.status_code, 401)
 
     def test_successful_delete(self):
+        """Test successful delete."""
         self.client.login(username="testuser", password="password")
 
         self.assertEqual(get_user_model().objects.count(), 1)
@@ -36,6 +37,7 @@ class DeleteAccountViewTests(TestCase):
         self.assertEqual(response.data, {"message": "Account deleted successfully."})
 
     def test_events_cascade(self):
+        """Test events cascade."""
         self.client.login(username="testuser", password="password")
 
         self.assertEqual(get_user_model().objects.count(), 1)
@@ -64,6 +66,7 @@ class DeleteAccountViewTests(TestCase):
         self.assertEqual(response.data, {"message": "Account deleted successfully."})
 
     def test_tasks_cascade(self):
+        """Test tasks cascade."""
         self.client.login(username="testuser", password="password")
 
         self.assertEqual(get_user_model().objects.count(), 1)

@@ -101,6 +101,7 @@ class CourseMembershipViewTests(TestCase):
         )
 
     def test_join_by_code_creates_student_profile_when_missing(self):
+        """Test join by code creates student profile when missing."""
         new_user = User.objects.create_user(
             username="new-membership-student",
             password="password123",
@@ -133,6 +134,7 @@ class CourseMembershipViewTests(TestCase):
         )
 
     def test_join_by_code_reactivates_existing_inactive_enrollment(self):
+        """Test join by code reactivates existing inactive enrollment."""
         CourseEnrollment.objects.create(
             course=self.course,
             student=self.student,
