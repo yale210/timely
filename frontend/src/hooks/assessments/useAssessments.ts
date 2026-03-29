@@ -77,10 +77,10 @@ const readGradebookFeatureFlag = (): boolean => {
 };
 
 /**
- * Provides state and actions for the assessments page.
- * @returns Structured assessments state, loading, error, and actions.
+ * Manages the core state for assessments and categories.
+ * @returns State-related variables and their setters.
  */
-export const useAssessments = (): UseAssessmentsReturn => {
+const useAssessmentState = () => {
   const [assessments, setAssessments] = useState<Assessment[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(false);
@@ -92,6 +92,31 @@ export const useAssessments = (): UseAssessmentsReturn => {
   const [pendingDeleteId, setPendingDeleteId] = useState<number | null>(null);
   const [gradebookSource, setGradebookSource] = useState<Assessment | null>(null);
   const [isGradebookEnabled, setIsGradebookEnabled] = useState<boolean>(() => readGradebookFeatureFlag());
+
+  return useMemo(() => ({
+    assessments, setAssessments,
+    categories, setCategories,
+    loading, setLoading,
+    error, setError,
+    search, setSearch,
+    selectedCategoryId, setSelectedCategoryId,
+    isSidebarOpen, setIsSidebarOpen,
+    selectedAssessment, setSelectedAssessment,
+    pendingDeleteId, setPendingDeleteId,
+    gradebookSource, setGradebookSource,
+    isGradebookEnabled, setIsGradebookEnabled,
+  }), [
+    assessments, categories, loading, error, search, selectedCategoryId,
+    isSidebarOpen, selectedAssessment, pendingDeleteId, gradebookSource, isGradebookEnabled,
+  ]);
+};
+
+/**
+ * Handles data fetching and synchronization for assessments.
+ * @param state - The assessment state object.
+ */
+const useAssessmentData = (state: ReturnType<typeof useAssessmentState>) => {
+  const { setAssessments, setCategories, setLoading, setError, setIsGradebookEnabled, setGradebookSource } = state;
 
   const fetchAssessments = useCallback(async () => {
     setLoading(true);
@@ -105,7 +130,7 @@ export const useAssessments = (): UseAssessmentsReturn => {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [setAssessments, setError, setLoading]);
 
   const fetchCategories = useCallback(async () => {
     try {
@@ -114,7 +139,7 @@ export const useAssessments = (): UseAssessmentsReturn => {
     } catch (fetchError) {
       console.error(fetchError);
     }
-  }, []);
+  }, [setCategories]);
 
   const refresh = useCallback(async () => {
     await Promise.all([fetchAssessments(), fetchCategories()]);
@@ -139,7 +164,26 @@ export const useAssessments = (): UseAssessmentsReturn => {
       window.removeEventListener("feature-flags-changed", syncFeatureFlag);
       window.removeEventListener("storage", syncFeatureFlag);
     };
-  }, []);
+  }, [setIsGradebookEnabled, setGradebookSource]);
+
+  return useMemo(() => ({ refresh }), [refresh]);
+};
+
+/**
+ * Defines operations and actions available for assessments.
+ * @param state - The assessment state object.
+ * @param refresh - Function to refresh data.
+ * @returns Memoised actions for assessment management.
+ */
+const useAssessmentOperations = (
+  state: ReturnType<typeof useAssessmentState>,
+  refresh: () => Promise<void>,
+) => {
+  const {
+    setAssessments, setCategories, setSearch, setSelectedCategoryId,
+    setIsSidebarOpen, setSelectedAssessment, setPendingDeleteId, setGradebookSource,
+    selectedAssessment, pendingDeleteId, selectedCategoryId,
+  } = state;
 
   const submitAssessment = useCallback(async (data: AssessmentSubmission) => {
     if (selectedAssessment) {
@@ -153,7 +197,7 @@ export const useAssessments = (): UseAssessmentsReturn => {
       )));
       setSelectedAssessment(created);
     }
-  }, [selectedAssessment]);
+  }, [selectedAssessment, setAssessments, setSelectedAssessment]);
 
   const deleteAssessment = useCallback(async () => {
     if (pendingDeleteId === null) {
@@ -166,13 +210,13 @@ export const useAssessments = (): UseAssessmentsReturn => {
       setIsSidebarOpen(false);
     }
     setPendingDeleteId(null);
-  }, [pendingDeleteId, selectedAssessment?.id]);
+  }, [pendingDeleteId, selectedAssessment?.id, setAssessments, setIsSidebarOpen, setPendingDeleteId, setSelectedAssessment]);
 
   const createCategory = useCallback(async (text: string) => {
     const created = await categoryService.createCategory(text.trim());
     setCategories((prev) => [...prev, created].sort((a, b) => a.text.localeCompare(b.text)));
     return created;
-  }, []);
+  }, [setCategories]);
 
   const updateCategory = useCallback(async (
     id: number,
@@ -195,7 +239,7 @@ export const useAssessments = (): UseAssessmentsReturn => {
       )),
     })));
     return updated;
-  }, []);
+  }, [setCategories, setAssessments]);
 
   const deleteCategory = useCallback(async (id: number) => {
     await categoryService.deleteCategory(id);
@@ -213,71 +257,81 @@ export const useAssessments = (): UseAssessmentsReturn => {
     if (selectedCategoryId === id) {
       setSelectedCategoryId(null);
     }
-  }, [selectedCategoryId]);
+  }, [selectedCategoryId, setCategories, setAssessments, setSelectedCategoryId]);
 
-  const filteredAssessments = useMemo(() => assessments.filter((assessment) => {
-    const matchesSearch = assessment.title.toLowerCase().includes(search.toLowerCase());
-    const matchesCategory = selectedCategoryId === null || [
+  return useMemo(() => ({
+    setSearch,
+    setSelectedCategoryId,
+    openNewAssessment: () => {
+      setSelectedAssessment(undefined);
+      setIsSidebarOpen(true);
+    },
+    openAssessment: (assessment: Assessment) => {
+      setSelectedAssessment(assessment);
+      setIsSidebarOpen(true);
+    },
+    closeSidebar: () => {
+      setSelectedAssessment(undefined);
+      setIsSidebarOpen(false);
+    },
+    submitAssessment,
+    deleteAssessment,
+    setPendingDeleteId,
+    openGradebook: (assessment: Assessment) => setGradebookSource(assessment),
+    closeGradebook: () => setGradebookSource(null),
+    createCategory,
+    updateCategory,
+    deleteCategory,
+    refresh,
+  }), [
+    setSearch, setSelectedCategoryId, setSelectedAssessment, setIsSidebarOpen,
+    submitAssessment, deleteAssessment, setPendingDeleteId, setGradebookSource,
+    createCategory, updateCategory, deleteCategory, refresh,
+  ]);
+};
+
+/**
+ * Provides state and actions for the assessments page.
+ * @returns Structured assessments state, loading, error, and actions.
+ */
+export const useAssessments = (): UseAssessmentsReturn => {
+  const state = useAssessmentState();
+  const { refresh } = useAssessmentData(state);
+  const actions = useAssessmentOperations(state, refresh);
+
+  const filteredAssessments = useMemo(() => state.assessments.filter((assessment) => {
+    const matchesSearch = assessment.title.toLowerCase().includes(state.search.toLowerCase());
+    const matchesCategory = state.selectedCategoryId === null || [
       assessment.assessment_category?.id,
       assessment.module_category?.id,
       ...assessment.categories.map((category) => category.id),
-    ].includes(selectedCategoryId);
+    ].includes(state.selectedCategoryId);
     return matchesSearch && matchesCategory;
-  }), [assessments, search, selectedCategoryId]);
+  }), [state.assessments, state.search, state.selectedCategoryId]);
 
-  const sections = useMemo<AssessmentSections>(() => {
-    return {
-      overdue: [],
-      upcoming: filteredAssessments.filter((assessment) => (
-        !isAssessmentCompleted(assessment)
-      )),
-      completed: filteredAssessments
-        .filter((assessment) => isAssessmentCompleted(assessment))
-        .sort((left, right) => (
-          new Date(right.due_date).getTime() - new Date(left.due_date).getTime()
-        )),
-    };
-  }, [filteredAssessments]);
+  const sections = useMemo<AssessmentSections>(() => ({
+    overdue: [],
+    upcoming: filteredAssessments.filter((assessment) => !isAssessmentCompleted(assessment)),
+    completed: filteredAssessments
+      .filter((assessment) => isAssessmentCompleted(assessment))
+      .sort((left, right) => new Date(right.due_date).getTime() - new Date(left.due_date).getTime()),
+  }), [filteredAssessments]);
 
   return {
     state: {
-      assessments,
-      categories,
+      assessments: state.assessments,
+      categories: state.categories,
       sections,
-      isGradebookEnabled,
-      search,
-      selectedCategoryId,
-      isSidebarOpen,
-      selectedAssessment,
-      pendingDeleteId,
-      gradebookSource,
+      isGradebookEnabled: state.isGradebookEnabled,
+      search: state.search,
+      selectedCategoryId: state.selectedCategoryId,
+      isSidebarOpen: state.isSidebarOpen,
+      selectedAssessment: state.selectedAssessment,
+      pendingDeleteId: state.pendingDeleteId,
+      gradebookSource: state.gradebookSource,
     },
-    loading,
-    error,
-    actions: {
-      setSearch,
-      setSelectedCategoryId,
-      openNewAssessment: () => {
-        setSelectedAssessment(undefined);
-        setIsSidebarOpen(true);
-      },
-      openAssessment: (assessment) => {
-        setSelectedAssessment(assessment);
-        setIsSidebarOpen(true);
-      },
-      closeSidebar: () => {
-        setSelectedAssessment(undefined);
-        setIsSidebarOpen(false);
-      },
-      submitAssessment,
-      deleteAssessment,
-      setPendingDeleteId,
-      openGradebook: setGradebookSource,
-      closeGradebook: () => setGradebookSource(null),
-      createCategory,
-      updateCategory,
-      deleteCategory,
-      refresh,
-    },
+    loading: state.loading,
+    error: state.error,
+    actions,
   };
 };
