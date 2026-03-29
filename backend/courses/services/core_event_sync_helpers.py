@@ -87,7 +87,13 @@ def update_core_event_from_course_event(core_event, course_event) -> bool:
 
     if updated:
         core_event.save(
-            update_fields=["start_time", "description", "location", "colour", "end_time"]
+            update_fields=[
+                "start_time",
+                "description",
+                "location",
+                "colour",
+                "end_time",
+            ]
         )
 
     return updated
@@ -117,7 +123,13 @@ def update_user_specific_core_event(
 
     if updated:
         core_event.save(
-            update_fields=["start_time", "description", "location", "colour", "end_time"]
+            update_fields=[
+                "start_time",
+                "description",
+                "location",
+                "colour",
+                "end_time",
+            ]
         )
 
     return updated
