@@ -72,4 +72,58 @@ describe("LoginForm", () => {
 
     expect(await screen.findByText("Bad creds")).toBeInTheDocument();
   });
+
+  it("shows the backend login validation message instead of a generic status code", async () => {
+    loginMock.mockRejectedValue({
+      response: {
+        status: 400,
+        data: {
+          non_field_errors: ["Invalid credentials."],
+        },
+      },
+    } as never);
+
+    render(
+      <MemoryRouter>
+        <LoginForm />
+      </MemoryRouter>,
+    );
+
+    fireEvent.change(screen.getByLabelText("Username"), {
+      target: { value: "alice" },
+    });
+    fireEvent.change(screen.getByLabelText("Password"), {
+      target: { value: "wrong" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Sign in" }));
+
+    expect(await screen.findByText("Invalid credentials.")).toBeInTheDocument();
+  });
+
+  it("shows a friendly server error when authentication returns 500", async () => {
+    loginMock.mockRejectedValue({
+      response: {
+        status: 500,
+        data: {},
+      },
+    } as never);
+
+    render(
+      <MemoryRouter>
+        <LoginForm />
+      </MemoryRouter>,
+    );
+
+    fireEvent.change(screen.getByLabelText("Username"), {
+      target: { value: "alice" },
+    });
+    fireEvent.change(screen.getByLabelText("Password"), {
+      target: { value: "secret" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Sign in" }));
+
+    expect(
+      await screen.findByText("The server is unavailable right now. Please try again in a moment."),
+    ).toBeInTheDocument();
+  });
 });

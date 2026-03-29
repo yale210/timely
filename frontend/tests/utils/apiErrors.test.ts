@@ -32,6 +32,32 @@ describe("formatDjangoFormError", () => {
     });
   });
 
+  it("returns a friendly message for 500 responses", () => {
+    const result = formatDjangoFormError({
+      response: {
+        status: 500,
+        data: {},
+      },
+    });
+
+    expect(result).toEqual({
+      message: "The server is unavailable right now. Please try again in a moment.",
+      fieldErrors: {},
+    });
+  });
+
+  it("returns a network message when the server cannot be reached", () => {
+    const result = formatDjangoFormError({
+      response: undefined,
+      message: "Network Error",
+    });
+
+    expect(result).toEqual({
+      message: "Unable to reach the server. Please check your connection and try again.",
+      fieldErrors: {},
+    });
+  });
+
   it("falls back when the error does not contain a usable response body", () => {
     expect(formatDjangoFormError(new Error("boom"))).toEqual({
       message: "Something went wrong",
@@ -72,6 +98,24 @@ describe("formatDjangoFormError", () => {
     expect(result.fieldErrors).toEqual({
       username: ["This field is required."],
       email: ["Enter a valid email address."],
+    });
+  });
+
+  it("supports string-valued field errors as well as arrays", () => {
+    const result = formatDjangoFormError({
+      response: {
+        status: 400,
+        data: {
+          username: "This username is unavailable.",
+        },
+      },
+    });
+
+    expect(result).toEqual({
+      message: "This username is unavailable.",
+      fieldErrors: {
+        username: ["This username is unavailable."],
+      },
     });
   });
 
