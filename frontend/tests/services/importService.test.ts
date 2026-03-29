@@ -19,7 +19,6 @@ describe("importService", () => {
     vi.clearAllMocks();
 
     vi.spyOn(Storage.prototype, "getItem").mockReturnValue("mock-token");
-    vi.spyOn(window, "alert").mockImplementation(() => undefined);
 
     reloadSpy = vi
       .spyOn(importService.pageReloader, "reload")
@@ -37,8 +36,16 @@ describe("importService", () => {
 
     const result = await importService.importEvents(mockFile);
 
-    expect(window.alert).toHaveBeenCalledWith("Import");
-    expect(reloadSpy).toHaveBeenCalled();
+    expect(mockPost).toHaveBeenCalledWith(
+      "/api/import/",
+      expect.any(FormData),
+      {
+        headers: {
+          Authorization: "Token mock-token",
+        },
+      },
+    );
+    expect(reloadSpy).not.toHaveBeenCalled();
     expect(result).toBe("Import");
   });
 
