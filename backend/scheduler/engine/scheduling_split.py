@@ -5,7 +5,13 @@ from __future__ import annotations
 from datetime import date, datetime, timedelta
 
 from core.models import Task
-from scheduler.intervals import minutes_between
+from scheduler.engine.scheduling_split_helpers import (
+    apply_split_chunk,
+    build_split_result,
+    has_invalid_split_remainder,
+    insufficient_category_minutes,
+    next_chunk_minutes,
+)
 from scheduler.scheduler_types import ScheduleResult
 
 DateTimeRange = tuple[datetime, datetime]
@@ -51,20 +57,7 @@ class _SchedulerSplitSchedulingMixin:
             A ScheduleResult object indicating success if all minutes were
             allocated, or failure otherwise.
         """
-        if remaining <= 0 and segments:
-            return ScheduleResult(
-                task_id=task.id,  # type: ignore[arg-type]
-                success=True,
-                scheduled_start=segments[0][0],
-                scheduled_end=segments[-1][1],
-                segments=segments,
-            )
-        return ScheduleResult(
-            task_id=task.id,  # type: ignore[arg-type]
-            success=False,
-            reason="Insufficient time within horizon",
-            segments=[],
-        )
+        return build_split_result(task.id, segments, remaining)
 
     def _schedule_task_split(self, task: Task, start_date: date) -> ScheduleResult:
         """Attempt to schedule a task by splitting it across multiple slots.
@@ -128,7 +121,7 @@ class _SchedulerSplitSchedulingMixin:
             day_segments, day_remaining = self._schedule_split_day(
                 task, current_date, task_start, deadline, segments, remaining, limits
             )
-            if not day_segments or self._has_invalid_split_remainder(
+            if not day_segments or has_invalid_split_remainder(
                 day_remaining, min_block
             ):
                 continue
@@ -166,7 +159,7 @@ class _SchedulerSplitSchedulingMixin:
             current_date,
             current_segments=segments,
         )
-        if self._insufficient_category_minutes(category_minutes, min_block):
+        if insufficient_category_minutes(category_minutes, min_block):
             return [], remaining
         slots = self._split_day_slots(
             task, current_date, min_block, task_start, deadline
@@ -198,34 +191,6 @@ class _SchedulerSplitSchedulingMixin:
         return self._task_slots_for_date(
             task, current_date, min_block, task_start, deadline
         )
-
-    @staticmethod
-    def _insufficient_category_minutes(
-        category_minutes: int | None, min_block: int
-    ) -> bool:
-        """Check if the remaining category quota is below the minimum block size.
-
-        Args:
-            category_minutes: Remaining daily minutes for the task's categories.
-            min_block: The minimum allowed duration for a task segment.
-
-        Returns:
-            bool: True if category quota is insufficient.
-        """
-        return category_minutes is not None and category_minutes < min_block
-
-    @staticmethod
-    def _has_invalid_split_remainder(day_remaining: int, min_block: int) -> bool:
-        """Check if the remaining minutes fall below the minimum allowed split.
-
-        Args:
-            day_remaining: Minutes left after a day's allocation.
-            min_block: Minimum allowed split duration.
-
-        Returns:
-            bool: True if the remainder is invalid (non-zero and too small).
-        """
-        return 0 < day_remaining < min_block
 
     def _split_segments_for_slots(
         self,
@@ -314,78 +279,14 @@ class _SchedulerSplitSchedulingMixin:
         buffer_gap = sum(self._get_task_buffer_minutes(task))
         cursor, end = slot
         while remaining > 0 and cursor < end:
-            if self._insufficient_category_minutes(category_minutes, min_block):
+            if insufficient_category_minutes(category_minutes, min_block):
                 return segments, remaining, category_minutes
-            chunk = self._next_chunk_minutes(
+            chunk = next_chunk_minutes(
                 cursor, end, remaining, min_block, max_block, category_minutes
             )
             if chunk is None:
                 return segments, remaining, category_minutes
-            cursor, remaining, category_minutes = self._apply_split_chunk(
+            cursor, remaining, category_minutes = apply_split_chunk(
                 segments, cursor, chunk, remaining, category_minutes, buffer_gap
             )
         return segments, remaining, category_minutes
-
-    @staticmethod
-    def _apply_split_chunk(
-        segments: list[DateTimeRange],
-        cursor: datetime,
-        chunk: int,
-        remaining: int,
-        category_minutes: int | None,
-        buffer_gap: int,
-    ) -> tuple[datetime, int, int | None]:
-        """Finalise a single chunk of time and update cursors and counters.
-
-        Args:
-            segments: The list of segments to append the chunk to.
-            cursor: Current starting point within the slot.
-            chunk: Duration of the chunk to allocate.
-            remaining: Overall remaining minutes for the task.
-            category_minutes: Daily category quota remaining.
-            buffer_gap: Buffer time to apply after the segment.
-
-        Returns:
-            A tuple of (next_cursor, updated_remaining, updated_category_minutes).
-        """
-        next_end = cursor + timedelta(minutes=chunk)
-        segments.append((cursor, next_end))
-        remaining -= chunk
-        if category_minutes is not None:
-            category_minutes -= chunk
-        cursor = next_end + timedelta(minutes=buffer_gap)
-        return cursor, remaining, category_minutes
-
-    @staticmethod
-    def _next_chunk_minutes(
-        start: datetime,
-        end: datetime,
-        remaining: int,
-        min_block: int,
-        max_block: int | None,
-        category_minutes: int | None,
-    ) -> int | None:
-        """Calculate the size of the next chunk that can be carved from a slot.
-
-        Args:
-            start: Start of the available space.
-            end: End of the available space.
-            remaining: Overall minutes still needed.
-            min_block: Minimum segment duration.
-            max_block: Maximum segment duration.
-            category_minutes: Remaining category quota.
-
-        Returns:
-            The size of the next chunk in minutes, or None if no valid chunk fits.
-        """
-        free_minutes = minutes_between(start, end)
-        if free_minutes < min_block and remaining > min_block:
-            return None
-        chunk = min(remaining, free_minutes)
-        if category_minutes is not None:
-            chunk = min(chunk, category_minutes)
-        if max_block is not None:
-            chunk = min(chunk, max_block)
-        if chunk < min_block:
-            return None
-        return chunk
