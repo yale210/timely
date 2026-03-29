@@ -32,8 +32,5 @@ export const importEvents = async (file: File): Promise<string> => {
     throw new Error("Error Importing Events");
   }
 
-  alert(response.data.message);
-  pageReloader.reload();
-
   return response.data.message;
 };

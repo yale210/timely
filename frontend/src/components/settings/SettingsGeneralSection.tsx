@@ -1,4 +1,5 @@
 import { useState } from "react";
+import ConfirmationModal from "@/components/modals/ConfirmationModal";
 import { Tooltip } from "@/components/ui";
 import type { UseSettingsReturn } from "@/hooks/settings/useSettings";
 import * as exportService from "@/services/exportService";
@@ -75,6 +76,7 @@ const SettingsGeneralSection = ({
   const [isExportingCalendar, setIsExportingCalendar] = useState(false);
   const [isImportingCalendar, setIsImportingCalendar] = useState(false);
   const [calendarDataError, setCalendarDataError] = useState<string | null>(null);
+  const [importSuccessMessage, setImportSuccessMessage] = useState<string | null>(null);
 
   const exportCalendarData = async () => {
     if (isExportingCalendar) return;
@@ -105,7 +107,8 @@ const SettingsGeneralSection = ({
     setCalendarDataError(null);
     setIsImportingCalendar(true);
     try {
-      await importService.importEvents(file);
+      const message = await importService.importEvents(file);
+      setImportSuccessMessage(message);
     } catch (error: unknown) {
       console.error("Failed to import calendar data:", error);
       setCalendarDataError("Unable to import calendar data.");
@@ -287,6 +290,38 @@ const SettingsGeneralSection = ({
           <FieldError errors={fieldErrors.drag_snap_minutes} />
         </div>
 
+        <div className="rounded-lg border border-gray-200 bg-white px-4 py-3 shadow-sm">
+          <p className="text-sm font-semibold text-gray-900">Calendar data</p>
+          <p className="mt-1 text-xs text-gray-500">
+            Import or export your calendar events.
+          </p>
+          {calendarDataError ? (
+            <div className="mt-2 rounded-md bg-red-50 px-3 py-2 text-xs text-red-700">
+              {calendarDataError}
+            </div>
+          ) : null}
+          <div className="mt-3 flex flex-wrap gap-3">
+            <button
+              type="button"
+              onClick={() => {
+                void exportCalendarData();
+              }}
+              disabled={isExportingCalendar}
+              className={outlineButtonClass(isExportingCalendar)}
+            >
+              {isExportingCalendar ? "Exporting..." : "Export events"}
+            </button>
+            <button
+              type="button"
+              onClick={openImportPicker}
+              disabled={isImportingCalendar}
+              className={outlineButtonClass(isImportingCalendar)}
+            >
+              {isImportingCalendar ? "Importing..." : "Import events"}
+            </button>
+          </div>
+        </div>
+
         <div className="flex justify-end">
           <button
             type="button"
@@ -300,40 +335,20 @@ const SettingsGeneralSection = ({
           </button>
         </div>
       </div>
-
-      <div className="rounded-lg border border-gray-200 bg-white px-4 py-3 shadow-sm">
-        <p className="text-sm font-semibold text-gray-900">Calendar data</p>
-        <p className="mt-1 text-xs text-gray-500">
-          Import or export your calendar events.
-        </p>
-        {calendarDataError ? (
-          <div className="mt-2 rounded-md bg-red-50 px-3 py-2 text-xs text-red-700">
-            {calendarDataError}
-          </div>
-        ) : null}
-        <div className="mt-3 flex flex-wrap gap-3">
-          <button
-            type="button"
-            onClick={() => {
-              void exportCalendarData();
-            }}
-            disabled={isExportingCalendar}
-            className={outlineButtonClass(isExportingCalendar)}
-          >
-            {isExportingCalendar ? "Exporting..." : "Export events"}
-          </button>
-          <button
-            type="button"
-            onClick={openImportPicker}
-            disabled={isImportingCalendar}
-            className={outlineButtonClass(isImportingCalendar)}
-          >
-            {isImportingCalendar ? "Importing..." : "Import events"}
-          </button>
-        </div>
-      </div>
         </>
       )}
+      <ConfirmationModal
+        isOpen={importSuccessMessage !== null}
+        onClose={() => setImportSuccessMessage(null)}
+        onConfirm={() => {
+          importService.pageReloader.reload();
+        }}
+        title="Import complete"
+        message={importSuccessMessage ?? ""}
+        confirmText="Reload"
+        cancelText="Close"
+        tone="success"
+      />
     </div>
   );
 };
