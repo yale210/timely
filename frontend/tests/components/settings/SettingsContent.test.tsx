@@ -21,7 +21,7 @@ vi.mock("@/components/settings/PreferencesSection", () => ({
     onImport: () => void;
     prefSaving: boolean;
     prefDirty: boolean;
-    onPrefChange: (pref: any) => void;
+    onPrefChange: (pref: Preference) => void;
   }) => (
     <div>
       <div>preferences-section</div>

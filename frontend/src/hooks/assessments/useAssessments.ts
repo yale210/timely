@@ -91,6 +91,8 @@ const useAssessmentState = () => {
 
 /**
  * Synchronises the gradebook feature flag state.
+ * @param setIsEnabled Callback to update the gradebook enabled status.
+ * @param setSource Callback to update the gradebook source assessment.
  */
 const useAssessmentFeatureSync = (
   setIsEnabled: (enabled: boolean) => void,
@@ -114,6 +116,7 @@ const useAssessmentFeatureSync = (
 
 /**
  * Handles fetching logic for assessments and categories.
+ * @param state The current assessments state object.
  */
 const useAssessmentData = (state: ReturnType<typeof useAssessmentState>) => {
   const { setAssessments, setCategories, setLoading, setError } = state;
@@ -152,6 +155,8 @@ const useAssessmentData = (state: ReturnType<typeof useAssessmentState>) => {
 
 /**
  * Update assessment categories when a category is modified.
+ * @param id The ID of the category being updated.
+ * @param updated The updated category data.
  */
 const updateAssessmentsByCategory = (id: number, updated: Category) => (a: Assessment) => ({
   ...a,
@@ -162,6 +167,7 @@ const updateAssessmentsByCategory = (id: number, updated: Category) => (a: Asses
 
 /**
  * Remove categories from assessments when a category is deleted.
+ * @param id The ID of the category being removed.
  */
 const removeCategoryFromAssessments = (id: number) => (a: Assessment) => ({
   ...a,
@@ -172,6 +178,7 @@ const removeCategoryFromAssessments = (id: number) => (a: Assessment) => ({
 
 /**
  * Handles CRUD operations for categories within the hooks.
+ * @param state The current assessments state object.
  */
 const useCategoryOperations = (state: ReturnType<typeof useAssessmentState>) => {
   const { setCategories, setAssessments, setSelectedCategoryId, selectedCategoryId } = state;
@@ -201,6 +208,7 @@ const useCategoryOperations = (state: ReturnType<typeof useAssessmentState>) => 
 
 /**
  * Handles CRUD operations for assessments.
+ * @param state The current assessments state object.
  */
 const useAssessmentCRUDOperations = (state: ReturnType<typeof useAssessmentState>) => {
   const { setAssessments, setSelectedAssessment, setIsSidebarOpen, setPendingDeleteId, selectedAssessment, pendingDeleteId } = state;
@@ -233,6 +241,8 @@ const useAssessmentCRUDOperations = (state: ReturnType<typeof useAssessmentState
 
 /**
  * Organises all assessment-related actions into a single stable object.
+ * @param state The current assessments state object.
+ * @param refresh Function that initialises or refreshes the data.
  */
 const useAssessmentOperations = (state: ReturnType<typeof useAssessmentState>, refresh: () => Promise<void>) => {
   const cats = useCategoryOperations(state);
@@ -251,6 +261,7 @@ const useAssessmentOperations = (state: ReturnType<typeof useAssessmentState>, r
 
 /**
  * Handles filtering and sectioning logic for assessments.
+ * @param state The current assessments state object.
  */
 const useAssessmentFilters = (state: ReturnType<typeof useAssessmentState>) => {
   const filtered = useMemo(() => state.assessments.filter((a) => {
