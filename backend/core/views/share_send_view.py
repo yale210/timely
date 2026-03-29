@@ -31,14 +31,51 @@ class ShareSendView(APIView):
                 an error message if validation fails.
 
         """
+        try:
+            normalized_username, event_id = self.get_username_and_event_id(request)
+
+            event_id_in_db = self.get_event_id_in_database(event_id)
+
+            event_to_share = self.get_event_to_share(request, event_id_in_db)
+
+            receiver_user = self.get_receiver_user(normalized_username)
+
+            event_belongs_to_receiver = self.check_event_belongs_to_receiver(
+                event_to_share, receiver_user
+            )
+
+            if event_belongs_to_receiver:
+                response = {"message": "Event sent 0"}
+                return Response(response)
+
+            self.check_share_request_already_exists(
+                request, event_to_share, receiver_user
+            )
+
+            PendingShareEvent.objects.create(
+                sender=request.user,
+                receiver=receiver_user,
+                event=event_to_share,
+            )
+
+            response = {"message": "Event sent 1"}
+            return Response(response)
+
+        except ValueError as e:
+            response = {"message": str(e)}
+            return Response(response, status=400)
+
+    def get_username_and_event_id(self, request):
         username = request.data.get("Receiver")
         event_id = request.data.get("Event-ID")
         normalized_username = str(username).strip().lower() if username else ""
 
         if not (normalized_username and event_id and str(event_id).strip()):
-            response = {"message": "Please provide a username and event ID"}
-            return Response(response, status=400)
+            raise ValueError("Please provide a username and event ID")
 
+        return normalized_username, event_id
+
+    def get_event_id_in_database(self, event_id):
         try:
             event_id_string = str(event_id).strip()
             if event_id_string.startswith("e"):
@@ -46,51 +83,40 @@ class ShareSendView(APIView):
             else:
                 event_id_in_db = int(event_id_string)
         except (ValueError, TypeError):
-            response = {"message": "Please provide a valid username and event ID"}
-            return Response(response, status=400)
+            raise ValueError("Please provide a valid event ID")
 
-        event_belongs_to_sharer = Event.objects.filter(
-            user=request.user,
-            pk=event_id_in_db,
-        ).exists()
+        return event_id_in_db
 
-        if not event_belongs_to_sharer:
-            response = {"message": "Please provide an event ID that you own"}
-            return Response(response, status=400)
-
+    def get_event_to_share(self, request, event_id_in_db):
         try:
-            event_to_share = Event.objects.get(pk=event_id_in_db)
+            event_to_share = Event.objects.get(user=request.user, pk=event_id_in_db)
         except Event.DoesNotExist:
-            response = {"message": "Please provide an event ID that you own"}
-            return Response(response, status=400)
+            raise ValueError("Please provide an event ID that you own")
+        return event_to_share
 
-        event_summary = event_to_share.title
-        event_start = event_to_share.start_time
-        event_end = event_to_share.end_time
-
-        User = get_user_model()
-
+    def get_receiver_user(self, normalized_username):
         try:
-            receiver_user = User.objects.get(username=normalized_username)
-            receiver_exists = True
-        except User.DoesNotExist:
-            receiver_exists = False
+            receiver_user = get_user_model().objects.get(username=normalized_username)
+        except get_user_model().DoesNotExist:
+            raise ValueError("Please provide a username that exists")
+        return receiver_user
 
-        if not receiver_exists:
-            response = {"message": "Please provide a username that exists"}
-            return Response(response, status=400)
-
+    def check_event_belongs_to_receiver(self, event_to_share, receiver_user):
         event_belongs_to_receiver = Event.objects.filter(
             user=receiver_user,
-            title=event_summary,
-            start_time=event_start,
-            end_time=event_end,
+            title=event_to_share.title,
+            start_time=event_to_share.start_time,
+            end_time=event_to_share.end_time,
         ).exists()
 
         if event_belongs_to_receiver:
-            response = {"message": "Event sent 0"}
-            return Response(response)
+            return True
+        else:
+            return False
 
+    def check_share_request_already_exists(
+        self, request, event_to_share, receiver_user
+    ):
         request_already_exists = PendingShareEvent.objects.filter(
             sender=request.user,
             receiver=receiver_user,
@@ -98,16 +124,8 @@ class ShareSendView(APIView):
         ).exists()
 
         if request_already_exists:
-            response = {
-                "message": "You may not send more than 1 of the same event to the same person"
-            }
-            return Response(response, status=400)
-
-        PendingShareEvent.objects.create(
-            sender=request.user,
-            receiver=receiver_user,
-            event=event_to_share,
-        )
-
-        response = {"message": "Event sent 1"}
-        return Response(response)
+            raise ValueError(
+                "You may not send more than 1 of the same event to the same person"
+            )
+        else:
+            return False

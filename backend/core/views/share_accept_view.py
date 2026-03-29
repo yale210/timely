@@ -32,7 +32,7 @@ class ShareAcceptView(APIView):
         decision = request.data.get("Decision")
         event_id = request.data.get("Event-ID")
 
-        if not decision and event_id:
+        if not (decision and event_id):
             response = {"error": "Please provide a decision and event ID"}
             return Response(response, status=400)
 
@@ -50,25 +50,30 @@ class ShareAcceptView(APIView):
 
         # Accepting creates a new event object for the user
         if decision == "accept":
-            Event.objects.create(
-                user=request.user,
-                title=pending_event.event.title,
-                description=pending_event.event.description,
-                start_time=pending_event.event.start_time,
-                end_time=pending_event.event.end_time,
-                location=pending_event.event.location,
-                recurrence_interval=pending_event.event.recurrence_interval,
-                recurrence_end=pending_event.event.recurrence_end,
-                exception_dates=pending_event.event.exception_dates,
-            )
-
-            # The share request is deleted as accepted
+            self.create_object_from_shared_event(request, pending_event)
             pending_event.delete()
-            response = {"message": "This event has been accepted"}
-            return Response(response)
 
-        else:
-            # The share request is deleted as rejected
+            response = {"message": "This event has been accepted"}
+
+        elif decision == "reject":
             pending_event.delete()
             response = {"message": "This event has been rejected"}
-            return Response(response)
+
+        else:
+            response = {"error": "Invalid decision"}
+            return Response(response, status=400)
+
+        return Response(response)
+
+    def create_object_from_shared_event(self, request, pending_event):
+        Event.objects.create(
+            user=request.user,
+            title=pending_event.event.title,
+            description=pending_event.event.description,
+            start_time=pending_event.event.start_time,
+            end_time=pending_event.event.end_time,
+            location=pending_event.event.location,
+            recurrence_interval=pending_event.event.recurrence_interval,
+            recurrence_end=pending_event.event.recurrence_end,
+            exception_dates=pending_event.event.exception_dates,
+        )
