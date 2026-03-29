@@ -1,0 +1,32 @@
+sequenceDiagram
+    participant Client as Browser Client
+    participant DRF as Django REST API
+    participant Signal as Django Signal
+    participant Channel as Django Channels<br/>(Redis Layer)
+    participant Celery as Celery Worker
+    participant Push as Web Push Service
+
+    Note over Client,Channel: Real-time WebSocket connection
+    Client->>Channel: WS CONNECT /ws/notifications/
+    Channel-->>Client: Connected (user_{id} group)
+
+    Note over DRF,Push: Notification creation flow
+    DRF->>DRF: Save Notification object
+    DRF->>Signal: post_save signal fires
+    Signal->>Channel: async_to_sync → group_send<br/>(notification_update)
+    Channel-->>Client: JSON message<br/>{type, notification, unread_count}
+    Signal->>Celery: send_push_notification.delay(id)
+    Celery->>Push: VAPID-signed POST to endpoint
+    Push-->>Client: Browser push notification
+
+    Note over DRF,Celery: Celery Beat periodic tasks
+    Celery->>Celery: check_reminders (every 60s)
+    Celery->>DRF: Query EventReminder.processed=False
+    Celery->>Channel: send_websocket_notification_task
+    Celery->>Push: dispatch push per subscription
+
+    Note over Client,Push: Admin broadcast flow
+    DRF->>Celery: process_broadcast_job.delay(id)
+    Celery->>DRF: Create Notification per recipient
+    Celery->>Push: send_push_notification per recipient
+    Celery->>Channel: WebSocket update per recipient

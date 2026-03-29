@@ -1,0 +1,48 @@
+flowchart TD
+    subgraph Triggers["Triggers"]
+        PR["Pull Request\n(to main)"]
+        Push["Push to main\n/ manual"]
+        Comment["PR Comment\n/oc or /opencode"]
+        PRClose["PR Closed"]
+        PRComment2["PR Comment\n(deploy preview)"]
+    end
+
+    subgraph TestBackend["test-backend.yml\n(PR: backend/**)"]
+        TB1["Ruff lint + format check"]
+        TB2["Run tests\n(90% coverage)"]
+        TB3["Docker build test"]
+        TB1 --> TB2 --> TB3
+    end
+
+    subgraph TestFrontend["test-frontend.yml\n(PR: frontend/**)"]
+        TF1["ESLint"]
+        TF2["Vitest + coverage\n(60% threshold)"]
+        TF3["Docker build test"]
+        TF1 --> TF2 --> TF3
+    end
+
+    subgraph Build["build.yml\n(push to main)"]
+        B1["Build backend image\nregistry.digitalocean.com/segmajor/backend:latest"]
+        B2["Build frontend image\nregistry.digitalocean.com/segmajor/frontend:latest"]
+        B3["Push to DigitalOcean\nContainer Registry"]
+        B4["SSH to server:\ngit pull + docker compose up\n+ migrate + image prune"]
+        B1 & B2 --> B3 --> B4
+    end
+
+    subgraph Preview["previews.yml"]
+        P1["Build images"]
+        P2["Deploy preview env\n(custom action)"]
+        P3["Comment PR with URL"]
+        P4["Destroy preview\n(on PR close)"]
+    end
+
+    subgraph OpenCode["opencode.yml"]
+        OC1["Run OpenCode\n(AI code review)"]
+    end
+
+    PR --> TestBackend
+    PR --> TestFrontend
+    Push --> Build
+    Comment --> OpenCode
+    PRClose --> P4
+    PRComment2 --> P1 --> P2 --> P3

@@ -1,0 +1,26 @@
+graph LR
+    Root["/"] --> Home["Home.tsx\n(landing)"]
+
+    Auth["/login\n/signup\n/logout"] --> AuthPages["Login.tsx\nSignup.tsx\nLogout.tsx"]
+
+    App["/app routes\n(RequireAuth)"] --> Calendar["/calendar → CalendarPage"]
+    App --> Tasks["/tasks → TaskList"]
+    App --> Assessments["/assessments → Assessments"]
+    App --> Gradebook["/gradebook → Gradebook"]
+    App --> Dashboard["/dashboard → Dashboard"]
+    App --> Courses["/courses → Courses"]
+    App --> CourseDetail["/courses/:id → CourseDetail"]
+    App --> Friends["/friends → Friends"]
+    App --> Sharing["/sharing → Sharing"]
+    App --> Leaderboard["/leaderboard → Leaderboard"]
+    App --> Pomodoro["/pomodoro → Pomodoro"]
+    App --> Profile["/profiles/:username → ProfilePage"]
+    App --> Notifications["/notifications → Notifications"]
+    App --> Settings["/settings → Settings"]
+
+    Admin["/admin routes\n(RequireAdmin)"] --> AdminNotif["/admin/notifications → AdminNotifications"]
+    Admin --> AdminHistory["/admin/notifications/history → AdminNotificationHistory"]
+
+    Teacher["/courses/manage\n(RequireTeacher)"] --> CourseManage["CourseManagement"]
+
+    App --> NotFound["* → NotFound"]
