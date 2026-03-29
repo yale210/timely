@@ -8,6 +8,7 @@ import { useNotificationContext } from '@/context/NotificationContext'
 import { type Notification } from '@/types'
 import AdminSidebar from "@/components/layout/AdminSidebar"
 import { LogoMark } from "@/components/ui"
+import { emitMobileRouteLoadingStart } from "@/utils/routeLoading"
 
 const navItems = [
   { label: "Overview", to: "/dashboard", icon: "space_dashboard" },
@@ -66,6 +67,16 @@ export default function AppNavbar() {
   const user = authStore.getUser()
   const isStaff = Boolean(user?.is_staff)
   const [profileAvatar, setProfileAvatar] = useState<string | null>(null)
+
+  const closeDrawerOnMobile = (nextPath?: string) => {
+    if (typeof window !== "undefined" && window.innerWidth < 768) {
+      if (nextPath && nextPath !== location.pathname) {
+        emitMobileRouteLoadingStart()
+      }
+      setOpen(false)
+      window.scrollTo({ top: 0, left: 0, behavior: "auto" })
+    }
+  }
 
   const handleNotificationClick = (notification: Notification) => {
     void markRead(notification.id)
@@ -250,6 +261,15 @@ export default function AppNavbar() {
         </div>
       </div>
 
+      {open && (
+        <button
+          type="button"
+          aria-label="Dismiss navigation overlay"
+          onClick={() => setOpen(false)}
+          className="fixed inset-0 z-40 bg-slate-900/20 backdrop-blur-sm transition-opacity md:hidden"
+        />
+      )}
+
       {/* Sliding drawer */}
       <nav
         className={`app-drawer fixed inset-y-0 left-0 z-50 flex w-56 max-w-full flex-col transform bg-white shadow-xl ring-1 ring-gray-200 transition-transform duration-300 ease-out ${
@@ -258,7 +278,7 @@ export default function AppNavbar() {
         aria-label="Main"
       >
         <div className="flex h-10 items-center justify-between px-4 border-b border-gray-200 flex-none">
-          <Link to="/dashboard" className="flex items-center">
+          <Link to="/dashboard" className="flex items-center" onClick={() => closeDrawerOnMobile("/dashboard")}>
             <span className="sr-only">Timely</span>
             <LogoMark className="h-6 w-6" />
           </Link>
@@ -276,7 +296,7 @@ export default function AppNavbar() {
 
         <div className="flex flex-1 flex-col overflow-y-auto">
           {isAdminRoute ? (
-            <AdminSidebar onClose={() => setOpen(false)} />
+            <AdminSidebar onClose={() => closeDrawerOnMobile()} />
           ) : (
             /* ── Main sidebar ── */
             <>
@@ -285,6 +305,7 @@ export default function AppNavbar() {
                   <li key={item.to}>
                     <NavLink
                       to={item.to}
+                      onClick={() => closeDrawerOnMobile(item.to)}
                       className={({ isActive }) =>
                         [
                           "app-nav-link flex items-center gap-3 rounded-md px-3 py-2.5 text-sm font-semibold transition-colors",
@@ -310,6 +331,7 @@ export default function AppNavbar() {
                       <li key={item.to}>
                         <NavLink
                           to={item.to}
+                          onClick={() => closeDrawerOnMobile(item.to)}
                           className={({ isActive }) =>
                             [
                               "app-nav-link flex items-center gap-3 rounded-md px-3 py-2.5 text-sm font-semibold transition-colors",
@@ -333,6 +355,7 @@ export default function AppNavbar() {
                     <li>
                       <Link
                         to="/admin/notifications"
+                        onClick={() => closeDrawerOnMobile("/admin/notifications")}
                         className="flex items-center gap-3 rounded-md px-3 py-2.5 text-sm font-semibold text-indigo-600 hover:bg-indigo-50 transition-colors"
                       >
                         <span aria-hidden="true" className="material-icons text-lg leading-none">admin_panel_settings</span>
@@ -349,6 +372,7 @@ export default function AppNavbar() {
         <div className="mt-auto border-t border-gray-200 px-4 py-3">
           <NavLink
             to="/leaderboard"
+            onClick={() => closeDrawerOnMobile("/leaderboard")}
             className={({ isActive }) =>
               [
                 "app-nav-link mb-2 flex items-center gap-3 rounded-md px-3 py-2 text-sm font-semibold transition-colors",
@@ -361,6 +385,7 @@ export default function AppNavbar() {
           </NavLink>
           <NavLink
             to="/friends"
+            onClick={() => closeDrawerOnMobile("/friends")}
             className={({ isActive }) =>
               [
                 "app-nav-link mb-2 flex items-center gap-3 rounded-md px-3 py-2 text-sm font-semibold transition-colors",
@@ -373,6 +398,7 @@ export default function AppNavbar() {
           </NavLink>
           <NavLink
             to="/settings"
+            onClick={() => closeDrawerOnMobile("/settings")}
             className={({ isActive }) =>
               [
                 "app-nav-link flex items-center gap-3 rounded-md px-3 py-2 text-sm font-semibold transition-colors",

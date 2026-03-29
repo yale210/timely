@@ -100,22 +100,24 @@
     background-color: color-mix(in srgb, var(--text-color) 32%, var(--background));
   }
 
-  body.menu-open .app-shell {
-    margin-left: var(--drawer-width, 288px);
-    width: calc(100% - var(--drawer-width, 288px));
-  }
-
   .app-shell {
     transition: margin-left 200ms ease-out, width 200ms ease-out;
   }
 
-  body.menu-open .calendar-header {
-    left: var(--drawer-width, 288px) !important;
-    right: 0 !important;
-  }
-
   .calendar-header {
     transition: left 200ms ease-out, right 200ms ease-out;
+  }
+
+  @media (min-width: 768px) {
+    body.menu-open .app-shell {
+      margin-left: var(--drawer-width, 288px);
+      width: calc(100% - var(--drawer-width, 288px));
+    }
+
+    body.menu-open .calendar-header {
+      left: var(--drawer-width, 288px) !important;
+      right: 0 !important;
+    }
   }
 
   input,
