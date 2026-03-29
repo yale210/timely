@@ -259,6 +259,7 @@ Non-code AI assistance used on this project should also be listed if relevant, f
 - Realtime and scheduled features depend on Redis and Celery, so they are not fully represented by a Django-only process.
 - Push notifications require valid VAPID keys and a compatible browser environment.
 - The team should continue consolidating large calendar and scheduling flows to reduce complexity in high-change areas.
+- Courses and Notifications do not work using Nix or local setup, it only works using Docker
 
 ## Submission Checklist
 
