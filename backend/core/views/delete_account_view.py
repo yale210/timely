@@ -1,8 +1,10 @@
 """Views for account deletion."""
 
-from rest_framework import permissions
+from rest_framework import permissions, serializers
 from rest_framework.response import Response
 from rest_framework.views import APIView
+
+from drf_spectacular.utils import extend_schema, inline_serializer
 
 
 class DeleteAccountView(APIView):
@@ -10,6 +12,15 @@ class DeleteAccountView(APIView):
 
     permission_classes = [permissions.IsAuthenticated]
 
+    @extend_schema(
+        request=None,
+        responses={
+            200: inline_serializer(
+                name="DeleteAccountResponse",
+                fields={"message": serializers.CharField()},
+            ),
+        },
+    )
     def delete(self, request):
         """Delete the account for the requesting user.
 

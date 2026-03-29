@@ -8,6 +8,8 @@ from rest_framework.parsers import FormParser, JSONParser, MultiPartParser
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
+from drf_spectacular.utils import extend_schema
+
 from profiles.models.profile import Profile
 from profiles.serializers.profile_serializer import (
     ProfileSerializer,
@@ -38,6 +40,7 @@ class ProfileAPIView(GenericAPIView):
         )
         return profile
 
+    @extend_schema(operation_id="profiles_me_retrieve")
     def get(self, request):
         """Return the authenticated user's profile payload.
 
