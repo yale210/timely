@@ -32,8 +32,10 @@ def _build_expanded_content(
     reminder_cache = serialise_event_reminders(event)
     duration = event.end_time - event.start_time
     exception_dates = set(event.exception_dates or [])
-    loaded_overrides = overrides or list(
-        event.overrides.prefetch_related("categories").all()
+    loaded_overrides = (
+        overrides
+        if overrides is not None
+        else list(event.overrides.prefetch_related("categories").all())
     )
     overrides_by_original = _index_overrides_by_original_start(loaded_overrides)
     return (

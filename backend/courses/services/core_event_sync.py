@@ -43,6 +43,13 @@ class CourseEventSyncService:
         return update_core_event_from_course_event(core_event, course_event)
 
     @staticmethod
+    def _record_sync_error(
+        stats: Dict[str, Any], course_event, username: str, exc: Exception
+    ) -> None:
+        # Centralized error formatting keeps logs consistent.
+        record_sync_error(stats, course_event, username, exc)
+
+    @staticmethod
     def _sync_enrollment_core_event(
         course_event, user, stats: Dict[str, Any], event_title: str
     ) -> None:

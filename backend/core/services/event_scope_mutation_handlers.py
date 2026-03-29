@@ -16,6 +16,7 @@ from core.services.event_scope_persistence_helpers import (
     update_scope_following,
 )
 from core.services.event_scope_update_helpers import (
+    _remove_exception_date,
     _replace_event_reminders,
     detach_non_aligned_overrides,
     resolve_scope_this_fields,

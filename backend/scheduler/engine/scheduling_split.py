@@ -59,6 +59,56 @@ class _SchedulerSplitSchedulingMixin:
         """
         return build_split_result(task.id, segments, remaining)
 
+    @staticmethod
+    def _insufficient_category_minutes(
+        category_minutes: int | None, min_block: int
+    ) -> bool:
+        """Check if the remaining category quota is below the minimum block size."""
+        return insufficient_category_minutes(category_minutes, min_block)
+
+    @staticmethod
+    def _has_invalid_split_remainder(day_remaining: int, min_block: int) -> bool:
+        """Check if the remaining minutes fall below the minimum allowed split."""
+        return has_invalid_split_remainder(day_remaining, min_block)
+
+    @staticmethod
+    def _apply_split_chunk(
+        segments: list[DateTimeRange],
+        cursor: datetime,
+        chunk: int,
+        remaining: int,
+        category_minutes: int | None,
+        buffer_gap: int,
+    ) -> tuple[datetime, int, int | None]:
+        """Finalise a single chunk of time and update cursors and counters."""
+        return apply_split_chunk(
+            segments,
+            cursor,
+            chunk,
+            remaining,
+            category_minutes,
+            buffer_gap,
+        )
+
+    @staticmethod
+    def _next_chunk_minutes(
+        start: datetime,
+        end: datetime,
+        remaining: int,
+        min_block: int,
+        max_block: int | None,
+        category_minutes: int | None,
+    ) -> int | None:
+        """Calculate the size of the next chunk that can be carved from a slot."""
+        return next_chunk_minutes(
+            start,
+            end,
+            remaining,
+            min_block,
+            max_block,
+            category_minutes,
+        )
+
     def _schedule_task_split(self, task: Task, start_date: date) -> ScheduleResult:
         """Attempt to schedule a task by splitting it across multiple slots.
 
@@ -121,7 +171,7 @@ class _SchedulerSplitSchedulingMixin:
             day_segments, day_remaining = self._schedule_split_day(
                 task, current_date, task_start, deadline, segments, remaining, limits
             )
-            if not day_segments or has_invalid_split_remainder(
+            if not day_segments or self._has_invalid_split_remainder(
                 day_remaining, min_block
             ):
                 continue
@@ -159,7 +209,7 @@ class _SchedulerSplitSchedulingMixin:
             current_date,
             current_segments=segments,
         )
-        if insufficient_category_minutes(category_minutes, min_block):
+        if self._insufficient_category_minutes(category_minutes, min_block):
             return [], remaining
         slots = self._split_day_slots(
             task, current_date, min_block, task_start, deadline
@@ -279,14 +329,14 @@ class _SchedulerSplitSchedulingMixin:
         buffer_gap = sum(self._get_task_buffer_minutes(task))
         cursor, end = slot
         while remaining > 0 and cursor < end:
-            if insufficient_category_minutes(category_minutes, min_block):
+            if self._insufficient_category_minutes(category_minutes, min_block):
                 return segments, remaining, category_minutes
-            chunk = next_chunk_minutes(
+            chunk = self._next_chunk_minutes(
                 cursor, end, remaining, min_block, max_block, category_minutes
             )
             if chunk is None:
                 return segments, remaining, category_minutes
-            cursor, remaining, category_minutes = apply_split_chunk(
+            cursor, remaining, category_minutes = self._apply_split_chunk(
                 segments, cursor, chunk, remaining, category_minutes, buffer_gap
             )
         return segments, remaining, category_minutes
