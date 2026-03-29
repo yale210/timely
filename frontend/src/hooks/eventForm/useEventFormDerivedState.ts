@@ -27,6 +27,50 @@ interface Args {
   serverTimeOffsetMs: number | null;
 }
 
+function getSelectedCategoryObjects(
+  categories: Category[],
+  selectedCategories: number[],
+) {
+  return categories.filter((category) => selectedCategories.includes(category.id));
+}
+
+function getEventColourState(selectedCategoryObjects: Category[], colour: string) {
+  const overrideColour = getOverrideColour(selectedCategoryObjects);
+
+  return {
+    isColourLocked: Boolean(overrideColour),
+    displayColour: overrideColour ?? colour,
+  };
+}
+
+function getEventTimeState(args: Args) {
+  const startDateTime = buildEventDateTime(args.startDate, args.startTime);
+  const endDateTime = buildEventDateTime(args.endDate, args.endTime);
+  const isTimeInvalid =
+    Number.isNaN(startDateTime.getTime())
+    || Number.isNaN(endDateTime.getTime())
+    || startDateTime >= endDateTime;
+
+  return { startDateTime, endDateTime, isTimeInvalid };
+}
+
+function getEventReminderState(args: Args, startDateTime: Date) {
+  const now = new Date(args.validationNowMs + (args.serverTimeOffsetMs ?? 0));
+  const pastReminderIndices = buildPastReminderIndices(args.reminders, startDateTime, now);
+
+  return {
+    canAddReminder: args.reminders.length < 5,
+    pastReminderIndices,
+  };
+}
+
+function buildEventFormErrors(isTimeInvalid: boolean, pastReminderIndices: Set<number>) {
+  return {
+    time: isTimeInvalid,
+    reminders: pastReminderIndices.size > 0,
+  };
+}
+
 /**
  * Builds a full EventSubmission from arguaments not yet in the correct format.
  * @param args Args as stored in EventForm.
@@ -58,30 +102,17 @@ export function buildSubmission(args: Args): EventSubmission {
  * @param args Args as stored in EventForm.
  */
 export function useEventFormDerivedState(args: Args) {
-  const selectedCategoryObjects = useMemo(() => {
-    return args.categories.filter((category) => args.selectedCategories.includes(category.id));
-  }, [args.categories, args.selectedCategories]);
-
-  const overrideColour = getOverrideColour(selectedCategoryObjects);
-  const isColourLocked = Boolean(overrideColour);
-  const displayColour = overrideColour ?? args.colour;
-
-  const startDateTime = buildEventDateTime(args.startDate, args.startTime);
-  const endDateTime = buildEventDateTime(args.endDate, args.endTime);
-  const isTimeInvalid =
-    Number.isNaN(startDateTime.getTime()) ||
-    Number.isNaN(endDateTime.getTime()) ||
-    startDateTime >= endDateTime;
-
-  const now = new Date(args.validationNowMs + (args.serverTimeOffsetMs ?? 0));
-  const pastReminderIndices = buildPastReminderIndices(args.reminders, startDateTime, now);
-  const canAddReminder = args.reminders.length < 5;
-
-  const errors = {
-    time: isTimeInvalid,
-    reminders: pastReminderIndices.size > 0,
-  };
-
+  const selectedCategoryObjects = useMemo(
+    () => getSelectedCategoryObjects(args.categories, args.selectedCategories),
+    [args.categories, args.selectedCategories],
+  );
+  const { isColourLocked, displayColour } = getEventColourState(
+    selectedCategoryObjects,
+    args.colour,
+  );
+  const { startDateTime, endDateTime, isTimeInvalid } = getEventTimeState(args);
+  const { canAddReminder, pastReminderIndices } = getEventReminderState(args, startDateTime);
+  const errors = buildEventFormErrors(isTimeInvalid, pastReminderIndices);
   const hasErrors = errors.time || errors.reminders;
   const submission = buildSubmission(args);
 
