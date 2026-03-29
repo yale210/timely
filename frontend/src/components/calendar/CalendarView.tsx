@@ -1,4 +1,4 @@
-import { memo, useCallback, useEffect, useLayoutEffect, useMemo, useRef, type CSSProperties } from "react";
+import { memo, useCallback, useEffect, useLayoutEffect, useMemo, useRef } from "react";
 import moment from "moment";
 import { Calendar, type Components, type Formats, Views } from "react-big-calendar";
 import withDragAndDrop from "react-big-calendar/lib/addons/dragAndDrop";
@@ -7,10 +7,13 @@ import { HTML5Backend } from "react-dnd-html5-backend";
 import type { UseCalendarReturn } from "@/hooks/calendar/useCalendar";
 import type { CalendarEntry } from "@/utils/calendarAdapter";
 import { useCalendarLocalizer } from "@/utils/calendarLocalizer";
-import { getOverrideColour, hexToRgba } from "@/utils/colorUtils";
+import {
+  buildCalendarComponents,
+  getCalendarEntryClassName,
+  getCalendarEntryStyle,
+} from "@/components/calendar/CalendarViewEventContent";
 import {
   CALENDAR_DISPLAY_TIMEZONE,
-  formatCalendarDisplayTime,
   fromCalendarDisplayDate,
   getCalendarDisplayDayOfWeek,
   getCalendarDisplayMinutes,
@@ -22,7 +25,6 @@ import { getStoredUserTimezone } from "@/utils/userTimezone";
 const DragAndDropCalendar = withDragAndDrop<CalendarEntry>(Calendar);
 const DEFAULT_DRAG_SNAP_MINUTES = 5;
 
-// Module-level stable references — never change, so they never cause re-renders.
 const alwaysTrue = () => true;
 
 interface CalendarViewProps {
@@ -44,113 +46,6 @@ const parseClockMinutes = (value: string): number => {
     return 0;
   }
   return (hour * 60) + minute;
-};
-
-type CalendarEntryStyle = CSSProperties & { "--event-stripe-color"?: string };
-
-const formatEventTime = formatCalendarDisplayTime;
-
-const getEventTimeLabel = (event: CalendarEntry, timeFormat: "24h" | "12h") => {
-  const actualEnd = event.actualEnd ?? event.end;
-  return `${formatEventTime(event.start, timeFormat)} - ${formatEventTime(actualEnd, timeFormat)}`;
-};
-
-const CalendarStandardEventContent = ({ event, timeLabel }: { event: CalendarEntry; timeLabel: string }) => (
-  <div className="calendar-entry-content flex h-full w-full items-start gap-2">
-    <div className="flex min-w-0 flex-col">
-      <span className="calendar-entry-title truncate text-[20px] font-medium">{event.title}</span>
-      <span className="calendar-entry-time truncate text-[15px] text-gray-700">{timeLabel}</span>
-      {event.eventData?.location && (
-        <span className="calendar-entry-location truncate text-[13px] text-gray-600">{event.eventData.location}</span>
-      )}
-    </div>
-  </div>
-);
-
-const CalendarTaskEventContent = ({
-  event,
-  timeLabel,
-  handleToggleTaskComplete,
-}: {
-  event: CalendarEntry;
-  timeLabel: string;
-  handleToggleTaskComplete: (taskId: number) => Promise<void>;
-}) => (
-  <div className="calendar-entry-content calendar-task-content flex h-full w-full items-start gap-2">
-    <input
-      type="checkbox"
-      checked={Boolean(event.taskData?.completed)}
-      onChange={(inputEvent) => {
-        inputEvent.stopPropagation();
-        void handleToggleTaskComplete(event.sourceId);
-      }}
-      onClick={(inputEvent) => inputEvent.stopPropagation()}
-      className="mt-1 task-event-checkbox"
-      aria-label="Mark task complete"
-    />
-    <div className="flex min-w-0 flex-col">
-      <span className="calendar-entry-title truncate text-[20px] font-medium">{event.title}</span>
-      <span className="calendar-entry-time truncate text-[15px] text-gray-600">{timeLabel}</span>
-    </div>
-  </div>
-);
-
-const CalendarEntryContent = ({
-  event,
-  timeFormat,
-  handleToggleTaskComplete,
-}: {
-  event: CalendarEntry;
-  timeFormat: "24h" | "12h";
-  handleToggleTaskComplete: (taskId: number) => Promise<void>;
-}) => {
-  const timeLabel = getEventTimeLabel(event, timeFormat);
-  return event.kind === "task"
-    ? <CalendarTaskEventContent event={event} timeLabel={timeLabel} handleToggleTaskComplete={handleToggleTaskComplete} />
-    : <CalendarStandardEventContent event={event} timeLabel={timeLabel} />;
-};
-
-const buildCalendarComponents = (
-  handleToggleTaskComplete: (taskId: number) => Promise<void>,
-  timeFormat: "24h" | "12h",
-): Components<CalendarEntry> => ({
-  event: ({ event }: { event: CalendarEntry }) => (
-    <CalendarEntryContent
-      event={event}
-      timeFormat={timeFormat}
-      handleToggleTaskComplete={handleToggleTaskComplete}
-    />
-  ),
-});
-
-const getCalendarEntryClassName = (event: CalendarEntry): string =>
-  [
-    "event-slot",
-    event.kind === "task" ? "task-event" : "",
-    event.repeat ? "is-repeat" : "",
-    event.split ? "is-split" : "",
-    event.oneGo ? "is-onego" : "",
-    event.kind === "event" ? "is-event" : "",
-    event.kind === "task" && typeof event.scheduleIndex === "number" ? "is-just-scheduled" : "",
-  ]
-    .filter(Boolean)
-    .join(" ");
-
-const getCalendarEntryColour = (event: CalendarEntry): string =>
-  getOverrideColour(event.kind === "task" ? event.categories : event.eventData?.categories)
-  ?? (event.kind === "task" ? event.taskData?.colour ?? "#3b82f6" : event.eventData?.colour ?? "#f97316");
-
-const getCalendarEntryStyle = (event: CalendarEntry): CSSProperties => {
-  const style: CalendarEntryStyle = {};
-  if (event.kind === "task" && typeof event.scheduleIndex === "number") {
-    style.animationDelay = `${event.scheduleIndex * 120}ms`;
-  }
-  const appliedColour = getCalendarEntryColour(event);
-  style.backgroundColor = hexToRgba(appliedColour, 0.5);
-  style.borderLeft = `4px solid ${appliedColour}`;
-  style["--event-stripe-color"] = hexToRgba(appliedColour, 0.6);
-  style.color = "#000000";
-  return style;
 };
 
 const measureTimeGutterWidth = (shell: HTMLDivElement | null): number | null => {
@@ -271,7 +166,6 @@ const CalendarView = ({
   const timeFormat = state.preference?.time_format ?? getStoredTimeFormat();
   const weekStartsOn = state.preference?.week_starts_on ?? getStoredWeekStartsOn();
 
-  // Destructure so the React Compiler can track individual deps rather than the whole object.
   const {
     setTimeGutterWidth,
     handleToggleTaskComplete,
