@@ -50,37 +50,21 @@ interface UseAssessmentsReturn {
   actions: UseAssessmentsActions;
 }
 
-/**
- * Determines whether an assessment should be treated as completed in the UI.
- * @param assessment - Assessment to evaluate.
- * @returns Whether the assessment is completed or has already passed.
- */
 const isAssessmentCompleted = (assessment: Assessment): boolean => {
-  if (assessment.completed) {
-    return true;
-  }
-
+  if (assessment.completed) return true;
   const comparisonDate = assessment.linked_event_details?.end_time ?? assessment.due_date;
   return new Date(comparisonDate).getTime() < Date.now();
 };
 
-/**
- * Reads the local gradebook feature flag.
- * @returns Whether gradebook is currently enabled.
- */
 const readGradebookFeatureFlag = (): boolean => {
   const raw = localStorage.getItem("feature_gradebook_enabled");
-  if (raw === null) {
-    return true;
-  }
-  return raw === "true";
+  return raw === null ? true : raw === "true";
 };
 
 /**
- * Provides state and actions for the assessments page.
- * @returns Structured assessments state, loading, error, and actions.
+ * Manages the core state for assessments and categories.
  */
-export const useAssessments = (): UseAssessmentsReturn => {
+const useAssessmentState = () => {
   const [assessments, setAssessments] = useState<Assessment[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(false);
@@ -93,44 +77,32 @@ export const useAssessments = (): UseAssessmentsReturn => {
   const [gradebookSource, setGradebookSource] = useState<Assessment | null>(null);
   const [isGradebookEnabled, setIsGradebookEnabled] = useState<boolean>(() => readGradebookFeatureFlag());
 
-  const fetchAssessments = useCallback(async () => {
-    setLoading(true);
-    try {
-      const data = await assessmentService.getAssessments({ ordering: "due_date" });
-      setAssessments(data);
-      setError(null);
-    } catch (fetchError) {
-      console.error(fetchError);
-      setError("Failed to load assessments.");
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+  return useMemo(() => ({
+    assessments, setAssessments, categories, setCategories,
+    loading, setLoading, error, setError, search, setSearch,
+    selectedCategoryId, setSelectedCategoryId, isSidebarOpen, setIsSidebarOpen,
+    selectedAssessment, setSelectedAssessment, pendingDeleteId, setPendingDeleteId,
+    gradebookSource, setGradebookSource, isGradebookEnabled, setIsGradebookEnabled,
+  }), [
+    assessments, categories, loading, error, search, selectedCategoryId,
+    isSidebarOpen, selectedAssessment, pendingDeleteId, gradebookSource, isGradebookEnabled,
+  ]);
+};
 
-  const fetchCategories = useCallback(async () => {
-    try {
-      const data = await categoryService.getCategories();
-      setCategories(data);
-    } catch (fetchError) {
-      console.error(fetchError);
-    }
-  }, []);
-
-  const refresh = useCallback(async () => {
-    await Promise.all([fetchAssessments(), fetchCategories()]);
-  }, [fetchAssessments, fetchCategories]);
-
-  useEffect(() => {
-    void refresh();
-  }, [refresh]);
-
+/**
+ * Synchronises the gradebook feature flag state.
+ * @param setIsEnabled Callback to update the gradebook enabled status.
+ * @param setSource Callback to update the gradebook source assessment.
+ */
+const useAssessmentFeatureSync = (
+  setIsEnabled: (enabled: boolean) => void,
+  setSource: (source: Assessment | null) => void,
+) => {
   useEffect(() => {
     const syncFeatureFlag = () => {
       const enabled = readGradebookFeatureFlag();
-      setIsGradebookEnabled(enabled);
-      if (!enabled) {
-        setGradebookSource(null);
-      }
+      setIsEnabled(enabled);
+      if (!enabled) setSource(null);
     };
 
     window.addEventListener("feature-flags-changed", syncFeatureFlag);
@@ -139,7 +111,107 @@ export const useAssessments = (): UseAssessmentsReturn => {
       window.removeEventListener("feature-flags-changed", syncFeatureFlag);
       window.removeEventListener("storage", syncFeatureFlag);
     };
-  }, []);
+  }, [setIsEnabled, setSource]);
+};
+
+/**
+ * Handles fetching logic for assessments and categories.
+ * @param state The current assessments state object.
+ */
+const useAssessmentData = (state: ReturnType<typeof useAssessmentState>) => {
+  const { setAssessments, setCategories, setLoading, setError } = state;
+
+  const fetchAssessments = useCallback(async () => {
+    setLoading(true);
+    try {
+      const data = await assessmentService.getAssessments({ ordering: "due_date" });
+      setAssessments(data);
+      setError(null);
+    } catch (err) {
+      console.error(err);
+      setError("Failed to load assessments.");
+    } finally {
+      setLoading(false);
+    }
+  }, [setAssessments, setError, setLoading]);
+
+  const fetchCategories = useCallback(async () => {
+    try {
+      const data = await categoryService.getCategories();
+      setCategories(data);
+    } catch (err) {
+      console.error(err);
+    }
+  }, [setCategories]);
+
+  const refresh = useCallback(async () => {
+    await Promise.all([fetchAssessments(), fetchCategories()]);
+  }, [fetchAssessments, fetchCategories]);
+
+  useEffect(() => { void refresh(); }, [refresh]);
+
+  return useMemo(() => ({ refresh }), [refresh]);
+};
+
+/**
+ * Update assessment categories when a category is modified.
+ * @param id The ID of the category being updated.
+ * @param updated The updated category data.
+ */
+const updateAssessmentsByCategory = (id: number, updated: Category) => (a: Assessment) => ({
+  ...a,
+  assessment_category: a.assessment_category?.id === id ? { ...a.assessment_category, ...updated } : a.assessment_category,
+  module_category: a.module_category?.id === id ? { ...a.module_category, ...updated } : a.module_category,
+  categories: a.categories.map((c) => (c.id === id ? { ...c, ...updated } : c)),
+});
+
+/**
+ * Remove categories from assessments when a category is deleted.
+ * @param id The ID of the category being removed.
+ */
+const removeCategoryFromAssessments = (id: number) => (a: Assessment) => ({
+  ...a,
+  assessment_category: a.assessment_category?.id === id ? null : a.assessment_category,
+  module_category: a.module_category?.id === id ? null : a.module_category,
+  categories: a.categories.filter((c) => c.id !== id),
+});
+
+/**
+ * Handles CRUD operations for categories within the hooks.
+ * @param state The current assessments state object.
+ */
+const useCategoryOperations = (state: ReturnType<typeof useAssessmentState>) => {
+  const { setCategories, setAssessments, setSelectedCategoryId, selectedCategoryId } = state;
+
+  const createCategory = useCallback(async (text: string) => {
+    const created = await categoryService.createCategory(text.trim());
+    setCategories((prev) => [...prev, created].sort((a, b) => a.text.localeCompare(b.text)));
+    return created;
+  }, [setCategories]);
+
+  const updateCategory = useCallback(async (id: number, patch: { colour?: string | null; colour_override?: boolean }) => {
+    const updated = await categoryService.updateCategory(id, patch);
+    setCategories((prev) => prev.map((c) => (c.id === id ? { ...c, ...updated } : c)));
+    setAssessments((prev) => prev.map(updateAssessmentsByCategory(id, updated)));
+    return updated;
+  }, [setCategories, setAssessments]);
+
+  const deleteCategory = useCallback(async (id: number) => {
+    await categoryService.deleteCategory(id);
+    setCategories((prev) => prev.filter((c) => c.id !== id));
+    setAssessments((prev) => prev.map(removeCategoryFromAssessments(id)));
+    if (selectedCategoryId === id) setSelectedCategoryId(null);
+  }, [selectedCategoryId, setCategories, setAssessments, setSelectedCategoryId]);
+
+  return useMemo(() => ({ createCategory, updateCategory, deleteCategory }), [createCategory, updateCategory, deleteCategory]);
+};
+
+/**
+ * Handles CRUD operations for assessments.
+ * @param state The current assessments state object.
+ */
+const useAssessmentCRUDOperations = (state: ReturnType<typeof useAssessmentState>) => {
+  const { setAssessments, setSelectedAssessment, setIsSidebarOpen, setPendingDeleteId, selectedAssessment, pendingDeleteId } = state;
 
   const submitAssessment = useCallback(async (data: AssessmentSubmission) => {
     if (selectedAssessment) {
@@ -148,17 +220,13 @@ export const useAssessments = (): UseAssessmentsReturn => {
       setSelectedAssessment(updated);
     } else {
       const created = await assessmentService.createAssessment(data);
-      setAssessments((prev) => [...prev, created].sort((left, right) => (
-        new Date(left.due_date).getTime() - new Date(right.due_date).getTime()
-      )));
+      setAssessments((prev) => [...prev, created].sort((l, r) => new Date(l.due_date).getTime() - new Date(r.due_date).getTime()));
       setSelectedAssessment(created);
     }
-  }, [selectedAssessment]);
+  }, [selectedAssessment, setAssessments, setSelectedAssessment]);
 
   const deleteAssessment = useCallback(async () => {
-    if (pendingDeleteId === null) {
-      return;
-    }
+    if (pendingDeleteId === null) return;
     await assessmentService.deleteAssessment(pendingDeleteId);
     setAssessments((prev) => prev.filter((item) => item.id !== pendingDeleteId));
     if (selectedAssessment?.id === pendingDeleteId) {
@@ -166,118 +234,68 @@ export const useAssessments = (): UseAssessmentsReturn => {
       setIsSidebarOpen(false);
     }
     setPendingDeleteId(null);
-  }, [pendingDeleteId, selectedAssessment?.id]);
+  }, [pendingDeleteId, selectedAssessment?.id, setAssessments, setIsSidebarOpen, setPendingDeleteId, setSelectedAssessment]);
 
-  const createCategory = useCallback(async (text: string) => {
-    const created = await categoryService.createCategory(text.trim());
-    setCategories((prev) => [...prev, created].sort((a, b) => a.text.localeCompare(b.text)));
-    return created;
-  }, []);
+  return useMemo(() => ({ submitAssessment, deleteAssessment }), [submitAssessment, deleteAssessment]);
+};
 
-  const updateCategory = useCallback(async (
-    id: number,
-    patch: { colour?: string | null; colour_override?: boolean },
-  ) => {
-    const updated = await categoryService.updateCategory(id, patch);
-    setCategories((prev) => prev.map((category) => (
-      category.id === id ? { ...category, ...updated } : category
-    )));
-    setAssessments((prev) => prev.map((assessment) => ({
-      ...assessment,
-      assessment_category: assessment.assessment_category?.id === id
-        ? { ...assessment.assessment_category, ...updated }
-        : assessment.assessment_category,
-      module_category: assessment.module_category?.id === id
-        ? { ...assessment.module_category, ...updated }
-        : assessment.module_category,
-      categories: assessment.categories.map((category) => (
-        category.id === id ? { ...category, ...updated } : category
-      )),
-    })));
-    return updated;
-  }, []);
+/**
+ * Organises all assessment-related actions into a single stable object.
+ * @param state The current assessments state object.
+ * @param refresh Function that initialises or refreshes the data.
+ */
+const useAssessmentOperations = (state: ReturnType<typeof useAssessmentState>, refresh: () => Promise<void>) => {
+  const cats = useCategoryOperations(state);
+  const crud = useAssessmentCRUDOperations(state);
+  const { setSearch, setSelectedCategoryId, setSelectedAssessment, setIsSidebarOpen, setPendingDeleteId, setGradebookSource } = state;
 
-  const deleteCategory = useCallback(async (id: number) => {
-    await categoryService.deleteCategory(id);
-    setCategories((prev) => prev.filter((category) => category.id !== id));
-    setAssessments((prev) => prev.map((assessment) => ({
-      ...assessment,
-      assessment_category: assessment.assessment_category?.id === id
-        ? null
-        : assessment.assessment_category,
-      module_category: assessment.module_category?.id === id
-        ? null
-        : assessment.module_category,
-      categories: assessment.categories.filter((category) => category.id !== id),
-    })));
-    if (selectedCategoryId === id) {
-      setSelectedCategoryId(null);
-    }
-  }, [selectedCategoryId]);
+  return useMemo(() => ({
+    ...cats, ...crud, setSearch, setSelectedCategoryId, setPendingDeleteId, refresh,
+    openNewAssessment: () => { setSelectedAssessment(undefined); setIsSidebarOpen(true); },
+    openAssessment: (a: Assessment) => { setSelectedAssessment(a); setIsSidebarOpen(true); },
+    closeSidebar: () => { setSelectedAssessment(undefined); setIsSidebarOpen(false); },
+    openGradebook: (a: Assessment) => setGradebookSource(a),
+    closeGradebook: () => setGradebookSource(null),
+  }), [cats, crud, setSearch, setSelectedCategoryId, setPendingDeleteId, refresh, setSelectedAssessment, setIsSidebarOpen, setGradebookSource]);
+};
 
-  const filteredAssessments = useMemo(() => assessments.filter((assessment) => {
-    const matchesSearch = assessment.title.toLowerCase().includes(search.toLowerCase());
-    const matchesCategory = selectedCategoryId === null || [
-      assessment.assessment_category?.id,
-      assessment.module_category?.id,
-      ...assessment.categories.map((category) => category.id),
-    ].includes(selectedCategoryId);
-    return matchesSearch && matchesCategory;
-  }), [assessments, search, selectedCategoryId]);
+/**
+ * Handles filtering and sectioning logic for assessments.
+ * @param state The current assessments state object.
+ */
+const useAssessmentFilters = (state: ReturnType<typeof useAssessmentState>) => {
+  const filtered = useMemo(() => state.assessments.filter((a) => {
+    const matchesSearch = a.title.toLowerCase().includes(state.search.toLowerCase());
+    const ids = [a.assessment_category?.id, a.module_category?.id, ...a.categories.map((c) => c.id)];
+    return matchesSearch && (state.selectedCategoryId === null || ids.includes(state.selectedCategoryId));
+  }), [state.assessments, state.search, state.selectedCategoryId]);
 
-  const sections = useMemo<AssessmentSections>(() => {
-    return {
-      overdue: [],
-      upcoming: filteredAssessments.filter((assessment) => (
-        !isAssessmentCompleted(assessment)
-      )),
-      completed: filteredAssessments
-        .filter((assessment) => isAssessmentCompleted(assessment))
-        .sort((left, right) => (
-          new Date(right.due_date).getTime() - new Date(left.due_date).getTime()
-        )),
-    };
-  }, [filteredAssessments]);
+  const sections = useMemo<AssessmentSections>(() => ({
+    overdue: [],
+    upcoming: filtered.filter((a) => !isAssessmentCompleted(a)),
+    completed: filtered.filter((a) => isAssessmentCompleted(a)).sort((l, r) => new Date(r.due_date).getTime() - new Date(l.due_date).getTime()),
+  }), [filtered]);
+
+  return useMemo(() => ({ sections }), [sections]);
+};
+
+/**
+ * Orchestrates the assessment hook logic.
+ */
+export const useAssessments = (): UseAssessmentsReturn => {
+  const state = useAssessmentState();
+  useAssessmentFeatureSync(state.setIsGradebookEnabled, state.setGradebookSource);
+  const { refresh } = useAssessmentData(state);
+  const actions = useAssessmentOperations(state, refresh);
+  const { sections } = useAssessmentFilters(state);
 
   return {
     state: {
-      assessments,
-      categories,
+      ...state,
       sections,
-      isGradebookEnabled,
-      search,
-      selectedCategoryId,
-      isSidebarOpen,
-      selectedAssessment,
-      pendingDeleteId,
-      gradebookSource,
     },
-    loading,
-    error,
-    actions: {
-      setSearch,
-      setSelectedCategoryId,
-      openNewAssessment: () => {
-        setSelectedAssessment(undefined);
-        setIsSidebarOpen(true);
-      },
-      openAssessment: (assessment) => {
-        setSelectedAssessment(assessment);
-        setIsSidebarOpen(true);
-      },
-      closeSidebar: () => {
-        setSelectedAssessment(undefined);
-        setIsSidebarOpen(false);
-      },
-      submitAssessment,
-      deleteAssessment,
-      setPendingDeleteId,
-      openGradebook: setGradebookSource,
-      closeGradebook: () => setGradebookSource(null),
-      createCategory,
-      updateCategory,
-      deleteCategory,
-      refresh,
-    },
+    loading: state.loading,
+    error: state.error,
+    actions,
   };
 };

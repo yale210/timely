@@ -1,5 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { buildCalendarEntries } from "@/utils/calendarAdapter";
+import {
+  buildCalendarEntries,
+  buildEventCalendarEntries,
+  buildTaskCalendarEntries,
+} from "@/utils/calendarAdapter";
 import type { Event, Task } from "@/types";
 
 describe("buildCalendarEntries", () => {
@@ -102,5 +106,60 @@ describe("buildCalendarEntries", () => {
     expect(entries[0].allDay).toBe(true);
     expect(entries[0].split).toBe(true);
     expect(entries[1].split).toBe(true);
+  });
+
+  it("builds task entries separately from event entries", () => {
+    const tasks: Task[] = [
+      {
+        id: 5,
+        title: "Split Task",
+        start_time: "2026-02-12T09:00:00.000Z",
+        deadline: "2026-02-12T11:00:00.000Z",
+        importance: 5,
+        completed: false,
+        categories: [],
+        estimated_minutes: 120,
+        allocation: [
+          {
+            start: "2026-02-12T09:00:00.000Z",
+            end: "2026-02-12T10:00:00.000Z",
+          },
+          {
+            start: "2026-02-12T10:30:00.000Z",
+            end: "2026-02-12T11:00:00.000Z",
+          },
+        ],
+      },
+    ];
+    const events: Event[] = [
+      {
+        id: 6,
+        title: "Lecture",
+        start_time: "2026-02-12T12:00:00.000Z",
+        end_time: "2026-02-12T13:00:00.000Z",
+        categories: [],
+        reminders: [],
+      },
+    ];
+
+    expect(buildTaskCalendarEntries(tasks, { 5: 3 }, "Europe/London")).toMatchObject([
+      {
+        id: "task-5-0",
+        split: true,
+        scheduleIndex: 3,
+      },
+      {
+        id: "task-5-1",
+        split: true,
+        scheduleIndex: 3,
+      },
+    ]);
+    expect(buildEventCalendarEntries(events, "Europe/London")).toMatchObject([
+      {
+        id: "event-6-2026-02-12T12:00:00.000Z",
+        kind: "event",
+        sourceId: 6,
+      },
+    ]);
   });
 });

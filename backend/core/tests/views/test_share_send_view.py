@@ -49,9 +49,7 @@ class ShareSendViewTests(TestCase):
             },
         )
         self.assertEqual(response.status_code, 400)
-        self.assertEqual(
-            response.data["message"], "Please provide a valid username and event ID"
-        )
+        self.assertEqual(response.data["message"], "Please provide a valid event ID")
 
     def test_no_e_no_int(self):
         """Test no e no int."""
@@ -65,9 +63,7 @@ class ShareSendViewTests(TestCase):
             },
         )
         self.assertEqual(response.status_code, 400)
-        self.assertEqual(
-            response.data["message"], "Please provide a valid username and event ID"
-        )
+        self.assertEqual(response.data["message"], "Please provide a valid event ID")
 
     def test_user_shares_event_they_do_not_own(self):
         """Test user shares event they do not own."""
