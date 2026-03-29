@@ -234,10 +234,8 @@ describe("SettingsContent", () => {
     const exportBtn = screen.getByRole("button", { name: "Export events" });
     const importBtn = screen.getByRole("button", { name: "Import events" });
 
-    // Assuming exportService and importService are mocked, but let's just trigger them for coverage
-    // If not mocked, they might throw or fail, which is also fine for coverage
     fireEvent.click(exportBtn);
-    fireEvent.click(importBtn); // This opens file dialog, but we also want to trigger onChange
+    fireEvent.click(importBtn); 
   });
   it("renders privacy menu", () => {
     render(<SettingsContent {...createProps("privacy")} />);
