@@ -1,4 +1,12 @@
-import { useCallback, useEffect, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  type Dispatch,
+  type MutableRefObject,
+  type SetStateAction,
+} from "react";
 import type { Profile } from "@/types";
 import { formatDjangoFormError } from "@/utils/apiErrors";
 import * as profileService from "@/services/profileService";
@@ -14,98 +22,164 @@ interface UseProfileState {
   isDirty: boolean;
 }
 
-/**
- * Manages profile settings state and persistence.
- * @param isActive - Whether the profile section is active.
- */
-export const useProfileSettings = (isActive: boolean) => {
-  const [state, setState] = useState<UseProfileState>({
-    profile: null,
-    savedProfile: null,
-    loading: false,
-    saving: false,
-    error: null,
-    fieldErrors: {},
-    avatarFile: null,
-    isDirty: false,
-  });
+type ShouldApplyProfileState = () => boolean;
 
-  const loadProfile = useCallback(async () => {
-    setState((prev) => ({ ...prev, loading: true, error: null, fieldErrors: {} }));
-    try {
-      const profile = await profileService.getMyProfile();
-      setState((prev) => ({
-        ...prev,
-        profile,
-        savedProfile: profile,
-        loading: false,
-        isDirty: false,
-      }));
-    } catch (error) {
-      const parsed = formatDjangoFormError(error);
-      setState((prev) => ({
-        ...prev,
-        loading: false,
-        error: parsed.message,
-        fieldErrors: parsed.fieldErrors,
-      }));
+const INITIAL_PROFILE_SETTINGS_STATE: UseProfileState = {
+  profile: null,
+  savedProfile: null,
+  loading: false,
+  saving: false,
+  error: null,
+  fieldErrors: {},
+  avatarFile: null,
+  isDirty: false,
+};
+
+function isProfileDirty(
+  profile: Profile | null,
+  savedProfile: Profile | null,
+  avatarFile: File | null,
+) {
+  return JSON.stringify(profile) !== JSON.stringify(savedProfile) || avatarFile !== null;
+}
+
+function setProfileLoadingState(
+  setState: Dispatch<SetStateAction<UseProfileState>>,
+) {
+  setState((prev) => ({ ...prev, loading: true, error: null, fieldErrors: {} }));
+}
+
+function applyLoadedProfileState(
+  profile: Profile,
+  setState: Dispatch<SetStateAction<UseProfileState>>,
+) {
+  setState((prev) => ({
+    ...prev,
+    profile,
+    savedProfile: profile,
+    loading: false,
+    isDirty: false,
+  }));
+}
+
+function applyProfileErrorState(
+  error: unknown,
+  setState: Dispatch<SetStateAction<UseProfileState>>,
+  statusKey: "loading" | "saving",
+) {
+  const parsed = formatDjangoFormError(error);
+  setState((prev) => ({
+    ...prev,
+    [statusKey]: false,
+    error: parsed.message,
+    fieldErrors: parsed.fieldErrors,
+  }));
+}
+
+async function fetchProfileIntoState(
+  setState: Dispatch<SetStateAction<UseProfileState>>,
+  shouldApplyState: ShouldApplyProfileState,
+) {
+  if (!shouldApplyState()) {
+    return;
+  }
+
+  setProfileLoadingState(setState);
+
+  try {
+    const profile = await profileService.getMyProfile();
+    if (!shouldApplyState()) {
+      return;
     }
-  }, []);
+
+    applyLoadedProfileState(profile, setState);
+  } catch (error) {
+    if (!shouldApplyState()) {
+      return;
+    }
+
+    applyProfileErrorState(error, setState, "loading");
+  }
+}
+
+function useProfileState() {
+  return useState<UseProfileState>(INITIAL_PROFILE_SETTINGS_STATE);
+}
+
+function useProfileLoadAction(
+  setState: Dispatch<SetStateAction<UseProfileState>>,
+  isActiveRef: MutableRefObject<boolean>,
+  requestIdRef: MutableRefObject<number>,
+) {
+  return useCallback(() => {
+    requestIdRef.current += 1;
+    const requestId = requestIdRef.current;
+    const shouldApplyState = () =>
+      isActiveRef.current && requestId === requestIdRef.current;
+
+    return fetchProfileIntoState(setState, shouldApplyState);
+  }, [isActiveRef, requestIdRef, setState]);
+}
+
+function useProfileLoadEffect(isActive: boolean, loadProfile: () => Promise<void>) {
+  useEffect(() => {
+    if (!isActive) {
+      return;
+    }
+
+    void loadProfile();
+  }, [isActive, loadProfile]);
+}
+
+function useProfileRequestGuards(isActive: boolean) {
+  const isActiveRef = useRef(isActive);
+  const requestIdRef = useRef(0);
 
   useEffect(() => {
-    if (!isActive) return;
-    let isMounted = true;
-
-    const fetchProfile = async () => {
-      setState((prev) => ({ ...prev, loading: true, error: null, fieldErrors: {} }));
-      try {
-        const profile = await profileService.getMyProfile();
-        if (!isMounted) return;
-        setState((prev) => ({
-          ...prev,
-          profile,
-          savedProfile: profile,
-          loading: false,
-          isDirty: false,
-        }));
-      } catch (error) {
-        if (!isMounted) return;
-        const parsed = formatDjangoFormError(error);
-        setState((prev) => ({
-          ...prev,
-          loading: false,
-          error: parsed.message,
-          fieldErrors: parsed.fieldErrors,
-        }));
-      }
-    };
-
-    void fetchProfile();
-    return () => {
-      isMounted = false;
-    };
+    isActiveRef.current = isActive;
+    if (!isActive) {
+      requestIdRef.current += 1;
+    }
   }, [isActive]);
 
-  const setProfile = (profile: Profile) => {
+  return { isActiveRef, requestIdRef };
+}
+
+function useSetProfileAction(
+  setState: Dispatch<SetStateAction<UseProfileState>>,
+) {
+  return useCallback((profile: Profile) => {
     setState((prev) => ({
       ...prev,
       profile,
-      isDirty: JSON.stringify(profile) !== JSON.stringify(prev.savedProfile) || prev.avatarFile !== null,
+      isDirty: isProfileDirty(profile, prev.savedProfile, prev.avatarFile),
     }));
-  };
+  }, [setState]);
+}
 
-  const setAvatarFile = (file: File | null) => {
+function useSetAvatarFileAction(
+  setState: Dispatch<SetStateAction<UseProfileState>>,
+) {
+  return useCallback((file: File | null) => {
     setState((prev) => ({
       ...prev,
       avatarFile: file,
-      isDirty: JSON.stringify(prev.profile) !== JSON.stringify(prev.savedProfile) || file !== null,
+      isDirty: isProfileDirty(prev.profile, prev.savedProfile, file),
     }));
-  };
+  }, [setState]);
+}
 
-  const saveProfile = useCallback(async () => {
-    if (!state.profile) return;
+function useSaveProfileAction(
+  state: UseProfileState,
+  setState: Dispatch<SetStateAction<UseProfileState>>,
+) {
+  return useCallback(async () => {
+    if (!state.profile) {
+      return;
+    }
 
     setState((prev) => ({ ...prev, saving: true, error: null, fieldErrors: {} }));
+
     try {
       const updated = await profileService.updateMyProfile(state.profile, state.avatarFile);
       setState((prev) => ({
@@ -117,15 +191,24 @@ export const useProfileSettings = (isActive: boolean) => {
         isDirty: false,
       }));
     } catch (error) {
-      const parsed = formatDjangoFormError(error);
-      setState((prev) => ({
-        ...prev,
-        saving: false,
-        error: parsed.message,
-        fieldErrors: parsed.fieldErrors,
-      }));
+      applyProfileErrorState(error, setState, "saving");
     }
-  }, [state.profile, state.avatarFile]);
+  }, [state.avatarFile, state.profile, setState]);
+}
+
+/**
+ * Manages profile settings state and persistence.
+ * @param isActive - Whether the profile section is active.
+ */
+export const useProfileSettings = (isActive: boolean) => {
+  const [state, setState] = useProfileState();
+  const { isActiveRef, requestIdRef } = useProfileRequestGuards(isActive);
+  const loadProfile = useProfileLoadAction(setState, isActiveRef, requestIdRef);
+  const setProfile = useSetProfileAction(setState);
+  const setAvatarFile = useSetAvatarFileAction(setState);
+  const saveProfile = useSaveProfileAction(state, setState);
+
+  useProfileLoadEffect(isActive, loadProfile);
 
   return {
     state,
