@@ -1,6 +1,6 @@
 import { render, screen } from "@testing-library/react";
 import { describe, it, expect } from "vitest";
-import GradebookLayout from "../../../src/components/gradebook/GradebookLayout";
+import GradebookLayout from "@/components/gradebook/GradebookLayout";
 
 describe("GradebookLayout", () => {
   it("renders children correctly", () => {
