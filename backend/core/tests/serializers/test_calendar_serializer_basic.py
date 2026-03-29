@@ -12,6 +12,7 @@ from .calendar_serializer_test_support import CalendarSerializerTestSupport
 
 class CalendarSerializerBasicTests(CalendarSerializerTestSupport):
     """Test cases for calendar serializer basic."""
+
     def test_calendar_serializer_fields(self):
         """Test calendar serializer fields."""
         now = timezone.now()

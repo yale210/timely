@@ -15,6 +15,7 @@ User = get_user_model()
 
 class NotificationConsumerTest(SerializeMixin, TransactionTestCase):
     """Test cases for notification consumer."""
+
     lockfile = __file__
 
     async def _test_connect_authenticated(self):

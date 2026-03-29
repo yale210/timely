@@ -21,6 +21,7 @@ User = get_user_model()
 
 class TasksTests(TestCase):
     """Test cases for tasks."""
+
     def setUp(self):
         self.user = User.objects.create_user(
             username="testuser", password="password", email="test@example.com"

@@ -14,6 +14,7 @@ from .scheduler_services_support import SchedulerServicesSupport
 
 class SchedulerServiceAdvancedTests(SchedulerServicesSupport, TestCase):
     """Test cases for scheduler service advanced."""
+
     def test_schedule_split_skips_day_that_leaves_remainder_below_minimum(self):
         """Test schedule split skips day that leaves remainder below minimum."""
         day_one = date(2026, 3, 19)

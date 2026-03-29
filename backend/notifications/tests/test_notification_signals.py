@@ -11,6 +11,7 @@ User = get_user_model()
 
 class NotificationSignalTests(TestCase):
     """Test cases for notification signal."""
+
     def setUp(self):
         self.user = User.objects.create_user(
             username="signal-user",

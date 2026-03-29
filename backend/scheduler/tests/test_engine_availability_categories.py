@@ -14,6 +14,7 @@ from .scheduler_engine_mixins_support import FakeScheduler
 
 class SchedulerEngineMixinTests(TestCase):
     """Test cases for scheduler engine mixin."""
+
     def setUp(self):
         self.user = get_user_model().objects.create_user(
             username="scheduler-mixin-user",

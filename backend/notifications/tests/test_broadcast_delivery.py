@@ -15,6 +15,7 @@ User = get_user_model()
 
 class BroadcastDeliveryTests(TestCase):
     """Test cases for broadcast delivery."""
+
     def setUp(self):
         self.user = User.objects.create_user(
             username="recipient",

@@ -13,6 +13,7 @@ from .scheduler_services_support import SchedulerServicesSupport
 
 class SchedulerServiceConstraintTests(SchedulerServicesSupport, TestCase):
     """Test cases for scheduler service constraint."""
+
     def test_schedule_does_not_place_task_before_task_start_time(self):
         """Test schedule does not place task before task start time."""
         task = Task.objects.create(

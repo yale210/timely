@@ -14,6 +14,7 @@ from .course_view_test_support import CourseViewTestSupport
 
 class CourseViewListingCrudTests(CourseViewTestSupport):
     """Test cases for course view listing crud."""
+
     def test_list_requires_authentication(self):
         """Test list requires authentication."""
         response = self.client.get(self.list_url)

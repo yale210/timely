@@ -14,6 +14,7 @@ from .scheduler_services_support import SchedulerServicesSupport
 
 class SchedulerServiceBasicsTests(SchedulerServicesSupport, TestCase):
     """Test cases for scheduler service basics."""
+
     def test_get_preference(self):
         """Test get preference."""
         scheduler = Scheduler(self.user)

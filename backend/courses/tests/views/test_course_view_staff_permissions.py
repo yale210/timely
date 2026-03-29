@@ -15,6 +15,7 @@ from .course_view_test_support import CourseViewTestSupport
 
 class CourseViewStaffPermissionsTests(CourseViewTestSupport):
     """Test cases for course view staff permissions."""
+
     def test_staff_get_requires_lead_or_admin(self):
         """Test staff get requires lead or admin."""
         self.client.force_authenticate(user=self.student_user)

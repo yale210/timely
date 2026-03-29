@@ -13,6 +13,7 @@ from scheduler.intervals import (
 
 class IntervalHelpersTest(SimpleTestCase):
     """Test cases for interval helpers."""
+
     def setUp(self):
         self.start = timezone.make_aware(datetime(2026, 3, 23, 8, 0))
         self.mid = timezone.make_aware(datetime(2026, 3, 23, 9, 0))

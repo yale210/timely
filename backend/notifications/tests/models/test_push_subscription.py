@@ -9,6 +9,7 @@ User = get_user_model()
 
 class PushSubscriptionModelTest(TestCase):
     """Test cases for push subscription model."""
+
     def setUp(self):
         self.user = User.objects.create_user(
             username="testuser", email="test@example.com", password="password"

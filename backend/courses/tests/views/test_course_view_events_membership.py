@@ -18,6 +18,7 @@ from .course_view_test_support import CourseViewTestSupport, User
 
 class CourseViewEventsMembershipTests(CourseViewTestSupport):
     """Test cases for course view events membership."""
+
     def test_get_events_orders_by_start_time(self):
         """Test get events orders by start time."""
         later = timezone.now() + datetime.timedelta(days=1)
