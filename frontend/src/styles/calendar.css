@@ -170,6 +170,14 @@
   background-color: color-mix(in srgb, var(--primary) 12%, var(--background));
 }
 
+.rbc-month-view .rbc-off-range {
+  color: color-mix(in srgb, var(--text-color) 38%, var(--background)) !important;
+}
+
+.rbc-month-view .rbc-off-range-bg {
+  background-color: color-mix(in srgb, var(--text-color) 8%, var(--background)) !important;
+}
+
 .rbc-today {
   background-color: color-mix(in srgb, var(--primary) 10%, var(--background)) !important;
 }
