@@ -30,6 +30,11 @@ class TeacherView(ViewSet):
 
     permission_classes = [IsAuthenticated, IsTeacher]
 
+    def get_permissions(self):
+        if self.action == 'me':
+            return [IsAuthenticated(), ]
+        return super(TeacherView, self).get_permissions()
+
     def list(self, request):
         """Lists all active teachers and their managed courses.
 
@@ -75,7 +80,7 @@ class TeacherView(ViewSet):
         detail=False,
         methods=["get"],
         url_path="me",
-        permission_classes=[IsAuthenticated],
+        permission_classes=[IsAuthenticated,],
     )
     def me(self, request):
         """Returns the current user's teacher profile if they are a teacher."""
@@ -83,7 +88,7 @@ class TeacherView(ViewSet):
 
         if teacher is None or not teacher.active:
             return Response(
-                None,
+                {"detail": "You are not registered as a teacher."},
                 status=status.HTTP_200_OK,
             )
 
