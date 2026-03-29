@@ -22,6 +22,7 @@ interface ConfirmationModalProps {
  * @param props.message - The message to display in the modal.
  * @param props.confirmText - The text for the confirmation button.
  * @param props.cancelText - The text for the cancellation button.
+ * @param props.tone - The text for the confirmation button tone
  * @returns The rendered confirmation modal component.
  */
 const ConfirmationModal = ({
