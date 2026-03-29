@@ -123,6 +123,38 @@ const ColourOverrideToggle = ({
   </label>
 );
 
+const CategoryActionsList = ({
+  openMenuId,
+  menuCategory,
+  presetColours,
+  onDelete,
+  onUpdate,
+  onClose,
+  onTogglePicker,
+}: Omit<CategoryActionsMenuProps, "menuPosition" | "menuRef"> & {
+  openMenuId: number;
+}) => (
+  <>
+    <DeleteButton onDelete={onDelete} onClose={onClose} openMenuId={openMenuId} />
+    <div className="my-1 border-t border-gray-200" />
+    <div className="px-3 py-2 text-xs font-semibold text-gray-500 uppercase">
+      Colours
+    </div>
+    <ColourPresetsGrid
+      presetColours={presetColours}
+      onUpdate={onUpdate}
+      onTogglePicker={onTogglePicker}
+      openMenuId={openMenuId}
+    />
+    <div className="my-1 border-t border-gray-200" />
+    <ColourOverrideToggle
+      menuCategory={menuCategory}
+      onUpdate={onUpdate}
+      openMenuId={openMenuId}
+    />
+  </>
+);
+
 /**
  * Renders the actions menu for a category row.
  * @param root0 - Component props.
@@ -140,12 +172,7 @@ export const CategoryActionsMenu = ({
   openMenuId,
   menuPosition,
   menuRef,
-  menuCategory,
-  presetColours,
-  onDelete,
-  onUpdate,
-  onClose,
-  onTogglePicker,
+  ...props
 }: CategoryActionsMenuProps) => {
   if (openMenuId === null || !menuPosition || typeof document === "undefined") {
     return null;
@@ -156,29 +183,9 @@ export const CategoryActionsMenu = ({
       ref={menuRef}
       className="fixed z-1000 w-44 rounded-lg border border-gray-200 bg-white shadow-lg"
       style={{ top: menuPosition.top, left: menuPosition.left }}
-      onMouseDown={(event) => event.stopPropagation()}
+      onMouseDown={(e) => e.stopPropagation()}
     >
-      <DeleteButton
-        onDelete={onDelete}
-        onClose={onClose}
-        openMenuId={openMenuId}
-      />
-      <div className="my-1 border-t border-gray-200" />
-      <div className="px-3 py-2 text-xs font-semibold text-gray-500 uppercase">
-        Colours
-      </div>
-      <ColourPresetsGrid
-        presetColours={presetColours}
-        onUpdate={onUpdate}
-        onTogglePicker={onTogglePicker}
-        openMenuId={openMenuId}
-      />
-      <div className="my-1 border-t border-gray-200" />
-      <ColourOverrideToggle
-        menuCategory={menuCategory}
-        onUpdate={onUpdate}
-        openMenuId={openMenuId}
-      />
+      <CategoryActionsList openMenuId={openMenuId} {...props} />
     </div>,
     document.body,
   );

@@ -102,6 +102,32 @@ const ColourInputSection = ({
   </div>
 );
 
+const ColourPickerBody = ({
+  currentColour,
+  colourInput,
+  colourError,
+  onColourInputChange,
+  onColourErrorChange,
+  onCommitInput,
+  onSelect,
+}: Omit<CategoryColourPickerProps, "isOpen" | "position" | "pickerRef">) => (
+  <>
+    <ColourPickerHeader onSelect={onSelect} />
+    <ColourPickerGrid
+      currentColour={currentColour}
+      onColourInputChange={onColourInputChange}
+      onColourErrorChange={onColourErrorChange}
+    />
+    <ColourInputSection
+      colourInput={colourInput}
+      colourError={colourError}
+      onColourInputChange={onColourInputChange}
+      onColourErrorChange={onColourErrorChange}
+      onCommitInput={onCommitInput}
+    />
+  </>
+);
+
 /**
  * Renders the custom colour picker popover.
  * @param root0 - Component props.
@@ -120,13 +146,7 @@ export const CategoryColourPicker = ({
   isOpen,
   position,
   pickerRef,
-  colourInput,
-  colourError,
-  currentColour,
-  onColourInputChange,
-  onColourErrorChange,
-  onCommitInput,
-  onSelect,
+  ...props
 }: CategoryColourPickerProps) => {
   if (!isOpen || !position || typeof document === "undefined") {
     return null;
@@ -137,21 +157,9 @@ export const CategoryColourPicker = ({
       ref={pickerRef}
       className="fixed z-1000 w-64 rounded-lg border border-gray-200 bg-white shadow-lg"
       style={{ top: position.top, left: position.left }}
-      onMouseDown={(event) => event.stopPropagation()}
+      onMouseDown={(e) => e.stopPropagation()}
     >
-      <ColourPickerHeader onSelect={onSelect} />
-      <ColourPickerGrid
-        currentColour={currentColour}
-        onColourInputChange={onColourInputChange}
-        onColourErrorChange={onColourErrorChange}
-      />
-      <ColourInputSection
-        colourInput={colourInput}
-        colourError={colourError}
-        onColourInputChange={onColourInputChange}
-        onColourErrorChange={onColourErrorChange}
-        onCommitInput={onCommitInput}
-      />
+      <ColourPickerBody {...props} />
     </div>,
     document.body,
   );

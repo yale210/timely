@@ -144,6 +144,61 @@ const DropdownStatusMessages = ({
   </>
 );
 
+const CategoryListItems = ({
+  filtered,
+  selectedIds,
+  defaultSwatch,
+  optionBaseClass,
+  onSelectOption,
+  onMenuOpen,
+}: Pick<
+  CategoryDropdownProps,
+  | "filtered"
+  | "selectedIds"
+  | "defaultSwatch"
+  | "optionBaseClass"
+  | "onSelectOption"
+  | "onMenuOpen"
+>) => (
+  <>
+    {filtered.map((cat) => (
+      <CategoryItem
+        key={cat.id}
+        category={cat}
+        isSelected={selectedIds.includes(cat.id)}
+        colourValue={cat.colour ?? defaultSwatch}
+        optionBaseClass={optionBaseClass}
+        onSelectOption={onSelectOption}
+        onMenuOpen={onMenuOpen}
+      />
+    ))}
+  </>
+);
+
+const DropdownContent = ({
+  filtered,
+  canCreate,
+  query,
+  addBaseClass,
+  onCreate,
+  ...props
+}: Omit<CategoryDropdownProps, "isOpen" | "dropdownPosition" | "dropdownMaxHeight">) => (
+  <>
+    {filtered.length === 0 && !canCreate && (
+      <div className="px-3 py-2 text-sm text-gray-500">No categories match.</div>
+    )}
+    <CategoryListItems filtered={filtered} {...props} />
+    {canCreate && (
+      <CreateCategoryButton
+        query={query}
+        addBaseClass={addBaseClass}
+        onCreate={onCreate}
+      />
+    )}
+    <DropdownStatusMessages {...props} />
+  </>
+);
+
 /**
  * Renders the dropdown list of categories with actions.
  * @param root0 - Component props.
@@ -167,70 +222,20 @@ const DropdownStatusMessages = ({
  */
 export const CategoryDropdown = ({
   isOpen,
-  dropdownPosition,
-  dropdownMaxHeight,
-  filtered,
-  selectedIds,
-  defaultSwatch,
-  normalizedQuery,
-  query,
-  canCreate,
-  maxCategoryLength,
-  isCreating,
-  error,
-  optionBaseClass,
-  addBaseClass,
-  onSelectOption,
-  onCreate,
-  onMenuOpen,
+  dropdownPosition: pos,
+  dropdownMaxHeight: h,
+  ...props
 }: CategoryDropdownProps) => {
-  if (!isOpen || !dropdownPosition || typeof document === "undefined") {
-    return null;
-  }
+  if (!isOpen || !pos || typeof document === "undefined") return null;
 
   return createPortal(
     <div
       className="fixed z-80 rounded-lg border border-gray-200 bg-white shadow-lg"
-      style={{
-        top: dropdownPosition.top,
-        left: dropdownPosition.left,
-        width: dropdownPosition.width,
-      }}
-      onMouseDown={(event) => event.stopPropagation()}
+      style={{ top: pos.top, left: pos.left, width: pos.width }}
+      onMouseDown={(e) => e.stopPropagation()}
     >
-      <div
-        className="overflow-y-auto py-1"
-        style={{ maxHeight: dropdownMaxHeight }}
-      >
-        {filtered.length === 0 && !canCreate && (
-          <div className="px-3 py-2 text-sm text-gray-500">
-            No categories match.
-          </div>
-        )}
-        {filtered.map((category) => (
-          <CategoryItem
-            key={category.id}
-            category={category}
-            isSelected={selectedIds.includes(category.id)}
-            colourValue={category.colour ?? defaultSwatch}
-            optionBaseClass={optionBaseClass}
-            onSelectOption={onSelectOption}
-            onMenuOpen={onMenuOpen}
-          />
-        ))}
-        {canCreate && (
-          <CreateCategoryButton
-            query={query}
-            addBaseClass={addBaseClass}
-            onCreate={onCreate}
-          />
-        )}
-        <DropdownStatusMessages
-          normalizedQuery={normalizedQuery}
-          maxCategoryLength={maxCategoryLength}
-          isCreating={isCreating}
-          error={error}
-        />
+      <div className="overflow-y-auto py-1" style={{ maxHeight: h }}>
+        <DropdownContent {...props} />
       </div>
     </div>,
     document.body,
