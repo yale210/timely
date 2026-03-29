@@ -1,3 +1,35 @@
+import { type useCourseDetailStates } from "@/hooks/course/useCourseDetail";
+//An object containing all states used in CourseDetail.
+/**
+ *
+ */
+export type CourseDetailState = ReturnType<typeof useCourseDetailStates>;
+
+import { type useCourseDetailConsts } from "@/hooks/course/useCourseDetailConsts";
+/*An object containing all consts used in CourseDetail so that they can be
+* declared in another file then passed in.
+* Object used for reference so that files reliant on CourseDetail can
+* know which consts it contains.
+*/
+/**
+ *
+ */
+export type CourseDetailConsts = ReturnType<typeof useCourseDetailConsts>;
+
+import { type useCourseDetailHooks } from "@/hooks/course/useCourseDetailHooks";
+//An object containing all returned hooks used in CourseDetail.
+/**
+ *
+ */
+export type CourseDetailHooks = ReturnType<typeof useCourseDetailHooks>;
+
+import { type useCourseManagementState } from "@/hooks/course/useCourseManagementState";
+//An object containing all states used in CourseManagement for reference.
+/**
+ *
+ */
+export type CourseManagmentState = ReturnType<typeof useCourseManagementState>;
+
 /**
  * Represents a course that can be joined
  */
@@ -133,4 +165,68 @@ export interface CoursePermissions {
 export interface CachedPermissionsEntry {
   value: CoursePermissions;
   expiresAt: number;
+}
+
+/**
+ *
+ */
+export interface CourseEditForm {
+  name: string;
+  description: string;
+  active: boolean;
+}
+
+/**
+ *
+ */
+export interface CourseEventForm {
+  title: string;
+  description: string;
+  location: string;
+  start_time: string;
+  end_time: string;
+}
+
+/**
+ *
+ */
+export interface CourseJoinCodeForm {
+  expires_at: string;
+}
+
+/**
+ *
+ */
+export interface UseCoursesState {
+  courses: Course[];
+  selectedCourse: Course | null;
+  search: string;
+  staff:  CourseStaff[] | null;
+}
+
+/**
+ *
+ */
+export interface UseCoursesActions {
+  setSearch: (value: string) => void;
+  selectCourse: (course: Course | null) => void;
+  refresh: () => Promise<void>;
+  createCourse: (data: CourseCreation) => Promise<Course | null>;
+  updateCourse: (id: number, data: CourseUpdate) => Promise<Course | null>;
+  deleteCourse: (id: number) => Promise<void>;
+  joinCourse: (id: string) => Promise<Course | null>;
+  leaveCourse: (id: number) => Promise<Course | null>;
+  getStaff: (courseId: number) => Promise<CourseStaff[]>;
+}
+
+/**
+ *
+ */
+export interface UseCoursesReturn {
+  state: UseCoursesState;
+  filteredCourses: Course[];
+  loading: boolean;
+  error: string | null;
+  actions: UseCoursesActions;
+  managedFilteredCourses: Course[];
 }

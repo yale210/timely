@@ -1,35 +1,7 @@
 import {useCallback, useEffect, useMemo, useState} from "react";
 import * as courseService from "@/services/courseService";
-import type {Course, CourseCreation, CourseStaff, CourseUpdate} from "@/types/course";
+import type {Course, CourseCreation, CourseStaff, CourseUpdate, UseCoursesReturn} from "@/types/course";
 import {authStore} from "@/services/authService.ts";
-
-interface UseCoursesState {
-  courses: Course[];
-  selectedCourse: Course | null;
-  search: string;
-  staff:  CourseStaff[] | null;
-}
-
-interface UseCoursesActions {
-  setSearch: (value: string) => void;
-  selectCourse: (course: Course | null) => void;
-  refresh: () => Promise<void>;
-  createCourse: (data: CourseCreation) => Promise<Course | null>;
-  updateCourse: (id: number, data: CourseUpdate) => Promise<Course | null>;
-  deleteCourse: (id: number) => Promise<void>;
-  joinCourse: (id: string) => Promise<Course | null>;
-  leaveCourse: (id: number) => Promise<Course | null>;
-  getStaff: (courseId: number) => Promise<CourseStaff[]>;
-}
-
-interface UseCoursesReturn {
-  state: UseCoursesState;
-  filteredCourses: Course[];
-  loading: boolean;
-  error: string | null;
-  actions: UseCoursesActions;
-  managedFilteredCourses: Course[];
-}
 
 /**
  * Provides state and actions for the courses feature.

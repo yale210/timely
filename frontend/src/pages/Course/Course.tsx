@@ -5,7 +5,7 @@ import CoursesEmptyState from "@/components/course/CourseEmptyState.tsx";
 import CourseCard from "@/components/course/CourseCard.tsx";
 import CoursesHeader from "@/components/course/CourseHeader.tsx";
 import CourseEventsDrawer from "@/components/course/CourseEventsDrawer.tsx";
-import { useCourses } from "@/hooks/course/useCourse.tsx";
+import { useCourses } from "@/hooks/course/useCourse.ts";
 import { useCoursePermissions } from "@/hooks/course/useCoursePermissions.tsx";
 import * as courseService from "@/services/courseService";
 import type { Course } from "@/types/course.ts";

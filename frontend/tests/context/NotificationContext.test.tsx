@@ -46,6 +46,8 @@ describe("NotificationContext", () => {
       previous: null
     } as NotificationListResponse);
     vi.mocked(notificationsApi.getUnreadCount).mockResolvedValue({ count: 1 });
+    vi.mocked(notificationsApi.markAsRead).mockResolvedValue(undefined);
+    vi.mocked(notificationsApi.markAsUnread).mockResolvedValue(undefined);
   });
 
   afterEach(() => {

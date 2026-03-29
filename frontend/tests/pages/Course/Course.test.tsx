@@ -60,7 +60,7 @@ vi.mock("@/hooks/course/useCoursePermissions.tsx", () => ({
   }),
 }));
 
-vi.mock("@/hooks/course/useCourse.tsx", () => ({
+vi.mock("@/hooks/course/useCourse.ts", () => ({
   useCourses: () => mockUseCoursesReturn,
 }));
 
