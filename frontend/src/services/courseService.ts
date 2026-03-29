@@ -293,9 +293,13 @@ export const getStaff = async (id: number): Promise<CourseStaff[]> => {
  */
 export const getCurrentTeacher = async (): Promise<Teacher | null> => {
   const response = await api.get<Teacher | null>("/api/teachers/me/");
+  console.log(response.data);
+  if(response.data && "detail" in response.data && response.data.detail === "You are not registered as a teacher.") {
+    console.log("not a teacher");
+    return null;
+  }
   return response.data;
-};
-
+}
 /**
  * Generates a join code for a specified course.
  * @param id - The unique identifier of the course.
