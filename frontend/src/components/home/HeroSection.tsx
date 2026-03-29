@@ -18,7 +18,7 @@ export default function HeroSection({ children } : HeroSectionProps) {
 
             { children }
         
-            <div className="mx-auto max-w-7xl py-16 sm:py-24 sm:pt-32">
+            <div className="mx-auto max-w-7xl pb-16 pt-24 sm:py-24 sm:pt-32">
                 <div className="flex flex-col gap-12 lg:flex-row md:flex-row">
 
                     <div className="flex-3">
@@ -34,10 +34,10 @@ export default function HeroSection({ children } : HeroSectionProps) {
                     
                     <div className="text-left">
                         <h1 className="text-5xl font-semibold tracking-tight text-balance text-gray-900 sm:text-7xl">
-                        Plan Your Day. <span className="bg-linear-to-r from-indigo-600 to-emerald-500 bg-clip-text text-transparent">Protect Your Time.</span>
+                        Plan Your Day. <span className="bg-linear-to-r from-indigo-500 to-emerald-500 bg-clip-text text-transparent">Protect Your Time.</span>
                         </h1>
                         <p className="mt-8 text-md font-medium text-pretty text-gray-500 sm:max-w-md md:max-w-lg lg:max-w-xl">
-                        A simple personal scheduler that helps you capture tasks, block time, and stay on top of deadlines--
+                        A simple personal scheduler that helps you capture tasks, block time, and stay on top of deadlines
                         without turning your calendar into a horror movie.
                         </p>
                         <div className="mt-10 flex items-center justify-start gap-x-6">
@@ -47,7 +47,7 @@ export default function HeroSection({ children } : HeroSectionProps) {
                         >
                             Get started
                         </Link>
-                        <Link to="/signup" className="text-sm/6 font-semibold text-gray-900">
+                        <Link to="/about" className="text-sm/6 font-semibold text-gray-900">
                             Learn more <span aria-hidden="true">-&gt;</span>
                         </Link>
                         </div>
@@ -55,7 +55,7 @@ export default function HeroSection({ children } : HeroSectionProps) {
                     </div>
 
                     <div className="flex-2 flex justify-center items-center">
-                    <img src={heroImage} className="w-48 lg:w-96 sm:w-82" alt="Person managing schedule"/>
+                    <img src={heroImage} className="w-64 lg:w-96 sm:w-82" alt="Person managing schedule"/>
                     </div>
                     
                 </div>
