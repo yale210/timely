@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Menu, MenuButton, MenuItem, MenuItems } from "@headlessui/react";
 import AppLayout from "@/layouts/AppLayout";
 import ConfirmationModal from "@/components/modals/ConfirmationModal";
@@ -17,6 +17,7 @@ type AssessmentSort =
 const Assessments = () => {
   const { state, loading, error, actions } = useAssessments();
   const [sortBy, setSortBy] = useState<AssessmentSort>("due_date");
+  const [isMobileLayout, setIsMobileLayout] = useState(() => typeof window !== "undefined" && window.innerWidth < 640);
   const {
     categories,
     sections,
@@ -32,6 +33,18 @@ const Assessments = () => {
   const sidebarKey = selectedAssessment
     ? `${selectedAssessment.id}-${selectedAssessment.updated_at}`
     : "new-assessment";
+
+  useEffect(() => {
+    const syncViewport = () => {
+      setIsMobileLayout(window.innerWidth < 640);
+    };
+
+    syncViewport();
+    window.addEventListener("resize", syncViewport);
+    return () => {
+      window.removeEventListener("resize", syncViewport);
+    };
+  }, []);
 
   const sortAssessments = (items: Assessment[]): Assessment[] => {
     const next = [...items];
@@ -60,92 +73,182 @@ const Assessments = () => {
   return (
     <AppLayout>
       <header className="border-b border-gray-200 bg-white">
-        <div className="flex items-center justify-between gap-4 px-6 py-4">
-          <h1 className="text-2xl font-semibold text-black">Assessments</h1>
-          <div className="flex items-center gap-3">
-            <div className="relative w-full sm:w-72">
-              <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
-                <span className="material-icons text-base text-gray-400">search</span>
-              </div>
-              <input
-                type="text"
-                value={search}
-                onChange={(event) => actions.setSearch(event.target.value)}
-                className="block w-full rounded-md border border-gray-300 bg-white py-2 pl-10 pr-3 text-sm text-black placeholder-gray-500 focus:border-primary focus:outline-none"
-                placeholder="Search assessments"
-              />
-            </div>
-            <Menu as="div" className="relative">
-              <MenuButton className="flex items-center rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50">
-                <span className="material-icons mr-1.5 text-base">filter_list</span>
-                Filter
-              </MenuButton>
-              <MenuItems className="absolute right-0 z-20 mt-2 w-64 origin-top-right rounded-lg border border-gray-200 bg-white shadow-lg focus:outline-none">
-                <div className="p-1">
-                  <div className="px-3 py-2 text-xs font-semibold uppercase text-gray-500">Category</div>
-                  <MenuItem>
-                    {({ focus }) => (
-                      <button
-                        onClick={() => actions.setSelectedCategoryId(null)}
-                        className={`${focus ? "bg-blue-50 text-primary" : "text-gray-700"} ${selectedCategoryId === null ? "bg-blue-50 font-bold text-primary" : ""} flex w-full items-center rounded-md px-3 py-2 text-sm`}
-                      >
-                        All categories
-                      </button>
-                    )}
-                  </MenuItem>
-                  {categories.map((category) => (
-                    <MenuItem key={category.id}>
-                      {({ focus }) => (
-                        <button
-                          onClick={() => actions.setSelectedCategoryId(category.id)}
-                          className={`${focus ? "bg-blue-50 text-primary" : "text-gray-700"} ${selectedCategoryId === category.id ? "bg-blue-50 font-bold text-primary" : ""} flex w-full items-center rounded-md px-3 py-2 text-sm`}
-                        >
-                          {category.text}
-                        </button>
-                      )}
-                    </MenuItem>
-                  ))}
-                </div>
-              </MenuItems>
-            </Menu>
-
-            <Menu as="div" className="relative">
-              <MenuButton className="flex items-center rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50">
-                <span className="material-icons mr-1.5 text-base">sort</span>
-                Sort
-              </MenuButton>
-              <MenuItems className="absolute right-0 z-20 mt-2 w-56 origin-top-right rounded-lg border border-gray-200 bg-white shadow-lg focus:outline-none">
-                <div className="p-1">
-                  {[
-                    { value: "due_date", label: "Due date" },
-                    { value: "-due_date", label: "Due date desc" },
-                    { value: "-weighting_of_assessment", label: "Highest weighting" },
-                    { value: "title", label: "Title" },
-                  ].map((option) => (
-                    <MenuItem key={option.value}>
-                      {({ focus }) => (
-                        <button
-                          onClick={() => setSortBy(option.value as AssessmentSort)}
-                          className={`${focus ? "bg-blue-50 text-primary" : "text-gray-700"} ${sortBy === option.value ? "bg-blue-50 font-bold text-primary" : ""} flex w-full items-center rounded-md px-3 py-2 text-sm`}
-                        >
-                          {option.label}
-                        </button>
-                      )}
-                    </MenuItem>
-                  ))}
-                </div>
-              </MenuItems>
-            </Menu>
+        {isMobileLayout ? (
+          <div className="flex flex-wrap items-center gap-3 px-4 pt-5 pb-4">
+            <h1 className="order-1 mr-auto text-2xl font-semibold text-black">Assessments</h1>
             <button
               type="button"
               onClick={actions.openNewAssessment}
-              className="flex items-center rounded-md bg-primary px-3 py-1.5 text-sm font-medium text-white shadow-sm transition-colors hover:bg-blue-300"
+              className="order-2 inline-flex items-center rounded-md bg-primary px-3 py-1.5 text-sm font-medium text-white shadow-sm transition-colors hover:bg-blue-300"
             >
-              <span className="material-icons mr-1 text-base">add</span>
-              New
+              <span className="material-icons text-base">add</span>
             </button>
+            <div className="order-3 flex basis-full items-center gap-2">
+              <div className="relative min-w-0 flex-1">
+                <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+                  <span className="material-icons text-base text-gray-400">search</span>
+                </div>
+                <input
+                  type="text"
+                  value={search}
+                  onChange={(event) => actions.setSearch(event.target.value)}
+                  className="block w-full rounded-md border border-gray-300 bg-white py-2 pl-10 pr-3 text-sm text-black placeholder-gray-500 focus:border-primary focus:outline-none"
+                  placeholder="Search assessments"
+                />
+              </div>
+              <div className="flex shrink-0 items-center gap-2">
+                <Menu as="div" className="relative">
+                  <MenuButton className="flex items-center rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50">
+                    <span className="material-icons mr-1.5 text-base">filter_list</span>
+                    Filter
+                  </MenuButton>
+                  <MenuItems className="absolute right-0 z-20 mt-2 w-64 origin-top-right rounded-lg border border-gray-200 bg-white shadow-lg focus:outline-none">
+                    <div className="p-1">
+                      <div className="px-3 py-2 text-xs font-semibold uppercase text-gray-500">Category</div>
+                      <MenuItem>
+                        {({ focus }) => (
+                          <button
+                            onClick={() => actions.setSelectedCategoryId(null)}
+                            className={`${focus ? "bg-blue-50 text-primary" : "text-gray-700"} ${selectedCategoryId === null ? "bg-blue-50 font-bold text-primary" : ""} flex w-full items-center rounded-md px-3 py-2 text-sm`}
+                          >
+                            All categories
+                          </button>
+                        )}
+                      </MenuItem>
+                      {categories.map((category) => (
+                        <MenuItem key={category.id}>
+                          {({ focus }) => (
+                            <button
+                              onClick={() => actions.setSelectedCategoryId(category.id)}
+                              className={`${focus ? "bg-blue-50 text-primary" : "text-gray-700"} ${selectedCategoryId === category.id ? "bg-blue-50 font-bold text-primary" : ""} flex w-full items-center rounded-md px-3 py-2 text-sm`}
+                            >
+                              {category.text}
+                            </button>
+                          )}
+                        </MenuItem>
+                      ))}
+                    </div>
+                  </MenuItems>
+                </Menu>
+
+                <Menu as="div" className="relative">
+                  <MenuButton className="flex items-center rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50">
+                    <span className="material-icons mr-1.5 text-base">sort</span>
+                    Sort
+                  </MenuButton>
+                  <MenuItems className="absolute right-0 z-20 mt-2 w-56 origin-top-right rounded-lg border border-gray-200 bg-white shadow-lg focus:outline-none">
+                    <div className="p-1">
+                      {[
+                        { value: "due_date", label: "Due date" },
+                        { value: "-due_date", label: "Due date desc" },
+                        { value: "-weighting_of_assessment", label: "Highest weighting" },
+                        { value: "title", label: "Title" },
+                      ].map((option) => (
+                        <MenuItem key={option.value}>
+                          {({ focus }) => (
+                            <button
+                              onClick={() => setSortBy(option.value as AssessmentSort)}
+                              className={`${focus ? "bg-blue-50 text-primary" : "text-gray-700"} ${sortBy === option.value ? "bg-blue-50 font-bold text-primary" : ""} flex w-full items-center rounded-md px-3 py-2 text-sm`}
+                            >
+                              {option.label}
+                            </button>
+                          )}
+                        </MenuItem>
+                      ))}
+                    </div>
+                  </MenuItems>
+                </Menu>
+              </div>
+            </div>
           </div>
-        </div>
+        ) : (
+          <div className="flex items-center justify-between gap-4 px-6 py-4">
+            <h1 className="text-2xl font-semibold text-black">Assessments</h1>
+            <div className="flex items-center gap-3">
+              <div className="relative w-full sm:w-72">
+                <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+                  <span className="material-icons text-base text-gray-400">search</span>
+                </div>
+                <input
+                  type="text"
+                  value={search}
+                  onChange={(event) => actions.setSearch(event.target.value)}
+                  className="block w-full rounded-md border border-gray-300 bg-white py-2 pl-10 pr-3 text-sm text-black placeholder-gray-500 focus:border-primary focus:outline-none"
+                  placeholder="Search assessments"
+                />
+              </div>
+              <Menu as="div" className="relative">
+                <MenuButton className="flex items-center rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50">
+                  <span className="material-icons mr-1.5 text-base">filter_list</span>
+                  Filter
+                </MenuButton>
+                <MenuItems className="absolute right-0 z-20 mt-2 w-64 origin-top-right rounded-lg border border-gray-200 bg-white shadow-lg focus:outline-none">
+                  <div className="p-1">
+                    <div className="px-3 py-2 text-xs font-semibold uppercase text-gray-500">Category</div>
+                    <MenuItem>
+                      {({ focus }) => (
+                        <button
+                          onClick={() => actions.setSelectedCategoryId(null)}
+                          className={`${focus ? "bg-blue-50 text-primary" : "text-gray-700"} ${selectedCategoryId === null ? "bg-blue-50 font-bold text-primary" : ""} flex w-full items-center rounded-md px-3 py-2 text-sm`}
+                        >
+                          All categories
+                        </button>
+                      )}
+                    </MenuItem>
+                    {categories.map((category) => (
+                      <MenuItem key={category.id}>
+                        {({ focus }) => (
+                          <button
+                            onClick={() => actions.setSelectedCategoryId(category.id)}
+                            className={`${focus ? "bg-blue-50 text-primary" : "text-gray-700"} ${selectedCategoryId === category.id ? "bg-blue-50 font-bold text-primary" : ""} flex w-full items-center rounded-md px-3 py-2 text-sm`}
+                          >
+                            {category.text}
+                          </button>
+                        )}
+                      </MenuItem>
+                    ))}
+                  </div>
+                </MenuItems>
+              </Menu>
+
+              <Menu as="div" className="relative">
+                <MenuButton className="flex items-center rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50">
+                  <span className="material-icons mr-1.5 text-base">sort</span>
+                  Sort
+                </MenuButton>
+                <MenuItems className="absolute right-0 z-20 mt-2 w-56 origin-top-right rounded-lg border border-gray-200 bg-white shadow-lg focus:outline-none">
+                  <div className="p-1">
+                    {[
+                      { value: "due_date", label: "Due date" },
+                      { value: "-due_date", label: "Due date desc" },
+                      { value: "-weighting_of_assessment", label: "Highest weighting" },
+                      { value: "title", label: "Title" },
+                    ].map((option) => (
+                      <MenuItem key={option.value}>
+                        {({ focus }) => (
+                          <button
+                            onClick={() => setSortBy(option.value as AssessmentSort)}
+                            className={`${focus ? "bg-blue-50 text-primary" : "text-gray-700"} ${sortBy === option.value ? "bg-blue-50 font-bold text-primary" : ""} flex w-full items-center rounded-md px-3 py-2 text-sm`}
+                          >
+                            {option.label}
+                          </button>
+                        )}
+                      </MenuItem>
+                    ))}
+                  </div>
+                </MenuItems>
+              </Menu>
+              <button
+                type="button"
+                onClick={actions.openNewAssessment}
+                className="flex items-center rounded-md bg-primary px-3 py-1.5 text-sm font-medium text-white shadow-sm transition-colors hover:bg-blue-300"
+              >
+                <span className="material-icons mr-1 text-base">add</span>
+                New
+              </button>
+            </div>
+          </div>
+        )}
       </header>
 
       <div className="flex-1 overflow-y-auto bg-white px-6 py-4">
