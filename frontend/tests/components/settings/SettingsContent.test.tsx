@@ -21,7 +21,7 @@ vi.mock("@/components/settings/PreferencesSection", () => ({
     onImport: () => void;
     prefSaving: boolean;
     prefDirty: boolean;
-    onPrefChange: (pref: any) => void;
+    onPrefChange: (pref: Partial<Preference>) => void;
   }) => (
     <div>
       <div>preferences-section</div>
@@ -43,7 +43,7 @@ vi.mock("@/components/settings/PreferencesSection", () => ({
       <label htmlFor="landing-page">Default landing page</label>
       <select
         id="landing-page"
-        onChange={(e) => onPrefChange({ default_landing_page: e.target.value })}
+        onChange={(e) => onPrefChange({ default_landing_page: e.currentTarget.value as Preference["default_landing_page"] })}
       >
         <option value="home">Home</option>
         <option value="calendar">Calendar</option>
@@ -51,7 +51,7 @@ vi.mock("@/components/settings/PreferencesSection", () => ({
       <label htmlFor="week-starts">Week starts on</label>
       <select
         id="week-starts"
-        onChange={(e) => onPrefChange({ week_starts_on: e.target.value })}
+        onChange={(e) => onPrefChange({ week_starts_on: e.currentTarget.value as Preference["week_starts_on"] })}
       >
         <option value="monday">Monday</option>
         <option value="sunday">Sunday</option>
@@ -59,7 +59,7 @@ vi.mock("@/components/settings/PreferencesSection", () => ({
       <label htmlFor="time-format">Time format</label>
       <select
         id="time-format"
-        onChange={(e) => onPrefChange({ time_format: e.target.value })}
+        onChange={(e) => onPrefChange({ time_format: e.currentTarget.value as Preference["time_format"] })}
       >
         <option value="24h">24h</option>
         <option value="12h">12h</option>
@@ -67,7 +67,7 @@ vi.mock("@/components/settings/PreferencesSection", () => ({
       <label htmlFor="drag-snap">Calendar drag timeslot</label>
       <select
         id="drag-snap"
-        onChange={(e) => onPrefChange({ drag_snap_minutes: e.target.value })}
+        onChange={(e) => onPrefChange({ drag_snap_minutes: Number(e.currentTarget.value) as Preference["drag_snap_minutes"] })}
       >
         <option value="15">15</option>
         <option value="30">30</option>
