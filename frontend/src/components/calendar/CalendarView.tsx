@@ -17,7 +17,7 @@ import {
   toCalendarDisplayDate,
 } from "@/utils/calendarDisplayTime";
 import { getStoredTimeFormat, getStoredWeekStartsOn } from "@/utils/userPreferences";
-import { getStoredUserTimezone, getZonedDateParts } from "@/utils/userTimezone";
+import { getStoredUserTimezone } from "@/utils/userTimezone";
 
 const DragAndDropCalendar = withDragAndDrop<CalendarEntry>(Calendar);
 const DEFAULT_DRAG_SNAP_MINUTES = 5;
@@ -56,12 +56,12 @@ const getEventTimeLabel = (event: CalendarEntry, timeFormat: "24h" | "12h") => {
 };
 
 const CalendarStandardEventContent = ({ event, timeLabel }: { event: CalendarEntry; timeLabel: string }) => (
-  <div className="flex h-full w-full items-start gap-2">
+  <div className="calendar-entry-content flex h-full w-full items-start gap-2">
     <div className="flex min-w-0 flex-col">
-      <span className="truncate text-[20px] font-medium">{event.title}</span>
-      <span className="truncate text-[15px] text-gray-700">{timeLabel}</span>
+      <span className="calendar-entry-title truncate text-[20px] font-medium">{event.title}</span>
+      <span className="calendar-entry-time truncate text-[15px] text-gray-700">{timeLabel}</span>
       {event.eventData?.location && (
-        <span className="truncate text-[13px] text-gray-600">{event.eventData.location}</span>
+        <span className="calendar-entry-location truncate text-[13px] text-gray-600">{event.eventData.location}</span>
       )}
     </div>
   </div>
@@ -76,7 +76,7 @@ const CalendarTaskEventContent = ({
   timeLabel: string;
   handleToggleTaskComplete: (taskId: number) => Promise<void>;
 }) => (
-  <div className="flex h-full w-full items-start gap-2">
+  <div className="calendar-entry-content calendar-task-content flex h-full w-full items-start gap-2">
     <input
       type="checkbox"
       checked={Boolean(event.taskData?.completed)}
@@ -89,8 +89,8 @@ const CalendarTaskEventContent = ({
       aria-label="Mark task complete"
     />
     <div className="flex min-w-0 flex-col">
-      <span className="truncate text-[20px] font-medium">{event.title}</span>
-      <span className="truncate text-[15px] text-gray-600">{timeLabel}</span>
+      <span className="calendar-entry-title truncate text-[20px] font-medium">{event.title}</span>
+      <span className="calendar-entry-time truncate text-[15px] text-gray-600">{timeLabel}</span>
     </div>
   </div>
 );
@@ -153,9 +153,9 @@ const getCalendarEntryStyle = (event: CalendarEntry): CSSProperties => {
   return style;
 };
 
-const measureTimeGutterWidth = (shell: HTMLDivElement | null): number => {
+const measureTimeGutterWidth = (shell: HTMLDivElement | null): number | null => {
   const gutter = shell?.querySelector(".rbc-time-gutter");
-  return gutter instanceof HTMLElement ? Math.ceil(gutter.getBoundingClientRect().width) : 0;
+  return gutter instanceof HTMLElement ? Math.ceil(gutter.getBoundingClientRect().width) : null;
 };
 
 const syncTimeGutterWidth = (
@@ -163,7 +163,7 @@ const syncTimeGutterWidth = (
   setTimeGutterWidth: (width: number) => void,
 ) => {
   const nextWidth = measureTimeGutterWidth(shell);
-  if (nextWidth > 0) {
+  if (nextWidth !== null) {
     setTimeGutterWidth(nextWidth);
   }
 };
@@ -182,14 +182,12 @@ const getScrollableAncestor = (element: HTMLElement): HTMLElement | null => {
   return document.scrollingElement instanceof HTMLElement ? document.scrollingElement : null;
 };
 
-const scrollCalendarToCurrentHour = (shell: HTMLDivElement | null, activeTimezone: string) => {
+const scrollCalendarToMidpoint = (shell: HTMLDivElement | null) => {
   const slotGroups = shell?.querySelectorAll(".rbc-time-gutter .rbc-timeslot-group");
   if (!slotGroups || slotGroups.length === 0) {
     return;
   }
-  const currentHour = getZonedDateParts(new Date(), activeTimezone).hour;
-  const targetIndex = Math.min(Math.max(currentHour, 0), slotGroups.length - 1);
-  const targetSlot = slotGroups[targetIndex];
+  const targetSlot = slotGroups[0];
   if (!(targetSlot instanceof HTMLElement)) {
     return;
   }
@@ -197,7 +195,7 @@ const scrollCalendarToCurrentHour = (shell: HTMLDivElement | null, activeTimezon
   if (!scroller) {
     return;
   }
-  scroller.scrollTop += Math.round(targetSlot.getBoundingClientRect().top - scroller.getBoundingClientRect().top);
+  scroller.scrollTop = Math.max(0, Math.round((scroller.scrollHeight - scroller.clientHeight) * 0.4));
 };
 
 const addWindowDraggingListeners = (clearDraggingFlag: () => void) => {
@@ -306,14 +304,14 @@ const CalendarView = ({
     if (state.view !== Views.WEEK && state.view !== Views.DAY) {
       return;
     }
-    const scrollToCurrentHour = () => scrollCalendarToCurrentHour(calendarShellRef.current, activeTimezone);
-    const frame = window.requestAnimationFrame(scrollToCurrentHour);
-    const timer = window.setTimeout(scrollToCurrentHour, 120);
+    const scrollToMidpoint = () => scrollCalendarToMidpoint(calendarShellRef.current);
+    const frame = window.requestAnimationFrame(scrollToMidpoint);
+    const timer = window.setTimeout(scrollToMidpoint, 120);
     return () => {
       window.cancelAnimationFrame(frame);
       window.clearTimeout(timer);
     };
-  }, [activeTimezone, state.date, state.calendarEntries.length, state.view]);
+  }, [state.date, state.calendarEntries.length, state.view]);
 
   useEffect(() => {
     const shell = calendarShellRef.current;

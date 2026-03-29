@@ -291,7 +291,24 @@
   display: none;
 }
 
-@media (max-width: 640px) {
+@media (max-width: 767px) {
+  .calendar-grid-shell .rbc-day-slot .rbc-events-container {
+    margin-right: 0 !important;
+  }
+
+  .calendar-grid-shell .rbc-day-slot .rbc-events-container.rbc-rtl {
+    left: 0 !important;
+  }
+
+  .calendar-grid-shell .rbc-time-gutter,
+  .calendar-grid-shell .rbc-time-header-gutter {
+    width: 0 !important;
+    min-width: 0 !important;
+    flex: 0 0 0 !important;
+    overflow: hidden;
+    border-right: 0 !important;
+  }
+
   .mini-calendar-preview .rbc-label,
   .mini-calendar-preview .rbc-header {
     font-size: 0.62rem;
@@ -300,6 +317,39 @@
   .mini-calendar-preview .rbc-time-header-content .rbc-header {
     padding-inline: 0.125rem;
     white-space: nowrap;
+  }
+
+  .calendar-grid-shell .rbc-event {
+    padding: 0.125rem 0.2rem;
+  }
+
+  .calendar-grid-shell .calendar-entry-content {
+    gap: 0.2rem;
+  }
+
+  .calendar-grid-shell .calendar-task-content {
+    gap: 0;
+  }
+
+  .calendar-grid-shell .calendar-entry-title {
+    font-size: 0.68rem;
+    line-height: 1.05;
+    font-weight: 600;
+  }
+
+  .calendar-grid-shell .calendar-entry-time {
+    display: block;
+    font-size: 0.58rem;
+    line-height: 1;
+    opacity: 0.85;
+  }
+
+  .calendar-grid-shell .calendar-entry-location {
+    display: none;
+  }
+
+  .calendar-grid-shell .task-event-checkbox {
+    display: none !important;
   }
 }
 
@@ -329,6 +379,12 @@
   height: 10px;
   border-radius: 9999px;
   background: #ffffff;
+}
+
+@media (max-width: 767px) {
+  .calendar-grid-shell .task-event-checkbox {
+    display: none !important;
+  }
 }
 
 .rbc-agenda-empty {
