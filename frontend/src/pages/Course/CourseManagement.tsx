@@ -25,7 +25,7 @@ export default function CourseManagement() {
           openCreateModal={courseManagementHooks.openCreateModal}
         />
 
-        <main className="p-6">
+        <main className="px-4 py-6 sm:p-6">
           <div className="mb-4 flex items-center justify-between">
             <p className="text-sm text-gray-500">{courseManagementHooks.courseCountText}</p>
           </div>
