@@ -41,7 +41,9 @@ class ShareAcceptViewTests(TestCase):
             "/api/share_accept/",
             data={},
         )
-        self.assertEqual(response.data["error"], "Event does not exist, likely deleted")
+        self.assertEqual(
+            response.data["error"], "Please provide a decision and event ID"
+        )
 
     def test_event_does_not_exist(self):
         """Test event does not exist."""

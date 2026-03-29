@@ -60,7 +60,7 @@ class ImportViewTests(TestCase):
             b"DTSTART;TZID=Europe/London:20260325T200000\n"
             b"DTEND;TZID=Europe/London:20260325T210000\n"
             b"SUMMARY:Title Event 1\n"
-            b"RRULE:FREQ=DAILY;UNTIL=None\n"
+            b"RRULE:FREQ=DAILY\n"
             b"END:VEVENT\n"
             b"END:VCALENDAR\n"
         ).strip()

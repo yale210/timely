@@ -179,7 +179,7 @@ class ExportViewTests(TestCase):
             "SUMMARY:Title Event 1\n"
             "DESCRIPTION:Description Event 1\n"
             "LOCATION:Location Event 1\n"
-            "RRULE:FREQ=DAILY;UNTIL=20460101T200000Z\n"
+            "RRULE:FREQ=DAILY\n"
             "END:VEVENT\n"
             "END:VCALENDAR\n"
         )

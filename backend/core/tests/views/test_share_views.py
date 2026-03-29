@@ -66,7 +66,7 @@ class ShareSendViewTests(APITestCase):
         self.assertEqual(response.status_code, 400)
         self.assertEqual(
             response.data,
-            {"message": "Please provide a valid username and event ID"},
+            {"message": "Please provide a valid event ID"},
         )
 
     def test_rejects_event_not_owned_by_sender(self):
