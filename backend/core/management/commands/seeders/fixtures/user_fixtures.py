@@ -2,53 +2,58 @@
 
 users = [
     {
-        "model": "auth.user",
+        "model": "authentication.user",
         "fields": {
             "username": "thomas",
             "password": "pbkdf2_sha256$1000000$x7OkUUpZ0jz1bkch9G2uXN$6HNY4kQaCjyiH4hc+765D1MYlAXsECbVP1G9VM0Bpg8=",
             "email": "thomas@example.com",
-            "first_name": "Thomas",
-            "last_name": "Yale",
+            "is_staff": True,
+            "is_superuser": True,
+            "is_active": True,
         },
     },
     {
-        "model": "auth.user",
+        "model": "authentication.user",
         "fields": {
             "username": "david",
             "password": "pbkdf2_sha256$1000000$x7OkUUpZ0jz1bkch9G2uXN$6HNY4kQaCjyiH4hc+765D1MYlAXsECbVP1G9VM0Bpg8=",
             "email": "david@example.com",
-            "first_name": "David",
-            "last_name": "Dudun",
+            "is_staff": False,
+            "is_superuser": False,
+            "is_active": True,
         },
     },
     {
-        "model": "auth.user",
+        "model": "authentication.user",
         "fields": {
             "username": "tommy",
             "password": "pbkdf2_sha256$1000000$x7OkUUpZ0jz1bkch9G2uXN$6HNY4kQaCjyiH4hc+765D1MYlAXsECbVP1G9VM0Bpg8=",
             "email": "test@example.com",
-            "first_name": "Tommy",
-            "last_name": "Hoang",
+            "is_staff": False,
+            "is_superuser": False,
+            "is_active": True,
         },
     },
     {
-        "model": "auth.user",
+        "model": "authentication.user",
         "fields": {
             "username": "mark",
             "password": "pbkdf2_sha256$1000000$x7OkUUpZ0jz1bkch9G2uXN$6HNY4kQaCjyiH4hc+765D1MYlAXsECbVP1G9VM0Bpg8=",
             "email": "bob@example.com",
-            "first_name": "Mark",
-            "last_name": "Bual",
+            "is_staff": False,
+            "is_superuser": False,
+            "is_active": True,
         },
     },
     {
-        "model": "auth.user",
+        "model": "authentication.user",
         "fields": {
             "username": "patrick",
             "password": "pbkdf2_sha256$1000000$x7OkUUpZ0jz1bkch9G2uXN$6HNY4kQaCjyiH4hc+765D1MYlAXsECbVP1G9VM0Bpg8=",
             "email": "simon@example.com",
-            "first_name": "Patrick",
-            "last_name": "Beckwith",
+            "is_staff": False,
+            "is_superuser": False,
+            "is_active": True,
         },
     },
 ]
