@@ -3,6 +3,8 @@
 from django.db import transaction
 from rest_framework import serializers
 
+from drf_spectacular.utils import extend_schema_field
+
 from core.models import Assessment, Category, Event, EventReminder
 from core.serializers.category_serializer import CategorySerializer
 from core.serializers.event_serializer import EventResponseSerializer
@@ -122,6 +124,7 @@ class AssessmentSerializer(serializers.ModelSerializer):
         )
         return representation
 
+    @extend_schema_field(EventResponseSerializer(allow_null=True))
     def get_linked_event_details(self, obj):
         """Get the details of the linked event.
 
