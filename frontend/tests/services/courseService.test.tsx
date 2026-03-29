@@ -158,13 +158,34 @@ describe("courseService", () => {
   });
 
   it("getCurrentTeacher calls the teacher endpoint", async () => {
-    const teacher = { id: 1, name: "Teacher" };
-    mockGet.mockResolvedValue({ data: teacher });
+    const teacher = {
+      id: 7,
+      user_id: 7,
+      username: "teacher",
+      active: true,
+      courses: [],
+    };
+    mockGet.mockResolvedValue({
+      data: [
+        { id: 1, user_id: 1, username: "other", active: true, courses: [] },
+        teacher,
+      ],
+    });
 
     const result = await courseService.getCurrentTeacher();
 
     expect(mockGet).toHaveBeenCalledWith("/api/teachers/");
     expect(result).toEqual(teacher);
+  });
+
+  it("getCurrentTeacher throws when the current user is not in the teacher list", async () => {
+    mockGet.mockResolvedValue({
+      data: [{ id: 1, user_id: 1, username: "other", active: true, courses: [] }],
+    });
+
+    await expect(courseService.getCurrentTeacher()).rejects.toThrow(
+      "You are not registered as an active teacher.",
+    );
   });
 
   it("createJoinCode posts data and returns the code payload", async () => {

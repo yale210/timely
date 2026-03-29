@@ -172,34 +172,49 @@ class CourseEventSyncServiceTests(TestCase):
         self.assertEqual(existing_event.end_time, self.course_event.end_time)
         self.assertEqual(existing_event.start_time, self.course_event.start_time)
 
-    def test_sync_user_course_events_reuses_single_title_match_when_start_time_differs(
+    def test_sync_user_course_events_does_not_overwrite_manual_title_match_when_moved(
         self,
     ):
-        """Sync should update a single matching course copy instead of duplicating it."""
+        """Moved course events should not rewrite unrelated personal events."""
         CourseEnrollment.objects.create(
             course=self.course, student=self.student, active=True
         )
 
-        existing_event = Event.objects.create(
+        manual_event = Event.objects.create(
             user=self.student_user,
             title="Python Basics - Lesson 1",
-            description="Old description",
-            location="Old room",
-            colour="#000000",
+            description="Personal planning note",
+            location="Library",
+            colour="#00ff00",
             start_time=self.course_event.start_time - datetime.timedelta(days=1),
             end_time=self.course_event.end_time - datetime.timedelta(days=1),
         )
 
         stats = CourseEventSyncService.sync_user_course_events(self.student_user)
 
-        self.assertEqual(stats["created"], 0)
-        self.assertEqual(stats["updated"], 1)
+        self.assertEqual(stats["created"], 1)
+        self.assertEqual(stats["updated"], 0)
         self.assertEqual(stats["errors"], [])
-        self.assertEqual(Event.objects.filter(user=self.student_user).count(), 1)
+        self.assertEqual(Event.objects.filter(user=self.student_user).count(), 2)
 
-        existing_event.refresh_from_db()
-        self.assertEqual(existing_event.start_time, self.course_event.start_time)
-        self.assertEqual(existing_event.end_time, self.course_event.end_time)
+        manual_event.refresh_from_db()
+        self.assertEqual(manual_event.description, "Personal planning note")
+        self.assertEqual(manual_event.location, "Library")
+        self.assertEqual(
+            manual_event.start_time,
+            self.course_event.start_time - datetime.timedelta(days=1),
+        )
+
+        synced_event = Event.objects.get(
+            user=self.student_user,
+            title="Python Basics - Lesson 1",
+            start_time=self.course_event.start_time,
+        )
+        self.assertEqual(
+            synced_event.description,
+            "Python Basics - Lesson 1'\nIntro lesson\nBy teacher",
+        )
+        self.assertEqual(synced_event.end_time, self.course_event.end_time)
 
     def test_sync_user_course_events_skips_users_without_enrollments(self):
         """Test sync user course events skips users without enrollments."""

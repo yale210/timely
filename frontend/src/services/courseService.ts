@@ -290,9 +290,22 @@ export const getStaff = async (id: number): Promise<CourseStaff[]> => {
  * @returns A promise that resolves to the teacher's information.
  */
 export const getCurrentTeacher = async (): Promise<Teacher> => {
-  const response = await api.get<Teacher>("/api/teachers/");
-  
-  return response.data;
+  const currentUserId = getCurrentUserId();
+
+  if (currentUserId === null) {
+    throw new Error("Cannot load current teacher without an authenticated user.");
+  }
+
+  const response = await api.get<Teacher[]>("/api/teachers/");
+  const teacher = response.data.find(
+    (teacherEntry) => teacherEntry.user_id === Number(currentUserId),
+  );
+
+  if (!teacher) {
+    throw new Error("You are not registered as an active teacher.");
+  }
+
+  return teacher;
 };
 
 /**

@@ -32,22 +32,11 @@ def course_event_description(course_event) -> str:
 
 def get_core_event(user, title: str, start_time):
     """Look up the target calendar event using the stable identity fields."""
-    try:
-        return Event.objects.get(
-            user=user,
-            title=title,
-            start_time=start_time,
-        )
-    except Event.DoesNotExist:
-        # Fall back to a title-only match when there is exactly one existing synced
-        # copy. This lets sync update a moved course event instead of duplicating it.
-        title_matches = Event.objects.filter(
-            user=user,
-            title=title,
-        )
-        if title_matches.count() == 1:
-            return title_matches.get()
-        raise
+    return Event.objects.get(
+        user=user,
+        title=title,
+        start_time=start_time,
+    )
 
 
 def create_core_event_for_course_student(course_event, user):
