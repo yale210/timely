@@ -163,7 +163,7 @@ describe("courseService", () => {
 
     const result = await courseService.getCurrentTeacher();
 
-    expect(mockGet).toHaveBeenCalledWith("/api/teachers/");
+    expect(mockGet).toHaveBeenCalledWith("/api/teachers/me/");
     expect(result).toEqual(teacher);
   });
 
