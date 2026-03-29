@@ -4,6 +4,9 @@ from django.http import HttpResponse
 from rest_framework import permissions
 from rest_framework.views import APIView
 
+from drf_spectacular.utils import extend_schema, OpenApiResponse
+from drf_spectacular.types import OpenApiTypes
+
 from core.models import Event
 
 
@@ -12,6 +15,15 @@ class ExportView(APIView):
 
     permission_classes = [permissions.IsAuthenticated]
 
+    @extend_schema(
+        request=None,
+        responses={
+            200: OpenApiResponse(
+                response=OpenApiTypes.STR,
+                description="iCalendar format text file download.",
+            ),
+        },
+    )
     def get(self, request):
         """Generate and return an iCalendar format text file for the user's events.
 
