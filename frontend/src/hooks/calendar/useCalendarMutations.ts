@@ -82,6 +82,8 @@ export const useCalendarMutations = (props: UseCalendarMutationsProps) => {
   // cause it to recreate on every data update and cascade re-renders downstream).
   const tasksRef = useRef(tasks);
   tasksRef.current = tasks;
+  const activeTimezone = preference?.timezone ?? moment.tz.guess();
+  const todayStartDate = moment().tz(activeTimezone).format("YYYY-MM-DD");
 
   const submitTask = useCallback(
     async (data: TaskSubmission) => {
@@ -181,7 +183,7 @@ export const useCalendarMutations = (props: UseCalendarMutationsProps) => {
 
     try {
       const response = await schedulerService.scheduleTasks({
-        start_date: moment(date).format("YYYY-MM-DD"),
+        start_date: todayStartDate,
         allow_split: true,
         replace_existing: true,
       });
@@ -209,7 +211,7 @@ export const useCalendarMutations = (props: UseCalendarMutationsProps) => {
     } finally {
       setIsRescheduling(false);
     }
-  }, [date, fetchTasks, tasks, setIsRescheduling, setReschedulingError, setRescheduleWarnings, setScheduleOrder]);
+  }, [fetchTasks, tasks, todayStartDate, setIsRescheduling, setReschedulingError, setRescheduleWarnings, setScheduleOrder]);
 
   const exportEvents = useCallback(async () => {
     setIsExporting(true);
