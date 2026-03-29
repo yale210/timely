@@ -21,6 +21,7 @@ class PomoSessionViewSet(viewsets.ModelViewSet):
     serializer_class = PomoSessionSerializer
     permission_classes = [permissions.IsAuthenticated]
     http_method_names = ["get", "post", "head", "options"]
+    queryset = PomoSession.objects.all()
 
     def get_queryset(self):
         """Retrieve the queryset of pomodoro sessions for the user.
