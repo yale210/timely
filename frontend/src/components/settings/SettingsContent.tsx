@@ -1,13 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import PreferencesSection from "@/components/settings/PreferencesSection";
-import OverridesSection from "@/components/settings/OverridesSection";
 import SettingsSidebar from "@/components/settings/SettingsSidebar";
-import ThemeSection from "@/components/settings/ThemeSection";
-import ProfileSection from "@/components/settings/ProfileSection";
-import CategoryLimitsSection from "@/components/settings/CategoryLimitsSection";
-import PrivacySection from "@/components/settings/PrivacySection";
-import SettingsFeatureSection from "@/components/settings/SettingsFeatureSection";
-import SettingsGeneralSection from "@/components/settings/SettingsGeneralSection";
+import SettingsSectionContent from "@/components/settings/SettingsSectionContent";
 import { useTeacher } from "@/hooks/course/useTeacher";
 import type { UseSettingsReturn } from "@/hooks/settings/useSettings";
 import { useProfileSettings } from "@/hooks/settings/useProfileSettings";
@@ -88,7 +81,6 @@ const SettingsContent = ({
 
   const profileState = useProfileSettings(state.activeSection === "profile");
   const isWideSection = state.activeSection === "themes" || state.activeSection === "fonts";
-  const sectionContentClass = "w-full";
   const sectionPanelClass = isWideSection
     ? "min-w-0 flex-1"
     : "min-w-0 w-full max-w-2xl";
@@ -141,6 +133,45 @@ const SettingsContent = ({
     scrollMobileSectionIntoView();
   }, [isMobileLayout, scrollMobileSectionIntoView, state.activeSection]);
 
+  const sidebarProps = {
+    state: { activeSection: state.activeSection },
+    loading: { saving: loading.saving },
+    actions: {
+      selectSection: handleSelectSection,
+      logout: () => {
+        void actions.logout();
+      },
+    },
+  };
+
+  const activeSectionContent = (
+    <SettingsSectionContent
+      state={state}
+      loading={loading}
+      error={error}
+      actions={actions}
+      categoryLimitMaxMinutes={categoryLimitMaxMinutes}
+      profileState={profileState}
+      teacherActionLoading={{
+        makingTeacher,
+        unregisteringTeacher,
+        teacherStatus: teacherState.loading,
+      }}
+      teacherActionState={{
+        error: makeTeacherError,
+        success: makeTeacherSuccess,
+      }}
+      isTeacher={teacherState.isTeacher}
+      onToggleTeacher={(nextValue) => {
+        if (nextValue) {
+          void makeTeacher();
+          return;
+        }
+        void unregisterTeacher();
+      }}
+    />
+  );
+
   return (
     <div className="settings-page min-h-screen bg-white text-black">
       <header className="border-b border-gray-200 bg-white">
@@ -154,252 +185,23 @@ const SettingsContent = ({
       <main className="px-3 py-4 sm:p-6">
         {isMobileLayout ? (
           <div className="space-y-4">
-            <SettingsSidebar
-              mobileLayout={true}
-              state={{ activeSection: state.activeSection }}
-              loading={{ saving: loading.saving }}
-              actions={{
-                selectSection: handleSelectSection,
-                logout: () => {
-                  void actions.logout();
-                },
-              }}
-            />
+            <SettingsSidebar mobileLayout={true} {...sidebarProps} />
             <section
               ref={mobileSectionRef}
-              className={`rounded-xl border border-gray-200 bg-white p-4 shadow-sm ${
-                isWideSection ? "w-full" : "w-full"
-              }`}
+              className="w-full rounded-xl border border-gray-200 bg-white p-4 shadow-sm"
             >
-              <div className={sectionContentClass}>
-                {state.activeSection === "preferences" ? (
-                  <PreferencesSection
-                    key={state.preference?.id ?? "preferences"}
-                    pref={state.preference}
-                    prefLoading={loading.preference}
-                    prefSaving={loading.saving}
-                    prefDirty={state.isPreferenceDirty ?? false}
-                    prefError={error.preference}
-                    fieldErrors={state.fieldErrors}
-                    onPrefChange={actions.setPreference}
-                    onSave={() => {
-                      void actions.savePreferences();
-                    }}
-                  />
-                ) : null}
-                {state.activeSection === "overrides" ? <OverridesSection /> : null}
-                {state.activeSection === "themes" ? (
-                  <ThemeSection
-                    onThemeChange={actions.applyTheme}
-                    onFontChange={actions.applyFont}
-                    mode="themes"
-                  />
-                ) : null}
-                {state.activeSection === "fonts" ? (
-                  <ThemeSection
-                    onThemeChange={actions.applyTheme}
-                    onFontChange={actions.applyFont}
-                    mode="fonts"
-                  />
-                ) : null}
-                {state.activeSection === "categories" ? (
-                  <CategoryLimitsSection
-                    categories={state.categories}
-                    maxDailyMinutes={categoryLimitMaxMinutes}
-                    loading={loading.categories}
-                    saving={loading.saving}
-                    hasChanges={state.areCategoryLimitsDirty ?? false}
-                    error={error.categories}
-                    onLimitChange={actions.setCategoryLimit}
-                    onSave={() => {
-                      void actions.saveCategoryLimits();
-                    }}
-                  />
-                ) : null}
-                {state.activeSection === "features" ? <SettingsFeatureSection /> : null}
-                {state.activeSection === "general" ? (
-                  <SettingsGeneralSection
-                    preference={state.preference}
-                    loadingPreference={loading.preference}
-                    saving={loading.saving}
-                    isPreferenceDirty={state.isPreferenceDirty ?? false}
-                    fieldErrors={state.fieldErrors}
-                    onPreferenceChange={actions.setPreference}
-                    onSave={actions.savePreferences}
-                  />
-                ) : null}
-                {state.activeSection === "profile" ? (
-                  <ProfileSection
-                    profile={profileState.state.profile}
-                    loading={profileState.state.loading}
-                    saving={profileState.state.saving}
-                    isDirty={profileState.state.isDirty}
-                    error={profileState.state.error}
-                    fieldErrors={profileState.state.fieldErrors}
-                    teacherActionLoading={{
-                      makingTeacher,
-                      unregisteringTeacher,
-                      teacherStatus: teacherState.loading,
-                    }}
-                    teacherActionState={{
-                      error: makeTeacherError,
-                      success: makeTeacherSuccess,
-                    }}
-                    isTeacher={teacherState.isTeacher}
-                    onChange={profileState.actions.setProfile}
-                    onAvatarChange={profileState.actions.setAvatarFile}
-                    onToggleTeacher={(nextValue) => {
-                      if (nextValue) {
-                        void makeTeacher();
-                        return;
-                      }
-
-                      void unregisterTeacher();
-                    }}
-                    onSave={() => {
-                      void profileState.actions.saveProfile();
-                    }}
-                  />
-                ) : null}
-                {state.activeSection === "privacy" ? (
-                  <PrivacySection
-                    deleting={false}
-                    onDeleteEvents={() => {
-                      return actions.deleteEvents();
-                    }}
-                    onDeleteTasks={() => {
-                      return actions.deleteTasks();
-                    }}
-                    onDeleteAccount={() => {
-                      return actions.deleteAccount();
-                    }}
-                  />
-                ) : null}
-              </div>
+              {activeSectionContent}
             </section>
           </div>
         ) : (
           <div className="flex items-start gap-6">
-            <SettingsSidebar
-              state={{ activeSection: state.activeSection }}
-              loading={{ saving: loading.saving }}
-              actions={{
-                selectSection: handleSelectSection,
-                logout: () => {
-                  void actions.logout();
-                },
-              }}
-            />
+            <SettingsSidebar {...sidebarProps} />
             <section
               className={`rounded-xl border border-gray-200 bg-white p-6 shadow-sm ${
                 sectionPanelClass
               }`}
             >
-              <div className={sectionContentClass}>
-                {state.activeSection === "preferences" ? (
-                  <PreferencesSection
-                    key={state.preference?.id ?? "preferences"}
-                    pref={state.preference}
-                    prefLoading={loading.preference}
-                    prefSaving={loading.saving}
-                    prefDirty={state.isPreferenceDirty ?? false}
-                    prefError={error.preference}
-                    fieldErrors={state.fieldErrors}
-                    onPrefChange={actions.setPreference}
-                    onSave={() => {
-                      void actions.savePreferences();
-                    }}
-                  />
-                ) : null}
-                {state.activeSection === "overrides" ? <OverridesSection /> : null}
-                {state.activeSection === "themes" ? (
-                  <ThemeSection
-                    onThemeChange={actions.applyTheme}
-                    onFontChange={actions.applyFont}
-                    mode="themes"
-                  />
-                ) : null}
-                {state.activeSection === "fonts" ? (
-                  <ThemeSection
-                    onThemeChange={actions.applyTheme}
-                    onFontChange={actions.applyFont}
-                    mode="fonts"
-                  />
-                ) : null}
-                {state.activeSection === "categories" ? (
-                  <CategoryLimitsSection
-                    categories={state.categories}
-                    maxDailyMinutes={categoryLimitMaxMinutes}
-                    loading={loading.categories}
-                    saving={loading.saving}
-                    hasChanges={state.areCategoryLimitsDirty ?? false}
-                    error={error.categories}
-                    onLimitChange={actions.setCategoryLimit}
-                    onSave={() => {
-                      void actions.saveCategoryLimits();
-                    }}
-                  />
-                ) : null}
-                {state.activeSection === "features" ? <SettingsFeatureSection /> : null}
-                {state.activeSection === "general" ? (
-                  <SettingsGeneralSection
-                    preference={state.preference}
-                    loadingPreference={loading.preference}
-                    saving={loading.saving}
-                    isPreferenceDirty={state.isPreferenceDirty ?? false}
-                    fieldErrors={state.fieldErrors}
-                    onPreferenceChange={actions.setPreference}
-                    onSave={actions.savePreferences}
-                  />
-                ) : null}
-                {state.activeSection === "profile" ? (
-                  <ProfileSection
-                    profile={profileState.state.profile}
-                    loading={profileState.state.loading}
-                    saving={profileState.state.saving}
-                    isDirty={profileState.state.isDirty}
-                    error={profileState.state.error}
-                    fieldErrors={profileState.state.fieldErrors}
-                    teacherActionLoading={{
-                      makingTeacher,
-                      unregisteringTeacher,
-                      teacherStatus: teacherState.loading,
-                    }}
-                    teacherActionState={{
-                      error: makeTeacherError,
-                      success: makeTeacherSuccess,
-                    }}
-                    isTeacher={teacherState.isTeacher}
-                    onChange={profileState.actions.setProfile}
-                    onAvatarChange={profileState.actions.setAvatarFile}
-                    onToggleTeacher={(nextValue) => {
-                      if (nextValue) {
-                        void makeTeacher();
-                        return;
-                      }
-
-                      void unregisterTeacher();
-                    }}
-                    onSave={() => {
-                      void profileState.actions.saveProfile();
-                    }}
-                  />
-                ) : null}
-                {state.activeSection === "privacy" ? (
-                  <PrivacySection
-                    deleting={false}
-                    onDeleteEvents={() => {
-                      return actions.deleteEvents();
-                    }}
-                    onDeleteTasks={() => {
-                      return actions.deleteTasks();
-                    }}
-                    onDeleteAccount={() => {
-                      return actions.deleteAccount();
-                    }}
-                  />
-                ) : null}
-              </div>
+              {activeSectionContent}
             </section>
           </div>
         )}

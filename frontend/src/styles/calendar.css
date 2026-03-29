@@ -230,6 +230,18 @@
   line-height: 1.05;
 }
 
+.mini-calendar-preview .rbc-event {
+  overflow: hidden;
+}
+
+.mini-calendar-preview .rbc-event-content {
+  display: block;
+  width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .mini-calendar-preview .rbc-allday-cell,
 .mini-calendar-preview .rbc-allday-row {
   display: none;
