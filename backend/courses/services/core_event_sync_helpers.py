@@ -32,11 +32,22 @@ def course_event_description(course_event) -> str:
 
 def get_core_event(user, title: str, start_time):
     """Look up the target calendar event using the stable identity fields."""
-    return Event.objects.get(
-        user=user,
-        title=title,
-        start_time=start_time,
-    )
+    try:
+        return Event.objects.get(
+            user=user,
+            title=title,
+            start_time=start_time,
+        )
+    except Event.DoesNotExist:
+        # Fall back to a title-only match when there is exactly one existing synced
+        # copy. This lets sync update a moved course event instead of duplicating it.
+        title_matches = Event.objects.filter(
+            user=user,
+            title=title,
+        )
+        if title_matches.count() == 1:
+            return title_matches.get()
+        raise
 
 
 def create_core_event_for_course_student(course_event, user):
@@ -58,6 +69,9 @@ def update_core_event_from_course_event(core_event, course_event) -> bool:
     """Update shared synced event fields from the source course event."""
     updated = False
 
+    if core_event.start_time != course_event.start_time:
+        core_event.start_time = course_event.start_time
+        updated = True
     if core_event.description != (course_event.description or ""):
         core_event.description = course_event.description or ""
         updated = True
@@ -72,7 +86,9 @@ def update_core_event_from_course_event(core_event, course_event) -> bool:
         updated = True
 
     if updated:
-        core_event.save(update_fields=["description", "location", "colour", "end_time"])
+        core_event.save(
+            update_fields=["start_time", "description", "location", "colour", "end_time"]
+        )
 
     return updated
 
@@ -83,6 +99,9 @@ def update_user_specific_core_event(
     """Update a user's personalized synced event fields."""
     updated = False
 
+    if core_event.start_time != course_event.start_time:
+        core_event.start_time = course_event.start_time
+        updated = True
     if core_event.description != event_description:
         core_event.description = event_description
         updated = True
@@ -97,7 +116,9 @@ def update_user_specific_core_event(
         updated = True
 
     if updated:
-        core_event.save(update_fields=["description", "location", "colour", "end_time"])
+        core_event.save(
+            update_fields=["start_time", "description", "location", "colour", "end_time"]
+        )
 
     return updated
 
