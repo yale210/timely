@@ -5,7 +5,6 @@ import { authService } from "@/services/authService";
 import * as categoryService from "@/services/categoryService";
 import { deleteEvents as deleteEventsAPI} from "@/services/taskService";
 import { deleteTasks as deleteTasksAPI} from "@/services/taskService";
-import { deleteAccount as deleteAccountAPI} from "@/services/taskService";
 import { preferenceService } from "@/services/preferenceService";
 import type { Category, Preference } from "@/types";
 import { formatDjangoFormError } from "@/utils/apiErrors";
@@ -127,7 +126,7 @@ export const useSettings = (): UseSettingsReturn => {
   const deleteAccount = useCallback(async () => {
     setIsDeleting(true);
     try {
-      const message = await deleteAccountAPI();
+      const message = await authService.deleteAccount();
 
       await authService.logout();
       
