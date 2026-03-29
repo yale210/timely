@@ -14,6 +14,7 @@ class CategoryViewSet(viewsets.ModelViewSet):
 
     serializer_class = CategorySerializer
     permission_classes = [permissions.IsAuthenticated]
+    queryset = Category.objects.all()
 
     def get_queryset(self):
         """Retrieve categories for the current user ordered by text.

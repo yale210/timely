@@ -3,9 +3,10 @@
 from datetime import datetime
 from django.db import transaction
 from django.utils import timezone
-from rest_framework import permissions
+from rest_framework import permissions, serializers
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from drf_spectacular.utils import extend_schema, inline_serializer
 from core.models import Event
 
 
@@ -30,6 +31,24 @@ class ImportView(APIView):
             return timezone.make_aware(parsed)
         return parsed
 
+    @extend_schema(
+        request={
+            "multipart/form-data": inline_serializer(
+                name="ImportFileRequest",
+                fields={"file": serializers.FileField()},
+            ),
+        },
+        responses={
+            200: inline_serializer(
+                name="ImportSuccessResponse",
+                fields={"message": serializers.CharField()},
+            ),
+            400: inline_serializer(
+                name="ImportErrorResponse",
+                fields={"error": serializers.CharField()},
+            ),
+        },
+    )
     def post(self, request):
         """Handle the import of events from a .txt file in iCalendar format.
 
@@ -46,35 +65,49 @@ class ImportView(APIView):
             ValueError: If the file format is invalid or contains errors.
 
         """
-
         try:
             lines = self.check_file_structure(request)
-            events = []
-            current_event = None
-            count = 0
-            for line in lines:
-                count = count + 1
+            events = self._parse_events_from_lines(request, lines)
 
-                current_event = self.begin_event(line, current_event)
-
-                current_event = self.prase_event(line, current_event)
-
-                current_event, events = self.end_event(
-                    line, current_event, request, events
-                )
-
-            # Every event is added to the DB
-            with transaction.atomic():
-                for event in events:
-                    self.create_event_object(request, event)
+            self._persist_imported_events(request, events)
 
             response = self.process_response(events)
             return Response(response)
 
-        # File format incorrect, error response
         except Exception as e:
             response = {"error": str(e)}
             return Response(response, status=400)
+
+    def _parse_events_from_lines(self, request, lines: list[str]) -> list[dict]:
+        """Iterate through lines and parse individual events.
+
+        Args:
+            request (Request): The DRF request object.
+            lines (list[str]): The decoded lines of the uploaded file.
+
+        Returns:
+            list[dict]: A list of successfully parsed event dictionaries.
+
+        """
+        events = []
+        current_event = None
+        for line in lines:
+            current_event = self.begin_event(line, current_event)
+            current_event = self.prase_event(line, current_event)
+            current_event, events = self.end_event(line, current_event, request, events)
+        return events
+
+    def _persist_imported_events(self, request, events: list[dict]) -> None:
+        """Save the imported events to the database within an atomic transaction.
+
+        Args:
+            request (Request): The DRF request object.
+            events (list[dict]): The list of events to be persisted.
+
+        """
+        with transaction.atomic():
+            for event in events:
+                self.create_event_object(request, event)
 
     def check_file_structure(self, request):
         """Validate the basic structure and metadata of the uploaded iCalendar file.
@@ -153,8 +186,12 @@ class ImportView(APIView):
 
         """
         if current_event is not None:
-            key, value = line.split(":", 1)
-            current_event[key] = value
+            # Avoid parsing BEGIN/END lines as properties
+            if ":" in line and not (
+                line.startswith("BEGIN:") or line.startswith("END:")
+            ):
+                key, value = line.split(":", 1)
+                current_event[key] = value
         return current_event
 
     def end_event(self, line, current_event, request, events):
@@ -217,7 +254,7 @@ class ImportView(APIView):
             Event: The newly created Event instance.
 
         """
-        Event.objects.create(
+        return Event.objects.create(
             user=request.user,
             title=event["title"],
             description=event["description"],

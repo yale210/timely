@@ -122,9 +122,15 @@ function validatePreferenceDayBounds(
 
   if (!preference.day_end) {
     errors.day_end = ["Required."];
-  } else if (dayEndMinutes === null) {
+    return;
+  }
+
+  if (dayEndMinutes === null) {
     errors.day_end = ["Must be a valid time."];
-  } else if (dayStartMinutes !== null && dayEndMinutes <= dayStartMinutes) {
+    return;
+  }
+
+  if (dayStartMinutes !== null && dayEndMinutes <= dayStartMinutes) {
     errors.day_end = ["Day end must be after day start."];
   }
 }

@@ -1,8 +1,10 @@
 """Views for bulk deletion of events."""
 
-from rest_framework import permissions
+from rest_framework import permissions, serializers
 from rest_framework.response import Response
 from rest_framework.views import APIView
+
+from drf_spectacular.utils import extend_schema, inline_serializer
 
 from core.models import Event
 
@@ -12,6 +14,15 @@ class DeleteAllEventsView(APIView):
 
     permission_classes = [permissions.IsAuthenticated]
 
+    @extend_schema(
+        request=None,
+        responses={
+            200: inline_serializer(
+                name="DeleteAllEventsResponse",
+                fields={"message": serializers.CharField()},
+            ),
+        },
+    )
     def delete(self, request):
         """Delete all events for the current user.
 

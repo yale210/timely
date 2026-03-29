@@ -231,6 +231,20 @@ SPECTACULAR_SETTINGS = {
     "TITLE": "Timely API",
     "DESCRIPTION": "OpenAPI schema for Timely backend",
     "VERSION": "1.0.0",
+    "ENUM_NAME_OVERRIDES": {
+        "BroadcastStatusEnum": [
+            ("QUEUED", "Queued"),
+            ("IN_PROGRESS", "In progress"),
+            ("COMPLETED", "Completed"),
+            ("PARTIAL", "Partial"),
+            ("FAILED", "Failed"),
+        ],
+        "DeliveryStatusEnum": [
+            ("PENDING", "Pending"),
+            ("SENT", "Sent"),
+            ("FAILED", "Failed"),
+        ],
+    },
 }
 
 REST_KNOX = {
