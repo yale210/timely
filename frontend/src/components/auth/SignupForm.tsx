@@ -1,6 +1,7 @@
 import { useState, type FormEvent, type ReactNode } from "react"
 import { authService } from "@/services/authService"
 import { useNavigate } from "react-router-dom"
+import { formatDjangoFormError } from "@/utils/apiErrors";
 
 interface SignupPayload {
   email: string
@@ -38,6 +39,25 @@ const getSignupErrorData = (error: unknown): Record<string, unknown> | null => {
 }
 
 const getSignupErrorLine = (field: string, value: unknown): string | null => {
+  if (field === "detail" && typeof value === "string") {
+    return value;
+  }
+
+  if (field === "non_field_errors") {
+    if (typeof value === "string") {
+      return value;
+    }
+
+    if (Array.isArray(value)) {
+      const joined = value
+        .filter((entry): entry is string => typeof entry === "string")
+        .join(" ")
+        .trim();
+
+      return joined || null;
+    }
+  }
+
   if (typeof value === "string") {
     return `${field}: ${value}`
   }
@@ -64,6 +84,11 @@ const getSignupErrorMessage = (error: unknown): string => {
     if (lines.length > 0) {
       return lines.join("\n")
     }
+  }
+
+  const parsed = formatDjangoFormError(error)
+  if (parsed.message !== "Something went wrong") {
+    return parsed.message
   }
 
   return error instanceof Error ? error.message : SIGNUP_FAILED_ERROR

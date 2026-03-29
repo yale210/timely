@@ -52,13 +52,24 @@ const getTopLevelError = (
     };
   }
 
+  if (typeof status === "number" && status >= 500) {
+    return {
+      message: "The server is unavailable right now. Please try again in a moment.",
+      fieldErrors: {},
+    };
+  }
+
   return null;
 };
 
 const getFieldErrors = (dataRecord: Record<string, unknown>): FieldErrors => {
   const fieldErrors: FieldErrors = {};
   for (const [key, potentialArray] of Object.entries(dataRecord)) {
-    // Ignore non-array payload entries so the result stays compatible with form UIs.
+    if (typeof potentialArray === "string") {
+      fieldErrors[key] = [potentialArray];
+      continue;
+    }
+
     if (Array.isArray(potentialArray)) {
       fieldErrors[key] = potentialArray.filter(
         (value): value is string => typeof value === "string",
@@ -98,6 +109,13 @@ export const formatDjangoFormError = (
   }
 
   if (!dataRecord) {
+    if (isApiError(error) && error.response === undefined) {
+      return {
+        message: "Unable to reach the server. Please check your connection and try again.",
+        fieldErrors: {},
+      };
+    }
+
     return getFallbackError();
   }
 
