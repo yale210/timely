@@ -3,9 +3,10 @@
 from datetime import datetime
 from django.db import transaction
 from django.utils import timezone
-from rest_framework import permissions
+from rest_framework import permissions, serializers
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from drf_spectacular.utils import extend_schema, inline_serializer
 from core.models import Event
 
 
@@ -30,6 +31,24 @@ class ImportView(APIView):
             return timezone.make_aware(parsed)
         return parsed
 
+    @extend_schema(
+        request={
+            "multipart/form-data": inline_serializer(
+                name="ImportFileRequest",
+                fields={"file": serializers.FileField()},
+            ),
+        },
+        responses={
+            200: inline_serializer(
+                name="ImportSuccessResponse",
+                fields={"message": serializers.CharField()},
+            ),
+            400: inline_serializer(
+                name="ImportErrorResponse",
+                fields={"error": serializers.CharField()},
+            ),
+        },
+    )
     def post(self, request):
         """Handle the import of events from a .txt file in iCalendar format.
 
@@ -46,37 +65,64 @@ class ImportView(APIView):
             ValueError: If the file format is invalid or contains errors.
 
         """
-
         try:
             lines = self.check_file_structure(request)
-            events = []
-            current_event = None
-            count = 0
-            for line in lines:
-                count = count + 1
+            events = self._parse_events_from_lines(request, lines)
 
-                current_event = self.begin_event(line, current_event)
-
-                current_event = self.prase_event(line, current_event)
-
-                current_event, events = self.end_event(
-                    line, current_event, request, events
-                )
-
-            # Every event is added to the DB
-            with transaction.atomic():
-                for event in events:
-                    self.create_event_object(request, event)
+            self._persist_imported_events(request, events)
 
             response = self.process_response(events)
             return Response(response)
 
-        # File format incorrect, error response
         except Exception as e:
             response = {"error": str(e)}
             return Response(response, status=400)
 
+    def _parse_events_from_lines(self, request, lines: list[str]) -> list[dict]:
+        """Iterate through lines and parse individual events.
+
+        Args:
+            request (Request): The DRF request object.
+            lines (list[str]): The decoded lines of the uploaded file.
+
+        Returns:
+            list[dict]: A list of successfully parsed event dictionaries.
+
+        """
+        events = []
+        current_event = None
+        for line in lines:
+            current_event = self.begin_event(line, current_event)
+            current_event = self.prase_event(line, current_event)
+            current_event, events = self.end_event(line, current_event, request, events)
+        return events
+
+    def _persist_imported_events(self, request, events: list[dict]) -> None:
+        """Save the imported events to the database within an atomic transaction.
+
+        Args:
+            request (Request): The DRF request object.
+            events (list[dict]): The list of events to be persisted.
+
+        """
+        with transaction.atomic():
+            for event in events:
+                self.create_event_object(request, event)
+
     def check_file_structure(self, request):
+        """Validate the basic structure and metadata of the uploaded iCalendar file.
+
+        Args:
+            request (Request): The DRF request object.
+
+        Returns:
+            list[str]: The decoded lines of the uploaded .txt file.
+
+        Raises:
+            ValueError: If no file is uploaded, the file type is not .txt,
+                the file is empty, or if basic metadata is missing.
+
+        """
         # The file that the user uploaded
         uploaded_file = request.FILES.get("file")
 
@@ -108,6 +154,19 @@ class ImportView(APIView):
         return lines
 
     def begin_event(self, line, current_event):
+        """Initialise a new event dictionary when a BEGIN:VEVENT line is found.
+
+        Args:
+            line (str): The current line being parsed.
+            current_event (dict | None): The event dictionary currently being built.
+
+        Returns:
+            dict | None: The initialised event dictionary or the current one.
+
+        Raises:
+            ValueError: If a BEGIN:VEVENT is found within another event.
+
+        """
         if line == "BEGIN:VEVENT":
             if current_event is None:
                 current_event = {}
@@ -116,12 +175,41 @@ class ImportView(APIView):
         return current_event
 
     def prase_event(self, line, current_event):
+        """Parse an iCalendar property line into the current event dictionary.
+
+        Args:
+            line (str): The current property line.
+            current_event (dict | None): The event dictionary currently being built.
+
+        Returns:
+            dict | None: The updated event dictionary with the parsed property.
+
+        """
         if current_event is not None:
-            key, value = line.split(":", 1)
-            current_event[key] = value
+            # Avoid parsing BEGIN/END lines as properties
+            if ":" in line and not (
+                line.startswith("BEGIN:") or line.startswith("END:")
+            ):
+                key, value = line.split(":", 1)
+                current_event[key] = value
         return current_event
 
     def end_event(self, line, current_event, request, events):
+        """Finalise an event's parsing and append it to the event list.
+
+        Args:
+            line (str): The current line being parsed.
+            current_event (dict | None): The event dictionary currently being built.
+            request (Request): The DRF request object.
+            events (list[dict]): The list of successfully parsed events.
+
+        Returns:
+            tuple: A tuple containing the reset current_event (None) and the updated events list.
+
+        Raises:
+            ValueError: If an END:VEVENT is found without a corresponding BEGIN:VEVENT.
+
+        """
         if line == "END:VEVENT":
             # No event being worked on currently, so ending an event is an error
             if current_event is None:
@@ -156,7 +244,17 @@ class ImportView(APIView):
         return current_event, events
 
     def create_event_object(self, request, event):
-        Event.objects.create(
+        """Create a new Event database object for an imported event.
+
+        Args:
+            request (Request): The DRF request object.
+            event (dict): The dictionary containing validated event data.
+
+        Returns:
+            Event: The newly created Event instance.
+
+        """
+        return Event.objects.create(
             user=request.user,
             title=event["title"],
             description=event["description"],
@@ -168,6 +266,15 @@ class ImportView(APIView):
         )
 
     def process_response(self, events):
+        """Build the summary message response for the import process.
+
+        Args:
+            events (list[dict]): The list of imported events.
+
+        Returns:
+            dict: A response dictionary containing the import summary message.
+
+        """
         # Response letting the user know that the import was successful
         if len(events) == 0:
             # 0 events is not strictly an error, as an error is wrong file type
@@ -181,6 +288,18 @@ class ImportView(APIView):
         return response
 
     def get_summary(self, current_event):
+        """Extract the summary property from the event data.
+
+        Args:
+            current_event (dict): The current event's property dictionary.
+
+        Returns:
+            str: The summary value from the event data.
+
+        Raises:
+            ValueError: If the SUMMARY property is missing.
+
+        """
         if "SUMMARY" in current_event:
             summary = current_event["SUMMARY"]
 
@@ -189,6 +308,18 @@ class ImportView(APIView):
         return summary
 
     def get_dt_start(self, current_event):
+        """Extract the start date and time from the event data.
+
+        Args:
+            current_event (dict): The current event's property dictionary.
+
+        Returns:
+            str: The raw DTSTART value from the event data.
+
+        Raises:
+            ValueError: If the DTSTART property is missing.
+
+        """
         dt_start = None
         # Search every key
         for key in current_event:
@@ -203,6 +334,18 @@ class ImportView(APIView):
         return dt_start
 
     def get_dt_end(self, current_event):
+        """Extract the end date and time from the event data.
+
+        Args:
+            current_event (dict): The current event's property dictionary.
+
+        Returns:
+            str: The raw DTEND value from the event data.
+
+        Raises:
+            ValueError: If the DTEND property is missing.
+
+        """
         # Assume that the event is invalid
         dt_end = None
         # Search every key
@@ -218,6 +361,15 @@ class ImportView(APIView):
         return dt_end
 
     def get_dt_stamp(self, current_event):
+        """Extract or generate the event's timestamp.
+
+        Args:
+            current_event (dict): The current event's property dictionary.
+
+        Returns:
+            str: The DTSTAMP value from the event data or the current time as a fallback.
+
+        """
         # A DTSTAMP is optional, no error for it not existing,
         if "DTSTAMP" in current_event:
             dt_stamp_unformatted = current_event["DTSTAMP"]
@@ -233,6 +385,16 @@ class ImportView(APIView):
         return dt_stamp
 
     def get_r_rule(self, current_event):
+        """Parse the recurrence rule (RRULE) from the event data.
+
+        Args:
+            current_event (dict): The current event's property dictionary.
+
+        Returns:
+            tuple: A tuple containing the recurrence frequency (str or None)
+                and the recurrence end date (date or None).
+
+        """
         if "RRULE" in current_event:
             r_rule = current_event["RRULE"]
 
@@ -241,8 +403,8 @@ class ImportView(APIView):
             r_rule_dictionary = {}
 
             for part in parts_of_r_rule:
-                k, v = part.split("=")
-                r_rule_dictionary[k] = v
+                key, value = part.split("=")
+                r_rule_dictionary[key] = value
 
             frequency_interval = r_rule_dictionary.get("FREQ")
 
@@ -279,6 +441,24 @@ class ImportView(APIView):
         until_date_final,
         events,
     ):
+        """Check for duplicates and add a new event to the list of events to import.
+
+        Args:
+            request (Request): The DRF request object.
+            summary (str): The summary/title of the event.
+            description (str): The description of the event.
+            location (str): The location of the event.
+            dt_stamp (str): The timestamp of the event creation.
+            start_date_time_django_format (datetime): The aware start datetime.
+            end_date_time_django_format (datetime): The aware end datetime.
+            frequency_interval_final (str | None): The recurrence frequency.
+            until_date_final (date | None): The recurrence end date.
+            events (list[dict]): The current list of events to be imported.
+
+        Returns:
+            list[dict]: The updated list of events to be imported.
+
+        """
         event_exists_pre_import = Event.objects.filter(
             user=request.user,
             title=summary,

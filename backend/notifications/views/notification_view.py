@@ -26,6 +26,7 @@ class NotificationViewSet(viewsets.ModelViewSet):
     serializer_class = NotificationSerializer
     permission_classes = [IsAuthenticated]
     pagination_class = NotificationPagination
+    queryset = Notification.objects.all()
 
     def get_queryset(self):
         """Retrieve the notifications for the current authenticated user.

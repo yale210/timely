@@ -2,9 +2,12 @@
 
 from django.contrib.auth import get_user_model
 from django.utils import timezone
-from rest_framework import status
+from rest_framework import serializers, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
+
+from drf_spectacular.utils import extend_schema, inline_serializer, OpenApiParameter
+from drf_spectacular.types import OpenApiTypes
 
 from admin_panel.serializers import (
     AdminNotificationRequestSerializer,
@@ -20,6 +23,13 @@ from admin_panel.services import (
 )
 from notifications.models import BroadcastJob
 from notifications.tasks import process_broadcast_job
+
+_BROADCAST_ID_PARAM = OpenApiParameter(
+    "broadcast_id",
+    OpenApiTypes.INT,
+    OpenApiParameter.PATH,
+    description="Broadcast job primary key.",
+)
 
 
 class AdminNotificationActionMixin:
@@ -141,6 +151,10 @@ class AdminNotificationActionMixin:
             }
         )
 
+    @extend_schema(
+        operation_id="admin_broadcasts_list",
+        responses={200: BroadcastJobListSerializer(many=True)},
+    )
     @action(detail=False, methods=["get"], url_path="broadcasts")
     def broadcasts(self, request):
         """List broadcast jobs with optional admin filters.
@@ -171,6 +185,24 @@ class AdminNotificationActionMixin:
         serializer = BroadcastJobListSerializer(queryset, many=True)
         return Response(serializer.data)
 
+    @extend_schema(
+        parameters=[_BROADCAST_ID_PARAM],
+        responses={
+            200: BroadcastJobDetailSerializer,
+            404: inline_serializer(
+                name="BroadcastNotFoundResponse",
+                fields={
+                    "error": inline_serializer(
+                        name="BroadcastNotFoundError",
+                        fields={
+                            "code": serializers.CharField(),
+                            "message": serializers.CharField(),
+                        },
+                    ),
+                },
+            ),
+        },
+    )
     @action(
         detail=False, methods=["get"], url_path=r"broadcasts/(?P<broadcast_id>[^/.]+)"
     )
@@ -201,6 +233,26 @@ class AdminNotificationActionMixin:
         serializer = BroadcastJobDetailSerializer(broadcast)
         return Response(serializer.data)
 
+    @extend_schema(
+        parameters=[_BROADCAST_ID_PARAM],
+        responses={
+            200: inline_serializer(
+                name="BroadcastStatusResponse",
+                fields={
+                    "id": serializers.IntegerField(),
+                    "status": serializers.CharField(),
+                    "recipient_count": serializers.IntegerField(),
+                    "delivered_count": serializers.IntegerField(),
+                    "failed_count": serializers.IntegerField(),
+                    "queued_at": serializers.CharField(),
+                    "started_at": serializers.CharField(allow_null=True),
+                    "completed_at": serializers.CharField(allow_null=True),
+                    "task_id": serializers.CharField(allow_null=True),
+                    "updated_at": serializers.CharField(),
+                },
+            ),
+        },
+    )
     @action(
         detail=False,
         methods=["get"],
@@ -247,6 +299,10 @@ class AdminNotificationActionMixin:
             }
         )
 
+    @extend_schema(
+        parameters=[_BROADCAST_ID_PARAM],
+        request=None,
+    )
     @action(
         detail=False,
         methods=["post"],

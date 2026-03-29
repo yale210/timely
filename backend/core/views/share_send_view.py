@@ -1,9 +1,11 @@
 """View for sending event share requests to other users."""
 
 from django.contrib.auth import get_user_model
-from rest_framework import permissions
+from rest_framework import permissions, serializers
 from rest_framework.response import Response
 from rest_framework.views import APIView
+
+from drf_spectacular.utils import extend_schema, inline_serializer
 
 from core.models import Event, PendingShareEvent
 
@@ -18,6 +20,29 @@ class ShareSendView(APIView):
 
     permission_classes = [permissions.IsAuthenticated]
 
+    @extend_schema(
+        request=inline_serializer(
+            name="ShareSendRequest",
+            fields={
+                "Receiver": serializers.CharField(
+                    help_text="Username of the recipient.",
+                ),
+                "Event-ID": serializers.CharField(
+                    help_text="ID of the event to share (optionally prefixed with 'e').",
+                ),
+            },
+        ),
+        responses={
+            200: inline_serializer(
+                name="ShareSendSuccessResponse",
+                fields={"message": serializers.CharField()},
+            ),
+            400: inline_serializer(
+                name="ShareSendErrorResponse",
+                fields={"message": serializers.CharField()},
+            ),
+        },
+    )
     def post(self, request):
         """Send an event share request to another user.
 
