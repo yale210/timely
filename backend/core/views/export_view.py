@@ -25,43 +25,11 @@ class ExportView(APIView):
         # All of the events that belong to the user
         events = Event.objects.filter(user=request.user)
 
-        # Every file requires this metadata at the top, this is not any event
-        lines = []
-        lines.append("BEGIN:VCALENDAR")
-        lines.append("VERSION:2.0")
-        lines.append("PRODID:TIMELY v1.0")
-        lines.append("CALSCALE:GREGORIAN")
-        lines.append("METHOD:PUBLISH")
+        lines = self.append_calendar_meta_data()
 
         # Each Event will be appened one-by-one
         for event in events:
-            lines.append("BEGIN:VEVENT")
-            # Event ID, this is just e + the event id in the DB e.g. e123
-            lines.append(f"UID:e{event.id}")
-            lines.append(f"DTSTAMP:{event.last_edited.strftime('%Y%m%dT%H%M%S')}Z")
-            lines.append(
-                f"DTSTART;TZID=Europe/London:{event.start_time.strftime('%Y%m%dT%H%M%S')}"
-            )
-            lines.append(
-                f"DTEND;TZID=Europe/London:{event.end_time.strftime('%Y%m%dT%H%M%S')}"
-            )
-            lines.append(f"SUMMARY:{event.title}")
-            lines.append(f"DESCRIPTION:{event.description}")
-            lines.append(f"LOCATION:{event.location}")
-
-            # Not None means that the event is recurring
-            if event.recurrence_interval is not None:
-                # None means repeat forever
-                if event.recurrence_end is None:
-                    lines.append(f"RRULE:FREQ={event.recurrence_interval.upper()}")
-                # Not none means repeat until a specified date
-                else:
-                    until = event.recurrence_end.strftime("%Y%m%dT%H%M%S")
-                    lines.append(
-                        f"RRULE:FREQ={event.recurrence_interval.upper()};UNTIL={until}Z"
-                    )
-
-            lines.append("END:VEVENT")
+            lines = self.append_event_data(lines, event)
 
         # End of file standard format
         lines.append("END:VCALENDAR")
@@ -73,3 +41,45 @@ class ExportView(APIView):
         response = HttpResponse(content, content_type="text/plain")
         response["Content-Disposition"] = 'attachment; filename="events.txt"'
         return response
+
+    def append_calendar_meta_data(self):
+        # Every file requires this metadata at the top, this is not any event
+        lines = []
+        lines.append("BEGIN:VCALENDAR")
+        lines.append("VERSION:2.0")
+        lines.append("PRODID:TIMELY v1.0")
+        lines.append("CALSCALE:GREGORIAN")
+        lines.append("METHOD:PUBLISH")
+        return lines
+
+    def append_event_data(self, lines, event):
+        lines.append("BEGIN:VEVENT")
+        # Event ID, this is just e + the event id in the DB e.g. e123
+        lines.append(f"UID:e{event.id}")
+        lines.append(f"DTSTAMP:{event.last_edited.strftime('%Y%m%dT%H%M%S')}Z")
+        lines.append(
+            f"DTSTART;TZID=Europe/London:{event.start_time.strftime('%Y%m%dT%H%M%S')}"
+        )
+        lines.append(
+            f"DTEND;TZID=Europe/London:{event.end_time.strftime('%Y%m%dT%H%M%S')}"
+        )
+        lines.append(f"SUMMARY:{event.title}")
+        lines.append(f"DESCRIPTION:{event.description}")
+        lines.append(f"LOCATION:{event.location}")
+        lines = self.append_recurrence_interval(lines, event)
+        lines.append("END:VEVENT")
+        return lines
+
+    def append_recurrence_interval(self, lines, event):
+        # Not None means that the event is recurring
+        if event.recurrence_interval is not None:
+            # None means repeat forever
+            if event.recurrence_end is None:
+                lines.append(f"RRULE:FREQ={event.recurrence_interval.upper()}")
+            # Not none means repeat until a specified date
+            else:
+                until = event.recurrence_end.strftime("%Y%m%dT%H%M%S")
+                lines.append(
+                    f"RRULE:FREQ={event.recurrence_interval.upper()};UNTIL={until}Z"
+                )
+        return lines
