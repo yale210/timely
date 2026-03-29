@@ -43,12 +43,12 @@ export function useTeacher(): UseTeacherResult {
   }, []);
 
   useEffect(() => {
-    void loadTeacher();
+    queueMicrotask(() => void loadTeacher());
     const handler = () => void loadTeacher();
     window.addEventListener(AUTH_CHANGE_EVENT, handler);
 
     return () => { window.removeEventListener(AUTH_CHANGE_EVENT, handler); };
   }, [loadTeacher]);
 
-  return {  ...state, isTeacher: state.teacher != null, reload: loadTeacher,};
+  return {  ...state, isTeacher: state.teacher !== null, reload: loadTeacher,};
 }
