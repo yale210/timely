@@ -32,6 +32,74 @@ interface ColourPickerMenuEffectArgs {
   >;
 }
 
+function getClockSkewWarning(offsetMs: number, thresholdMs: number) {
+  return Math.abs(offsetMs) >= thresholdMs
+    ? "Your device clock appears out of sync with the server. Reminder validation uses server time."
+    : null;
+}
+
+function applyServerTimeSync(
+  serverTime: string,
+  args: EventFormServerTimeSyncArgs,
+) {
+  const now = args.getCurrentTimestamp();
+  const offsetMs = new Date(serverTime).getTime() - now;
+
+  args.setServerTimeOffsetMs(offsetMs);
+  args.setValidationNowMs(now);
+  args.setClockSkewWarning(getClockSkewWarning(offsetMs, args.clockSkewWarningThresholdMs));
+}
+
+function handleServerTimeSyncError(
+  error: unknown,
+  args: EventFormServerTimeSyncArgs,
+) {
+  console.error("Failed to sync server time for reminder validation", error);
+  args.setValidationNowMs(args.getCurrentTimestamp());
+}
+
+async function syncServerTime(
+  args: EventFormServerTimeSyncArgs,
+  shouldApplyState: () => boolean,
+) {
+  try {
+    const { server_time } = await getServerTime();
+    if (!shouldApplyState()) {
+      return;
+    }
+
+    applyServerTimeSync(server_time, args);
+  } catch (error) {
+    if (!shouldApplyState()) {
+      return;
+    }
+
+    handleServerTimeSyncError(error, args);
+  }
+}
+
+function shouldIgnorePickerPointerEvent(
+  target: EventTarget | null,
+  pickerRef: RefObject<HTMLDivElement | null>,
+) {
+  return !(target instanceof Node) || Boolean(pickerRef.current?.contains(target));
+}
+
+function buildPickerPointerDownHandler(
+  pickerRef: RefObject<HTMLDivElement | null>,
+  setShowPickerMenu: ColourPickerMenuEffectArgs["setShowPickerMenu"],
+  setPickerPosition: ColourPickerMenuEffectArgs["setPickerPosition"],
+) {
+  return (event: MouseEvent) => {
+    if (shouldIgnorePickerPointerEvent(event.target, pickerRef)) {
+      return;
+    }
+
+    setShowPickerMenu(false);
+    setPickerPosition(null);
+  };
+}
+
 /**
  * Emits event form changes upward.
  * @param args Event form change arguments.
@@ -73,44 +141,23 @@ export function useEventFormServerTimeSync(args: EventFormServerTimeSyncArgs) {
 
   useEffect(() => {
     let mounted = true;
-
-    async function syncServerTime() {
-      try {
-        const { server_time } = await getServerTime();
-        const now = getCurrentTimestamp();
-        const offsetMs = new Date(server_time).getTime() - now;
-
-        if (!mounted) {
-          return;
-        }
-
-        setServerTimeOffsetMs(offsetMs);
-        setValidationNowMs(now);
-        setClockSkewWarning(
-          Math.abs(offsetMs) >= clockSkewWarningThresholdMs
-            ? "Your device clock appears out of sync with the server. Reminder validation uses server time."
-            : null,
-        );
-      } catch (error) {
-        console.error("Failed to sync server time for reminder validation", error);
-
-        if (mounted) {
-          setValidationNowMs(getCurrentTimestamp());
-        }
-      }
-    }
-
-    void syncServerTime();
+    void syncServerTime({
+      getCurrentTimestamp,
+      clockSkewWarningThresholdMs,
+      setServerTimeOffsetMs,
+      setValidationNowMs,
+      setClockSkewWarning,
+    }, () => mounted);
 
     return () => {
       mounted = false;
     };
   }, [
-    getCurrentTimestamp,
     clockSkewWarningThresholdMs,
+    getCurrentTimestamp,
+    setClockSkewWarning,
     setServerTimeOffsetMs,
     setValidationNowMs,
-    setClockSkewWarning,
   ]);
 }
 
@@ -132,30 +179,15 @@ export function useColourPickerMenuEffect(args: ColourPickerMenuEffectArgs) {
       return;
     }
 
-    function handlePointerDown(event: MouseEvent) {
-      const target = event.target;
-      if (!(target instanceof Node)) {
-        return;
-      }
-
-      if (pickerRef.current?.contains(target)) {
-        return;
-      }
-
-      setShowPickerMenu(false);
-      setPickerPosition(null);
-    }
-
+    const handlePointerDown = buildPickerPointerDownHandler(
+      pickerRef,
+      setShowPickerMenu,
+      setPickerPosition,
+    );
     document.addEventListener("mousedown", handlePointerDown);
 
     return () => {
       document.removeEventListener("mousedown", handlePointerDown);
     };
-  }, [
-    showPickerMenu,
-    pickerPosition,
-    pickerRef,
-    setShowPickerMenu,
-    setPickerPosition,
-  ]);
+  }, [pickerPosition, pickerRef, setPickerPosition, setShowPickerMenu, showPickerMenu]);
 }

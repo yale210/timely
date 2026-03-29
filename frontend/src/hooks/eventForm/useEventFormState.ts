@@ -25,10 +25,106 @@ function initialSelectedCategories(event?: Event) {
  * @returns List of Reminders, potentially empty.
  */
 function initialReminders(event?: Event): ReminderFormState[] {
-    return event?.reminders?.map(({ send_email, send_push, minutes_before }) => {
-        const { value, unit } = fromMinutesBefore(minutes_before);
-        return { send_email, send_push, value, unit };
-    }) ?? [];
+  return event?.reminders?.map(({ send_email, send_push, minutes_before }) => {
+    const { value, unit } = fromMinutesBefore(minutes_before);
+    return { send_email, send_push, value, unit };
+  }) ?? [];
+}
+
+function useEventFormTextState(initialData?: Event) {
+  const [title, setTitle] = useState(initialData?.title ?? "");
+  const [description, setDescription] = useState(initialData?.description ?? "");
+  const [location, setLocation] = useState(initialData?.location ?? "");
+
+  return { title, setTitle, description, setDescription, location, setLocation };
+}
+
+function useEventFormDateTimeState(initialData?: Event) {
+  const initialStart = buildInitialStartDateTime(initialData?.start_time);
+  const initialEnd = buildInitialEndDateTime(
+    initialData?.end_time,
+    initialStart,
+    Boolean(initialData?.start_time),
+  );
+  const [startDate, setStartDate] = useState(toLocalDateInputValue(initialStart));
+  const [startTime, setStartTime] = useState(toTimeInputValue(initialStart));
+  const [endDate, setEndDate] = useState(
+    initialData?.end_time ? toLocalDateInputValue(initialEnd) : "",
+  );
+  const [endTime, setEndTime] = useState(
+    initialData?.end_time || initialData?.start_time ? toTimeInputValue(initialEnd) : "",
+  );
+
+  return { startDate, setStartDate, startTime, setStartTime, endDate, setEndDate, endTime, setEndTime };
+}
+
+function useEventFormCategoryColourState(defaultColour: string, initialData?: Event) {
+  const [selectedCategories, setSelectedCategories] = useState(initialSelectedCategories(initialData));
+  const [colour, setColour] = useState(initialData?.colour ?? defaultColour);
+  const [colourInput, setColourInput] = useState(initialData?.colour ?? defaultColour);
+  const [colourError, setColourError] = useState<string | null>(null);
+  const [showPickerMenu, setShowPickerMenu] = useState(false);
+  const [pickerPosition, setPickerPosition] = useState<{ top: number; left: number } | null>(null);
+
+  return {
+    selectedCategories,
+    setSelectedCategories,
+    colour,
+    setColour,
+    colourInput,
+    setColourInput,
+    colourError,
+    setColourError,
+    showPickerMenu,
+    setShowPickerMenu,
+    pickerPosition,
+    setPickerPosition,
+  };
+}
+
+function useEventFormRecurrenceState(initialData?: Event) {
+  const [recurrenceEnabled, setRecurrenceEnabled] = useState(Boolean(initialData?.recurrence_interval));
+  const [recurrenceInterval, setRecurrenceInterval] = useState<string | null>(
+    initialData?.recurrence_interval ?? null,
+  );
+  const [recurrenceEnd, setRecurrenceEnd] = useState(initialData?.recurrence_end ?? "");
+
+  return {
+    recurrenceEnabled,
+    setRecurrenceEnabled,
+    recurrenceInterval,
+    setRecurrenceInterval,
+    recurrenceEnd,
+    setRecurrenceEnd,
+  };
+}
+
+function useEventFormReminderState(initialData?: Event) {
+  const [reminders, setReminders] = useState<ReminderFormState[]>(initialReminders(initialData));
+  const [pushDeniedNotice, setPushDeniedNotice] = useState<Record<number, boolean>>({});
+
+  return { reminders, setReminders, pushDeniedNotice, setPushDeniedNotice };
+}
+
+function useEventFormValidationState() {
+  const [validationNowMs, setValidationNowMs] = useState<number>(INITIAL_VALIDATION_NOW_MS);
+  const [serverTimeOffsetMs, setServerTimeOffsetMs] = useState<number | null>(null);
+  const [clockSkewWarning, setClockSkewWarning] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
+
+  return {
+    validationNowMs,
+    setValidationNowMs,
+    serverTimeOffsetMs,
+    setServerTimeOffsetMs,
+    clockSkewWarning,
+    setClockSkewWarning,
+    isSubmitting,
+    setIsSubmitting,
+    submitError,
+    setSubmitError,
+  };
 }
 
 /**
@@ -37,70 +133,19 @@ function initialReminders(event?: Event): ReminderFormState[] {
  * @param initialData An optional initial Event.
  */
 export function useEventFormState(defaultColour: string, initialData?: Event) {
-    const initialStart = buildInitialStartDateTime(initialData?.start_time);
-    const initialEnd = buildInitialEndDateTime(
-        initialData?.end_time,
-        initialStart,
-        Boolean(initialData?.start_time),
-    );
+  const textState = useEventFormTextState(initialData);
+  const dateTimeState = useEventFormDateTimeState(initialData);
+  const categoryColourState = useEventFormCategoryColourState(defaultColour, initialData);
+  const recurrenceState = useEventFormRecurrenceState(initialData);
+  const reminderState = useEventFormReminderState(initialData);
+  const validationState = useEventFormValidationState();
 
-    const [title, setTitle] = useState(initialData?.title ?? "");
-    const [description, setDescription] = useState(initialData?.description ?? "");
-    const [location, setLocation] = useState(initialData?.location ?? "");
-    const [startDate, setStartDate] = useState(toLocalDateInputValue(initialStart));
-    const [startTime, setStartTime] = useState(toTimeInputValue(initialStart));
-    const [endDate, setEndDate] = useState(
-        initialData?.end_time ? toLocalDateInputValue(initialEnd) : "",
-    );
-    const [endTime, setEndTime] = useState(
-        initialData?.end_time || initialData?.start_time
-            ? toTimeInputValue(initialEnd)
-            : "",
-    );
-    const [selectedCategories, setSelectedCategories] = useState(initialSelectedCategories(initialData));
-    const [colour, setColour] = useState(initialData?.colour ?? defaultColour);
-    const [recurrenceEnabled, setRecurrenceEnabled] = useState(Boolean(initialData?.recurrence_interval));
-    const [recurrenceInterval, setRecurrenceInterval] = useState<string | null>(
-        initialData?.recurrence_interval ?? null,
-    );
-    const [recurrenceEnd, setRecurrenceEnd] = useState(initialData?.recurrence_end ?? "");
-    const [reminders, setReminders] = useState<ReminderFormState[]>(initialReminders(initialData));
-    const [showPickerMenu, setShowPickerMenu] = useState(false);
-    const [pickerPosition, setPickerPosition] = useState<{ top: number; left: number } | null>(null);
-    const [colourInput, setColourInput] = useState(colour);
-    const [colourError, setColourError] = useState<string | null>(null);
-    const [pushDeniedNotice, setPushDeniedNotice] = useState<Record<number, boolean>>({});
-    const [validationNowMs, setValidationNowMs] = useState<number>(
-        INITIAL_VALIDATION_NOW_MS,
-    );
-    const [serverTimeOffsetMs, setServerTimeOffsetMs] = useState<number | null>(null);
-    const [clockSkewWarning, setClockSkewWarning] = useState<string | null>(null);
-    const [isSubmitting, setIsSubmitting] = useState(false);
-    const [submitError, setSubmitError] = useState<string | null>(null);
-
-    return {
-        title, setTitle,
-        description, setDescription,
-        location, setLocation,
-        startDate, setStartDate,
-        startTime, setStartTime,
-        endDate, setEndDate,
-        endTime, setEndTime,
-        selectedCategories, setSelectedCategories,
-        colour, setColour,
-        recurrenceEnabled, setRecurrenceEnabled,
-        recurrenceInterval, setRecurrenceInterval,
-        recurrenceEnd, setRecurrenceEnd,
-        reminders, setReminders,
-        showPickerMenu, setShowPickerMenu,
-        pickerPosition, setPickerPosition,
-        colourInput, setColourInput,
-        colourError, setColourError,
-        pushDeniedNotice, setPushDeniedNotice,
-        validationNowMs, setValidationNowMs,
-        serverTimeOffsetMs, setServerTimeOffsetMs,
-        clockSkewWarning, setClockSkewWarning,
-        isSubmitting, setIsSubmitting,
-        submitError, setSubmitError,
-    };
+  return {
+    ...textState,
+    ...dateTimeState,
+    ...categoryColourState,
+    ...recurrenceState,
+    ...reminderState,
+    ...validationState,
+  };
 }
