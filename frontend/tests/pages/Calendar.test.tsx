@@ -453,8 +453,8 @@ describe("CalendarPage (lean tests)", () => {
 
     it("navigates calendar dates", () => {
         const todayBtn = screen.getByText("Today");
-        const prevBtn = screen.getByText("chevron_left");
-        const nextBtn = screen.getByText("chevron_right");
+        const prevBtn = screen.getByLabelText("Previous period");
+        const nextBtn = screen.getByLabelText("Next period");
 
         fireEvent.click(nextBtn);
         fireEvent.click(prevBtn);
