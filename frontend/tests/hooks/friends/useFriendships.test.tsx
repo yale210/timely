@@ -130,7 +130,7 @@ const mockFriendship: Friendship = { id: 1, sender: 1, receiver: 2, state: 'SENT
     });
 
     expect(result.current.error).toBe('Failed to update friend request');
-    expect(result.current.friendships[0].state).toBe('PENDING'); // Rolled back
+    expect(result.current.friendships[0].state).toBe('SENT'); // Rolled back
   });
 
   it('declines a friend request optimistically', async () => {
