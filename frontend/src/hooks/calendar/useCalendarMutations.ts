@@ -240,6 +240,7 @@ export const useCalendarMutations = (props: UseCalendarMutationsProps) => {
 
     try {
       await importService.importEvents(file);
+      importService.pageReloader.reload();
     } catch (error) {
       console.error(error);
       setImportingError("Failed to import events.");

@@ -2,14 +2,17 @@ import { fireEvent, render, screen, within } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import PrivacySection from "@/components/settings/PrivacySection";
 
+const openConfirmationModal = async (buttonName: RegExp) => {
+  fireEvent.click(screen.getByRole("button", { name: buttonName }));
+  return screen.findByRole("dialog");
+};
+
 describe("PrivacySection", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    vi.spyOn(window, "confirm").mockReturnValue(true);
   });
 
-  it("rendering the page", async () => {
-
+  it("renders the privacy actions", async () => {
     render(
       <PrivacySection
         deleting={false}
@@ -20,12 +23,12 @@ describe("PrivacySection", () => {
     );
 
     expect(await screen.findByText("Privacy")).toBeInTheDocument();
-    expect(await screen.findByRole("button", { name: /delete events/i })).toBeInTheDocument();
-    expect(await screen.findByRole("button", { name: /delete tasks/i })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /delete events/i })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /delete tasks/i })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /delete account/i })).toBeInTheDocument();
   });
 
-
-  it("calls onDeleteEvents successfully", async () => {
+  it("calls onDeleteEvents successfully after modal confirmation", async () => {
     const onDeleteEvents = vi.fn().mockResolvedValue("Events Deleted");
 
     render(
@@ -37,16 +40,14 @@ describe("PrivacySection", () => {
       />,
     );
 
-    const deleteEventsButton  = screen.getByRole("button", { name: /Delete Events/i });
-    fireEvent.click(deleteEventsButton);
-    fireEvent.click(within(await screen.findByRole("dialog")).getByRole("button", { name: /delete events/i }));
+    const dialog = within(await openConfirmationModal(/delete events/i));
+    fireEvent.click(dialog.getByRole("button", { name: /delete events/i }));
 
     expect(onDeleteEvents).toHaveBeenCalled();
-
     expect(await screen.findByText("Events Deleted")).toBeInTheDocument();
   });
 
-  it("calls onDeleteTasks successfully", async () => {
+  it("calls onDeleteTasks successfully after modal confirmation", async () => {
     const onDeleteTasks = vi.fn().mockResolvedValue("Tasks Deleted");
 
     render(
@@ -58,16 +59,14 @@ describe("PrivacySection", () => {
       />,
     );
 
-    const deleteTasksButton  = screen.getByRole("button", { name: /Delete tasks/i });
-    fireEvent.click(deleteTasksButton);
-    fireEvent.click(within(await screen.findByRole("dialog")).getByRole("button", { name: /delete tasks/i }));
+    const dialog = within(await openConfirmationModal(/delete tasks/i));
+    fireEvent.click(dialog.getByRole("button", { name: /delete tasks/i }));
 
     expect(onDeleteTasks).toHaveBeenCalled();
-
     expect(await screen.findByText("Tasks Deleted")).toBeInTheDocument();
   });
 
-  it("calls onDeleteAccount successfully", async () => {
+  it("calls onDeleteAccount successfully after modal confirmation", async () => {
     const onDeleteAccount = vi.fn().mockResolvedValue("Account Deleted");
 
     render(
@@ -79,16 +78,15 @@ describe("PrivacySection", () => {
       />,
     );
 
-    const deleteAccountButton  = screen.getByRole("button", { name: /Delete accounT/i });
-    fireEvent.click(deleteAccountButton);
+    const dialog = within(await openConfirmationModal(/delete account/i));
+    fireEvent.click(dialog.getByRole("button", { name: /delete account/i }));
 
     expect(onDeleteAccount).toHaveBeenCalled();
-
     expect(await screen.findByText("Account Deleted")).toBeInTheDocument();
   });
 
-  it("error shown when onDeleteEvents fails", async () => {
-    const onDeleteEvents = vi.fn().mockRejectedValue(new Error("failEvents?"));
+  it("shows an error when deleting events fails", async () => {
+    const onDeleteEvents = vi.fn().mockRejectedValue(new Error("failEvents"));
 
     render(
       <PrivacySection
@@ -99,17 +97,15 @@ describe("PrivacySection", () => {
       />,
     );
 
-    const deleteEventsButton  = screen.getByRole("button", { name: /Delete Events/i });
-    fireEvent.click(deleteEventsButton);
-    fireEvent.click(within(await screen.findByRole("dialog")).getByRole("button", { name: /delete events/i }));
+    const dialog = within(await openConfirmationModal(/delete events/i));
+    fireEvent.click(dialog.getByRole("button", { name: /delete events/i }));
 
     expect(onDeleteEvents).toHaveBeenCalled();
-
     expect(await screen.findByText("Failed to delete events.")).toBeInTheDocument();
   });
 
-  it("error shown when onDeleteTasks fails", async () => {
-    const onDeleteTasks = vi.fn().mockRejectedValue(new Error("failEvents?"));
+  it("shows an error when deleting tasks fails", async () => {
+    const onDeleteTasks = vi.fn().mockRejectedValue(new Error("failTasks"));
 
     render(
       <PrivacySection
@@ -120,17 +116,15 @@ describe("PrivacySection", () => {
       />,
     );
 
-    const deleteTasksButton  = screen.getByRole("button", { name: /Delete Tasks/i });
-    fireEvent.click(deleteTasksButton);
-    fireEvent.click(within(await screen.findByRole("dialog")).getByRole("button", { name: /delete tasks/i }));
+    const dialog = within(await openConfirmationModal(/delete tasks/i));
+    fireEvent.click(dialog.getByRole("button", { name: /delete tasks/i }));
 
     expect(onDeleteTasks).toHaveBeenCalled();
-
     expect(await screen.findByText("Failed to delete tasks.")).toBeInTheDocument();
   });
 
-  it("error shown when onDeleteAccount fails", async () => {
-    const onDeleteAccount = vi.fn().mockRejectedValue(new Error("failEvents?"));
+  it("shows an error when deleting account fails", async () => {
+    const onDeleteAccount = vi.fn().mockRejectedValue(new Error("failAccount"));
 
     render(
       <PrivacySection
@@ -141,16 +135,14 @@ describe("PrivacySection", () => {
       />,
     );
 
-    const deleteAccountButton  = screen.getByRole("button", { name: /Delete Account/i });
-    fireEvent.click(deleteAccountButton);
+    const dialog = within(await openConfirmationModal(/delete account/i));
+    fireEvent.click(dialog.getByRole("button", { name: /delete account/i }));
 
     expect(onDeleteAccount).toHaveBeenCalled();
-
     expect(await screen.findByText("Failed to delete account.")).toBeInTheDocument();
   });
 
-  it("Disables all buttons when deleting", () => {
-
+  it("disables all action buttons when deleting", () => {
     render(
       <PrivacySection
         deleting={true}
@@ -160,41 +152,13 @@ describe("PrivacySection", () => {
       />,
     );
 
-    const buttons = screen.getAllByRole("button", { name: /Deleting/i })
+    const buttons = screen.getAllByRole("button", { name: /deleting/i });
     expect(buttons).toHaveLength(3);
-
     buttons.forEach((button) => expect(button).toBeDisabled());
-
-    });
-
-
-
-    it("error shown when onDeleteAccount fails", async () => {
-    const onDeleteAccount = vi.fn().mockRejectedValue(new Error("failEvents?"));
-
-    render(
-      <PrivacySection
-        deleting={false}
-        onDeleteEvents={vi.fn()}
-        onDeleteTasks={vi.fn()}
-        onDeleteAccount={onDeleteAccount}
-      />,
-    );
-
-    const deleteAccountButton  = screen.getByRole("button", { name: /Delete Account/i });
-    fireEvent.click(deleteAccountButton);
-
-    expect(onDeleteAccount).toHaveBeenCalled();
-
-    expect(await screen.findByText("Failed to delete account.")).toBeInTheDocument();
   });
 
-
-  
-
-  it("does not call onDeleteEvents when not confirmed", () => {
+  it("does not call onDeleteEvents when the modal is cancelled", async () => {
     const onDeleteEvents = vi.fn();
-    vi.spyOn(window, "confirm").mockReturnValue(false);
 
     render(
       <PrivacySection
@@ -205,16 +169,14 @@ describe("PrivacySection", () => {
       />,
     );
 
-    const deleteEventsButton  = screen.getByRole("button", { name: /Delete Events/i });
-    fireEvent.click(deleteEventsButton);
+    const dialog = within(await openConfirmationModal(/delete events/i));
+    fireEvent.click(dialog.getByRole("button", { name: /cancel/i }));
 
     expect(onDeleteEvents).not.toHaveBeenCalled();
-
   });
 
-  it("does not call onDeleteTasks when not confirmed", () => {
+  it("does not call onDeleteTasks when the modal is cancelled", async () => {
     const onDeleteTasks = vi.fn();
-    vi.spyOn(window, "confirm").mockReturnValue(false);
 
     render(
       <PrivacySection
@@ -225,16 +187,14 @@ describe("PrivacySection", () => {
       />,
     );
 
-    const deleteTasksButton  = screen.getByRole("button", { name: /Delete Tasks/i });
-    fireEvent.click(deleteTasksButton);
+    const dialog = within(await openConfirmationModal(/delete tasks/i));
+    fireEvent.click(dialog.getByRole("button", { name: /cancel/i }));
 
     expect(onDeleteTasks).not.toHaveBeenCalled();
-
   });
 
-  it("does not call onDeleteAccount when not confirmed", () => {
+  it("does not call onDeleteAccount when the modal is cancelled", async () => {
     const onDeleteAccount = vi.fn();
-    vi.spyOn(window, "confirm").mockReturnValue(false);
 
     render(
       <PrivacySection
@@ -245,11 +205,9 @@ describe("PrivacySection", () => {
       />,
     );
 
-    const deleteAccountButton  = screen.getByRole("button", { name: /Delete Account/i });
-    fireEvent.click(deleteAccountButton);
+    const dialog = within(await openConfirmationModal(/delete account/i));
+    fireEvent.click(dialog.getByRole("button", { name: /cancel/i }));
 
     expect(onDeleteAccount).not.toHaveBeenCalled();
-
   });
-  
 });
