@@ -75,9 +75,7 @@ class ImportView(APIView):
         for line in lines:
             current_event = self.begin_event(line, current_event)
             current_event = self.prase_event(line, current_event)
-            current_event, events = self.end_event(
-                line, current_event, request, events
-            )
+            current_event, events = self.end_event(line, current_event, request, events)
         return events
 
     def _persist_imported_events(self, request, events: list[dict]) -> None:
@@ -170,7 +168,9 @@ class ImportView(APIView):
         """
         if current_event is not None:
             # Avoid parsing BEGIN/END lines as properties
-            if ":" in line and not (line.startswith("BEGIN:") or line.startswith("END:")):
+            if ":" in line and not (
+                line.startswith("BEGIN:") or line.startswith("END:")
+            ):
                 key, value = line.split(":", 1)
                 current_event[key] = value
         return current_event
