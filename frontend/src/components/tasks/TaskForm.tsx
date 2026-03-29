@@ -27,9 +27,9 @@ import {
 } from "@/hooks/taskForm/useTaskFormDerivedState";
 import CategoryMultiSelect from "@/components/categories/CategoryMultiSelect";
 import TaskFormProgress from "@/components/tasks/TaskFormProgress";
+import TaskFormSubmitError from "@/components/tasks/TaskFormSubmitError";
 import {
   buildTaskFormArgs,
-  getTaskServerFieldLabel,
   renderDeadlineError,
 } from "@/components/tasks/taskFormUtils";
 
@@ -167,9 +167,6 @@ export default function TaskForm({
     [derivedValues.errors, serverFieldErrors],
   );
 
-  const serverFieldErrorEntries = Object.entries(serverFieldErrors)
-    .filter(([, messages]) => messages.length > 0);
-
   const handleColourPickerToggle = (
     event: ReactMouseEvent<HTMLButtonElement>,
   ) => {
@@ -221,23 +218,10 @@ export default function TaskForm({
         className="flex flex-col h-full bg-white text-black"
       >
         <div className="grow overflow-y-auto p-6 space-y-6">
-          {taskState.submitError ? (
-            <div className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
-              <p>{taskState.submitError}</p>
-              {serverFieldErrorEntries.length > 0 ? (
-                <ul className="mt-2 list-disc space-y-1 pl-5 text-xs">
-                  {serverFieldErrorEntries.map(([field, messages]) => (
-                    <li key={field}>
-                      <span className="font-medium">
-                        {getTaskServerFieldLabel(field)}:
-                      </span>{" "}
-                      {messages.join(" ")}
-                    </li>
-                  ))}
-                </ul>
-              ) : null}
-            </div>
-          ) : null}
+          <TaskFormSubmitError
+            submitError={taskState.submitError}
+            serverFieldErrors={serverFieldErrors}
+          />
           <TaskFormHeader
             isColourLocked={derivedValues.isColourLocked}
             displayColour={derivedValues.displayColour}

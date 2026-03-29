@@ -37,6 +37,42 @@ interface UseTaskListReturn {
 
 export type { TaskCompletionFilter, TaskListSections, TaskListState };
 
+function buildTaskListStateResult(
+  state: ReturnType<typeof useTaskListState>,
+  derived: ReturnType<typeof useTaskListDerivedState>,
+): UseTaskListReturn["state"] {
+  return {
+    tasks: state.tasks,
+    categories: state.categories,
+    isSidebarOpen: state.isSidebarOpen,
+    selectedTask: state.selectedTask,
+    warning: state.warning,
+    search: state.search,
+    sortBy: state.sortBy,
+    filters: {
+      category: state.filterCategory,
+      completed: state.filterCompleted,
+      highImportance: state.filterHighImportance,
+      quickWins: state.filterQuickWins,
+    },
+    sections: derived.sections,
+  };
+}
+
+function buildTaskListActionsResult(
+  queries: ReturnType<typeof useTaskListQueries>,
+  uiActions: ReturnType<typeof useTaskListUiActions>,
+  mutations: ReturnType<typeof useTaskListMutations>,
+  derived: ReturnType<typeof useTaskListDerivedState>,
+): UseTaskListReturn["actions"] {
+  return {
+    ...uiActions,
+    ...mutations,
+    refresh: queries.refresh,
+    formatDayLabel: derived.formatDayLabel,
+  };
+}
+
 function buildTaskListResult(
   state: ReturnType<typeof useTaskListState>,
   queries: ReturnType<typeof useTaskListQueries>,
@@ -45,30 +81,10 @@ function buildTaskListResult(
   derived: ReturnType<typeof useTaskListDerivedState>,
 ): UseTaskListReturn {
   return {
-    state: {
-      tasks: state.tasks,
-      categories: state.categories,
-      isSidebarOpen: state.isSidebarOpen,
-      selectedTask: state.selectedTask,
-      warning: state.warning,
-      search: state.search,
-      sortBy: state.sortBy,
-      filters: {
-        category: state.filterCategory,
-        completed: state.filterCompleted,
-        highImportance: state.filterHighImportance,
-        quickWins: state.filterQuickWins,
-      },
-      sections: derived.sections,
-    },
+    state: buildTaskListStateResult(state, derived),
     loading: state.loading,
     error: state.error,
-    actions: {
-      ...uiActions,
-      ...mutations,
-      refresh: queries.refresh,
-      formatDayLabel: derived.formatDayLabel,
-    },
+    actions: buildTaskListActionsResult(queries, uiActions, mutations, derived),
   };
 }
 

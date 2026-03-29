@@ -40,6 +40,15 @@ interface Args {
     bufferAfterMinutes: string;
 }
 
+interface ParsedTaskFormValues {
+    normalizedEstimatedMinutes: number;
+    parsedCompletedMinutes: number;
+    parsedMinSplitMinutes: number;
+    parsedMaxSplitMinutes: number | null;
+    parsedBufferBeforeMinutes: number;
+    parsedBufferAfterMinutes: number;
+}
+
 function toNumberOrZero(value: number | string) {
     return Number(value || 0);
 }
@@ -65,176 +74,132 @@ function buildTaskProgressPercent(
     );
 }
 
+function buildParsedTaskFormValues(args: Args): ParsedTaskFormValues {
+    return {
+        normalizedEstimatedMinutes: toNumberOrZero(args.estimatedMinutes),
+        parsedCompletedMinutes: toNumberOrZero(args.completedMinutes),
+        parsedMinSplitMinutes: Number.parseInt(args.minSplitMinutes, 10),
+        parsedMaxSplitMinutes: toNullableNumber(args.maxSplitMinutes),
+        parsedBufferBeforeMinutes: toNumberOrZero(args.bufferBeforeMinutes),
+        parsedBufferAfterMinutes: toNumberOrZero(args.bufferAfterMinutes),
+    };
+}
+
+function buildTaskValidationState(
+    args: Args,
+    startDateTime: Date,
+    endDateTime: Date,
+) {
+    return {
+        errors: buildTaskErrors(args, startDateTime, endDateTime),
+        hasBlockingErrors: buildTaskBlockingState(args, startDateTime, endDateTime),
+    };
+}
+
+function buildTaskErrors(
+    args: Args,
+    startDateTime: Date,
+    endDateTime: Date,
+) {
+    const shouldValidateTime = args.hasSubmitted || args.hasTouchedTime;
+    return buildTaskFormErrors(
+        startDateTime,
+        endDateTime,
+        args.importance,
+        shouldValidateTime,
+        args.estimatedMinutes,
+        args.completedMinutes,
+        args.allowSplit,
+        args.minSplitMinutes,
+        args.maxSplitMinutes,
+        args.bufferEnabled,
+        args.bufferBeforeMinutes,
+        args.bufferAfterMinutes,
+        args.hasSubmitted,
+    );
+}
+
+function buildTaskBlockingState(
+    args: Args,
+    startDateTime: Date,
+    endDateTime: Date,
+) {
+    return hasTaskBlockingErrors(
+        startDateTime,
+        endDateTime,
+        args.importance,
+        args.estimatedMinutes,
+        args.completedMinutes,
+        args.allowSplit,
+        args.minSplitMinutes,
+        args.maxSplitMinutes,
+        args.bufferEnabled,
+        args.bufferBeforeMinutes,
+        args.bufferAfterMinutes,
+    );
+}
+
+function buildDerivedTaskSubmission(
+    args: Args,
+    startDateTime: Date,
+    endDateTime: Date,
+    parsedValues: ParsedTaskFormValues,
+) {
+    return buildTaskSubmission({
+        title: args.title,
+        description: args.description,
+        startDateTime,
+        endDateTime,
+        selectedCategories: args.selectedCategories,
+        importance: args.importance,
+        estimatedMinutes: args.estimatedMinutes,
+        colour: args.colour,
+        autoSchedule: args.autoSchedule,
+        allowSplit: args.allowSplit,
+        initialData: args.initialData,
+        completed_minutes: parsedValues.parsedCompletedMinutes,
+        min_split_minutes: parsedValues.parsedMinSplitMinutes,
+        max_split_minutes: parsedValues.parsedMaxSplitMinutes,
+        buffer_before_minutes: args.bufferEnabled ? parsedValues.parsedBufferBeforeMinutes : 0,
+        buffer_after_minutes: args.bufferEnabled ? parsedValues.parsedBufferAfterMinutes : 0,
+    });
+}
+
+function buildTaskDerivedStateResult(
+    args: Args,
+    startDateTime: Date,
+    endDateTime: Date,
+    parsedValues: ParsedTaskFormValues,
+) {
+    const validationState = buildTaskValidationState(args, startDateTime, endDateTime);
+    return {
+        startDateTime,
+        endDateTime,
+        ...validationState,
+        submission: buildDerivedTaskSubmission(args, startDateTime, endDateTime, parsedValues),
+        progressPercent: buildTaskProgressPercent(
+            parsedValues.normalizedEstimatedMinutes,
+            parsedValues.parsedCompletedMinutes,
+        ),
+        normalizedEstimatedMinutes: parsedValues.normalizedEstimatedMinutes,
+        parsedCompletedMinutes: parsedValues.parsedCompletedMinutes,
+        ...getTaskFormColourState(args.categories, args.selectedCategories, args.colour),
+    };
+}
+
 /**
  * Computes derived task form state.
  * @param args Task form inputs.
  */
 export function useTaskFormDerivedState(args: Args) {
-    const startDateTime = useMemo(
-        () => buildTaskStartDateTime(args.date, args.startTime),
-        [args.date, args.startTime],
-    );
-
-    const endDateTime = useMemo(
-        () => buildTaskDeadlineDateTime(args.deadline, args.deadlineTime),
-        [args.deadline, args.deadlineTime],
-    );
-
-    const colourState = useMemo(
-        () => getTaskFormColourState(args.categories, args.selectedCategories, args.colour),
-        [args.categories, args.selectedCategories, args.colour],
-    );
-
-    const normalizedEstimatedMinutes = useMemo(
-        () => toNumberOrZero(args.estimatedMinutes),
-        [args.estimatedMinutes],
-    );
-
-    const parsedCompletedMinutes = useMemo(
-        () => toNumberOrZero(args.completedMinutes),
-        [args.completedMinutes],
-    );
-
-    const parsedMinSplitMinutes = useMemo(
-        () => Number.parseInt(args.minSplitMinutes, 10),
-        [args.minSplitMinutes],
-    );
-
-    const parsedMaxSplitMinutes = useMemo(
-        () => toNullableNumber(args.maxSplitMinutes),
-        [args.maxSplitMinutes],
-    );
-
-    const parsedBufferBeforeMinutes = useMemo(
-        () => toNumberOrZero(args.bufferBeforeMinutes),
-        [args.bufferBeforeMinutes],
-    );
-
-    const parsedBufferAfterMinutes = useMemo(
-        () => toNumberOrZero(args.bufferAfterMinutes),
-        [args.bufferAfterMinutes],
-    );
-
-    const progressPercent = useMemo(
-        () => buildTaskProgressPercent(normalizedEstimatedMinutes, parsedCompletedMinutes),
-        [normalizedEstimatedMinutes, parsedCompletedMinutes],
-    );
-
-    const shouldValidateTime = args.hasSubmitted || args.hasTouchedTime;
-
-    const errors = useMemo(
-        () => buildTaskFormErrors(
-            startDateTime,
-            endDateTime,
-            args.importance,
-            shouldValidateTime,
-            args.estimatedMinutes,
-            args.completedMinutes,
-            args.allowSplit,
-            args.minSplitMinutes,
-            args.maxSplitMinutes,
-            args.bufferEnabled,
-            args.bufferBeforeMinutes,
-            args.bufferAfterMinutes,
-            args.hasSubmitted,
-        ),
-        [
-            startDateTime,
-            endDateTime,
-            args.importance,
-            shouldValidateTime,
-            args.estimatedMinutes,
-            args.completedMinutes,
-            args.allowSplit,
-            args.minSplitMinutes,
-            args.maxSplitMinutes,
-            args.bufferEnabled,
-            args.bufferBeforeMinutes,
-            args.bufferAfterMinutes,
-            args.hasSubmitted,
-        ],
-    );
-
-    const hasBlockingErrors = useMemo(
-        () => hasTaskBlockingErrors(
-            startDateTime,
-            endDateTime,
-            args.importance,
-            args.estimatedMinutes,
-            args.completedMinutes,
-            args.allowSplit,
-            args.minSplitMinutes,
-            args.maxSplitMinutes,
-            args.bufferEnabled,
-            args.bufferBeforeMinutes,
-            args.bufferAfterMinutes,
-        ),
-        [
-            startDateTime,
-            endDateTime,
-            args.importance,
-            args.estimatedMinutes,
-            args.completedMinutes,
-            args.allowSplit,
-            args.minSplitMinutes,
-            args.maxSplitMinutes,
-            args.bufferEnabled,
-            args.bufferBeforeMinutes,
-            args.bufferAfterMinutes,
-        ],
-    );
-
-    const submission = useMemo(
-        () => buildTaskSubmission({
-            title: args.title,
-            description: args.description,
-            startDateTime,
-            endDateTime,
-            selectedCategories: args.selectedCategories,
-            importance: args.importance,
-            estimatedMinutes: args.estimatedMinutes,
-            colour: args.colour,
-            autoSchedule: args.autoSchedule,
-            allowSplit: args.allowSplit,
-            initialData: args.initialData,
-            completed_minutes: parsedCompletedMinutes,
-            min_split_minutes: parsedMinSplitMinutes,
-            max_split_minutes: parsedMaxSplitMinutes,
-            buffer_before_minutes: args.bufferEnabled ? parsedBufferBeforeMinutes : 0,
-            buffer_after_minutes: args.bufferEnabled ? parsedBufferAfterMinutes : 0,
-        }),
-        [
-            args.title,
-            args.description,
-            startDateTime,
-            endDateTime,
-            args.selectedCategories,
-            args.importance,
-            args.estimatedMinutes,
-            args.colour,
-            args.autoSchedule,
-            args.allowSplit,
-            args.initialData,
-            parsedCompletedMinutes,
-            parsedMinSplitMinutes,
-            parsedMaxSplitMinutes,
-            args.bufferEnabled,
-            parsedBufferBeforeMinutes,
-            parsedBufferAfterMinutes,
-        ],
-    );
-
-    return {
+    const startDateTime = buildTaskStartDateTime(args.date, args.startTime);
+    const endDateTime = buildTaskDeadlineDateTime(args.deadline, args.deadlineTime);
+    return buildTaskDerivedStateResult(
+        args,
         startDateTime,
         endDateTime,
-        errors,
-        hasBlockingErrors,
-        submission,
-        normalizedEstimatedMinutes,
-        parsedCompletedMinutes,
-        progressPercent,
-        ...colourState,
-    };
+        buildParsedTaskFormValues(args),
+    );
 }
 
 /**

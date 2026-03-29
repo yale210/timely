@@ -63,17 +63,29 @@ function useSecondStates(initialData: Task | undefined) {
     }
 }
 
-function useThirdStates(initialData: Task | undefined, DEFAULT_MIN_SPLIT_MINUTES: number) {
+function useTaskScheduleModeStates(initialData: Task | undefined) {
     const [importance, setImportance] = useState(initialData?.importance ?? 5);
     const [allowSplit, setAllowSplit] = useState(initialData?.allow_split ?? false);
     const [autoSchedule, setAutoSchedule] = useState(
         initialData?.locked ? false : true,
     );
+
+    return {
+        importance, setImportance,
+        allowSplit, setAllowSplit,
+        autoSchedule, setAutoSchedule,
+    }
+}
+
+function useTaskSplitWindowStates(
+    initialData: Task | undefined,
+    defaultMinSplitMinutes: number,
+) {
     const [bufferEnabled, setBufferEnabled] = useState(
         (initialData?.buffer_before_minutes ?? 0) > 0 || (initialData?.buffer_after_minutes ?? 0) > 0,
     );
     const [minSplitMinutes, setMinSplitMinutes] = useState<string>(
-        String(initialData?.min_split_minutes ?? DEFAULT_MIN_SPLIT_MINUTES),
+        String(initialData?.min_split_minutes ?? defaultMinSplitMinutes),
     );
     const [maxSplitMinutes, setMaxSplitMinutes] = useState<string>(
         initialData?.max_split_minutes == null ? "" : String(initialData.max_split_minutes),
@@ -84,19 +96,33 @@ function useThirdStates(initialData: Task | undefined, DEFAULT_MIN_SPLIT_MINUTES
     const [bufferAfterMinutes, setBufferAfterMinutes] = useState<string>(
         String(initialData?.buffer_after_minutes ?? 0),
     );
-    const [isTaskLocked, setIsTaskLocked] = useState(initialData?.locked ?? false);
-    const [isSubmitting, setIsSubmitting] = useState(false);
-    const [submitError, setSubmitError] = useState<string | null>(null);
-    const [serverFieldErrors, setServerFieldErrors] = useState<Record<string, string[]>>({});
+
     return {
-        importance, setImportance,
-        allowSplit, setAllowSplit,
-        autoSchedule, setAutoSchedule,
         bufferEnabled, setBufferEnabled,
         minSplitMinutes, setMinSplitMinutes,
         maxSplitMinutes, setMaxSplitMinutes,
         bufferBeforeMinutes, setBufferBeforeMinutes,
         bufferAfterMinutes, setBufferAfterMinutes,
+    }
+}
+
+function useTaskSchedulingStates(
+    initialData: Task | undefined,
+    defaultMinSplitMinutes: number,
+) {
+    return {
+        ...useTaskScheduleModeStates(initialData),
+        ...useTaskSplitWindowStates(initialData, defaultMinSplitMinutes),
+    }
+}
+
+function useTaskSubmissionStates(initialData: Task | undefined) {
+    const [isTaskLocked, setIsTaskLocked] = useState(initialData?.locked ?? false);
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const [submitError, setSubmitError] = useState<string | null>(null);
+    const [serverFieldErrors, setServerFieldErrors] = useState<Record<string, string[]>>({});
+
+    return {
         isTaskLocked, setIsTaskLocked,
         isSubmitting, setIsSubmitting,
         submitError, setSubmitError,
@@ -136,7 +162,8 @@ export default function useTaskFormState(defaultColour: string, initialData: Tas
     return {
         ...useFirstStates(initialData),
         ...useSecondStates(initialData),
-        ...useThirdStates(initialData, DEFAULT_MIN_SPLIT_MINUTES),
+        ...useTaskSchedulingStates(initialData, DEFAULT_MIN_SPLIT_MINUTES),
+        ...useTaskSubmissionStates(initialData),
         ...useColourStates(defaultColour, initialData),
     }
 }
