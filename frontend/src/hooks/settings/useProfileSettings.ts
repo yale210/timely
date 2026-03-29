@@ -1,4 +1,12 @@
-import { useCallback, useEffect, useState, type Dispatch, type SetStateAction } from "react";
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  type Dispatch,
+  type MutableRefObject,
+  type SetStateAction,
+} from "react";
 import type { Profile } from "@/types";
 import { formatDjangoFormError } from "@/utils/apiErrors";
 import * as profileService from "@/services/profileService";
@@ -13,6 +21,8 @@ interface UseProfileState {
   avatarFile: File | null;
   isDirty: boolean;
 }
+
+type ShouldApplyProfileState = () => boolean;
 
 const INITIAL_PROFILE_SETTINGS_STATE: UseProfileState = {
   profile: null,
@@ -68,13 +78,26 @@ function applyProfileErrorState(
 
 async function fetchProfileIntoState(
   setState: Dispatch<SetStateAction<UseProfileState>>,
+  shouldApplyState: ShouldApplyProfileState,
 ) {
+  if (!shouldApplyState()) {
+    return;
+  }
+
   setProfileLoadingState(setState);
 
   try {
     const profile = await profileService.getMyProfile();
+    if (!shouldApplyState()) {
+      return;
+    }
+
     applyLoadedProfileState(profile, setState);
   } catch (error) {
+    if (!shouldApplyState()) {
+      return;
+    }
+
     applyProfileErrorState(error, setState, "loading");
   }
 }
@@ -85,8 +108,17 @@ function useProfileState() {
 
 function useProfileLoadAction(
   setState: Dispatch<SetStateAction<UseProfileState>>,
+  isActiveRef: MutableRefObject<boolean>,
+  requestIdRef: MutableRefObject<number>,
 ) {
-  return useCallback(() => fetchProfileIntoState(setState), [setState]);
+  return useCallback(() => {
+    requestIdRef.current += 1;
+    const requestId = requestIdRef.current;
+    const shouldApplyState = () =>
+      isActiveRef.current && requestId === requestIdRef.current;
+
+    return fetchProfileIntoState(setState, shouldApplyState);
+  }, [isActiveRef, requestIdRef, setState]);
 }
 
 function useProfileLoadEffect(isActive: boolean, loadProfile: () => Promise<void>) {
@@ -97,6 +129,20 @@ function useProfileLoadEffect(isActive: boolean, loadProfile: () => Promise<void
 
     void loadProfile();
   }, [isActive, loadProfile]);
+}
+
+function useProfileRequestGuards(isActive: boolean) {
+  const isActiveRef = useRef(isActive);
+  const requestIdRef = useRef(0);
+
+  useEffect(() => {
+    isActiveRef.current = isActive;
+    if (!isActive) {
+      requestIdRef.current += 1;
+    }
+  }, [isActive]);
+
+  return { isActiveRef, requestIdRef };
 }
 
 function useSetProfileAction(
@@ -156,7 +202,8 @@ function useSaveProfileAction(
  */
 export const useProfileSettings = (isActive: boolean) => {
   const [state, setState] = useProfileState();
-  const loadProfile = useProfileLoadAction(setState);
+  const { isActiveRef, requestIdRef } = useProfileRequestGuards(isActive);
+  const loadProfile = useProfileLoadAction(setState, isActiveRef, requestIdRef);
   const setProfile = useSetProfileAction(setState);
   const setAvatarFile = useSetAvatarFileAction(setState);
   const saveProfile = useSaveProfileAction(state, setState);

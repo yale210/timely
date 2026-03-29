@@ -90,4 +90,62 @@ describe("useProfileSettings", () => {
     expect(result.current.state.error).toBe("Save failed");
     expect(result.current.state.saving).toBe(false);
   });
+
+  it("ignores stale profile fetches after deactivation and re-entry", async () => {
+    const firstProfile = { ...mockProfile, bio: "First load" };
+    const secondProfile = { ...mockProfile, bio: "Second load" };
+    const unsavedProfile = { ...secondProfile, bio: "Unsaved edit" };
+    let resolveFirstLoad: ((profile: Profile) => void) | undefined;
+    let resolveSecondLoad: ((profile: Profile) => void) | undefined;
+
+    vi.mocked(profileService.getMyProfile)
+      .mockImplementationOnce(
+        () =>
+          new Promise<Profile>((resolve) => {
+            resolveFirstLoad = resolve;
+          }),
+      )
+      .mockImplementationOnce(
+        () =>
+          new Promise<Profile>((resolve) => {
+            resolveSecondLoad = resolve;
+          }),
+      );
+
+    const { result, rerender } = renderHook(
+      ({ isActive }) => useProfileSettings(isActive),
+      { initialProps: { isActive: true } },
+    );
+
+    await waitFor(() => expect(profileService.getMyProfile).toHaveBeenCalledTimes(1));
+
+    rerender({ isActive: false });
+    rerender({ isActive: true });
+
+    await waitFor(() => expect(profileService.getMyProfile).toHaveBeenCalledTimes(2));
+
+    await act(async () => {
+      resolveSecondLoad?.(secondProfile);
+      await Promise.resolve();
+    });
+
+    await waitFor(() => expect(result.current.state.profile).toEqual(secondProfile));
+    await waitFor(() => expect(result.current.state.savedProfile).toEqual(secondProfile));
+
+    act(() => {
+      result.current.actions.setProfile(unsavedProfile);
+    });
+
+    expect(result.current.state.profile).toEqual(unsavedProfile);
+    expect(result.current.state.isDirty).toBe(true);
+
+    await act(async () => {
+      resolveFirstLoad?.(firstProfile);
+      await Promise.resolve();
+    });
+
+    expect(result.current.state.profile).toEqual(unsavedProfile);
+    expect(result.current.state.savedProfile).toEqual(secondProfile);
+    expect(result.current.state.isDirty).toBe(true);
+  });
 });
