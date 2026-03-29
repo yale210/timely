@@ -5,7 +5,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from drf_spectacular.utils import extend_schema, inline_serializer
-
+from django.db import transaction
 from core.models import Event
 
 
@@ -37,7 +37,8 @@ class DeleteAllEventsView(APIView):
 
         all_events = Event.objects.filter(user=request.user)
 
-        all_events.delete()
+        with transaction.atomic():
+            all_events.delete()
 
         if all_events_count == 0:
             response = {"message": "You do not have any events to delete"}
