@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import PreferencesSection from "@/components/settings/PreferencesSection";
 import OverridesSection from "@/components/settings/OverridesSection";
 import SettingsSidebar from "@/components/settings/SettingsSidebar";
@@ -109,7 +109,7 @@ const SettingsContent = ({
     };
   }, []);
 
-  const scrollMobileSectionIntoView = () => {
+  const scrollMobileSectionIntoView = useCallback(() => {
     if (!isMobileLayout) {
       return;
     }
@@ -120,7 +120,7 @@ const SettingsContent = ({
     window.requestAnimationFrame(() => {
       section.scrollIntoView({ behavior: "smooth", block: "start" });
     });
-  };
+  }, [isMobileLayout]);
 
   const handleSelectSection = (section: typeof state.activeSection) => {
     if (isMobileLayout) {
@@ -139,7 +139,7 @@ const SettingsContent = ({
     }
     shouldScrollToSectionRef.current = false;
     scrollMobileSectionIntoView();
-  }, [isMobileLayout, state.activeSection]);
+  }, [isMobileLayout, scrollMobileSectionIntoView, state.activeSection]);
 
   return (
     <div className="settings-page min-h-screen bg-white text-black">
