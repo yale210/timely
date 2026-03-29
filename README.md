@@ -231,6 +231,12 @@ Primary external services and infrastructure used by the project:
 
 ## AI Usage Disclosure
 
+We have used tools like ChatGPT and Github Copilot for:
+- understanding Django patterns and APIs
+- guidance on how to implement common functionality
+- debugging and error explanation
+- generating migrations from the source code
+
 The College requires every use of generative AI to be acknowledged in the README with the path, affected unit, approximate number of lines, and the proportion of generated code. The table below must be completed before submission using the exact categories from the handbook.
 
 Approved proportion labels:
@@ -255,8 +261,6 @@ Non-code AI assistance used on this project should also be listed if relevant, f
 - The team should continue consolidating large calendar and scheduling flows to reduce complexity in high-change areas.
 
 ## Submission Checklist
-
-Before submission, confirm that:
 
 - the `Reused source code` table above is complete, or explicitly states `None`
 - the `AI Usage Disclosure` table above is complete for every AI-assisted code contribution
