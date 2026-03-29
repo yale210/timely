@@ -117,6 +117,12 @@ export const getCalendarWindow = (
       end_date: anchor.clone().endOf("day").format("YYYY-MM-DD"),
     };
   }
+  if (currentView === Views.AGENDA) {
+    return {
+      start_date: anchor.clone().startOf("month").format("YYYY-MM-DD"),
+      end_date: anchor.clone().endOf("month").format("YYYY-MM-DD"),
+    };
+  }
   return {
     start_date: anchor.clone().startOf("day").format("YYYY-MM-DD"),
     end_date: anchor.clone().add(30, "days").endOf("day").format("YYYY-MM-DD"),
@@ -130,6 +136,9 @@ export const getCalendarWindow = (
  */
 export const getNavigationUnit = (view: View): "month" | "week" | "day" => {
   if (view === Views.MONTH) {
+    return "month";
+  }
+  if (view === Views.AGENDA) {
     return "month";
   }
   if (view === Views.DAY) {

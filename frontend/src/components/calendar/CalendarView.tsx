@@ -64,6 +64,17 @@ const CalendarView = ({
     () => toCalendarDisplayDate(state.date, activeTimezone),
     [activeTimezone, state.date],
   );
+  const calendarDate = useMemo(() => {
+    if (state.view !== Views.AGENDA) {
+      return displayDate;
+    }
+
+    return moment.utc(displayDate).startOf("month").toDate();
+  }, [displayDate, state.view]);
+  const agendaLength = useMemo(
+    () => (state.view === Views.AGENDA ? moment.utc(calendarDate).daysInMonth() : undefined),
+    [calendarDate, state.view],
+  );
   const dragSnapMinutes = state.preference?.drag_snap_minutes ?? DEFAULT_DRAG_SNAP_MINUTES;
   const dragSnapTimeslots = 60 / dragSnapMinutes;
   const timeFormat = state.preference?.time_format ?? getStoredTimeFormat();
@@ -331,8 +342,11 @@ const CalendarView = ({
   }, [state.preference, state.view]);
 
   const handleNavigate = useCallback((nextDisplayDate: Date) => {
-    actions.setDate(fromCalendarDisplayDate(nextDisplayDate, activeTimezone));
-  }, [actions, activeTimezone]);
+    const normalizedDisplayDate = state.view === Views.AGENDA
+      ? moment.utc(nextDisplayDate).startOf("month").toDate()
+      : nextDisplayDate;
+    actions.setDate(fromCalendarDisplayDate(normalizedDisplayDate, activeTimezone));
+  }, [actions, activeTimezone, state.view]);
 
   const formats = useMemo<Formats>(() => {
     const timeLabel = timeFormat === "24h" ? "HH:mm" : "h:mm A";
@@ -365,8 +379,9 @@ const CalendarView = ({
             events={state.calendarEntries}
             view={state.view}
             onView={actions.setView}
-            date={displayDate}
+            date={calendarDate}
             onNavigate={handleNavigate}
+            length={agendaLength}
             step={dragSnapMinutes}
             timeslots={dragSnapTimeslots}
             slotPropGetter={slotPropGetter}
