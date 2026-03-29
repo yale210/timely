@@ -2,6 +2,9 @@ import { useState, type Dispatch, type SetStateAction } from "react";
 import type { SettingsSection } from "@/components/settings/types";
 import type { Category, Preference } from "@/types";
 
+/**
+ * Core mutable settings state used to compose the public settings hook.
+ */
 export interface SettingsCoreState {
   activeSection: SettingsSection;
   setActiveSection: Dispatch<SetStateAction<SettingsSection>>;
@@ -17,6 +20,9 @@ export interface SettingsCoreState {
   setFieldErrors: Dispatch<SetStateAction<Record<string, string[]>>>;
 }
 
+/**
+ * Internal loading flags used by the settings domain hooks.
+ */
 export interface SettingsLoadingState {
   isPreferenceLoading: boolean;
   setIsPreferenceLoading: Dispatch<SetStateAction<boolean>>;
@@ -28,6 +34,9 @@ export interface SettingsLoadingState {
   setIsDeleting: Dispatch<SetStateAction<boolean>>;
 }
 
+/**
+ * Internal error state used by the settings domain hooks.
+ */
 export interface SettingsErrorState {
   preferenceError: string | null;
   setPreferenceError: Dispatch<SetStateAction<string | null>>;
@@ -89,6 +98,10 @@ function useSettingsErrorState(): SettingsErrorState {
   };
 }
 
+/**
+ * Builds the grouped state slices used by the settings hook orchestration layer.
+ * @returns Core settings state plus loading and error state groups.
+ */
 export function useSettingsStateBundle() {
   return {
     core: useSettingsCoreState(),

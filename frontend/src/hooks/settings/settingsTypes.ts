@@ -1,6 +1,9 @@
 import type { SettingsSection } from "@/components/settings/types";
 import type { Category, Preference } from "@/types";
 
+/**
+ * Public settings state exposed to settings consumers.
+ */
 export interface SettingsState {
   activeSection: SettingsSection;
   preference: Preference | null;
@@ -10,6 +13,9 @@ export interface SettingsState {
   areCategoryLimitsDirty: boolean;
 }
 
+/**
+ * Loading flags exposed by the settings hook.
+ */
 export interface SettingsLoading {
   preference: boolean;
   categories: boolean;
@@ -17,11 +23,17 @@ export interface SettingsLoading {
   deleting: boolean;
 }
 
+/**
+ * Error state exposed by the settings hook.
+ */
 export interface SettingsError {
   preference: string | null;
   categories: string | null;
 }
 
+/**
+ * Actions exposed by the settings hook.
+ */
 export interface SettingsActions {
   selectSection: (section: SettingsSection) => void;
   setPreference: (nextPreference: Preference) => void;
@@ -38,6 +50,9 @@ export interface SettingsActions {
   unregisterTeacher: () => Promise<void>;
 }
 
+/**
+ * Structured return shape for the settings hook.
+ */
 export interface UseSettingsReturn {
   state: SettingsState;
   loading: SettingsLoading;

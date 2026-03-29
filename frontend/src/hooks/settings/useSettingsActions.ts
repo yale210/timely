@@ -1,10 +1,7 @@
 import { useCallback, useEffect } from "react";
 import type { NavigateFunction } from "react-router-dom";
 import { authService } from "@/services/authService";
-import {
-  deleteEvents as deleteEventsAPI,
-  deleteTasks as deleteTasksAPI,
-} from "@/services/taskService";
+import { deleteEvents as deleteEventsAPI, deleteTasks as deleteTasksAPI } from "@/services/taskService";
 import { applyFont, applyTheme } from "@/utils/themeSettings";
 import { getSchedulingDayMaxMinutes } from "@/utils/schedulingLimits";
 import type { Preference } from "@/types";
@@ -214,6 +211,12 @@ function useSaveCategoryLimitsAction(
   );
 }
 
+/**
+ * Runs section-driven data loading effects for preferences and category limits.
+ * @param activeSection - Currently selected settings section.
+ * @param loadPreference - Preference loading action.
+ * @param loadCategories - Category loading action.
+ */
 export function useSettingsDataEffects(
   activeSection: SettingsState["activeSection"],
   loadPreference: () => Promise<void>,
@@ -265,6 +268,14 @@ function buildSettingsError(errors: SettingsErrorState): SettingsError {
   };
 }
 
+/**
+ * Builds the public settings hook result from the internal state groups and actions.
+ * @param core - Core settings state values.
+ * @param loading - Internal loading flags.
+ * @param errors - Internal error state.
+ * @param actions - Public settings actions.
+ * @returns Structured settings hook state, loading, errors, and actions.
+ */
 export function buildUseSettingsResult(
   core: SettingsCoreState,
   loading: SettingsLoadingState,
@@ -279,6 +290,13 @@ export function buildUseSettingsResult(
   };
 }
 
+/**
+ * Creates the global settings actions unrelated to a single data domain.
+ * @param navigate - Router navigation function.
+ * @param core - Core settings state values.
+ * @param loading - Internal loading flags.
+ * @returns Global settings actions such as navigation, logout, deletion, and theme updates.
+ */
 export function useSettingsGlobalActions(
   navigate: NavigateFunction,
   core: SettingsCoreState,
@@ -355,6 +373,13 @@ function useCategoryActions(
   };
 }
 
+/**
+ * Creates the settings actions and data loaders for preferences and category limits.
+ * @param core - Core settings state values.
+ * @param loading - Internal loading flags.
+ * @param errors - Internal error state.
+ * @returns Domain-specific settings actions plus the data loaders used by the outer hook.
+ */
 export function useSettingsDomainActions(
   core: SettingsCoreState,
   loading: SettingsLoadingState,

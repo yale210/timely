@@ -18,6 +18,11 @@ type SetFieldErrors = Dispatch<SetStateAction<Record<string, string[]>>>;
 type SetStringState = Dispatch<SetStateAction<string | null>>;
 type SetBooleanState = Dispatch<SetStateAction<boolean>>;
 
+/**
+ * Returns whether the current settings section should trigger preference loading.
+ * @param section - Active settings section.
+ * @returns True when preference data is required for the section.
+ */
 export function shouldLoadPreferenceForSection(section: string) {
   return section === "preferences" || section === "general" || section === "categories";
 }
@@ -51,6 +56,12 @@ function buildPreferenceUpdatePayload(preference: Preference) {
   };
 }
 
+/**
+ * Clamps a category study limit to the current daily maximum while preserving null values.
+ * @param value - Proposed category limit in minutes.
+ * @param maxDailyMinutes - Maximum allowed minutes for the current schedule.
+ * @returns A normalized category limit value.
+ */
 export function updateCategoryLimitValue(
   value: number | null | undefined,
   maxDailyMinutes: number,
@@ -116,6 +127,14 @@ function buildCategoryLimitPatch(category: Category, maxDailyMinutes: number) {
   };
 }
 
+/**
+ * Loads the current user preference into settings state.
+ * @param setPreference - Setter for the editable preference state.
+ * @param setSavedPreference - Setter for the saved preference snapshot.
+ * @param setFieldErrors - Setter for preference field-level errors.
+ * @param setIsPreferenceLoading - Setter for the preference loading flag.
+ * @param setPreferenceError - Setter for the preference request error message.
+ */
 export async function runLoadPreference(
   setPreference: SetPreference,
   setSavedPreference: SetPreference,
@@ -135,6 +154,15 @@ export async function runLoadPreference(
   }
 }
 
+/**
+ * Validates and saves the current preference values.
+ * @param preference - Preference values to save.
+ * @param setPreference - Setter for the editable preference state.
+ * @param setSavedPreference - Setter for the saved preference snapshot.
+ * @param setFieldErrors - Setter for preference field-level errors.
+ * @param setIsSaving - Setter for the saving flag.
+ * @param setPreferenceError - Setter for the preference error message.
+ */
 export async function runSavePreference(
   preference: Preference,
   setPreference: SetPreference,
@@ -161,6 +189,13 @@ export async function runSavePreference(
   }
 }
 
+/**
+ * Loads category settings used by the category-limits section.
+ * @param setCategories - Setter for editable categories.
+ * @param setSavedCategories - Setter for the saved category snapshot.
+ * @param setIsCategoriesLoading - Setter for the category loading flag.
+ * @param setCategoriesError - Setter for the category request error message.
+ */
 export async function runLoadCategories(
   setCategories: SetCategories,
   setSavedCategories: SetCategories,
@@ -182,6 +217,15 @@ export async function runLoadCategories(
   }
 }
 
+/**
+ * Saves the current category study limits after normalizing them against scheduling limits.
+ * @param categories - Category list to persist.
+ * @param preference - Active scheduling preference used to compute max daily minutes.
+ * @param setCategories - Setter for editable categories.
+ * @param setSavedCategories - Setter for the saved category snapshot.
+ * @param setIsSaving - Setter for the saving flag.
+ * @param setCategoriesError - Setter for the category error message.
+ */
 export async function runSaveCategoryLimits(
   categories: Category[],
   preference: Preference | null,
