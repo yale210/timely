@@ -49,6 +49,16 @@ export function useTeacher(): UseTeacherResult {
     try {
       const teacher = await getCurrentTeacher();
 
+      if (!teacher) {
+        setState({
+          teacher: null,
+          isTeacher: false,
+          loading: false,
+          error: null,
+        });
+        return;
+      }
+
       setState({
         teacher,
         isTeacher: true,

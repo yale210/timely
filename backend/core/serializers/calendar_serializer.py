@@ -2,6 +2,8 @@
 
 from rest_framework import serializers
 
+from drf_spectacular.utils import extend_schema_field
+
 from core.models import Category, Task
 
 from .calendar_validation import CalendarValidationMixin
@@ -60,6 +62,7 @@ class CalendarSerializer(CalendarValidationMixin, serializers.ModelSerializer):
         ).data
         return representation
 
+    @extend_schema_field(serializers.IntegerField())
     def get_remaining_minutes(self, instance):
         """Calculate the remaining minutes for a task.
 
@@ -151,6 +154,7 @@ class CalendarResponseSerializer(serializers.ModelSerializer):
             "parent_task",
         ]
 
+    @extend_schema_field(serializers.IntegerField())
     def get_remaining_minutes(self, instance):
         """Calculate the remaining minutes for a task by subtracting the completed minutes and estimated minutes.
 

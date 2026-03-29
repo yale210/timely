@@ -285,29 +285,22 @@ export const getStaff = async (id: number): Promise<CourseStaff[]> => {
 /**
  * Retrieves the current teacher's information from the server.
  * This asynchronous function makes a network request to the `/api/teachers/`
- * endpoint to fetch data about the current teacher. The response, once received,
- * is logged to the console and the teacher's data is returned as a Promise.
- * @returns A promise that resolves to the teacher's information.
+ * endpoint, then selects the current user's teacher record from the returned list.
+ * @returns A promise that resolves to the current teacher's information, or null if
+ * the current user is not an active teacher.
  */
-export const getCurrentTeacher = async (): Promise<Teacher> => {
+export const getCurrentTeacher = async (): Promise<Teacher | null> => {
   const currentUserId = getCurrentUserId();
 
   if (currentUserId === null) {
-    throw new Error("Cannot load current teacher without an authenticated user.");
+    return null;
   }
 
   const response = await api.get<Teacher[]>("/api/teachers/");
-  const teacher = response.data.find(
+  return response.data.find(
     (teacherEntry) => teacherEntry.user_id === Number(currentUserId),
-  );
-
-  if (!teacher) {
-    throw new Error("You are not registered as an active teacher.");
-  }
-
-  return teacher;
+  ) ?? null;
 };
-
 /**
  * Generates a join code for a specified course.
  * @param id - The unique identifier of the course.
