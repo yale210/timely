@@ -21,7 +21,7 @@ vi.mock("@/components/settings/PreferencesSection", () => ({
     onImport: () => void;
     prefSaving: boolean;
     prefDirty: boolean;
-    onPrefChange: (pref: Partial<Preference>) => void;
+    onPrefChange: (pref: Preference) => void;
   }) => (
     <div>
       <div>preferences-section</div>
@@ -36,14 +36,14 @@ vi.mock("@/components/settings/PreferencesSection", () => ({
       <button
         role="button"
         aria-pressed={true}
-        onClick={() => onPrefChange({ disable_sound_effects: true })}
+        onClick={() => onPrefChange({ disable_sound_effects: true } as Preference)}
       >
         Sound effects
       </button>
       <label htmlFor="landing-page">Default landing page</label>
       <select
         id="landing-page"
-        onChange={(e) => onPrefChange({ default_landing_page: e.currentTarget.value as Preference["default_landing_page"] })}
+        onChange={(e) => onPrefChange({ default_landing_page: e.currentTarget.value as Preference["default_landing_page"] } as Preference)}
       >
         <option value="home">Home</option>
         <option value="calendar">Calendar</option>
@@ -51,7 +51,7 @@ vi.mock("@/components/settings/PreferencesSection", () => ({
       <label htmlFor="week-starts">Week starts on</label>
       <select
         id="week-starts"
-        onChange={(e) => onPrefChange({ week_starts_on: e.currentTarget.value as Preference["week_starts_on"] })}
+        onChange={(e) => onPrefChange({ week_starts_on: e.currentTarget.value as Preference["week_starts_on"] } as Preference)}
       >
         <option value="monday">Monday</option>
         <option value="sunday">Sunday</option>
@@ -59,7 +59,7 @@ vi.mock("@/components/settings/PreferencesSection", () => ({
       <label htmlFor="time-format">Time format</label>
       <select
         id="time-format"
-        onChange={(e) => onPrefChange({ time_format: e.currentTarget.value as Preference["time_format"] })}
+        onChange={(e) => onPrefChange({ time_format: e.currentTarget.value as Preference["time_format"] } as Preference)}
       >
         <option value="24h">24h</option>
         <option value="12h">12h</option>
@@ -67,7 +67,7 @@ vi.mock("@/components/settings/PreferencesSection", () => ({
       <label htmlFor="drag-snap">Calendar drag timeslot</label>
       <select
         id="drag-snap"
-        onChange={(e) => onPrefChange({ drag_snap_minutes: Number(e.currentTarget.value) as Preference["drag_snap_minutes"] })}
+        onChange={(e) => onPrefChange({ drag_snap_minutes: Number(e.currentTarget.value) as Preference["drag_snap_minutes"] } as Preference)}
       >
         <option value="15">15</option>
         <option value="30">30</option>
