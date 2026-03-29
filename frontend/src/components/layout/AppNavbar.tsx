@@ -173,19 +173,17 @@ export default function AppNavbar() {
         <div className="flex justify-center" />
 
         <div className="flex h-10 items-center justify-end gap-1.5">
-          <div className="hidden md:flex md:items-center">
-            <NotificationDropdown
-              notifications={notifications}
-              unreadCount={unreadCount}
-              onItemClick={handleNotificationClick}
-              onToggleRead={(notification) =>
-                notification.is_read
-                  ? markUnread(notification.id)
-                  : markRead(notification.id)
-              }
-              onDeleteItem={(notification) => deleteNotification(notification.id)}
-            />
-          </div>
+          <NotificationDropdown
+            notifications={notifications}
+            unreadCount={unreadCount}
+            onItemClick={handleNotificationClick}
+            onToggleRead={(notification) =>
+              notification.is_read
+                ? markUnread(notification.id)
+                : markRead(notification.id)
+            }
+            onDeleteItem={(notification) => deleteNotification(notification.id)}
+          />
 
           <Menu as="div" className="relative flex h-8 items-center">
             <MenuButton className="inline-flex h-8 items-center justify-center gap-2 rounded-full px-2.5 py-0 text-sm font-semibold leading-none text-gray-900 hover:bg-gray-100">
