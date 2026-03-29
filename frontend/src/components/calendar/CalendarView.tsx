@@ -381,6 +381,9 @@ const CalendarView = ({
             onEventDrop={onEventDrop}
             onEventResize={onEventResize}
             formats={formats}
+            messages={{
+              noEventsInRange: "No events available for this period",
+            }}
             showMultiDayTimes
             toolbar={false}
             className="h-full"
