@@ -131,6 +131,10 @@
   border-left: 1px solid var(--border) !important;
 }
 
+.calendar-grid-shell .rbc-time-content > * + * > * {
+  border-left: 1px solid var(--border) !important;
+}
+
 .calendar-grid-shell .rbc-timeslot-group {
   border-bottom: 1px solid var(--border) !important;
 }
@@ -146,6 +150,10 @@
 }
 
 .mini-calendar-preview .rbc-time-content > .rbc-day-slot {
+  border-left: 1px solid var(--border) !important;
+}
+
+.mini-calendar-preview .rbc-time-content > * + * > * {
   border-left: 1px solid var(--border) !important;
 }
 
