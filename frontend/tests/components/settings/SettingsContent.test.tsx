@@ -43,7 +43,7 @@ vi.mock("@/components/settings/PreferencesSection", () => ({
       <label htmlFor="landing-page">Default landing page</label>
       <select
         id="landing-page"
-        onChange={(e) => onPrefChange({ default_landing_page: e.target.value as "dashboard" | "calendar" | "tasks" } as Preference)}
+        onChange={(e) => onPrefChange({ default_landing_page: e.currentTarget.value as Preference["default_landing_page"] } as Preference)}
       >
         <option value="home">Home</option>
         <option value="calendar">Calendar</option>
@@ -51,7 +51,7 @@ vi.mock("@/components/settings/PreferencesSection", () => ({
       <label htmlFor="week-starts">Week starts on</label>
       <select
         id="week-starts"
-        onChange={(e) => onPrefChange({ week_starts_on: e.target.value as "monday" | "sunday" } as Preference)}
+        onChange={(e) => onPrefChange({ week_starts_on: e.currentTarget.value as Preference["week_starts_on"] } as Preference)}
       >
         <option value="monday">Monday</option>
         <option value="sunday">Sunday</option>
@@ -59,7 +59,7 @@ vi.mock("@/components/settings/PreferencesSection", () => ({
       <label htmlFor="time-format">Time format</label>
       <select
         id="time-format"
-        onChange={(e) => onPrefChange({ time_format: e.target.value as "24h" | "12h" } as Preference)}
+        onChange={(e) => onPrefChange({ time_format: e.currentTarget.value as Preference["time_format"] } as Preference)}
       >
         <option value="24h">24h</option>
         <option value="12h">12h</option>
@@ -67,7 +67,7 @@ vi.mock("@/components/settings/PreferencesSection", () => ({
       <label htmlFor="drag-snap">Calendar drag timeslot</label>
       <select
         id="drag-snap"
-        onChange={(e) => onPrefChange({ drag_snap_minutes: Number(e.target.value) as 5 | 10 | 15 | 20 | 30 | 60 } as Preference)}
+        onChange={(e) => onPrefChange({ drag_snap_minutes: Number(e.currentTarget.value) as Preference["drag_snap_minutes"] } as Preference)}
       >
         <option value="15">15</option>
         <option value="30">30</option>

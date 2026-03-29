@@ -4,6 +4,9 @@ import { Views } from "react-big-calendar";
 import { getCalendarWindow, isOutsidePreferredDayWindow } from "@/hooks/calendar/calendarTypes";
 import { useCalendarState } from "@/hooks/calendar/useCalendarState";
 import { useCalendar } from "@/hooks/calendar/useCalendar";
+import { useCalendarData } from "@/hooks/calendar/useCalendarData";
+import { buildDraftCalendarEvent } from "@/hooks/calendar/useCalendarInteractions";
+import { buildRescheduleWarnings, shouldRescheduleTaskSave } from "@/hooks/calendar/calendarMutationHelpers";
 import * as eventService from "@/services/eventService";
 import * as categoryService from "@/services/categoryService";
 import * as schedulerService from "@/services/schedulerService";
@@ -129,6 +132,31 @@ describe("useCalendar", () => {
       "Event Entry",
     ]);
     expect(result.current.error.tasks).toBeNull();
+  });
+
+  it("loads the initial event window after server preferences arrive", async () => {
+    setStoredUserTimezone("America/Los_Angeles");
+    setStoredWeekStartsOn("sunday");
+    vi.mocked(preferenceService).getMyPreference.mockResolvedValue({
+      id: 1,
+      timezone: "Europe/London",
+      week_starts_on: "monday",
+      day_start: "08:00:00",
+      day_end: "22:00:00",
+      max_hours_study_per_day: 4,
+      max_days_ahead: 7,
+      drag_snap_minutes: 15,
+      days_off: [],
+    } as never);
+
+    const { result } = renderHook(() => useCalendarData(Views.WEEK, new Date("2026-03-18T12:00:00.000Z")));
+
+    await waitFor(() => expect(result.current.loading.initializing).toBe(false));
+
+    expect(eventService.getEvents).toHaveBeenCalledWith({
+      start_date: "2026-03-16",
+      end_date: "2026-03-22",
+    });
   });
 
   it("opens an event sidebar template when a slot is selected", async () => {
@@ -267,5 +295,132 @@ describe("isOutsidePreferredDayWindow", () => {
     expect(
       isOutsidePreferredDayWindow(new Date("2026-03-27T10:00:00.000Z"), preference),
     ).toBe(true);
+  });
+});
+
+describe("calendar interaction helpers", () => {
+  it("builds a draft event from slot selections and falls back to a one-hour window", () => {
+    const draft = buildDraftCalendarEvent({
+      start: new Date("2026-04-03T09:00:00.000Z"),
+      end: new Date("2026-04-03T09:00:00.000Z"),
+      slots: [
+        new Date("2026-04-03T09:00:00.000Z"),
+        new Date("2026-04-03T09:30:00.000Z"),
+      ],
+    });
+
+    expect(draft).toMatchObject({
+      id: 0,
+      title: "",
+      start_time: "2026-04-03T09:00:00.000Z",
+      end_time: "2026-04-03T09:30:00.000Z",
+      categories: [],
+    });
+
+    const fallbackDraft = buildDraftCalendarEvent({
+      start: new Date("2026-04-03T09:00:00.000Z"),
+      end: new Date("2026-04-03T08:00:00.000Z"),
+    });
+
+    expect(fallbackDraft.end_time).toBe("2026-04-03T10:00:00.000Z");
+  });
+});
+
+describe("calendar mutation helpers", () => {
+  it("detects when editing a task should trigger save-and-reschedule", () => {
+    expect(
+      shouldRescheduleTaskSave(
+        {
+          id: 4,
+          title: "Essay",
+          deadline: "2026-04-03T12:00:00.000Z",
+          start_time: "2026-04-03T09:00:00.000Z",
+          importance: 4,
+          completed: false,
+          estimated_minutes: 120,
+          buffer_before_minutes: 10,
+          buffer_after_minutes: 15,
+          completed_minutes: 20,
+          categories: [],
+        },
+        {
+          buffer_before_minutes: 10,
+          buffer_after_minutes: 20,
+          completed_minutes: 20,
+        },
+      ),
+    ).toBe(true);
+
+    expect(
+      shouldRescheduleTaskSave(
+        {
+          id: 4,
+          title: "Essay",
+          deadline: "2026-04-03T12:00:00.000Z",
+          start_time: "2026-04-03T09:00:00.000Z",
+          importance: 4,
+          completed: false,
+          estimated_minutes: 120,
+          buffer_before_minutes: 10,
+          buffer_after_minutes: 15,
+          completed_minutes: 20,
+          categories: [],
+        },
+        {
+          title: "Essay draft",
+        },
+      ),
+    ).toBe(false);
+  });
+
+  it("builds scheduler warnings with fallback titles and reasons", () => {
+    expect(
+      buildRescheduleWarnings(
+        [
+          {
+            task_id: 1,
+            success: false,
+            scheduled_start: null,
+            scheduled_end: null,
+            reason: "Conflicts with working hours.",
+          },
+          {
+            task_id: 2,
+            success: false,
+            scheduled_start: null,
+            scheduled_end: null,
+          },
+          {
+            task_id: 3,
+            success: true,
+            scheduled_start: "2026-04-03T09:00:00.000Z",
+            scheduled_end: "2026-04-03T10:00:00.000Z",
+          },
+        ],
+        [
+          {
+            id: 1,
+            title: "Essay",
+            deadline: "2026-04-03T12:00:00.000Z",
+            start_time: "2026-04-03T09:00:00.000Z",
+            importance: 4,
+            completed: false,
+            estimated_minutes: 120,
+            categories: [],
+          },
+        ],
+      ),
+    ).toEqual([
+      {
+        taskId: 1,
+        title: "Essay",
+        reason: "Conflicts with working hours.",
+      },
+      {
+        taskId: 2,
+        title: "Task #2",
+        reason: "The scheduler could not find enough time before the deadline.",
+      },
+    ]);
   });
 });
