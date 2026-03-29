@@ -131,6 +131,10 @@
   border-left: 1px solid var(--border) !important;
 }
 
+.calendar-grid-shell .rbc-time-content > * + * > * {
+  border-left: 1px solid var(--border) !important;
+}
+
 .calendar-grid-shell .rbc-timeslot-group {
   border-bottom: 1px solid var(--border) !important;
 }
@@ -146,6 +150,10 @@
 }
 
 .mini-calendar-preview .rbc-time-content > .rbc-day-slot {
+  border-left: 1px solid var(--border) !important;
+}
+
+.mini-calendar-preview .rbc-time-content > * + * > * {
   border-left: 1px solid var(--border) !important;
 }
 
@@ -168,6 +176,14 @@
 
 .calendar-day-header-highlight {
   background-color: color-mix(in srgb, var(--primary) 12%, var(--background));
+}
+
+.rbc-month-view .rbc-off-range {
+  color: color-mix(in srgb, var(--text-color) 38%, var(--background)) !important;
+}
+
+.rbc-month-view .rbc-off-range-bg {
+  background-color: color-mix(in srgb, var(--text-color) 8%, var(--background)) !important;
 }
 
 .rbc-today {
@@ -301,4 +317,21 @@
   height: 10px;
   border-radius: 9999px;
   background: #ffffff;
+}
+
+.rbc-agenda-empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  min-height: 200px;
+  color: color-mix(in srgb, var(--text-color) 60%, transparent);
+  font-size: 1.1rem;
+  font-weight: 500;
+  background-color: color-mix(in srgb, var(--text-color) 5%, var(--background));
+  border-radius: 0.5rem;
+  border: 1px dashed var(--border);
+  margin: 1rem;
+  padding: 2rem;
+  text-align: center;
 }

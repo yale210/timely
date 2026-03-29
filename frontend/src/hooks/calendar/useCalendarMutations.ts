@@ -1,25 +1,17 @@
-import { useCallback, useRef, type Dispatch, type SetStateAction } from "react";
+import { useCallback, useLayoutEffect, useRef, type Dispatch, type MutableRefObject, type SetStateAction } from "react";
 import moment from "moment";
 import type { View } from "react-big-calendar";
 import { hasTaskAllocationRescheduleConflict } from "@/utils/apiErrors";
-import * as eventService from "@/services/eventService";
-import * as taskService from "@/services/taskService";
+import { calendarMutationHelpers } from "./calendarMutationHelpers";
 import * as categoryService from "@/services/categoryService";
-import * as schedulerService from "@/services/schedulerService";
+import * as eventService from "@/services/eventService";
 import * as exportService from "@/services/exportService";
 import * as importService from "@/services/importService";
+import * as schedulerService from "@/services/schedulerService";
+import * as taskService from "@/services/taskService";
 import completeSoundUrl from "@/assets/sounds/task-complete.mp3";
-import type {
-  Category,
-  Event,
-  EventMutationContext,
-  EventSubmission,
-  Preference,
-  Task,
-  TaskSubmission,
-} from "@/types";
+import type { Category, Event, EventMutationContext, EventSubmission, Preference, Task, TaskSubmission } from "@/types";
 
-// We define exactly what this hook needs to function:
 interface UseCalendarMutationsProps {
   selectedItem: Task | Event | undefined;
   date: Date;
@@ -30,7 +22,7 @@ interface UseCalendarMutationsProps {
   fetchTasks: () => Promise<void>;
   fetchEvents: (view: View, date: Date) => Promise<void>;
   closeSidebar: () => void;
-  setCategories:Dispatch<SetStateAction<Category[]>>;
+  setCategories: Dispatch<SetStateAction<Category[]>>;
   setTasks: Dispatch<SetStateAction<Task[]>>;
   setEvents: Dispatch<SetStateAction<Event[]>>;
   setSelectedItem: Dispatch<SetStateAction<Task | Event | undefined>>;
@@ -44,84 +36,53 @@ interface UseCalendarMutationsProps {
   setImportingError: (val: string | null) => void;
 }
 
-/**
- * Provides task, event, category, import, export, and reschedule mutations.
- * @param props - Mutation dependencies and state setters.
- * @returns Calendar mutation handlers.
- */
-export const useCalendarMutations = (props: UseCalendarMutationsProps) => {
-  const {
-    selectedItem,
-    date,
-    view,
-    tasks,
-    categories,
-    preference,
-    fetchTasks,
-    fetchEvents,
-    closeSidebar,
-    setCategories,
-    setTasks,
-    setEvents,
-    setSelectedItem,
-    setScheduleOrder,
-    setIsRescheduling,
-    setReschedulingError,
-    setRescheduleWarnings,
-    setIsExporting,
-    setExportingError,
-    setIsImporting,
-    setImportingError,
-  } = props;
-
-  const completeSoundRef = useRef<HTMLAudioElement | null>(
-    typeof Audio === "undefined" ? null : new Audio(completeSoundUrl),
-  );
-
-  // Ref so handleToggleTaskComplete doesn't need `tasks` as a dep (which would
-  // cause it to recreate on every data update and cascade re-renders downstream).
+const useTasksRef = (tasks: Task[]): MutableRefObject<Task[]> => {
   const tasksRef = useRef(tasks);
-  tasksRef.current = tasks;
-  const activeTimezone = preference?.timezone ?? moment.tz.guess();
-  const todayStartDate = moment().tz(activeTimezone).format("YYYY-MM-DD");
+  useLayoutEffect(() => {
+    tasksRef.current = tasks;
+  }, [tasks]);
+  return tasksRef;
+};
 
-  const submitTask = useCallback(
+const useTaskSubmissionMutation = (
+  selectedItem: Task | Event | undefined,
+  preference: Preference | null,
+  fetchTasks: UseCalendarMutationsProps["fetchTasks"],
+  closeSidebar: UseCalendarMutationsProps["closeSidebar"],
+) =>
+  useCallback(
     async (data: TaskSubmission) => {
+      const selectedTask = calendarMutationHelpers.getSelectedTask(selectedItem);
       try {
-        if (selectedItem && "deadline" in selectedItem && selectedItem.id !== 0) {
-          const bufferBeforeChanged = typeof data.buffer_before_minutes === "number" && data.buffer_before_minutes !== (selectedItem.buffer_before_minutes ?? 0);
-          const bufferAfterChanged = typeof data.buffer_after_minutes === "number" && data.buffer_after_minutes !== (selectedItem.buffer_after_minutes ?? 0);
-          const completedMinutesChanged = typeof data.completed_minutes === "number" && data.completed_minutes !== (selectedItem.completed_minutes ?? 0);
-          
-          if (bufferBeforeChanged || bufferAfterChanged || completedMinutesChanged) {
-            await taskService.saveAndRescheduleTask(selectedItem.id, data, moment(date).format("YYYY-MM-DD"));
-          } else {
-            await taskService.updateTask(selectedItem.id, data);
-          }
-        } else {
-          await taskService.createTask(data);
-        }
+        await calendarMutationHelpers.saveTaskSubmission(selectedTask, data, preference);
         await fetchTasks();
         closeSidebar();
       } catch (error) {
-        if (selectedItem && "deadline" in selectedItem && selectedItem.id !== 0 && (selectedItem.allocation?.length ?? 0) > 0 && hasTaskAllocationRescheduleConflict(error)) {
-          await taskService.saveAndRescheduleTask(selectedItem.id, data, moment(date).format("YYYY-MM-DD"));
-          await fetchTasks();
-          closeSidebar();
-          return;
+        if (!selectedTask || !calendarMutationHelpers.hasTaskAllocations(selectedTask) || !hasTaskAllocationRescheduleConflict(error)) {
+          console.error(error);
+          throw error;
         }
-        console.error(error);
-        throw error;
+        await calendarMutationHelpers.retryTaskRescheduleSave(selectedTask, data, preference);
+        await fetchTasks();
+        closeSidebar();
       }
     },
-    [closeSidebar, date, fetchTasks, selectedItem],
+    [closeSidebar, fetchTasks, preference, selectedItem],
   );
 
-  const submitEvent = useCallback(
+const useEventSubmissionMutation = (
+  selectedItem: Task | Event | undefined,
+  view: View,
+  date: Date,
+  fetchEvents: UseCalendarMutationsProps["fetchEvents"],
+  closeSidebar: UseCalendarMutationsProps["closeSidebar"],
+) =>
+  useCallback(
     async (data: EventSubmission, context?: EventMutationContext) => {
       try {
-        if (selectedItem && "end_time" in selectedItem && selectedItem.id !== 0) {
-          await eventService.updateEvent(selectedItem.id, data, context);
+        const selectedEvent = calendarMutationHelpers.getSelectedEvent(selectedItem);
+        if (selectedEvent && selectedEvent.id !== 0) {
+          await eventService.updateEvent(selectedEvent.id, data, context);
         } else {
           await eventService.createEvent(data);
         }
@@ -135,14 +96,21 @@ export const useCalendarMutations = (props: UseCalendarMutationsProps) => {
     [closeSidebar, date, fetchEvents, selectedItem, view],
   );
 
-  const deleteSelected = useCallback(
+const useDeleteSelectedMutation = (
+  selectedItem: Task | Event | undefined,
+  view: View,
+  date: Date,
+  fetchTasks: UseCalendarMutationsProps["fetchTasks"],
+  fetchEvents: UseCalendarMutationsProps["fetchEvents"],
+  closeSidebar: UseCalendarMutationsProps["closeSidebar"],
+) =>
+  useCallback(
     async (context?: EventMutationContext) => {
       try {
         if (!selectedItem?.id) {
           console.error("There is either no item, or its id is not valid.");
           return;
         }
-
         if ("end_time" in selectedItem) {
           await eventService.deleteEvent(selectedItem.id, context);
           await fetchEvents(view, date);
@@ -150,7 +118,6 @@ export const useCalendarMutations = (props: UseCalendarMutationsProps) => {
           await taskService.deleteTask(selectedItem.id);
           await fetchTasks();
         }
-
         closeSidebar();
       } catch (error) {
         console.error(error);
@@ -160,12 +127,21 @@ export const useCalendarMutations = (props: UseCalendarMutationsProps) => {
     [closeSidebar, date, fetchEvents, fetchTasks, selectedItem, view],
   );
 
-  const revertSelectedEvent = useCallback(
+const useRevertSelectedEventMutation = (
+  selectedItem: Task | Event | undefined,
+  view: View,
+  date: Date,
+  fetchEvents: UseCalendarMutationsProps["fetchEvents"],
+  closeSidebar: UseCalendarMutationsProps["closeSidebar"],
+) =>
+  useCallback(
     async (context: EventMutationContext) => {
       try {
-        if (!selectedItem || !("end_time" in selectedItem) || !context.original_start_time) return;
-
-        await eventService.revertEventInstance(selectedItem.id, context.original_start_time);
+        const selectedEvent = calendarMutationHelpers.getSelectedEvent(selectedItem);
+        if (!selectedEvent || !context.original_start_time) {
+          return;
+        }
+        await eventService.revertEventInstance(selectedEvent.id, context.original_start_time);
         await fetchEvents(view, date);
         closeSidebar();
       } catch (error) {
@@ -176,34 +152,24 @@ export const useCalendarMutations = (props: UseCalendarMutationsProps) => {
     [closeSidebar, date, fetchEvents, selectedItem, view],
   );
 
-  const rescheduleTasks = useCallback(async () => {
+const useRescheduleTasksMutation = (
+  tasks: Task[],
+  preference: Preference | null,
+  fetchTasks: UseCalendarMutationsProps["fetchTasks"],
+  setScheduleOrder: UseCalendarMutationsProps["setScheduleOrder"],
+  setIsRescheduling: UseCalendarMutationsProps["setIsRescheduling"],
+  setReschedulingError: UseCalendarMutationsProps["setReschedulingError"],
+  setRescheduleWarnings: UseCalendarMutationsProps["setRescheduleWarnings"],
+) => {
+  const startDate = moment().tz(preference?.timezone ?? moment.tz.guess()).format("YYYY-MM-DD");
+  return useCallback(async () => {
     setIsRescheduling(true);
     setReschedulingError(null);
     setRescheduleWarnings([]);
-
     try {
-      const response = await schedulerService.scheduleTasks({
-        start_date: todayStartDate,
-        allow_split: true,
-        replace_existing: true,
-      });
-      
-      const nextOrder: Record<number, number> = {};
-      response.results
-        .filter((result) => result.success && result.scheduled_start && result.scheduled_end)
-        .forEach((result, index) => { nextOrder[result.task_id] = index; });
-        
-      setScheduleOrder(nextOrder);
-      setRescheduleWarnings(
-        response.results.filter((result) => !result.success).map((result) => {
-          const matchingTask = tasks.find((t) => t.id === result.task_id);
-          return {
-            taskId: result.task_id,
-            title: matchingTask?.title ?? `Task #${result.task_id}`,
-            reason: result.reason ?? "The scheduler could not find enough time before the deadline.",
-          };
-        }),
-      );
+      const response = await schedulerService.scheduleTasks({ start_date: startDate, allow_split: true, replace_existing: true });
+      setScheduleOrder(calendarMutationHelpers.buildScheduleOrder(response.results));
+      setRescheduleWarnings(calendarMutationHelpers.buildRescheduleWarnings(response.results, tasks));
       await fetchTasks();
     } catch (error) {
       console.error(error);
@@ -211,35 +177,43 @@ export const useCalendarMutations = (props: UseCalendarMutationsProps) => {
     } finally {
       setIsRescheduling(false);
     }
-  }, [fetchTasks, tasks, todayStartDate, setIsRescheduling, setReschedulingError, setRescheduleWarnings, setScheduleOrder]);
+  }, [fetchTasks, setIsRescheduling, setRescheduleWarnings, setReschedulingError, setScheduleOrder, startDate, tasks]);
+};
 
-  const exportEvents = useCallback(async () => {
+const useExportEventsMutation = (
+  setIsExporting: UseCalendarMutationsProps["setIsExporting"],
+  setExportingError: UseCalendarMutationsProps["setExportingError"],
+) =>
+  useCallback(async () => {
     setIsExporting(true);
     setExportingError(null);
-
     try {
       const response = await exportService.exportEvents();
-      if (response) {
-        const url = window.URL.createObjectURL(new Blob([response]));
-        const link = document.createElement("a");
-        link.href = url;
-        link.setAttribute("download", "events.txt");
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
+      if (!response) {
+        return;
       }
+      const url = window.URL.createObjectURL(new Blob([response]));
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute("download", "events.txt");
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
     } catch (error) {
       console.error(error);
       setExportingError("Failed to export events.");
     } finally {
       setIsExporting(false);
     }
-  }, [setIsExporting, setExportingError]);
+  }, [setExportingError, setIsExporting]);
 
-  const importEvents = useCallback(async (file: File) => {
+const useImportEventsMutation = (
+  setIsImporting: UseCalendarMutationsProps["setIsImporting"],
+  setImportingError: UseCalendarMutationsProps["setImportingError"],
+) =>
+  useCallback(async (file: File) => {
     setIsImporting(true);
     setImportingError(null);
-
     try {
       await importService.importEvents(file);
       importService.pageReloader.reload();
@@ -249,81 +223,104 @@ export const useCalendarMutations = (props: UseCalendarMutationsProps) => {
     } finally {
       setIsImporting(false);
     }
-  }, [setIsImporting, setImportingError]);
+  }, [setImportingError, setIsImporting]);
 
-  const createCategory = useCallback(async (text: string): Promise<Category> => {
+const useCreateCategoryMutation = (setCategories: UseCalendarMutationsProps["setCategories"]) =>
+  useCallback(async (text: string): Promise<Category> => {
     const trimmed = text.trim();
-    if (!trimmed) throw new Error("Category name cannot be empty.");
-    
+    if (!trimmed) {
+      throw new Error("Category name cannot be empty.");
+    }
     const created = await categoryService.createCategory(trimmed);
-    setCategories((prev) => {
-      const exists = prev.some((category) => category.id === created.id);
-      const next = exists ? prev : [...prev, created];
-      return [...next].sort((a, b) => a.text.localeCompare(b.text));
+    setCategories((previous) => {
+      const next = previous.some((category) => category.id === created.id) ? previous : [...previous, created];
+      return [...next].sort((left, right) => left.text.localeCompare(right.text));
     });
     return created;
   }, [setCategories]);
 
-  const updateCategory = useCallback(
-    async (id: number, patch: { colour?: string | null; colour_override?: boolean }) => {
-      const updated = await categoryService.updateCategory(id, patch);
-      setCategories((prev) => prev.map((c) => (c.id === id ? { ...c, ...updated } : c)));
-      setTasks((prev) => prev.map((t) => ({ ...t, categories: t.categories.map((c) => c.id === id ? { ...c, ...updated } : c) })));
-      setEvents((prev) => prev.map((e) => ({ ...e, categories: e.categories.map((c) => c.id === id ? { ...c, ...updated } : c) })));
-      return updated;
-    },
-    [setCategories, setTasks, setEvents],
-  );
-
+const useCategorySyncMutations = (
+  setCategories: UseCalendarMutationsProps["setCategories"],
+  setTasks: UseCalendarMutationsProps["setTasks"],
+  setEvents: UseCalendarMutationsProps["setEvents"],
+) => {
+  const updateCategory = useCallback(async (id: number, patch: { colour?: string | null; colour_override?: boolean }) => {
+    const updated = await categoryService.updateCategory(id, patch);
+    setCategories((previous) => previous.map((category) => (category.id === id ? { ...category, ...updated } : category)));
+    setTasks((previous) => calendarMutationHelpers.updateCategoriesInItems(previous, id, updated));
+    setEvents((previous) => calendarMutationHelpers.updateCategoriesInItems(previous, id, updated));
+    return updated;
+  }, [setCategories, setEvents, setTasks]);
   const deleteCategory = useCallback(async (id: number): Promise<void> => {
     await categoryService.deleteCategory(id);
-    setCategories((prev) => prev.filter((c) => c.id !== id));
-    setTasks((prev) => prev.map((t) => ({ ...t, categories: t.categories.filter((c) => c.id !== id) })));
-    setEvents((prev) => prev.map((e) => ({ ...e, categories: e.categories.filter((c) => c.id !== id) })));
-  }, [setCategories, setTasks, setEvents]);
+    setCategories((previous) => previous.filter((category) => category.id !== id));
+    setTasks((previous) => calendarMutationHelpers.removeCategoryFromItems(previous, id));
+    setEvents((previous) => calendarMutationHelpers.removeCategoryFromItems(previous, id));
+  }, [setCategories, setEvents, setTasks]);
 
-  const updateTaskCategories = useCallback(
-    async (id: number, nextCategoryIds: number[]): Promise<void> => {
-      const nextCategoryObjects = categories.filter((c) => nextCategoryIds.includes(c.id));
-      setTasks((prev) => prev.map((t) => t.id === id ? { ...t, categories: nextCategoryObjects } : t));
-      setSelectedItem((prev) => {
-        if (!prev || !("deadline" in prev) || prev.id !== id) return prev;
-        return { ...prev, categories: nextCategoryObjects };
-      });
-      try {
-        await taskService.updateTask(id, { categories: nextCategoryIds });
-      } catch (updateError) {
-        console.error(updateError);
-        await fetchTasks();
+  return { updateCategory, deleteCategory };
+};
+
+const useUpdateTaskCategoriesMutation = (
+  categories: Category[],
+  fetchTasks: UseCalendarMutationsProps["fetchTasks"],
+  setTasks: UseCalendarMutationsProps["setTasks"],
+  setSelectedItem: UseCalendarMutationsProps["setSelectedItem"],
+) =>
+  useCallback(async (id: number, nextCategoryIds: number[]): Promise<void> => {
+    const nextCategories = categories.filter((category) => nextCategoryIds.includes(category.id));
+    setTasks((previous) => previous.map((task) => (task.id === id ? { ...task, categories: nextCategories } : task)));
+    setSelectedItem((previous) => (!previous || !("deadline" in previous) || previous.id !== id ? previous : { ...previous, categories: nextCategories }));
+    try {
+      await taskService.updateTask(id, { categories: nextCategoryIds });
+    } catch (updateError) {
+      console.error(updateError);
+      await fetchTasks();
+    }
+  }, [categories, fetchTasks, setSelectedItem, setTasks]);
+
+const useToggleTaskCompleteMutation = (
+  tasksRef: MutableRefObject<Task[]>,
+  preference: Preference | null,
+  fetchTasks: UseCalendarMutationsProps["fetchTasks"],
+) => {
+  const completeSoundRef = useRef<HTMLAudioElement | null>(typeof Audio === "undefined" ? null : new Audio(completeSoundUrl));
+  return useCallback(async (taskId: number) => {
+    const task = tasksRef.current.find((entry) => entry.id === taskId);
+    if (!task) {
+      return;
+    }
+    try {
+      if (!task.completed && completeSoundRef.current && !calendarMutationHelpers.isSoundEffectsDisabled(preference)) {
+        completeSoundRef.current.currentTime = 0;
+        void completeSoundRef.current.play().catch(() => undefined);
       }
-    },
-    [categories, fetchTasks, setTasks, setSelectedItem],
-  );
+      await taskService.updateTask(taskId, calendarMutationHelpers.getTaskCompletionPatch(task));
+      await fetchTasks();
+    } catch (error) {
+      console.error(error);
+    }
+  }, [fetchTasks, preference, tasksRef]);
+};
 
-  const handleToggleTaskComplete = useCallback(
-    async (taskId: number) => {
-      const task = tasksRef.current.find((entry) => entry.id === taskId);
-      if (!task) return;
-
-      const isSoundDisabled = preference?.disable_sound_effects ?? (typeof window !== "undefined" && localStorage.getItem("disable_sound_effects") === "true");
-
-      try {
-        if (!task.completed && completeSoundRef.current && !isSoundDisabled) {
-          completeSoundRef.current.currentTime = 0;
-          void completeSoundRef.current.play().catch(() => undefined);
-        }
-        const nextCompleted = !task.completed;
-        await taskService.updateTask(taskId, {
-          completed: nextCompleted,
-          completed_minutes: nextCompleted ? task.estimated_minutes : 0,
-        });
-        await fetchTasks();
-      } catch (error) {
-        console.error(error);
-      }
-    },
-    [fetchTasks, preference?.disable_sound_effects],
-  );
+/**
+ * Provides task, event, category, import, export, and reschedule mutations.
+ * @param props - Mutation dependencies and state setters.
+ * @returns Calendar mutation handlers.
+ */
+export const useCalendarMutations = (props: UseCalendarMutationsProps) => {
+  const tasksRef = useTasksRef(props.tasks);
+  const submitTask = useTaskSubmissionMutation(props.selectedItem, props.preference, props.fetchTasks, props.closeSidebar);
+  const submitEvent = useEventSubmissionMutation(props.selectedItem, props.view, props.date, props.fetchEvents, props.closeSidebar);
+  const deleteSelected = useDeleteSelectedMutation(props.selectedItem, props.view, props.date, props.fetchTasks, props.fetchEvents, props.closeSidebar);
+  const revertSelectedEvent = useRevertSelectedEventMutation(props.selectedItem, props.view, props.date, props.fetchEvents, props.closeSidebar);
+  const rescheduleTasks = useRescheduleTasksMutation(props.tasks, props.preference, props.fetchTasks, props.setScheduleOrder, props.setIsRescheduling, props.setReschedulingError, props.setRescheduleWarnings);
+  const exportEvents = useExportEventsMutation(props.setIsExporting, props.setExportingError);
+  const importEvents = useImportEventsMutation(props.setIsImporting, props.setImportingError);
+  const createCategory = useCreateCategoryMutation(props.setCategories);
+  const categorySyncMutations = useCategorySyncMutations(props.setCategories, props.setTasks, props.setEvents);
+  const updateTaskCategories = useUpdateTaskCategoriesMutation(props.categories, props.fetchTasks, props.setTasks, props.setSelectedItem);
+  const handleToggleTaskComplete = useToggleTaskCompleteMutation(tasksRef, props.preference, props.fetchTasks);
 
   return {
     submitTask,
@@ -334,9 +331,8 @@ export const useCalendarMutations = (props: UseCalendarMutationsProps) => {
     exportEvents,
     importEvents,
     createCategory,
-    updateCategory,
-    deleteCategory,
+    ...categorySyncMutations,
     updateTaskCategories,
-    handleToggleTaskComplete
+    handleToggleTaskComplete,
   };
 };

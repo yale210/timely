@@ -65,36 +65,37 @@ const AssessmentModal = ({
     return null;
   }
 
-  const handleSubmit = async (event: FormEvent) => {
-    event.preventDefault();
-    setError(null);
-
+  const validateAssessmentForm = (): string | null => {
     if (!title.trim()) {
-      setError("Title is required.");
-      return;
+      return "Title is required.";
     }
     if (mode === "DEADLINE" && !dueDate) {
-      setError("Due date is required.");
-      return;
+      return "Due date is required.";
     }
-    if (mode === "EVENT") {
-      if (!eventStart || !eventEnd) {
-        setError("Start and end time are required when calendar event is enabled.");
-        return;
-      }
-      if (new Date(eventEnd).getTime() <= new Date(eventStart).getTime()) {
-        setError("Calendar event end time must be after start time.");
-        return;
-      }
+    if (mode !== "EVENT") {
+      return null;
     }
+    if (!eventStart || !eventEnd) {
+        return "Start and end time are required when calendar event is enabled.";
+    }
+    if (new Date(eventEnd).getTime() <= new Date(eventStart).getTime()) {
+        return "Calendar event end time must be after start time.";
+    }
+    return null;
+  };
 
-    const mergedCategories = [...new Set(
+
+
+  const getMergedCategories = (): number[] => {
+    return [...new Set(
       [assessmentCategoryId, moduleCategoryId]
         .filter((value): value is number => typeof value === "number"),
     )];
+  };
 
-    try {
-      await onSubmit({
+
+  const buildAssessmentSubmission = (): AssessmentSubmission => {
+    return {
         title: title.trim(),
         assessment_type: assessmentType,
         due_date: timezoneDateTimeLocalToIso(mode === "EVENT" ? eventStart : dueDate, userTimezone),
@@ -104,7 +105,7 @@ const AssessmentModal = ({
         reminder_offset: null,
         assessment_category: typeof assessmentCategoryId === "number" ? assessmentCategoryId : null,
         module_category: typeof moduleCategoryId === "number" ? moduleCategoryId : null,
-        categories: mergedCategories,
+        categories: getMergedCategories(),
         completed: assessment?.completed ?? false,
         event_details: mode === "EVENT"
           ? {
@@ -113,13 +114,29 @@ const AssessmentModal = ({
               location: eventLocation.trim(),
             }
           : null,
-      });
+      
+    };
+  };
 
+
+  const handleSubmit = async (event: FormEvent) => {
+    event.preventDefault();
+    setError(null);
+
+    const validationError = validateAssessmentForm();
+    if (validationError) {
+      setError(validationError);
+      return;
+    }
+
+    try {
+      await onSubmit(buildAssessmentSubmission());
       onClose();
     } catch (submitError) {
       setError(getSubmissionErrorMessage(submitError));
     }
-  };
+  }
+    
 
   return (
     <Transition show={isOpen} as={Fragment}>

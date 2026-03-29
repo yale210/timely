@@ -4,6 +4,9 @@ from django.http import HttpResponse
 from rest_framework import permissions
 from rest_framework.views import APIView
 
+from drf_spectacular.utils import extend_schema, OpenApiResponse
+from drf_spectacular.types import OpenApiTypes
+
 from core.models import Event
 
 
@@ -12,6 +15,15 @@ class ExportView(APIView):
 
     permission_classes = [permissions.IsAuthenticated]
 
+    @extend_schema(
+        request=None,
+        responses={
+            200: OpenApiResponse(
+                response=OpenApiTypes.STR,
+                description="iCalendar format text file download.",
+            ),
+        },
+    )
     def get(self, request):
         """Generate and return an iCalendar format text file for the user's events.
 
@@ -43,6 +55,12 @@ class ExportView(APIView):
         return response
 
     def append_calendar_meta_data(self):
+        """Initialise the calendar metadata for the export file.
+
+        Returns:
+            list[str]: A list of strings containing the iCalendar header lines.
+
+        """
         # Every file requires this metadata at the top, this is not any event
         lines = []
         lines.append("BEGIN:VCALENDAR")
@@ -53,6 +71,16 @@ class ExportView(APIView):
         return lines
 
     def append_event_data(self, lines, event):
+        """Serialise an event's data into iCalendar format and append to lines.
+
+        Args:
+            lines (list[str]): The current list of iCalendar lines.
+            event (Event): The event object to serialise.
+
+        Returns:
+            list[str]: The updated list of iCalendar lines including the new event.
+
+        """
         lines.append("BEGIN:VEVENT")
         # Event ID, this is just e + the event id in the DB e.g. e123
         lines.append(f"UID:e{event.id}")
@@ -71,6 +99,16 @@ class ExportView(APIView):
         return lines
 
     def append_recurrence_interval(self, lines, event):
+        """Append recurrence rules to the iCalendar lines if the event is recurring.
+
+        Args:
+            lines (list[str]): The current list of iCalendar lines.
+            event (Event): The event object to check for recurrence.
+
+        Returns:
+            list[str]: The updated list of iCalendar lines with recurrence rules.
+
+        """
         # Not None means that the event is recurring
         if event.recurrence_interval is not None:
             # None means repeat forever

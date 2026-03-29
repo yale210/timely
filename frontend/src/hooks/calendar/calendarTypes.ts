@@ -83,6 +83,49 @@ export interface UseCalendarReturn {
   actions: CalendarActions;
 }
 
+interface CalendarWindow {
+  start_date: string;
+  end_date: string;
+}
+type CalendarWindowUnit = "week" | "isoWeek";
+
+const formatWindow = (start: moment.Moment, end: moment.Moment): CalendarWindow => ({
+  start_date: start.format("YYYY-MM-DD"),
+  end_date: end.format("YYYY-MM-DD"),
+});
+
+const getMonthWindow = (anchor: moment.Moment, startOfWeekUnit: CalendarWindowUnit): CalendarWindow =>
+  formatWindow(
+    anchor.clone().startOf("month").startOf(startOfWeekUnit),
+    anchor.clone().endOf("month").endOf(startOfWeekUnit),
+  );
+
+const getWeekWindow = (anchor: moment.Moment, startOfWeekUnit: CalendarWindowUnit): CalendarWindow =>
+  formatWindow(anchor.clone().startOf(startOfWeekUnit), anchor.clone().endOf(startOfWeekUnit));
+
+const getDayWindow = (anchor: moment.Moment): CalendarWindow =>
+  formatWindow(anchor.clone().startOf("day"), anchor.clone().endOf("day"));
+
+const getAgendaWindow = (anchor: moment.Moment): CalendarWindow =>
+  formatWindow(anchor.clone().startOf("day"), anchor.clone().add(30, "days").endOf("day"));
+
+const resolveCalendarWindow = (
+  currentView: View,
+  anchor: moment.Moment,
+  startOfWeekUnit: CalendarWindowUnit,
+): CalendarWindow => {
+  if (currentView === Views.MONTH) {
+    return getMonthWindow(anchor, startOfWeekUnit);
+  }
+  if (currentView === Views.WEEK) {
+    return getWeekWindow(anchor, startOfWeekUnit);
+  }
+  if (currentView === Views.DAY) {
+    return getDayWindow(anchor);
+  }
+  return getAgendaWindow(anchor);
+};
+
 /**
  * Computes the inclusive date window to load for the current calendar view.
  * @param currentView - Active calendar view.
@@ -94,33 +137,15 @@ export const getCalendarWindow = (
   currentView: View,
   currentDate: Date,
   preference?: Preference | null,
-): { start_date: string; end_date: string } => {
+): CalendarWindow => {
   const activeTimezone = preference?.timezone ?? getStoredUserTimezone();
   const weekStartsOn = preference?.week_starts_on ?? getStoredWeekStartsOn();
   const anchor = moment(currentDate).tz(activeTimezone);
   const startOfWeekUnit = weekStartsOn === "monday" ? "isoWeek" : "week";
-  if (currentView === Views.MONTH) {
-    return {
-      start_date: anchor.clone().startOf("month").startOf(startOfWeekUnit).format("YYYY-MM-DD"),
-      end_date: anchor.clone().endOf("month").endOf(startOfWeekUnit).format("YYYY-MM-DD"),
-    };
+  if (currentView === Views.AGENDA) {
+    return formatWindow(anchor.clone().startOf("month"), anchor.clone().endOf("month"));
   }
-  if (currentView === Views.WEEK) {
-    return {
-      start_date: anchor.clone().startOf(startOfWeekUnit).format("YYYY-MM-DD"),
-      end_date: anchor.clone().endOf(startOfWeekUnit).format("YYYY-MM-DD"),
-    };
-  }
-  if (currentView === Views.DAY) {
-    return {
-      start_date: anchor.clone().startOf("day").format("YYYY-MM-DD"),
-      end_date: anchor.clone().endOf("day").format("YYYY-MM-DD"),
-    };
-  }
-  return {
-    start_date: anchor.clone().startOf("day").format("YYYY-MM-DD"),
-    end_date: anchor.clone().add(30, "days").endOf("day").format("YYYY-MM-DD"),
-  };
+  return resolveCalendarWindow(currentView, anchor, startOfWeekUnit);
 };
 
 /**
@@ -130,6 +155,9 @@ export const getCalendarWindow = (
  */
 export const getNavigationUnit = (view: View): "month" | "week" | "day" => {
   if (view === Views.MONTH) {
+    return "month";
+  }
+  if (view === Views.AGENDA) {
     return "month";
   }
   if (view === Views.DAY) {

@@ -31,7 +31,7 @@ class UserSeeder(BaseSeeder):
     def seed(self):
         """Execute the seeding process for users.
 
-        First creates users from defined fixtures, then generates 1000
+        First creates users from defined fixtures, then generates 250
         random users to provide a large dataset.
         """
         self._create_fixture_user()
@@ -71,6 +71,9 @@ class UserSeeder(BaseSeeder):
             username=username,
             defaults={
                 "email": email,
+                "is_staff": data["fields"].get("is_staff", False),
+                "is_superuser": data["fields"].get("is_superuser", False),
+                "is_active": True,
             },
         )
 
