@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react"
+import { useCallback, useEffect, useRef, useState } from "react"
 import { Routes, Route, useLocation } from "react-router-dom"
 import RequireAuth from "@/components/auth/RequireAuth"
 import RedirectAuth from "@/components/auth/RedirectAuth"
@@ -102,8 +102,9 @@ const useMobileRouteLoadingOverlay = (pathname: string) => {
   const [isLoading, setIsLoading] = useState(false);
   const hideTimeoutRef = useRef<number | null>(null);
   const fallbackTimeoutRef = useRef<number | null>(null);
+  const loadingStartPathRef = useRef<string | null>(null);
 
-  const clearTimers = () => {
+  const clearTimers = useCallback(() => {
     if (hideTimeoutRef.current !== null) {
       window.clearTimeout(hideTimeoutRef.current);
       hideTimeoutRef.current = null;
@@ -112,15 +113,17 @@ const useMobileRouteLoadingOverlay = (pathname: string) => {
       window.clearTimeout(fallbackTimeoutRef.current);
       fallbackTimeoutRef.current = null;
     }
-  };
+  }, []);
 
   useEffect(() => {
     const handleRouteLoadingStart = () => {
       if (!isMobileViewport()) return;
       clearTimers();
+      loadingStartPathRef.current = pathname;
       setIsLoading(true);
       fallbackTimeoutRef.current = window.setTimeout(() => {
         setIsLoading(false);
+        loadingStartPathRef.current = null;
         fallbackTimeoutRef.current = null;
       }, MOBILE_ROUTE_LOADING_FALLBACK_MS);
     };
@@ -130,13 +133,20 @@ const useMobileRouteLoadingOverlay = (pathname: string) => {
       clearTimers();
       window.removeEventListener(MOBILE_ROUTE_LOADING_EVENT, handleRouteLoadingStart);
     };
-  }, []);
+  }, [clearTimers, pathname]);
 
   useEffect(() => {
     if (!isLoading) return;
     if (!isMobileViewport()) {
       clearTimers();
-      setIsLoading(false);
+      loadingStartPathRef.current = null;
+      queueMicrotask(() => {
+        setIsLoading(false);
+      });
+      return;
+    }
+
+    if (loadingStartPathRef.current === pathname) {
       return;
     }
 
@@ -147,6 +157,7 @@ const useMobileRouteLoadingOverlay = (pathname: string) => {
 
     hideTimeoutRef.current = window.setTimeout(() => {
       setIsLoading(false);
+      loadingStartPathRef.current = null;
       hideTimeoutRef.current = null;
     }, MOBILE_ROUTE_LOADING_MIN_MS);
 
@@ -156,7 +167,7 @@ const useMobileRouteLoadingOverlay = (pathname: string) => {
         hideTimeoutRef.current = null;
       }
     };
-  }, [pathname, isLoading]);
+  }, [clearTimers, pathname, isLoading]);
 
   return isLoading;
 };
