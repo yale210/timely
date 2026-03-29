@@ -292,7 +292,7 @@ describe("Settings page", () => {
     fireEvent.click(screen.getByText("Save changes"));
 
     await waitFor(() => {
-      expect(screen.getByText("Please fix the highlighted fields.")).toBeInTheDocument();
+      expect(screen.getByText("Not an array")).toBeInTheDocument();
     });
   });
 
@@ -391,7 +391,9 @@ describe("Settings page", () => {
     renderSettings();
     fireEvent.click(screen.getByRole("button", { name: /scheduling/i }));
     await waitFor(() => {
-      expect(screen.getByText("Something went wrong")).toBeInTheDocument();
+      expect(
+        screen.getByText("The server is unavailable right now. Please try again in a moment."),
+      ).toBeInTheDocument();
     });
   });
 

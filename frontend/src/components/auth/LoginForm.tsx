@@ -2,10 +2,23 @@ import { useState, type FormEvent, type ReactNode } from "react"
 import { authService } from "@/services/authService"
 import { useNavigate } from "react-router-dom"
 import { getStoredDefaultLandingPagePath } from "@/utils/userPreferences";
+import { formatDjangoFormError } from "@/utils/apiErrors";
 
 interface LoginFormProps {
     children?: ReactNode
 }
+
+const LOGIN_FAILED_ERROR = "Login failed";
+
+const getLoginErrorMessage = (error: unknown): string => {
+  const parsed = formatDjangoFormError(error);
+
+  if (parsed.message !== "Something went wrong") {
+    return parsed.message;
+  }
+
+  return error instanceof Error ? error.message : LOGIN_FAILED_ERROR;
+};
 
 /**
  * A functional component that renders the login page.
@@ -32,8 +45,7 @@ export default function LoginForm({ children }: LoginFormProps ) {
         void navigate(getStoredDefaultLandingPagePath())
       })
       .catch((err: unknown) => {
-        const message = err instanceof Error ? err.message : "Login failed"
-        setError(message)
+        setError(getLoginErrorMessage(err))
       })
       .finally(() => {
         setLoading(false)
@@ -54,7 +66,7 @@ export default function LoginForm({ children }: LoginFormProps ) {
           <div className="mt-10 sm:mx-auto sm:w-full sm:max-w-sm">
             <form onSubmit={login} className="space-y-6">
               {error && (
-                <div className="rounded-md bg-red-50 p-3 text-sm text-red-700">
+                <div className="whitespace-pre-line rounded-md bg-red-50 p-3 text-sm text-red-700">
                   {error}
                 </div>
               )}
@@ -102,4 +114,3 @@ export default function LoginForm({ children }: LoginFormProps ) {
       </div>
   )
 }
-
