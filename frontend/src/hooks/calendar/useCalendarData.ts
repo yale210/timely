@@ -196,6 +196,9 @@ const useInitialCalendarLoad = (
   hasInitializedRef: MutableRefObject<boolean>,
 ) => {
   useEffect(() => {
+    if (hasInitializedRef.current) {
+      return;
+    }
     let isMounted = true;
     const initializedRef = hasInitializedRef;
     const initialise = async () => {
