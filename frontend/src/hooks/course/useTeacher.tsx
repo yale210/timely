@@ -15,7 +15,7 @@ interface UseTeacherResult extends UseTeacherState {
 }
 
 const noTokenState = () => ({teacher: null, loading: false, error: null})
-const successState = (teacher : Teacher) => ({teacher, loading : false, error: null})
+const successState = (teacher : Teacher | null) => ({teacher, loading : false, error: null})
 const errorState = (e: unknown) => ({teacher: null, loading: false, error : e instanceof Error && e.message? e.message : "you are not registered as a teacher"})
 
 /**
