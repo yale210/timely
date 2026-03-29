@@ -6,18 +6,53 @@ The project is designed to go beyond a basic to-do list by supporting automated 
 
 Production deployment: [timely.subhan.work](https://timely.subhan.work/)
 
+## Team name: It Worked On My Machine
+
+Members:
+- David Dudun
+- Harkaran (Mark) Bual
+- Mahdi Mustafa Razzaque
+- Mohammed Al-Amin
+- Muhammad Subhan Afzal
+- Patrick Sebastian Beckwith
+- Rashid Bin Shehzad
+- Thomas Richard Yale
+- Tommy Hoang
+- Valentino Garcia-Pianovszky
 
 ## Key Features
 
-- task creation, categorisation, tracking, and bulk deletion
-- automated task scheduling with configurable scheduling options
-- calendar management with recurring events and event scope updates
-- assessment tracking and gradebook views
-- friendship, sharing, leaderboard, and profile features
-- teacher-managed courses and course detail views
-- in-app notifications, push notifications, and admin broadcast tools
-- Pomodoro focus timer and weekly statistics
-- responsive React frontend backed by a Django REST API
+Academic planning and scheduling
+- task creation, categorisation, recurrence, and deadline tracking
+- automated scheduling with user-configurable working hours and category limits
+- manual rescheduling and unscheduling flows for task planning
+
+Calendar and event management
+- unified month, week, day, and agenda calendar views
+- one-off and recurring personal events
+- recurring-event override support for editing individual instances
+- import and export of calendar data
+
+Course and teaching tools
+- teacher registration and course management
+- course events that sync into enrolled students' calendars
+- join-code based course enrolment
+- assessments and gradebook tracking linked to courses
+
+Collaboration and social features
+- friend system and sharing flows
+- shared events and progress views
+- leaderboard and weekly comparative statistics
+
+Notifications and admin tooling
+- in-app notifications and push-notification support
+- broadcast notifications for admin users
+- asynchronous background processing with Celery and Redis
+
+Focus, analytics, and personalisation
+- Pomodoro timer
+- weekly statistics dashboard and analytics views
+- theme, font, timezone, and profile settings
 
 ## Architecture
 
@@ -68,7 +103,7 @@ If Nix is not available on your machine, use the manual Python + npm setup inste
 
 ## Alternative local setup: Python + npm
 
-Use this path if Nix is unavailable.
+Use this path if Nix is unavailable. The Nix path above is the least error-prone option because it sets the required local environment values automatically.
 
 #### Prerequisites
 
@@ -86,16 +121,34 @@ python -m venv venv
 source venv/bin/activate
 pip install -r backend/requirements.txt
 cp backend/.env.example backend/.env
-python backend/manage.py migrate
 ```
 
-The example environment file is at `backend/.env.example`.
+Windows PowerShell equivalents:
 
-For a lightweight local setup, use:
+```powershell
+python -m venv venv
+.\venv\Scripts\Activate.ps1
+pip install -r backend/requirements.txt
+Copy-Item backend/.env.example backend/.env
+```
+
+The example environment file is at [backend/.env.example](/D:/Coding/KCL/It-Worked-On-My-Machine/backend/.env.example). Before running migrations, edit `backend/.env` and set at minimum:
 
 - `POSTGRES=False`
-- SQLite database at the default local path
+- `SECRET_KEY` to any non-empty local development value
 - `REDIS_URL=redis://localhost:6379/0`
+
+If you want push notifications locally, also generate VAPID keys and populate:
+
+- `VAPID_PUBLIC_KEY`
+- `VAPID_PRIVATE_KEY`
+- `VAPID_ADMIN_EMAIL`
+
+Then run:
+
+```bash
+python backend/manage.py migrate
+```
 
 #### Frontend setup
 
@@ -135,10 +188,22 @@ python manage.py test
 Frontend tests:
 ```bash
 cd frontend
-npm test
+npm run test
 ```
 
-## External Libraries and Services
+## Reused Code, Libraries, and External Sources
+
+### Reused source code
+
+The team must complete this table before final submission for any code copied or adapted from tutorials, examples, documentation, prior projects, Stack Overflow, blog posts, or similar external sources.
+
+| File or path | Affected function / class / component | Source | Nature of reuse | Notes |
+| --- | --- | --- | --- | --- |
+| `TBC by team before submission` | `TBC` | `TBC` | `Copied / adapted / derived` | `Add every direct reused source code instance here.` |
+
+If there was no direct reuse of source code beyond third-party libraries, replace the placeholder row above with `None`.
+
+### External libraries and services
 
 This project depends on external libraries and frameworks including:
 
@@ -152,19 +217,49 @@ This project depends on external libraries and frameworks including:
 
 These packages are listed in `frontend/package.json` and `backend/requirements.txt`.
 
-### Libraries
-
 All third-party libraries used by Timely are declared in:
 
 - `frontend/package.json`
 - `backend/requirements.txt`
 
+Primary external services and infrastructure used by the project:
 
-
-## Limitations and Future Work
-
-
+- PostgreSQL for deployed relational data storage
+- Redis for Channels and Celery
+- Celery worker and Celery beat for asynchronous and scheduled jobs
+- Web Push / VAPID for browser push notifications
 
 ## AI Usage Disclosure
 
+The College requires every use of generative AI to be acknowledged in the README with the path, affected unit, approximate number of lines, and the proportion of generated code. The table below must be completed before submission using the exact categories from the handbook.
+
+Approved proportion labels:
+
+- `whole unit`
+- `more than 50% of the unit`
+- `about 50% of the unit`
+- `less than 50% of the unit`
+- `less than 10% of the unit`
+
+| File or path | Function / method / class / unit | Approximate lines | Proportion of generated code | AI system used | Purpose |
+| --- | --- | --- | --- | --- | --- |
+| `TBC by team before submission` | `TBC` | `TBC` | `TBC` | `TBC` | `Add every AI-assisted code contribution here.` |
+
+Non-code AI assistance used on this project should also be listed if relevant, for example documentation drafting or debugging assistance.
+
+## Limitations and Future Work
+
+- Local manual setup requires environment configuration, while the Nix path is the most reliable marker route.
+- Realtime and scheduled features depend on Redis and Celery, so they are not fully represented by a Django-only process.
+- Push notifications require valid VAPID keys and a compatible browser environment.
+- The team should continue consolidating large calendar and scheduling flows to reduce complexity in high-change areas.
+
+## Submission Checklist
+
+Before submission, confirm that:
+
+- the `Reused source code` table above is complete, or explicitly states `None`
+- the `AI Usage Disclosure` table above is complete for every AI-assisted code contribution
+- the manual setup steps have been tested from a clean machine or environment
+- the Nix quick-start path still runs without requiring markers to debug configuration issues
 
