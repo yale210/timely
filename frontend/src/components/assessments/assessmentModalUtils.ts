@@ -29,14 +29,24 @@ const flattenErrorMessages = (value: unknown): string[] => {
  * @returns A readable error message.
  */
 export const getSubmissionErrorMessage = (error: unknown): string => {
-  if (error && typeof error === "object" && "response" in error) {
-    const response = error.response;
-    if (response && typeof response === "object" && "data" in response) {
-      const messages = flattenErrorMessages(response.data);
-      if (messages.length > 0) {
-        return messages.join(" ");
-      }
+  if (!error || typeof error !== "object" || !("response" in error)) {
+    if (error instanceof Error && error.message) {
+      return error.message;
     }
+    return "Failed to save assessment.";
+  }
+
+  const response = error.response;
+  if (!response || typeof response !== "object" || !("data" in response)) {
+    if (error instanceof Error && error.message) {
+      return error.message;
+    }
+    return "Failed to save assessment.";
+  }
+
+  const messages = flattenErrorMessages(response.data);
+  if (messages.length > 0) {
+    return messages.join(" ");
   }
   if (error instanceof Error && error.message) {
     return error.message;
