@@ -42,8 +42,56 @@ import {
   setStoredTimeFormat,
   setStoredWeekStartsOn,
 } from "@/utils/userPreferences";
+import type { Preference } from "@/types";
 
 const PUBLIC_ROUTES = ["/login", "/signup", "/", "/about"]
+
+const resetStoredPreferenceBootstrap = () => {
+  resetStoredUserTimezone();
+  resetStoredUserPreferences();
+};
+
+const applyStoredPreferenceBootstrap = (preference: Preference) => {
+  setStoredUserTimezone(preference.timezone);
+  setStoredDefaultLandingPage(preference.default_landing_page ?? "dashboard");
+  setStoredWeekStartsOn(preference.week_starts_on ?? "monday");
+  setStoredTimeFormat(preference.time_format ?? "24h");
+};
+
+const syncStoredPreferenceBootstrap = async (isMounted: () => boolean) => {
+  if (!authStore.getToken()) {
+    resetStoredPreferenceBootstrap();
+    return;
+  }
+
+  try {
+    const preference = await preferenceService.getMyPreference();
+    if (isMounted()) {
+      applyStoredPreferenceBootstrap(preference);
+    }
+  } catch {
+    if (isMounted()) {
+      resetStoredPreferenceBootstrap();
+    }
+  }
+};
+
+const useStoredPreferenceBootstrap = () => {
+  useEffect(() => {
+    let isMounted = true;
+    const handleAuthChange = () => {
+      void syncStoredPreferenceBootstrap(() => isMounted);
+    };
+
+    handleAuthChange();
+    window.addEventListener(AUTH_CHANGE_EVENT, handleAuthChange);
+
+    return () => {
+      isMounted = false;
+      window.removeEventListener(AUTH_CHANGE_EVENT, handleAuthChange);
+    };
+  }, []);
+};
 
 /**
  * The root component of the application which organises the routing logic.
@@ -51,6 +99,7 @@ const PUBLIC_ROUTES = ["/login", "/signup", "/", "/about"]
  */
 export default function App() {
   const location = useLocation()
+  useStoredPreferenceBootstrap();
 
   useEffect(() => {
     // Public entry routes intentionally keep the default theme/font instead of user preferences.
@@ -70,45 +119,6 @@ export default function App() {
       document.documentElement.dataset.font = "poppins"
     }
   }, [location.pathname])
-
-  useEffect(() => {
-    let isMounted = true;
-
-    const syncUserTimezone = async () => {
-      if (!authStore.getToken()) {
-        resetStoredUserTimezone();
-        resetStoredUserPreferences();
-        return;
-      }
-
-      try {
-        const preference = await preferenceService.getMyPreference();
-        if (isMounted) {
-          setStoredUserTimezone(preference.timezone);
-          setStoredDefaultLandingPage(preference.default_landing_page ?? "dashboard");
-          setStoredWeekStartsOn(preference.week_starts_on ?? "monday");
-          setStoredTimeFormat(preference.time_format ?? "24h");
-        }
-      } catch {
-        if (isMounted) {
-          resetStoredUserTimezone();
-          resetStoredUserPreferences();
-        }
-      }
-    };
-
-    const handleAuthChange = () => {
-      void syncUserTimezone();
-    };
-
-    void syncUserTimezone();
-    window.addEventListener(AUTH_CHANGE_EVENT, handleAuthChange);
-
-    return () => {
-      isMounted = false;
-      window.removeEventListener(AUTH_CHANGE_EVENT, handleAuthChange);
-    };
-  }, []);
 
   return (
     <Routes>
