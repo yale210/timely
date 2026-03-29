@@ -307,7 +307,7 @@ describe("calendar interaction helpers", () => {
         new Date("2026-04-03T09:00:00.000Z"),
         new Date("2026-04-03T09:30:00.000Z"),
       ],
-    });
+    }, "UTC");
 
     expect(draft).toMatchObject({
       id: 0,
@@ -320,7 +320,7 @@ describe("calendar interaction helpers", () => {
     const fallbackDraft = buildDraftCalendarEvent({
       start: new Date("2026-04-03T09:00:00.000Z"),
       end: new Date("2026-04-03T08:00:00.000Z"),
-    });
+    }, "UTC");
 
     expect(fallbackDraft.end_time).toBe("2026-04-03T10:00:00.000Z");
   });

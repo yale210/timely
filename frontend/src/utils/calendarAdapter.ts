@@ -1,5 +1,6 @@
 import moment from "moment";
 import type { Category, Event, Task } from "@/types";
+import { toCalendarDisplayDate } from "@/utils/calendarDisplayTime";
 
 /**
  * Represents a calendar event rendered by react-big-calendar.
@@ -27,6 +28,7 @@ interface BuildCalendarEntriesOptions {
   tasks: Task[];
   events: Event[];
   scheduleOrder: Record<number, number>;
+  timeZone: string;
 }
 
 const getRenderableEnd = (startValue: string, endValue: string): Date => {
@@ -45,12 +47,13 @@ const buildTaskEntry = (
   index: number,
   allocationCount: number,
   scheduleOrder: Record<number, number>,
+  timeZone: string,
 ): CalendarEntry => ({
   id: `task-${task.id}-${index}`,
   title: task.title,
-  start: new Date(slot.start),
-  end: getRenderableEnd(slot.start, slot.end),
-  actualEnd: new Date(slot.end),
+  start: toCalendarDisplayDate(slot.start, timeZone),
+  end: toCalendarDisplayDate(getRenderableEnd(slot.start, slot.end), timeZone),
+  actualEnd: toCalendarDisplayDate(slot.end, timeZone),
   allDay: moment(slot.end).diff(moment(slot.start), "hours") >= 24,
   kind: "task",
   sourceId: task.id,
@@ -65,19 +68,20 @@ const buildTaskEntry = (
 const buildTaskEntriesForTask = (
   task: Task,
   scheduleOrder: Record<number, number>,
+  timeZone: string,
 ): CalendarEntry[] => {
   const allocations = task.allocation ?? [];
   return allocations.map((slot, index) =>
-    buildTaskEntry(task, slot, index, allocations.length, scheduleOrder),
+    buildTaskEntry(task, slot, index, allocations.length, scheduleOrder, timeZone),
   );
 };
 
-const buildEventEntry = (event: Event): CalendarEntry => ({
+const buildEventEntry = (event: Event, timeZone: string): CalendarEntry => ({
   id: event.instance_id ?? `event-${event.id}-${event.start_time}`,
   title: event.title,
-  start: new Date(event.start_time),
-  end: getRenderableEnd(event.start_time, event.end_time),
-  actualEnd: new Date(event.end_time),
+  start: toCalendarDisplayDate(event.start_time, timeZone),
+  end: toCalendarDisplayDate(getRenderableEnd(event.start_time, event.end_time), timeZone),
+  actualEnd: toCalendarDisplayDate(event.end_time, timeZone),
   allDay: false,
   kind: "event",
   sourceId: event.id,
@@ -94,15 +98,16 @@ const buildEventEntry = (event: Event): CalendarEntry => ({
 export const buildTaskCalendarEntries = (
   tasks: Task[],
   scheduleOrder: Record<number, number>,
-): CalendarEntry[] => tasks.flatMap((task) => buildTaskEntriesForTask(task, scheduleOrder));
+  timeZone: string,
+): CalendarEntry[] => tasks.flatMap((task) => buildTaskEntriesForTask(task, scheduleOrder, timeZone));
 
 /**
  * Maps API events into react-big-calendar event entries.
  * @param events - Events returned from the API.
  * @returns Calendar event entries.
  */
-export const buildEventCalendarEntries = (events: Event[]): CalendarEntry[] =>
-  events.map((event) => buildEventEntry(event));
+export const buildEventCalendarEntries = (events: Event[], timeZone: string): CalendarEntry[] =>
+  events.map((event) => buildEventEntry(event, timeZone));
 
 /**
  * Maps task allocations and calendar events into react-big-calendar entries.
@@ -116,7 +121,8 @@ export const buildCalendarEntries = ({
   tasks,
   events,
   scheduleOrder,
+  timeZone,
 }: BuildCalendarEntriesOptions): CalendarEntry[] => [
-  ...buildTaskCalendarEntries(tasks, scheduleOrder),
-  ...buildEventCalendarEntries(events),
+  ...buildTaskCalendarEntries(tasks, scheduleOrder, timeZone),
+  ...buildEventCalendarEntries(events, timeZone),
 ];

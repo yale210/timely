@@ -52,6 +52,7 @@ describe("buildCalendarEntries", () => {
       tasks,
       events,
       scheduleOrder: { 1: 0 },
+      timeZone: "Europe/London",
     });
 
     expect(entries).toHaveLength(2);
@@ -98,6 +99,7 @@ describe("buildCalendarEntries", () => {
       ],
       events: [],
       scheduleOrder: {},
+      timeZone: "Europe/London",
     });
 
     expect(entries).toHaveLength(2);
@@ -140,7 +142,7 @@ describe("buildCalendarEntries", () => {
       },
     ];
 
-    expect(buildTaskCalendarEntries(tasks, { 5: 3 })).toMatchObject([
+    expect(buildTaskCalendarEntries(tasks, { 5: 3 }, "Europe/London")).toMatchObject([
       {
         id: "task-5-0",
         split: true,
@@ -152,7 +154,7 @@ describe("buildCalendarEntries", () => {
         scheduleIndex: 3,
       },
     ]);
-    expect(buildEventCalendarEntries(events)).toMatchObject([
+    expect(buildEventCalendarEntries(events, "Europe/London")).toMatchObject([
       {
         id: "event-6-2026-02-12T12:00:00.000Z",
         kind: "event",

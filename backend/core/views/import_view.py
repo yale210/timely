@@ -403,8 +403,8 @@ class ImportView(APIView):
             r_rule_dictionary = {}
 
             for part in parts_of_r_rule:
-                k, v = part.split("=")
-                r_rule_dictionary[k] = v
+                key, value = part.split("=")
+                r_rule_dictionary[key] = value
 
             frequency_interval = r_rule_dictionary.get("FREQ")
 

@@ -284,20 +284,23 @@ export const getStaff = async (id: number): Promise<CourseStaff[]> => {
 
 /**
  * Retrieves the current teacher's information from the server.
- * This asynchronous function makes a network request to the `/api/teachers/me/`
- * endpoint to fetch data about the current teacher.
- * If the API responds with a 200 "You are not registered as a teacher", the function
- * returns null instead of treating it as an error.
- * @returns A promise that resolves to the teacher's information, or null if
- * the current user is not a teacher.
+ * This asynchronous function makes a network request to the `/api/teachers/`
+ * endpoint, then selects the current user's teacher record from the returned list.
+ * @returns A promise that resolves to the current teacher's information, or null if
+ * the current user is not an active teacher.
  */
 export const getCurrentTeacher = async (): Promise<Teacher | null> => {
-  const response = await api.get<Teacher | null>("/api/teachers/me/");
-  if(response.data && "detail" in response.data && response.data.detail === "You are not registered as a teacher.") {
+  const currentUserId = getCurrentUserId();
+
+  if (currentUserId === null) {
     return null;
   }
-  return response.data;
-}
+
+  const response = await api.get<Teacher[]>("/api/teachers/");
+  return response.data.find(
+    (teacherEntry) => teacherEntry.user_id === Number(currentUserId),
+  ) ?? null;
+};
 /**
  * Generates a join code for a specified course.
  * @param id - The unique identifier of the course.

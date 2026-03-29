@@ -4,6 +4,7 @@ import { useCalendarData } from "./useCalendarData";
 import { useCalendarInteractions } from "./useCalendarInteractions";
 import { useCalendarMutations } from "./useCalendarMutations";
 import { buildCalendarEntries } from "@/utils/calendarAdapter";
+import { getStoredUserTimezone } from "@/utils/userTimezone";
 import type { UseCalendarReturn } from "./calendarTypes";
 
 export { isOutsidePreferredDayWindow } from "./calendarTypes";
@@ -13,10 +14,11 @@ const useCalendarEntries = (
   tasks: UseCalendarReturn["state"]["tasks"],
   events: UseCalendarReturn["state"]["events"],
   scheduleOrder: UseCalendarReturn["state"]["scheduleOrder"],
+  timeZone: string,
 ) =>
   useMemo(
-    () => buildCalendarEntries({ tasks, events, scheduleOrder }),
-    [events, scheduleOrder, tasks],
+    () => buildCalendarEntries({ tasks, events, scheduleOrder, timeZone }),
+    [events, scheduleOrder, tasks, timeZone],
   );
 
 const getInteractionProps = (
@@ -75,10 +77,12 @@ const buildCalendarActions = (
 export const useCalendar = (): UseCalendarReturn => {
   const stateHook = useCalendarState();
   const dataHook = useCalendarData(stateHook.state.view, stateHook.state.date);
+  const activeTimezone = dataHook.state.preference?.timezone ?? getStoredUserTimezone();
   const calendarEntries = useCalendarEntries(
     dataHook.state.tasks,
     dataHook.state.events,
     stateHook.state.scheduleOrder,
+    activeTimezone,
   );
   const interactionsHook = useCalendarInteractions(getInteractionProps(stateHook, dataHook));
   const mutationsHook = useCalendarMutations(

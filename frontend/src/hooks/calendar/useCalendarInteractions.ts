@@ -5,13 +5,16 @@ import { normalizeInteractionEnd, normalizeInteractionStart } from "./calendarTy
 import * as eventService from "@/services/eventService";
 import * as taskService from "@/services/taskService";
 import type { CalendarEntry } from "@/utils/calendarAdapter";
-import type { Event, EventMutationContext, Task } from "@/types";
+import { fromCalendarDisplayDate } from "@/utils/calendarDisplayTime";
+import { getStoredUserTimezone } from "@/utils/userTimezone";
+import type { Event, EventMutationContext, Preference, Task } from "@/types";
 
 interface UseCalendarInteractionsProps {
   tasks: Task[];
   events: Event[];
   isSidebarOpen: boolean;
   scheduleOrder: Record<number, number>;
+  preference: Preference | null;
   view: View;
   date: Date;
   setTasks: Dispatch<SetStateAction<Task[]>>;
@@ -58,11 +61,20 @@ const createDraftEvent = (start: Date, end: Date): Event => ({
   categories: [],
 });
 
-const getSlotRange = (slot: CalendarSelectionSlot): { start: Date; end: Date } => {
-  const start = slot.slots?.[0] ?? slot.start;
-  const selectedEnd = slot.slots?.at(-1) ?? slot.end ?? start;
-  const end = selectedEnd > start ? selectedEnd : new Date(start.getTime() + 60 * 60 * 1000);
-  return { start, end };
+const getSlotRange = (
+  slot: CalendarSelectionSlot,
+  activeTimezone: string,
+): { start: Date; end: Date } => {
+  const displayStart = slot.slots?.[0] ?? slot.start;
+  const selectedDisplayEnd = slot.slots?.at(-1) ?? slot.end ?? displayStart;
+  const normalizedDisplayEnd = selectedDisplayEnd > displayStart
+    ? selectedDisplayEnd
+    : new Date(displayStart.getTime() + 60 * 60 * 1000);
+
+  return {
+    start: fromCalendarDisplayDate(displayStart, activeTimezone),
+    end: fromCalendarDisplayDate(normalizedDisplayEnd, activeTimezone),
+  };
 };
 
 const clearScheduleOrderIfNeeded = (
@@ -92,8 +104,8 @@ const findTaskByEntry = (tasks: Task[], entry: CalendarEntry): Task | undefined 
   tasks.find((item) => item.id === entry.sourceId);
 
 const findEventByEntry = (events: Event[], entry: CalendarEntry): Event | undefined =>
-  entry.eventData ??
-  events.find((item) => item.id === entry.sourceId && item.start_time === entry.start.toISOString());
+  entry.eventData
+  ?? events.find((item) => item.id === entry.sourceId && item.start_time === entry.eventData?.start_time);
 
 const buildEventMutationContext = (eventData: Event): EventMutationContext | undefined =>
   eventData.recurrence_interval
@@ -129,13 +141,11 @@ const updateOptimisticEvents = (
     return isRecurringInstance || isSingleEvent ? { ...item, ...payload } : item;
   });
 
-/**
- * Builds an empty calendar event draft from a selected slot range.
- * @param slot - Selected calendar slot payload.
- * @returns Draft event for the sidebar form.
- */
-export const buildDraftCalendarEvent = (slot: CalendarSelectionSlot): Event => {
-  const range = getSlotRange(slot);
+export const buildDraftCalendarEvent = (
+  slot: CalendarSelectionSlot,
+  activeTimezone = getStoredUserTimezone(),
+): Event => {
+  const range = getSlotRange(slot, activeTimezone);
   return createDraftEvent(range.start, range.end);
 };
 
@@ -170,6 +180,7 @@ const useSlotSelectionAction = (
   setSidebarMode: UseCalendarInteractionsProps["setSidebarMode"],
   setSelectedItem: UseCalendarInteractionsProps["setSelectedItem"],
   setIsSidebarOpen: UseCalendarInteractionsProps["setIsSidebarOpen"],
+  activeTimezone: string,
 ) =>
   useCallback(
     (slot: CalendarSelectionSlot) => {
@@ -177,10 +188,10 @@ const useSlotSelectionAction = (
         return;
       }
       setSidebarMode("event");
-      setSelectedItem(buildDraftCalendarEvent(slot));
+      setSelectedItem(buildDraftCalendarEvent(slot, activeTimezone));
       setIsSidebarOpen(true);
     },
-    [setIsSidebarOpen, setSelectedItem, setSidebarMode, stateRef],
+    [activeTimezone, setIsSidebarOpen, setSelectedItem, setSidebarMode, stateRef],
   );
 
 const useEntrySelectionAction = (
@@ -222,6 +233,7 @@ const useTaskAllocationUpdater = (
   setScheduleOrder: UseCalendarInteractionsProps["setScheduleOrder"],
   setTasks: UseCalendarInteractionsProps["setTasks"],
   fetchTasks: UseCalendarInteractionsProps["fetchTasks"],
+  activeTimezone: string,
 ) =>
   useCallback(
     async (entry: CalendarEntry, start: Date, end: Date) => {
@@ -233,7 +245,9 @@ const useTaskAllocationUpdater = (
         return;
       }
       clearTaskScheduleAnimation(task.id, setScheduleOrder);
-      const nextAllocations = replaceTaskAllocationSlot(task, entry.allocationIndex, start, end);
+      const actualStart = fromCalendarDisplayDate(start, activeTimezone);
+      const actualEnd = fromCalendarDisplayDate(end, activeTimezone);
+      const nextAllocations = replaceTaskAllocationSlot(task, entry.allocationIndex, actualStart, actualEnd);
       setTasks((previous) => previous.map((item) => (item.id === task.id ? { ...item, allocation: nextAllocations } : item)));
       try {
         await taskService.updateTask(task.id, { allocation: nextAllocations });
@@ -242,13 +256,14 @@ const useTaskAllocationUpdater = (
         await fetchTasks();
       }
     },
-    [fetchTasks, setScheduleOrder, setTasks, stateRef],
+    [activeTimezone, fetchTasks, setScheduleOrder, setTasks, stateRef],
   );
 
 const useCalendarEventUpdater = (
   stateRef: MutableRefObject<InteractionStateSnapshot>,
   setEvents: UseCalendarInteractionsProps["setEvents"],
   fetchEvents: UseCalendarInteractionsProps["fetchEvents"],
+  activeTimezone: string,
 ) =>
   useCallback(
     async (entry: CalendarEntry, start: Date, end: Date) => {
@@ -256,7 +271,9 @@ const useCalendarEventUpdater = (
       if (!eventData) {
         return;
       }
-      const payload = buildEventTimePatch(start, end);
+      const actualStart = fromCalendarDisplayDate(start, activeTimezone);
+      const actualEnd = fromCalendarDisplayDate(end, activeTimezone);
+      const payload = buildEventTimePatch(actualStart, actualEnd);
       setEvents((previous) => updateOptimisticEvents(previous, eventData, payload));
       try {
         await eventService.updateEvent(eventData.id, payload, buildEventMutationContext(eventData));
@@ -265,7 +282,7 @@ const useCalendarEventUpdater = (
       }
       await fetchEvents(stateRef.current.view, stateRef.current.date);
     },
-    [fetchEvents, setEvents, stateRef],
+    [activeTimezone, fetchEvents, setEvents, stateRef],
   );
 
 const useCalendarEntryInteractionHandler = (
@@ -288,19 +305,26 @@ const useCalendarEntryInteractionHandler = (
     [setScheduleOrder, stateRef, updateCalendarEvent, updateTaskAllocation],
   );
 
-/**
- * Builds user interaction handlers for the calendar surface.
- * @param props - Interaction dependencies and state setters.
- * @returns Calendar selection and drag/drop handlers.
- */
 export const useCalendarInteractions = (props: UseCalendarInteractionsProps) => {
+  const activeTimezone = props.preference?.timezone ?? getStoredUserTimezone();
   const stateRef = useInteractionStateRef(props);
   const closeSidebar = useCloseSidebarAction(props.setIsSidebarOpen, props.setSelectedItem, props.setSidebarMode);
-  const selectSlot = useSlotSelectionAction(stateRef, props.setSidebarMode, props.setSelectedItem, props.setIsSidebarOpen);
+  const selectSlot = useSlotSelectionAction(stateRef, props.setSidebarMode, props.setSelectedItem, props.setIsSidebarOpen, activeTimezone);
   const selectEntry = useEntrySelectionAction(stateRef, props.setSidebarMode, props.setSelectedItem, props.setIsSidebarOpen);
   const openCreateSidebar = useCreateSidebarAction(props.setSidebarMode, props.setSelectedItem, props.setIsSidebarOpen);
-  const updateTaskAllocation = useTaskAllocationUpdater(stateRef, props.setScheduleOrder, props.setTasks, props.fetchTasks);
-  const updateCalendarEvent = useCalendarEventUpdater(stateRef, props.setEvents, props.fetchEvents);
+  const updateTaskAllocation = useTaskAllocationUpdater(
+    stateRef,
+    props.setScheduleOrder,
+    props.setTasks,
+    props.fetchTasks,
+    activeTimezone,
+  );
+  const updateCalendarEvent = useCalendarEventUpdater(
+    stateRef,
+    props.setEvents,
+    props.fetchEvents,
+    activeTimezone,
+  );
   const handleEntryInteraction = useCalendarEntryInteractionHandler(
     stateRef,
     props.setScheduleOrder,

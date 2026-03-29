@@ -8,7 +8,8 @@ const getSelectedTask = (selectedItem: Task | Event | undefined): Task | null =>
 const getSelectedEvent = (selectedItem: Task | Event | undefined): Event | null =>
   selectedItem && "end_time" in selectedItem ? selectedItem : null;
 
-const getTaskRescheduleDate = (date: Date): string => moment(date).format("YYYY-MM-DD");
+const getTaskRescheduleDate = (preference: Preference | null): string =>
+  moment().tz(preference?.timezone ?? moment.tz.guess()).format("YYYY-MM-DD");
 
 const hasTaskAllocations = (task: Task): boolean => (task.allocation?.length ?? 0) > 0;
 
@@ -43,21 +44,25 @@ const isSoundEffectsDisabled = (preference: Preference | null): boolean =>
 const saveTaskSubmission = async (
   selectedTask: Task | null,
   data: TaskSubmission,
-  date: Date,
+  preference: Preference | null,
 ) => {
   if (!selectedTask || selectedTask.id === 0) {
     await taskService.createTask(data);
     return;
   }
   if (shouldRescheduleTaskSave(selectedTask, data)) {
-    await taskService.saveAndRescheduleTask(selectedTask.id, data, getTaskRescheduleDate(date));
+    await taskService.saveAndRescheduleTask(selectedTask.id, data, getTaskRescheduleDate(preference));
     return;
   }
   await taskService.updateTask(selectedTask.id, data);
 };
 
-const retryTaskRescheduleSave = async (selectedTask: Task, data: TaskSubmission, date: Date) =>
-  taskService.saveAndRescheduleTask(selectedTask.id, data, getTaskRescheduleDate(date));
+const retryTaskRescheduleSave = async (
+  selectedTask: Task,
+  data: TaskSubmission,
+  preference: Preference | null,
+) =>
+  taskService.saveAndRescheduleTask(selectedTask.id, data, getTaskRescheduleDate(preference));
 
 /**
  * Determines whether editing a persisted task should trigger save-and-reschedule.

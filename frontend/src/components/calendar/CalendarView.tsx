@@ -5,10 +5,17 @@ import withDragAndDrop from "react-big-calendar/lib/addons/dragAndDrop";
 import { DndProvider } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
 import type { UseCalendarReturn } from "@/hooks/calendar/useCalendar";
-import { isOutsidePreferredDayWindow } from "@/hooks/calendar/useCalendar";
 import type { CalendarEntry } from "@/utils/calendarAdapter";
 import { useCalendarLocalizer } from "@/utils/calendarLocalizer";
 import { getOverrideColour, hexToRgba } from "@/utils/colorUtils";
+import {
+  CALENDAR_DISPLAY_TIMEZONE,
+  formatCalendarDisplayTime,
+  fromCalendarDisplayDate,
+  getCalendarDisplayDayOfWeek,
+  getCalendarDisplayMinutes,
+  toCalendarDisplayDate,
+} from "@/utils/calendarDisplayTime";
 import { getStoredTimeFormat, getStoredWeekStartsOn } from "@/utils/userPreferences";
 import { getStoredUserTimezone, getZonedDateParts } from "@/utils/userTimezone";
 
@@ -29,23 +36,19 @@ interface CalendarViewProps {
   >;
 }
 
+const parseClockMinutes = (value: string): number => {
+  const [hourRaw, minuteRaw] = value.split(":");
+  const hour = Number.parseInt(hourRaw ?? "0", 10);
+  const minute = Number.parseInt(minuteRaw ?? "0", 10);
+  if (Number.isNaN(hour) || Number.isNaN(minute)) {
+    return 0;
+  }
+  return (hour * 60) + minute;
+};
+
 type CalendarEntryStyle = CSSProperties & { "--event-stripe-color"?: string };
 
-const formatEventTime = (dateValue: Date, timeFormat: "24h" | "12h") => {
-  if (timeFormat === "24h") {
-    return `${String(dateValue.getHours()).padStart(2, "0")}:${String(dateValue.getMinutes()).padStart(2, "0")}`;
-  }
-  const hours24 = dateValue.getHours();
-  const minutes = dateValue.getMinutes();
-  const isPm = hours24 >= 12;
-  const hours12 = hours24 % 12 === 0 ? 12 : hours24 % 12;
-  const suffix = isPm ? "pm" : "am";
-  if (minutes === 0) {
-    return `${hours12}${suffix}`;
-  }
-  const padded = String(minutes).padStart(2, "0");
-  return `${hours12}:${padded}${suffix}`;
-};
+const formatEventTime = formatCalendarDisplayTime;
 
 const getEventTimeLabel = (event: CalendarEntry, timeFormat: "24h" | "12h") => {
   const actualEnd = event.actualEnd ?? event.end;
@@ -248,8 +251,23 @@ const CalendarView = ({
   actions,
 }: CalendarViewProps) => {
   const calendarShellRef = useRef<HTMLDivElement | null>(null);
-  const localizer = useCalendarLocalizer();
+  const localizer = useCalendarLocalizer(CALENDAR_DISPLAY_TIMEZONE);
   const activeTimezone = state.preference?.timezone ?? getStoredUserTimezone();
+  const displayDate = useMemo(
+    () => toCalendarDisplayDate(state.date, activeTimezone),
+    [activeTimezone, state.date],
+  );
+  const calendarDate = useMemo(() => {
+    if (state.view !== Views.AGENDA) {
+      return displayDate;
+    }
+
+    return moment.utc(displayDate).startOf("month").toDate();
+  }, [displayDate, state.view]);
+  const agendaLength = useMemo(
+    () => (state.view === Views.AGENDA ? moment.utc(calendarDate).daysInMonth() : undefined),
+    [calendarDate, state.view],
+  );
   const dragSnapMinutes = state.preference?.drag_snap_minutes ?? DEFAULT_DRAG_SNAP_MINUTES;
   const dragSnapTimeslots = 60 / dragSnapMinutes;
   const timeFormat = state.preference?.time_format ?? getStoredTimeFormat();
@@ -328,14 +346,39 @@ const CalendarView = ({
   }, []);
 
   const slotPropGetter = useCallback((slotDate: Date) => {
-    if (
-      (state.view !== Views.WEEK && state.view !== Views.DAY) ||
-      !isOutsidePreferredDayWindow(slotDate, state.preference)
-    ) {
+    if ((state.view !== Views.WEEK && state.view !== Views.DAY) || !state.preference) {
       return {};
     }
+
+    const dayOfWeek = getCalendarDisplayDayOfWeek(slotDate);
+    const dayKey = dayOfWeek === 0 ? 7 : dayOfWeek;
+    const schedule = state.preference.day_schedule ?? [];
+    const daySchedule = schedule.find((item) => item.day === dayKey);
+    const windowStart = parseClockMinutes(daySchedule?.start ?? state.preference.day_start);
+    const windowEnd = parseClockMinutes(daySchedule?.end ?? state.preference.day_end);
+    const slotMinutes = getCalendarDisplayMinutes(slotDate);
+
+    if (windowStart === windowEnd) {
+      return {};
+    }
+
+    const outsideWindow = windowStart < windowEnd
+      ? slotMinutes < windowStart || slotMinutes >= windowEnd
+      : slotMinutes >= windowEnd && slotMinutes < windowStart;
+
+    if (!outsideWindow) {
+      return {};
+    }
+
     return { className: "calendar-off-hours-slot" };
-  }, [state.view, state.preference]);
+  }, [state.preference, state.view]);
+
+  const handleNavigate = useCallback((nextDisplayDate: Date) => {
+    const normalizedDisplayDate = state.view === Views.AGENDA
+      ? moment.utc(nextDisplayDate).startOf("month").toDate()
+      : nextDisplayDate;
+    actions.setDate(fromCalendarDisplayDate(normalizedDisplayDate, activeTimezone));
+  }, [actions, activeTimezone, state.view]);
 
   const formats = useMemo<Formats>(() => {
     const timeLabel = timeFormat === "24h" ? "HH:mm" : "h:mm A";
@@ -368,8 +411,9 @@ const CalendarView = ({
             events={state.calendarEntries}
             view={state.view}
             onView={actions.setView}
-            date={state.date}
-            onNavigate={actions.setDate}
+            date={calendarDate}
+            onNavigate={handleNavigate}
+            length={agendaLength}
             step={dragSnapMinutes}
             timeslots={dragSnapTimeslots}
             slotPropGetter={slotPropGetter}

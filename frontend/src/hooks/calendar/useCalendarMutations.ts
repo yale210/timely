@@ -46,7 +46,7 @@ const useTasksRef = (tasks: Task[]): MutableRefObject<Task[]> => {
 
 const useTaskSubmissionMutation = (
   selectedItem: Task | Event | undefined,
-  date: Date,
+  preference: Preference | null,
   fetchTasks: UseCalendarMutationsProps["fetchTasks"],
   closeSidebar: UseCalendarMutationsProps["closeSidebar"],
 ) =>
@@ -54,7 +54,7 @@ const useTaskSubmissionMutation = (
     async (data: TaskSubmission) => {
       const selectedTask = calendarMutationHelpers.getSelectedTask(selectedItem);
       try {
-        await calendarMutationHelpers.saveTaskSubmission(selectedTask, data, date);
+        await calendarMutationHelpers.saveTaskSubmission(selectedTask, data, preference);
         await fetchTasks();
         closeSidebar();
       } catch (error) {
@@ -62,12 +62,12 @@ const useTaskSubmissionMutation = (
           console.error(error);
           throw error;
         }
-        await calendarMutationHelpers.retryTaskRescheduleSave(selectedTask, data, date);
+        await calendarMutationHelpers.retryTaskRescheduleSave(selectedTask, data, preference);
         await fetchTasks();
         closeSidebar();
       }
     },
-    [closeSidebar, date, fetchTasks, selectedItem],
+    [closeSidebar, fetchTasks, preference, selectedItem],
   );
 
 const useEventSubmissionMutation = (
@@ -310,7 +310,7 @@ const useToggleTaskCompleteMutation = (
  */
 export const useCalendarMutations = (props: UseCalendarMutationsProps) => {
   const tasksRef = useTasksRef(props.tasks);
-  const submitTask = useTaskSubmissionMutation(props.selectedItem, props.date, props.fetchTasks, props.closeSidebar);
+  const submitTask = useTaskSubmissionMutation(props.selectedItem, props.preference, props.fetchTasks, props.closeSidebar);
   const submitEvent = useEventSubmissionMutation(props.selectedItem, props.view, props.date, props.fetchEvents, props.closeSidebar);
   const deleteSelected = useDeleteSelectedMutation(props.selectedItem, props.view, props.date, props.fetchTasks, props.fetchEvents, props.closeSidebar);
   const revertSelectedEvent = useRevertSelectedEventMutation(props.selectedItem, props.view, props.date, props.fetchEvents, props.closeSidebar);

@@ -58,6 +58,9 @@ def update_core_event_from_course_event(core_event, course_event) -> bool:
     """Update shared synced event fields from the source course event."""
     updated = False
 
+    if core_event.start_time != course_event.start_time:
+        core_event.start_time = course_event.start_time
+        updated = True
     if core_event.description != (course_event.description or ""):
         core_event.description = course_event.description or ""
         updated = True
@@ -72,7 +75,15 @@ def update_core_event_from_course_event(core_event, course_event) -> bool:
         updated = True
 
     if updated:
-        core_event.save(update_fields=["description", "location", "colour", "end_time"])
+        core_event.save(
+            update_fields=[
+                "start_time",
+                "description",
+                "location",
+                "colour",
+                "end_time",
+            ]
+        )
 
     return updated
 
@@ -83,6 +94,9 @@ def update_user_specific_core_event(
     """Update a user's personalized synced event fields."""
     updated = False
 
+    if core_event.start_time != course_event.start_time:
+        core_event.start_time = course_event.start_time
+        updated = True
     if core_event.description != event_description:
         core_event.description = event_description
         updated = True
@@ -97,7 +111,15 @@ def update_user_specific_core_event(
         updated = True
 
     if updated:
-        core_event.save(update_fields=["description", "location", "colour", "end_time"])
+        core_event.save(
+            update_fields=[
+                "start_time",
+                "description",
+                "location",
+                "colour",
+                "end_time",
+            ]
+        )
 
     return updated
 

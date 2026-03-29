@@ -142,6 +142,9 @@ export const getCalendarWindow = (
   const weekStartsOn = preference?.week_starts_on ?? getStoredWeekStartsOn();
   const anchor = moment(currentDate).tz(activeTimezone);
   const startOfWeekUnit = weekStartsOn === "monday" ? "isoWeek" : "week";
+  if (currentView === Views.AGENDA) {
+    return formatWindow(anchor.clone().startOf("month"), anchor.clone().endOf("month"));
+  }
   return resolveCalendarWindow(currentView, anchor, startOfWeekUnit);
 };
 
@@ -152,6 +155,9 @@ export const getCalendarWindow = (
  */
 export const getNavigationUnit = (view: View): "month" | "week" | "day" => {
   if (view === Views.MONTH) {
+    return "month";
+  }
+  if (view === Views.AGENDA) {
     return "month";
   }
   if (view === Views.DAY) {
