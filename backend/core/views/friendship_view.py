@@ -20,6 +20,7 @@ class FriendshipViewSet(viewsets.ModelViewSet):
 
     serializer_class = FriendshipSerializer
     permission_classes = [IsAuthenticated]
+    queryset = Friendship.objects.all()
 
     def get_queryset(self):
         """Retrieve friendships where the user is either the sender or receiver.
