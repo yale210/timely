@@ -1,3 +1,4 @@
+import { useRef, useState } from "react";
 import { Tooltip } from "@/components/ui";
 import type { Profile } from "@/types";
 
@@ -48,6 +49,9 @@ const ProfileSection = ({
   onAvatarChange,
   onToggleTeacher = noopToggleTeacher,
 }: ProfileSectionProps) => {
+  const avatarInputRef = useRef<HTMLInputElement | null>(null);
+  const [selectedAvatarName, setSelectedAvatarName] = useState("No file chosen");
+
   if (loading) {
     return <p className="text-sm text-gray-500">Loading...</p>;
   }
@@ -80,7 +84,7 @@ const ProfileSection = ({
       )}
 
       <div className="grid gap-4">
-        <div className="flex items-center gap-4 rounded-lg border border-gray-200 bg-gray-50 px-4 py-3">
+        <div className="flex flex-col gap-3 rounded-lg border border-gray-200 bg-gray-50 px-4 py-3 sm:flex-row sm:items-center sm:gap-4">
           <div className="h-16 w-16 overflow-hidden rounded-full border border-gray-200 bg-white">
             {profile.avatar ? (
               <img src={profile.avatar} alt="Avatar" className="h-full w-full object-cover" />
@@ -90,16 +94,33 @@ const ProfileSection = ({
               </div>
             )}
           </div>
-          <div className="flex flex-col gap-2">
+          <div className="min-w-0 flex-1">
             <label className="text-sm font-semibold text-gray-800">Avatar</label>
             <input
+              ref={avatarInputRef}
               type="file"
               accept="image/*"
-              onChange={(event) => onAvatarChange(event.target.files?.[0] ?? null)}
-              className="text-sm text-gray-600 file:mr-3 file:rounded-md file:border-0 file:bg-gray-200 file:px-3 file:py-1.5 file:text-xs file:font-semibold file:text-gray-700 hover:file:bg-gray-300"
+              onChange={(event) => {
+                const file = event.target.files?.[0] ?? null;
+                setSelectedAvatarName(file?.name ?? "No file chosen");
+                onAvatarChange(file);
+              }}
+              className="sr-only"
             />
+            <div className="mt-2 flex flex-col gap-2 sm:flex-row sm:items-center">
+              <button
+                type="button"
+                onClick={() => avatarInputRef.current?.click()}
+                className="inline-flex w-fit items-center rounded-md bg-gray-200 px-3 py-2 text-sm font-semibold text-gray-700 transition-colors hover:bg-gray-300"
+              >
+                Choose File
+              </button>
+              <span className="min-w-0 text-sm text-gray-600">
+                {selectedAvatarName}
+              </span>
+            </div>
             {fieldErrors.avatar && (
-              <span className="text-xs text-red-600">{fieldErrors.avatar.join(" ")}</span>
+              <span className="mt-1 block text-xs text-red-600">{fieldErrors.avatar.join(" ")}</span>
             )}
           </div>
         </div>
