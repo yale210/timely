@@ -7,6 +7,7 @@ User = get_user_model()
 
 
 class NotificationModelTest(TestCase):
+    """Test cases for notification model."""
     def setUp(self):
         self.user = User.objects.create_user(
             username="testuser", email="test@example.com", password="password"
@@ -16,6 +17,7 @@ class NotificationModelTest(TestCase):
         )
 
     def test_notification_creation(self):
+        """Test notification creation."""
         notification = Notification.objects.create(
             recipient=self.user,
             sender=self.sender,
@@ -34,6 +36,7 @@ class NotificationModelTest(TestCase):
         self.assertIsNotNone(notification.timestamp)
 
     def test_notification_str(self):
+        """Test notification str."""
         notification = Notification.objects.create(
             recipient=self.user,
             title="A very long title that should be truncated",
@@ -45,6 +48,7 @@ class NotificationModelTest(TestCase):
         )
 
     def test_cascade_delete_recipient(self):
+        """Test cascade delete recipient."""
         Notification.objects.create(
             recipient=self.user,
             title="Test Title",
@@ -55,6 +59,7 @@ class NotificationModelTest(TestCase):
         self.assertEqual(Notification.objects.count(), 0)
 
     def test_sender_null_blank(self):
+        """Test sender null blank."""
         notification = Notification.objects.create(
             recipient=self.user,
             title="System Message",

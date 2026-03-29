@@ -13,11 +13,14 @@ from .scheduler_services_support import SchedulerServicesSupport
 
 
 class SchedulerServiceBasicsTests(SchedulerServicesSupport, TestCase):
+    """Test cases for scheduler service basics."""
     def test_get_preference(self):
+        """Test get preference."""
         scheduler = Scheduler(self.user)
         self.assertEqual(scheduler._get_preference(), self.preference)
 
     def test_get_unscheduled_tasks(self):
+        """Test get unscheduled tasks."""
         task1 = Task.objects.create(
             user=self.user,
             title="Important Report",
@@ -45,6 +48,7 @@ class SchedulerServiceBasicsTests(SchedulerServicesSupport, TestCase):
         self.assertEqual(tasks[0], task1)  # higher importance first
 
     def test_get_events(self):
+        """Test get events."""
         event1 = Event.objects.create(
             user=self.user,
             title="Team Meeting",
@@ -64,6 +68,7 @@ class SchedulerServiceBasicsTests(SchedulerServicesSupport, TestCase):
         self.assertEqual(events[0], event1)
 
     def test_is_day_available_with_days_off_and_special_dates(self):
+        """Test is day available with days off and special dates."""
         target_date = date(2026, 2, 12)  # Thursday
         scheduler = Scheduler(self.user)
         self.assertTrue(scheduler._is_day_available(target_date))
@@ -79,6 +84,7 @@ class SchedulerServiceBasicsTests(SchedulerServicesSupport, TestCase):
         self.assertFalse(scheduler._is_day_available(target_date))
 
     def test_schedule_single_task_no_split(self):
+        """Test schedule single task no split."""
         Task.objects.create(
             user=self.user,
             title="Write summary",
@@ -98,6 +104,7 @@ class SchedulerServiceBasicsTests(SchedulerServicesSupport, TestCase):
         self.assertEqual(results[0].scheduled_start.date(), date(2026, 2, 12))
 
     def test_schedule_task_split_across_days(self):
+        """Test schedule task split across days."""
         base_day = timezone.localdate() + timedelta(days=1)
         # Leave only 60 mins on day 1; rest on day 2
         Event.objects.create(
@@ -127,6 +134,7 @@ class SchedulerServiceBasicsTests(SchedulerServicesSupport, TestCase):
         self.assertGreater(results[0].scheduled_end, results[0].scheduled_start)
 
     def test_schedule_respects_deadline(self):
+        """Test schedule respects deadline."""
         Task.objects.create(
             user=self.user,
             title="Overdue",
@@ -144,6 +152,7 @@ class SchedulerServiceBasicsTests(SchedulerServicesSupport, TestCase):
         self.assertIn("Deadline", results[0].reason)
 
     def test_schedule_includes_deadline_day_within_horizon(self):
+        """Test schedule includes deadline day within horizon."""
         start_date = date(2026, 3, 19)
         deadline_dt = timezone.make_aware(datetime(2026, 3, 26, 10, 0))
         mocked_now = timezone.make_aware(datetime(2026, 3, 19, 6, 0))

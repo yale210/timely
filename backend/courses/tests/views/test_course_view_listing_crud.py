@@ -13,11 +13,14 @@ from .course_view_test_support import CourseViewTestSupport
 
 
 class CourseViewListingCrudTests(CourseViewTestSupport):
+    """Test cases for course view listing crud."""
     def test_list_requires_authentication(self):
+        """Test list requires authentication."""
         response = self.client.get(self.list_url)
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
     def test_list_returns_student_courses(self):
+        """Test list returns student courses."""
         CourseEnrollment.objects.create(
             course=self.course, student=self.student, active=True
         )
@@ -30,6 +33,7 @@ class CourseViewListingCrudTests(CourseViewTestSupport):
         self.assertEqual(response.data[0]["name"], "Python Basics")
 
     def test_list_returns_teacher_courses(self):
+        """Test list returns teacher courses."""
         second_course = Course.objects.create(
             name="Advanced Python",
             description="Advanced course",
@@ -46,6 +50,7 @@ class CourseViewListingCrudTests(CourseViewTestSupport):
         self.assertIn(second_course.id, returned_ids)
 
     def test_list_returns_all_courses_for_superuser(self):
+        """Test list returns all courses for superuser."""
         Course.objects.create(
             name="Another Course",
             description="Another",
@@ -63,12 +68,14 @@ class CourseViewListingCrudTests(CourseViewTestSupport):
     # -------------------------
 
     def test_create_requires_authentication(self):
+        """Test create requires authentication."""
         response = self.client.post(
             self.list_url, {"name": "New Course"}, format="json"
         )
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
     def test_create_requires_teacher_permission(self):
+        """Test create requires teacher permission."""
         self.client.force_authenticate(user=self.student_user)
         response = self.client.post(
             self.list_url,
@@ -78,6 +85,7 @@ class CourseViewListingCrudTests(CourseViewTestSupport):
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_create_course_success(self):
+        """Test create course success."""
         self.client.force_authenticate(user=self.teacher_user)
         response = self.client.post(
             self.list_url,
@@ -93,6 +101,7 @@ class CourseViewListingCrudTests(CourseViewTestSupport):
         self.assertEqual(course.description, "A brand new course")
 
     def test_create_course_with_minimal_payload(self):
+        """Test create course with minimal payload."""
         self.client.force_authenticate(user=self.teacher_user)
         response = self.client.post(self.list_url, {"name": "Minimal"}, format="json")
 
@@ -105,10 +114,12 @@ class CourseViewListingCrudTests(CourseViewTestSupport):
     # -------------------------
 
     def test_retrieve_requires_authentication(self):
+        """Test retrieve requires authentication."""
         response = self.client.get(self.detail_url)
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
     def test_retrieve_returns_course_data_with_cohort_and_students(self):
+        """Test retrieve returns course data with cohort and students."""
         CourseEnrollment.objects.create(
             course=self.course, student=self.student, active=True
         )
@@ -121,6 +132,7 @@ class CourseViewListingCrudTests(CourseViewTestSupport):
         self.assertEqual(response.data["cohort"], 1)
 
     def test_retrieve_excludes_inactive_enrollments_from_cohort(self):
+        """Test retrieve excludes inactive enrollments from cohort."""
         CourseEnrollment.objects.create(
             course=self.course, student=self.student, active=False
         )
@@ -132,6 +144,7 @@ class CourseViewListingCrudTests(CourseViewTestSupport):
         self.assertEqual(response.data["cohort"], 0)
 
     def test_retrieve_nonexistent_course(self):
+        """Test retrieve nonexistent course."""
         self.client.force_authenticate(user=self.teacher_user)
         response = self.client.get(reverse("course-detail", args=[999999]))
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
@@ -141,6 +154,7 @@ class CourseViewListingCrudTests(CourseViewTestSupport):
     # -------------------------
 
     def test_update_requires_authentication(self):
+        """Test update requires authentication."""
         response = self.client.put(
             self.detail_url,
             {"name": "Updated", "description": "Updated"},
@@ -149,6 +163,7 @@ class CourseViewListingCrudTests(CourseViewTestSupport):
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
     def test_update_requires_permission(self):
+        """Test update requires permission."""
         self.client.force_authenticate(user=self.student_user)
         response = self.client.put(
             self.detail_url,
@@ -158,6 +173,7 @@ class CourseViewListingCrudTests(CourseViewTestSupport):
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_update_lead_can_change_name_and_description(self):
+        """Test update lead can change name and description."""
         self.client.force_authenticate(user=self.teacher_user)
         response = self.client.put(
             self.detail_url,
@@ -171,6 +187,7 @@ class CourseViewListingCrudTests(CourseViewTestSupport):
         self.assertEqual(self.course.description, "Updated Description")
 
     def test_partial_update_lead_success(self):
+        """Test partial update lead success."""
         self.client.force_authenticate(user=self.teacher_user)
         response = self.client.patch(
             self.detail_url,
@@ -183,6 +200,7 @@ class CourseViewListingCrudTests(CourseViewTestSupport):
         self.assertEqual(self.course.name, "Patched Name")
 
     def test_partial_update_non_lead_cannot_change_name(self):
+        """Test partial update non lead cannot change name."""
         CourseStaff.objects.create(
             course=self.course, student=self.other_user, active=True
         )
@@ -200,6 +218,7 @@ class CourseViewListingCrudTests(CourseViewTestSupport):
         self.assertEqual(self.course.description, "Patched Desc")
 
     def test_update_invalid_data_returns_400(self):
+        """Test update invalid data returns 400."""
         self.client.force_authenticate(user=self.teacher_user)
         response = self.client.put(self.detail_url, {"name": ""}, format="json")
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
@@ -209,15 +228,18 @@ class CourseViewListingCrudTests(CourseViewTestSupport):
     # -------------------------
 
     def test_destroy_requires_authentication(self):
+        """Test destroy requires authentication."""
         response = self.client.delete(self.detail_url)
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
     def test_destroy_requires_lead_or_admin(self):
+        """Test destroy requires lead or admin."""
         self.client.force_authenticate(user=self.student_user)
         response = self.client.delete(self.detail_url)
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_destroy_soft_deletes_course(self):
+        """Test destroy soft deletes course."""
         self.client.force_authenticate(user=self.teacher_user)
         response = self.client.delete(self.detail_url)
 
@@ -226,6 +248,7 @@ class CourseViewListingCrudTests(CourseViewTestSupport):
         self.assertFalse(self.course.active)
 
     def test_destroy_by_admin(self):
+        """Test destroy by admin."""
         self.client.force_authenticate(user=self.admin_user)
         response = self.client.delete(self.detail_url)
 

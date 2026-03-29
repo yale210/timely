@@ -12,6 +12,7 @@ User = get_user_model()
 
 
 class PushTaskTests(TestCase):
+    """Test cases for push task."""
     def setUp(self):
         self.user = User.objects.create_user(
             username="testuser", email="test@example.com"
@@ -27,6 +28,7 @@ class PushTaskTests(TestCase):
     @patch("notifications.tasks.push.webpush")
     def test_dispatch_to_subscription_success(self, mock_webpush):
         # Arrange
+        """Test dispatch to subscription success."""
         mock_webpush.return_value = None
 
         # Act
@@ -40,6 +42,7 @@ class PushTaskTests(TestCase):
     @patch("notifications.tasks.push.webpush")
     def test_dispatch_to_subscription_failure_delete(self, mock_webpush):
         # Arrange
+        """Test dispatch to subscription failure delete."""
         mock_response = MagicMock()
         mock_response.status_code = 410
         mock_webpush.side_effect = WebPushException("Gone", response=mock_response)

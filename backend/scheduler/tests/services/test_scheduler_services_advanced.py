@@ -13,7 +13,9 @@ from .scheduler_services_support import SchedulerServicesSupport
 
 
 class SchedulerServiceAdvancedTests(SchedulerServicesSupport, TestCase):
+    """Test cases for scheduler service advanced."""
     def test_schedule_split_skips_day_that_leaves_remainder_below_minimum(self):
+        """Test schedule split skips day that leaves remainder below minimum."""
         day_one = date(2026, 3, 19)
         day_two = day_one + timedelta(days=1)
 
@@ -48,6 +50,7 @@ class SchedulerServiceAdvancedTests(SchedulerServicesSupport, TestCase):
         self.assertEqual(results[0].scheduled_start.date(), day_two)
 
     def test_schedule_today_uses_minute_precision_boundaries(self):
+        """Test schedule today uses minute precision boundaries."""
         today = date(2026, 3, 19)
         tomorrow = today + timedelta(days=1)
 
@@ -88,6 +91,7 @@ class SchedulerServiceAdvancedTests(SchedulerServicesSupport, TestCase):
             self.assertEqual(end.microsecond, 0)
 
     def test_schedule_uses_only_remaining_minutes_after_partial_completion(self):
+        """Test schedule uses only remaining minutes after partial completion."""
         start_day = date(2026, 3, 20)
 
         Task.objects.create(
@@ -115,6 +119,7 @@ class SchedulerServiceAdvancedTests(SchedulerServicesSupport, TestCase):
         )
 
     def test_split_task_limits_prefer_task_over_scheduler_defaults(self):
+        """Test split task limits prefer task over scheduler defaults."""
         task = Task.objects.create(
             user=self.user,
             title="Task-specific split limits",
@@ -134,6 +139,7 @@ class SchedulerServiceAdvancedTests(SchedulerServicesSupport, TestCase):
         self.assertEqual(scheduler._split_task_limits(task), (15, 45))
 
     def test_build_split_result_returns_success_when_segments_cover_task(self):
+        """Test build split result returns success when segments cover task."""
         task = Task.objects.create(
             user=self.user,
             title="Build split result",

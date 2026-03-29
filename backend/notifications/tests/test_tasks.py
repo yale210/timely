@@ -20,6 +20,7 @@ User = get_user_model()
 
 
 class TasksTests(TestCase):
+    """Test cases for tasks."""
     def setUp(self):
         self.user = User.objects.create_user(
             username="testuser", password="password", email="test@example.com"
@@ -35,6 +36,7 @@ class TasksTests(TestCase):
         )
 
     def test_check_reminders(self):
+        """Test check reminders."""
         reminder = EventReminder.objects.create(
             event=self.event, minutes_before=0, send_push=False
         )
@@ -52,6 +54,7 @@ class TasksTests(TestCase):
         )
 
     def test_check_reminders_no_push(self):
+        """Test check reminders no push."""
         reminder = EventReminder.objects.create(
             event=self.event, minutes_before=0, send_push=False
         )
@@ -67,6 +70,7 @@ class TasksTests(TestCase):
             self.assertTrue(getattr(saved_instance, "_skip_push", False))
 
     def test_check_recurring_reminders_dispatches_once_with_dedupe(self):
+        """Test check recurring reminders dispatches once with dedupe."""
         recurring_start = timezone.now() - timezone.timedelta(seconds=10)
         recurring_event = Event.objects.create(
             user=self.user,
@@ -99,6 +103,7 @@ class TasksTests(TestCase):
         self.assertEqual(ReminderDispatchLog.objects.count(), 1)
 
     def test_check_recurring_reminders_skips_exception_date(self):
+        """Test check recurring reminders skips exception date."""
         recurring_start = timezone.now() - timezone.timedelta(seconds=10)
         recurring_event = Event.objects.create(
             user=self.user,
@@ -125,6 +130,7 @@ class TasksTests(TestCase):
         self.assertEqual(ReminderDispatchLog.objects.count(), 0)
 
     def test_check_recurring_reminders_uses_override_snapshot(self):
+        """Test check recurring reminders uses override snapshot."""
         recurring_start = timezone.now() - timezone.timedelta(days=1, seconds=10)
         original_start = recurring_start + timezone.timedelta(days=1)
         recurring_event = Event.objects.create(
@@ -164,6 +170,7 @@ class TasksTests(TestCase):
 
     @patch("notifications.tasks.push.webpush")
     def test_send_push_notification(self, mock_webpush):
+        """Test send push notification."""
         PushSubscription.objects.create(
             user=self.user, endpoint="https://example.com", p256dh="p256dh", auth="auth"
         )
@@ -172,6 +179,7 @@ class TasksTests(TestCase):
 
     @patch("notifications.tasks.push.webpush")
     def test_send_push_notification_error(self, mock_webpush):
+        """Test send push notification error."""
         from pywebpush import WebPushException
 
         class MockResponse:
@@ -188,6 +196,7 @@ class TasksTests(TestCase):
         self.assertFalse(PushSubscription.objects.filter(id=sub.id).exists())
 
     def test_cleanup_old_notifications(self):
+        """Test cleanup old notifications."""
         old_notification = Notification.objects.create(
             recipient=self.user, title="Old", message="Old message"
         )
@@ -200,6 +209,7 @@ class TasksTests(TestCase):
         self.assertFalse(Notification.objects.filter(id=old_notification.id).exists())
 
     def test_broadcast_notification_all(self):
+        """Test broadcast notification all."""
         with (
             patch(
                 "notifications.tasks.broadcast._send_push_notification_sync",
@@ -221,6 +231,7 @@ class TasksTests(TestCase):
         self.assertEqual(mock_notify_user.call_count, 2)
 
     def test_broadcast_notification_staff(self):
+        """Test broadcast notification staff."""
         staff_user = User.objects.create_user(
             username="staff",
             password="password",
@@ -240,6 +251,7 @@ class TasksTests(TestCase):
         )
 
     def test_broadcast_notification_users(self):
+        """Test broadcast notification users."""
         broadcast_notification(
             "Users Only", "Hello", target="users", user_ids=[self.user.id]
         )
@@ -250,10 +262,12 @@ class TasksTests(TestCase):
         )
 
     def test_broadcast_notification_invalid(self):
+        """Test broadcast notification invalid."""
         res = broadcast_notification("Title", "Message", target="invalid")
         self.assertEqual(res, "Invalid target")
 
     def test_broadcast_notification_admin(self):
+        """Test broadcast notification admin."""
         admin_user = User.objects.create_superuser(
             username="admin",
             password="password",
@@ -268,6 +282,7 @@ class TasksTests(TestCase):
         )
 
     def test_reminder_signature(self):
+        """Test reminder signature."""
         from notifications.tasks import _reminder_signature
 
         reminder = {"minutes_before": 15, "send_email": True, "send_push": False}
@@ -278,6 +293,7 @@ class TasksTests(TestCase):
         self.assertEqual(sig1, sig2)
 
     def test_record_dispatch_integrity_error(self):
+        """Test record dispatch integrity error."""
         from notifications.tasks import _record_dispatch
 
         now = timezone.now()
@@ -288,6 +304,7 @@ class TasksTests(TestCase):
         self.assertFalse(success)
 
     def test_send_push_notification_sync_no_subs(self):
+        """Test send push notification sync no subs."""
         from notifications.tasks import _send_push_notification_sync
 
         res = _send_push_notification_sync(self.user.id, "T", "M")
@@ -295,6 +312,7 @@ class TasksTests(TestCase):
 
     @patch("notifications.tasks.push.webpush")
     def test_send_push_notification_sync_failure_all(self, mock_webpush):
+        """Test send push notification sync failure all."""
         from pywebpush import WebPushException
 
         mock_webpush.side_effect = WebPushException("Fail")
@@ -308,11 +326,13 @@ class TasksTests(TestCase):
         self.assertEqual(res["error_code"], "PUSH_PROVIDER_FAILURE")
 
     def test_process_broadcast_job_not_found(self):
+        """Test process broadcast job not found."""
         from notifications.tasks import process_broadcast_job
 
         self.assertEqual(process_broadcast_job(9999), "Broadcast not found")
 
     def test_process_broadcast_job_already_processed(self):
+        """Test process broadcast job already processed."""
         from notifications.models import BroadcastJob
         from notifications.tasks import process_broadcast_job
 
@@ -330,6 +350,7 @@ class TasksTests(TestCase):
         self.assertIn("already processed", res)
 
     def test_process_broadcast_job_no_recipients(self):
+        """Test process broadcast job no recipients."""
         from notifications.models import BroadcastJob
         from notifications.tasks import process_broadcast_job
 
@@ -350,10 +371,12 @@ class TasksTests(TestCase):
 
     def test_broadcast_notification_zero_audience(self):
         # target users with empty user_ids list
+        """Test broadcast notification zero audience."""
         res = broadcast_notification("T", "M", target="users", user_ids=[])
         self.assertEqual(res, "Broadcasted to 0 users")
 
     def test_process_due_reminders_invalid_minutes(self):
+        """Test process due reminders invalid minutes."""
         from unittest.mock import MagicMock
 
         from notifications.tasks import _process_due_reminders
@@ -367,6 +390,7 @@ class TasksTests(TestCase):
         )
 
     def test_check_reminders_disabled_recurrence(self):
+        """Test check reminders disabled recurrence."""
         from django.test import override_settings
 
         with override_settings(ENABLE_RECURRENCE_OVERRIDES=False):
@@ -375,6 +399,7 @@ class TasksTests(TestCase):
 
     def test_send_push_notification_sync_success_with_error(self):
         # One sub succeeds, one fails
+        """Test send push notification sync success with error."""
         from pywebpush import WebPushException
 
         from notifications.tasks import _send_push_notification_sync
@@ -397,6 +422,7 @@ class TasksTests(TestCase):
             self.assertTrue(res["success"])
 
     def test_process_broadcast_job_partial_and_failed(self):
+        """Test process broadcast job partial and failed."""
         from notifications.models import BroadcastJob, BroadcastRecipient
         from notifications.tasks import process_broadcast_job
 
@@ -450,6 +476,7 @@ class TasksTests(TestCase):
             self.assertEqual(job2.status, BroadcastJob.Status.FAILED)
 
     def test_build_broadcast_queryset_none(self):
+        """Test build broadcast queryset none."""
         from notifications.tasks import _build_broadcast_queryset
 
         qs = _build_broadcast_queryset("invalid-target")

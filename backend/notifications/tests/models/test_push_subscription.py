@@ -8,12 +8,14 @@ User = get_user_model()
 
 
 class PushSubscriptionModelTest(TestCase):
+    """Test cases for push subscription model."""
     def setUp(self):
         self.user = User.objects.create_user(
             username="testuser", email="test@example.com", password="password"
         )
 
     def test_push_subscription_creation(self):
+        """Test push subscription creation."""
         subscription = PushSubscription.objects.create(
             user=self.user,
             endpoint="https://fcm.googleapis.com/fcm/send/test-endpoint",
@@ -29,6 +31,7 @@ class PushSubscriptionModelTest(TestCase):
         self.assertIsNotNone(subscription.created_at)
 
     def test_unique_together_constraint(self):
+        """Test unique together constraint."""
         endpoint = "https://fcm.googleapis.com/fcm/send/test-endpoint"
         PushSubscription.objects.create(
             user=self.user,
@@ -45,6 +48,7 @@ class PushSubscriptionModelTest(TestCase):
             )
 
     def test_cascade_delete_user(self):
+        """Test cascade delete user."""
         PushSubscription.objects.create(
             user=self.user,
             endpoint="https://fcm.googleapis.com/fcm/send/test-endpoint",

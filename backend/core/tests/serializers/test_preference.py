@@ -50,6 +50,7 @@ class PreferenceSerializerTests(TestCase):
         self.assertEqual(pref.day_start, datetime.time(9, 0))
 
     def test_update_general_preferences(self):
+        """Test update general preferences."""
         pref = Preference.objects.create(user=self.user)
         serializer = PreferenceSerializer(
             instance=pref,

@@ -12,6 +12,7 @@ from .calendar_serializer_test_support import CalendarSerializerTestSupport
 
 
 class CalendarSerializerAllocationParsingTests(CalendarSerializerTestSupport):
+    """Test cases for calendar serializer allocation parsing."""
     def test_parse_allocation_slots_collects_errors_and_normalizes_valid_datetimes(
         self,
     ):

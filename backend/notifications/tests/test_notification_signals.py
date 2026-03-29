@@ -10,6 +10,7 @@ User = get_user_model()
 
 
 class NotificationSignalTests(TestCase):
+    """Test cases for notification signal."""
     def setUp(self):
         self.user = User.objects.create_user(
             username="signal-user",
@@ -18,6 +19,7 @@ class NotificationSignalTests(TestCase):
         )
 
     def test_new_notification_payload_uses_actual_unread_count(self):
+        """Test new notification payload uses actual unread count."""
         first_notification = Notification.objects.create(
             recipient=self.user,
             title="Old",

@@ -11,6 +11,7 @@ from .calendar_serializer_test_support import CalendarSerializerTestSupport
 
 
 class CalendarResponseSerializerTests(CalendarSerializerTestSupport):
+    """Test cases for calendar response serializer."""
     def test_calendar_response_serializer_covers_representation_and_validation(self):
         """Test calendar response serializer covers representation and validation."""
         now = timezone.now()

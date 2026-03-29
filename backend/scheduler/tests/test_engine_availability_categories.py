@@ -13,6 +13,7 @@ from .scheduler_engine_mixins_support import FakeScheduler
 
 
 class SchedulerEngineMixinTests(TestCase):
+    """Test cases for scheduler engine mixin."""
     def setUp(self):
         self.user = get_user_model().objects.create_user(
             username="scheduler-mixin-user",
@@ -47,6 +48,7 @@ class SchedulerEngineMixinTests(TestCase):
         return task
 
     def test_category_helper_skips_invalid_segments_and_accumulates_usage(self):
+        """Test category helper skips invalid segments and accumulates usage."""
         category = Category.objects.create(
             user=self.user,
             text="Study",
@@ -107,6 +109,7 @@ class SchedulerEngineMixinTests(TestCase):
         self.assertEqual(len(self.scheduler._task_allocation_segments(task)), 1)
 
     def test_category_helpers_cover_overlap_and_no_limit_paths(self):
+        """Test category helpers cover overlap and no limit paths."""
         uncapped_category = Category.objects.create(user=self.user, text="Uncapped")
         capped_category = Category.objects.create(
             user=self.user,
@@ -152,6 +155,7 @@ class SchedulerEngineMixinTests(TestCase):
         self.assertEqual(minutes_used[capped_category.id], 30)
 
     def test_get_occupied_slots_combines_events_tasks_and_manual_blocks(self):
+        """Test get occupied slots combines events tasks and manual blocks."""
         self.scheduler.event_slots = [
             (
                 make_aware(datetime.combine(self.target_date, time(8, 0))),
@@ -184,6 +188,7 @@ class SchedulerEngineMixinTests(TestCase):
         self.assertEqual(len(occupied), 3)
 
     def test_get_available_slots_applies_trimming_blocks_and_capacity(self):
+        """Test get available slots applies trimming blocks and capacity."""
         self.scheduler.event_slots = [
             (
                 make_aware(datetime.combine(self.target_date, time(9, 0))),
@@ -237,6 +242,7 @@ class SchedulerEngineMixinTests(TestCase):
         self.assertEqual(slots, [])
 
     def test_apply_daily_capacity_can_be_disabled_and_counts_scheduled_segments(self):
+        """Test apply daily capacity can be disabled and counts scheduled segments."""
         window = self.scheduler._day_window(self.target_date)
         task = self._task(
             "Scheduled task",
