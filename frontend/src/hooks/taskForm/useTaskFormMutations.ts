@@ -16,6 +16,46 @@ interface UseTaskMutationArgs {
     fetchTasks: () => Promise<void>;
 }
 
+function useToggleCompleteMutation(
+    tasks: Task[],
+    fetchTasks: () => Promise<void>,
+) {
+    return useCallback(async (id: number) => {
+        await makeToggleComplete(tasks, fetchTasks)(id);
+    }, [tasks, fetchTasks]);
+}
+
+function useSubmitTaskMutation(
+    selectedTask: Task | undefined,
+    fetchTasks: () => Promise<void>,
+) {
+    return useCallback(async (data: TaskSubmission) => {
+        return makeSubmitTask(selectedTask, fetchTasks)(data);
+    }, [selectedTask, fetchTasks]);
+}
+
+function useDeleteTaskMutation(fetchTasks: () => Promise<void>) {
+    return useCallback(async (id: number) => {
+        await makeDeleteTask(fetchTasks)(id);
+    }, [fetchTasks]);
+}
+
+function useUpdateTaskCategoriesMutation(
+    categories: Category[],
+    setTasks: React.Dispatch<React.SetStateAction<Task[]>>,
+    setSelectedTask: React.Dispatch<React.SetStateAction<Task | undefined>>,
+    fetchTasks: () => Promise<void>,
+) {
+    return useCallback(async (id: number, nextCategories: number[]) => {
+        await makeUpdateTaskCategories(
+            categories,
+            setTasks,
+            setSelectedTask,
+            fetchTasks,
+        )(id, nextCategories);
+    }, [categories, setTasks, setSelectedTask, fetchTasks]);
+}
+
 /**
  * Builds task mutation handlers used by task views.
  * @param args Hook arguments.
@@ -27,34 +67,16 @@ interface UseTaskMutationArgs {
  * @param args.fetchTasks Refreshes tasks from the server.
  */
 export function useTaskMutations(args: UseTaskMutationArgs) {
-    const {
-        tasks,
-        categories,
-        selectedTask,
-        setTasks,
-        setSelectedTask,
-        fetchTasks,
-    } = args;
-    const toggleComplete = useCallback(async (id: number) => {
-        await makeToggleComplete(tasks, fetchTasks)(id);
-    }, [tasks, fetchTasks]);
-    const submitTask = useCallback(async (data : TaskSubmission) => {
-        return makeSubmitTask(selectedTask, fetchTasks)(data);
-    }, [selectedTask, fetchTasks]);
-    const deleteTask = useCallback(async (id: number) => {
-        await makeDeleteTask(fetchTasks)(id);
-    }, [fetchTasks]);
-    const updateTaskCategories = useCallback(
-        async (id: number, nextCategories: number[]) => {
-            await makeUpdateTaskCategories(
-            categories,
-            setTasks,
-            setSelectedTask,
-            fetchTasks,
-            )(id, nextCategories);
-        },
-        [categories, setTasks, setSelectedTask, fetchTasks],
+    const toggleComplete = useToggleCompleteMutation(args.tasks, args.fetchTasks);
+    const submitTask = useSubmitTaskMutation(args.selectedTask, args.fetchTasks);
+    const deleteTask = useDeleteTaskMutation(args.fetchTasks);
+    const updateTaskCategories = useUpdateTaskCategoriesMutation(
+        args.categories,
+        args.setTasks,
+        args.setSelectedTask,
+        args.fetchTasks,
     );
+
     return {
         toggleComplete,
         submitTask,

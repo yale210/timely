@@ -1,5 +1,7 @@
 import type { TaskFormErrors } from "@/types";
 
+type TaskFormErrorKey = keyof TaskFormErrors;
+
 /**
  * Checks if the start and end times are valid.
  * @param startDateTime start date
@@ -97,6 +99,49 @@ export function isTaskBufferMinutesInvalid(
     );
 }
 
+function addTaskFormError(
+    errors: TaskFormErrors,
+    key: TaskFormErrorKey,
+    shouldAdd: boolean,
+) {
+    if (shouldAdd) {
+        errors[key] = true;
+    }
+}
+
+function buildSubmittedTaskValidations(
+    estimatedMinutes: number | "",
+    completedMinutes: number | "",
+    allowSplit: boolean,
+    minSplitMinutes: string,
+    maxSplitMinutes: string,
+    bufferEnabled: boolean,
+    bufferBeforeMinutes: string,
+    bufferAfterMinutes: string,
+): [TaskFormErrorKey, boolean][] {
+    return [
+        ["completed_minutes", isTaskCompletedMinutesInvalid(estimatedMinutes, completedMinutes)],
+        ["min_split_minutes", isTaskMinSplitMinutesInvalid(allowSplit, minSplitMinutes)],
+        ["max_split_minutes", isTaskMaxSplitMinutesInvalid(allowSplit, minSplitMinutes, maxSplitMinutes)],
+        ["buffer_before_minutes", isTaskBufferMinutesInvalid(bufferEnabled, bufferBeforeMinutes)],
+        ["buffer_after_minutes", isTaskBufferMinutesInvalid(bufferEnabled, bufferAfterMinutes)],
+    ];
+}
+
+function applySubmittedTaskErrors(
+    errors: TaskFormErrors,
+    validations: [TaskFormErrorKey, boolean][],
+    hasSubmitted: boolean,
+) {
+    if (!hasSubmitted) {
+        return;
+    }
+
+    validations.forEach(([key, shouldAdd]) => {
+        addTaskFormError(errors, key, shouldAdd);
+    });
+}
+
 /**
  * Builds errors from existing task.
  * @param startDateTime Task start date.
@@ -129,39 +174,21 @@ export function buildTaskFormErrors(
     hasSubmitted: boolean,
 ) {
     const errors: TaskFormErrors = {};
-
-    if (shouldValidateTime && isTaskTimeInvalid(startDateTime, endDateTime)) {
-        errors.start = true;
-        errors.deadline = true;
-    }
-
-    if (isTaskImportanceInvalid(importance)) {
-        errors.importance = true;
-    }
-
-    if (hasSubmitted && isTaskCompletedMinutesInvalid(estimatedMinutes, completedMinutes)) {
-        errors.completed_minutes = true;
-    }
-
-    if (hasSubmitted && isTaskMinSplitMinutesInvalid(allowSplit, minSplitMinutes)) {
-        errors.min_split_minutes = true;
-    }
-
-    if (hasSubmitted && isTaskMaxSplitMinutesInvalid(
+    const validations = buildSubmittedTaskValidations(
+        estimatedMinutes,
+        completedMinutes,
         allowSplit,
         minSplitMinutes,
         maxSplitMinutes,
-    )) {
-        errors.max_split_minutes = true;
-    }
+        bufferEnabled,
+        bufferBeforeMinutes,
+        bufferAfterMinutes,
+    );
 
-    if (hasSubmitted && isTaskBufferMinutesInvalid(bufferEnabled, bufferBeforeMinutes)) {
-        errors.buffer_before_minutes = true;
-    }
-
-    if (hasSubmitted && isTaskBufferMinutesInvalid(bufferEnabled, bufferAfterMinutes)) {
-        errors.buffer_after_minutes = true;
-    }
+    addTaskFormError(errors, "start", shouldValidateTime && isTaskTimeInvalid(startDateTime, endDateTime));
+    addTaskFormError(errors, "deadline", shouldValidateTime && isTaskTimeInvalid(startDateTime, endDateTime));
+    addTaskFormError(errors, "importance", isTaskImportanceInvalid(importance));
+    applySubmittedTaskErrors(errors, validations, hasSubmitted);
 
     return errors;
 }

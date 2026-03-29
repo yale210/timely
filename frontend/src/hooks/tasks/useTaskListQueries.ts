@@ -45,16 +45,52 @@ async function loadCategories(
   }
 }
 
-function buildLoadTasksArgs(args: UseTaskListQueriesArgs): UseTaskListQueriesArgs {
-  return {
-    sortBy: args.sortBy,
-    filterCategory: args.filterCategory,
-    filterCompleted: args.filterCompleted,
-    setTasks: args.setTasks,
-    setCategories: args.setCategories,
-    setLoading: args.setLoading,
-    setError: args.setError,
-  };
+function useTaskListTasksQuery(args: UseTaskListQueriesArgs) {
+  const {
+    sortBy,
+    filterCategory,
+    filterCompleted,
+    setTasks,
+    setCategories,
+    setLoading,
+    setError,
+  } = args;
+
+  return useCallback(
+    () => loadTasks({
+      sortBy,
+      filterCategory,
+      filterCompleted,
+      setTasks,
+      setCategories,
+      setLoading,
+      setError,
+    }),
+    [
+      filterCategory,
+      filterCompleted,
+      setCategories,
+      setError,
+      setLoading,
+      setTasks,
+      sortBy,
+    ],
+  );
+}
+
+function useTaskListCategoriesQuery(
+  setCategories: React.Dispatch<React.SetStateAction<Category[]>>,
+) {
+  return useCallback(
+    () => loadCategories(setCategories),
+    [setCategories],
+  );
+}
+
+function useTaskListInitialFetch(refresh: () => Promise<void>) {
+  useEffect(() => {
+    void refresh();
+  }, [refresh]);
 }
 
 function useTaskListRefresh(
@@ -73,36 +109,10 @@ function useTaskListRefresh(
  * @returns Query actions for the task list.
  */
 export function useTaskListQueries(args: UseTaskListQueriesArgs) {
-  const {
-    sortBy,
-    filterCategory,
-    filterCompleted,
-    setTasks,
-    setCategories,
-    setLoading,
-    setError,
-  } = args;
-  const fetchTasks = useCallback(
-    () => loadTasks(buildLoadTasksArgs({
-      sortBy,
-      filterCategory,
-      filterCompleted,
-      setTasks,
-      setCategories,
-      setLoading,
-      setError,
-    })),
-    [filterCategory, filterCompleted, setCategories, setError, setLoading, setTasks, sortBy],
-  );
-  const fetchCategories = useCallback(
-    () => loadCategories(setCategories),
-    [setCategories],
-  );
+  const fetchTasks = useTaskListTasksQuery(args);
+  const fetchCategories = useTaskListCategoriesQuery(args.setCategories);
   const refresh = useTaskListRefresh(fetchTasks, fetchCategories);
-
-  useEffect(() => {
-    void refresh();
-  }, [refresh]);
+  useTaskListInitialFetch(refresh);
 
   return { fetchTasks, refresh };
 }
