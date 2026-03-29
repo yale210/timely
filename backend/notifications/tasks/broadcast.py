@@ -87,9 +87,7 @@ def _dispatch_single_recipient(
 
 def _record_dispatch_failure(provider_errors, recipient, error_code, error_msg):
     """Record one failed provider delivery."""
-    provider_errors.append(
-        _recipient_provider_error(recipient, error_code, error_msg)
-    )
+    provider_errors.append(_recipient_provider_error(recipient, error_code, error_msg))
 
 
 def _bulk_create_broadcast_recipients(broadcast, recipient_ids):

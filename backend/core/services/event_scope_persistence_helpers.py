@@ -60,7 +60,9 @@ def persist_scope_this_update(
     return event
 
 
-def _build_following_split_context(event: Any, original_start_time: datetime) -> tuple[datetime.date, list[Any], list[dict[str, Any]], list[str], list[str]]:
+def _build_following_split_context(
+    event: Any, original_start_time: datetime
+) -> tuple[datetime.date, list[Any], list[dict[str, Any]], list[str], list[str]]:
     """Collect the parent-series context needed for a following-scope split."""
     original_date = original_start_time.date()
     parent_categories = list(event.categories.all())

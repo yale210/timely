@@ -10,7 +10,9 @@ from scheduler.scheduler_types import ScheduleResult
 DateTimeRange = tuple[datetime, datetime]
 
 
-def build_split_result(task_id: int | None, segments: list[DateTimeRange], remaining: int) -> ScheduleResult:
+def build_split_result(
+    task_id: int | None, segments: list[DateTimeRange], remaining: int
+) -> ScheduleResult:
     """Construct a split-scheduling result from allocated segments."""
     if remaining <= 0 and segments:
         return ScheduleResult(

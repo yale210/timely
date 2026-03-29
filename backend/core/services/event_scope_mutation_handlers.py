@@ -59,6 +59,7 @@ def _scope_this_update_data(
     )
     return payload, final_reminders, final_category_ids
 
+
 def _has_recurrence_pattern_change(
     event: Any,
     validated_data: dict[str, Any],
@@ -143,7 +144,12 @@ def _update_scope_this(
         original_start_time,
     )
     return persist_scope_this_update(
-        event, existing_override, payload, final_category_ids, final_reminders, original_start_time
+        event,
+        existing_override,
+        payload,
+        final_category_ids,
+        final_reminders,
+        original_start_time,
     )
 
 
@@ -200,7 +206,9 @@ def _apply_recurring_delete_scope(
 ) -> None:
     """Route recurring event deletions to the correct scoped implementation."""
     if scope == "this":
-        _delete_scope_this(event, _require_original_start_time(original_start_time, "this"))
+        _delete_scope_this(
+            event, _require_original_start_time(original_start_time, "this")
+        )
         return
 
     if scope == "following":

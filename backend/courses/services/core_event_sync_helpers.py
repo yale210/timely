@@ -72,9 +72,7 @@ def update_core_event_from_course_event(core_event, course_event) -> bool:
         updated = True
 
     if updated:
-        core_event.save(
-            update_fields=["description", "location", "colour", "end_time"]
-        )
+        core_event.save(update_fields=["description", "location", "colour", "end_time"])
 
     return updated
 
@@ -99,9 +97,7 @@ def update_user_specific_core_event(
         updated = True
 
     if updated:
-        core_event.save(
-            update_fields=["description", "location", "colour", "end_time"]
-        )
+        core_event.save(update_fields=["description", "location", "colour", "end_time"])
 
     return updated
 
@@ -111,8 +107,7 @@ def record_sync_error(
 ) -> None:
     """Append and log a sync error."""
     error_msg = (
-        f"Failed to sync course_event {course_event.id} "
-        f"for user {username}: {str(exc)}"
+        f"Failed to sync course_event {course_event.id} for user {username}: {str(exc)}"
     )
     logger.error(error_msg, exc_info=True)
     stats["errors"].append(error_msg)

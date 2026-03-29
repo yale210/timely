@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import date, datetime, timedelta
+from datetime import date, datetime
 
 from core.models import Task
 from scheduler.engine.scheduling_split_helpers import (
