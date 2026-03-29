@@ -286,7 +286,7 @@ export const getStaff = async (id: number): Promise<CourseStaff[]> => {
  * Retrieves the current teacher's information from the server.
  * This asynchronous function makes a network request to the `/api/teachers/me/`
  * endpoint to fetch data about the current teacher.
- * If the API responds with a 404 "teacher not found" detail, the function
+ * If the API responds with a 200 "You are not registered as a teacher", the function
  * returns null instead of treating it as an error.
  * @returns A promise that resolves to the teacher's information, or null if
  * the current user is not a teacher.
