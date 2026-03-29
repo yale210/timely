@@ -79,7 +79,9 @@ class TeacherViewTests(TestCase):
         response = view(request)
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data["detail"], "You are not registered as a teacher.")
+        self.assertEqual(
+            response.data["detail"], "You are not registered as a teacher."
+        )
 
     def test_me_returns_not_found_for_inactive_teacher(self):
         """Test me returns a not-found response for inactive teachers."""
@@ -93,7 +95,9 @@ class TeacherViewTests(TestCase):
         response = view(request)
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data["detail"], "You are not registered as a teacher.")
+        self.assertEqual(
+            response.data["detail"], "You are not registered as a teacher."
+        )
 
     def test_create_teacher_creates_teacher_for_authenticated_user(self):
         """Test create_teacher lets an admin register a teacher for a user."""
