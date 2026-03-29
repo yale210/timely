@@ -38,7 +38,9 @@ class CourseStaffMixin(CourseViewSetBase):
             .filter(course=course, active=True)
             .order_by("-assigned_at")
         )
-        return Response([self._serialise_staff_member(item) for item in staff])
+        return Response(
+            [self._serialise_staff_member(staff_member) for staff_member in staff]
+        )
 
     def _add_staff_member(self, request, course):
         serializer = CourseStaffAddSerializer(data=request.data)
