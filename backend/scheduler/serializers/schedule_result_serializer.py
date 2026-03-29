@@ -1,5 +1,6 @@
 """Serializers for the scheduler application."""
 
+from drf_spectacular.utils import extend_schema_field, inline_serializer
 from rest_framework import serializers
 
 
@@ -17,6 +18,16 @@ class ScheduleResultSerializer(serializers.Serializer):
     reason = serializers.CharField(allow_null=True, required=False)
     segments = serializers.SerializerMethodField()
 
+    @extend_schema_field(
+        inline_serializer(
+            name="ScheduleSegment",
+            fields={
+                "start": serializers.DateTimeField(),
+                "end": serializers.DateTimeField(),
+            },
+            many=True,
+        )
+    )
     def get_segments(self, instance):
         """Retrieve and format the segments of a scheduled task.
 

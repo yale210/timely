@@ -1,8 +1,10 @@
 """Views for the scheduler application."""
 
-from rest_framework import permissions, status
+from rest_framework import permissions, serializers, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
+
+from drf_spectacular.utils import extend_schema, inline_serializer
 
 from core.models import Task
 
@@ -16,6 +18,15 @@ class UnscheduleTasksAPIView(APIView):
 
     permission_classes = [permissions.IsAuthenticated]
 
+    @extend_schema(
+        request=None,
+        responses={
+            200: inline_serializer(
+                name="UnscheduleTasksResponse",
+                fields={"unscheduled_count": serializers.IntegerField()},
+            ),
+        },
+    )
     def post(self, request):
         """Handle task unscheduling request.
 
