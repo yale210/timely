@@ -1,8 +1,10 @@
 """View for accepting or rejecting shared event requests."""
 
-from rest_framework import permissions
+from rest_framework import permissions, serializers
 from rest_framework.response import Response
 from rest_framework.views import APIView
+
+from drf_spectacular.utils import extend_schema, inline_serializer
 
 from core.models import Event, PendingShareEvent
 
@@ -16,6 +18,29 @@ class ShareAcceptView(APIView):
 
     permission_classes = [permissions.IsAuthenticated]
 
+    @extend_schema(
+        request=inline_serializer(
+            name="ShareAcceptRequest",
+            fields={
+                "Decision": serializers.CharField(
+                    help_text='Either "accept" or "reject".',
+                ),
+                "Event-ID": serializers.IntegerField(
+                    help_text="ID of the pending share event.",
+                ),
+            },
+        ),
+        responses={
+            200: inline_serializer(
+                name="ShareAcceptSuccessResponse",
+                fields={"message": serializers.CharField()},
+            ),
+            400: inline_serializer(
+                name="ShareAcceptErrorResponse",
+                fields={"error": serializers.CharField()},
+            ),
+        },
+    )
     def post(self, request):
         """Handle accepting or rejecting a shared event.
 

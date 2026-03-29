@@ -5,11 +5,13 @@ and unregistering (deactivating) teacher accounts.
 """
 
 from django.contrib.auth import get_user_model
-from rest_framework import status
+from rest_framework import serializers, status
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.viewsets import ViewSet
+
+from drf_spectacular.utils import extend_schema, inline_serializer
 
 from courses.models import Course, Teacher
 from courses.permissions.teacher_permission import IsTeacher
@@ -19,6 +21,17 @@ from courses.serializers.teacher_serializer import (
 )
 
 User = get_user_model()
+
+_TEACHER_COURSE_ITEM = inline_serializer(
+    name="TeacherCourseItem",
+    fields={
+        "id": serializers.IntegerField(),
+        "name": serializers.CharField(),
+        "description": serializers.CharField(),
+        "created_at": serializers.DateTimeField(),
+        "active": serializers.BooleanField(),
+    },
+)
 
 
 class TeacherView(ViewSet):
@@ -37,6 +50,22 @@ class TeacherView(ViewSet):
             ]
         return super(TeacherView, self).get_permissions()
 
+    @extend_schema(
+        request=None,
+        responses={
+            200: inline_serializer(
+                name="TeacherListResponse",
+                fields={
+                    "id": serializers.IntegerField(),
+                    "user_id": serializers.IntegerField(),
+                    "username": serializers.CharField(),
+                    "active": serializers.BooleanField(),
+                    "courses": _TEACHER_COURSE_ITEM,
+                },
+                many=True,
+            ),
+        },
+    )
     def list(self, request):
         """Lists all active teachers and their managed courses.
 
@@ -78,6 +107,21 @@ class TeacherView(ViewSet):
 
         return Response(data, status=status.HTTP_200_OK)
 
+    @extend_schema(
+        request=None,
+        responses={
+            200: inline_serializer(
+                name="TeacherMeResponse",
+                fields={
+                    "id": serializers.IntegerField(),
+                    "user_id": serializers.IntegerField(),
+                    "username": serializers.CharField(),
+                    "active": serializers.BooleanField(),
+                    "courses": _TEACHER_COURSE_ITEM,
+                },
+            ),
+        },
+    )
     @action(
         detail=False,
         methods=["get"],
@@ -122,6 +166,17 @@ class TeacherView(ViewSet):
             status=status.HTTP_200_OK,
         )
 
+    @extend_schema(
+        request=TeacherCreateSerializer,
+        responses={
+            200: TeacherSerializer,
+            201: TeacherSerializer,
+            403: inline_serializer(
+                name="TeacherCreateForbiddenResponse",
+                fields={"detail": serializers.CharField()},
+            ),
+        },
+    )
     @action(
         detail=False,
         methods=["post"],
@@ -163,6 +218,16 @@ class TeacherView(ViewSet):
             status=status.HTTP_201_CREATED if created else status.HTTP_200_OK,
         )
 
+    @extend_schema(
+        request=None,
+        responses={
+            200: TeacherSerializer,
+            404: inline_serializer(
+                name="TeacherUnregisterNotFoundResponse",
+                fields={"detail": serializers.CharField()},
+            ),
+        },
+    )
     @action(
         detail=False,
         methods=["post"],

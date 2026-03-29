@@ -3,9 +3,10 @@
 from datetime import datetime
 from django.db import transaction
 from django.utils import timezone
-from rest_framework import permissions
+from rest_framework import permissions, serializers
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from drf_spectacular.utils import extend_schema, inline_serializer
 from core.models import Event
 
 
@@ -30,6 +31,24 @@ class ImportView(APIView):
             return timezone.make_aware(parsed)
         return parsed
 
+    @extend_schema(
+        request={
+            "multipart/form-data": inline_serializer(
+                name="ImportFileRequest",
+                fields={"file": serializers.FileField()},
+            ),
+        },
+        responses={
+            200: inline_serializer(
+                name="ImportSuccessResponse",
+                fields={"message": serializers.CharField()},
+            ),
+            400: inline_serializer(
+                name="ImportErrorResponse",
+                fields={"error": serializers.CharField()},
+            ),
+        },
+    )
     def post(self, request):
         """Handle the import of events from a .txt file in iCalendar format.
 
