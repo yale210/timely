@@ -12,7 +12,10 @@ from .scheduler_services_support import SchedulerServicesSupport
 
 
 class SchedulerServiceConstraintTests(SchedulerServicesSupport, TestCase):
+    """Test cases for scheduler service constraint."""
+
     def test_schedule_does_not_place_task_before_task_start_time(self):
+        """Test schedule does not place task before task start time."""
         task = Task.objects.create(
             user=self.user,
             title="Afternoon task",
@@ -31,6 +34,7 @@ class SchedulerServiceConstraintTests(SchedulerServicesSupport, TestCase):
         self.assertGreaterEqual(results[0].scheduled_start, task.start_time)
 
     def test_schedule_task_split_uses_task_min_split_minutes(self):
+        """Test schedule task split uses task min split minutes."""
         day_one = timezone.localdate() + timedelta(days=1)
 
         Task.objects.create(
@@ -63,6 +67,7 @@ class SchedulerServiceConstraintTests(SchedulerServicesSupport, TestCase):
         )
 
     def test_schedule_task_split_respects_task_max_split_minutes(self):
+        """Test schedule task split respects task max split minutes."""
         start_day = date(2026, 3, 19)
 
         Task.objects.create(
@@ -95,6 +100,7 @@ class SchedulerServiceConstraintTests(SchedulerServicesSupport, TestCase):
         )
 
     def test_schedule_task_split_does_not_create_block_below_task_minimum(self):
+        """Test schedule task split does not create block below task minimum."""
         day_one = date(2026, 3, 19)
         day_two = day_one + timedelta(days=1)
 
@@ -133,6 +139,7 @@ class SchedulerServiceConstraintTests(SchedulerServicesSupport, TestCase):
         self.assertEqual(results[0].segments, [])
 
     def test_schedule_respects_category_daily_limit(self):
+        """Test schedule respects category daily limit."""
         start_day = date(2026, 3, 19)
         category = Category.objects.create(
             user=self.user,
@@ -162,6 +169,7 @@ class SchedulerServiceConstraintTests(SchedulerServicesSupport, TestCase):
         self.assertEqual(results[0].segments, [])
 
     def test_schedule_respects_task_buffer_before_event(self):
+        """Test schedule respects task buffer before event."""
         start_day = date(2026, 3, 19)
         Event.objects.create(
             user=self.user,
@@ -191,6 +199,7 @@ class SchedulerServiceConstraintTests(SchedulerServicesSupport, TestCase):
         )
 
     def test_schedule_respects_existing_task_buffers(self):
+        """Test schedule respects existing task buffers."""
         start_day = date(2026, 3, 19)
         Task.objects.create(
             user=self.user,
@@ -235,6 +244,7 @@ class SchedulerServiceConstraintTests(SchedulerServicesSupport, TestCase):
         )
 
     def test_schedule_respects_recurring_event_instances(self):
+        """Test schedule respects recurring event instances."""
         start_day = timezone.localdate() + timedelta(days=1)
         Event.objects.create(
             user=self.user,

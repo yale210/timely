@@ -17,7 +17,10 @@ from .course_view_test_support import CourseViewTestSupport, User
 
 
 class CourseViewEventsMembershipTests(CourseViewTestSupport):
+    """Test cases for course view events membership."""
+
     def test_get_events_orders_by_start_time(self):
+        """Test get events orders by start time."""
         later = timezone.now() + datetime.timedelta(days=1)
         earlier = timezone.now()
 
@@ -46,6 +49,7 @@ class CourseViewEventsMembershipTests(CourseViewTestSupport):
         self.assertEqual(response.data[1]["title"], "Later")
 
     def test_create_event_requires_authentication(self):
+        """Test create event requires authentication."""
         response = self.client.post(
             self.events_url,
             {
@@ -58,6 +62,7 @@ class CourseViewEventsMembershipTests(CourseViewTestSupport):
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
     def test_create_event_success(self):
+        """Test create event success."""
         self.client.force_authenticate(user=self.teacher_user)
         start = timezone.now()
         end = start + datetime.timedelta(hours=1)
@@ -82,6 +87,7 @@ class CourseViewEventsMembershipTests(CourseViewTestSupport):
         self.assertEqual(event.created_by, self.teacher)
 
     def test_create_event_invalid_range_returns_400(self):
+        """Test create event invalid range returns 400."""
         self.client.force_authenticate(user=self.teacher_user)
         now = timezone.now()
 
@@ -102,10 +108,12 @@ class CourseViewEventsMembershipTests(CourseViewTestSupport):
     # -------------------------
 
     def test_join_requires_authentication(self):
+        """Test join requires authentication."""
         response = self.client.post(self.join_url)
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
     def test_join_creates_enrollment(self):
+        """Test join creates enrollment."""
         self.client.force_authenticate(user=self.student_user)
         response = self.client.post(self.join_url)
 
@@ -118,6 +126,7 @@ class CourseViewEventsMembershipTests(CourseViewTestSupport):
         )
 
     def test_join_reactivates_inactive_enrollment(self):
+        """Test join reactivates inactive enrollment."""
         enrollment = CourseEnrollment.objects.create(
             course=self.course, student=self.student, active=False
         )
@@ -130,6 +139,7 @@ class CourseViewEventsMembershipTests(CourseViewTestSupport):
         self.assertTrue(enrollment.active)
 
     def test_join_creates_student_profile_if_missing(self):
+        """Test join creates student profile if missing."""
         new_user = User.objects.create_user(
             username="newstudent",
             password="password123",
@@ -144,11 +154,13 @@ class CourseViewEventsMembershipTests(CourseViewTestSupport):
         self.assertTrue(Student.objects.filter(user=new_user).exists())
 
     def test_join_rejects_inactive_course(self):
+        """Test join rejects inactive course."""
         self.client.force_authenticate(user=self.student_user)
         response = self.client.post(self.inactive_detail_url.replace("detail", "join"))
         self.assertEqual(response.status_code, status.HTTP_405_METHOD_NOT_ALLOWED)
 
     def test_join_by_code_success(self):
+        """Test join by code success."""
         join_code = CourseJoinCode.objects.create(
             course=self.course,
             code="ABC123",
@@ -170,6 +182,7 @@ class CourseViewEventsMembershipTests(CourseViewTestSupport):
         )
 
     def test_join_by_code_creates_student_profile_if_missing(self):
+        """Test join by code creates student profile if missing."""
         new_user = User.objects.create_user(
             username="codejoiner",
             password="password123",
@@ -198,6 +211,7 @@ class CourseViewEventsMembershipTests(CourseViewTestSupport):
         )
 
     def test_join_by_code_reactivates_inactive_enrollment(self):
+        """Test join by code reactivates inactive enrollment."""
         CourseJoinCode.objects.create(
             course=self.course,
             code="REJOIN",
@@ -218,6 +232,7 @@ class CourseViewEventsMembershipTests(CourseViewTestSupport):
         self.assertTrue(enrollment.active)
 
     def test_join_by_code_invalid_code_returns_400(self):
+        """Test join by code invalid code returns 400."""
         self.client.force_authenticate(user=self.student_user)
         response = self.client.post(
             self.join_by_code_url, {"code": "missing"}, format="json"
@@ -226,6 +241,7 @@ class CourseViewEventsMembershipTests(CourseViewTestSupport):
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
     def test_join_by_code_expired_returns_400(self):
+        """Test join by code expired returns 400."""
         CourseJoinCode.objects.create(
             course=self.course,
             code="EXPIRED",
@@ -242,6 +258,7 @@ class CourseViewEventsMembershipTests(CourseViewTestSupport):
         self.assertIn("expired", response.data["detail"])
 
     def test_leave_success(self):
+        """Test leave success."""
         CourseEnrollment.objects.create(
             course=self.course, student=self.student, active=True
         )
@@ -256,6 +273,7 @@ class CourseViewEventsMembershipTests(CourseViewTestSupport):
         self.assertFalse(enrollment.active)
 
     def test_leave_returns_404_when_no_student_profile(self):
+        """Test leave returns 404 when no student profile."""
         new_user = User.objects.create_user(
             username="nostudent",
             password="password123",
@@ -268,12 +286,14 @@ class CourseViewEventsMembershipTests(CourseViewTestSupport):
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
     def test_leave_returns_404_when_not_enrolled(self):
+        """Test leave returns 404 when not enrolled."""
         self.client.force_authenticate(user=self.student_user)
         response = self.client.post(self.leave_url)
 
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
     def test_join_code_requires_permission(self):
+        """Test join code requires permission."""
         self.client.force_authenticate(user=self.student_user)
         response = self.client.post(
             reverse("course-join-code", args=[self.course.id]),

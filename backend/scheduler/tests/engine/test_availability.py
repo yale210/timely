@@ -90,6 +90,7 @@ class SchedulerAvailabilityMixinTests(TestCase):
         return task
 
     def test_get_occupied_slots_combines_events_tasks_and_manual_blocks(self):
+        """Test get occupied slots combines events tasks and manual blocks."""
         self.scheduler.event_slots = [
             (
                 make_aware(datetime.combine(self.target_date, time(8, 0))),
@@ -122,6 +123,7 @@ class SchedulerAvailabilityMixinTests(TestCase):
         self.assertEqual(len(occupied), 3)
 
     def test_get_available_slots_applies_trimming_blocks_and_capacity(self):
+        """Test get available slots applies trimming blocks and capacity."""
         self.scheduler.event_slots = [
             (
                 make_aware(datetime.combine(self.target_date, time(9, 0))),
@@ -175,6 +177,7 @@ class SchedulerAvailabilityMixinTests(TestCase):
         self.assertEqual(slots, [])
 
     def test_apply_daily_capacity_can_be_disabled_and_counts_scheduled_segments(self):
+        """Test apply daily capacity can be disabled and counts scheduled segments."""
         window = self.scheduler._day_window(self.target_date)
         task = self._task(
             "Scheduled task",

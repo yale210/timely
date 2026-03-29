@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import datetime, timedelta
+from datetime import datetime
 from typing import Any
 
 from django.db import transaction
@@ -9,21 +9,18 @@ from core.services.event_scope_datetime_helpers import (
     _make_aware,
     _normalise_all_scope_datetimes,
 )
+from core.services.event_scope_persistence_helpers import (
+    delete_scope_following,
+    delete_scope_this,
+    persist_scope_this_update,
+    update_scope_following,
+)
 from core.services.event_scope_update_helpers import (
-    _current_event_reminder_snapshot,
     _remove_exception_date,
     _replace_event_reminders,
-    _set_exception_date,
-    _split_exception_dates,
-    assign_following_child_relations,
-    create_following_child,
     detach_non_aligned_overrides,
-    move_future_overrides,
     resolve_scope_this_fields,
     resolve_scope_this_relations,
-    save_scope_this_override,
-    scope_this_is_noop,
-    truncate_or_delete_parent_series,
 )
 
 EVENT_FIELD_NAMES = (
@@ -61,22 +58,6 @@ def _scope_this_update_data(
         validated_data,
     )
     return payload, final_reminders, final_category_ids
-
-
-def _cleanup_scope_this_noop(
-    event: Any,
-    existing_override: Any | None,
-    original_start_time: datetime,
-) -> Any:
-    """Drop the temporary override and restore the base event occurrence.
-
-    Returns:
-        Any: The parent event after restoring the base occurrence.
-    """
-    if existing_override is not None:
-        existing_override.delete()
-    _remove_exception_date(event, original_start_time.date())
-    return event
 
 
 def _has_recurrence_pattern_change(
@@ -162,7 +143,7 @@ def _update_scope_this(
         validated_data,
         original_start_time,
     )
-    return _persist_scope_this_update(
+    return persist_scope_this_update(
         event,
         existing_override,
         payload,
@@ -170,52 +151,6 @@ def _update_scope_this(
         final_reminders,
         original_start_time,
     )
-
-
-def _persist_scope_this_update(
-    event: Any,
-    existing_override: Any | None,
-    payload: Any,
-    final_category_ids: set[int],
-    final_reminders: list[dict[str, Any]],
-    original_start_time: datetime,
-) -> Any:
-    """Persist or discard a single-instance override based on the resolved diff.
-
-    Args:
-        event (Any): The recurring parent event being edited.
-        existing_override (Any | None): Existing override for the same anchor,
-            if one already exists.
-        payload (Any): Resolved override field values for the target instance.
-        final_category_ids (set[int]): Category ids that should remain attached
-            to the override.
-        final_reminders (list[dict[str, Any]]): Reminder payloads to store on
-            the override snapshot.
-        original_start_time (datetime): Anchor timestamp for the edited series
-            occurrence.
-
-    Returns:
-        Any: The parent event after the override is saved, or the restored event
-        when the edit is effectively a no-op.
-    """
-    if scope_this_is_noop(
-        event,
-        payload,
-        final_category_ids,
-        final_reminders,
-        original_start_time,
-    ):
-        return _cleanup_scope_this_noop(event, existing_override, original_start_time)
-    save_scope_this_override(
-        event,
-        existing_override,
-        original_start_time,
-        payload,
-        final_reminders,
-        final_category_ids,
-    )
-    _set_exception_date(event, original_start_time.date())
-    return event
 
 
 def _update_scope_following(
@@ -228,49 +163,72 @@ def _update_scope_following(
     Returns:
         Any: The newly created child event.
     """
-    original_start_time = _make_aware(original_start_time)
-    original_date = original_start_time.date()
-    parent_categories = list(event.categories.all())
-    parent_reminders = _current_event_reminder_snapshot(event)
-    past_exception_dates, future_exception_dates = _split_exception_dates(
-        event.exception_dates,
-        original_date,
-    )
-    child = create_following_child(
-        event,
-        validated_data,
-        original_start_time,
-        future_exception_dates,
-    )
-    assign_following_child_relations(
-        child,
-        validated_data,
-        parent_categories,
-        parent_reminders,
-    )
-    move_future_overrides(event, child, original_date)
-    cutoff = original_date - timedelta(days=1)
-    truncate_or_delete_parent_series(event, cutoff, past_exception_dates)
-    return child
+    return update_scope_following(event, validated_data, original_start_time)
+
+
+def _require_original_start_time(
+    original_start_time: datetime | None,
+    scope: str,
+) -> datetime:
+    """Validate and return the original occurrence anchor for scoped mutations."""
+    if original_start_time is None:
+        raise ValueError(f"original_start_time is required for scope='{scope}'.")
+    return original_start_time
+
+
+def _apply_recurring_update_scope(
+    event: Any,
+    validated_data: dict[str, Any],
+    scope: str,
+    original_start_time: datetime | None,
+) -> Any:
+    """Route recurring event updates to the correct scoped implementation."""
+    if scope == "this":
+        anchor = _require_original_start_time(original_start_time, "this")
+        if _has_recurrence_pattern_change(event, validated_data):
+            raise ValueError(
+                "Recurrence pattern changes are not supported for scope='this'. "
+                "Use scope='following' or scope='all'."
+            )
+        return _update_scope_this(event, validated_data, anchor)
+
+    if scope == "following":
+        anchor = _require_original_start_time(original_start_time, "following")
+        return _update_scope_following(event, validated_data, anchor)
+
+    return _update_scope_all(event, validated_data, original_start_time)
+
+
+def _apply_recurring_delete_scope(
+    event: Any,
+    scope: str,
+    original_start_time: datetime | None,
+) -> None:
+    """Route recurring event deletions to the correct scoped implementation."""
+    if scope == "this":
+        _delete_scope_this(
+            event, _require_original_start_time(original_start_time, "this")
+        )
+        return
+
+    if scope == "following":
+        _delete_scope_following(
+            event,
+            _require_original_start_time(original_start_time, "following"),
+        )
+        return
+
+    event.delete()
 
 
 def _delete_scope_this(event: Any, original_start_time: datetime) -> None:
     """Delete a single overridden occurrence and restore the parent series."""
-    original_start_time = _make_aware(original_start_time)
-    event.overrides.filter(original_start_time=original_start_time).delete()
-    _set_exception_date(event, original_start_time.date())
+    delete_scope_this(event, original_start_time)
 
 
 def _delete_scope_following(event: Any, original_start_time: datetime) -> None:
     """Remove the current and future series fragments from the parent event."""
-    original_start_time = _make_aware(original_start_time)
-    original_date = original_start_time.date()
-    cutoff = original_date - timedelta(days=1)
-    event.overrides.filter(original_start_time__date__gte=original_date).delete()
-    past_exception_dates, _ = _split_exception_dates(
-        event.exception_dates, original_date
-    )
-    truncate_or_delete_parent_series(event, cutoff, past_exception_dates)
+    delete_scope_following(event, original_start_time)
 
 
 @transaction.atomic
@@ -296,20 +254,12 @@ def apply_update_scope(
     """
     if not event.recurrence_interval:
         return _update_scope_all(event, validated_data)
-    if scope == "this":
-        if original_start_time is None:
-            raise ValueError("original_start_time is required for scope='this'.")
-        if _has_recurrence_pattern_change(event, validated_data):
-            raise ValueError(
-                "Recurrence pattern changes are not supported for scope='this'. "
-                "Use scope='following' or scope='all'."
-            )
-        return _update_scope_this(event, validated_data, original_start_time)
-    if scope == "following":
-        if original_start_time is None:
-            raise ValueError("original_start_time is required for scope='following'.")
-        return _update_scope_following(event, validated_data, original_start_time)
-    return _update_scope_all(event, validated_data, original_start_time)
+    return _apply_recurring_update_scope(
+        event,
+        validated_data,
+        scope,
+        original_start_time,
+    )
 
 
 @transaction.atomic
@@ -331,17 +281,7 @@ def apply_delete_scope(
     if not event.recurrence_interval or scope == "all":
         event.delete()
         return
-    if scope == "this":
-        if original_start_time is None:
-            raise ValueError("original_start_time is required for scope='this'.")
-        _delete_scope_this(event, original_start_time)
-        return
-    if scope == "following":
-        if original_start_time is None:
-            raise ValueError("original_start_time is required for scope='following'.")
-        _delete_scope_following(event, original_start_time)
-        return
-    event.delete()
+    _apply_recurring_delete_scope(event, scope, original_start_time)
 
 
 @transaction.atomic

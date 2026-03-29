@@ -68,6 +68,7 @@ class PreferenceMeTests(APITestCase):
         )
 
     def test_me_patch_validation_day_start_after_day_end(self):
+        """Test me patch validation day start after day end."""
         self.client.force_authenticate(user=self.user)
 
         res = self.client.patch(
@@ -79,6 +80,7 @@ class PreferenceMeTests(APITestCase):
         self.assertIn("day_end", res.json())
 
     def test_me_patch_validation_day_schedule_rejects_reverse_window(self):
+        """Test me patch validation day schedule rejects reverse window."""
         self.client.force_authenticate(user=self.user)
 
         res = self.client.patch(
@@ -100,6 +102,7 @@ class PreferenceMeTests(APITestCase):
         self.assertIn("day_schedule", res.json())
 
     def test_me_patch_accepts_new_general_preferences(self):
+        """Test me patch accepts new general preferences."""
         self.client.force_authenticate(user=self.user)
 
         res = self.client.patch(

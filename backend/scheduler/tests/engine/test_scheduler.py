@@ -31,6 +31,7 @@ class SchedulerEngineClassTests(TestCase):
         )
 
     def test_scheduler_composes_expected_mixins(self):
+        """Test scheduler composes expected mixins."""
         scheduler = Scheduler(self.user)
 
         self.assertIsInstance(scheduler, SchedulerDataMixin)
@@ -39,6 +40,7 @@ class SchedulerEngineClassTests(TestCase):
         self.assertIsInstance(scheduler, SchedulerSchedulingMixin)
 
     def test_scheduler_initialises_engine_state(self):
+        """Test scheduler initialises engine state."""
         task = Task.objects.create(
             user=self.user,
             title="Engine task",

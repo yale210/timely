@@ -14,6 +14,8 @@ User = get_user_model()
 
 
 class NotificationConsumerTest(SerializeMixin, TransactionTestCase):
+    """Test cases for notification consumer."""
+
     lockfile = __file__
 
     async def _test_connect_authenticated(self):
@@ -72,6 +74,7 @@ class NotificationConsumerTest(SerializeMixin, TransactionTestCase):
         await communicator.disconnect()
 
     def test_all_consumer_logic(self):
+        """Test all consumer logic."""
         loop = asyncio.new_event_loop()
         asyncio.set_event_loop(loop)
         try:
