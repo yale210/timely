@@ -284,14 +284,15 @@ export const getStaff = async (id: number): Promise<CourseStaff[]> => {
 
 /**
  * Retrieves the current teacher's information from the server.
- * This asynchronous function makes a network request to the `/api/teachers/`
- * endpoint to fetch data about the current teacher. The response, once received,
- * is logged to the console and the teacher's data is returned as a Promise.
- * @returns A promise that resolves to the teacher's information.
+ * This asynchronous function makes a network request to the `/api/teachers/me/`
+ * endpoint to fetch data about the current teacher.
+ * If the API responds with a 404 "teacher not found" detail, the function
+ * returns null instead of treating it as an error.
+ * @returns A promise that resolves to the teacher's information, or null if
+ * the current user is not a teacher.
  */
-export const getCurrentTeacher = async (): Promise<Teacher> => {
-  const response = await api.get<Teacher>("/api/teachers/");
-  
+export const getCurrentTeacher = async (): Promise<Teacher | null> => {
+  const response = await api.get<Teacher | null>("/api/teachers/me/");
   return response.data;
 };
 

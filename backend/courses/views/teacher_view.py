@@ -73,6 +73,44 @@ class TeacherView(ViewSet):
 
     @action(
         detail=False,
+        methods=["get"],
+        url_path="me",
+        permission_classes=[IsAuthenticated],
+    )
+    def me(self, request):
+        """Returns the current user's teacher profile if they are a teacher."""
+        teacher = Teacher.objects.select_related("user").filter(user=request.user).first()
+
+        if teacher is None or not teacher.active:
+            return Response(
+                None,
+                status=status.HTTP_200_OK,
+            )
+
+        courses = Course.objects.filter(lead=teacher, active=True).order_by("-created_at")
+
+        return Response(
+            {
+                "id": teacher.user_id,
+                "user_id": teacher.user_id,
+                "username": teacher.user.username,
+                "active": teacher.active,
+                "courses": [
+                    {
+                        "id": course.id,
+                        "name": course.name,
+                        "description": course.description,
+                        "created_at": course.created_at,
+                        "active": course.active,
+                    }
+                    for course in courses
+                ],
+            },
+            status=status.HTTP_200_OK,
+        )
+
+    @action(
+        detail=False,
         methods=["post"],
         url_path="",
         permission_classes=[IsAuthenticated],
