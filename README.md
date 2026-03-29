@@ -166,5 +166,11 @@ All third-party libraries used by Timely are declared in:
 
 
 ## AI Usage Disclosure
+We have used tools like ChatGPT and Github Copilot for:
+- understanding Django patterns and APIs
+- guidance on how to implement common functionality
+- debugging and error explanation
 
+All code was written and adapted and reviewed properly by the team.
+AI has only been used for low level assistance in line with module policy.
 
