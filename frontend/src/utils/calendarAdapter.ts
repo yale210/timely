@@ -1,5 +1,6 @@
 import moment from "moment";
 import type { Category, Event, Task } from "@/types";
+import { toCalendarDisplayDate } from "@/utils/calendarDisplayTime";
 
 /**
  * Represents a calendar event rendered by react-big-calendar.
@@ -27,6 +28,7 @@ interface BuildCalendarEntriesOptions {
   tasks: Task[];
   events: Event[];
   scheduleOrder: Record<number, number>;
+  timeZone: string;
 }
 
 const getRenderableEnd = (startValue: string, endValue: string): Date => {
@@ -51,6 +53,7 @@ export const buildCalendarEntries = ({
   tasks,
   events,
   scheduleOrder,
+  timeZone,
 }: BuildCalendarEntriesOptions): CalendarEntry[] => [
   ...tasks.flatMap((task) => {
     const allocations = task.allocation ?? [];
@@ -61,9 +64,9 @@ export const buildCalendarEntries = ({
     return allocations.map((slot, index) => ({
       id: `task-${task.id}-${index}`,
       title: task.title,
-      start: new Date(slot.start),
-      end: getRenderableEnd(slot.start, slot.end),
-      actualEnd: new Date(slot.end),
+      start: toCalendarDisplayDate(slot.start, timeZone),
+      end: toCalendarDisplayDate(getRenderableEnd(slot.start, slot.end), timeZone),
+      actualEnd: toCalendarDisplayDate(slot.end, timeZone),
       allDay: moment(slot.end).diff(moment(slot.start), "hours") >= 24,
       kind: "task" as const,
       sourceId: task.id,
@@ -78,9 +81,9 @@ export const buildCalendarEntries = ({
   ...events.map((event) => ({
     id: event.instance_id ?? `event-${event.id}-${event.start_time}`,
     title: event.title,
-    start: new Date(event.start_time),
-    end: getRenderableEnd(event.start_time, event.end_time),
-    actualEnd: new Date(event.end_time),
+    start: toCalendarDisplayDate(event.start_time, timeZone),
+    end: toCalendarDisplayDate(getRenderableEnd(event.start_time, event.end_time), timeZone),
+    actualEnd: toCalendarDisplayDate(event.end_time, timeZone),
     allDay: false,
     kind: "event" as const,
     sourceId: event.id,

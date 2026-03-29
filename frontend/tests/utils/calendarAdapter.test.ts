@@ -48,6 +48,7 @@ describe("buildCalendarEntries", () => {
       tasks,
       events,
       scheduleOrder: { 1: 0 },
+      timeZone: "Europe/London",
     });
 
     expect(entries).toHaveLength(2);
@@ -94,6 +95,7 @@ describe("buildCalendarEntries", () => {
       ],
       events: [],
       scheduleOrder: {},
+      timeZone: "Europe/London",
     });
 
     expect(entries).toHaveLength(2);
@@ -102,4 +104,3 @@ describe("buildCalendarEntries", () => {
     expect(entries[1].split).toBe(true);
   });
 });
-

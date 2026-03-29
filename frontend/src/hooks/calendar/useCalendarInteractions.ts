@@ -4,14 +4,17 @@ import { normalizeInteractionStart, normalizeInteractionEnd } from "./calendarTy
 import * as taskService from "@/services/taskService";
 import * as eventService from "@/services/eventService";
 import type { CalendarEntry } from "@/utils/calendarAdapter";
-import type { Event, EventMutationContext, Task } from "@/types";
+import type { Event, EventMutationContext, Preference, Task } from "@/types";
 import type { View } from "react-big-calendar";
+import { fromCalendarDisplayDate } from "@/utils/calendarDisplayTime";
+import { getStoredUserTimezone } from "@/utils/userTimezone";
 
 interface UseCalendarInteractionsProps {
   tasks: Task[];
   events: Event[];
   isSidebarOpen: boolean;
   scheduleOrder: Record<number, number>;
+  preference: Preference | null;
   view: View;
   date: Date;
   setTasks: Dispatch<SetStateAction<Task[]>>;
@@ -35,6 +38,7 @@ export const useCalendarInteractions = (props: UseCalendarInteractionsProps) => 
     events,
     isSidebarOpen,
     scheduleOrder,
+    preference,
     view,
     date,
     setTasks,
@@ -46,6 +50,7 @@ export const useCalendarInteractions = (props: UseCalendarInteractionsProps) => 
     fetchTasks,
     fetchEvents,
   } = props;
+  const activeTimezone = preference?.timezone ?? getStoredUserTimezone();
 
   // Refs so callbacks don't need frequently-changing values as deps, which would
   // cause them to recreate on every data update and force CalendarView to re-render.
@@ -77,14 +82,16 @@ export const useCalendarInteractions = (props: UseCalendarInteractionsProps) => 
       if (isSidebarOpenRef.current && slot.action !== "select") return;
       if (!slot.start) return;
 
-      const slotStart = slot.slots && slot.slots.length > 0 ? slot.slots[0] : slot.start;
-      let slotEnd = slot.end ?? slotStart;
+      const displaySlotStart = slot.slots && slot.slots.length > 0 ? slot.slots[0] : slot.start;
+      let displaySlotEnd = slot.end ?? displaySlotStart;
       if (slot.slots && slot.slots.length > 0) {
-        slotEnd = slot.slots[slot.slots.length - 1];
+        displaySlotEnd = slot.slots[slot.slots.length - 1];
       }
-      if (slotEnd <= slotStart) {
-        slotEnd = new Date(slotStart.getTime() + 60 * 60 * 1000);
+      if (displaySlotEnd <= displaySlotStart) {
+        displaySlotEnd = new Date(displaySlotStart.getTime() + 60 * 60 * 1000);
       }
+      const slotStart = fromCalendarDisplayDate(displaySlotStart, activeTimezone);
+      const slotEnd = fromCalendarDisplayDate(displaySlotEnd, activeTimezone);
       
       setSidebarMode("event");
       setSelectedItem({
@@ -106,7 +113,7 @@ export const useCalendarInteractions = (props: UseCalendarInteractionsProps) => 
       });
       setIsSidebarOpen(true);
     },
-    [setSidebarMode, setSelectedItem, setIsSidebarOpen],
+    [activeTimezone, setSidebarMode, setSelectedItem, setIsSidebarOpen],
   );
 
   const selectEntry = useCallback(
@@ -144,10 +151,12 @@ export const useCalendarInteractions = (props: UseCalendarInteractionsProps) => 
         return next;
       });
       
+      const actualStart = fromCalendarDisplayDate(start, activeTimezone);
+      const actualEnd = fromCalendarDisplayDate(end, activeTimezone);
       const nextAllocations = [...(task.allocation ?? [])];
       nextAllocations[entry.allocationIndex] = {
-        start: start.toISOString(),
-        end: end.toISOString(),
+        start: actualStart.toISOString(),
+        end: actualEnd.toISOString(),
       };
 
       setTasks((prev) =>
@@ -161,7 +170,7 @@ export const useCalendarInteractions = (props: UseCalendarInteractionsProps) => 
         await fetchTasks();
       }
     },
-    [fetchTasks, setScheduleOrder, setTasks],
+    [activeTimezone, fetchTasks, setScheduleOrder, setTasks],
   );
 
   const updateCalendarEvent = useCallback(
@@ -172,9 +181,11 @@ export const useCalendarInteractions = (props: UseCalendarInteractionsProps) => 
 
       if (!eventData) return;
 
+      const actualStart = fromCalendarDisplayDate(start, activeTimezone);
+      const actualEnd = fromCalendarDisplayDate(end, activeTimezone);
       const payload: Pick<Event, "start_time" | "end_time"> = {
-        start_time: start.toISOString(),
-        end_time: end.toISOString(),
+        start_time: actualStart.toISOString(),
+        end_time: actualEnd.toISOString(),
       };
 
       const context: EventMutationContext | undefined = eventData.recurrence_interval
@@ -204,7 +215,7 @@ export const useCalendarInteractions = (props: UseCalendarInteractionsProps) => 
         await fetchEvents(viewRef.current, dateRef.current);
       }
     },
-    [fetchEvents, setEvents],
+    [activeTimezone, fetchEvents, setEvents],
   );
 
   const handleEventDrop = useCallback(
