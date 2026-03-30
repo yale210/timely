@@ -230,7 +230,7 @@ const MiniCalendarPreview = ({ tasks, events }: MiniCalendarPreviewProps) => {
       style={sizingVars}
       ref={containerRef}
     >
-      <Calendar
+      <Calendar<MiniCalendarEntry>
         localizer={localizer}
         events={calendarEntries}
         defaultView={Views.WEEK}
