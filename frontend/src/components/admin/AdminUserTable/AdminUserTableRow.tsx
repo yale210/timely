@@ -1,6 +1,5 @@
 import { type AdminUserSummary } from "@/types";
-import { AdminUserRoleBadge } from "./AdminUserRoleBadge";
-import { AdminUserStatusBadge } from "./AdminUserStatusBadge";
+import { AdminUserRoleBadge, AdminUserStatusBadge } from "./AdminUserBadges";
 
 interface AdminUserTableRowProps {
   user: AdminUserSummary;

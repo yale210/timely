@@ -1,6 +1,6 @@
 import { render, screen } from "@testing-library/react";
 import { describe, it, expect } from "vitest";
-import { AdminUserStatusBadge } from "@/components/admin/AdminUserTable/AdminUserStatusBadge";
+import { AdminUserStatusBadge } from "@/components/admin/AdminUserTable/AdminUserBadges";
 
 describe("AdminUserStatusBadge Component", () => {
   it("renders Active when isActive is true", () => {

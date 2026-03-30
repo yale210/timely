@@ -1,6 +1,6 @@
 import { render, screen, fireEvent } from "@testing-library/react";
 import { vi, describe, it, expect } from "vitest";
-import { AdminUserTableRoleFilter } from "@/components/admin/AdminUserTable/AdminUserTableRoleFilter";
+import { AdminUserTableRoleFilter } from "@/components/admin/AdminUserTable/AdminUserTableControls";
 
 describe("AdminUserTableRoleFilter Component", () => {
   it("renders and handles changes", () => {

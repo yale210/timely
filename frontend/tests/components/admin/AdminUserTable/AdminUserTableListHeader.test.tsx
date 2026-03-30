@@ -1,6 +1,6 @@
 import { render, screen, fireEvent } from "@testing-library/react";
 import { vi, describe, it, expect } from "vitest";
-import { AdminUserTableListHeader } from "@/components/admin/AdminUserTable/AdminUserTableListHeader";
+import { AdminUserTableListHeader } from "@/components/admin/AdminUserTable/AdminUserTableList";
 
 describe("AdminUserTableListHeader Component", () => {
   it("renders headers and handles select all", () => {
