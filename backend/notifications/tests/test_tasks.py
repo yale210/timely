@@ -156,9 +156,7 @@ class TasksTests(TestCase):
             start_time=original_start,
             end_time=original_start + timezone.timedelta(hours=1),
             original_start_time=original_start,
-            reminders_snapshot=[
-                {"minutes_before": 0, "send_push": False, "send_email": False}
-            ],
+            reminders_snapshot=[{"minutes_before": 0, "send_push": False}],
         )
 
         check_reminders()
@@ -286,11 +284,9 @@ class TasksTests(TestCase):
         """Test reminder signature."""
         from notifications.tasks import _reminder_signature
 
-        reminder = {"minutes_before": 15, "send_email": True, "send_push": False}
+        reminder = {"minutes_before": 15, "send_push": False}
         sig1 = _reminder_signature(reminder)
-        sig2 = _reminder_signature(
-            {"minutes_before": "15", "send_email": True, "send_push": False}
-        )
+        sig2 = _reminder_signature({"minutes_before": "15", "send_push": False})
         self.assertEqual(sig1, sig2)
 
     def test_record_dispatch_integrity_error(self):

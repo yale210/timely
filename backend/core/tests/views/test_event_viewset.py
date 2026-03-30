@@ -32,8 +32,8 @@ class EventViewSetTests(APITestCase):
             "start_time": now + datetime.timedelta(hours=3),
             "end_time": now + datetime.timedelta(hours=4),
             "reminders": [
-                {"send_push": True, "send_email": False, "minutes_before": 15},
-                {"send_push": False, "send_email": True, "minutes_before": 60},
+                {"send_push": True, "minutes_before": 15},
+                {"send_push": False, "minutes_before": 60},
             ],
         }
         response = self.client.post(self.url, data, format="json")
@@ -61,9 +61,7 @@ class EventViewSetTests(APITestCase):
             "title": "New Title",
             "start_time": now + datetime.timedelta(hours=3),
             "end_time": now + datetime.timedelta(hours=4),
-            "reminders": [
-                {"send_push": False, "send_email": True, "minutes_before": 20}
-            ],
+            "reminders": [{"send_push": False, "minutes_before": 20}],
         }
         response = self.client.put(url, data, format="json")
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -71,7 +69,6 @@ class EventViewSetTests(APITestCase):
         event.refresh_from_db()
         self.assertEqual(event.title, "New Title")
         self.assertEqual(event.reminders.count(), 1)
-        self.assertTrue(event.reminders.first().send_email)
         self.assertFalse(event.reminders.first().send_push)
         self.assertEqual(event.reminders.first().minutes_before, 20)
 
@@ -91,7 +88,6 @@ class EventViewSetTests(APITestCase):
         self.assertEqual(len(response.data), 1)
         self.assertEqual(len(response.data[0]["reminders"]), 1)
         self.assertTrue(response.data[0]["reminders"][0]["send_push"])
-        self.assertFalse(response.data[0]["reminders"][0]["send_email"])
 
     def test_create_event_with_max_reminders(self):
         """Test create event with max reminders."""
@@ -104,8 +100,8 @@ class EventViewSetTests(APITestCase):
                 {"send_push": True, "minutes_before": 5},
                 {"send_push": True, "minutes_before": 10},
                 {"send_push": True, "minutes_before": 15},
-                {"send_email": True, "minutes_before": 30},
-                {"send_email": True, "minutes_before": 60},
+                {"minutes_before": 30},
+                {"minutes_before": 60},
             ],
         }
         response = self.client.post(self.url, data, format="json")
@@ -123,8 +119,8 @@ class EventViewSetTests(APITestCase):
                 {"send_push": True, "minutes_before": 5},
                 {"send_push": True, "minutes_before": 10},
                 {"send_push": True, "minutes_before": 15},
-                {"send_email": True, "minutes_before": 30},
-                {"send_email": True, "minutes_before": 60},
+                {"minutes_before": 30},
+                {"minutes_before": 60},
                 {
                     "send_push": True,
                     "minutes_before": 120,

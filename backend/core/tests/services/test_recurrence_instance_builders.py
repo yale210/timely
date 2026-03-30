@@ -40,7 +40,6 @@ class RecurrenceInstanceBuilderTests(TestCase):
         EventReminder.objects.create(
             event=self.event,
             minutes_before=15,
-            send_email=True,
             send_push=False,
         )
         override = EventOverride.objects.create(
@@ -61,7 +60,6 @@ class RecurrenceInstanceBuilderTests(TestCase):
                 {
                     "id": 1,
                     "minutes_before": 15,
-                    "send_email": True,
                     "send_push": False,
                 }
             ],
