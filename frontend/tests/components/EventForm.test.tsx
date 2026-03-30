@@ -84,7 +84,7 @@ const mockInitialData: Event = {
   recurrence_interval: 'weekly',
   recurrence_end: '2026-12-31',
   reminders: [
-    { id: 1, send_email: false, send_push: true, minutes_before: 30 }
+    { id: 1, send_push: true, minutes_before: 30 }
   ]
 }
 
@@ -218,9 +218,6 @@ describe('EventForm', () => {
 
     fireEvent.click(screen.getByText(/Add Reminder/i))
     expect(screen.getByText(/minutes/i)).toBeInTheDocument()
-
-    const emailCheckbox = screen.getAllByLabelText(/Email/i)[0]
-    fireEvent.click(emailCheckbox)
 
     const minutesInput = screen.getAllByDisplayValue('15')
     fireEvent.change(minutesInput[0], { target: { value: '45' } })
