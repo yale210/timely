@@ -84,9 +84,9 @@ Timely aims to provide:
 - support for both individual productivity and collaborative academic features
 - a platform that is testable, maintainable, and deployable as a real web application
 
-## Marker Quick Start
+## Quick Start
 
-The recommended path for examiners is the Nix flake because it installs dependencies, prepares a local SQLite database, generates local VAPID keys, and exposes consistent entrypoints.
+The recommended path is the Nix flake because it installs dependencies, prepares a local SQLite database, generates local VAPID keys, and exposes consistent entrypoints.
 
 ```bash
 nix run .#init
