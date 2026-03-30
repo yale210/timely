@@ -122,6 +122,4 @@ class DeleteAccountViewTests(TestCase):
 
         self.assertEqual(response.status_code, 400)
         self.assertEqual(response.data, {"password": ["Incorrect password."]})
-        self.assertTrue(
-            get_user_model().objects.filter(username="testuser").exists()
-        )
+        self.assertTrue(get_user_model().objects.filter(username="testuser").exists())

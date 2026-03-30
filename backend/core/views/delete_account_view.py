@@ -14,9 +14,7 @@ class DeleteAccountRequestSerializer(serializers.Serializer):
         """Require the authenticated user's current password."""
         request = self.context["request"]
         if not request.user.check_password(attrs["password"]):
-            raise serializers.ValidationError(
-                {"password": ["Incorrect password."]}
-            )
+            raise serializers.ValidationError({"password": ["Incorrect password."]})
         return attrs
 
 
