@@ -8,7 +8,6 @@ export type TimeUnit = "minutes" | "hours" | "days" | "weeks" | "months" | "year
  *
  */
 export interface ReminderFormState {
-    send_email: boolean;
     send_push: boolean;
     value: number;
     unit: TimeUnit;
@@ -18,7 +17,6 @@ export interface ReminderFormState {
  *
  */
 export interface NormalisedEventReminder {
-    send_email: boolean;
     send_push: boolean;
     minutes_before: number;
 }

@@ -6,7 +6,6 @@ import type { Category } from "./category"
  */
 export interface EventReminder {
   id?: number;
-  send_email: boolean;
   send_push: boolean;
   minutes_before: number;
 }

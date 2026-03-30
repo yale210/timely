@@ -25,9 +25,9 @@ function initialSelectedCategories(event?: Event) {
  * @returns List of Reminders, potentially empty.
  */
 function initialReminders(event?: Event): ReminderFormState[] {
-  return event?.reminders?.map(({ send_email, send_push, minutes_before }) => {
+  return event?.reminders?.map(({ send_push, minutes_before }) => {
     const { value, unit } = fromMinutesBefore(minutes_before);
-    return { send_email, send_push, value, unit };
+    return { send_push, value, unit };
   }) ?? [];
 }
 

@@ -17,7 +17,7 @@ function refreshValidationNow(setValidationNowMs: Args["setValidationNowMs"]) {
 }
 
 function buildDefaultReminder(): ReminderFormState {
-  return { send_email: false, send_push: false, value: 15, unit: "minutes" };
+  return { send_push: false, value: 15, unit: "minutes" };
 }
 
 function updateReminderField<K extends keyof ReminderFormState>(
@@ -84,7 +84,7 @@ function useToggleReminderChannelAction(
 ) {
   return useCallback((
     index: number,
-    field: "send_email" | "send_push",
+    field: "send_push",
     value: boolean,
   ) => {
     refreshValidationNow(setValidationNowMs);
@@ -115,7 +115,7 @@ function useHandleTogglePushAction(
   args: Args,
   toggleReminderChannel: (
     index: number,
-    field: "send_email" | "send_push",
+    field: "send_push",
     value: boolean,
   ) => void,
 ) {
