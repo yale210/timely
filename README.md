@@ -54,6 +54,13 @@ Focus, analytics, and personalisation
 - weekly statistics dashboard and analytics views
 - theme, font, timezone, and profile settings
 
+Event Export and Import
+- event data can be converted into a file in the standard iCalendar format
+- iCalendar files can be imported, and have event data created from them
+
+Privacy and Data Deletion
+- data can be deleted from the application, including user accounts, events and tasks
+
 ## Architecture
 
 Timely uses a modular full-stack architecture:
@@ -257,6 +264,8 @@ Non-code AI assistance used on this project should also be listed if relevant, f
 
 - Push notifications require valid VAPID keys and a compatible browser environment.
 - Courses and Notifications do not work using Nix or local setup, it only works using Docker
+- The complete iCalendar specification is not implemented, meaning that imported files with certain unsupported (by the application) syntax will fail to be parsed. Currently, this results in no changes being made. Future development would certainly require an expansion of the iCakendar specification supported so that more valid files can be imported.
+
 
 ## Submission Checklist
 
