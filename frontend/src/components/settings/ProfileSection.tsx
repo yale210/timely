@@ -51,6 +51,7 @@ const ProfileSection = ({
 }: ProfileSectionProps) => {
   const avatarInputRef = useRef<HTMLInputElement | null>(null);
   const [selectedAvatarName, setSelectedAvatarName] = useState("No file chosen");
+  const avatarInputId = "profile-avatar-input";
 
   if (loading) {
     return <p className="text-sm text-gray-500">Loading...</p>;
@@ -95,8 +96,9 @@ const ProfileSection = ({
             )}
           </div>
           <div className="min-w-0 flex-1">
-            <label className="text-sm font-semibold text-gray-800">Avatar</label>
+            <label htmlFor={avatarInputId} className="text-sm font-semibold text-gray-800">Avatar</label>
             <input
+              id={avatarInputId}
               ref={avatarInputRef}
               type="file"
               accept="image/*"

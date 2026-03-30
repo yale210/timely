@@ -135,6 +135,7 @@ export default function GradebookHeader(props: GradebookHeaderProps) {
   const newButton = (
     <button
       onClick={() => setModalOpen(true)}
+      aria-label="New grade"
       className="flex items-center rounded-md bg-primary px-3 py-1.5 text-sm font-medium text-white shadow-sm transition-colors hover:bg-blue-300"
     >
       <span className="material-icons text-base">add</span>

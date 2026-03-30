@@ -79,6 +79,7 @@ const Assessments = () => {
             <button
               type="button"
               onClick={actions.openNewAssessment}
+              aria-label="New assessment"
               className="order-2 inline-flex items-center rounded-md bg-primary px-3 py-1.5 text-sm font-medium text-white shadow-sm transition-colors hover:bg-blue-300"
             >
               <span className="material-icons text-base">add</span>

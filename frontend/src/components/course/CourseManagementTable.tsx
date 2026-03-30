@@ -1,4 +1,4 @@
-﻿import { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import type { Course, CourseManagmentState } from "@/types/course";
 import { formatDateInTimezone } from "@/utils/userTimezone";
 

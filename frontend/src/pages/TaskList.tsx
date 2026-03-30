@@ -29,6 +29,7 @@ const TaskList = () => {
             <h1 className="order-1 mr-auto text-2xl font-semibold text-black">Tasks</h1>
             <button
               onClick={actions.openNewTask}
+              aria-label="New task"
               className="order-2 inline-flex items-center rounded-md bg-primary px-3 py-1.5 text-sm font-medium text-white shadow-sm transition-colors hover:bg-blue-300"
             >
               <span className="material-icons text-base">add</span>
