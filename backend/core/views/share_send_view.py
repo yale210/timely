@@ -91,6 +91,18 @@ class ShareSendView(APIView):
             return Response(response, status=400)
 
     def get_username_and_event_id(self, request):
+        """Extract and validate the recipient username and event identifier.
+
+        Args:
+            request: The DRF request containing the share form payload.
+
+        Returns:
+            tuple[str, str | int]: A lowercase username and the raw event ID
+            value provided by the client.
+
+        Raises:
+            ValueError: If either field is missing or blank.
+        """
         username = request.data.get("Receiver")
         event_id = request.data.get("Event-ID")
         normalized_username = str(username).strip().lower() if username else ""
@@ -101,6 +113,17 @@ class ShareSendView(APIView):
         return normalized_username, event_id
 
     def get_event_id_in_database(self, event_id):
+        """Normalize the incoming event identifier to a database primary key.
+
+        Args:
+            event_id (str | int): The client-supplied event identifier.
+
+        Returns:
+            int: The numeric primary key used for the event lookup.
+
+        Raises:
+            ValueError: If the identifier cannot be converted to an integer.
+        """
         try:
             event_id_string = str(event_id).strip()
             if event_id_string.startswith("e"):
@@ -113,6 +136,18 @@ class ShareSendView(APIView):
         return event_id_in_db
 
     def get_event_to_share(self, request, event_id_in_db):
+        """Load the event being shared and verify sender ownership.
+
+        Args:
+            request: The DRF request for the authenticated sender.
+            event_id_in_db (int): Event primary key resolved from the payload.
+
+        Returns:
+            Event: The sender-owned event that will be shared.
+
+        Raises:
+            ValueError: If the sender does not own the event.
+        """
         try:
             event_to_share = Event.objects.get(user=request.user, pk=event_id_in_db)
         except Event.DoesNotExist:
@@ -120,6 +155,18 @@ class ShareSendView(APIView):
         return event_to_share
 
     def get_receiver_user(self, normalized_username):
+        """Resolve the recipient user account by normalized username.
+
+        Args:
+            normalized_username (str): Lowercase username extracted from the
+                request payload.
+
+        Returns:
+            User: The target user who will receive the shared event.
+
+        Raises:
+            ValueError: If the username does not exist.
+        """
         try:
             receiver_user = get_user_model().objects.get(username=normalized_username)
         except get_user_model().DoesNotExist:
@@ -127,6 +174,16 @@ class ShareSendView(APIView):
         return receiver_user
 
     def check_event_belongs_to_receiver(self, event_to_share, receiver_user):
+        """Check whether the recipient already has the same event copy.
+
+        Args:
+            event_to_share (Event): The sender-owned event being shared.
+            receiver_user: The intended recipient of the share.
+
+        Returns:
+            bool: ``True`` when a matching event already exists for the
+            recipient, otherwise ``False``.
+        """
         event_belongs_to_receiver = Event.objects.filter(
             user=receiver_user,
             title=event_to_share.title,
@@ -142,6 +199,19 @@ class ShareSendView(APIView):
     def check_share_request_already_exists(
         self, request, event_to_share, receiver_user
     ):
+        """Prevent duplicate pending share requests for the same recipient.
+
+        Args:
+            request: The DRF request for the authenticated sender.
+            event_to_share (Event): The sender-owned event being shared.
+            receiver_user: The intended recipient of the share.
+
+        Returns:
+            bool: ``False`` when the request is new.
+
+        Raises:
+            ValueError: If an identical pending share already exists.
+        """
         request_already_exists = PendingShareEvent.objects.filter(
             sender=request.user,
             receiver=receiver_user,

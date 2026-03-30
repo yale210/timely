@@ -11,7 +11,17 @@ class DeleteAccountRequestSerializer(serializers.Serializer):
     password = serializers.CharField(trim_whitespace=False)
 
     def validate(self, attrs):
-        """Require the authenticated user's current password."""
+        """Require the authenticated user's current password.
+
+        Args:
+            attrs (dict[str, Any]): Serializer-validated input data.
+
+        Returns:
+            dict[str, Any]: The validated attributes when the password matches.
+
+        Raises:
+            ValidationError: If the supplied password is incorrect.
+        """
         request = self.context["request"]
         if not request.user.check_password(attrs["password"]):
             raise serializers.ValidationError({"password": ["Incorrect password."]})
