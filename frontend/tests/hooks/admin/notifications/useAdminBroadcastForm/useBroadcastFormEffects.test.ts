@@ -1,6 +1,6 @@
 import { renderHook } from "@testing-library/react";
 import { vi, describe, it, expect, beforeEach, afterEach } from "vitest";
-import { useBroadcastFormEffects } from "@/hooks/admin/notifications/useAdminBroadcastForm/useBroadcastFormEffects";
+import { useBroadcastFormEffects } from "@/hooks/admin/notifications/useAdminBroadcastFormCore";
 
 describe("useBroadcastFormEffects hook", () => {
   beforeEach(() => {

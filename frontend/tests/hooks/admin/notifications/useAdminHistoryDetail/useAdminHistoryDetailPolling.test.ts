@@ -1,6 +1,6 @@
 import { renderHook, act } from "@testing-library/react";
 import { vi, describe, it, expect, beforeEach, afterEach } from "vitest";
-import { useAdminHistoryDetailPolling } from "@/hooks/admin/notifications/useAdminHistoryDetail/useAdminHistoryDetailPolling";
+import { useAdminHistoryDetailPolling } from "@/hooks/admin/notifications/useAdminHistoryDetail";
 import * as api from "@/api/notifications";
 import { type BroadcastJobStatusResponse } from "@/types";
 

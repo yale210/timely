@@ -1,6 +1,6 @@
 import { renderHook, act } from "@testing-library/react";
 import { vi, describe, it, expect, beforeEach, afterEach } from "vitest";
-import { useBroadcastDelivery } from "@/hooks/admin/notifications/useAdminBroadcastForm/useBroadcastDelivery";
+import { useBroadcastDelivery } from "@/hooks/admin/notifications/useAdminBroadcastDelivery";
 import * as api from "@/api/notifications";
 import { type BroadcastJobStatusResponse } from "@/types";
 
