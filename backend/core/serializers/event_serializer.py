@@ -17,12 +17,12 @@ class EventReminderSerializer(serializers.ModelSerializer):
     class Meta:
         """Configure reminder fields used when events expose nested reminders.
 
-        The API only persists the identifier, push/email toggles, and relative
-        offset because reminder timing is derived from the parent event window.
+        The API only persists the identifier, push toggle, and relative offset
+        because reminder timing is derived from the parent event window.
         """
 
         model = EventReminder
-        fields = ["id", "send_push", "send_email", "minutes_before"]
+        fields = ["id", "send_push", "minutes_before"]
 
 
 class ExpandedEventReminderSerializer(serializers.Serializer):
@@ -30,7 +30,6 @@ class ExpandedEventReminderSerializer(serializers.Serializer):
 
     id = serializers.IntegerField(required=False)
     send_push = serializers.BooleanField(required=False, default=False)
-    send_email = serializers.BooleanField(required=False, default=False)
     minutes_before = serializers.IntegerField(min_value=0)
 
 

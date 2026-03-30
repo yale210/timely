@@ -90,7 +90,6 @@ export function buildSubmission(args: Args): EventSubmission {
     recurrence_interval: (args.recurrenceInterval as Event["recurrence_interval"]) ?? null,
     recurrence_end: args.recurrenceEnd || null,
     reminders: args.reminders.map((r) => ({
-      send_email: r.send_email,
       send_push: r.send_push,
       minutes_before: toMinutesBefore(r.value, r.unit),
     })),

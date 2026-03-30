@@ -36,7 +36,6 @@ def serialise_event_reminders(event: Any) -> list[dict[str, Any]]:
     return [
         {
             "id": reminder.id,
-            "send_email": reminder.send_email,
             "send_push": reminder.send_push,
             "minutes_before": reminder.minutes_before,
         }

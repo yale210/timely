@@ -59,8 +59,8 @@ class RecurrenceExpansionServiceTests(TestCase):
     def test_normalise_reminder_snapshot_invalid(self):
         """Test normalise reminder snapshot invalid."""
         bad_data = [
-            {"minutes_before": "not-a-number", "send_email": True},
-            {"minutes_before": 15, "send_email": True},
+            {"minutes_before": "not-a-number"},
+            {"minutes_before": 15},
         ]
         result = _normalise_reminder_snapshot(bad_data)
         self.assertEqual(len(result), 1)

@@ -7,7 +7,6 @@ export type TimeUnit = "minutes" | "hours" | "days" | "weeks" | "months" | "year
  * Reminder information data structure.
  */
 export interface ReminderFormState {
-    send_email: boolean;
     send_push: boolean;
     value: number;
     unit: TimeUnit;
