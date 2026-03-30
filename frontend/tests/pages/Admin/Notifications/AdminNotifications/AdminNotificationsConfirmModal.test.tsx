@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from "vitest";
 import { fireEvent, render, screen } from "@testing-library/react";
-import { AdminNotificationsConfirmModal } from "@/pages/Admin/Notifications/AdminNotifications/AdminNotificationsConfirmModal";
+import { AdminNotificationsConfirmModal } from "@/components/admin/notifications";
 
 vi.mock("@/components/modals/ConfirmationModal", () => ({
   default: ({

@@ -1,6 +1,6 @@
 import { render, screen } from "@testing-library/react";
 import { describe, it, expect } from "vitest";
-import { AdminNotificationsHeader } from "@/pages/Admin/Notifications/AdminNotifications/AdminNotificationsHeader";
+import { AdminNotificationsHeader } from "@/components/admin/notifications";
 
 describe("AdminNotificationsHeader Component", () => {
   it("renders correctly", () => {

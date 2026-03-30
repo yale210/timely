@@ -1,6 +1,6 @@
 import { render, screen, fireEvent } from "@testing-library/react";
 import { vi, describe, it, expect } from "vitest";
-import { AdminNotificationHistoryHeader } from "@/pages/Admin/Notifications/AdminNotificationHistory/AdminNotificationHistoryHeader";
+import { AdminNotificationHistoryHeader } from "@/components/admin/notifications";
 
 describe("AdminNotificationHistoryHeader Component", () => {
   it("renders correctly and handles navigation", () => {

@@ -1,7 +1,7 @@
 import { render, screen, fireEvent } from "@testing-library/react";
 import { vi, describe, it, expect } from "vitest";
 import { BrowserRouter } from "react-router-dom";
-import { AdminNotificationHistoryDetailHeader } from "@/pages/Admin/Notifications/AdminNotificationHistoryDetail/AdminNotificationHistoryDetailHeader";
+import { AdminNotificationHistoryDetailHeader } from "@/components/admin/notifications";
 
 describe("AdminNotificationHistoryDetailHeader Component", () => {
   it("renders correctly and handles retry click", () => {

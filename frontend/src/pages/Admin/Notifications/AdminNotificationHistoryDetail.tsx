@@ -1,10 +1,12 @@
 import AppLayout from "@/layouts/AppLayout";
-import { AdminHistoryDetailPayload } from "@/components/admin/notifications/AdminHistoryDetailPayload";
-import { AdminHistoryDetailRecipientsTable } from "@/components/admin/notifications/AdminHistoryDetailRecipientsTable";
-import { AdminHistoryDetailMetrics } from "@/components/admin/notifications/AdminHistoryDetailMetrics";
+import {
+  AdminHistoryDetailMetrics,
+  AdminHistoryDetailPayload,
+  AdminHistoryDetailRecipientsTable,
+  AdminNotificationHistoryDetailHeader,
+  AdminNotificationHistoryDetailRetryModal,
+} from "@/components/admin/notifications";
 import { useAdminHistoryDetail } from "@/hooks/admin/notifications/useAdminHistoryDetail";
-import { AdminNotificationHistoryDetailHeader } from "./AdminNotificationHistoryDetail/AdminNotificationHistoryDetailHeader";
-import { AdminNotificationHistoryDetailRetryModal } from "./AdminNotificationHistoryDetail/AdminNotificationHistoryDetailRetryModal";
 
 /**
  * Renders details and recipient status for a broadcast history item.

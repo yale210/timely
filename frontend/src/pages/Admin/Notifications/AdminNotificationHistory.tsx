@@ -1,9 +1,11 @@
 import { useNavigate } from "react-router-dom";
 import AppLayout from "@/layouts/AppLayout";
-import { AdminHistoryFilters } from "@/components/admin/notifications/AdminHistoryFilters";
-import { AdminHistoryTable } from "@/components/admin/notifications/AdminHistoryTable";
+import {
+  AdminHistoryFilters,
+  AdminHistoryTable,
+  AdminNotificationHistoryHeader,
+} from "@/components/admin/notifications";
 import { useAdminHistory } from "@/hooks/admin/notifications/useAdminHistory";
-import { AdminNotificationHistoryHeader } from "./AdminNotificationHistory/AdminNotificationHistoryHeader";
 
 /**
  * Renders the admin notification broadcast history page.

@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { render, screen } from "@testing-library/react";
-import { AdminNotificationsTips } from "@/pages/Admin/Notifications/AdminNotifications/AdminNotificationsTips";
+import { AdminNotificationsTips } from "@/components/admin/notifications";
 
 describe("AdminNotificationsTips", () => {
   it("renders the static broadcast guidance", () => {

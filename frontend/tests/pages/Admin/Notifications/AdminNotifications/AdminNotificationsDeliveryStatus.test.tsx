@@ -1,7 +1,7 @@
 import { render, screen } from "@testing-library/react";
 import { describe, it, expect } from "vitest";
 import { BrowserRouter } from "react-router-dom";
-import { AdminNotificationsDeliveryStatus } from "@/pages/Admin/Notifications/AdminNotifications/AdminNotificationsDeliveryStatus";
+import { AdminNotificationsDeliveryStatus } from "@/components/admin/notifications";
 import { type BroadcastJobStatusResponse } from "@/types";
 
 describe("AdminNotificationsDeliveryStatus Component", () => {

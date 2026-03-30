@@ -1,11 +1,13 @@
 import AppLayout from "@/layouts/AppLayout";
-import { AdminBroadcastForm } from "@/components/admin/notifications/AdminBroadcastForm";
-import { AdminLivePreview } from "@/components/admin/notifications/AdminLivePreview";
+import {
+  AdminBroadcastForm,
+  AdminLivePreview,
+  AdminNotificationsConfirmModal,
+  AdminNotificationsDeliveryStatus,
+  AdminNotificationsHeader,
+  AdminNotificationsTips,
+} from "@/components/admin/notifications";
 import { useAdminBroadcastForm } from "@/hooks/admin/notifications/useAdminBroadcastForm";
-import { AdminNotificationsHeader } from "./AdminNotifications/AdminNotificationsHeader";
-import { AdminNotificationsDeliveryStatus } from "./AdminNotifications/AdminNotificationsDeliveryStatus";
-import { AdminNotificationsTips } from "./AdminNotifications/AdminNotificationsTips";
-import { AdminNotificationsConfirmModal } from "./AdminNotifications/AdminNotificationsConfirmModal";
 
 const getBroadcastFormProps = (
   state: ReturnType<typeof useAdminBroadcastForm>["state"],
