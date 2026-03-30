@@ -2,8 +2,6 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import type { ReactNode } from "react";
-import { NotificationProvider } from "@/context/NotificationContext";
-
 import { AdminNotifications } from "@/pages/Admin/Notifications/AdminNotifications";
 import {
   getAdminUsers,
@@ -23,13 +21,15 @@ vi.mock("@/api/notifications", () => ({
   getBroadcastStatus: vi.fn(),
 }));
 
+vi.mock("@/hooks/admin/notifications/useAdminBroadcastForm/useBroadcastFormEffects", () => ({
+  useBroadcastFormEffects: () => undefined,
+}));
+
 describe("AdminNotifications Page", () => {
   const renderPage = () =>
     render(
       <MemoryRouter>
-        <NotificationProvider>
-          <AdminNotifications />
-        </NotificationProvider>
+        <AdminNotifications />
       </MemoryRouter>,
     );
 
