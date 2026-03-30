@@ -21,9 +21,16 @@ vi.mock("@/api/notifications", () => ({
   getBroadcastStatus: vi.fn(),
 }));
 
-vi.mock("@/hooks/admin/notifications/useAdminBroadcastForm/useBroadcastFormEffects", () => ({
-  useBroadcastFormEffects: () => undefined,
-}));
+vi.mock("@/hooks/admin/notifications/useAdminBroadcastFormCore", async () => {
+  const actual = await vi.importActual<
+    typeof import("@/hooks/admin/notifications/useAdminBroadcastFormCore")
+  >("@/hooks/admin/notifications/useAdminBroadcastFormCore");
+
+  return {
+    ...actual,
+    useBroadcastFormEffects: () => undefined,
+  };
+});
 
 describe("AdminNotifications Page", () => {
   const renderPage = () =>
