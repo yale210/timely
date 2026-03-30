@@ -3,6 +3,7 @@ import type { SettingsSection } from "@/components/settings/types";
 import ConfirmationModal from "@/components/modals/ConfirmationModal";
 
 interface SettingsSidebarProps {
+  mobileLayout?: boolean;
   state: {
     activeSection: SettingsSection;
   };
@@ -24,6 +25,7 @@ interface SettingsSidebarProps {
  * @returns The settings sidebar.
  */
 const SettingsSidebar = ({
+  mobileLayout = false,
   state,
   loading,
   actions,
@@ -64,37 +66,69 @@ const SettingsSidebar = ({
     },
   ];
 
+  const renderNavButton = (
+    item: { label: string; value: SettingsSection; icon: string },
+    itemIndex: number,
+  ) => {
+    const isActive = state.activeSection === item.value;
+    if (mobileLayout) {
+      return (
+        <button
+          key={item.value}
+          type="button"
+          disabled={loading.saving}
+          onClick={() => actions.selectSection(item.value)}
+          className={`w-full rounded-lg px-3 py-2.5 text-left text-sm font-semibold leading-tight transition-colors ${
+            isActive
+              ? "bg-cyan-50 text-cyan-700 ring-1 ring-cyan-100"
+              : "bg-white text-gray-600 ring-1 ring-gray-200 hover:bg-gray-50"
+          } disabled:cursor-not-allowed disabled:opacity-70`}
+        >
+          <span className="flex items-center gap-2">
+            <span className="material-icons text-base">{item.icon}</span>
+            {item.label}
+          </span>
+        </button>
+      );
+    }
+
+    return (
+      <button
+        key={item.value}
+        type="button"
+        disabled={loading.saving}
+        onClick={() => actions.selectSection(item.value)}
+        className={`w-full rounded-md px-3 py-2.5 text-left text-base font-semibold transition-colors ${
+          itemIndex > 0 ? "mt-2 " : ""
+        }${
+          isActive
+            ? "bg-cyan-50 text-cyan-700 ring-1 ring-cyan-100"
+            : "text-gray-600 hover:bg-gray-50"
+        } disabled:cursor-not-allowed disabled:opacity-70`}
+      >
+        <span className="flex items-center gap-2">
+          <span className="material-icons text-lg">{item.icon}</span>
+          {item.label}
+        </span>
+      </button>
+    );
+  };
+
   return (
-    <aside className="w-56 min-w-56 shrink-0">
-      <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
+    <aside className={mobileLayout ? "w-full" : "w-56 min-w-56 shrink-0"}>
+      <div className={`rounded-xl border border-gray-200 bg-white shadow-sm ${mobileLayout ? "p-3" : "p-4"}`}>
         {navGroups.map((group, groupIndex) => (
-          <div key={group.label} className={groupIndex > 0 ? "mt-5" : ""}>
-            <p className="mb-2 px-3 text-xs font-semibold uppercase tracking-[0.14em] text-gray-400">
+          <div key={group.label} className={groupIndex > 0 ? (mobileLayout ? "mt-4" : "mt-5") : ""}>
+            <p className={`mb-2 font-semibold uppercase text-gray-400 ${
+              mobileLayout
+                ? "px-1 text-[10px] tracking-[0.18em]"
+                : "px-3 text-xs tracking-[0.14em]"
+            }`}>
               {group.label}
             </p>
-            {group.items.map((item, itemIndex) => {
-              const isActive = state.activeSection === item.value;
-              return (
-                <button
-                  key={item.value}
-                  type="button"
-                  disabled={loading.saving}
-                  onClick={() => actions.selectSection(item.value)}
-                  className={`w-full rounded-md px-3 py-2.5 text-left text-base font-semibold transition-colors ${
-                    itemIndex > 0 ? "mt-2 " : ""
-                  }${
-                    isActive
-                      ? "bg-cyan-50 text-cyan-700 ring-1 ring-cyan-100"
-                      : "text-gray-600 hover:bg-gray-50"
-                  } disabled:cursor-not-allowed disabled:opacity-70`}
-                >
-                  <span className="flex items-center gap-2">
-                    <span className="material-icons text-lg">{item.icon}</span>
-                    {item.label}
-                  </span>
-                </button>
-              );
-            })}
+            <div className={mobileLayout ? "grid grid-cols-2 gap-2" : ""}>
+              {group.items.map((item, itemIndex) => renderNavButton(item, itemIndex))}
+            </div>
           </div>
         ))}
         <div className="my-4 border-t border-gray-200" />
@@ -102,7 +136,9 @@ const SettingsSidebar = ({
           <button
             type="button"
             onClick={() => setShowLogoutConfirm(true)}
-            className="w-full rounded-md px-3 py-2 text-center text-sm font-semibold text-red-700 hover:bg-red-50"
+            className={`w-full text-center text-sm font-semibold text-red-700 hover:bg-red-50 ${
+              mobileLayout ? "rounded-lg px-3 py-2.5" : "rounded-md px-3 py-2"
+            }`}
           >
             Log out
           </button>

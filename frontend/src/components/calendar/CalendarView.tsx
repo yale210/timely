@@ -1,4 +1,4 @@
-import { memo, useCallback, useEffect, useLayoutEffect, useMemo, useRef, type CSSProperties } from "react";
+import { memo, useCallback, useEffect, useLayoutEffect, useMemo, useRef } from "react";
 import moment from "moment";
 import { Calendar, type Components, type Formats, Views } from "react-big-calendar";
 import withDragAndDrop from "react-big-calendar/lib/addons/dragAndDrop";
@@ -7,22 +7,24 @@ import { HTML5Backend } from "react-dnd-html5-backend";
 import type { UseCalendarReturn } from "@/hooks/calendar/useCalendar";
 import type { CalendarEntry } from "@/utils/calendarAdapter";
 import { useCalendarLocalizer } from "@/utils/calendarLocalizer";
-import { getOverrideColour, hexToRgba } from "@/utils/colorUtils";
+import {
+  buildCalendarComponents,
+  getCalendarEntryClassName,
+  getCalendarEntryStyle,
+} from "@/components/calendar/CalendarViewEventContent";
 import {
   CALENDAR_DISPLAY_TIMEZONE,
-  formatCalendarDisplayTime,
   fromCalendarDisplayDate,
   getCalendarDisplayDayOfWeek,
   getCalendarDisplayMinutes,
   toCalendarDisplayDate,
 } from "@/utils/calendarDisplayTime";
 import { getStoredTimeFormat, getStoredWeekStartsOn } from "@/utils/userPreferences";
-import { getStoredUserTimezone, getZonedDateParts } from "@/utils/userTimezone";
+import { getStoredUserTimezone } from "@/utils/userTimezone";
 
 const DragAndDropCalendar = withDragAndDrop<CalendarEntry>(Calendar);
 const DEFAULT_DRAG_SNAP_MINUTES = 5;
 
-// Module-level stable references — never change, so they never cause re-renders.
 const alwaysTrue = () => true;
 
 interface CalendarViewProps {
@@ -46,116 +48,9 @@ const parseClockMinutes = (value: string): number => {
   return (hour * 60) + minute;
 };
 
-type CalendarEntryStyle = CSSProperties & { "--event-stripe-color"?: string };
-
-const formatEventTime = formatCalendarDisplayTime;
-
-const getEventTimeLabel = (event: CalendarEntry, timeFormat: "24h" | "12h") => {
-  const actualEnd = event.actualEnd ?? event.end;
-  return `${formatEventTime(event.start, timeFormat)} - ${formatEventTime(actualEnd, timeFormat)}`;
-};
-
-const CalendarStandardEventContent = ({ event, timeLabel }: { event: CalendarEntry; timeLabel: string }) => (
-  <div className="flex h-full w-full items-start gap-2">
-    <div className="flex min-w-0 flex-col">
-      <span className="truncate text-[20px] font-medium">{event.title}</span>
-      <span className="truncate text-[15px] text-gray-700">{timeLabel}</span>
-      {event.eventData?.location && (
-        <span className="truncate text-[13px] text-gray-600">{event.eventData.location}</span>
-      )}
-    </div>
-  </div>
-);
-
-const CalendarTaskEventContent = ({
-  event,
-  timeLabel,
-  handleToggleTaskComplete,
-}: {
-  event: CalendarEntry;
-  timeLabel: string;
-  handleToggleTaskComplete: (taskId: number) => Promise<void>;
-}) => (
-  <div className="flex h-full w-full items-start gap-2">
-    <input
-      type="checkbox"
-      checked={Boolean(event.taskData?.completed)}
-      onChange={(inputEvent) => {
-        inputEvent.stopPropagation();
-        void handleToggleTaskComplete(event.sourceId);
-      }}
-      onClick={(inputEvent) => inputEvent.stopPropagation()}
-      className="mt-1 task-event-checkbox"
-      aria-label="Mark task complete"
-    />
-    <div className="flex min-w-0 flex-col">
-      <span className="truncate text-[20px] font-medium">{event.title}</span>
-      <span className="truncate text-[15px] text-gray-600">{timeLabel}</span>
-    </div>
-  </div>
-);
-
-const CalendarEntryContent = ({
-  event,
-  timeFormat,
-  handleToggleTaskComplete,
-}: {
-  event: CalendarEntry;
-  timeFormat: "24h" | "12h";
-  handleToggleTaskComplete: (taskId: number) => Promise<void>;
-}) => {
-  const timeLabel = getEventTimeLabel(event, timeFormat);
-  return event.kind === "task"
-    ? <CalendarTaskEventContent event={event} timeLabel={timeLabel} handleToggleTaskComplete={handleToggleTaskComplete} />
-    : <CalendarStandardEventContent event={event} timeLabel={timeLabel} />;
-};
-
-const buildCalendarComponents = (
-  handleToggleTaskComplete: (taskId: number) => Promise<void>,
-  timeFormat: "24h" | "12h",
-): Components<CalendarEntry> => ({
-  event: ({ event }: { event: CalendarEntry }) => (
-    <CalendarEntryContent
-      event={event}
-      timeFormat={timeFormat}
-      handleToggleTaskComplete={handleToggleTaskComplete}
-    />
-  ),
-});
-
-const getCalendarEntryClassName = (event: CalendarEntry): string =>
-  [
-    "event-slot",
-    event.kind === "task" ? "task-event" : "",
-    event.repeat ? "is-repeat" : "",
-    event.split ? "is-split" : "",
-    event.oneGo ? "is-onego" : "",
-    event.kind === "event" ? "is-event" : "",
-    event.kind === "task" && typeof event.scheduleIndex === "number" ? "is-just-scheduled" : "",
-  ]
-    .filter(Boolean)
-    .join(" ");
-
-const getCalendarEntryColour = (event: CalendarEntry): string =>
-  getOverrideColour(event.kind === "task" ? event.categories : event.eventData?.categories)
-  ?? (event.kind === "task" ? event.taskData?.colour ?? "#3b82f6" : event.eventData?.colour ?? "#f97316");
-
-const getCalendarEntryStyle = (event: CalendarEntry): CSSProperties => {
-  const style: CalendarEntryStyle = {};
-  if (event.kind === "task" && typeof event.scheduleIndex === "number") {
-    style.animationDelay = `${event.scheduleIndex * 120}ms`;
-  }
-  const appliedColour = getCalendarEntryColour(event);
-  style.backgroundColor = hexToRgba(appliedColour, 0.5);
-  style.borderLeft = `4px solid ${appliedColour}`;
-  style["--event-stripe-color"] = hexToRgba(appliedColour, 0.6);
-  style.color = "#000000";
-  return style;
-};
-
-const measureTimeGutterWidth = (shell: HTMLDivElement | null): number => {
+const measureTimeGutterWidth = (shell: HTMLDivElement | null): number | null => {
   const gutter = shell?.querySelector(".rbc-time-gutter");
-  return gutter instanceof HTMLElement ? Math.ceil(gutter.getBoundingClientRect().width) : 0;
+  return gutter instanceof HTMLElement ? Math.ceil(gutter.getBoundingClientRect().width) : null;
 };
 
 const syncTimeGutterWidth = (
@@ -163,7 +58,7 @@ const syncTimeGutterWidth = (
   setTimeGutterWidth: (width: number) => void,
 ) => {
   const nextWidth = measureTimeGutterWidth(shell);
-  if (nextWidth > 0) {
+  if (nextWidth !== null) {
     setTimeGutterWidth(nextWidth);
   }
 };
@@ -182,14 +77,12 @@ const getScrollableAncestor = (element: HTMLElement): HTMLElement | null => {
   return document.scrollingElement instanceof HTMLElement ? document.scrollingElement : null;
 };
 
-const scrollCalendarToCurrentHour = (shell: HTMLDivElement | null, activeTimezone: string) => {
+const scrollCalendarToMidpoint = (shell: HTMLDivElement | null) => {
   const slotGroups = shell?.querySelectorAll(".rbc-time-gutter .rbc-timeslot-group");
   if (!slotGroups || slotGroups.length === 0) {
     return;
   }
-  const currentHour = getZonedDateParts(new Date(), activeTimezone).hour;
-  const targetIndex = Math.min(Math.max(currentHour, 0), slotGroups.length - 1);
-  const targetSlot = slotGroups[targetIndex];
+  const targetSlot = slotGroups[0];
   if (!(targetSlot instanceof HTMLElement)) {
     return;
   }
@@ -197,7 +90,7 @@ const scrollCalendarToCurrentHour = (shell: HTMLDivElement | null, activeTimezon
   if (!scroller) {
     return;
   }
-  scroller.scrollTop += Math.round(targetSlot.getBoundingClientRect().top - scroller.getBoundingClientRect().top);
+  scroller.scrollTop = Math.max(0, Math.round((scroller.scrollHeight - scroller.clientHeight) * 0.4));
 };
 
 const addWindowDraggingListeners = (clearDraggingFlag: () => void) => {
@@ -273,7 +166,6 @@ const CalendarView = ({
   const timeFormat = state.preference?.time_format ?? getStoredTimeFormat();
   const weekStartsOn = state.preference?.week_starts_on ?? getStoredWeekStartsOn();
 
-  // Destructure so the React Compiler can track individual deps rather than the whole object.
   const {
     setTimeGutterWidth,
     handleToggleTaskComplete,
@@ -306,14 +198,14 @@ const CalendarView = ({
     if (state.view !== Views.WEEK && state.view !== Views.DAY) {
       return;
     }
-    const scrollToCurrentHour = () => scrollCalendarToCurrentHour(calendarShellRef.current, activeTimezone);
-    const frame = window.requestAnimationFrame(scrollToCurrentHour);
-    const timer = window.setTimeout(scrollToCurrentHour, 120);
+    const scrollToMidpoint = () => scrollCalendarToMidpoint(calendarShellRef.current);
+    const frame = window.requestAnimationFrame(scrollToMidpoint);
+    const timer = window.setTimeout(scrollToMidpoint, 120);
     return () => {
       window.cancelAnimationFrame(frame);
       window.clearTimeout(timer);
     };
-  }, [activeTimezone, state.date, state.calendarEntries.length, state.view]);
+  }, [state.date, state.calendarEntries.length, state.view]);
 
   useEffect(() => {
     const shell = calendarShellRef.current;
