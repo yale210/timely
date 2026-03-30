@@ -3,7 +3,7 @@ import type { EventMutationContext, RecurrenceScope } from "@/types/recurrence";
 
 describe("recurrence types", () => {
   it("restricts recurrence scope values", () => {
-    const scope = "following" satisfies RecurrenceScope;
+    const scope: RecurrenceScope = "following";
 
     expectTypeOf(scope).toMatchTypeOf<RecurrenceScope>();
   });

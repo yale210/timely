@@ -8,7 +8,7 @@ import type {
 
 describe("assessment types", () => {
   it("restricts supported assessment type values", () => {
-    const assessmentType = "EXAM" satisfies AssessmentType;
+    const assessmentType: AssessmentType = "EXAM";
 
     expectTypeOf(assessmentType).toMatchTypeOf<AssessmentType>();
   });
