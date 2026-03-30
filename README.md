@@ -279,10 +279,6 @@ All the pull requests in which GitHub Copilot was used to review/generate code:
 [#25](https://github.com/xlightningstar/It-Worked-On-My-Machine/pull/25)
 
 
-
-
-Non-code AI assistance used on this project should also be listed if relevant, for example documentation drafting or debugging assistance.
-
 ## Limitations and Future Work
 
 - Push notifications require valid VAPID keys and a compatible browser environment.
