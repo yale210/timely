@@ -170,7 +170,18 @@ def _require_original_start_time(
     original_start_time: datetime | None,
     scope: str,
 ) -> datetime:
-    """Validate and return the original occurrence anchor for scoped mutations."""
+    """Validate and return the original occurrence anchor for scoped mutations.
+
+    Args:
+        original_start_time (datetime | None): Required anchor datetime.
+        scope (str): Mutation scope used to format the validation error.
+
+    Returns:
+        datetime: The validated original occurrence anchor.
+
+    Raises:
+        ValueError: If the anchor is missing for a scoped recurrence update.
+    """
     if original_start_time is None:
         raise ValueError(f"original_start_time is required for scope='{scope}'.")
     return original_start_time
@@ -182,7 +193,22 @@ def _apply_recurring_update_scope(
     scope: str,
     original_start_time: datetime | None,
 ) -> Any:
-    """Route recurring event updates to the correct scoped implementation."""
+    """Route recurring event updates to the correct scoped implementation.
+
+    Args:
+        event (Any): Event being mutated.
+        validated_data (dict[str, Any]): Serializer-validated event payload.
+        scope (str): Requested mutation scope.
+        original_start_time (datetime | None): Anchor for single-instance or
+            following-scope changes.
+
+    Returns:
+        Any: The updated event or split child event.
+
+    Raises:
+        ValueError: If a scoped update is missing its required anchor or the
+            recurrence pattern change is unsupported for ``scope='this'``.
+    """
     if scope == "this":
         anchor = _require_original_start_time(original_start_time, "this")
         if _has_recurrence_pattern_change(event, validated_data):
@@ -248,9 +274,6 @@ def apply_update_scope(
 
     Returns:
         Any: The updated event or split child event.
-
-    Raises:
-        ValueError: If the requested scope is missing its required anchor or uses an unsupported recurrence change.
     """
     if not event.recurrence_interval:
         return _update_scope_all(event, validated_data)
@@ -274,9 +297,6 @@ def apply_delete_scope(
         event (Any): Event being deleted.
         scope (str): Requested deletion scope.
         original_start_time (datetime | None): Recurring instance anchor when needed.
-
-    Raises:
-        ValueError: If the requested scope is missing its required anchor.
     """
     if not event.recurrence_interval or scope == "all":
         event.delete()

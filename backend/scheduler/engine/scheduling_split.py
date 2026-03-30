@@ -63,12 +63,21 @@ class _SchedulerSplitSchedulingMixin:
     def _insufficient_category_minutes(
         category_minutes: int | None, min_block: int
     ) -> bool:
-        """Check if the remaining category quota is below the minimum block size."""
+        """Check if the remaining category quota is below the minimum block size.
+
+        Returns:
+            bool: ``True`` when the category quota cannot support another block.
+        """
         return insufficient_category_minutes(category_minutes, min_block)
 
     @staticmethod
     def _has_invalid_split_remainder(day_remaining: int, min_block: int) -> bool:
-        """Check if the remaining minutes fall below the minimum allowed split."""
+        """Check if the remaining minutes fall below the minimum allowed split.
+
+        Returns:
+            bool: ``True`` when the leftover minutes would create a too-small
+            trailing fragment.
+        """
         return has_invalid_split_remainder(day_remaining, min_block)
 
     @staticmethod
@@ -80,7 +89,12 @@ class _SchedulerSplitSchedulingMixin:
         category_minutes: int | None,
         buffer_gap: int,
     ) -> tuple[datetime, int, int | None]:
-        """Finalise a single chunk of time and update cursors and counters."""
+        """Finalise a single chunk of time and update cursors and counters.
+
+        Returns:
+            tuple[datetime, int, int | None]: Updated cursor, remaining minutes,
+            and remaining category quota.
+        """
         return apply_split_chunk(
             segments,
             cursor,
@@ -99,7 +113,12 @@ class _SchedulerSplitSchedulingMixin:
         max_block: int | None,
         category_minutes: int | None,
     ) -> int | None:
-        """Calculate the size of the next chunk that can be carved from a slot."""
+        """Calculate the size of the next chunk that can be carved from a slot.
+
+        Returns:
+            int | None: The next chunk size, or ``None`` when the slot is too
+            small to use.
+        """
         return next_chunk_minutes(
             start,
             end,

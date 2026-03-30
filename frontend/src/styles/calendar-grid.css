@@ -1,0 +1,130 @@
+/* Keep the visible grid hourly while allowing finer internal drag resolution. */
+.rbc-time-view .rbc-time-slot {
+  min-height: 0;
+}
+
+.calendar-grid-shell .rbc-timeslot-group {
+  flex: 0 0 64px;
+  min-height: 64px;
+}
+
+.calendar-grid-shell .rbc-day-slot .calendar-off-hours-slot {
+  background-color: color-mix(in srgb, var(--text-color) 6%, var(--background));
+}
+
+.calendar-grid-shell .rbc-time-header,
+.calendar-grid-shell .rbc-month-header {
+  display: none;
+}
+
+.calendar-grid-shell .rbc-time-content {
+  border-top: 0;
+  margin-top: 0;
+  overflow-y: auto;
+  scrollbar-gutter: auto;
+}
+
+.calendar-grid-shell .rbc-day-slot .rbc-time-slot,
+.calendar-grid-shell .rbc-time-slot {
+  border-top: 0 !important;
+}
+
+.calendar-grid-shell .rbc-time-content > .rbc-day-slot {
+  border-left: 1px solid var(--border) !important;
+}
+
+.calendar-grid-shell .rbc-time-content > * + * > * {
+  border-left: 1px solid var(--border) !important;
+}
+
+.calendar-grid-shell .rbc-timeslot-group {
+  border-bottom: 1px solid var(--border) !important;
+}
+
+.calendar-grid-shell .rbc-time-gutter,
+.calendar-grid-shell .rbc-time-header-gutter {
+  border-right: 1px solid var(--border) !important;
+}
+
+.calendar-grid-shell .rbc-time-view,
+.calendar-grid-shell .rbc-calendar {
+  margin-top: 0;
+  border: 0;
+  height: 100%;
+  min-height: 0;
+}
+
+.calendar-day-header-highlight {
+  background-color: color-mix(in srgb, var(--primary) 12%, var(--background));
+}
+
+.rbc-month-view .rbc-off-range {
+  color: color-mix(in srgb, var(--text-color) 38%, var(--background)) !important;
+}
+
+.rbc-month-view .rbc-off-range-bg {
+  background-color: color-mix(in srgb, var(--text-color) 8%, var(--background)) !important;
+}
+
+.rbc-today {
+  background-color: color-mix(in srgb, var(--primary) 10%, var(--background)) !important;
+}
+
+.rbc-time-header .rbc-today,
+.rbc-time-content .rbc-today {
+  background-color: color-mix(in srgb, var(--primary) 10%, var(--background)) !important;
+}
+
+.dashboard-agenda .rbc-agenda-view table.rbc-agenda-table {
+  margin-bottom: 0;
+}
+
+.calendar-grid-shell .task-event .rbc-event-label,
+.calendar-grid-shell .rbc-event .rbc-event-label {
+  display: none;
+}
+
+.calendar-grid-shell .task-event-checkbox {
+  appearance: none;
+  border: 1px solid #cbd5e1;
+  border-radius: 9999px;
+  background: transparent;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  min-width: 20px;
+  min-height: 20px;
+  flex: 0 0 20px;
+}
+
+.calendar-grid-shell .task-event-checkbox:checked {
+  background-color: #3b82f6;
+  border-color: #3b82f6;
+}
+
+.calendar-grid-shell .task-event-checkbox:checked::after {
+  content: "";
+  width: 10px;
+  height: 10px;
+  border-radius: 9999px;
+  background: #ffffff;
+}
+
+.rbc-agenda-empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  min-height: 200px;
+  color: color-mix(in srgb, var(--text-color) 60%, transparent);
+  font-size: 1.1rem;
+  font-weight: 500;
+  background-color: color-mix(in srgb, var(--text-color) 5%, var(--background));
+  border-radius: 0.5rem;
+  border: 1px dashed var(--border);
+  margin: 1rem;
+  padding: 2rem;
+  text-align: center;
+}

@@ -1,6 +1,7 @@
 import { useState, type FormEvent, type ReactNode } from "react"
 import { authService } from "@/services/authService"
 import { useNavigate } from "react-router-dom"
+import LogoMark from "@/components/ui/LogoMark"
 import { getStoredDefaultLandingPagePath } from "@/utils/userPreferences";
 import { formatDjangoFormError } from "@/utils/apiErrors";
 
@@ -53,20 +54,26 @@ export default function LoginForm({ children }: LoginFormProps ) {
   }
 
   return (
-      <div className="relative isolate flex min-h-screen flex-col justify-center px-6 py-12 lg:px-8">
+      <div className="relative isolate flex min-h-screen flex-col justify-start px-4 pb-12 pt-24 sm:justify-center sm:px-6 sm:py-12 lg:px-8">
         { children }
 
         <div className="relative z-10">
-          <div className="sm:mx-auto sm:w-full sm:max-w-sm">
-            <h2 className="mt-10 text-center text-2xl font-bold tracking-tight text-gray-900">
+          <div className="mx-auto w-full max-w-sm text-center">
+            <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-indigo-50 ring-1 ring-indigo-100 sm:hidden">
+              <LogoMark className="h-6 w-6" />
+            </div>
+            <h2 className="mt-4 text-2xl font-bold tracking-tight text-gray-900 sm:mt-10">
               Sign in to your account
             </h2>
+            <p className="mt-2 text-sm text-gray-500">
+              Pick up where you left off and get back into your flow.
+            </p>
           </div>
 
-          <div className="mt-10 sm:mx-auto sm:w-full sm:max-w-sm">
-            <form onSubmit={login} className="space-y-6">
+          <div className="mx-auto mt-6 w-full max-w-sm rounded-3xl border border-gray-200/80 bg-white/95 p-5 shadow-sm backdrop-blur-sm sm:mt-10 sm:border-0 sm:bg-transparent sm:p-0 sm:shadow-none sm:backdrop-blur-none">
+            <form onSubmit={login} className="space-y-4 sm:space-y-6">
               {error && (
-                <div className="whitespace-pre-line rounded-md bg-red-50 p-3 text-sm text-red-700">
+                <div className="rounded-xl bg-red-50 p-3 text-sm text-red-700">
                   {error}
                 </div>
               )}
@@ -80,7 +87,7 @@ export default function LoginForm({ children }: LoginFormProps ) {
                     required
                     value={username}
                     onChange={(e) => setUsername(e.target.value)}
-                    className="block w-full rounded-md bg-white px-3 py-1.5 text-gray-900 outline outline-gray-300 focus:outline-2 focus:outline-indigo-600"
+                    className="block w-full rounded-xl border border-gray-200 bg-white px-3 py-2.5 text-gray-900 shadow-sm outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100"
                   />
                 </div>
               </div>
@@ -94,7 +101,7 @@ export default function LoginForm({ children }: LoginFormProps ) {
                     required
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="block w-full rounded-md bg-white px-3 py-1.5 text-gray-900 outline outline-gray-300 focus:outline-2 focus:outline-indigo-600"
+                    className="block w-full rounded-xl border border-gray-200 bg-white px-3 py-2.5 text-gray-900 shadow-sm outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100"
                   />
                 </div>
               </div>
@@ -103,7 +110,7 @@ export default function LoginForm({ children }: LoginFormProps ) {
                 <button
                   disabled={loading}
                   type="submit"
-                  className="flex w-full justify-center rounded-md bg-indigo-500 px-3 py-1.5 text-sm font-semibold text-white hover:bg-indigo-600 disabled:opacity-60"
+                  className="flex w-full justify-center rounded-xl bg-indigo-500 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-indigo-600 disabled:opacity-60"
                 >
                   {loading ? "Signing in..." : "Sign in"}
                 </button>

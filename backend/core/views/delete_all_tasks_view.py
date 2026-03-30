@@ -5,7 +5,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from drf_spectacular.utils import extend_schema, inline_serializer
-
+from django.db import transaction
 from core.models import Task
 
 
@@ -37,7 +37,8 @@ class DeleteAllTasksView(APIView):
 
         all_tasks = Task.objects.filter(user=request.user)
 
-        all_tasks.delete()
+        with transaction.atomic():
+            all_tasks.delete()
 
         if all_tasks_count == 0:
             response = {"message": "You do not have any tasks to delete"}

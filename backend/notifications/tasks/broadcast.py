@@ -47,7 +47,14 @@ def _build_broadcast_queryset(target, user_ids=None):
 
 
 def _get_locked_broadcast(broadcast_job_id):
-    """Fetch and lock a broadcast job row for processing."""
+    """Fetch and lock a broadcast job row for processing.
+
+    Args:
+        broadcast_job_id: Primary key of the broadcast job to process.
+
+    Returns:
+        BroadcastJob | None: The locked job row if it exists.
+    """
     return (
         BroadcastJob.objects.select_related("sender")
         .select_for_update()
@@ -57,7 +64,14 @@ def _get_locked_broadcast(broadcast_job_id):
 
 
 def _get_broadcast_recipients(broadcast):
-    """Fetch all recipient rows for a broadcast job."""
+    """Fetch all recipient rows for a broadcast job.
+
+    Args:
+        broadcast: The broadcast job whose recipients are being loaded.
+
+    Returns:
+        list[BroadcastRecipient]: Recipient tracking rows for the job.
+    """
     return list(
         BroadcastRecipient.objects.filter(broadcast_job=broadcast).select_related(
             "recipient"
@@ -66,7 +80,16 @@ def _get_broadcast_recipients(broadcast):
 
 
 def _recipient_provider_error(recipient, error_code, error_msg):
-    """Build the provider-error payload for one failed recipient."""
+    """Build the provider-error payload for one failed recipient.
+
+    Args:
+        recipient: The recipient that failed to receive the broadcast.
+        error_code (str): Provider-specific failure code.
+        error_msg (str): Human-readable failure message.
+
+    Returns:
+        dict[str, object]: Structured error details for broadcast telemetry.
+    """
     return {
         "recipient_id": recipient.recipient_id,
         "code": error_code,
@@ -77,7 +100,19 @@ def _recipient_provider_error(recipient, error_code, error_msg):
 def _dispatch_single_recipient(
     recipient, notification, sender_username, broadcast, attempted_at
 ):
-    """Dispatch one recipient and return delivery outcome details."""
+    """Dispatch one recipient and return delivery outcome details.
+
+    Args:
+        recipient: The recipient row being processed.
+        notification: The prepared notification for the recipient.
+        sender_username: Username of the broadcast sender, if available.
+        broadcast: The broadcast job being processed.
+        attempted_at: Timestamp used for the delivery attempt.
+
+    Returns:
+        tuple[bool, str | None, str | None]: Delivery success and provider
+        failure details.
+    """
     recipient.notification = notification
     recipient.last_attempt_at = attempted_at
     _notify_recipient_websocket(recipient, notification, sender_username)

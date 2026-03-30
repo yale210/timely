@@ -45,7 +45,7 @@ export interface SettingsActions {
   applyFont: (fontName: string) => void;
   deleteEvents: () => Promise<string>;
   deleteTasks: () => Promise<string>;
-  deleteAccount: () => Promise<string>;
+  deleteAccount: (password: string) => Promise<string>;
   makeTeacher: () => Promise<void>;
   unregisterTeacher: () => Promise<void>;
 }

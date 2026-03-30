@@ -112,11 +112,12 @@ describe('taskService', () => {
     it('deleteAccount should call api.delete', async () => {
         const message = "Delete Account"
         const spy = vi.spyOn(api, 'delete').mockResolvedValue({ data: { message: message }, } as { data: { message: string } })
-        const result = await authService.deleteAccount();
-        expect(spy).toHaveBeenCalledWith('/api/delete_account/')
+        const result = await authService.deleteAccount("secret");
+        expect(spy).toHaveBeenCalledWith('/api/delete_account/', {
+            data: { password: "secret" },
+        })
         expect(result).toBe(message)
     })
 
 
 })
-

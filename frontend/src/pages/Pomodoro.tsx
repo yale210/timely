@@ -173,9 +173,9 @@ const Pomodoro = () => {
           }}
         >
           <div className="px-6 py-4">
-            <div className="flex flex-wrap items-start justify-between gap-4">
+            <div className="flex items-center justify-between gap-3 sm:flex-wrap sm:items-start sm:gap-4">
               <h1 className="text-2xl font-semibold text-black">Pomodoro</h1>
-              <p className="text-sm font-medium text-gray-500">
+              <p className="text-right text-sm font-medium text-gray-500">
                 {isActive ? "Running" : "Paused"} | {mode === "focus" ? "Focus period" : mode === "shortBreak" ? "Short break" : "Long break"}
               </p>
             </div>

@@ -60,10 +60,6 @@ class ImportView(APIView):
 
         Returns:
             Response: A DRF response indicating success or providing an error message.
-
-        Raises:
-            ValueError: If the file format is invalid or contains errors.
-
         """
         try:
             lines = self.check_file_structure(request)

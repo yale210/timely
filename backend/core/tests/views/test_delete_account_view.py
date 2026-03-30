@@ -30,7 +30,11 @@ class DeleteAccountViewTests(TestCase):
 
         self.assertEqual(get_user_model().objects.count(), 1)
 
-        response = self.client.delete("/api/delete_account/")
+        response = self.client.delete(
+            "/api/delete_account/",
+            {"password": "password"},
+            format="json",
+        )
 
         self.assertEqual(get_user_model().objects.count(), 0)
 
@@ -56,7 +60,11 @@ class DeleteAccountViewTests(TestCase):
 
         self.assertEqual(Event.objects.count(), 1)
 
-        response = self.client.delete("/api/delete_account/")
+        response = self.client.delete(
+            "/api/delete_account/",
+            {"password": "password"},
+            format="json",
+        )
 
         self.assertEqual(get_user_model().objects.count(), 0)
 
@@ -89,7 +97,11 @@ class DeleteAccountViewTests(TestCase):
 
         self.assertEqual(Task.objects.count(), 1)
 
-        response = self.client.delete("/api/delete_account/")
+        response = self.client.delete(
+            "/api/delete_account/",
+            {"password": "password"},
+            format="json",
+        )
 
         self.assertEqual(get_user_model().objects.count(), 0)
 
@@ -97,3 +109,17 @@ class DeleteAccountViewTests(TestCase):
         self.assertEqual(Task.objects.count(), 0)
 
         self.assertEqual(response.data, {"message": "Account deleted successfully."})
+
+    def test_rejects_incorrect_password(self):
+        """Test delete account requires the current password."""
+        self.client.login(username="testuser", password="password")
+
+        response = self.client.delete(
+            "/api/delete_account/",
+            {"password": "wrong-password"},
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.data, {"password": ["Incorrect password."]})
+        self.assertTrue(get_user_model().objects.filter(username="testuser").exists())

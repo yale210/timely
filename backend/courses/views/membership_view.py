@@ -21,10 +21,20 @@ from courses.views.base_view import CourseViewSetBase
 
 
 def _inactive_course_response():
+    """Return the standard response for attempts against inactive courses.
+
+    Returns:
+        Response: A 400 response explaining that the course is inactive.
+    """
     return Response({"detail": "Course is not active."}, status=400)
 
 
 def _missing_student_response():
+    """Return the response used when the current user has no student profile.
+
+    Returns:
+        Response: A 404 response for missing current-user student records.
+    """
     return Response(
         {"detail": "Student profile not found for the current user."},
         status=404,
@@ -32,6 +42,11 @@ def _missing_student_response():
 
 
 def _user_student_not_found_response():
+    """Return the response used when a target student profile is absent.
+
+    Returns:
+        Response: A 404 response for a user lookup that has no student row.
+    """
     return Response(
         {"detail": "Student profile not found for this user."},
         status=status.HTTP_404_NOT_FOUND,
@@ -39,6 +54,11 @@ def _user_student_not_found_response():
 
 
 def _unenrolled_response():
+    """Return the response used when the current user is not enrolled.
+
+    Returns:
+        Response: A 404 response indicating the enrollment does not exist.
+    """
     return Response(
         {"detail": "You are not enrolled in this course."},
         status=404,
@@ -46,6 +66,11 @@ def _unenrolled_response():
 
 
 def _target_not_enrolled_response():
+    """Return the response used when the target user is not enrolled.
+
+    Returns:
+        Response: A 404 response indicating the target enrollment is absent.
+    """
     return Response(
         {"detail": "User is not enrolled in this course."},
         status=status.HTTP_404_NOT_FOUND,
@@ -53,6 +78,14 @@ def _target_not_enrolled_response():
 
 
 def _join_code_created_response(join_code):
+    """Return the serialized response for a newly created join code.
+
+    Args:
+        join_code: The CourseJoinCode instance that was just created.
+
+    Returns:
+        Response: A 201 response containing the join code payload.
+    """
     return Response(
         {
             "id": join_code.id,
@@ -66,13 +99,30 @@ def _join_code_created_response(join_code):
 
 
 def _generate_unique_join_code() -> str:
+    """Generate a join code that does not collide with an existing record.
+
+    Returns:
+        str: A short, URL-safe join code suitable for student enrollment.
+    """
     code = token_urlsafe(5)
     while CourseJoinCode.objects.filter(code=code).exists():
+        # Retry until the generated code is unique in the database.
         code = token_urlsafe(5)
     return code
 
 
 def _get_enrollment_or_response(course, student, missing_response):
+    """Fetch an enrollment or return the supplied error response.
+
+    Args:
+        course: The course whose enrollment should be located.
+        student: The student whose enrollment is being resolved.
+        missing_response: Prebuilt response returned when no enrollment exists.
+
+    Returns:
+        tuple[CourseEnrollment | None, Response | None]: The enrollment and
+        ``None`` when found, otherwise ``None`` and the provided response.
+    """
     try:
         return CourseEnrollment.objects.get(course=course, student=student), None
     except CourseEnrollment.DoesNotExist:
@@ -80,11 +130,25 @@ def _get_enrollment_or_response(course, student, missing_response):
 
 
 def _deactivate_enrollment(enrollment):
+    """Soft-disable an enrollment while preserving the historical row.
+
+    Args:
+        enrollment: The active CourseEnrollment row to deactivate.
+    """
     enrollment.active = False
     enrollment.save(update_fields=["active"])
 
 
 def _get_target_student_for_course(user_id):
+    """Resolve a student record for the user being removed from a course.
+
+    Args:
+        user_id: The user identifier provided by the admin action payload.
+
+    Returns:
+        tuple[Student | None, Response | None]: The matching student and
+        ``None`` when found, otherwise ``None`` and a 404 response.
+    """
     student = Student.objects.filter(user_id=user_id).first()
     if student is None:
         return None, _user_student_not_found_response()
@@ -98,9 +162,25 @@ class CourseMembershipMixin(CourseViewSetBase):
     """
 
     def _get_student_for_user(self, user):
+        """Return the student profile for the authenticated user.
+
+        Args:
+            user: The current authenticated user.
+
+        Returns:
+            Student: The existing or newly created student profile.
+        """
         return Student.objects.get_or_create(user=user)[0]
 
     def _get_active_join_code(self, code):
+        """Return an active join code and its related course, if it exists.
+
+        Args:
+            code (str): The enrollment code submitted by the client.
+
+        Returns:
+            CourseJoinCode | None: The active join-code record, if present.
+        """
         return (
             CourseJoinCode.objects.select_related("course")
             .filter(code=code, active=True)
@@ -108,6 +188,16 @@ class CourseMembershipMixin(CourseViewSetBase):
         )
 
     def _get_or_create_active_enrollment(self, course, student):
+        """Create or reactivate a course enrollment for the given student.
+
+        Args:
+            course: The course being joined.
+            student: The student who should be enrolled.
+
+        Returns:
+            tuple[CourseEnrollment, bool]: The enrollment row and whether it was
+            created during this call.
+        """
         enrollment, created = CourseEnrollment.objects.get_or_create(
             course=course,
             student=student,
@@ -119,6 +209,15 @@ class CourseMembershipMixin(CourseViewSetBase):
         return enrollment, created
 
     def _get_join_by_code_error_response(self, join_code):
+        """Validate join-code state before the enrollment is created.
+
+        Args:
+            join_code: The active CourseJoinCode record.
+
+        Returns:
+            Response | None: A validation error response when the code is no
+            longer usable, otherwise ``None``.
+        """
         if join_code.expires_at and join_code.expires_at <= timezone.now():
             return Response({"detail": "Join code has expired."}, status=400)
 
@@ -195,9 +294,11 @@ class CourseMembershipMixin(CourseViewSetBase):
             {
                 "user_id": 123
             }
+
         Args:
             request: The current HttpRequest.
             pk: The primary key of the course to leave.
+
         Returns:
             Response: API response indicating success or failure.
         """
