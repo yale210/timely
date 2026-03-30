@@ -44,6 +44,12 @@ class TeacherView(ViewSet):
     permission_classes = [IsAuthenticated, IsTeacher]
 
     def get_permissions(self):
+        """Allow the self-service profile endpoint to remain authentication-only.
+
+        Returns:
+            list[BasePermission]: ``me`` only needs authentication so teachers
+            can inspect their profile even before the teacher role check runs.
+        """
         if self.action == "me":
             return [
                 IsAuthenticated(),
