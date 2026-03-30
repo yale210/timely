@@ -236,20 +236,43 @@ We have used tools like ChatGPT and Github Copilot for:
 - guidance on how to implement common functionality
 - debugging and error explanation
 - generating migrations from the source code
+- pull request reviewing
 
-The College requires every use of generative AI to be acknowledged in the README with the path, affected unit, approximate number of lines, and the proportion of generated code. The table below must be completed before submission using the exact categories from the handbook.
+All the pull requests in which GitHub Copilot was used to review/generate code:
+[#320](https://github.com/xlightningstar/It-Worked-On-My-Machine/pull/320)
+[#309](https://github.com/xlightningstar/It-Worked-On-My-Machine/pull/309)
+[#288](https://github.com/xlightningstar/It-Worked-On-My-Machine/pull/288)
+[#286](https://github.com/xlightningstar/It-Worked-On-My-Machine/pull/286)
+[#280](https://github.com/xlightningstar/It-Worked-On-My-Machine/pull/280)
+[#271](https://github.com/xlightningstar/It-Worked-On-My-Machine/pull/271)
+[#255](https://github.com/xlightningstar/It-Worked-On-My-Machine/pull/255)
+[#176](https://github.com/xlightningstar/It-Worked-On-My-Machine/pull/176)
+[#174](https://github.com/xlightningstar/It-Worked-On-My-Machine/pull/174)
+[#156](https://github.com/xlightningstar/It-Worked-On-My-Machine/pull/156)
+[#150](https://github.com/xlightningstar/It-Worked-On-My-Machine/pull/150)
+[#164](https://github.com/xlightningstar/It-Worked-On-My-Machine/pull/164)
+[#155](https://github.com/xlightningstar/It-Worked-On-My-Machine/pull/155)
+[#154](https://github.com/xlightningstar/It-Worked-On-My-Machine/pull/154)
+[#149](https://github.com/xlightningstar/It-Worked-On-My-Machine/pull/149)
+[#145](https://github.com/xlightningstar/It-Worked-On-My-Machine/pull/145)
+[#140](https://github.com/xlightningstar/It-Worked-On-My-Machine/pull/140)
+[#133](https://github.com/xlightningstar/It-Worked-On-My-Machine/pull/133)
+[#104](https://github.com/xlightningstar/It-Worked-On-My-Machine/pull/104)
+[#71](https://github.com/xlightningstar/It-Worked-On-My-Machine/pull/71)
+[#87](https://github.com/xlightningstar/It-Worked-On-My-Machine/pull/87)
+[#69](https://github.com/xlightningstar/It-Worked-On-My-Machine/pull/69)
+[#65](https://github.com/xlightningstar/It-Worked-On-My-Machine/pull/65)
+[#64](https://github.com/xlightningstar/It-Worked-On-My-Machine/pull/64)
+[#62](https://github.com/xlightningstar/It-Worked-On-My-Machine/pull/62)
+[#48](https://github.com/xlightningstar/It-Worked-On-My-Machine/pull/48)
+[#53](https://github.com/xlightningstar/It-Worked-On-My-Machine/pull/53)
+[#45](https://github.com/xlightningstar/It-Worked-On-My-Machine/pull/45)
+[#40](https://github.com/xlightningstar/It-Worked-On-My-Machine/pull/40)
+[#37](https://github.com/xlightningstar/It-Worked-On-My-Machine/pull/37)
+[#25](https://github.com/xlightningstar/It-Worked-On-My-Machine/pull/25)
 
-Approved proportion labels:
 
-- `whole unit`
-- `more than 50% of the unit`
-- `about 50% of the unit`
-- `less than 50% of the unit`
-- `less than 10% of the unit`
 
-| File or path | Function / method / class / unit | Approximate lines | Proportion of generated code | AI system used | Purpose |
-| --- | --- | --- | --- | --- | --- |
-| `TBC by team before submission` | `TBC` | `TBC` | `TBC` | `TBC` | `Add every AI-assisted code contribution here.` |
 
 Non-code AI assistance used on this project should also be listed if relevant, for example documentation drafting or debugging assistance.
 
