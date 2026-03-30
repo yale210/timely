@@ -52,7 +52,7 @@ def normalise_reminder_snapshot(
 
     Returns:
         list[dict[str, Any]]: A list of dictionaries with consistent types
-            for email, push, and timing.
+            for push and timing.
 
     """
     normalised: list[dict[str, Any]] = []
@@ -63,7 +63,6 @@ def normalise_reminder_snapshot(
             continue
         normalised.append(
             {
-                "send_email": bool(reminder.get("send_email", False)),
                 "send_push": bool(reminder.get("send_push", False)),
                 "minutes_before": minutes_before,
             }

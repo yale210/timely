@@ -1220,9 +1220,11 @@ paths:
             {
                 "user_id": 123
             }
+
         Args:
             request: The current HttpRequest.
             pk: The primary key of the course to leave.
+
         Returns:
             Response: API response indicating success or failure.
       parameters:
@@ -2221,9 +2223,6 @@ paths:
 
         Returns:
             Response: A DRF response indicating success or providing an error message.
-
-        Raises:
-            ValueError: If the file format is invalid or contains errors.
       tags:
       - import
       requestBody:
@@ -4734,8 +4733,6 @@ components:
           readOnly: true
         send_push:
           type: boolean
-        send_email:
-          type: boolean
         minutes_before:
           type: integer
           maximum: 9223372036854775807
@@ -4868,9 +4865,6 @@ components:
         id:
           type: integer
         send_push:
-          type: boolean
-          default: false
-        send_email:
           type: boolean
           default: false
         minutes_before:

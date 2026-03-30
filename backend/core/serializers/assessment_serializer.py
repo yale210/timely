@@ -164,7 +164,6 @@ class AssessmentSerializer(serializers.ModelSerializer):
         if reminder_offset is not None:
             EventReminder.objects.create(
                 event=event,
-                send_email=False,
                 send_push=False,
                 minutes_before=reminder_offset,
             )
