@@ -6,11 +6,24 @@ import { getOverrideColour, hexToRgba } from "@/utils/colorUtils";
 
 type CalendarEntryStyle = CSSProperties & { "--event-stripe-color"?: string };
 
+/**
+ * Builds the rendered time range label for a calendar entry.
+ * @param event - Calendar entry being rendered.
+ * @param timeFormat - User-selected time format.
+ * @returns Human-readable time range label.
+ */
 const getEventTimeLabel = (event: CalendarEntry, timeFormat: "24h" | "12h") => {
   const actualEnd = event.actualEnd ?? event.end;
   return `${formatCalendarDisplayTime(event.start, timeFormat)} - ${formatCalendarDisplayTime(actualEnd, timeFormat)}`;
 };
 
+/**
+ * Renders standard event content inside the calendar cell.
+ * @param props - Component props.
+ * @param props.event - Calendar entry being rendered.
+ * @param props.timeLabel - Preformatted event time range.
+ * @returns Event content markup.
+ */
 const CalendarStandardEventContent = ({ event, timeLabel }: { event: CalendarEntry; timeLabel: string }) => (
   <div className="calendar-entry-content flex h-full w-full items-start gap-2">
     <div className="flex min-w-0 flex-col">
@@ -23,6 +36,14 @@ const CalendarStandardEventContent = ({ event, timeLabel }: { event: CalendarEnt
   </div>
 );
 
+/**
+ * Renders task content including the completion checkbox.
+ * @param props - Component props.
+ * @param props.event - Calendar task entry being rendered.
+ * @param props.timeLabel - Preformatted task time range.
+ * @param props.handleToggleTaskComplete - Toggles completion state for the task.
+ * @returns Task content markup.
+ */
 const CalendarTaskEventContent = ({
   event,
   timeLabel,
@@ -51,6 +72,14 @@ const CalendarTaskEventContent = ({
   </div>
 );
 
+/**
+ * Chooses the appropriate cell content for a task or event entry.
+ * @param props - Component props.
+ * @param props.event - Calendar entry being rendered.
+ * @param props.timeFormat - User-selected time format.
+ * @param props.handleToggleTaskComplete - Toggles completion state for task entries.
+ * @returns Entry content markup.
+ */
 const CalendarEntryContent = ({
   event,
   timeFormat,
@@ -66,6 +95,12 @@ const CalendarEntryContent = ({
     : <CalendarStandardEventContent event={event} timeLabel={timeLabel} />;
 };
 
+/**
+ * Builds the react-big-calendar component overrides for event cells.
+ * @param handleToggleTaskComplete - Toggles completion state for task entries.
+ * @param timeFormat - User-selected time format.
+ * @returns Calendar component override map.
+ */
 export const buildCalendarComponents = (
   handleToggleTaskComplete: (taskId: number) => Promise<void>,
   timeFormat: "24h" | "12h",
@@ -79,6 +114,11 @@ export const buildCalendarComponents = (
   ),
 });
 
+/**
+ * Computes the CSS class list applied to a calendar entry.
+ * @param event - Calendar entry being rendered.
+ * @returns Space-delimited class name string.
+ */
 export const getCalendarEntryClassName = (event: CalendarEntry): string =>
   [
     "event-slot",
@@ -96,6 +136,11 @@ const getCalendarEntryColour = (event: CalendarEntry): string =>
   getOverrideColour(event.kind === "task" ? event.categories : event.eventData?.categories)
   ?? (event.kind === "task" ? event.taskData?.colour ?? "#3b82f6" : event.eventData?.colour ?? "#f97316");
 
+/**
+ * Computes inline styling for a calendar entry.
+ * @param event - Calendar entry being rendered.
+ * @returns Inline style object for the entry.
+ */
 export const getCalendarEntryStyle = (event: CalendarEntry): CSSProperties => {
   const style: CalendarEntryStyle = {};
   if (event.kind === "task" && typeof event.scheduleIndex === "number") {

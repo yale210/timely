@@ -141,6 +141,12 @@ const updateOptimisticEvents = (
     return isRecurringInstance || isSingleEvent ? { ...item, ...payload } : item;
   });
 
+/**
+ * Builds a draft event object from a selected calendar slot.
+ * @param slot - Selected calendar slot.
+ * @param activeTimezone - Active user timezone.
+ * @returns Draft event ready for the sidebar form.
+ */
 export const buildDraftCalendarEvent = (
   slot: CalendarSelectionSlot,
   activeTimezone = getStoredUserTimezone(),
@@ -149,6 +155,17 @@ export const buildDraftCalendarEvent = (
   return createDraftEvent(range.start, range.end);
 };
 
+/**
+ * Mirrors the latest interaction inputs into a ref for async handlers.
+ * @param props - Interaction values that must stay current inside callbacks.
+ * @param props.isSidebarOpen - Whether the sidebar is currently open.
+ * @param props.tasks - Current task list.
+ * @param props.events - Current event list.
+ * @param props.view - Active calendar view.
+ * @param props.date - Active calendar date anchor.
+ * @param props.scheduleOrder - Animation order for recently scheduled tasks.
+ * @returns Mutable ref containing the latest interaction snapshot.
+ */
 const useInteractionStateRef = ({
   isSidebarOpen,
   tasks,
@@ -259,6 +276,14 @@ const useTaskAllocationUpdater = (
     [activeTimezone, fetchTasks, setScheduleOrder, setTasks, stateRef],
   );
 
+/**
+ * Builds the event-update handler used by drag and resize interactions.
+ * @param stateRef - Ref holding the latest interaction snapshot.
+ * @param setEvents - Setter for optimistic event updates.
+ * @param fetchEvents - Refetches events after persistence.
+ * @param activeTimezone - Active user timezone.
+ * @returns Async event updater callback.
+ */
 const useCalendarEventUpdater = (
   stateRef: MutableRefObject<InteractionStateSnapshot>,
   setEvents: UseCalendarInteractionsProps["setEvents"],
@@ -285,6 +310,14 @@ const useCalendarEventUpdater = (
     [activeTimezone, fetchEvents, setEvents, stateRef],
   );
 
+/**
+ * Builds the shared drag/resize interaction handler for calendar entries.
+ * @param stateRef - Ref holding the latest interaction snapshot.
+ * @param setScheduleOrder - Setter for task scheduling animation state.
+ * @param updateTaskAllocation - Persists task allocation changes.
+ * @param updateCalendarEvent - Persists event time changes.
+ * @returns Async drag/resize handler.
+ */
 const useCalendarEntryInteractionHandler = (
   stateRef: MutableRefObject<InteractionStateSnapshot>,
   setScheduleOrder: UseCalendarInteractionsProps["setScheduleOrder"],
@@ -305,6 +338,11 @@ const useCalendarEntryInteractionHandler = (
     [setScheduleOrder, stateRef, updateCalendarEvent, updateTaskAllocation],
   );
 
+/**
+ * Creates calendar interaction handlers for selection, drag, resize, and sidebar flows.
+ * @param props - Calendar interaction dependencies and state setters.
+ * @returns Interaction handlers consumed by the calendar view.
+ */
 export const useCalendarInteractions = (props: UseCalendarInteractionsProps) => {
   const activeTimezone = props.preference?.timezone ?? getStoredUserTimezone();
   const stateRef = useInteractionStateRef(props);

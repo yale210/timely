@@ -19,6 +19,7 @@ interface SettingsSidebarProps {
 /**
  * Renders the settings navigation sidebar.
  * @param props - Sidebar props.
+ * @param props.mobileLayout - Whether the compact mobile layout should be used.
  * @param props.state - Sidebar state values.
  * @param props.loading - Sidebar loading values.
  * @param props.actions - Sidebar action callbacks.

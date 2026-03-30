@@ -49,7 +49,9 @@ const AccountDeletionModal = ({
     try {
       await onConfirm(password);
       resetAndClose();
-    } catch {}
+    } catch {
+      // Parent state surfaces the error message for this modal.
+    }
   };
 
   return (

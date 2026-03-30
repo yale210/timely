@@ -93,6 +93,7 @@ const buildEventEntry = (event: Event, timeZone: string): CalendarEntry => ({
  * Maps task allocations into react-big-calendar task entries.
  * @param tasks - Tasks that may contain allocation slots.
  * @param scheduleOrder - Animation ordering for newly scheduled tasks.
+ * @param timeZone - Active timezone used for the synthetic display clock.
  * @returns Calendar task entries.
  */
 export const buildTaskCalendarEntries = (
@@ -104,6 +105,7 @@ export const buildTaskCalendarEntries = (
 /**
  * Maps API events into react-big-calendar event entries.
  * @param events - Events returned from the API.
+ * @param timeZone - Active timezone used for the synthetic display clock.
  * @returns Calendar event entries.
  */
 export const buildEventCalendarEntries = (events: Event[], timeZone: string): CalendarEntry[] =>
@@ -115,6 +117,7 @@ export const buildEventCalendarEntries = (events: Event[], timeZone: string): Ca
  * @param options.tasks - Tasks that may contain allocation slots.
  * @param options.events - Events returned from the API.
  * @param options.scheduleOrder - Animation ordering for newly scheduled tasks.
+ * @param options.timeZone - Active timezone used for the synthetic display clock.
  * @returns Calendar entries suitable for react-big-calendar.
  */
 export const buildCalendarEntries = ({
