@@ -164,7 +164,7 @@ export default function SettingsSectionContent({
         deleting={false}
         onDeleteEvents={() => actions.deleteEvents()}
         onDeleteTasks={() => actions.deleteTasks()}
-        onDeleteAccount={() => actions.deleteAccount()}
+        onDeleteAccount={(password) => actions.deleteAccount(password)}
       />
     );
   }

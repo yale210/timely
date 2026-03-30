@@ -79,9 +79,12 @@ describe("PrivacySection", () => {
     );
 
     const dialog = within(await openConfirmationModal(/delete account/i));
+    fireEvent.change(dialog.getByLabelText(/password/i), {
+      target: { value: "secret" },
+    });
     fireEvent.click(dialog.getByRole("button", { name: /delete account/i }));
 
-    expect(onDeleteAccount).toHaveBeenCalled();
+    expect(onDeleteAccount).toHaveBeenCalledWith("secret");
     expect(await screen.findByText("Account Deleted")).toBeInTheDocument();
   });
 
@@ -136,10 +139,32 @@ describe("PrivacySection", () => {
     );
 
     const dialog = within(await openConfirmationModal(/delete account/i));
+    fireEvent.change(dialog.getByLabelText(/password/i), {
+      target: { value: "secret" },
+    });
     fireEvent.click(dialog.getByRole("button", { name: /delete account/i }));
 
-    expect(onDeleteAccount).toHaveBeenCalled();
+    expect(onDeleteAccount).toHaveBeenCalledWith("secret");
     expect(await screen.findByText("Failed to delete account.")).toBeInTheDocument();
+  });
+
+  it("requires a password before deleting the account", async () => {
+    const onDeleteAccount = vi.fn();
+
+    render(
+      <PrivacySection
+        deleting={false}
+        onDeleteEvents={vi.fn()}
+        onDeleteTasks={vi.fn()}
+        onDeleteAccount={onDeleteAccount}
+      />,
+    );
+
+    const dialog = within(await openConfirmationModal(/delete account/i));
+    fireEvent.click(dialog.getByRole("button", { name: /delete account/i }));
+
+    expect(onDeleteAccount).not.toHaveBeenCalled();
+    expect(await screen.findByText("Please enter your password.")).toBeInTheDocument();
   });
 
   it("disables all action buttons when deleting", () => {

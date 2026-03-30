@@ -1,19 +1,20 @@
-import { useState } from "react"
-import ConfirmationModal from "@/components/modals/ConfirmationModal"
+import { useState } from "react";
+import ConfirmationModal from "@/components/modals/ConfirmationModal";
+import AccountDeletionModal from "@/components/modals/AccountDeletionModal";
 
 interface PrivacySectionProps {
-  deleting: boolean
-  onDeleteTasks: () => Promise<string>
-  onDeleteEvents: () => Promise<string>
-  onDeleteAccount: () => Promise<string>
+  deleting: boolean;
+  onDeleteTasks: () => Promise<string>;
+  onDeleteEvents: () => Promise<string>;
+  onDeleteAccount: (password: string) => Promise<string>;
 }
 
 interface PrivacyActionCardProps {
-  description: string
-  deleting: boolean
-  icon: string
-  onClick: () => void
-  title: string
+  description: string;
+  deleting: boolean;
+  icon: string;
+  onClick: () => void;
+  title: string;
 }
 
 const PrivacyActionCard = ({
@@ -45,7 +46,7 @@ const PrivacyActionCard = ({
       </button>
     </div>
   </div>
-)
+);
 
 const PrivacySection = ({
   deleting,
@@ -53,45 +54,46 @@ const PrivacySection = ({
   onDeleteEvents,
   onDeleteAccount,
 }: PrivacySectionProps) => {
-  const [message, setMessage] = useState<string | null>(null)
-  const [error, setError] = useState<string | null>(null)
-  const [pendingAction, setPendingAction] = useState<"events" | "tasks" | "account" | null>(null)
+  const [message, setMessage] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [pendingAction, setPendingAction] = useState<
+    "events" | "tasks" | "account" | null
+  >(null);
 
-  const handleDeleteEvents = () => {
-    setMessage(null)
-    setError(null)
-    onDeleteEvents()
-      .then((result) => {
-        setMessage(result)
-      })
-      .catch(() => {
-        setError("Failed to delete events.")
-      })
-  }
+  const executeAction = async (
+    action: () => Promise<string>,
+    fallbackError: string,
+    rethrow = false,
+  ) => {
+    setMessage(null);
+    setError(null);
 
-  const handleDeleteTasks = () => {
-    setMessage(null)
-    setError(null)
-    onDeleteTasks()
-      .then((result) => {
-        setMessage(result)
-      })
-      .catch(() => {
-        setError("Failed to delete tasks.")
-      })
-  }
+    try {
+      const result = await action();
+      setMessage(result);
+    } catch {
+      setError(fallbackError);
+      if (rethrow) {
+        throw new Error(fallbackError);
+      }
+    }
+  };
 
-  const handleDeleteAccount = () => {
-    setMessage(null)
-    setError(null)
-    onDeleteAccount()
-      .then((result) => {
-        setMessage(result)
-      })
-      .catch(() => {
-        setError("Failed to delete account.")
-      })
-  }
+  const handleDeleteEvents = async () => {
+    await executeAction(onDeleteEvents, "Failed to delete events.");
+  };
+
+  const handleDeleteTasks = async () => {
+    await executeAction(onDeleteTasks, "Failed to delete tasks.");
+  };
+
+  const handleDeleteAccount = async (password: string) => {
+    await executeAction(
+      () => onDeleteAccount(password),
+      "Failed to delete account.",
+      true,
+    );
+  };
 
   return (
     <div className="space-y-6">
@@ -139,19 +141,15 @@ const PrivacySection = ({
       </div>
 
       <ConfirmationModal
-        isOpen={pendingAction !== null}
+        isOpen={pendingAction === "events" || pendingAction === "tasks"}
         onClose={() => setPendingAction(null)}
         onConfirm={() => {
           if (pendingAction === "events") {
-            handleDeleteEvents()
-            return
+            void handleDeleteEvents();
+            return;
           }
           if (pendingAction === "tasks") {
-            handleDeleteTasks()
-            return
-          }
-          if (pendingAction === "account") {
-            handleDeleteAccount()
+            void handleDeleteTasks();
           }
         }}
         title={
@@ -176,8 +174,14 @@ const PrivacySection = ({
               : "Delete account"
         }
       />
+      <AccountDeletionModal
+        isOpen={pendingAction === "account"}
+        isDeleting={deleting}
+        onClose={() => setPendingAction(null)}
+        onConfirm={handleDeleteAccount}
+      />
     </div>
-  )
-}
+  );
+};
 
-export default PrivacySection
+export default PrivacySection;

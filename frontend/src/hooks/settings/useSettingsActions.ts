@@ -77,10 +77,10 @@ function useSettingsDeletionActions(
     }
   }, [setIsDeleting]);
 
-  const deleteAccount = useCallback(async () => {
+  const deleteAccount = useCallback(async (password: string) => {
     setIsDeleting(true);
     try {
-      const message = await authService.deleteAccount();
+      const message = await authService.deleteAccount(password);
       await authService.logout();
       return message;
     } finally {
