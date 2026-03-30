@@ -1,12 +1,13 @@
 import moment from "moment";
 import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
-import { Calendar, Views, momentLocalizer, type Formats } from "react-big-calendar";
+import { Calendar, Views, type Formats } from "react-big-calendar";
 import { preferenceService } from "@/services/preferenceService";
 import type { Category, Event, Task } from "@/types";
+import { CALENDAR_DISPLAY_TIMEZONE, toCalendarDisplayDate } from "@/utils/calendarDisplayTime";
+import { useCalendarLocalizer } from "@/utils/calendarLocalizer";
 import { getOverrideColour, hexToRgba } from "@/utils/colorUtils";
 import { getStoredTimeFormat, getStoredWeekStartsOn } from "@/utils/userPreferences";
-
-const localizer = momentLocalizer(moment);
+import { getStoredUserTimezone } from "@/utils/userTimezone";
 const DEFAULT_DAY_START = "08:00";
 const DEFAULT_DAY_END = "22:00";
 
@@ -38,6 +39,7 @@ interface MiniCalendarPreferences {
   daySchedule: DayScheduleEntry[];
   weekStartsOn: "monday" | "sunday";
   timeFormat: "24h" | "12h";
+  timezone: string;
 }
 
 const parseClockMinutes = (value: string): number => {
@@ -57,6 +59,7 @@ const getFallbackPreferences = (): MiniCalendarPreferences => ({
   daySchedule: [],
   weekStartsOn: getStoredWeekStartsOn(),
   timeFormat: getStoredTimeFormat(),
+  timezone: getStoredUserTimezone(),
 });
 
 const loadMiniCalendarPreferences = async (): Promise<MiniCalendarPreferences> => {
@@ -69,6 +72,7 @@ const loadMiniCalendarPreferences = async (): Promise<MiniCalendarPreferences> =
       daySchedule: preference.day_schedule ?? [],
       weekStartsOn: preference.week_starts_on ?? fallback.weekStartsOn,
       timeFormat: preference.time_format ?? fallback.timeFormat,
+      timezone: preference.timezone ?? fallback.timezone,
     };
   } catch {
     return fallback;
@@ -111,12 +115,12 @@ const syncCalendarWeekStart = (weekStartsOn: "monday" | "sunday") => {
   });
 };
 
-const buildCalendarEntries = (tasks: Task[], events: Event[]): MiniCalendarEntry[] => [
+const buildCalendarEntries = (tasks: Task[], events: Event[], timeZone: string): MiniCalendarEntry[] => [
   ...tasks.flatMap((task) => (task.allocation ?? []).map((slot, index) => ({
     id: `task-${task.id}-${index}`,
     title: task.title,
-    start: new Date(slot.start),
-    end: new Date(slot.end),
+    start: toCalendarDisplayDate(slot.start, timeZone),
+    end: toCalendarDisplayDate(slot.end, timeZone),
     allDay: false,
     kind: "task" as const,
     categories: task.categories,
@@ -125,8 +129,8 @@ const buildCalendarEntries = (tasks: Task[], events: Event[]): MiniCalendarEntry
   ...events.map((event) => ({
     id: event.instance_id ?? `event-${event.id}-${event.start_time}`,
     title: event.title,
-    start: new Date(event.start_time),
-    end: new Date(event.end_time),
+    start: toCalendarDisplayDate(event.start_time, timeZone),
+    end: toCalendarDisplayDate(event.end_time, timeZone),
     allDay: false,
     kind: "event" as const,
     categories: event.categories,
@@ -134,11 +138,17 @@ const buildCalendarEntries = (tasks: Task[], events: Event[]): MiniCalendarEntry
   })),
 ];
 
-const getVisibleHours = (
+interface VisibleRange {
+  hours: number;
+  startMinutes: number;
+  endMinutes: number;
+}
+
+const getVisibleRange = (
   daySchedule: DayScheduleEntry[],
   dayStart: string,
   dayEnd: string,
-): number => {
+): VisibleRange => {
   const schedule = daySchedule.length > 0 ? daySchedule : [{ day: 1, start: dayStart, end: dayEnd }];
   let minStartMinutes: number | null = null;
   let maxEndMinutes: number | null = null;
@@ -153,7 +163,14 @@ const getVisibleHours = (
 
   const safeStartMinutes = minStartMinutes ?? parseClockMinutes(dayStart);
   const safeEndMinutes = maxEndMinutes ?? parseClockMinutes(dayEnd);
-  return Math.max(1, Math.ceil(Math.max(1, safeEndMinutes - safeStartMinutes) / 60));
+  const hours = Math.max(1, Math.ceil(Math.max(1, safeEndMinutes - safeStartMinutes) / 60));
+  return { hours, startMinutes: safeStartMinutes, endMinutes: Math.min(safeEndMinutes, 24 * 60) };
+};
+
+const minutesToDate = (minutes: number): Date => {
+  const h = Math.floor(minutes / 60);
+  const m = minutes % 60;
+  return new Date(Date.UTC(1970, 0, 1, h, m, 0));
 };
 
 const buildSizingVars = (containerHeight: number, visibleHours: number): CSSProperties => {
@@ -194,36 +211,40 @@ const getEntryStyle = (entry: MiniCalendarEntry) => {
 };
 
 const useMiniCalendarViewModel = (tasks: Task[], events: Event[]) => {
-  const { dayStart, dayEnd, daySchedule, weekStartsOn, timeFormat } = useMiniCalendarPreferences();
+  const { dayStart, dayEnd, daySchedule, weekStartsOn, timeFormat, timezone } = useMiniCalendarPreferences();
   const { ref: containerRef, height: containerHeight, width: containerWidth } = useObservedHeight();
+  const localizer = useCalendarLocalizer(CALENDAR_DISPLAY_TIMEZONE);
   useEffect(() => {
     syncCalendarWeekStart(weekStartsOn);
   }, [weekStartsOn]);
-  const calendarEntries = useMemo(() => buildCalendarEntries(tasks, events), [tasks, events]);
-  const visibleHours = useMemo(() => getVisibleHours(daySchedule, dayStart, dayEnd), [daySchedule, dayStart, dayEnd]);
-  const compactHeader = containerWidth > 0 && containerWidth < 480;
-  const sizingVars = useMemo(() => buildSizingVars(containerHeight, visibleHours), [containerHeight, visibleHours]);
-  const formats = useMemo(() => buildFormats(timeFormat, compactHeader), [timeFormat, compactHeader]);
-  const calendarKey = `${containerWidth > 0 ? "ready" : "initial"}-${compactHeader ? "compact" : "full"}-${timeFormat}`;
-  return { calendarEntries, containerRef, sizingVars, formats, calendarKey };
+  const calendarEntries = useMemo(() => buildCalendarEntries(tasks, events, timezone), [tasks, events, timezone]);
+  const displayDate = useMemo(() => toCalendarDisplayDate(new Date(), timezone), [timezone]);
+  const visibleRange = useMemo(() => getVisibleRange(daySchedule, dayStart, dayEnd), [daySchedule, dayStart, dayEnd]);
+  const sizingVars = useMemo(() => buildSizingVars(containerHeight, visibleRange.hours), [containerHeight, visibleRange.hours]);
+  const compact = containerWidth > 0 && containerWidth < 500;
+  const formats = useMemo(() => buildFormats(timeFormat, compact), [timeFormat, compact]);
+  const min = useMemo(() => minutesToDate(visibleRange.startMinutes), [visibleRange.startMinutes]);
+  const max = useMemo(() => minutesToDate(visibleRange.endMinutes), [visibleRange.endMinutes]);
+  return { calendarEntries, containerRef, sizingVars, formats, localizer, displayDate, min, max };
 };
 
 const MiniCalendarPreview = ({ tasks, events }: MiniCalendarPreviewProps) => {
-  const { calendarEntries, containerRef, sizingVars, formats, calendarKey } = useMiniCalendarViewModel(tasks, events);
+  const { calendarEntries, containerRef, sizingVars, formats, localizer, displayDate, min, max } = useMiniCalendarViewModel(tasks, events);
   return (
     <div
       className="mini-calendar-preview h-full w-full overflow-hidden"
       style={sizingVars}
       ref={containerRef}
     >
-      <Calendar
-        key={calendarKey}
+      <Calendar<MiniCalendarEntry>
         localizer={localizer}
         events={calendarEntries}
         defaultView={Views.WEEK}
         views={[Views.WEEK]}
         toolbar={false}
-        date={new Date()}
+        date={displayDate}
+        min={min}
+        max={max}
         startAccessor="start"
         endAccessor="end"
         step={60}
