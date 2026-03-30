@@ -5,7 +5,11 @@ from courses.services.event import logger
 
 
 def new_sync_stats() -> Dict[str, Any]:
-    """Track sync outcome across the whole operation."""
+    """Track sync outcome across the whole operation.
+
+    Returns:
+        Dict[str, Any]: Fresh counters and an empty error list for one sync run.
+    """
     return {
         "created": 0,
         "updated": 0,
@@ -14,12 +18,26 @@ def new_sync_stats() -> Dict[str, Any]:
 
 
 def course_event_title(course_event) -> str:
-    """Build a consistent title used to match core events."""
+    """Build a consistent title used to match core events.
+
+    Args:
+        course_event: The source course event being mirrored.
+
+    Returns:
+        str: Canonical title used as the sync identity key.
+    """
     return f"{course_event.course.name} - {course_event.title}"
 
 
 def course_event_description(course_event) -> str:
-    """Build the richer user-facing description for synced course events."""
+    """Build the richer user-facing description for synced course events.
+
+    Args:
+        course_event: The source course event being mirrored.
+
+    Returns:
+        str: Human-readable description for the synced calendar entry.
+    """
     return (
         f"{course_event.course.name} - {course_event.title}"
         + "'\n"
@@ -31,7 +49,16 @@ def course_event_description(course_event) -> str:
 
 
 def get_core_event(user, title: str, start_time):
-    """Look up the target calendar event using the stable identity fields."""
+    """Look up the target calendar event using the stable identity fields.
+
+    Args:
+        user: The owner of the calendar copy.
+        title (str): Canonical event title.
+        start_time: The event start timestamp used for matching.
+
+    Returns:
+        Event: The matching core event row.
+    """
     return Event.objects.get(
         user=user,
         title=title,
@@ -40,7 +67,15 @@ def get_core_event(user, title: str, start_time):
 
 
 def create_core_event_for_course_student(course_event, user):
-    """Create a new core event copy for a specific enrolled student."""
+    """Create a new core event copy for a specific enrolled student.
+
+    Args:
+        course_event: The source course event to duplicate.
+        user: The student receiving the calendar copy.
+
+    Returns:
+        Event: The newly created core event row.
+    """
     core_event = Event(
         user=user,
         title=course_event_title(course_event),
@@ -55,7 +90,15 @@ def create_core_event_for_course_student(course_event, user):
 
 
 def update_core_event_from_course_event(core_event, course_event) -> bool:
-    """Update shared synced event fields from the source course event."""
+    """Update shared synced event fields from the source course event.
+
+    Args:
+        core_event (Event): Existing calendar copy to update.
+        course_event: The source course event containing fresh values.
+
+    Returns:
+        bool: ``True`` when at least one field changed, otherwise ``False``.
+    """
     updated = False
 
     if core_event.start_time != course_event.start_time:
@@ -91,7 +134,16 @@ def update_core_event_from_course_event(core_event, course_event) -> bool:
 def update_user_specific_core_event(
     core_event, event_description: str, course_event
 ) -> bool:
-    """Update a user's personalized synced event fields."""
+    """Update a user's personalized synced event fields.
+
+    Args:
+        core_event (Event): Existing calendar copy to update.
+        event_description (str): User-facing description for the copy.
+        course_event: The source course event containing fresh values.
+
+    Returns:
+        bool: ``True`` when at least one field changed, otherwise ``False``.
+    """
     updated = False
 
     if core_event.start_time != course_event.start_time:

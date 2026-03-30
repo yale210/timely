@@ -18,4 +18,5 @@ class CoursesConfig(AppConfig):
     name = "courses"
 
     def ready(self):
+        """Register course signals when Django finishes app initialization."""
         import_module("courses.signals.event_signal")

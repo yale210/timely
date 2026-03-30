@@ -89,19 +89,24 @@ const useMiniCalendarPreferences = (): MiniCalendarPreferences => {
 
 const useObservedHeight = () => {
   const ref = useRef<HTMLDivElement | null>(null);
-  const [height, setHeight] = useState(0);
+  const [size, setSize] = useState({ height: 0, width: 0 });
 
   useEffect(() => {
     if (!ref.current || typeof ResizeObserver === "undefined") return;
     const observer = new ResizeObserver((entries) => {
       const entry = entries[0];
-      if (entry) setHeight(Math.round(entry.contentRect.height));
+      if (entry) {
+        setSize({
+          height: Math.round(entry.contentRect.height),
+          width: Math.round(entry.contentRect.width),
+        });
+      }
     });
     observer.observe(ref.current);
     return () => observer.disconnect();
   }, []);
 
-  return { ref, height };
+  return { ref, ...size };
 };
 
 const syncCalendarWeekStart = (weekStartsOn: "monday" | "sunday") => {
@@ -180,14 +185,14 @@ const buildSizingVars = (containerHeight: number, visibleHours: number): CSSProp
   } as CSSProperties;
 };
 
-const buildFormats = (timeFormat: "24h" | "12h"): Formats => {
+const buildFormats = (timeFormat: "24h" | "12h", compact: boolean): Formats => {
   const timeLabel = timeFormat === "24h" ? "HH:mm" : "h:mm A";
   return {
     timeGutterFormat: timeLabel,
     eventTimeRangeFormat: ({ start, end }, culture, nextLocalizer) =>
       `${nextLocalizer?.format(start, timeLabel, culture)} - ${nextLocalizer?.format(end, timeLabel, culture)}`,
-    dayHeaderFormat: "dddd DD MMM",
-    dayFormat: "ddd DD/MM",
+    dayHeaderFormat: compact ? "dd D" : "dddd DD MMM",
+    dayFormat: compact ? "dd D" : "ddd DD/MM",
   };
 };
 
@@ -231,6 +236,7 @@ const MiniCalendarPreview = ({ tasks, events }: MiniCalendarPreviewProps) => {
       ref={containerRef}
     >
       <Calendar
+        key={calendarKey}
         localizer={localizer}
         events={calendarEntries}
         defaultView={Views.WEEK}

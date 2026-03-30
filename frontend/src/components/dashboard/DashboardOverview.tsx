@@ -284,7 +284,7 @@ const DashboardOverview = ({
   };
 
   return (
-    <main className="h-full min-h-0 w-full px-6 pt-4 pb-0 lg:px-10">
+    <main className="h-full min-h-0 w-full px-6 pt-4 pb-6 lg:px-10">
       <DashboardOverviewHeader
         periodLabel={periodLabel}
         selectedPeriod={selectedPeriod}

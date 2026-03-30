@@ -85,7 +85,7 @@ const NotificationDropdownPanel = ({
 }: NotificationDropdownPanelProps) => (
   <div className="overflow-hidden rounded-2xl bg-white shadow-xl ring-1 ring-black/5">
     <div className="px-4 py-3"><h3 className="text-base font-semibold text-gray-900">Notifications ({total})</h3></div>
-    <div className="max-h-105 space-y-2 overflow-y-auto px-3 pb-3">
+    <div className="max-h-[60vh] space-y-2 overflow-y-auto px-3 pb-3 sm:max-h-105">
       {requests.map((friendship) => <FriendRequestCard key={friendship.id} friendship={friendship} acceptRequest={onAcceptRequest} declineRequest={onDeclineRequest} isActing={actingIds.has(friendship.id)} />)}
       {notifications.map((notification) => <NotificationCard key={notification.id} notification={notification} onClick={onItemClick} onToggleRead={onToggleRead} onDelete={onDeleteItem} showActions showReadToggle={false} showDivider={false} compact />)}
       {notifications.length === 0 && requests.length === 0 && <div className="px-6 py-12 text-center text-sm text-gray-500">No notifications</div>}
@@ -117,7 +117,7 @@ export const NotificationDropdown = ({ notifications, unreadCount, onItemClick, 
     <Popover className="relative flex h-6 items-center">
       <Popover.Button aria-label="View notifications" type="button" className="cursor-pointer focus:outline-none flex h-6 items-center"><NotificationBell unreadCount={total} as="div" isDecorative /></Popover.Button>
       <Transition as={Fragment} enter="transition ease-out duration-200" enterFrom="opacity-0 translate-y-1" enterTo="opacity-100 translate-y-0" leave="transition ease-in duration-150" leaveFrom="opacity-100 translate-y-0" leaveTo="opacity-0 translate-y-1">
-        <Popover.Panel className="absolute right-0 top-full z-10 mt-2 w-96 px-4 sm:px-0">
+        <Popover.Panel className="fixed inset-x-3 top-14 z-50 sm:absolute sm:inset-x-auto sm:right-0 sm:top-full sm:mt-2 sm:w-96">
           <NotificationDropdownPanel total={total} requests={requests} notifications={displayNotifications} actingIds={actingIds} onItemClick={onItemClick} onToggleRead={handleToggle} onDeleteItem={handleDelete} onAcceptRequest={(id) => { void acceptRequest(id); }} onDeclineRequest={(id) => { void declineRequest(id); }} />
         </Popover.Panel>
       </Transition>

@@ -38,6 +38,16 @@ class WeeklySummarySerializer(serializers.Serializer):
         )
     )
     def get_daily_stats(self, obj):
+        """Return the per-day completion breakdown for the summary.
+
+        Args:
+            obj (dict[str, Any]): Weekly summary payload returned by the
+                statistics helper. It should contain a ``daily_stats`` key
+                with a list of day-level aggregate dictionaries.
+
+        Returns:
+            list[dict[str, Any]]: Daily completion data for the reporting UI.
+        """
         return obj.get("daily_stats", [])
 
     @extend_schema_field(
@@ -51,4 +61,14 @@ class WeeklySummarySerializer(serializers.Serializer):
         )
     )
     def get_importance_stats(self, obj):
+        """Return the completion breakdown grouped by importance level.
+
+        Args:
+            obj (dict[str, Any]): Weekly summary payload returned by the
+                statistics helper. It should contain an ``importance_stats``
+                key with a list of importance-level aggregate dictionaries.
+
+        Returns:
+            list[dict[str, Any]]: Completion totals grouped by task importance.
+        """
         return obj.get("importance_stats", [])

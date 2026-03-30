@@ -6,6 +6,7 @@ import { CALENDAR_DISPLAY_TIMEZONE } from "@/utils/calendarDisplayTime";
 
 /**
  * Returns a react-big-calendar localizer that tracks the selected app timezone.
+ * @param forcedTimezone - Optional timezone override for the calendar display layer.
  * @returns A moment-based calendar localizer configured for the active timezone.
  */
 export const useCalendarLocalizer = (forcedTimezone?: string) => {

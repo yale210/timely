@@ -35,6 +35,8 @@ const CalendarToolbar = ({
   const warningPanelRef = useRef<HTMLDivElement | null>(null);
   const rescheduleWarnings = state.rescheduleWarnings ?? [];
   const activeTimezone = state.preference?.timezone ?? "UTC";
+  const isMobileViewport = typeof window !== "undefined" && window.innerWidth < 768;
+  const dateStripGutterWidth = isMobileViewport ? 0 : state.timeGutterWidth;
 
   useEffect(() => {
     if (!isWarningsOpen) {
@@ -58,8 +60,8 @@ const CalendarToolbar = ({
       ref={headerRef}
       className={`calendar-header fixed left-0 right-0 z-20 flex-none border-b border-gray-200 bg-white pt-2 pb-0 shadow-sm ${calendarHeaderTopClass}`}
     >
-      <div className="flex flex-col md:flex-row justify-between items-center gap-2 px-4">
-        <div className="flex items-center gap-6">
+      <div className="flex flex-col gap-3 px-3 pb-2 sm:px-4 md:flex-row md:items-center md:justify-between md:gap-2 md:pb-0">
+        <div className="hidden w-full items-center justify-between gap-3 md:flex md:w-auto md:justify-start md:gap-6">
           <h1 className="text-2xl font-bold tracking-tight text-black">
             Calendar
           </h1>
@@ -87,8 +89,29 @@ const CalendarToolbar = ({
             </button>
           </div>
         </div>
-        <div className="flex items-center gap-4">
-          <div className="relative flex items-center gap-2" ref={warningPanelRef}>
+        <div className="flex w-full flex-col gap-3 md:ml-auto md:w-auto md:flex-row md:items-center md:justify-end md:gap-4">
+          <h2 className="order-1 w-full pt-1 text-center text-lg font-semibold uppercase tracking-[0.22em] text-black sm:text-xl md:order-3 md:w-48 md:pt-0 md:text-center md:text-xl md:tracking-wide">
+            {state.currentLabel}
+          </h2>
+          <div className="relative order-2 flex items-center justify-between gap-2 md:order-1 md:justify-start" ref={warningPanelRef}>
+            <div className="flex items-center rounded-lg border border-gray-200 bg-white shadow-sm md:hidden">
+              <button
+                type="button"
+                onClick={actions.goToPrevious}
+                className="flex h-10 w-10 items-center justify-center border-r border-gray-200 text-gray-500 transition-colors hover:bg-blue-100"
+                aria-label="Previous period"
+              >
+                <span className="material-icons text-xl">chevron_left</span>
+              </button>
+              <button
+                type="button"
+                onClick={actions.goToNext}
+                className="flex h-10 w-10 items-center justify-center text-gray-500 transition-colors hover:bg-blue-100"
+                aria-label="Next period"
+              >
+                <span className="material-icons text-xl">chevron_right</span>
+              </button>
+            </div>
             {rescheduleWarnings.length > 0 ? (
               <>
                 <button
@@ -129,7 +152,7 @@ const CalendarToolbar = ({
               type="button"
               onClick={() => { void actions.rescheduleTasks(); }}
               disabled={state.isRescheduling}
-              className={`px-4 py-2 rounded-lg text-sm font-medium flex items-center shadow-sm transition-colors ${
+              className={`flex h-10 flex-1 items-center justify-center rounded-lg px-3 text-sm font-medium shadow-sm transition-colors sm:flex-none sm:px-4 ${
                 state.isRescheduling
                   ? "bg-gray-200 text-gray-500 cursor-not-allowed"
                   : "bg-primary text-white hover:bg-blue-300"
@@ -151,7 +174,7 @@ const CalendarToolbar = ({
 
           
           </div>
-          <div className="hidden md:flex bg-gray-100 p-1 rounded-lg">
+          <div className="hidden md:order-2 md:flex rounded-lg bg-gray-100 p-1">
             {(
               [
                 { label: "Month", value: Views.MONTH },
@@ -174,19 +197,16 @@ const CalendarToolbar = ({
               </button>
             ))}
           </div>
-          <h2 className="text-xl font-semibold w-48 text-center uppercase tracking-wide text-black">
-            {state.currentLabel}
-          </h2>
         </div>
       </div>
       {state.dateStripDays.length > 0 && (
         <div
           className="mt-2 grid border-t border-gray-200 bg-white"
           style={{
-            gridTemplateColumns: `${state.timeGutterWidth}px repeat(${state.dateStripDays.length}, minmax(0, 1fr))`,
+            gridTemplateColumns: `${dateStripGutterWidth}px repeat(${state.dateStripDays.length}, minmax(0, 1fr))`,
           }}
         >
-          <div className="border-r border-gray-200 bg-gray-50" />
+          <div className={dateStripGutterWidth > 0 ? "border-r border-gray-200 bg-gray-50" : ""} />
           {state.dateStripDays.map((dayMoment) => {
             const isToday = dayMoment.isSame(moment().tz(activeTimezone), "day");
             const isActiveDay = state.view === Views.DAY && dayMoment.isSame(moment(state.date).tz(activeTimezone), "day");
@@ -200,9 +220,13 @@ const CalendarToolbar = ({
                 }`}
               >
                 <p className="text-xs font-medium uppercase tracking-wide text-gray-500">
-                  {dayMoment.format("ddd")}
+                  <span className="sm:hidden">{dayMoment.format("dd")}</span>
+                  <span className="hidden sm:inline">{dayMoment.format("ddd")}</span>
                 </p>
-                <p className="text-sm font-semibold">
+                <p className="text-sm font-semibold sm:hidden">
+                  {dayMoment.format("D")}
+                </p>
+                <p className="hidden text-sm font-semibold sm:block">
                   {dayMoment.format("D MMM")}
                 </p>
               </div>

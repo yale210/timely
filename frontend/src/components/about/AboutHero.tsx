@@ -10,7 +10,7 @@ export default function AboutHero() {
   const [ref, visible] = useReveal(0)
 
   return (
-    <div className="relative isolate overflow-hidden bg-white px-6 pb-16 pt-24 sm:pb-24 sm:pt-32 lg:px-8">
+    <div className="relative isolate overflow-hidden bg-white px-6 pb-16 pt-28 sm:pb-24 sm:pt-36 lg:px-8">
       <BlurBackground />
       <div
         ref={ref}
@@ -23,11 +23,11 @@ export default function AboutHero() {
       >
         <h1 className="text-5xl font-semibold tracking-tight text-balance text-gray-900 sm:text-6xl lg:text-7xl">
           Everything you need to{" "}
-          <span className="bg-linear-to-r from-indigo-600 to-emerald-500 bg-clip-text text-transparent">
+          <span className="bg-linear-to-r from-indigo-500 to-emerald-500 bg-clip-text text-transparent">
             study smarter
           </span>
         </h1>
-        <p className="mx-auto mt-6 max-w-2xl text-lg leading-relaxed text-gray-500">
+        <p className="mx-auto mt-6 max-w-2xl text-base leading-relaxed text-gray-500 sm:text-lg">
           Timely brings together task management, calendar scheduling, grade tracking, and social
           motivation — all in one seamless platform built for students.
         </p>

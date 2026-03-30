@@ -1,0 +1,112 @@
+.mini-calendar-preview .rbc-event-label {
+  display: none;
+}
+
+.mini-calendar-preview .rbc-day-slot .rbc-time-slot,
+.mini-calendar-preview .rbc-time-slot {
+  border-top: 1px solid var(--border) !important;
+}
+
+.mini-calendar-preview .rbc-time-content > .rbc-day-slot {
+  border-left: 1px solid var(--border) !important;
+  height: 100%;
+  min-height: 0;
+}
+
+.mini-calendar-preview .rbc-time-content > * + * > * {
+  border-left: 1px solid var(--border) !important;
+}
+
+.mini-calendar-preview .rbc-timeslot-group {
+  border-bottom: 1px solid var(--border) !important;
+  flex: 0 0 var(--mini-hour-height);
+  min-height: var(--mini-hour-height);
+}
+
+.mini-calendar-preview .rbc-time-gutter,
+.mini-calendar-preview .rbc-time-header-gutter {
+  border-right: 1px solid var(--border) !important;
+}
+
+.mini-calendar-preview {
+  height: 100%;
+  width: 100%;
+  --mini-header-height: 32px;
+  --mini-hour-height: 24px;
+}
+
+.mini-calendar-preview .rbc-calendar {
+  height: 100%;
+}
+
+.mini-calendar-preview .rbc-label,
+.mini-calendar-preview .rbc-header {
+  font-size: 0.7rem;
+}
+
+.mini-calendar-preview .rbc-time-gutter .rbc-label {
+  text-align: center;
+  top: 0;
+  line-height: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+}
+
+.mini-calendar-preview .rbc-event-content,
+.mini-calendar-preview .rbc-event-label {
+  font-size: 0.65rem;
+  line-height: 1.05;
+}
+
+.mini-calendar-preview .rbc-event {
+  overflow: hidden;
+}
+
+.mini-calendar-preview .rbc-event-content {
+  display: block;
+  width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.mini-calendar-preview .rbc-allday-cell,
+.mini-calendar-preview .rbc-allday-row {
+  display: none;
+}
+
+.mini-calendar-preview .rbc-time-content {
+  overflow: hidden;
+  height: 100%;
+  align-items: stretch;
+  min-height: 0;
+  flex: 1 1 0;
+}
+
+.mini-calendar-preview .rbc-time-view {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+}
+
+.mini-calendar-preview .rbc-time-header {
+  flex: 0 0 auto;
+  margin-right: 0 !important;
+  padding-right: 0 !important;
+  height: var(--mini-header-height);
+}
+
+.mini-calendar-preview .rbc-time-header-content,
+.mini-calendar-preview .rbc-time-header-content .rbc-row {
+  margin-right: 0 !important;
+  height: var(--mini-header-height);
+}
+
+.mini-calendar-preview .rbc-day-slot {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+}

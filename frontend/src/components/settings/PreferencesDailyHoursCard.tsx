@@ -10,7 +10,7 @@ interface PreferencesDailyHoursCardProps {
 }
 
 const inputClassName = (hasErrors: boolean, isDayOff = false) =>
-  `bg-white px-3 py-2 block outline w-45 rounded-md text-right ${
+  `bg-white px-3 py-2 block w-full min-w-0 rounded-md text-left outline sm:w-45 sm:text-right ${
     hasErrors ? "outline-red-300" : "outline-gray-300"
   } focus:outline-2 focus:outline-turquoise-600 ${isDayOff ? "opacity-60" : ""}`;
 
@@ -107,57 +107,63 @@ const PreferencesDailyHoursCard = ({
 
       {useSetAllDays ? (
         <>
-          <div className="mt-3 grid grid-cols-[80px_1fr] items-center gap-y-2 text-xs font-medium text-gray-500">
+          <div className="mt-3 hidden grid-cols-[80px_1fr] items-center gap-y-2 text-xs font-medium text-gray-500 sm:grid">
             <div />
             <div className="flex justify-end gap-3">
               <div className="w-45 text-left">Start</div>
               <div className="w-45 text-left">End</div>
             </div>
           </div>
-          <div className="grid grid-cols-[80px_1fr] items-center gap-y-2">
+          <div className="grid grid-cols-1 items-start gap-y-2 sm:grid-cols-[80px_1fr] sm:items-center">
             <div className="text-sm font-medium text-gray-700">All</div>
-            <div className="flex justify-end gap-3">
-              <input
-                type="time"
-                value={pref.day_start?.slice(0, 5) ?? "08:00"}
-                onChange={(event) => {
-                  onPrefChange({
-                    ...pref,
-                    day_start: event.target.value,
-                    day_schedule: buildDefaultSchedule(
-                      event.target.value,
-                      pref.day_end?.slice(0, 5) ?? "22:00",
-                    ),
-                  });
-                }}
-                className={inputClassName(hasScheduleErrors)}
-              />
-              <input
-                type="time"
-                value={pref.day_end?.slice(0, 5) ?? "22:00"}
-                onChange={(event) => {
-                  onPrefChange({
-                    ...pref,
-                    day_end: event.target.value,
-                    day_schedule: buildDefaultSchedule(
-                      pref.day_start?.slice(0, 5) ?? "08:00",
-                      event.target.value,
-                    ),
-                  });
-                }}
-                className={inputClassName(hasScheduleErrors)}
-              />
+            <div className="grid min-w-0 gap-2 sm:flex sm:justify-end sm:gap-3">
+              <label className="block min-w-0">
+                <span className="mb-1 block text-xs font-medium text-gray-500 sm:hidden">Start</span>
+                <input
+                  type="time"
+                  value={pref.day_start?.slice(0, 5) ?? "08:00"}
+                  onChange={(event) => {
+                    onPrefChange({
+                      ...pref,
+                      day_start: event.target.value,
+                      day_schedule: buildDefaultSchedule(
+                        event.target.value,
+                        pref.day_end?.slice(0, 5) ?? "22:00",
+                      ),
+                    });
+                  }}
+                  className={inputClassName(hasScheduleErrors)}
+                />
+              </label>
+              <label className="block min-w-0">
+                <span className="mb-1 block text-xs font-medium text-gray-500 sm:hidden">End</span>
+                <input
+                  type="time"
+                  value={pref.day_end?.slice(0, 5) ?? "22:00"}
+                  onChange={(event) => {
+                    onPrefChange({
+                      ...pref,
+                      day_end: event.target.value,
+                      day_schedule: buildDefaultSchedule(
+                        pref.day_start?.slice(0, 5) ?? "08:00",
+                        event.target.value,
+                      ),
+                    });
+                  }}
+                  className={inputClassName(hasScheduleErrors)}
+                />
+              </label>
             </div>
             {hasScheduleErrors ? (
-              <div className="col-start-2 mt-2 text-xs text-red-700">
-                {displayFieldErrors.day_start?.join(" ")} {displayFieldErrors.day_end?.join(" ")} {displayFieldErrors.day_schedule?.join(" ")}
-              </div>
+                <div className="mt-2 text-xs text-red-700 sm:col-start-2">
+                  {displayFieldErrors.day_start?.join(" ")} {displayFieldErrors.day_end?.join(" ")} {displayFieldErrors.day_schedule?.join(" ")}
+                </div>
             ) : null}
           </div>
         </>
       ) : (
         <div className="mt-3 grid grid-cols-1 gap-3">
-          <div className="grid grid-cols-[80px_1fr] items-center gap-y-2 text-xs font-medium text-gray-500">
+          <div className="hidden grid-cols-[80px_1fr] items-center gap-y-2 text-xs font-medium text-gray-500 sm:grid">
             <div />
             <div className="flex justify-end gap-3">
               <div className="w-45 text-left">Start</div>
@@ -170,47 +176,54 @@ const PreferencesDailyHoursCard = ({
             return (
               <div
                 key={entry.day}
-                className="grid grid-cols-[80px_1fr] items-center gap-y-2"
+                className="grid grid-cols-[56px_minmax(0,1fr)] items-start gap-y-2 sm:grid-cols-[80px_1fr] sm:items-center"
               >
-                <div className="text-sm font-medium text-gray-700">
+                <div className="pt-7 text-sm font-medium text-gray-700 sm:pt-0">
                   {dayLabels.find(([day]) => day === entry.day)?.[1] ?? `Day ${entry.day}`}
                 </div>
-                <div className="flex justify-end gap-3">
-                  <input
-                    type="time"
-                    value={entry.start}
-                    disabled={isDayOff}
-                    onChange={(event) => {
-                      const nextSchedule = schedule.map((item) => (
-                        item.day === entry.day ? { ...item, start: event.target.value } : item
-                      ));
-                      onPrefChange({
-                        ...pref,
-                        day_schedule: nextSchedule,
-                        day_start: nextSchedule[0]?.start ?? pref.day_start,
-                        day_end: nextSchedule[0]?.end ?? pref.day_end,
-                      });
-                    }}
-                    className={inputClassName(Boolean(displayFieldErrors.day_schedule), isDayOff)}
-                  />
-                  <input
-                    type="time"
-                    value={entry.end}
-                    disabled={isDayOff}
-                    onChange={(event) => {
-                      const nextSchedule = schedule.map((item) => (
-                        item.day === entry.day ? { ...item, end: event.target.value } : item
-                      ));
-                      onPrefChange({
-                        ...pref,
-                        day_schedule: nextSchedule,
-                        day_start: nextSchedule[0]?.start ?? pref.day_start,
-                        day_end: nextSchedule[0]?.end ?? pref.day_end,
-                      });
-                    }}
-                    className={inputClassName(Boolean(displayFieldErrors.day_schedule), isDayOff)}
-                  />
-                  <div className="flex w-15 items-center justify-end">
+                <div className="grid min-w-0 gap-2 sm:flex sm:justify-end sm:gap-3">
+                  <label className="block min-w-0">
+                    <span className="mb-1 block text-xs font-medium text-gray-500 sm:hidden">Start</span>
+                    <input
+                      type="time"
+                      value={entry.start}
+                      disabled={isDayOff}
+                      onChange={(event) => {
+                        const nextSchedule = schedule.map((item) => (
+                          item.day === entry.day ? { ...item, start: event.target.value } : item
+                        ));
+                        onPrefChange({
+                          ...pref,
+                          day_schedule: nextSchedule,
+                          day_start: nextSchedule[0]?.start ?? pref.day_start,
+                          day_end: nextSchedule[0]?.end ?? pref.day_end,
+                        });
+                      }}
+                      className={inputClassName(Boolean(displayFieldErrors.day_schedule), isDayOff)}
+                    />
+                  </label>
+                  <label className="block min-w-0">
+                    <span className="mb-1 block text-xs font-medium text-gray-500 sm:hidden">End</span>
+                    <input
+                      type="time"
+                      value={entry.end}
+                      disabled={isDayOff}
+                      onChange={(event) => {
+                        const nextSchedule = schedule.map((item) => (
+                          item.day === entry.day ? { ...item, end: event.target.value } : item
+                        ));
+                        onPrefChange({
+                          ...pref,
+                          day_schedule: nextSchedule,
+                          day_start: nextSchedule[0]?.start ?? pref.day_start,
+                          day_end: nextSchedule[0]?.end ?? pref.day_end,
+                        });
+                      }}
+                      className={inputClassName(Boolean(displayFieldErrors.day_schedule), isDayOff)}
+                    />
+                  </label>
+                  <div className="flex items-center justify-between rounded-md border border-gray-200 px-3 py-2 sm:w-15 sm:justify-end sm:border-0 sm:px-0 sm:py-0">
+                    <span className="text-xs font-medium text-gray-500 sm:hidden">Day off</span>
                     <button
                       type="button"
                       onClick={() => toggleDayOnOff(entry.day)}
