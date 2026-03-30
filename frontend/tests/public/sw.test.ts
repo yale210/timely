@@ -1,5 +1,6 @@
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
+import { runInNewContext } from "node:vm";
 import { describe, expect, it, vi } from "vitest";
 
 const swSource = readFileSync(
@@ -31,7 +32,7 @@ function loadServiceWorker() {
     },
   };
 
-  new Function("self", swSource)(selfMock);
+  runInNewContext(swSource, { self: selfMock, URL, console });
 
   return { selfMock, listeners };
 }

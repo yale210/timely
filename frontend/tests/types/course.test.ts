@@ -154,13 +154,13 @@ describe("course types", () => {
     const actions = {
       setSearch: (_value: string) => undefined,
       selectCourse: (_course: Course | null) => undefined,
-      refresh: async () => undefined,
-      createCourse: async (_data: CourseCreation) => null,
-      updateCourse: async (_id: number, _data: CourseUpdate) => null,
-      deleteCourse: async (_id: number) => undefined,
-      joinCourse: async (_id: string) => null,
-      leaveCourse: async (_id: number) => null,
-      getStaff: async (_courseId: number) => [],
+      refresh: () => Promise.resolve(),
+      createCourse: (_data: CourseCreation) => Promise.resolve(null),
+      updateCourse: (_id: number, _data: CourseUpdate) => Promise.resolve(null),
+      deleteCourse: (_id: number) => Promise.resolve(),
+      joinCourse: (_id: string) => Promise.resolve(null),
+      leaveCourse: (_id: number) => Promise.resolve(null),
+      getStaff: (_courseId: number) => Promise.resolve([]),
     } satisfies UseCoursesActions;
 
     const result = {
