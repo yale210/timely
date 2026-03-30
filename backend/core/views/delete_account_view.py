@@ -3,7 +3,7 @@
 from rest_framework import permissions, serializers
 from rest_framework.response import Response
 from rest_framework.views import APIView
-
+from django.db import transaction
 from drf_spectacular.utils import extend_schema, inline_serializer
 
 
@@ -33,7 +33,8 @@ class DeleteAccountView(APIView):
         """
         user = request.user
 
-        user.delete()
+        with transaction.atomic():
+            user.delete()
 
         response = {"message": "Account deleted successfully."}
 
