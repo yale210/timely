@@ -1,6 +1,6 @@
 import { render, screen } from "@testing-library/react";
 import { describe, it, expect } from "vitest";
-import { AdminHistoryAudienceSnapshot } from "@/components/admin/notifications/AdminHistoryDetailMetrics/AdminHistoryAudienceSnapshot";
+import { AdminHistoryAudienceSnapshot } from "@/components/admin/notifications/AdminHistoryDetailMetrics";
 import { type BroadcastJobDetail } from "@/types";
 
 describe("AdminHistoryAudienceSnapshot Component", () => {

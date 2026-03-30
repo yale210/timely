@@ -1,6 +1,6 @@
 import { render, screen, fireEvent } from "@testing-library/react";
 import { vi, describe, it, expect } from "vitest";
-import { AdminBroadcastFormMessageField } from "@/components/admin/notifications/AdminBroadcastForm/AdminBroadcastFormMessageField";
+import { AdminBroadcastFormMessageField } from "@/components/admin/notifications/AdminBroadcastForm";
 
 describe("AdminBroadcastFormMessageField Component", () => {
   it("renders and handles changes", () => {

@@ -1,6 +1,6 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
-import { AdminBroadcastForm } from "@/components/admin/notifications/AdminBroadcastForm";
+import { AdminBroadcastForm } from "@/components/admin/notifications";
 import type { AdminNotificationTarget, AdminUserRole, AdminUserSummary } from "@/types";
 
 vi.mock("@/components/admin/AdminUserTable", () => ({

@@ -1,6 +1,6 @@
 import { render, screen } from "@testing-library/react";
 import { describe, it, expect } from "vitest";
-import { AdminHistoryDetailPayload } from "@/components/admin/notifications/AdminHistoryDetailPayload";
+import { AdminHistoryDetailPayload } from "@/components/admin/notifications";
 
 describe("AdminHistoryDetailPayload Component", () => {
   it("renders the message payload correctly", () => {

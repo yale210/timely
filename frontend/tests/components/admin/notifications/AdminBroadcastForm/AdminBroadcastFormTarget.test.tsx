@@ -1,6 +1,6 @@
 import { render, screen, fireEvent } from "@testing-library/react";
 import { vi, describe, it, expect } from "vitest";
-import { AdminBroadcastFormTarget } from "@/components/admin/notifications/AdminBroadcastForm/AdminBroadcastFormTarget";
+import { AdminBroadcastFormTarget } from "@/components/admin/notifications/AdminBroadcastForm";
 import { type AdminNotificationTarget } from "@/types";
 
 describe("AdminBroadcastFormTarget Component", () => {

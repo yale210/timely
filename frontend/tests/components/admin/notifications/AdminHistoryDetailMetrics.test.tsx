@@ -1,6 +1,6 @@
 import { render, screen } from "@testing-library/react";
 import { describe, it, expect } from "vitest";
-import { AdminHistoryDetailMetrics } from "@/components/admin/notifications/AdminHistoryDetailMetrics";
+import { AdminHistoryDetailMetrics } from "@/components/admin/notifications";
 import type { BroadcastJobDetail, BroadcastJobStatusResponse } from "@/types";
 
 describe("AdminHistoryDetailMetrics Component", () => {
@@ -75,4 +75,3 @@ describe("AdminHistoryDetailMetrics Component", () => {
     expect(screen.getByText("15")).toBeDefined();
   });
 });
-

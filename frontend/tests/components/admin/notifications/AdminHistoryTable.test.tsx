@@ -2,7 +2,7 @@ import { render, screen, fireEvent } from "@testing-library/react";
 import { vi, describe, it, expect } from "vitest";
 import { MemoryRouter } from "react-router-dom";
 import type { ReactElement } from "react";
-import { AdminHistoryTable } from "@/components/admin/notifications/AdminHistoryTable";
+import { AdminHistoryTable } from "@/components/admin/notifications";
 import type { BroadcastJobSummary } from "@/types";
 
 const renderAdminHistoryTable = (ui: ReactElement) => render(<MemoryRouter>{ui}</MemoryRouter>);

@@ -1,6 +1,6 @@
 import { render, screen } from "@testing-library/react";
 import { describe, it, expect } from "vitest";
-import { AdminHistoryDetailRecipientsTable } from "@/components/admin/notifications/AdminHistoryDetailRecipientsTable";
+import { AdminHistoryDetailRecipientsTable } from "@/components/admin/notifications";
 import type { BroadcastRecipientDetail } from "@/types";
 
 describe("AdminHistoryDetailRecipientsTable Component", () => {
@@ -54,4 +54,3 @@ describe("AdminHistoryDetailRecipientsTable Component", () => {
     expect(screen.getAllByText("-").length).toBeGreaterThanOrEqual(1);
   });
 });
-

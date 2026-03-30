@@ -1,6 +1,6 @@
 import { render, screen, fireEvent } from "@testing-library/react";
 import { describe, it, expect } from "vitest";
-import { AdminLivePreview } from "@/components/admin/notifications/AdminLivePreview";
+import { AdminLivePreview } from "@/components/admin/notifications";
 
 describe("AdminLivePreview Component", () => {
   it("renders default preview text when title and message are empty", () => {

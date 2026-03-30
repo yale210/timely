@@ -1,6 +1,6 @@
 import { render, screen, fireEvent } from "@testing-library/react";
 import { vi, describe, it, expect } from "vitest";
-import { AdminHistoryFilters } from "@/components/admin/notifications/AdminHistoryFilters";
+import { AdminHistoryFilters } from "@/components/admin/notifications";
 
 describe("AdminHistoryFilters Component", () => {
   const mockOnSearchChange = vi.fn();

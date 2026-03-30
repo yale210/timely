@@ -1,6 +1,6 @@
 import { render, screen } from "@testing-library/react";
 import { describe, it, expect } from "vitest";
-import { AdminHistoryDeliveryMetrics } from "@/components/admin/notifications/AdminHistoryDetailMetrics/AdminHistoryDeliveryMetrics";
+import { AdminHistoryDeliveryMetrics } from "@/components/admin/notifications/AdminHistoryDetailMetrics";
 import { type BroadcastJobStatusResponse } from "@/types";
 
 describe("AdminHistoryDeliveryMetrics Component", () => {

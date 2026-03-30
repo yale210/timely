@@ -1,6 +1,6 @@
 import { render, screen } from "@testing-library/react";
 import { describe, it, expect } from "vitest";
-import { AdminHistoryRecipientRow } from "@/components/admin/notifications/AdminHistoryDetailRecipientsTable/AdminHistoryRecipientRow";
+import { AdminHistoryRecipientRow } from "@/components/admin/notifications/AdminHistoryDetailRecipientsTable";
 import { type BroadcastRecipientDetail } from "@/types";
 
 describe("AdminHistoryRecipientRow Component", () => {
