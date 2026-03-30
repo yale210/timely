@@ -1,0 +1,26 @@
+graph TD
+    Browser["Browser / PWA\n(React 19 + Vite 7)"]
+
+    subgraph Docker["Docker Compose (Production)"]
+        Nginx["Nginx\n(Port 80)"]
+        Backend["Daphne ASGI\n(Django 5 — Port 8000)"]
+        CeleryWorker["Celery Worker\n(Notification delivery)"]
+        CeleryBeat["Celery Beat\n(Periodic tasks)"]
+        Redis["Redis 7\n(Broker + Channel Layer)"]
+        Postgres["PostgreSQL 16\n(Primary database)"]
+    end
+
+    CDN["Cloudflare CDN\n(IP filtering)"]
+
+    Browser -->|"HTTPS"| CDN
+    CDN -->|"HTTP"| Nginx
+    Nginx -->|"/api/* HTTP"| Backend
+    Nginx -->|"/ws/* WebSocket upgrade"| Backend
+    Nginx -->|"Static assets"| Nginx
+
+    Backend -->|"ORM"| Postgres
+    Backend -->|"Pub/Sub"| Redis
+    CeleryWorker -->|"Task queue"| Redis
+    CeleryBeat -->|"Schedule"| Redis
+    CeleryWorker -->|"DB writes"| Postgres
+    Backend -->|"WebSocket"| Redis

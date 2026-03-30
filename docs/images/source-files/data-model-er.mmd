@@ -1,0 +1,220 @@
+erDiagram
+    User {
+        int id PK
+        string username
+        string email
+        date date_of_birth
+        bool is_active
+        bool is_staff
+        datetime date_joined
+    }
+
+    Profile {
+        int id PK
+        int user_id FK
+        string name
+        date date_of_birth
+        string slogan
+        text bio
+        string avatar
+        int xp
+        int level
+        datetime creation_date
+    }
+
+    Preference {
+        int id PK
+        int user_id FK
+        time day_start
+        time day_end
+        json day_schedule
+        int max_hours_study_per_day
+        int max_days_ahead
+        int drag_snap_minutes
+        bool limit_max_hours
+        bool disable_sound_effects
+        string default_landing_page
+        string week_starts_on
+        string time_format
+        string timezone
+    }
+
+    Category {
+        int id PK
+        int user_id FK
+        string text
+        string colour
+        bool colour_override
+        int max_daily_study_time
+    }
+
+    Task {
+        int id PK
+        int user_id FK
+        string title
+        text description
+        string colour
+        int estimated_minutes
+        int completed_minutes
+        datetime start_time
+        datetime deadline
+        bool completed
+        bool locked
+        bool allow_split
+        int min_split_minutes
+        int max_split_minutes
+        int buffer_before_minutes
+        int buffer_after_minutes
+        int parent_task_id FK
+        int total_task_allocations
+        json allocation
+        int importance
+    }
+
+    Event {
+        int id PK
+        int user_id FK
+        string title
+        text description
+        string location
+        string colour
+        datetime start_time
+        datetime end_time
+        string recurrence_interval
+        date recurrence_end
+        json exception_dates
+        int split_from_event_id FK
+        datetime last_edited
+    }
+
+    EventReminder {
+        int id PK
+        int event_id FK
+        bool send_email
+        bool send_push
+        int minutes_before
+        datetime trigger_at
+        bool processed
+    }
+
+    EventOverride {
+        int id PK
+        int parent_event_id FK
+        datetime original_start_time
+        json reminders_snapshot
+    }
+
+    Assessment {
+        int id PK
+        int user_id FK
+        string title
+        string assessment_type
+        datetime due_date
+        int length_of_assessment
+        int weighting_of_assessment
+        text notes
+        int reminder_offset
+        int linked_event_id FK
+        int assessment_category_id FK
+        int module_category_id FK
+        bool completed
+        datetime created_at
+        datetime updated_at
+    }
+
+    Grade {
+        int id PK
+        int user_id FK
+        string name
+        int category_id FK
+        float score
+        float total_possible
+        date date_achieved
+    }
+
+    Friendship {
+        int id PK
+        int sender_id FK
+        int receiver_id FK
+        string state
+        datetime updated_at
+    }
+
+    PendingShareEvent {
+        int id PK
+        int sender_id FK
+        int receiver_id FK
+        int event_id FK
+    }
+
+    SpecialDates {
+        int id PK
+        int user_id FK
+        date date
+        string text
+    }
+
+    Notification {
+        int id PK
+        int recipient_id FK
+        int sender_id FK
+        string title
+        text message
+        bool is_read
+        datetime timestamp
+        string notification_type
+    }
+
+    PushSubscription {
+        int id PK
+        int user_id FK
+        string endpoint
+        string p256dh
+        string auth
+        datetime created_at
+    }
+
+    BroadcastJob {
+        int id PK
+        int sender_id FK
+        string title
+        string message
+        string target
+        json audience_filters
+        int recipient_count
+        int delivered_count
+        int failed_count
+        string status
+        string task_id
+        datetime queued_at
+    }
+
+    PomoSession {
+        int id PK
+        int user_id FK
+        int duration_minutes
+        datetime completed_at
+    }
+
+    User ||--o{ Task : "owns"
+    User ||--o{ Event : "owns"
+    User ||--o{ Category : "owns"
+    User ||--|| Profile : "has"
+    User ||--|| Preference : "has"
+    User ||--o{ Assessment : "owns"
+    User ||--o{ Grade : "owns"
+    User ||--o{ Notification : "receives"
+    User ||--o{ PushSubscription : "has"
+    User ||--o{ PomoSession : "logs"
+    User ||--o{ SpecialDates : "has"
+    User ||--o{ Friendship : "sends"
+    User ||--o{ PendingShareEvent : "shares"
+    Task }o--o{ Category : "tagged with"
+    Task ||--o{ Task : "parent of"
+    Event }o--o{ Category : "tagged with"
+    Event ||--o{ EventReminder : "has"
+    Event ||--o{ EventOverride : "overrides"
+    Assessment }o--o{ Category : "tagged with"
+    Assessment ||--o| Event : "linked to"
+    Grade ||--o| Category : "belongs to"
+    BroadcastJob ||--o{ Notification : "generates"
