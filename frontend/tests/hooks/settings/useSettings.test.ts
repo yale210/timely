@@ -150,10 +150,10 @@ describe("useSettings", () => {
     const { result } = renderHook(() => useSettings());
 
     await act(async () => {
-      await result.current.actions.deleteAccount();
+      await result.current.actions.deleteAccount("secret");
     });
 
-    expect(mockedDeleteAccount).toHaveBeenCalledTimes(1);
+    expect(mockedDeleteAccount).toHaveBeenCalledWith("secret");
     expect(mockedLogout).toHaveBeenCalledTimes(1);
     expect(result.current.loading.deleting).toBe(false);
   });

@@ -49,6 +49,16 @@ interface SettingsSectionContentProps {
 /**
  * Renders the currently selected settings section.
  * @param props - Settings section content props.
+ * @param props.state - Current settings state.
+ * @param props.loading - Loading flags for settings sections.
+ * @param props.error - Settings error messages.
+ * @param props.actions - Public settings actions.
+ * @param props.categoryLimitMaxMinutes - Upper limit for category daily minutes.
+ * @param props.profileState - Profile section state and actions.
+ * @param props.teacherActionLoading - Teacher toggle loading flags.
+ * @param props.teacherActionState - Teacher toggle success/error state.
+ * @param props.isTeacher - Whether the current user is a teacher.
+ * @param props.onToggleTeacher - Toggles teacher registration state.
  * @returns The active settings section component.
  */
 export default function SettingsSectionContent({
@@ -164,7 +174,7 @@ export default function SettingsSectionContent({
         deleting={false}
         onDeleteEvents={() => actions.deleteEvents()}
         onDeleteTasks={() => actions.deleteTasks()}
-        onDeleteAccount={() => actions.deleteAccount()}
+        onDeleteAccount={(password) => actions.deleteAccount(password)}
       />
     );
   }

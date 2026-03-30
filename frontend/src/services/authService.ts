@@ -96,8 +96,10 @@ export const authService = {
   },
 
   //Deletes the user's account
-  async deleteAccount(): Promise<string> {
-    const response = await api.delete<DeleteResponse>("/api/delete_account/");
+  async deleteAccount(password: string): Promise<string> {
+    const response = await api.delete<DeleteResponse>("/api/delete_account/", {
+      data: { password },
+    });
     return response.data.message;
   },
 }
