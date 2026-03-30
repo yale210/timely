@@ -7,6 +7,7 @@
 .nix-state/
 
 frontend/coverage/*
+frontend/tests/**/*.js
 
 ### Django ###
 *.log
