@@ -91,6 +91,14 @@ class ShareAcceptView(APIView):
         return Response(response)
 
     def create_object_from_shared_event(self, request, pending_event):
+        """Clone a pending shared event into the recipient's calendar.
+
+        Args:
+            request: The DRF request for the authenticated recipient.
+            pending_event (PendingShareEvent): The share request being
+                accepted, including the source event to duplicate.
+
+        """
         Event.objects.create(
             user=request.user,
             title=pending_event.event.title,

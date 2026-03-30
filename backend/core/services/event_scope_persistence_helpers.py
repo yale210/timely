@@ -23,7 +23,16 @@ def _cleanup_scope_this_noop(
     existing_override: Any | None,
     original_start_time: datetime,
 ) -> Any:
-    """Drop the temporary override and restore the base event occurrence."""
+    """Drop the temporary override and restore the base event occurrence.
+
+    Args:
+        event (Any): Parent recurring event being restored.
+        existing_override (Any | None): Override row to remove when present.
+        original_start_time (datetime): Anchor datetime for the occurrence.
+
+    Returns:
+        Any: The parent event, restored to the pre-edit state.
+    """
     if existing_override is not None:
         existing_override.delete()
     _remove_exception_date(event, original_start_time.date())
@@ -38,7 +47,19 @@ def persist_scope_this_update(
     final_reminders: list[dict[str, Any]],
     original_start_time: datetime,
 ) -> Any:
-    """Persist or discard a single-instance override based on the resolved diff."""
+    """Persist or discard a single-instance override based on the diff.
+
+    Args:
+        event (Any): Parent recurring event being updated.
+        existing_override (Any | None): Existing override row, if any.
+        payload (Any): Serialized update payload.
+        final_category_ids (set[int]): Final category set for the override.
+        final_reminders (list[dict[str, Any]]): Final reminder payloads.
+        original_start_time (datetime): Anchor datetime for the occurrence.
+
+    Returns:
+        Any: The updated event or the restored parent event.
+    """
     if scope_this_is_noop(
         event,
         payload,
@@ -63,7 +84,17 @@ def persist_scope_this_update(
 def _build_following_split_context(
     event: Any, original_start_time: datetime
 ) -> tuple[datetime.date, list[Any], list[dict[str, Any]], list[str], list[str]]:
-    """Collect the parent-series context needed for a following-scope split."""
+    """Collect the parent-series context needed for a following-scope split.
+
+    Args:
+        event (Any): Parent recurring event being split.
+        original_start_time (datetime): Anchor datetime for the split point.
+
+    Returns:
+        tuple[datetime.date, list[Any], list[dict[str, Any]], list[str], list[str]]:
+        The split date, cached categories/reminders, and preserved exception
+        date partitions.
+    """
     original_date = original_start_time.date()
     parent_categories = list(event.categories.all())
     parent_reminders = _current_event_reminder_snapshot(event)
@@ -85,7 +116,16 @@ def update_scope_following(
     validated_data: dict[str, Any],
     original_start_time: datetime,
 ) -> Any:
-    """Create the split child series and rehome future occurrences to it."""
+    """Create the split child series and rehome future occurrences to it.
+
+    Args:
+        event (Any): Parent recurring event being updated.
+        validated_data (dict[str, Any]): Serializer-validated event payload.
+        original_start_time (datetime): Anchor datetime for the split point.
+
+    Returns:
+        Any: The newly created child event.
+    """
     original_start_time = _make_aware(original_start_time)
     (
         original_date,

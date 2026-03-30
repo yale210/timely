@@ -13,7 +13,17 @@ DateTimeRange = tuple[datetime, datetime]
 def build_split_result(
     task_id: int | None, segments: list[DateTimeRange], remaining: int
 ) -> ScheduleResult:
-    """Construct a split-scheduling result from allocated segments."""
+    """Construct a split-scheduling result from allocated segments.
+
+    Args:
+        task_id (int | None): The task being scheduled.
+        segments (list[DateTimeRange]): Allocated time slices.
+        remaining (int): Minutes that could not be scheduled.
+
+    Returns:
+        ScheduleResult: Success metadata when allocation covered the task,
+        otherwise a failure result explaining the shortfall.
+    """
     if remaining <= 0 and segments:
         return ScheduleResult(
             task_id=task_id,
@@ -48,7 +58,20 @@ def apply_split_chunk(
     category_minutes: int | None,
     buffer_gap: int,
 ) -> tuple[datetime, int, int | None]:
-    """Append one scheduled chunk and update cursors and counters."""
+    """Append one scheduled chunk and update cursors and counters.
+
+    Args:
+        segments (list[DateTimeRange]): Already allocated slices for the task.
+        cursor (datetime): Start time for the next chunk.
+        chunk (int): Minutes allocated in this slice.
+        remaining (int): Minutes left to schedule.
+        category_minutes (int | None): Remaining per-category quota.
+        buffer_gap (int): Gap inserted after the scheduled slice.
+
+    Returns:
+        tuple[datetime, int, int | None]: Updated cursor, remaining minutes,
+        and remaining category quota.
+    """
     next_end = cursor + timedelta(minutes=chunk)
     segments.append((cursor, next_end))
     remaining -= chunk
@@ -66,7 +89,19 @@ def next_chunk_minutes(
     max_block: int | None,
     category_minutes: int | None,
 ) -> int | None:
-    """Calculate the size of the next valid chunk from a free slot."""
+    """Calculate the size of the next valid chunk from a free slot.
+
+    Args:
+        start (datetime): Start of the available slot.
+        end (datetime): End of the available slot.
+        remaining (int): Minutes still required for the task.
+        min_block (int): Minimum allowed chunk size.
+        max_block (int | None): Optional upper cap for one chunk.
+        category_minutes (int | None): Remaining quota for the task category.
+
+    Returns:
+        int | None: The next chunk length, or ``None`` if the slot is unusable.
+    """
     free_minutes = minutes_between(start, end)
     if free_minutes < min_block and remaining > min_block:
         return None

@@ -53,7 +53,14 @@ def _build_expanded_content(
 def _index_overrides_by_original_start(
     loaded_overrides: list[Any],
 ) -> dict[datetime, Any]:
-    """Index overrides by their original occurrence anchor."""
+    """Index overrides by their original occurrence anchor.
+
+    Args:
+        loaded_overrides (list[Any]): Prefetched override rows for the series.
+
+    Returns:
+        dict[datetime, Any]: Overrides keyed by original occurrence start.
+    """
     return {override.original_start_time: override for override in loaded_overrides}
 
 
