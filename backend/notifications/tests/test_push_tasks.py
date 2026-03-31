@@ -79,9 +79,7 @@ class PushTaskTests(TestCase):
         """Test that a 429 response does NOT delete the subscription."""
         mock_response = MagicMock()
         mock_response.status_code = 429
-        mock_webpush.side_effect = WebPushException(
-            "Too Many", response=mock_response
-        )
+        mock_webpush.side_effect = WebPushException("Too Many", response=mock_response)
 
         success, error = _dispatch_to_subscription(self.sub, self.payload)
 
@@ -184,9 +182,7 @@ class SendPushNotificationSyncTests(TestCase):
         )
         mock_response = MagicMock()
         mock_response.status_code = 429
-        mock_webpush.side_effect = WebPushException(
-            "Too Many", response=mock_response
-        )
+        mock_webpush.side_effect = WebPushException("Too Many", response=mock_response)
 
         result = _send_push_notification_sync(self.user.id, "Title", "Message")
 

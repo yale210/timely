@@ -54,11 +54,11 @@ describe("AdminHistoryRecipientRow Component", () => {
     expect(screen.getByText("Failed")).toBeDefined();
   });
 
-  it("shows tooltip for each status", () => {
-    const statuses: Array<{
-      status: BroadcastRecipientDetail["status"];
-      tooltip: string;
-    }> = [
+   it("shows tooltip for each status", () => {
+     const statuses: {
+       status: BroadcastRecipientDetail["status"];
+       tooltip: string;
+     }[] = [
       {
         status: "PENDING",
         tooltip: "In-app notification created. Push delivery is still queued.",
