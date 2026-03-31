@@ -53,7 +53,7 @@ class ExportViewTests(TestCase):
         """Test export one event only."""
         self.client.login(username="testuser", password="password")
 
-        Event.objects.create(
+        event = Event.objects.create(
             user=self.user,
             title="Title Event 1",
             description="Description Event 1",
@@ -72,7 +72,7 @@ class ExportViewTests(TestCase):
             "CALSCALE:GREGORIAN\n"
             "METHOD:PUBLISH\n"
             "BEGIN:VEVENT\n"
-            "UID:e1\n"
+            f"UID:e{event.pk}\n"
             "DTSTAMP:20260205T120548Z\n"
             "DTSTART;TZID=Europe/London:20260325T200000\n"
             "DTEND;TZID=Europe/London:20260325T210000\n"
@@ -92,7 +92,7 @@ class ExportViewTests(TestCase):
         """Test export two events."""
         self.client.login(username="testuser", password="password")
 
-        Event.objects.create(
+        event1 = Event.objects.create(
             user=self.user,
             title="Title Event 1",
             description="Description Event 1",
@@ -102,7 +102,7 @@ class ExportViewTests(TestCase):
             last_edited=timezone.make_aware(datetime(2026, 2, 5, 12, 5, 48)),
         )
 
-        Event.objects.create(
+        event2 = Event.objects.create(
             user=self.user,
             title="Title Event 2",
             description="Description Event 2",
@@ -121,7 +121,7 @@ class ExportViewTests(TestCase):
             "CALSCALE:GREGORIAN\n"
             "METHOD:PUBLISH\n"
             "BEGIN:VEVENT\n"
-            "UID:e1\n"
+            f"UID:e{event1.pk}\n"
             "DTSTAMP:20260205T120548Z\n"
             "DTSTART;TZID=Europe/London:20260325T200000\n"
             "DTEND;TZID=Europe/London:20260325T210000\n"
@@ -130,7 +130,7 @@ class ExportViewTests(TestCase):
             "LOCATION:Location Event 1\n"
             "END:VEVENT\n"
             "BEGIN:VEVENT\n"
-            "UID:e2\n"
+            f"UID:e{event2.pk}\n"
             "DTSTAMP:20260205T120548Z\n"
             "DTSTART;TZID=Europe/London:20260425T200000\n"
             "DTEND;TZID=Europe/London:20260425T210000\n"
@@ -151,7 +151,7 @@ class ExportViewTests(TestCase):
         """Test export r rule 1."""
         self.client.login(username="testuser", password="password")
 
-        Event.objects.create(
+        event = Event.objects.create(
             user=self.user,
             title="Title Event 1",
             description="Description Event 1",
@@ -172,7 +172,7 @@ class ExportViewTests(TestCase):
             "CALSCALE:GREGORIAN\n"
             "METHOD:PUBLISH\n"
             "BEGIN:VEVENT\n"
-            "UID:e1\n"
+            f"UID:e{event.pk}\n"
             "DTSTAMP:20260205T120548Z\n"
             "DTSTART;TZID=Europe/London:20260325T200000\n"
             "DTEND;TZID=Europe/London:20260325T210000\n"
@@ -202,7 +202,7 @@ class ExportViewTests(TestCase):
 
         rec_end = datetime.strptime("20260417T000000", "%Y%m%dT%H%M%S").date()
 
-        Event.objects.create(
+        event = Event.objects.create(
             user=self.user,
             title="Title Event 1",
             description="Description Event 1",
@@ -223,7 +223,7 @@ class ExportViewTests(TestCase):
             "CALSCALE:GREGORIAN\n"
             "METHOD:PUBLISH\n"
             "BEGIN:VEVENT\n"
-            "UID:e1\n"
+            f"UID:e{event.pk}\n"
             "DTSTAMP:20260205T120548Z\n"
             "DTSTART;TZID=Europe/London:20260325T200000\n"
             "DTEND;TZID=Europe/London:20260325T210000\n"
