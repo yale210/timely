@@ -12,7 +12,7 @@ import { useAdminHistoryDetail } from "@/hooks/admin/notifications/useAdminHisto
  * Renders details and recipient status for a broadcast history item.
  */
 export const AdminNotificationHistoryDetail = () => {
-  const { state, loading, error, retryError, actions } = useAdminHistoryDetail();
+  const { state, loading, error, retryError, actions, recipientPagination } = useAdminHistoryDetail();
 
   if (loading) return <AppLayout><div className="p-8 text-center">Loading...</div></AppLayout>;
   if (error || !state.detail || !state.status) return <AppLayout><div className="p-8 text-center text-red-600">{error ?? "Broadcast not found"}</div></AppLayout>;
@@ -29,7 +29,13 @@ export const AdminNotificationHistoryDetail = () => {
         <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
           <div className="space-y-6">
             <AdminHistoryDetailPayload message={state.detail.message} />
-            <AdminHistoryDetailRecipientsTable recipients={state.detail.recipients} />
+            <AdminHistoryDetailRecipientsTable
+              recipients={recipientPagination.recipients}
+              page={recipientPagination.page}
+              totalPages={recipientPagination.totalPages}
+              loading={recipientPagination.loading}
+              onPageChange={actions.goToRecipientsPage}
+            />
           </div>
           <aside className="space-y-4">
             <AdminHistoryDetailMetrics detail={state.detail} status={state.status} />
