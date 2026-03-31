@@ -197,6 +197,34 @@ We have used tools like ChatGPT and GitHub Copilot for:
 - generating migrations from the source code
 - pull request reviewing
 
+The following migrations were created or updated with AI assistance:
+- `backend/core/migrations/0013_extract_notifications_models.py`
+- `backend/core/migrations/0015_merge_notification_and_settings.py`
+- `backend/core/migrations/0020_category_colour_override.py`
+- `backend/core/migrations/0021_add_task_event_colour.py`
+- `backend/core/migrations/0022_task_locked.py`
+- `backend/core/migrations/0023_task_allow_split.py`
+- `backend/core/migrations/0024_special_dates_text_optional.py`
+- `backend/core/migrations/0025_preference_day_schedule.py`
+- `backend/core/migrations/0026_preference_limit_max_hours.py`
+- `backend/core/migrations/0027_preference_disable_sound_effects.py`
+- `backend/core/migrations/0028_merge_20260311_1615.py`
+- `backend/core/migrations/0029_preference_max_days_ahead_task_min_split_minutes.py`
+- `backend/core/migrations/0030_task_max_split_minutes.py`
+- `backend/core/migrations/0031_preference_drag_snap_minutes.py`
+- `backend/core/migrations/0032_category_daily_limit_minutes.py`
+- `backend/core/migrations/0033_preference_schedule_buffers.py`
+- `backend/core/migrations/0035_task_completed_minutes.py`
+- `backend/core/migrations/0039_assessment_category_fields.py`
+- `backend/core/migrations/0040_category_max_daily_study_time.py`
+- `backend/core/migrations/0042_remove_assessment_end_time_and_more.py`
+- `backend/core/migrations/0044_delete_commute.py`
+- `backend/core/migrations/0044_remove_legacy_preference_columns.py`
+- `backend/core/migrations/0045_preference_general_settings.py`
+- `backend/notifications/migrations/0001_initial.py`
+- `backend/profiles/migrations/0002_profile_avatar_upload.py`
+- `backend/profiles/migrations/0003_delete_preference.py`
+
 GitHub Copilot was used in these pull requests:
 [#320](https://github.com/xlightningstar/It-Worked-On-My-Machine/pull/320), [#309](https://github.com/xlightningstar/It-Worked-On-My-Machine/pull/309), [#288](https://github.com/xlightningstar/It-Worked-On-My-Machine/pull/288), [#286](https://github.com/xlightningstar/It-Worked-On-My-Machine/pull/286), [#280](https://github.com/xlightningstar/It-Worked-On-My-Machine/pull/280), [#271](https://github.com/xlightningstar/It-Worked-On-My-Machine/pull/271), [#255](https://github.com/xlightningstar/It-Worked-On-My-Machine/pull/255), [#176](https://github.com/xlightningstar/It-Worked-On-My-Machine/pull/176), [#174](https://github.com/xlightningstar/It-Worked-On-My-Machine/pull/174), [#156](https://github.com/xlightningstar/It-Worked-On-My-Machine/pull/156), [#150](https://github.com/xlightningstar/It-Worked-On-My-Machine/pull/150), [#164](https://github.com/xlightningstar/It-Worked-On-My-Machine/pull/164), [#155](https://github.com/xlightningstar/It-Worked-On-My-Machine/pull/155), [#154](https://github.com/xlightningstar/It-Worked-On-My-Machine/pull/154), [#149](https://github.com/xlightningstar/It-Worked-On-My-Machine/pull/149), [#145](https://github.com/xlightningstar/It-Worked-On-My-Machine/pull/145), [#140](https://github.com/xlightningstar/It-Worked-On-My-Machine/pull/140), [#133](https://github.com/xlightningstar/It-Worked-On-My-Machine/pull/133), [#104](https://github.com/xlightningstar/It-Worked-On-My-Machine/pull/104), [#87](https://github.com/xlightningstar/It-Worked-On-My-Machine/pull/87), [#71](https://github.com/xlightningstar/It-Worked-On-My-Machine/pull/71), [#69](https://github.com/xlightningstar/It-Worked-On-My-Machine/pull/69), [#65](https://github.com/xlightningstar/It-Worked-On-My-Machine/pull/65), [#64](https://github.com/xlightningstar/It-Worked-On-My-Machine/pull/64), [#62](https://github.com/xlightningstar/It-Worked-On-My-Machine/pull/62), [#53](https://github.com/xlightningstar/It-Worked-On-My-Machine/pull/53), [#48](https://github.com/xlightningstar/It-Worked-On-My-Machine/pull/48), [#45](https://github.com/xlightningstar/It-Worked-On-My-Machine/pull/45), [#40](https://github.com/xlightningstar/It-Worked-On-My-Machine/pull/40), [#37](https://github.com/xlightningstar/It-Worked-On-My-Machine/pull/37), [#25](https://github.com/xlightningstar/It-Worked-On-My-Machine/pull/25)
 
