@@ -5,8 +5,8 @@ import {
   areAllVisibleUsersSelected,
   removeVisibleUserIds,
   toggleSelectedUserId,
-} from "@/hooks/admin/notifications/useAdminBroadcastForm/broadcastUserSelection";
-import { useBroadcastUsers } from "@/hooks/admin/notifications/useAdminBroadcastForm/useBroadcastUsers";
+} from "@/hooks/admin/notifications/useAdminBroadcastUsers";
+import { useBroadcastUsers } from "@/hooks/admin/notifications/useAdminBroadcastUsers";
 import * as api from "@/api/notifications";
 
 vi.mock("@/api/notifications", () => ({

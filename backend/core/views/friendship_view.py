@@ -14,11 +14,13 @@ from core.serializers import FriendshipSerializer
 
 class FriendshipViewSet(viewsets.ModelViewSet):
     """Manage friendship requests for the authenticated user.
+
     Users can send, accept, and decline friend requests.
     """
 
     serializer_class = FriendshipSerializer
     permission_classes = [IsAuthenticated]
+    queryset = Friendship.objects.all()
 
     def get_queryset(self):
         """Retrieve friendships where the user is either the sender or receiver.

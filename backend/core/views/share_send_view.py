@@ -1,11 +1,13 @@
 """View for sending event share requests to other users."""
 
-from rest_framework import permissions
-from rest_framework.views import APIView
-from rest_framework.response import Response
-from core.models import PendingShareEvent
-from core.models import Event
 from django.contrib.auth import get_user_model
+from rest_framework import permissions, serializers
+from rest_framework.response import Response
+from rest_framework.views import APIView
+
+from drf_spectacular.utils import extend_schema, inline_serializer
+
+from core.models import Event, PendingShareEvent
 
 
 class ShareSendView(APIView):
@@ -18,6 +20,29 @@ class ShareSendView(APIView):
 
     permission_classes = [permissions.IsAuthenticated]
 
+    @extend_schema(
+        request=inline_serializer(
+            name="ShareSendRequest",
+            fields={
+                "Receiver": serializers.CharField(
+                    help_text="Username of the recipient.",
+                ),
+                "Event-ID": serializers.CharField(
+                    help_text="ID of the event to share (optionally prefixed with 'e').",
+                ),
+            },
+        ),
+        responses={
+            200: inline_serializer(
+                name="ShareSendSuccessResponse",
+                fields={"message": serializers.CharField()},
+            ),
+            400: inline_serializer(
+                name="ShareSendErrorResponse",
+                fields={"message": serializers.CharField()},
+            ),
+        },
+    )
     def post(self, request):
         """Send an event share request to another user.
 
@@ -31,14 +56,74 @@ class ShareSendView(APIView):
                 an error message if validation fails.
 
         """
+        try:
+            normalized_username, event_id = self.get_username_and_event_id(request)
+
+            event_id_in_db = self.get_event_id_in_database(event_id)
+
+            event_to_share = self.get_event_to_share(request, event_id_in_db)
+
+            receiver_user = self.get_receiver_user(normalized_username)
+
+            event_belongs_to_receiver = self.check_event_belongs_to_receiver(
+                event_to_share, receiver_user
+            )
+
+            if event_belongs_to_receiver:
+                response = {"message": "Event sent 0"}
+                return Response(response)
+
+            self.check_share_request_already_exists(
+                request, event_to_share, receiver_user
+            )
+
+            PendingShareEvent.objects.create(
+                sender=request.user,
+                receiver=receiver_user,
+                event=event_to_share,
+            )
+
+            response = {"message": "Event sent 1"}
+            return Response(response)
+
+        except ValueError as e:
+            response = {"message": str(e)}
+            return Response(response, status=400)
+
+    def get_username_and_event_id(self, request):
+        """Extract and validate the recipient username and event identifier.
+
+        Args:
+            request: The DRF request containing the share form payload.
+
+        Returns:
+            tuple[str, str | int]: A lowercase username and the raw event ID
+            value provided by the client.
+
+        Raises:
+            ValueError: If either field is missing or blank.
+        """
         username = request.data.get("Receiver")
         event_id = request.data.get("Event-ID")
         normalized_username = str(username).strip().lower() if username else ""
 
         if not (normalized_username and event_id and str(event_id).strip()):
-            response = {"message": "Please provide a username and event ID"}
-            return Response(response, status=400)
+            raise ValueError("Please provide a username and event ID")
 
+        return normalized_username, event_id
+
+    def get_event_id_in_database(self, event_id):
+        """Normalize the incoming event identifier to a database primary key.
+
+        Args:
+            event_id (str | int): The client-supplied event identifier.
+
+        Returns:
+            int: The numeric primary key used for the event lookup.
+
+        Raises:
+            ValueError: If the identifier cannot be converted to an integer.
+        """
         try:
             event_id_string = str(event_id).strip()
             if event_id_string.startswith("e"):
@@ -46,51 +131,87 @@ class ShareSendView(APIView):
             else:
                 event_id_in_db = int(event_id_string)
         except (ValueError, TypeError):
-            response = {"message": "Please provide a valid username and event ID"}
-            return Response(response, status=400)
+            raise ValueError("Please provide a valid event ID")
 
-        event_belongs_to_sharer = Event.objects.filter(
-            user=request.user,
-            pk=event_id_in_db,
-        ).exists()
+        return event_id_in_db
 
-        if not event_belongs_to_sharer:
-            response = {"message": "Please provide an event ID that you own"}
-            return Response(response, status=400)
+    def get_event_to_share(self, request, event_id_in_db):
+        """Load the event being shared and verify sender ownership.
 
+        Args:
+            request: The DRF request for the authenticated sender.
+            event_id_in_db (int): Event primary key resolved from the payload.
+
+        Returns:
+            Event: The sender-owned event that will be shared.
+
+        Raises:
+            ValueError: If the sender does not own the event.
+        """
         try:
-            event_to_share = Event.objects.get(pk=event_id_in_db)
+            event_to_share = Event.objects.get(user=request.user, pk=event_id_in_db)
         except Event.DoesNotExist:
-            response = {"message": "Please provide an event ID that you own"}
-            return Response(response, status=400)
+            raise ValueError("Please provide an event ID that you own")
+        return event_to_share
 
-        event_summary = event_to_share.title
-        event_start = event_to_share.start_time
-        event_end = event_to_share.end_time
+    def get_receiver_user(self, normalized_username):
+        """Resolve the recipient user account by normalized username.
 
-        User = get_user_model()
+        Args:
+            normalized_username (str): Lowercase username extracted from the
+                request payload.
 
+        Returns:
+            User: The target user who will receive the shared event.
+
+        Raises:
+            ValueError: If the username does not exist.
+        """
         try:
-            receiver_user = User.objects.get(username=normalized_username)
-            receiver_exists = True
-        except User.DoesNotExist:
-            receiver_exists = False
+            receiver_user = get_user_model().objects.get(username=normalized_username)
+        except get_user_model().DoesNotExist:
+            raise ValueError("Please provide a username that exists")
+        return receiver_user
 
-        if not receiver_exists:
-            response = {"message": "Please provide a username that exists"}
-            return Response(response, status=400)
+    def check_event_belongs_to_receiver(self, event_to_share, receiver_user):
+        """Check whether the recipient already has the same event copy.
 
+        Args:
+            event_to_share (Event): The sender-owned event being shared.
+            receiver_user: The intended recipient of the share.
+
+        Returns:
+            bool: ``True`` when a matching event already exists for the
+            recipient, otherwise ``False``.
+        """
         event_belongs_to_receiver = Event.objects.filter(
             user=receiver_user,
-            title=event_summary,
-            start_time=event_start,
-            end_time=event_end,
+            title=event_to_share.title,
+            start_time=event_to_share.start_time,
+            end_time=event_to_share.end_time,
         ).exists()
 
         if event_belongs_to_receiver:
-            response = {"message": "Event sent 0"}
-            return Response(response)
+            return True
+        else:
+            return False
 
+    def check_share_request_already_exists(
+        self, request, event_to_share, receiver_user
+    ):
+        """Prevent duplicate pending share requests for the same recipient.
+
+        Args:
+            request: The DRF request for the authenticated sender.
+            event_to_share (Event): The sender-owned event being shared.
+            receiver_user: The intended recipient of the share.
+
+        Returns:
+            bool: ``False`` when the request is new.
+
+        Raises:
+            ValueError: If an identical pending share already exists.
+        """
         request_already_exists = PendingShareEvent.objects.filter(
             sender=request.user,
             receiver=receiver_user,
@@ -98,16 +219,8 @@ class ShareSendView(APIView):
         ).exists()
 
         if request_already_exists:
-            response = {
-                "message": "You may not send more than 1 of the same event to the same person"
-            }
-            return Response(response, status=400)
-
-        PendingShareEvent.objects.create(
-            sender=request.user,
-            receiver=receiver_user,
-            event=event_to_share,
-        )
-
-        response = {"message": "Event sent 1"}
-        return Response(response)
+            raise ValueError(
+                "You may not send more than 1 of the same event to the same person"
+            )
+        else:
+            return False

@@ -1,10 +1,12 @@
 """Tests for share send view."""
 
-from django.test import TestCase
-from django.contrib.auth import get_user_model
-from rest_framework.test import APIClient
 from datetime import datetime
+
+from django.contrib.auth import get_user_model
+from django.test import TestCase
 from django.utils import timezone
+from rest_framework.test import APIClient
+
 from core.models import Event
 
 
@@ -47,9 +49,7 @@ class ShareSendViewTests(TestCase):
             },
         )
         self.assertEqual(response.status_code, 400)
-        self.assertEqual(
-            response.data["message"], "Please provide a valid username and event ID"
-        )
+        self.assertEqual(response.data["message"], "Please provide a valid event ID")
 
     def test_no_e_no_int(self):
         """Test no e no int."""
@@ -63,9 +63,7 @@ class ShareSendViewTests(TestCase):
             },
         )
         self.assertEqual(response.status_code, 400)
-        self.assertEqual(
-            response.data["message"], "Please provide a valid username and event ID"
-        )
+        self.assertEqual(response.data["message"], "Please provide a valid event ID")
 
     def test_user_shares_event_they_do_not_own(self):
         """Test user shares event they do not own."""

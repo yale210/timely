@@ -68,6 +68,7 @@ class SchedulerCategoryMixinTests(TestCase):
         return task
 
     def test_category_helper_skips_invalid_segments_and_accumulates_usage(self):
+        """Test category helper skips invalid segments and accumulates usage."""
         category = Category.objects.create(
             user=self.user,
             text="Study",
@@ -128,6 +129,7 @@ class SchedulerCategoryMixinTests(TestCase):
         self.assertEqual(len(self.scheduler._task_allocation_segments(task)), 1)
 
     def test_category_helpers_cover_overlap_and_no_limit_paths(self):
+        """Test category helpers cover overlap and no limit paths."""
         uncapped_category = Category.objects.create(user=self.user, text="Uncapped")
         capped_category = Category.objects.create(
             user=self.user,

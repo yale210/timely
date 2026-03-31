@@ -29,6 +29,14 @@ const getCurrentUserId = (): number | string | null => {
   return authStore.getUser()?.id ?? null;
 };
 
+const clearCourseCacheEntries = (courseId: number) => {
+  for (const key of coursePermissionsCache.keys()) {
+    if (key.startsWith(`course:${courseId}:user:`)) {
+      coursePermissionsCache.delete(key);
+    }
+  }
+};
+
 /**
  * Clears cached permissions for a course and/or a specific user.
  * The function provides the capability to remove permission entries from the
@@ -49,11 +57,7 @@ export const clearCoursePermissionsCache = (courseId?: number, userId?: number |
   }
 
   if (typeof courseId === "number") {
-    for (const key of coursePermissionsCache.keys()) {
-      if (key.startsWith(`course:${courseId}:user:`)) {
-        coursePermissionsCache.delete(key);
-      }
-    }
+    clearCourseCacheEntries(courseId);
     return;
   }
 
@@ -251,6 +255,24 @@ export const getCourseStudents = async (id: number): Promise<CourseStudent[]> =>
 };
 
 /**
+ * Removes a user from a course.
+ * This function sends a POST request to the backend to remove a specified user
+ * from a given course by their respective IDs. Once the request is successfully
+ * completed, the user will no longer be associated with the course.
+ * @param courseId - The unique identifier of the course from which the user is to be removed.
+ * @param userId - The unique identifier of the user to be removed from the course.
+ * @returns A promise that resolves when the user is successfully removed from the course.
+ */
+export const removeUserFromCourse = async (
+  courseId: number,
+  userId: number,
+): Promise<void> => {
+  await api.post(`/api/courses/${courseId}/remove-user/`, {
+    user_id: userId,
+  });
+};
+
+/**
  * Retrieves the staff members associated with a specific course.
  * @param id - The unique identifier of the course.
  * @returns A promise that resolves to an array of CourseStaff objects.
@@ -263,16 +285,22 @@ export const getStaff = async (id: number): Promise<CourseStaff[]> => {
 /**
  * Retrieves the current teacher's information from the server.
  * This asynchronous function makes a network request to the `/api/teachers/`
- * endpoint to fetch data about the current teacher. The response, once received,
- * is logged to the console and the teacher's data is returned as a Promise.
- * @returns A promise that resolves to the teacher's information.
+ * endpoint, then selects the current user's teacher record from the returned list.
+ * @returns A promise that resolves to the current teacher's information, or null if
+ * the current user is not an active teacher.
  */
-export const getCurrentTeacher = async (): Promise<Teacher> => {
-  const response = await api.get<Teacher>("/api/teachers/");
-  
-  return response.data;
-};
+export const getCurrentTeacher = async (): Promise<Teacher | null> => {
+  const currentUserId = getCurrentUserId();
 
+  if (currentUserId === null) {
+    return null;
+  }
+
+  const response = await api.get<Teacher[]>("/api/teachers/");
+  return response.data.find(
+    (teacherEntry) => teacherEntry.user_id === Number(currentUserId),
+  ) ?? null;
+};
 /**
  * Generates a join code for a specified course.
  * @param id - The unique identifier of the course.

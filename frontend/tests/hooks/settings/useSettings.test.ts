@@ -3,9 +3,16 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { useSettings } from "@/hooks/settings/useSettings";
 import type { Preference } from "@/types";
 
-const { mockNavigate, mockedLogout, mockedGetMyPreference, mockedUpdateMyPreference } = vi.hoisted(() => ({
+const {
+  mockNavigate,
+  mockedLogout,
+  mockedDeleteAccount,
+  mockedGetMyPreference,
+  mockedUpdateMyPreference,
+} = vi.hoisted(() => ({
   mockNavigate: vi.fn(),
   mockedLogout: vi.fn(),
+  mockedDeleteAccount: vi.fn(),
   mockedGetMyPreference: vi.fn(),
   mockedUpdateMyPreference: vi.fn(),
 }));
@@ -21,6 +28,7 @@ vi.mock("react-router-dom", async () => {
 vi.mock("@/services/authService", () => ({
   authService: {
     logout: mockedLogout,
+    deleteAccount: mockedDeleteAccount,
   },
 }));
 
@@ -48,6 +56,7 @@ describe("useSettings", () => {
     mockedGetMyPreference.mockResolvedValue(mockPreference);
     mockedUpdateMyPreference.mockResolvedValue(mockPreference);
     mockedLogout.mockResolvedValue(undefined);
+    mockedDeleteAccount.mockResolvedValue("Account deleted");
   });
 
   it("loads preferences when the scheduling section is selected", async () => {
@@ -135,5 +144,17 @@ describe("useSettings", () => {
 
     expect(mockedLogout).toHaveBeenCalledTimes(1);
     expect(mockNavigate).toHaveBeenCalledWith("/login");
+  });
+
+  it("deletes the account and logs out", async () => {
+    const { result } = renderHook(() => useSettings());
+
+    await act(async () => {
+      await result.current.actions.deleteAccount("secret");
+    });
+
+    expect(mockedDeleteAccount).toHaveBeenCalledWith("secret");
+    expect(mockedLogout).toHaveBeenCalledTimes(1);
+    expect(result.current.loading.deleting).toBe(false);
   });
 });

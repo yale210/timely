@@ -1,27 +1,34 @@
-"""Course student view mixins."""
+"""View mixins for student-related course operations.
+
+Provides actions to retrieve lists of enrolled students for specific courses.
+"""
 
 from rest_framework import status
 from rest_framework.decorators import action
 from rest_framework.generics import get_object_or_404
 from rest_framework.response import Response
 
-from courses.models import CourseEnrollment, Course
+from courses.models import Course, CourseEnrollment
 from courses.views import CourseViewSetBase
 
 
 class CourseStudentMixin(CourseViewSetBase):
-    """Mixin for course student actions."""
+    """Mixin providing student-related actions for Course viewsets.
+
+    Handles retrieval of student enrollment lists and profile summaries
+    for specific courses.
+    """
 
     @action(detail=True, methods=["get"], url_path="students")
     def students(self, request, pk=None):
-        """Return active students for the requested course.
+        """Retrieves a list of active students enrolled in the course.
 
         Args:
-            request: The incoming DRF request.
-            pk: The primary key of the course whose students are being listed.
+            request: The current HttpRequest.
+            pk: The primary key of the course.
 
         Returns:
-            Response: A response containing the active student payload.
+            A Response containing a list of serialized student enrollment data.
         """
         course = get_object_or_404(Course, pk=pk)
         self.check_object_permissions(request, course)

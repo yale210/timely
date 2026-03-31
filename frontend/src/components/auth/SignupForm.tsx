@@ -1,9 +1,12 @@
 import { useState, type FormEvent, type ReactNode } from "react"
 import { authService } from "@/services/authService"
 import { useNavigate } from "react-router-dom"
+import LogoMark from "@/components/ui/LogoMark"
+import { formatDjangoFormError } from "@/utils/apiErrors";
 
 interface SignupPayload {
   email: string
+  name: string
   password: string
   password2: string
   username: string
@@ -13,12 +16,14 @@ const PASSWORD_MISMATCH_ERROR = "Try again, your passwords did not match."
 const SIGNUP_FAILED_ERROR = "Signup failed"
 
 const buildSignupPayload = (
+  name: string,
   email: string,
   username: string,
   password: string,
   confirmPassword: string,
 ): SignupPayload => ({
   email,
+  name,
   password,
   password2: confirmPassword,
   username,
@@ -35,6 +40,25 @@ const getSignupErrorData = (error: unknown): Record<string, unknown> | null => {
 }
 
 const getSignupErrorLine = (field: string, value: unknown): string | null => {
+  if (field === "detail" && typeof value === "string") {
+    return value;
+  }
+
+  if (field === "non_field_errors") {
+    if (typeof value === "string") {
+      return value;
+    }
+
+    if (Array.isArray(value)) {
+      const joined = value
+        .filter((entry): entry is string => typeof entry === "string")
+        .join(" ")
+        .trim();
+
+      return joined || null;
+    }
+  }
+
   if (typeof value === "string") {
     return `${field}: ${value}`
   }
@@ -63,6 +87,11 @@ const getSignupErrorMessage = (error: unknown): string => {
     }
   }
 
+  const parsed = formatDjangoFormError(error)
+  if (parsed.message !== "Something went wrong") {
+    return parsed.message
+  }
+
   return error instanceof Error ? error.message : SIGNUP_FAILED_ERROR
 }
 
@@ -73,6 +102,7 @@ const getSignupErrorMessage = (error: unknown): string => {
  * @returns The rendered signup page component.
  */
 export default function SignupForm({ children }: { children?: ReactNode }) {
+  const [name, setName] = useState("")
   const [email, setEmail] = useState("")
   const [username, setUsername] = useState("")
   const [password, setPassword] = useState("")
@@ -95,9 +125,9 @@ export default function SignupForm({ children }: { children?: ReactNode }) {
 
     try {
       await authService.register(
-        buildSignupPayload(email, username, password, confirmPassword),
+        buildSignupPayload(name, email, username, password, confirmPassword),
       )
-      void navigate("/login")
+      void navigate("/dashboard")
     } catch (err: unknown) {
       setError(getSignupErrorMessage(err))
     } finally {
@@ -110,25 +140,45 @@ export default function SignupForm({ children }: { children?: ReactNode }) {
   }
 
   return (
-      <div className="relative isolate flex min-h-screen flex-col justify-center px-6 py-12 lg:px-8">
+      <div className="relative isolate flex min-h-screen flex-col justify-start px-4 pb-12 pt-24 sm:justify-center sm:px-6 sm:py-12 lg:px-8">
         { children }
 
         <div className="relative z-10">
-          <div className="sm:mx-auto sm:w-full sm:max-w-sm">
-            <h2 className="mt-16 text-center text-2xl font-bold tracking-tight text-gray-900">
+          <div className="mx-auto w-full max-w-sm text-center">
+            <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-indigo-50 ring-1 ring-indigo-100 sm:hidden">
+              <LogoMark className="h-6 w-6" />
+            </div>
+            <h2 className="mt-4 text-2xl font-bold tracking-tight text-gray-900 sm:mt-16">
               Create your account
             </h2>
+            <p className="mt-2 text-sm text-gray-500">
+              Set up your workspace and start planning with Timely.
+            </p>
           </div>
 
-          <div className="mt-6 sm:mx-auto sm:w-full sm:max-w-sm">
-            <form onSubmit={signup} className="space-y-6">
+          <div className="mx-auto mt-6 w-full max-w-sm rounded-3xl border border-gray-200/80 bg-white/95 p-5 shadow-sm backdrop-blur-sm sm:border-0 sm:bg-transparent sm:p-0 sm:shadow-none sm:backdrop-blur-none">
+            <form onSubmit={signup} className="space-y-4 sm:space-y-6">
               {error && (
-                <div className="rounded-md bg-red-50 p-3 text-sm text-red-700 whitespace-pre-line">
+                <div className="rounded-xl bg-red-50 p-3 text-sm text-red-700 whitespace-pre-line">
                   {error}
                 </div>
               )}
 
               {/* same fields */}
+              <div>
+                <label htmlFor="signup-name" className="block text-sm font-medium text-gray-900">Name</label>
+                <div className="mt-2">
+                  <input
+                    id="signup-name"
+                    type="text"
+                    required
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    className="block w-full rounded-xl border border-gray-200 bg-white px-3 py-2 text-gray-900 shadow-sm outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100"
+                  />
+                </div>
+              </div>
+
               <div>
                 <label htmlFor="signup-username" className="block text-sm font-medium text-gray-900">Username</label>
                 <div className="mt-2">
@@ -138,7 +188,7 @@ export default function SignupForm({ children }: { children?: ReactNode }) {
                     required
                     value={username}
                     onChange={(e) => setUsername(e.target.value)}
-                    className="block w-full rounded-md bg-white px-3 py-1.5 text-gray-900 outline outline-gray-300 focus:outline-2 focus:outline-indigo-600"
+                    className="block w-full rounded-xl border border-gray-200 bg-white px-3 py-2 text-gray-900 shadow-sm outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100"
                   />
                 </div>
               </div>
@@ -152,7 +202,7 @@ export default function SignupForm({ children }: { children?: ReactNode }) {
                     required
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    className="block w-full rounded-md bg-white px-3 py-1.5 text-gray-900 outline outline-gray-300 focus:outline-2 focus:outline-indigo-600"
+                    className="block w-full rounded-xl border border-gray-200 bg-white px-3 py-2 text-gray-900 shadow-sm outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100"
                   />
                 </div>
               </div>
@@ -166,7 +216,7 @@ export default function SignupForm({ children }: { children?: ReactNode }) {
                     required
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="block w-full rounded-md bg-white px-3 py-1.5 text-gray-900 outline outline-gray-300 focus:outline-2 focus:outline-indigo-600"
+                    className="block w-full rounded-xl border border-gray-200 bg-white px-3 py-2 text-gray-900 shadow-sm outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100"
                   />
                 </div>
               </div>
@@ -182,7 +232,7 @@ export default function SignupForm({ children }: { children?: ReactNode }) {
                     required
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
-                    className="block w-full rounded-md bg-white px-3 py-1.5 text-gray-900 outline outline-gray-300 focus:outline-2 focus:outline-indigo-600"
+                    className="block w-full rounded-xl border border-gray-200 bg-white px-3 py-2 text-gray-900 shadow-sm outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100"
                   />
                 </div>
               </div>
@@ -191,7 +241,7 @@ export default function SignupForm({ children }: { children?: ReactNode }) {
                 <button
                   disabled={loading}
                   type="submit"
-                  className="flex w-full justify-center rounded-md bg-indigo-500 px-3 py-1.5 text-sm font-semibold text-white hover:bg-indigo-600 disabled:opacity-60"
+                  className="flex w-full justify-center rounded-xl bg-indigo-500 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-indigo-600 disabled:opacity-60"
                 >
                   {loading ? "Signing up..." : "Sign up"}
                 </button>

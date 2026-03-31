@@ -1,6 +1,7 @@
 """Reccuring events override model definitions."""
 
 from django.db import models
+
 from .base_event import BaseEventModel
 from .category import Category
 from .event import Event
@@ -23,6 +24,8 @@ class EventOverride(BaseEventModel):
     reminders_snapshot = models.JSONField(default=list, blank=True)
 
     class Meta:
+        """Prevent duplicate overrides for the same recurring occurrence."""
+
         constraints = [
             models.UniqueConstraint(
                 fields=["parent_event", "original_start_time"],

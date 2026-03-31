@@ -1,14 +1,20 @@
 import { Fragment, useMemo, useState, type FormEvent } from "react";
 import { Dialog, DialogPanel, DialogTitle, Transition, TransitionChild } from "@headlessui/react";
 
-import { Tooltip } from "@/components";
-import { hexToRgba } from "@/utils/colorUtils";
 import type { Assessment, AssessmentSubmission, AssessmentType, Category } from "@/types";
 import {
   getStoredUserTimezone,
   timezoneDateTimeLocalToIso,
   toTimezoneDateTimeLocalValue,
 } from "@/utils/userTimezone";
+import AssessmentCategorySelect from "@/components/assessments/AssessmentCategorySelect";
+import AssessmentDeadlineFields from "@/components/assessments/AssessmentDeadlineFields";
+import AssessmentEventSection from "@/components/assessments/AssessmentEventSection";
+import AssessmentModeSelector from "@/components/assessments/AssessmentModeSelector";
+import {
+  getSubmissionErrorMessage,
+  type AssessmentMode,
+} from "@/components/assessments/assessmentModalUtils";
 
 interface AssessmentModalProps {
   isOpen: boolean;
@@ -21,40 +27,6 @@ interface AssessmentModalProps {
   onSubmit: (data: AssessmentSubmission) => Promise<void>;
   onDelete: () => void;
 }
-
-type AssessmentMode = "DEADLINE" | "EVENT";
-
-const flattenErrorMessages = (value: unknown): string[] => {
-  if (typeof value === "string") {
-    return [value];
-  }
-  if (Array.isArray(value)) {
-    return value.flatMap(flattenErrorMessages);
-  }
-  if (value && typeof value === "object") {
-    return Object.entries(value).flatMap(([key, nestedValue]) => (
-      flattenErrorMessages(nestedValue).map((message) => `${key}: ${message}`)
-    ));
-  }
-  return [];
-};
-
-const getSubmissionErrorMessage = (error: unknown): string => {
-  if (error && typeof error === "object" && "response" in error) {
-    const response = error.response;
-    if (response && typeof response === "object" && "data" in response) {
-      const messages = flattenErrorMessages(response.data);
-      if (messages.length > 0) {
-        return messages.join(" ");
-      }
-    }
-  }
-  if (error instanceof Error && error.message) {
-    return error.message;
-  }
-  return "Failed to save assessment.";
-};
-
 const AssessmentModal = ({
   isOpen,
   onClose,
@@ -89,51 +61,41 @@ const AssessmentModal = ({
     [moduleCategoryId, categories],
   );
 
-  const getCategorySelectStyle = (category?: Category) => {
-    if (!category?.colour) {
-      return undefined;
-    }
-
-    return {
-      borderColor: category.colour,
-      boxShadow: `inset 0 0 0 1px ${hexToRgba(category.colour, 0.2)}`,
-    };
-  };
-
   if (!isOpen) {
     return null;
   }
 
-  const handleSubmit = async (event: FormEvent) => {
-    event.preventDefault();
-    setError(null);
-
+  const validateAssessmentForm = (): string | null => {
     if (!title.trim()) {
-      setError("Title is required.");
-      return;
+      return "Title is required.";
     }
     if (mode === "DEADLINE" && !dueDate) {
-      setError("Due date is required.");
-      return;
+      return "Due date is required.";
     }
-    if (mode === "EVENT") {
-      if (!eventStart || !eventEnd) {
-        setError("Start and end time are required when calendar event is enabled.");
-        return;
-      }
-      if (new Date(eventEnd).getTime() <= new Date(eventStart).getTime()) {
-        setError("Calendar event end time must be after start time.");
-        return;
-      }
+    if (mode !== "EVENT") {
+      return null;
     }
+    if (!eventStart || !eventEnd) {
+        return "Start and end time are required when calendar event is enabled.";
+    }
+    if (new Date(eventEnd).getTime() <= new Date(eventStart).getTime()) {
+        return "Calendar event end time must be after start time.";
+    }
+    return null;
+  };
 
-    const mergedCategories = [...new Set(
+
+
+  const getMergedCategories = (): number[] => {
+    return [...new Set(
       [assessmentCategoryId, moduleCategoryId]
         .filter((value): value is number => typeof value === "number"),
     )];
+  };
 
-    try {
-      await onSubmit({
+
+  const buildAssessmentSubmission = (): AssessmentSubmission => {
+    return {
         title: title.trim(),
         assessment_type: assessmentType,
         due_date: timezoneDateTimeLocalToIso(mode === "EVENT" ? eventStart : dueDate, userTimezone),
@@ -143,7 +105,7 @@ const AssessmentModal = ({
         reminder_offset: null,
         assessment_category: typeof assessmentCategoryId === "number" ? assessmentCategoryId : null,
         module_category: typeof moduleCategoryId === "number" ? moduleCategoryId : null,
-        categories: mergedCategories,
+        categories: getMergedCategories(),
         completed: assessment?.completed ?? false,
         event_details: mode === "EVENT"
           ? {
@@ -152,13 +114,29 @@ const AssessmentModal = ({
               location: eventLocation.trim(),
             }
           : null,
-      });
+      
+    };
+  };
 
+
+  const handleSubmit = async (event: FormEvent) => {
+    event.preventDefault();
+    setError(null);
+
+    const validationError = validateAssessmentForm();
+    if (validationError) {
+      setError(validationError);
+      return;
+    }
+
+    try {
+      await onSubmit(buildAssessmentSubmission());
       onClose();
     } catch (submitError) {
       setError(getSubmissionErrorMessage(submitError));
     }
-  };
+  }
+    
 
   return (
     <Transition show={isOpen} as={Fragment}>
@@ -220,31 +198,7 @@ const AssessmentModal = ({
                       </div>
                     ) : null}
 
-                    <div className="rounded-xl border border-gray-200 p-2">
-                      <div className="grid gap-2 sm:grid-cols-2">
-                        {[
-                          { value: "DEADLINE", label: "Deadline assessment", description: "Tracked by due date only." },
-                          { value: "EVENT", label: "Event assessment", description: "Scheduled with a calendar event." },
-                        ].map((option) => {
-                          const isActive = mode === option.value;
-                          return (
-                            <button
-                              key={option.value}
-                              type="button"
-                              onClick={() => setMode(option.value as AssessmentMode)}
-                              className={`rounded-xl border px-4 py-3 text-left transition-colors ${
-                                isActive
-                                  ? "border-primary bg-blue-50 text-black"
-                                  : "border-gray-200 bg-white text-gray-600 hover:bg-gray-50"
-                              }`}
-                            >
-                              <div className="text-sm font-semibold">{option.label}</div>
-                              <div className="mt-1 text-xs text-gray-500">{option.description}</div>
-                            </button>
-                          );
-                        })}
-                      </div>
-                    </div>
+                    <AssessmentModeSelector mode={mode} onChange={setMode} />
 
                     <div>
                       <label htmlFor="assessment-title" className="mb-2 block text-sm font-medium text-gray-700">
@@ -261,111 +215,38 @@ const AssessmentModal = ({
                     </div>
 
                     <div className="grid gap-4 sm:grid-cols-2">
-                      <div>
-                        <div className="mb-2 flex items-center gap-2">
-                          <label htmlFor="assessment-category" className="block text-sm font-medium text-gray-700">
-                            Assessment type
-                          </label>
-                          <Tooltip content="Select from your existing categories. Create or edit categories from tasks, calendar, or settings first.">
-                            <button
-                              type="button"
-                              className="inline-flex h-5 w-5 items-center justify-center rounded-full border border-gray-300 text-xs text-gray-500 hover:bg-gray-100"
-                              aria-label="Explain assessment category"
-                            >
-                              ?
-                            </button>
-                          </Tooltip>
-                        </div>
-                        <select
-                          id="assessment-category"
-                          value={assessmentCategoryId}
-                          onChange={(event) => setAssessmentCategoryId(
-                            event.target.value === "" ? "" : Number(event.target.value),
-                          )}
-                          className={baseInputClass}
-                          style={getCategorySelectStyle(selectedAssessmentCategory)}
-                        >
-                          <option value="">None</option>
-                          {categories.map((category) => (
-                            <option
-                              key={category.id}
-                              value={category.id}
-                              style={category.colour ? { backgroundColor: hexToRgba(category.colour, 0.18) } : undefined}
-                            >
-                              {category.text}
-                            </option>
-                          ))}
-                        </select>
-                      </div>
-                      <div>
-                        <div className="mb-2 flex items-center gap-2">
-                          <label htmlFor="assessment-module" className="block text-sm font-medium text-gray-700">
-                            Subject / module
-                          </label>
-                          <Tooltip content="Select from your existing categories. Use a category you already created for your subject or module.">
-                            <button
-                              type="button"
-                              className="inline-flex h-5 w-5 items-center justify-center rounded-full border border-gray-300 text-xs text-gray-500 hover:bg-gray-100"
-                              aria-label="Explain subject or module"
-                            >
-                              ?
-                            </button>
-                          </Tooltip>
-                        </div>
-                        <select
-                          id="assessment-module"
-                          value={moduleCategoryId}
-                          onChange={(event) => setModuleCategoryId(
-                            event.target.value === "" ? "" : Number(event.target.value),
-                          )}
-                          className={baseInputClass}
-                          style={getCategorySelectStyle(selectedModuleCategory)}
-                        >
-                          <option value="">None</option>
-                          {categories.map((category) => (
-                            <option
-                              key={category.id}
-                              value={category.id}
-                              style={category.colour ? { backgroundColor: hexToRgba(category.colour, 0.18) } : undefined}
-                            >
-                              {category.text}
-                            </option>
-                          ))}
-                        </select>
-                      </div>
+                      <AssessmentCategorySelect
+                        id="assessment-category"
+                        label="Assessment type"
+                        tooltip="Select from your existing categories. Create or edit categories from tasks, calendar, or settings first."
+                        value={assessmentCategoryId}
+                        categories={categories}
+                        category={selectedAssessmentCategory}
+                        inputClassName={baseInputClass}
+                        ariaLabel="Explain assessment category"
+                        onChange={setAssessmentCategoryId}
+                      />
+                      <AssessmentCategorySelect
+                        id="assessment-module"
+                        label="Subject / module"
+                        tooltip="Select from your existing categories. Use a category you already created for your subject or module."
+                        value={moduleCategoryId}
+                        categories={categories}
+                        category={selectedModuleCategory}
+                        inputClassName={baseInputClass}
+                        ariaLabel="Explain subject or module"
+                        onChange={setModuleCategoryId}
+                      />
                     </div>
 
                     {mode === "DEADLINE" ? (
-                      <div className="grid gap-4 sm:grid-cols-2">
-                        <div>
-                        <label htmlFor="assessment-due-date" className="mb-2 block text-sm font-medium text-gray-700">
-                          Due date
-                        </label>
-                        <input
-                          id="assessment-due-date"
-                          type="datetime-local"
-                          value={dueDate}
-                          onChange={(event) => setDueDate(event.target.value)}
-                          className={baseInputClass}
-                          required
-                        />
-                        </div>
-                        <div>
-                          <label htmlFor="assessment-weighting" className="mb-2 block text-sm font-medium text-gray-700">
-                            Weighting %
-                          </label>
-                          <input
-                            id="assessment-weighting"
-                            type="number"
-                            min="0"
-                            max="100"
-                            value={String(weighting)}
-                            onChange={(event) => setWeighting(event.target.value === "" ? "" : Number(event.target.value))}
-                            className={baseInputClass}
-                            placeholder="Optional"
-                          />
-                        </div>
-                      </div>
+                      <AssessmentDeadlineFields
+                        dueDate={dueDate}
+                        weighting={weighting}
+                        inputClassName={baseInputClass}
+                        onDueDateChange={setDueDate}
+                        onWeightingChange={setWeighting}
+                      />
                     ) : null}
 
                     <div>
@@ -383,72 +264,17 @@ const AssessmentModal = ({
                     </div>
 
                     {mode === "EVENT" ? (
-                      <div className="rounded-xl border border-gray-200 px-4 py-3">
-                        <div className="flex items-center justify-between gap-4">
-                          <p className="text-sm font-medium text-gray-900">Event details</p>
-                          <span className="rounded-full bg-orange-100 px-3 py-1 text-xs font-semibold text-orange-700">
-                            Event
-                          </span>
-                        </div>
-
-                        <div className="mt-4 grid gap-4">
-                          <div>
-                            <label htmlFor="assessment-weighting" className="mb-2 block text-sm font-medium text-gray-700">
-                              Weighting %
-                            </label>
-                            <input
-                              id="assessment-weighting"
-                              type="number"
-                              min="0"
-                              max="100"
-                              value={String(weighting)}
-                              onChange={(event) => setWeighting(event.target.value === "" ? "" : Number(event.target.value))}
-                              className={baseInputClass}
-                              placeholder="Optional"
-                            />
-                          </div>
-                          <div className="grid gap-4 sm:grid-cols-2">
-                            <div>
-                              <label htmlFor="assessment-event-start" className="mb-2 block text-sm font-medium text-gray-700">
-                                Start
-                              </label>
-                              <input
-                                id="assessment-event-start"
-                                type="datetime-local"
-                                value={eventStart}
-                                onChange={(event) => setEventStart(event.target.value)}
-                                className={baseInputClass}
-                                required={mode === "EVENT"}
-                              />
-                            </div>
-                            <div>
-                              <label htmlFor="assessment-event-end" className="mb-2 block text-sm font-medium text-gray-700">
-                                End
-                              </label>
-                              <input
-                                id="assessment-event-end"
-                                type="datetime-local"
-                                value={eventEnd}
-                                onChange={(event) => setEventEnd(event.target.value)}
-                                className={baseInputClass}
-                                required={mode === "EVENT"}
-                              />
-                            </div>
-                          </div>
-                          <div>
-                            <label htmlFor="assessment-event-location" className="mb-2 block text-sm font-medium text-gray-700">
-                              Location
-                            </label>
-                            <input
-                              id="assessment-event-location"
-                              value={eventLocation}
-                              onChange={(event) => setEventLocation(event.target.value)}
-                              className={baseInputClass}
-                              placeholder="Optional location"
-                            />
-                          </div>
-                        </div>
-                      </div>
+                      <AssessmentEventSection
+                        weighting={weighting}
+                        eventStart={eventStart}
+                        eventEnd={eventEnd}
+                        eventLocation={eventLocation}
+                        inputClassName={baseInputClass}
+                        onWeightingChange={setWeighting}
+                        onEventStartChange={setEventStart}
+                        onEventEndChange={setEventEnd}
+                        onEventLocationChange={setEventLocation}
+                      />
                     ) : null}
                   </div>
 

@@ -7,48 +7,49 @@ from rest_framework.test import APIRequestFactory
 from courses.models import Course, CourseEnrollment, CourseStaff, Student, Teacher
 from courses.permissions.course_permission import CoursePermission
 
-
 User = get_user_model()
 
 
 class CoursePermissionTests(TestCase):
     """Test cases for course permission."""
 
-    def setUp(self):
-        """Set up shared test fixtures."""
-        self.factory = APIRequestFactory()
-        self.permission = CoursePermission()
-
-        self.teacher_user = User.objects.create_user(
+    @classmethod
+    def setUpTestData(cls):
+        cls.teacher_user = User.objects.create_user(
             username="teacher_user",
             password="password123",
             email="teacher@example.com",
         )
-        self.student_user = User.objects.create_user(
+        cls.student_user = User.objects.create_user(
             username="student_user",
             password="password123",
             email="student@example.com",
         )
-        self.staff_user = User.objects.create_user(
+        cls.staff_user = User.objects.create_user(
             username="staff_user",
             password="password123",
             email="staff@example.com",
         )
-        self.admin_user = User.objects.create_superuser(
+        cls.admin_user = User.objects.create_superuser(
             username="admin",
             password="password123",
             email="admin@example.com",
         )
 
-        self.teacher = Teacher.objects.create(user=self.teacher_user)
-        self.student = Student.objects.create(user=self.student_user)
-        self.staff_student = Student.objects.create(user=self.staff_user)
+        cls.teacher = Teacher.objects.create(user=cls.teacher_user)
+        cls.student = Student.objects.create(user=cls.student_user)
+        cls.staff_student = Student.objects.create(user=cls.staff_user)
 
-        self.course = Course.objects.create(
+        cls.course = Course.objects.create(
             name="Python Basics",
             description="Intro course",
-            lead=self.teacher,
+            lead=cls.teacher,
         )
+
+    def setUp(self):
+        """Set up shared test fixtures."""
+        self.factory = APIRequestFactory()
+        self.permission = CoursePermission()
 
     def _request(self, user):
         """Build a request object for permission tests."""

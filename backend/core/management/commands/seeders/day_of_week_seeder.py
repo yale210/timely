@@ -5,8 +5,8 @@ standard seven days of the week are populated in the database for use in
 scheduling and recurrence logic.
 """
 
-from core.models import DayOfWeek
 from core.management.commands.seeders.base import BaseSeeder
+from core.models import DayOfWeek
 
 
 class DayOfWeekSeeder(BaseSeeder):

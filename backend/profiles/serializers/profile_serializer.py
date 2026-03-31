@@ -3,6 +3,8 @@
 from django.utils import timezone
 from rest_framework import serializers
 
+from drf_spectacular.utils import extend_schema_field
+
 from profiles.models.profile import Profile
 
 
@@ -55,6 +57,7 @@ class PublicProfileSerializer(serializers.ModelSerializer):
         model = Profile
         fields = ["username", "name", "bio", "avatar_url", "joined_at"]
 
+    @extend_schema_field(serializers.CharField(allow_null=True))
     def get_avatar_url(self, obj):
         """Build an absolute avatar URL when request context is available.
 

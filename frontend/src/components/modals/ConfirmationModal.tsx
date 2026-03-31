@@ -9,6 +9,7 @@ interface ConfirmationModalProps {
   message: string;
   confirmText?: string;
   cancelText?: string;
+  tone?: "danger" | "success" | "neutral";
 }
 
 /**
@@ -21,6 +22,7 @@ interface ConfirmationModalProps {
  * @param props.message - The message to display in the modal.
  * @param props.confirmText - The text for the confirmation button.
  * @param props.cancelText - The text for the cancellation button.
+ * @param props.tone - The text for the confirmation button tone
  * @returns The rendered confirmation modal component.
  */
 const ConfirmationModal = ({
@@ -31,7 +33,31 @@ const ConfirmationModal = ({
   message,
   confirmText = "Delete",
   cancelText = "Cancel",
+  tone = "danger",
 }: ConfirmationModalProps) => {
+  const toneStyles = {
+    danger: {
+      iconWrapperClass: "bg-red-100",
+      iconClass: "text-red-600",
+      iconName: "warning",
+      confirmButtonClass: "bg-red-600 hover:bg-red-500",
+    },
+    success: {
+      iconWrapperClass: "bg-emerald-100",
+      iconClass: "text-emerald-600",
+      iconName: "check_circle",
+      confirmButtonClass: "bg-emerald-600 hover:bg-emerald-500",
+    },
+    neutral: {
+      iconWrapperClass: "bg-slate-100",
+      iconClass: "text-slate-600",
+      iconName: "info",
+      confirmButtonClass: "bg-slate-900 hover:bg-slate-700",
+    },
+  } as const;
+
+  const activeTone = toneStyles[tone];
+
   return (
     <Transition show={isOpen} as={Fragment}>
       <Dialog as="div" className="relative z-60" onClose={onClose}>
@@ -60,8 +86,8 @@ const ConfirmationModal = ({
             >
               <DialogPanel className="relative transform overflow-hidden rounded-lg bg-white px-4 pb-4 pt-5 text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-lg sm:p-6">
                 <div className="sm:flex sm:items-start">
-                  <div className="mx-auto flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-red-100 sm:mx-0 sm:h-10 sm:w-10">
-                    <span className="material-icons text-red-600">warning</span>
+                  <div className={`mx-auto flex h-12 w-12 shrink-0 items-center justify-center rounded-full sm:mx-0 sm:h-10 sm:w-10 ${activeTone.iconWrapperClass}`}>
+                    <span className={`material-icons ${activeTone.iconClass}`}>{activeTone.iconName}</span>
                   </div>
                   <div className="mt-3 text-center sm:ml-4 sm:mt-0 sm:text-left">
                     <DialogTitle as="h3" className="text-lg font-semibold leading-6 text-black">
@@ -77,7 +103,7 @@ const ConfirmationModal = ({
                 <div className="mt-5 sm:mt-4 sm:flex sm:flex-row-reverse gap-3">
                   <button
                     type="button"
-                    className="inline-flex w-full justify-center rounded-md bg-red-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-red-500 sm:w-auto transition-colors"
+                    className={`inline-flex w-full justify-center rounded-md px-3 py-2 text-sm font-semibold text-white shadow-sm sm:w-auto transition-colors ${activeTone.confirmButtonClass}`}
                     onClick={() => {
                       onConfirm();
                       onClose();

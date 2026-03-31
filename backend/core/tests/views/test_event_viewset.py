@@ -1,11 +1,15 @@
 """Tests for event viewset."""
 
 import datetime
+from unittest.mock import patch
+
 from django.contrib.auth import get_user_model
+from django.test import override_settings
 from django.urls import reverse
+from django.utils import timezone
 from rest_framework import status
 from rest_framework.test import APITestCase
-from django.utils import timezone
+
 from core.models import Event, EventReminder
 
 
@@ -28,8 +32,8 @@ class EventViewSetTests(APITestCase):
             "start_time": now + datetime.timedelta(hours=3),
             "end_time": now + datetime.timedelta(hours=4),
             "reminders": [
-                {"send_push": True, "send_email": False, "minutes_before": 15},
-                {"send_push": False, "send_email": True, "minutes_before": 60},
+                {"send_push": True, "minutes_before": 15},
+                {"send_push": False, "minutes_before": 60},
             ],
         }
         response = self.client.post(self.url, data, format="json")
@@ -57,9 +61,7 @@ class EventViewSetTests(APITestCase):
             "title": "New Title",
             "start_time": now + datetime.timedelta(hours=3),
             "end_time": now + datetime.timedelta(hours=4),
-            "reminders": [
-                {"send_push": False, "send_email": True, "minutes_before": 20}
-            ],
+            "reminders": [{"send_push": False, "minutes_before": 20}],
         }
         response = self.client.put(url, data, format="json")
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -67,7 +69,6 @@ class EventViewSetTests(APITestCase):
         event.refresh_from_db()
         self.assertEqual(event.title, "New Title")
         self.assertEqual(event.reminders.count(), 1)
-        self.assertTrue(event.reminders.first().send_email)
         self.assertFalse(event.reminders.first().send_push)
         self.assertEqual(event.reminders.first().minutes_before, 20)
 
@@ -87,10 +88,9 @@ class EventViewSetTests(APITestCase):
         self.assertEqual(len(response.data), 1)
         self.assertEqual(len(response.data[0]["reminders"]), 1)
         self.assertTrue(response.data[0]["reminders"][0]["send_push"])
-        self.assertFalse(response.data[0]["reminders"][0]["send_email"])
 
     def test_create_event_with_max_reminders(self):
-        """Test that an event can have up to 5 reminders."""
+        """Test create event with max reminders."""
         now = timezone.now()
         data = {
             "title": "Event with 5 reminders",
@@ -100,8 +100,8 @@ class EventViewSetTests(APITestCase):
                 {"send_push": True, "minutes_before": 5},
                 {"send_push": True, "minutes_before": 10},
                 {"send_push": True, "minutes_before": 15},
-                {"send_email": True, "minutes_before": 30},
-                {"send_email": True, "minutes_before": 60},
+                {"minutes_before": 30},
+                {"minutes_before": 60},
             ],
         }
         response = self.client.post(self.url, data, format="json")
@@ -109,7 +109,7 @@ class EventViewSetTests(APITestCase):
         self.assertEqual(EventReminder.objects.count(), 5)
 
     def test_create_event_exceeds_max_reminders(self):
-        """Test that an event cannot have more than 5 reminders."""
+        """Test create event exceeds max reminders."""
         now = timezone.now()
         data = {
             "title": "Event with too many reminders",
@@ -119,8 +119,8 @@ class EventViewSetTests(APITestCase):
                 {"send_push": True, "minutes_before": 5},
                 {"send_push": True, "minutes_before": 10},
                 {"send_push": True, "minutes_before": 15},
-                {"send_email": True, "minutes_before": 30},
-                {"send_email": True, "minutes_before": 60},
+                {"minutes_before": 30},
+                {"minutes_before": 60},
                 {
                     "send_push": True,
                     "minutes_before": 120,
@@ -133,7 +133,7 @@ class EventViewSetTests(APITestCase):
         self.assertEqual(Event.objects.count(), 0)
 
     def test_create_recurring_event_without_end_date(self):
-        """Test that recurring events can be created without an end date (never ending)."""
+        """Test create recurring event without end date."""
         now = timezone.now()
         data = {
             "title": "Never Ending Event",
@@ -161,19 +161,16 @@ class EventViewSetTests(APITestCase):
 
     def test_list_with_invalid_dates(self):
         """Test list with invalid dates."""
-        # Invalid format
         response = self.client.get(
             self.url, {"start_date": "2023-01-01", "end_date": "invalid"}
         )
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
-        # End before start
         response = self.client.get(
             self.url, {"start_date": "2023-01-02", "end_date": "2023-01-01"}
         )
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
-        # Range too large (> 365 days)
         response = self.client.get(
             self.url, {"start_date": "2023-01-01", "end_date": "2024-01-02"}
         )
@@ -191,13 +188,11 @@ class EventViewSetTests(APITestCase):
         )
         url = reverse("event-detail", args=[event.id])
 
-        # Invalid ISO datetime
         response = self.client.patch(
             url, {"title": "New"}, QUERY_STRING="original_start_time=invalid"
         )
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
-        # Naive datetime
         response = self.client.patch(
             url,
             {"title": "New"},
@@ -219,8 +214,6 @@ class EventViewSetTests(APITestCase):
             url, {"title": "New"}, QUERY_STRING="scope=invalid"
         )
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-
-    from django.test import override_settings
 
     @override_settings(ENABLE_RECURRENCE_OVERRIDES=False)
     def test_update_recurring_scope_disabled(self):
@@ -289,12 +282,8 @@ class EventViewSetTests(APITestCase):
         )
 
         url = reverse("event-revert-instance", args=[event.id])
-        # original_start_time missing
         response = self.client.post(url)
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-
-        # Success
-        from unittest.mock import patch
 
         with patch("core.views.event_view.revert_override_instance") as mock_revert:
             response = self.client.post(
@@ -331,7 +320,6 @@ class EventViewSetTests(APITestCase):
             end_time=now + datetime.timedelta(hours=1),
         )
         url = reverse("event-revert-instance", args=[event.id])
-        # original_start_time missing
         response = self.client.post(
             url, QUERY_STRING="original_start_time=2023-01-01T10:00:00Z"
         )
@@ -340,7 +328,6 @@ class EventViewSetTests(APITestCase):
 
     def test_list_no_dates(self):
         """Test list no dates."""
-        # Should use default window (month start to end)
         response = self.client.get(self.url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
@@ -356,8 +343,6 @@ class EventViewSetTests(APITestCase):
             recurrence_interval="daily",
         )
         url = reverse("event-detail", args=[event.id])
-        from unittest.mock import patch
-
         with patch("core.views.event_view.apply_update_scope") as mock_update:
             mock_update.return_value = event
             response = self.client.patch(
@@ -380,8 +365,6 @@ class EventViewSetTests(APITestCase):
             recurrence_interval="daily",
         )
         url = reverse("event-detail", args=[event.id])
-        from unittest.mock import patch
-
         with patch("core.views.event_view.apply_update_scope") as mock_update:
             mock_update.side_effect = ValueError("Test error")
             response = self.client.patch(
@@ -420,8 +403,6 @@ class EventViewSetTests(APITestCase):
             recurrence_interval="daily",
         )
         url = reverse("event-detail", args=[event.id])
-        from unittest.mock import patch
-
         with patch("core.views.event_view.apply_delete_scope") as mock_delete:
             response = self.client.delete(
                 url, QUERY_STRING="scope=this&original_start_time=2023-01-01T10:00:00Z"
@@ -441,8 +422,6 @@ class EventViewSetTests(APITestCase):
             recurrence_interval="daily",
         )
         url = reverse("event-revert-instance", args=[event.id])
-        from unittest.mock import patch
-
         with patch("core.views.event_view.revert_override_instance") as mock_revert:
             mock_revert.side_effect = ValueError("Not found")
             response = self.client.post(

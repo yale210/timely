@@ -3,8 +3,9 @@
 from django.contrib.auth import get_user_model
 from rest_framework import serializers
 
-from core.models import Friendship
+from drf_spectacular.utils import extend_schema_field
 
+from core.models import Friendship
 
 User = get_user_model()
 
@@ -26,6 +27,8 @@ class FriendshipSerializer(serializers.ModelSerializer):
     receiver_avatar = serializers.SerializerMethodField()
 
     class Meta:
+        """Describe the friendship request payload used by the social flow."""
+
         model = Friendship
         fields = [
             "id",
@@ -76,20 +79,22 @@ class FriendshipSerializer(serializers.ModelSerializer):
 
     def _get_profile(self, user):
         """Return the related profile object for a friendship user if present."""
-
         return getattr(user, "user_profile", None)
 
     def _get_profile_name(self, user):
         """Return the preferred display name for a friendship user."""
-
         profile = self._get_profile(user)
         if profile and profile.name:
             return profile.name
         return user.username
 
     def _get_avatar_url(self, user):
-        """Build the avatar URL for a friendship user when available."""
+        """Build the avatar URL for a friendship user when available.
 
+        Returns:
+            str | None: The absolute avatar URL when available.
+
+        """
         profile = self._get_profile(user)
         if not profile or not getattr(profile, "avatar", None):
             return None
@@ -97,6 +102,7 @@ class FriendshipSerializer(serializers.ModelSerializer):
         url = profile.avatar.url
         return request.build_absolute_uri(url) if request else url
 
+    @extend_schema_field(serializers.CharField())
     def get_sender_name(self, obj):
         """Get the profile name of the sender.
 
@@ -105,6 +111,7 @@ class FriendshipSerializer(serializers.ModelSerializer):
         """
         return self._get_profile_name(obj.sender)
 
+    @extend_schema_field(serializers.CharField())
     def get_receiver_name(self, obj):
         """Get the display name of the receiver.
 
@@ -113,6 +120,7 @@ class FriendshipSerializer(serializers.ModelSerializer):
         """
         return self._get_profile_name(obj.receiver)
 
+    @extend_schema_field(serializers.CharField(allow_null=True))
     def get_sender_avatar(self, obj):
         """Get the avatar URL of the sender.
 
@@ -121,6 +129,7 @@ class FriendshipSerializer(serializers.ModelSerializer):
         """
         return self._get_avatar_url(obj.sender)
 
+    @extend_schema_field(serializers.CharField(allow_null=True))
     def get_receiver_avatar(self, obj):
         """Get the avatar URL of the receiver.
 

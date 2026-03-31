@@ -1,11 +1,17 @@
-"""Teacher management views for courses."""
+"""Views for managing teacher profiles and their associated courses.
+
+Provides endpoints for listing active teachers, registering new teacher profiles,
+and unregistering (deactivating) teacher accounts.
+"""
 
 from django.contrib.auth import get_user_model
-from rest_framework import status
+from rest_framework import serializers, status
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.viewsets import ViewSet
+
+from drf_spectacular.utils import extend_schema, inline_serializer
 
 from courses.models import Course, Teacher
 from courses.permissions.teacher_permission import IsTeacher
@@ -16,20 +22,64 @@ from courses.serializers.teacher_serializer import (
 
 User = get_user_model()
 
+_TEACHER_COURSE_ITEM = inline_serializer(
+    name="TeacherCourseItem",
+    fields={
+        "id": serializers.IntegerField(),
+        "name": serializers.CharField(),
+        "description": serializers.CharField(),
+        "created_at": serializers.DateTimeField(),
+        "active": serializers.BooleanField(),
+    },
+)
+
 
 class TeacherView(ViewSet):
-    """View set for teacher registration and listing."""
+    """ViewSet for handling teacher-related operations.
+
+    Manages teacher registration, deactivation, and retrieval of teacher
+    profiles including their associated course leads.
+    """
 
     permission_classes = [IsAuthenticated, IsTeacher]
 
-    def list(self, request):
-        """Return active teachers and the courses they lead.
-
-        Args:
-            request: The incoming DRF request.
+    def get_permissions(self):
+        """Allow the self-service profile endpoint to remain authentication-only.
 
         Returns:
-            Response: A response containing active teachers and their courses.
+            list[BasePermission]: ``me`` only needs authentication so teachers
+            can inspect their profile even before the teacher role check runs.
+        """
+        if self.action == "me":
+            return [
+                IsAuthenticated(),
+            ]
+        return super(TeacherView, self).get_permissions()
+
+    @extend_schema(
+        request=None,
+        responses={
+            200: inline_serializer(
+                name="TeacherListResponse",
+                fields={
+                    "id": serializers.IntegerField(),
+                    "user_id": serializers.IntegerField(),
+                    "username": serializers.CharField(),
+                    "active": serializers.BooleanField(),
+                    "courses": _TEACHER_COURSE_ITEM,
+                },
+                many=True,
+            ),
+        },
+    )
+    def list(self, request):
+        """Lists all active teachers and their managed courses.
+
+        Args:
+            request: The current HttpRequest.
+
+        Returns:
+            A Response containing a list of teacher profiles and their courses.
         """
         teachers = (
             Teacher.objects.select_related("user")
@@ -63,6 +113,76 @@ class TeacherView(ViewSet):
 
         return Response(data, status=status.HTTP_200_OK)
 
+    @extend_schema(
+        request=None,
+        responses={
+            200: inline_serializer(
+                name="TeacherMeResponse",
+                fields={
+                    "id": serializers.IntegerField(),
+                    "user_id": serializers.IntegerField(),
+                    "username": serializers.CharField(),
+                    "active": serializers.BooleanField(),
+                    "courses": _TEACHER_COURSE_ITEM,
+                },
+            ),
+        },
+    )
+    @action(
+        detail=False,
+        methods=["get"],
+        url_path="me",
+        permission_classes=[
+            IsAuthenticated,
+        ],
+    )
+    def me(self, request):
+        """Returns the current user's teacher profile if they are a teacher."""
+        teacher = (
+            Teacher.objects.select_related("user").filter(user=request.user).first()
+        )
+
+        if teacher is None or not teacher.active:
+            return Response(
+                {"detail": "You are not registered as a teacher."},
+                status=status.HTTP_200_OK,
+            )
+
+        courses = Course.objects.filter(lead=teacher, active=True).order_by(
+            "-created_at"
+        )
+
+        return Response(
+            {
+                "id": teacher.user_id,
+                "user_id": teacher.user_id,
+                "username": teacher.user.username,
+                "active": teacher.active,
+                "courses": [
+                    {
+                        "id": course.id,
+                        "name": course.name,
+                        "description": course.description,
+                        "created_at": course.created_at,
+                        "active": course.active,
+                    }
+                    for course in courses
+                ],
+            },
+            status=status.HTTP_200_OK,
+        )
+
+    @extend_schema(
+        request=TeacherCreateSerializer,
+        responses={
+            200: TeacherSerializer,
+            201: TeacherSerializer,
+            403: inline_serializer(
+                name="TeacherCreateForbiddenResponse",
+                fields={"detail": serializers.CharField()},
+            ),
+        },
+    )
     @action(
         detail=False,
         methods=["post"],
@@ -70,13 +190,13 @@ class TeacherView(ViewSet):
         permission_classes=[IsAuthenticated],
     )
     def create_teacher(self, request):
-        """Register or reactivate a teacher profile for a user.
+        """Registers a new teacher profile for the current or specified user.
 
         Args:
-            request: The incoming DRF request.
+            request: The current HttpRequest containing 'user_id'.
 
         Returns:
-            Response: A response containing the teacher payload.
+            A Response containing the serialized teacher profile.
         """
         serializer = TeacherCreateSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -104,6 +224,16 @@ class TeacherView(ViewSet):
             status=status.HTTP_201_CREATED if created else status.HTTP_200_OK,
         )
 
+    @extend_schema(
+        request=None,
+        responses={
+            200: TeacherSerializer,
+            404: inline_serializer(
+                name="TeacherUnregisterNotFoundResponse",
+                fields={"detail": serializers.CharField()},
+            ),
+        },
+    )
     @action(
         detail=False,
         methods=["post"],
@@ -111,13 +241,13 @@ class TeacherView(ViewSet):
         permission_classes=[IsAuthenticated],
     )
     def unregister_teacher(self, request):
-        """Deactivate the current user's teacher registration.
+        """Deactivates the teacher profile for the current user.
 
         Args:
-            request: The incoming DRF request.
+            request: The current HttpRequest.
 
         Returns:
-            Response: A response containing the updated teacher payload.
+            A Response containing the updated teacher profile state.
         """
         teacher = Teacher.objects.filter(user=request.user).first()
 

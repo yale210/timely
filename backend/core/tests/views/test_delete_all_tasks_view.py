@@ -1,11 +1,12 @@
 """Test cases for the delete all tasks view."""
 
-from django.test import TestCase
+from datetime import datetime
+
 from django.contrib.auth import get_user_model
+from django.test import TestCase
+from django.utils import timezone
 from rest_framework.test import APIClient
 
-from datetime import datetime
-from django.utils import timezone
 from core.models import Task
 
 

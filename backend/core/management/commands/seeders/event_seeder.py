@@ -5,14 +5,17 @@ of event-related data, including both single and recurring events. It
 facilitates testing the calendar and scheduling features of the application.
 """
 
-import random
 import datetime
+import random
 from datetime import timedelta
-from core.models import Event, Category
-from django.utils import timezone
-from .fixtures.event_fixtures import events
+
 from django.contrib.auth import get_user_model
+from django.utils import timezone
+
 from core.management.commands.seeders.base import BaseSeeder
+from core.models import Category, Event
+
+from .fixtures.event_fixtures import events
 
 
 class EventSeeder(BaseSeeder):
@@ -28,6 +31,9 @@ class EventSeeder(BaseSeeder):
     """
 
     help = "Handles seeding of events into the database."
+    DEFAULT_DAY_START = datetime.time(hour=8, minute=0)
+    DEFAULT_DAY_END = datetime.time(hour=22, minute=0)
+    MIN_EVENT_MINUTES = 15
 
     def seed(self):
         """Execute the seeding logic for events.
@@ -37,7 +43,7 @@ class EventSeeder(BaseSeeder):
         """
         self._create_fixture_event()
         # Generate random events across various users
-        for _ in range(200):
+        for _ in range(750):
             self._populate_random_event()
 
     def _create_fixture_event(self):
@@ -93,10 +99,10 @@ class EventSeeder(BaseSeeder):
         Determines whether to create a recurring or non-recurring event
         randomly.
         """
+        # Delegate to randomized event type creation
         temporary_user = self._get_or_create_random_user()
         temporary_category = self._get_or_create_random_category(temporary_user)
 
-        # Delegate to randomized event type creation
         self._create_random_event_type(
             {
                 "fields": {
@@ -154,17 +160,18 @@ class EventSeeder(BaseSeeder):
             data (dict): A dictionary containing user and category metadata.
 
         """
-        start = timezone.make_aware(self.faker.date_time())
+        user = self.resolve_user(data["fields"]["user"])
+        start, end = self._random_event_datetimes(user, max_duration_minutes=100)
         self._create_event(
             {
                 "fields": {
-                    "user": data["fields"]["user"],
+                    "user": user.id,
                     "categories": data["fields"]["categories"],
                     "title": self.faker.sentence(),
                     "description": self.faker.sentence(),
                     "location": self.faker.word(),
                     "start_time": start,
-                    "end_time": start + timedelta(random.randint(0, 100)),
+                    "end_time": end,
                     "recurrence_interval": random.choice(
                         ["daily", "weekly", "monthly", "yearly"]
                     ),
@@ -178,67 +185,160 @@ class EventSeeder(BaseSeeder):
     def _create_random_event_type(self, data):
         """Determine and create either a recurring or single random event.
 
+        Uses the caller-provided user and categories from ``data["fields"]``
+        so that ownership established by ``_populate_random_event`` is
+        preserved.
+
         Args:
             data (dict): A dictionary containing user and category metadata.
 
         """
-        # Determine recurrence randomly
-        recurring = random.randint(0, 1) == 1
+        user = self.resolve_user(data["fields"]["user"])
+        categories = data["fields"]["categories"]
 
-        if recurring:
-            start = timezone.make_aware(self.faker.date_time())
-            self._create_event(
-                {
-                    "fields": {
-                        "user": self._get_or_create_random_user().id,
-                        "categories": [
-                            self._get_or_create_random_category(
-                                self._get_or_create_random_user()
-                            ).id
-                        ],
-                        "title": self.faker.sentence(),
-                        "description": self.faker.sentence(),
-                        "location": self.faker.word(),
-                        "start_time": start,
-                        "end_time": start + timedelta(random.randint(0, 100)),
-                        "recurrence_interval": random.choice(
-                            ["daily", "weekly", "monthly", "yearly"]
-                        ),
-                        "recurrence_end": (
-                            start + timedelta(random.randint(0, 100))
-                        ).date(),
-                        "exception_dates": [],
-                        "split_from_event": None,
-                        "colour": self.faker.hex_color(),
-                    }
-                }
-            )
-        else:
-            start = timezone.make_aware(self.faker.date_time())
-            end = start + timedelta(random.randint(0, 60))
+        if random.randint(0, 1) == 1:
+            self._create_random_recurring_event(user, categories)
+            return
 
-            self._create_event(
-                {
-                    "fields": {
-                        "user": self._get_or_create_random_user().id,
-                        "categories": [
-                            self._get_or_create_random_category(
-                                self._get_or_create_random_user()
-                            ).id
-                        ],
-                        "title": self.faker.sentence(),
-                        "description": self.faker.sentence(),
-                        "location": self.faker.word(),
-                        "start_time": start,
-                        "end_time": end,
-                        "recurrence_interval": None,
-                        "recurrence_end": None,
-                        "exception_dates": [],
-                        "split_from_event": None,
-                        "colour": self.faker.hex_color(),
-                    }
-                }
+        self._create_random_single_event(user, categories)
+
+    def _create_random_recurring_event(self, user, categories):
+        """Generate a recurring event with randomised dates and recurrence.
+
+        Args:
+            user (User): The user that should own the generated event.
+            categories (list): Category IDs to assign to the event.
+
+        """
+        start, end = self._random_event_datetimes(user, max_duration_minutes=100)
+        recurrence_end = (start + timedelta(days=random.randint(0, 100))).date()
+        self._create_event(
+            {
+                "fields": self._build_random_event_fields(
+                    user=user,
+                    categories=categories,
+                    start=start,
+                    end=end,
+                    recurrence_interval=random.choice(
+                        ["daily", "weekly", "monthly", "yearly"]
+                    ),
+                    recurrence_end=recurrence_end,
+                )
+            }
+        )
+
+    def _create_random_single_event(self, user, categories):
+        """Generate a one-off event with a bounded random duration.
+
+        Args:
+            user (User): The user that should own the generated event.
+            categories (list): Category IDs to assign to the event.
+
+        """
+        start, end = self._random_event_datetimes(user, max_duration_minutes=60)
+        self._create_event(
+            {
+                "fields": self._build_random_event_fields(
+                    user=user,
+                    categories=categories,
+                    start=start,
+                    end=end,
+                    recurrence_interval=None,
+                    recurrence_end=None,
+                )
+            }
+        )
+
+    def _build_random_event_fields(
+        self, user, categories, start, end, recurrence_interval, recurrence_end
+    ):
+        """Build the payload used to persist generated event fixtures.
+
+        Args:
+            user (User): The event owner.
+            categories (list): Category IDs to assign to the event.
+            start (datetime): The event start datetime.
+            end (datetime): The event end datetime.
+            recurrence_interval (str | None): The recurrence cadence when the
+                event should repeat.
+            recurrence_end (date | None): The date when recurrence should stop.
+
+        Returns:
+            dict: Event field values in the fixture format consumed by the create
+                helper.
+
+        """
+        return {
+            "user": user.id,
+            "categories": categories,
+            "title": self.faker.sentence(),
+            "description": self.faker.sentence(),
+            "location": self.faker.word(),
+            "start_time": start,
+            "end_time": end,
+            "recurrence_interval": recurrence_interval,
+            "recurrence_end": recurrence_end,
+            "exception_dates": [],
+            "split_from_event": None,
+            "colour": self.faker.hex_color(),
+        }
+
+    def _random_event_datetimes(
+        self,
+        user,
+        *,
+        max_duration_minutes: int,
+    ) -> tuple[datetime.datetime, datetime.datetime]:
+        """Generate a same-day event within the user's daily availability window.
+
+        Returns:
+            tuple[datetime.datetime, datetime.datetime]: Start and end datetimes
+            for the generated event.
+        """
+        base_datetime = self.faker.date_time()
+        target_date = base_datetime.date()
+        day_start, day_end = self._daily_window_for_user(user, target_date)
+        window_start = datetime.datetime.combine(target_date, day_start)
+        window_end = datetime.datetime.combine(target_date, day_end)
+
+        available_minutes = int((window_end - window_start).total_seconds() // 60)
+        if available_minutes < self.MIN_EVENT_MINUTES:
+            window_start = datetime.datetime.combine(
+                target_date, self.DEFAULT_DAY_START
             )
+            window_end = datetime.datetime.combine(target_date, self.DEFAULT_DAY_END)
+            available_minutes = int((window_end - window_start).total_seconds() // 60)
+
+        duration_cap = min(max_duration_minutes, available_minutes)
+        duration_minutes = random.randint(self.MIN_EVENT_MINUTES, duration_cap)
+        start_offset_max = max(0, available_minutes - duration_minutes)
+        start_offset = (
+            random.randint(0, start_offset_max) if start_offset_max > 0 else 0
+        )
+
+        start = timezone.make_aware(window_start + timedelta(minutes=start_offset))
+        end = start + timedelta(minutes=duration_minutes)
+        return start, end
+
+    def _daily_window_for_user(
+        self,
+        user,
+        target_date: datetime.date,
+    ) -> tuple[datetime.time, datetime.time]:
+        """Resolve the user's availability window for a given date.
+
+        Returns:
+            tuple[datetime.time, datetime.time]: Start and end times for the
+            daily window.
+        """
+        preference = getattr(user, "preference", None)
+        if preference is None:
+            return self.DEFAULT_DAY_START, self.DEFAULT_DAY_END
+
+        start_time, end_time = preference.get_day_window(target_date)
+        if end_time <= start_time:
+            return self.DEFAULT_DAY_START, self.DEFAULT_DAY_END
+        return start_time, end_time
 
     def _random_time(self):
         """Generate a random `datetime.time` object.

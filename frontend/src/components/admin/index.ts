@@ -1,8 +1,10 @@
-export { AdminBroadcastForm } from "./notifications/AdminBroadcastForm";
-export { AdminUserTable } from "./AdminUserTable";
-export { AdminLivePreview } from "./notifications/AdminLivePreview";
-export { AdminHistoryFilters } from "./notifications/AdminHistoryFilters";
-export { AdminHistoryTable } from "./notifications/AdminHistoryTable";
-export { AdminHistoryDetailPayload } from "./notifications/AdminHistoryDetailPayload";
-export { AdminHistoryDetailRecipientsTable } from "./notifications/AdminHistoryDetailRecipientsTable";
-export { AdminHistoryDetailMetrics } from "./notifications/AdminHistoryDetailMetrics";
+export { AdminUserTable } from "./admin-user-table/AdminUserTable";
+export {
+  AdminBroadcastForm,
+  AdminHistoryTable,
+  AdminHistoryFilters,
+  AdminHistoryDetailMetrics,
+  AdminHistoryDetailRecipientsTable,
+  AdminHistoryDetailPayload,
+  AdminLivePreview,
+} from "./notifications";

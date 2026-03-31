@@ -2,12 +2,14 @@ import { vi, describe, it, expect, beforeEach } from "vitest";
 import { authStore, authService, AUTH_CHANGE_EVENT } from "@/services/authService";
 
 // Mock api
-const { mockPost } = vi.hoisted(() => ({
+const { mockDelete, mockPost } = vi.hoisted(() => ({
+  mockDelete: vi.fn(),
   mockPost: vi.fn(),
 }));
 
 vi.mock("@/services/api", () => ({
   default: {
+    delete: mockDelete,
     post: mockPost,
   },
 }));
@@ -77,7 +79,7 @@ describe("authService", () => {
   });
 
   it("register calls correct URL and updates store", async () => {
-    const payload = { username: "u", email: "e", password: "p", password2: "p" };
+    const payload = { username: "u", email: "e", password: "p", password2: "p", name: "User" };
     const mockResponse = { data: { token: "t", user: { username: "u", email: "e" } } };
     mockPost.mockResolvedValue(mockResponse);
 
@@ -122,6 +124,18 @@ describe("authService", () => {
 
     expect(authStore.getToken()).toBeNull();
   });
+
+  it("deleteAccount sends the password payload", async () => {
+    mockDelete.mockResolvedValue({
+      data: { message: "Account deleted successfully." },
+    });
+
+    await expect(authService.deleteAccount("secret")).resolves.toBe(
+      "Account deleted successfully.",
+    );
+
+    expect(mockDelete).toHaveBeenCalledWith("/api/delete_account/", {
+      data: { password: "secret" },
+    });
+  });
 });
-
-

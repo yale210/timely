@@ -1,7 +1,7 @@
 import { render, screen } from "@testing-library/react";
 import "@testing-library/jest-dom/vitest";
 import { describe, expect, it } from "vitest";
-import { AdminHistoryTableHead } from "@/components/admin/notifications/AdminHistoryTable/AdminHistoryTableHead";
+import { AdminHistoryTableHead } from "@/components/admin/notifications/AdminHistoryTable";
 
 describe("AdminHistoryTableHead", () => {
   it("renders the expected broadcast history columns", () => {

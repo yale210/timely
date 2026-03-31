@@ -1,12 +1,13 @@
 """Tests for share accept view."""
 
-from django.test import TestCase
-from django.contrib.auth import get_user_model
-from rest_framework.test import APIClient
 from datetime import datetime
+
+from django.contrib.auth import get_user_model
+from django.test import TestCase
 from django.utils import timezone
-from core.models import PendingShareEvent
-from core.models import Event
+from rest_framework.test import APIClient
+
+from core.models import Event, PendingShareEvent
 
 
 class ShareAcceptViewTests(TestCase):
@@ -31,7 +32,7 @@ class ShareAcceptViewTests(TestCase):
             "/api/share_accept/",
             data={"Event-ID": "1", "Decision": "accept"},
         )
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, 400)
 
     def test_no_decision_nor_eventID(self):
         """Test no decision nor event id."""
@@ -40,7 +41,9 @@ class ShareAcceptViewTests(TestCase):
             "/api/share_accept/",
             data={},
         )
-        self.assertEqual(response.data["error"], "Event does not exist, likely deleted")
+        self.assertEqual(
+            response.data["error"], "Please provide a decision and event ID"
+        )
 
     def test_event_does_not_exist(self):
         """Test event does not exist."""

@@ -1,8 +1,8 @@
 """Category model definitions."""
 
-from django.core.validators import RegexValidator, MinValueValidator, MaxValueValidator
-from django.db import models
 from django.conf import settings
+from django.core.validators import MaxValueValidator, MinValueValidator, RegexValidator
+from django.db import models
 
 
 class Category(models.Model):

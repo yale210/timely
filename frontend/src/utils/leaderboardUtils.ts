@@ -1,5 +1,6 @@
 import type { CSSProperties } from "react";
 import type { Profile } from "@/types";
+import { formatDateInTimezone } from "@/utils/userTimezone";
 
 /**
  * Derived profile metrics used by the leaderboard summary card.
@@ -50,7 +51,7 @@ const formatJoinedDate = (value?: string | null) => {
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return "Unknown";
 
-  return date.toLocaleDateString([], {
+  return formatDateInTimezone(date, {
     year: "numeric",
     month: "short",
     day: "numeric",

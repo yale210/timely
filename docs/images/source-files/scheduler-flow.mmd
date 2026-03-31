@@ -1,0 +1,37 @@
+flowchart TD
+    A["POST /api/schedule/\n{start_date, max_days_ahead,\nallow_split, replace_existing}"] --> B["ScheduleTasksAPIView"]
+    B --> C["Instantiate Scheduler\n(load tasks, events, preferences)"]
+    C --> D["Sort tasks by\n-importance DESC, deadline ASC"]
+    D --> E{{"For each task"}}
+    E --> F{"Deadline\npassed?"}
+    F -->|Yes| G["ScheduleResult: failure\n(deadline passed)"]
+    F -->|No| H{"allow_split\nenabled?"}
+    H -->|No| I["_schedule_task_no_split()"]
+    H -->|Yes| J["_schedule_task_split()"]
+
+    I --> K["Iterate dates\nfrom start_date → deadline"]
+    K --> L["Get available slots\nfor current date"]
+    L --> M["Subtract events +\nalready-scheduled tasks\n+ buffers"]
+    M --> N["Apply daily\ncapacity limit"]
+    N --> O{"Slot fits\ntask duration?"}
+    O -->|No| K
+    O -->|Yes| P["Clip to task_start\nand deadline"]
+    P --> Q{"Valid\ncandidate?"}
+    Q -->|No| K
+    Q -->|Yes| R["ScheduleResult: success\n(single segment)"]
+
+    J --> S["Split into segments\nacross multiple days"]
+    S --> T["ScheduleResult: success\n(multiple segments)"]
+
+    R --> U["Store segments\nto _scheduled_blocks"]
+    T --> U
+    G --> V["Next task"]
+    U --> V
+    V --> E
+
+    E -->|Done| W["Bulk-update\nTask.allocation JSONField"]
+    W --> X["Return list of\nScheduleResult objects"]
+
+    style A fill:#4A90D9,color:#fff
+    style X fill:#27AE60,color:#fff
+    style G fill:#E74C3C,color:#fff

@@ -31,6 +31,20 @@ class EventScopeMutationServiceTests(TestCase):
             exception_dates=[],
         )
 
+    def create_override(self, original_start, **overrides):
+        """Create an override for the recurring fixture event."""
+        return EventOverride.objects.create(
+            parent_event=self.event,
+            title=overrides.pop("title", "Temp Override"),
+            description=overrides.pop("description", ""),
+            location=overrides.pop("location", ""),
+            start_time=overrides.pop("start_time", original_start + timedelta(hours=1)),
+            end_time=overrides.pop("end_time", original_start + timedelta(hours=2)),
+            original_start_time=original_start,
+            reminders_snapshot=overrides.pop("reminders_snapshot", []),
+            **overrides,
+        )
+
     def test_scope_this_update_creates_override_and_exception(self):
         """Test scope this update creates override and exception."""
         original_start = self.base_start + timedelta(days=2)
@@ -70,16 +84,7 @@ class EventScopeMutationServiceTests(TestCase):
     def test_scope_this_delete_marks_exception_and_removes_override(self):
         """Test scope this delete marks exception and removes override."""
         original_start = self.base_start + timedelta(days=1)
-        EventOverride.objects.create(
-            parent_event=self.event,
-            title="Temp Override",
-            description="",
-            location="",
-            start_time=original_start + timedelta(hours=1),
-            end_time=original_start + timedelta(hours=2),
-            original_start_time=original_start,
-            reminders_snapshot=[],
-        )
+        self.create_override(original_start)
 
         apply_delete_scope(self.event, "this", original_start)
 
@@ -95,15 +100,11 @@ class EventScopeMutationServiceTests(TestCase):
     def test_scope_this_update_noop_removes_existing_override(self):
         """Test scope this update noop removes existing override."""
         original_start = self.base_start + timedelta(days=2)
-        EventOverride.objects.create(
-            parent_event=self.event,
+        self.create_override(
+            original_start,
             title="Different",
             description="Changed",
             location="Room X",
-            start_time=original_start + timedelta(hours=1),
-            end_time=original_start + timedelta(hours=2),
-            original_start_time=original_start,
-            reminders_snapshot=[],
         )
         self.event.exception_dates = [original_start.date().isoformat()]
         self.event.save(update_fields=["exception_dates"])
@@ -133,16 +134,7 @@ class EventScopeMutationServiceTests(TestCase):
     def test_scope_following_update_splits_series_and_moves_future_data(self):
         """Test scope following update splits series and moves future data."""
         split_anchor = self.base_start + timedelta(days=4)
-        moved_override = EventOverride.objects.create(
-            parent_event=self.event,
-            title="Future Override",
-            description="",
-            location="",
-            start_time=split_anchor + timedelta(hours=1),
-            end_time=split_anchor + timedelta(hours=2),
-            original_start_time=split_anchor,
-            reminders_snapshot=[],
-        )
+        moved_override = self.create_override(split_anchor, title="Future Override")
         self.event.exception_dates = [
             (self.base_start + timedelta(days=1)).date().isoformat(),
             split_anchor.date().isoformat(),
@@ -170,16 +162,7 @@ class EventScopeMutationServiceTests(TestCase):
     def test_scope_following_delete_truncates_parent_and_cleans_future_data(self):
         """Test scope following delete truncates parent and cleans future data."""
         anchor = self.base_start + timedelta(days=3)
-        EventOverride.objects.create(
-            parent_event=self.event,
-            title="Future Override",
-            description="",
-            location="",
-            start_time=anchor + timedelta(hours=1),
-            end_time=anchor + timedelta(hours=2),
-            original_start_time=anchor,
-            reminders_snapshot=[],
-        )
+        self.create_override(anchor, title="Future Override")
         self.event.exception_dates = [
             (self.base_start + timedelta(days=1)).date().isoformat(),
             anchor.date().isoformat(),
@@ -204,14 +187,13 @@ class EventScopeMutationServiceTests(TestCase):
     def test_scope_all_update_detaches_non_aligned_override(self):
         """Test scope all update detaches non aligned override."""
         original_start = self.base_start + timedelta(days=2)
-        override = EventOverride.objects.create(
-            parent_event=self.event,
+        override = self.create_override(
+            original_start,
             title="Detached Override",
             description="Detached",
             location="Room X",
             start_time=original_start + timedelta(hours=4),
             end_time=original_start + timedelta(hours=5),
-            original_start_time=original_start,
             reminders_snapshot=[{"minutes_before": 5, "send_push": True}],
         )
         self.event.exception_dates = [original_start.date().isoformat()]
@@ -352,13 +334,7 @@ class EventScopeMutationServiceTests(TestCase):
         from core.services.event_scope_mutations import revert_override_instance
 
         now = self.base_start
-        EventOverride.objects.create(
-            parent_event=self.event,
-            original_start_time=now,
-            start_time=now + timedelta(hours=1),
-            end_time=now + timedelta(hours=2),
-            title="Override",
-        )
+        self.create_override(now, title="Override")
         self.event.exception_dates = [now.date().isoformat()]
         self.event.save()
 
@@ -386,8 +362,9 @@ class EventScopeMutationServiceTests(TestCase):
 
     def test_split_exception_dates_invalid(self):
         """Test split exception dates invalid."""
-        from core.services.event_scope_mutations import _split_exception_dates
         from datetime import date
+
+        from core.services.event_scope_mutations import _split_exception_dates
 
         past, future = _split_exception_dates(
             ["invalid-date", "2026-03-20"], date(2026, 3, 20)
@@ -441,8 +418,9 @@ class EventScopeMutationServiceTests(TestCase):
 
     def test_remove_exception_date_not_present(self):
         """Test remove exception date not present."""
-        from core.services.event_scope_mutations import _remove_exception_date
         from datetime import date
+
+        from core.services.event_scope_mutations import _remove_exception_date
 
         self.event.exception_dates = ["2026-03-19"]
         self.event.save()
@@ -459,15 +437,15 @@ class EventScopeMutationServiceTests(TestCase):
         _detach_non_aligned_overrides(self.event)  # Should not crash
 
     def test_scope_following_delete_past_cutoff(self):
-        """Test scope following delete past cutoff."""
         # Cutoff < start_time.date() -> delete event
+        """Test scope following delete past cutoff."""
         now = self.base_start
         apply_delete_scope(self.event, "following", now)
         self.assertFalse(Event.objects.filter(id=self.event.id).exists())
 
     def test_scope_following_update_past_cutoff(self):
-        """Test scope following update past cutoff."""
         # Cutoff < start_time.date() -> delete event
+        """Test scope following update past cutoff."""
         now = self.base_start
         child = apply_update_scope(self.event, {"title": "New Child"}, "following", now)
         self.assertFalse(Event.objects.filter(id=self.event.id).exists())

@@ -13,9 +13,20 @@ const dayLabels: readonly [number, string][] = [
   [7, "Sun"],
 ] as const;
 
+/**
+ * Builds a fallback weekly schedule using the provided day start and end times.
+ * @param start - Fallback day start in HH:MM format.
+ * @param end - Fallback day end in HH:MM format.
+ * @returns A seven-day schedule using the same hours every day.
+ */
 const buildDefaultSchedule = (start: string, end: string) =>
   dayLabels.map(([day]) => ({ day, start, end }));
 
+/**
+ * Parses an HH:MM time string into minutes since midnight.
+ * @param value - Time string to parse.
+ * @returns Minutes since midnight, or null if parsing fails.
+ */
 const toMinutes = (value: string): number | null => {
   const [hourRaw, minuteRaw] = value.split(":");
   const hour = Number.parseInt(hourRaw ?? "", 10);
@@ -45,6 +56,19 @@ const getScheduleMaxMinutes = (pref: Preference): number => {
 };
 
 /**
+ * Computes the widest schedulable day length from the user's weekly schedule.
+ * @param pref - The scheduling preferences to inspect.
+ * @returns The maximum available daily minutes across the current schedule.
+ */
+export const getAvailableSchedulingDayMaxMinutes = (pref: Preference | null): number => {
+  if (!pref) {
+    return 24 * 60;
+  }
+
+  return getScheduleMaxMinutes(pref);
+};
+
+/**
  * Computes the maximum number of minutes the user can schedule in a single day.
  * @param pref - The scheduling preferences to derive the daily cap from.
  * @returns The effective daily scheduling cap in minutes.
@@ -54,7 +78,7 @@ export const getSchedulingDayMaxMinutes = (pref: Preference | null): number => {
     return 24 * 60;
   }
 
-  const scheduleMaxMinutes = getScheduleMaxMinutes(pref);
+  const scheduleMaxMinutes = getAvailableSchedulingDayMaxMinutes(pref);
   if (pref.limit_max_hours === false) {
     return scheduleMaxMinutes;
   }

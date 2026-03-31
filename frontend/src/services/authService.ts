@@ -1,5 +1,5 @@
 import api from "@/services/api"
-import type { AuthResponse, User } from "@/types"
+import type { AuthResponse, User, DeleteResponse } from "@/types"
 
 // Create custom browser event, app is notified when user data changes
 export const AUTH_CHANGE_EVENT = "auth-change"
@@ -63,7 +63,7 @@ export const authStore = {
 // Backend API layer for authentication
 export const authService = {
   // Sends signup data to '/api/authentication/register/'
-  async register(payload: { username: string; email: string; password: string; password2: string; }) {
+  async register(payload: { username: string; email: string; password: string; password2: string; name: string; }) {
     const { data } = await api.post<AuthResponse>("/api/authentication/register/", payload)
 
     const token = getTokenFromResponse(data)
@@ -93,6 +93,14 @@ export const authService = {
     } finally {
       authStore.clear()
     }
+  },
+
+  //Deletes the user's account
+  async deleteAccount(password: string): Promise<string> {
+    const response = await api.delete<DeleteResponse>("/api/delete_account/", {
+      data: { password },
+    });
+    return response.data.message;
   },
 }
 /**

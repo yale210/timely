@@ -185,12 +185,14 @@ export const PomodoroProvider = ({ children }: PomodoroProviderProps) => {
 
   const setMode = useCallback((newMode: PomodoroMode) => {
     setViewingMode(newMode);
-
-    if (!isActive) {
-      setModeState(newMode);
-      synchroniseCountdownWithDuration(newMode);
+    if (newMode === mode) {
+      return;
     }
-  }, [isActive, synchroniseCountdownWithDuration]);
+
+    stopTimer();
+    setModeState(newMode);
+    synchroniseCountdownWithDuration(newMode);
+  }, [mode, stopTimer, synchroniseCountdownWithDuration]);
 
   const onTimerComplete = useCallback(async () => {
     stopTimer();
@@ -216,11 +218,10 @@ export const PomodoroProvider = ({ children }: PomodoroProviderProps) => {
 
   const handleExplicitModeHandover = useCallback(() => {
     if (viewingMode !== mode) {
-      stopTimer();
       setModeState(viewingMode);
       synchroniseCountdownWithDuration(viewingMode);
     }
-  }, [mode, stopTimer, synchroniseCountdownWithDuration, viewingMode]);
+  }, [mode, synchroniseCountdownWithDuration, viewingMode]);
 
   const startTimer = useCallback(() => {
     if (!hasAuth) {

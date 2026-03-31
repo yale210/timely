@@ -34,6 +34,10 @@ const mockedPomoService = pomoService as {
   recordSession: ReturnType<typeof vi.fn>;
 };
 
+vi.stubGlobal("Audio", vi.fn(() => ({
+  play: vi.fn().mockResolvedValue(undefined),
+})));
+
 const renderWithProvider = (ui: React.ReactNode) =>
   render(<PomodoroProvider>{ui}</PomodoroProvider>);
 

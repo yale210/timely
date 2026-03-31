@@ -1,6 +1,6 @@
 import { renderHook, act } from "@testing-library/react";
 import { vi, describe, it, expect, beforeEach } from "vitest";
-import { useBroadcastSubmission } from "@/hooks/admin/notifications/useAdminBroadcastForm/useBroadcastSubmission";
+import { useBroadcastSubmission } from "@/hooks/admin/notifications/useAdminBroadcastDelivery";
 import * as api from "@/api/notifications";
 
 vi.mock("@/api/notifications", () => ({

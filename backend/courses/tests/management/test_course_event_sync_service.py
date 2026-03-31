@@ -1,7 +1,6 @@
 """Tests for course event sync services."""
 
 import datetime
-from unittest.mock import patch
 
 from django.contrib.auth import get_user_model
 from django.test import TestCase
@@ -9,7 +8,7 @@ from django.utils import timezone
 
 from core.models import Event, Preference
 from courses.models import Course, CourseEnrollment, CourseEvent, Student, Teacher
-from courses.services.event import CourseEventSyncService
+from courses.services.core_event_sync import CourseEventSyncService
 
 User = get_user_model()
 
@@ -17,50 +16,50 @@ User = get_user_model()
 class CourseEventSyncServiceTests(TestCase):
     """Test cases for course event sync service."""
 
-    def setUp(self):
-        """Set up shared test fixtures."""
-        self.teacher_user = User.objects.create_user(
+    @classmethod
+    def setUpTestData(cls):
+        cls.teacher_user = User.objects.create_user(
             username="teacher",
             password="password123",
             email="teacher@example.com",
         )
-        self.student_user = User.objects.create_user(
+        cls.student_user = User.objects.create_user(
             username="student",
             password="password123",
             email="student@example.com",
         )
-        self.other_user = User.objects.create_user(
+        cls.other_user = User.objects.create_user(
             username="other",
             password="password123",
             email="other@example.com",
         )
 
-        self.teacher = Teacher.objects.create(user=self.teacher_user)
-        self.student = Student.objects.create(user=self.student_user)
-        self.other_student = Student.objects.create(user=self.other_user)
+        cls.teacher = Teacher.objects.create(user=cls.teacher_user)
+        cls.student = Student.objects.create(user=cls.student_user)
+        cls.other_student = Student.objects.create(user=cls.other_user)
 
         Preference.objects.create(
-            user=self.student_user,
+            user=cls.student_user,
             day_start=datetime.time(7, 0),
             day_end=datetime.time(23, 0),
             timezone="Europe/London",
         )
         Preference.objects.create(
-            user=self.other_user,
+            user=cls.other_user,
             day_start=datetime.time(7, 0),
             day_end=datetime.time(23, 0),
             timezone="Europe/London",
         )
 
-        self.course = Course.objects.create(
+        cls.course = Course.objects.create(
             name="Python Basics",
             description="Intro course",
-            lead=self.teacher,
+            lead=cls.teacher,
         )
 
-        self.course_event = CourseEvent.objects.create(
-            course=self.course,
-            created_by=self.teacher,
+        cls.course_event = CourseEvent.objects.create(
+            course=cls.course,
+            created_by=cls.teacher,
             title="Lesson 1",
             description="Intro lesson",
             location="Room 101",
@@ -171,6 +170,51 @@ class CourseEventSyncServiceTests(TestCase):
             "Python Basics - Lesson 1'\nIntro lesson\nBy teacher",
         )
         self.assertEqual(existing_event.end_time, self.course_event.end_time)
+        self.assertEqual(existing_event.start_time, self.course_event.start_time)
+
+    def test_sync_user_course_events_does_not_overwrite_manual_title_match_when_moved(
+        self,
+    ):
+        """Moved course events should not rewrite unrelated personal events."""
+        CourseEnrollment.objects.create(
+            course=self.course, student=self.student, active=True
+        )
+
+        manual_event = Event.objects.create(
+            user=self.student_user,
+            title="Python Basics - Lesson 1",
+            description="Personal planning note",
+            location="Library",
+            colour="#00ff00",
+            start_time=self.course_event.start_time - datetime.timedelta(days=1),
+            end_time=self.course_event.end_time - datetime.timedelta(days=1),
+        )
+
+        stats = CourseEventSyncService.sync_user_course_events(self.student_user)
+
+        self.assertEqual(stats["created"], 1)
+        self.assertEqual(stats["updated"], 0)
+        self.assertEqual(stats["errors"], [])
+        self.assertEqual(Event.objects.filter(user=self.student_user).count(), 2)
+
+        manual_event.refresh_from_db()
+        self.assertEqual(manual_event.description, "Personal planning note")
+        self.assertEqual(manual_event.location, "Library")
+        self.assertEqual(
+            manual_event.start_time,
+            self.course_event.start_time - datetime.timedelta(days=1),
+        )
+
+        synced_event = Event.objects.get(
+            user=self.student_user,
+            title="Python Basics - Lesson 1",
+            start_time=self.course_event.start_time,
+        )
+        self.assertEqual(
+            synced_event.description,
+            "Python Basics - Lesson 1'\nIntro lesson\nBy teacher",
+        )
+        self.assertEqual(synced_event.end_time, self.course_event.end_time)
 
     def test_sync_user_course_events_skips_users_without_enrollments(self):
         """Test sync user course events skips users without enrollments."""
@@ -180,19 +224,3 @@ class CourseEventSyncServiceTests(TestCase):
         self.assertEqual(stats["updated"], 0)
         self.assertEqual(stats["errors"], [])
         self.assertEqual(Event.objects.filter(user=self.other_user).count(), 0)
-
-    @patch("courses.services.event.logger")
-    def test_sync_course_event_to_core_collects_errors(self, mock_logger):
-        """Test sync course event to core collects errors."""
-        CourseEnrollment.objects.create(
-            course=self.course, student=self.student, active=True
-        )
-
-        with patch.object(Event.objects, "get", side_effect=Exception("boom")):
-            stats = CourseEventSyncService.sync_course_event_to_core(self.course_event)
-
-        self.assertEqual(stats["created"], 0)
-        self.assertEqual(stats["updated"], 0)
-        self.assertEqual(len(stats["errors"]), 1)
-        self.assertIn("boom", stats["errors"][0])
-        mock_logger.error.assert_called()

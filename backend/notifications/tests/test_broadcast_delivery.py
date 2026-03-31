@@ -10,11 +10,12 @@ from notifications.tasks.broadcast_delivery import (
     finalise_broadcast_delivery,
 )
 
-
 User = get_user_model()
 
 
 class BroadcastDeliveryTests(TestCase):
+    """Test cases for broadcast delivery."""
+
     def setUp(self):
         self.user = User.objects.create_user(
             username="recipient",
@@ -33,6 +34,7 @@ class BroadcastDeliveryTests(TestCase):
         )
 
     def test_determine_broadcast_status(self):
+        """Test determine broadcast status."""
         self.assertEqual(
             determine_broadcast_status(delivered_count=2, failed_count=0),
             BroadcastJob.Status.COMPLETED,
@@ -47,6 +49,7 @@ class BroadcastDeliveryTests(TestCase):
         )
 
     def test_complete_broadcast_without_recipients_marks_failure(self):
+        """Test complete broadcast without recipients marks failure."""
         complete_broadcast_without_recipients(self.broadcast)
 
         self.broadcast.refresh_from_db()
@@ -60,6 +63,7 @@ class BroadcastDeliveryTests(TestCase):
         self.assertIsNotNone(self.broadcast.completed_at)
 
     def test_build_broadcast_websocket_payload_uses_notification_data(self):
+        """Test build broadcast websocket payload uses notification data."""
         notification = Notification.objects.create(
             recipient=self.user,
             title="Hello",
@@ -79,6 +83,7 @@ class BroadcastDeliveryTests(TestCase):
         self.assertEqual(payload["unread_count"], 3)
 
     def test_build_broadcast_websocket_payload_falls_back_without_notification(self):
+        """Test build broadcast websocket payload falls back without notification."""
         payload = build_broadcast_websocket_payload(
             notification=None,
             sender_username=None,
@@ -88,6 +93,7 @@ class BroadcastDeliveryTests(TestCase):
         self.assertEqual(payload, {"type": "unread_count", "count": 4})
 
     def test_finalise_broadcast_delivery_updates_job_and_recipients(self):
+        """Test finalise broadcast delivery updates job and recipients."""
         notification = Notification.objects.create(
             recipient=self.user,
             title="Done",

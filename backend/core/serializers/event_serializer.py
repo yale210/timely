@@ -6,8 +6,8 @@ from django.core.exceptions import ValidationError as DjangoValidationError
 from django.db import transaction
 from django.utils import timezone
 from rest_framework import serializers
-from core.models import Event, EventReminder
-from core.models import Category
+
+from core.models import Category, Event, EventReminder
 from core.serializers.category_serializer import CategorySerializer
 
 
@@ -15,8 +15,14 @@ class EventReminderSerializer(serializers.ModelSerializer):
     """Serializer for the EventReminder model."""
 
     class Meta:
+        """Configure reminder fields used when events expose nested reminders.
+
+        The API only persists the identifier, push toggle, and relative offset
+        because reminder timing is derived from the parent event window.
+        """
+
         model = EventReminder
-        fields = ["id", "send_push", "send_email", "minutes_before"]
+        fields = ["id", "send_push", "minutes_before"]
 
 
 class ExpandedEventReminderSerializer(serializers.Serializer):
@@ -24,7 +30,6 @@ class ExpandedEventReminderSerializer(serializers.Serializer):
 
     id = serializers.IntegerField(required=False)
     send_push = serializers.BooleanField(required=False, default=False)
-    send_email = serializers.BooleanField(required=False, default=False)
     minutes_before = serializers.IntegerField(min_value=0)
 
 
@@ -42,6 +47,13 @@ class EventSerializer(serializers.ModelSerializer):
     )
 
     class Meta:
+        """Define the writable event payload shape for calendar edits.
+
+        The serializer exposes the core scheduling fields plus nested reminders
+        and category links so clients can create or edit recurring events in one
+        request without guessing which relations are writable.
+        """
+
         model = Event
         fields = [
             "id",
@@ -103,7 +115,6 @@ class EventSerializer(serializers.ModelSerializer):
 
     def _validate_reminders(self, reminders_data, attributes):
         """Validate reminder count and trigger times for the incoming payload."""
-
         # Validate max reminders
         self._validate_max_reminders(reminders_data)
 
@@ -119,8 +130,12 @@ class EventSerializer(serializers.ModelSerializer):
                 self._validate_trigger_time(trigger_at, minutes_before)
 
     def _build_event_for_validation(self, attributes):
-        """Build a temporary event instance so model validation can run safely."""
+        """Build a temporary event instance so model validation can run safely.
 
+        Returns:
+            Event: A temporary event instance for validation.
+
+        """
         attrs_copy = attributes.copy()
         attrs_copy.pop("reminders", None)
         attrs_copy.pop("categories", None)
@@ -191,8 +206,12 @@ class EventSerializer(serializers.ModelSerializer):
         return instance
 
     def _validate_max_reminders(self, reminders_data):
-        """Enforce the maximum number of reminders allowed per event."""
+        """Enforce the maximum number of reminders allowed per event.
 
+        Raises:
+            ValidationError: If too many reminders are provided.
+
+        """
         if len(reminders_data) > MAX_REMINDERS_PER_EVENT:
             raise serializers.ValidationError(
                 {
@@ -201,8 +220,12 @@ class EventSerializer(serializers.ModelSerializer):
             )
 
     def _validate_trigger_time(self, trigger_at, minutes_before):
-        """Reject reminders that would fire in the past."""
+        """Reject reminders that would fire in the past.
 
+        Raises:
+            ValidationError: If a reminder would trigger in the past.
+
+        """
         now = timezone.now()
         if trigger_at <= now:
             raise serializers.ValidationError(
@@ -212,8 +235,12 @@ class EventSerializer(serializers.ModelSerializer):
             )
 
     def _clean_event(self, event):
-        """Run model validation and translate Django errors into DRF errors."""
+        """Run model validation and translate Django errors into DRF errors.
 
+        Raises:
+            ValidationError: If model validation fails.
+
+        """
         try:
             event.clean()
         except DjangoValidationError as e:
@@ -228,6 +255,12 @@ class EventResponseSerializer(serializers.ModelSerializer):
     split_from_event_id = serializers.IntegerField(read_only=True)
 
     class Meta:
+        """Describe the response payload returned after event mutations.
+
+        The view layer uses this structure when returning persisted event data
+        together with nested relations and any split-series metadata.
+        """
+
         model = Event
         fields = [
             "id",

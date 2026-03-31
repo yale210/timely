@@ -2,6 +2,7 @@ import { fireEvent, render, screen, waitFor, within } from "@testing-library/rea
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { ReactNode } from "react";
 import PreferencesSection from "@/components/settings/PreferencesSection";
+import OverridesSection from "@/components/settings/OverridesSection";
 import * as specialDatesService from "@/services/specialDatesService";
 import type { Preference } from "@/types";
 
@@ -46,7 +47,6 @@ describe("PreferencesSection", () => {
   });
 
   it("loads overrides and can add and remove a special date", async () => {
-    const onPrefChange = vi.fn();
     vi.mocked(specialDatesService.getSpecialDates).mockResolvedValue([
       { id: 1, date: "2026-03-20", text: "Holiday" },
     ]);
@@ -58,15 +58,7 @@ describe("PreferencesSection", () => {
     vi.mocked(specialDatesService.deleteSpecialDate).mockResolvedValue(undefined);
 
     render(
-      <PreferencesSection
-        pref={preference}
-        prefLoading={false}
-        prefSaving={false}
-        prefError={null}
-        fieldErrors={{}}
-        onPrefChange={onPrefChange}
-        onSave={vi.fn()}
-      />,
+      <OverridesSection />,
     );
 
     expect(await screen.findByText("2026-03-20")).toBeInTheDocument();
@@ -80,24 +72,21 @@ describe("PreferencesSection", () => {
     });
     fireEvent.click(screen.getByRole("button", { name: "Add" }));
 
-    await waitFor(() =>
-      expect(specialDatesService.createSpecialDate).toHaveBeenCalledWith({
-        date: "2026-03-22",
-        text: "Exam",
-      }),
-    );
+    await waitFor(() => expect(specialDatesService.createSpecialDate).toHaveBeenCalledTimes(1));
+    expect(specialDatesService.createSpecialDate).toHaveBeenCalledWith({
+      date: "2026-03-22",
+      text: "Exam",
+    });
     expect(await screen.findByText("2026-03-22")).toBeInTheDocument();
 
     fireEvent.click(screen.getAllByRole("button", { name: "Remove date override" })[0]);
 
-    await waitFor(() =>
-      expect(specialDatesService.deleteSpecialDate).toHaveBeenCalledWith(1),
-    );
+    await waitFor(() => expect(specialDatesService.deleteSpecialDate).toHaveBeenCalledTimes(1));
+    expect(specialDatesService.deleteSpecialDate).toHaveBeenCalledWith(1);
   });
 
   it("switches to per-day scheduling and toggles a day off", () => {
     const onPrefChange = vi.fn();
-    vi.mocked(specialDatesService.getSpecialDates).mockResolvedValue([]);
 
     render(
       <PreferencesSection

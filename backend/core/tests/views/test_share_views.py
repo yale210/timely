@@ -48,7 +48,7 @@ class ShareSendViewTests(APITestCase):
             self.url, {"Receiver": "receiver", "Event-ID": "   "}
         )
 
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(response.status_code, 400)
         self.assertEqual(
             response.data,
             {"message": "Please provide a username and event ID"},
@@ -63,10 +63,10 @@ class ShareSendViewTests(APITestCase):
             {"Receiver": self.receiver.username, "Event-ID": "enope"},
         )
 
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(response.status_code, 400)
         self.assertEqual(
             response.data,
-            {"message": "Please provide a valid username and event ID"},
+            {"message": "Please provide a valid event ID"},
         )
 
     def test_rejects_event_not_owned_by_sender(self):
@@ -84,7 +84,7 @@ class ShareSendViewTests(APITestCase):
             {"Receiver": self.receiver.username, "Event-ID": other_event.id},
         )
 
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(response.status_code, 400)
         self.assertEqual(
             response.data,
             {"message": "Please provide an event ID that you own"},
@@ -99,7 +99,7 @@ class ShareSendViewTests(APITestCase):
             {"Receiver": "ghost", "Event-ID": self.event.id},
         )
 
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(response.status_code, 400)
         self.assertEqual(
             response.data,
             {"message": "Please provide a username that exists"},
@@ -140,7 +140,7 @@ class ShareSendViewTests(APITestCase):
             {"Receiver": self.receiver.username, "Event-ID": self.event.id},
         )
 
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(response.status_code, 400)
         self.assertEqual(
             response.data,
             {
@@ -214,7 +214,7 @@ class ShareAcceptViewTests(APITestCase):
 
         response = self.client.post(self.url, {"Event-ID": self.event.id})
 
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.status_code, 400)
         self.assertEqual(
             response.data,
             {"error": "Please provide a decision and event ID"},
@@ -226,7 +226,7 @@ class ShareAcceptViewTests(APITestCase):
 
         response = self.client.post(self.url, {"Decision": "accept", "Event-ID": 99999})
 
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.status_code, 400)
         self.assertEqual(
             response.data,
             {"error": "Event does not exist, likely deleted"},
@@ -241,7 +241,7 @@ class ShareAcceptViewTests(APITestCase):
             {"Decision": "accept", "Event-ID": self.event.id},
         )
 
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.status_code, 400)
         self.assertEqual(response.data, {"error": "This event is not shared with you"})
 
     def test_accept_creates_event_copy_and_deletes_pending_share(self):

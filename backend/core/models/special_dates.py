@@ -1,12 +1,13 @@
 """Special dates model definitions."""
 
-from django.db import models
 from django.conf import settings
+from django.db import models
 from holidays.countries.united_kingdom import UnitedKingdom
 
 
 class SpecialDates(models.Model):
     """This model allows users to create special dates which can be used to help customise scheduling.
+
     An example could be a birthday, wedding, or any other special occasion.
     """
 

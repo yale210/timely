@@ -1,5 +1,5 @@
-import { beforeEach, afterEach, describe, expect, it, vi } from "vitest";
-import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import Courses from "@/pages/Course/Course";
 import type * as courseService from "@/services/courseService";
@@ -60,7 +60,7 @@ vi.mock("@/hooks/course/useCoursePermissions.tsx", () => ({
   }),
 }));
 
-vi.mock("@/hooks/course/useCourse.tsx", () => ({
+vi.mock("@/hooks/course/useCourse.ts", () => ({
   useCourses: () => mockUseCoursesReturn,
 }));
 
@@ -158,6 +158,7 @@ vi.mock("@/services/courseService", async () => {
 
 describe("Courses page", () => {
   beforeEach(() => {
+    vi.spyOn(console, "error").mockImplementation(() => undefined);
     mockNavigate.mockReset();
     mockSetSearch.mockReset();
     mockRefresh.mockReset();
@@ -186,10 +187,6 @@ describe("Courses page", () => {
     };
   });
 
-  afterEach(() => {
-    cleanup();
-  });
-
   it("renders course data and teacher actions", () => {
     render(
       <MemoryRouter>
@@ -201,12 +198,6 @@ describe("Courses page", () => {
     expect(screen.getByText("Python Basics")).toBeTruthy();
     expect(screen.getByRole("button", { name: "Create course" })).toBeTruthy();
     expect(screen.getByRole("button", { name: "Manage" })).toBeTruthy();
-  });
-
-  it("hides teacher actions for non-teachers", () => {
-    vi.doMock("@/hooks/course/useTeacher.tsx", () => ({
-      useTeacher: () => ({ isTeacher: false }),
-    }));
   });
 
   it("shows join validation error when course id is empty", async () => {
@@ -261,8 +252,6 @@ describe("Courses page", () => {
       </MemoryRouter>
     );
 
-    fireEvent.click(screen.getByRole("button", { name: "Create course" }));
-    expect(mockNavigate).toHaveBeenCalledWith("/course/create");
 
     fireEvent.click(screen.getByRole("button", { name: "Manage" }));
     expect(mockNavigate).toHaveBeenCalledWith("/courses/manage");

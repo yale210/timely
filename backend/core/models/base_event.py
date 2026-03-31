@@ -17,6 +17,8 @@ class BaseEventModel(models.Model):
     last_edited = models.DateTimeField(default=now)
 
     class Meta:
+        """Mark the model as abstract so subclasses inherit shared event fields."""
+
         abstract = True
 
     def clean(self):

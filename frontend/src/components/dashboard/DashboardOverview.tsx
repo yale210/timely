@@ -1,209 +1,22 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import type { CSSProperties } from "react";
 import moment from "moment";
-import { Link } from "react-router-dom";
-import MiniCalendarPreview from "@/components/dashboard/MiniCalendarPreview";
+import DashboardAgendaGrid from "@/components/dashboard/DashboardAgendaGrid";
+import DashboardOverviewHeader from "@/components/dashboard/DashboardOverviewHeader";
+import DashboardStatsGrid from "@/components/dashboard/DashboardStatsGrid";
+import {
+  type DashboardOverviewProps,
+  type OverviewPeriod,
+  type ProfileStats,
+} from "@/components/dashboard/dashboardOverviewTypes";
+import { MAX_UPCOMING_TASKS } from "@/components/dashboard/dashboardOverviewUtils";
 import * as taskService from "@/services/taskService";
 import { getMyProfile } from "@/services/profileService";
-import type { Event, Task, WeeklyStats } from "@/types";
-import { getOverrideColour, hexToRgba } from "@/utils/colorUtils";
+import type { Task, WeeklyStats } from "@/types";
 import { emitXpGained } from "@/utils/xpEvents";
 import completeSoundUrl from "@/assets/sounds/task-complete.mp3";
 import { XP_GAINED_EVENT } from "@/utils/xpEvents";
 import { emitLevelup } from "@/utils/levelUpEvent";
-import { formatDateTimeInTimezone, useUserTimezone } from "@/utils/userTimezone";
-
-interface DashboardOverviewProps {
-  tasks: Task[];
-  events: Event[];
-  weeklyStats: WeeklyStats | null;
-}
-
-type OverviewPeriod = "daily" | "weekly" | "monthly" | "yearly" | "all_time";
-
-const WeeklyStatCard = ({
-  title,
-  value,
-  subtitle,
-  className,
-  icon,
-  iconClassName,
-  valueClassName,
-}: {
-  title: string;
-  value: string;
-  subtitle?: string;
-  className?: string;
-  icon: string;
-  iconClassName: string;
-  valueClassName?: string;
-}) => (
-  <div className={`flex h-full flex-col rounded-xl p-5 shadow-sm ring-1 ring-gray-900/5 ${className ?? "bg-white"}`}>
-    <div className="flex items-center justify-between gap-3">
-      <p className="min-w-0 text-xs font-semibold uppercase tracking-[0.18em] text-gray-500">
-        {title}
-      </p>
-      <span
-        aria-hidden="true"
-        className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl ${iconClassName}`}
-      >
-        <span className="material-icons block text-xl leading-none">{icon}</span>
-      </span>
-    </div>
-    <div className={`mt-5 text-[clamp(1.8rem,2.3vw,2.4rem)] font-semibold leading-[1.05] tracking-tight text-gray-900 ${valueClassName ?? ""}`}>
-      {value}
-    </div>
-    {subtitle ? <p className="mt-2 text-sm text-gray-500">{subtitle}</p> : null}
-  </div>
-);
-
-const overviewIconClassName = "bg-cyan-100 text-cyan-700";
-
-const MAX_UPCOMING_TASKS = 4;
-const UPCOMING_TASK_ROW_HEIGHT = 52;
-const UPCOMING_TASK_ROW_GAP = 12;
-const getImportanceLabel = (importance: number) => {
-  if (importance >= 9) return "Critical";
-  if (importance >= 7) return "High";
-  if (importance >= 5) return "Medium";
-  if (importance >= 3) return "Low";
-  return "Very low";
-};
-
-const formatDueDate = (isoString: string) => {
-  return formatDateTimeInTimezone(isoString, {
-    month: "short",
-    day: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
-};
-
-const getRequiredExp = (level: number) => {
-  const nextLevel = Math.max(1, level + 1);
-  return Math.round(100 * nextLevel ** 1.5);
-};
-
-const UpcomingTasksCard = ({
-  tasks,
-  checkedOverrides,
-  onToggle,
-  periodLabel,
-}: {
-  tasks: Task[];
-  checkedOverrides: Record<number, boolean | undefined>;
-  onToggle: (task: Task, nextChecked: boolean) => void;
-  periodLabel: string;
-}) => (
-  <div className="flex h-full flex-col rounded-lg bg-white p-6 shadow-sm ring-1 ring-gray-900/5">
-    <div className="flex items-center justify-between">
-      <p className="text-lg font-semibold text-gray-900">Upcoming Tasks</p>
-      <Link
-        to="/tasks"
-        className="text-sm font-semibold text-cyan-700 hover:text-cyan-800"
-      >
-        See all
-      </Link>
-    </div>
-    <ul
-      className="mt-4 flex flex-col gap-3 overflow-hidden text-base text-gray-900"
-      style={{
-        height: `calc(${MAX_UPCOMING_TASKS} * ${UPCOMING_TASK_ROW_HEIGHT}px + ${MAX_UPCOMING_TASKS - 1} * ${UPCOMING_TASK_ROW_GAP}px)`,
-      }}
-    >
-      {tasks.length > 0 ? tasks.map((task) => {
-        const isChecked = checkedOverrides[task.id] ?? task.completed;
-        const overrideColour = getOverrideColour(task.categories);
-        const baseColour = overrideColour ?? "#3b82f6";
-        const backgroundColour = overrideColour ? hexToRgba(baseColour, 0.12) : hexToRgba(baseColour, 0.08);
-        return (
-          <li
-            key={task.id}
-            className="flex h-[52px] items-center gap-3 rounded-md border px-3"
-            style={{
-              borderColor: baseColour,
-              backgroundColor: backgroundColour,
-              boxShadow: "0 0 0 1px rgba(0,0,0,0.02)",
-            }}
-          >
-            <label
-              className="flex h-full w-full cursor-pointer items-center gap-3"
-              htmlFor={`upcoming-task-${task.id}`}
-            >
-              <input
-                id={`upcoming-task-${task.id}`}
-                type="checkbox"
-                className="task-circle-checkbox text-cyan-600"
-                checked={isChecked}
-                onChange={(event) => {
-                  void onToggle(task, event.target.checked);
-                }}
-              />
-              <span className="flex min-w-0 flex-col">
-                <span className={`text-base font-medium leading-6 truncate ${isChecked ? "text-gray-400 line-through" : "text-gray-900"}`}>
-                  {task.title}
-                </span>
-                <span className="mt-0 flex flex-wrap items-center gap-2 text-xs text-gray-500">
-                  <span className="flex items-center">
-                    <span className="material-icons mr-1" style={{ fontSize: "22px" }}>event</span>
-                    {formatDueDate(task.deadline)}
-                  </span>
-                  <span className="flex items-center text-xs text-gray-500">
-                    <span className="material-icons mr-1" style={{ fontSize: "22px" }}>schedule</span>
-                    {task.estimated_minutes}m
-                  </span>
-                  <span className="flex items-center text-xs text-gray-500">
-                    <span className="material-icons mr-1" style={{ fontSize: "22px" }}>priority_high</span>
-                    {getImportanceLabel(task.importance)}
-                  </span>
-                </span>
-              </span>
-            </label>
-          </li>
-        );
-      }) : (
-        <li className="flex h-full items-center justify-center text-lg text-gray-400">
-          No Upcoming Tasks {periodLabel}
-        </li>
-      )}
-    </ul>
-  </div>
-);
-
-const XpProgressCard = ({ profileStats }: { profileStats: { exp: number; level: number } | null }) => {
-  const level = profileStats?.level ?? 0;
-  const exp = profileStats?.exp ?? 0;
-  const requiredExp = getRequiredExp(level);
-  const progress = requiredExp > 0 ? Math.min(100, (exp / requiredExp) * 100) : 0;
-  const progressStyle = { "--xp-progress": `${progress}%` } as CSSProperties;
-
-  if (!profileStats) {
-    return (
-      <div className="rounded-lg bg-white p-6 shadow-sm ring-1 ring-gray-900/5">
-        <p className="text-lg font-semibold text-gray-900">Experience</p>
-        <p className="mt-2 text-sm text-gray-500">Loading XP...</p>
-      </div>
-    );
-  }
-
-  return (
-    <div className="rounded-lg bg-white p-6 shadow-sm ring-1 ring-gray-900/5">
-      <div className="flex items-center justify-between">
-        <p className="text-lg font-semibold text-gray-900">Experience</p>
-        <span className="text-sm font-semibold text-cyan-700">Level {level}</span>
-      </div>
-      <p className="mt-2 text-sm text-gray-500">
-        {exp} / {requiredExp} XP to next level
-      </p>
-      <div className="mt-4 h-3 w-full rounded-full bg-gray-100">
-        <div
-          className="xp-progress-fill h-3 rounded-full bg-cyan-500"
-          style={progressStyle}
-        />
-      </div>
-    </div>
-  );
-};
+import { useUserTimezone } from "@/utils/userTimezone";
 
 /**
  * Renders the dashboard header, stat cards, and calendar shortcut.
@@ -224,7 +37,7 @@ const DashboardOverview = ({
   );
   const [checkedOverrides, setCheckedOverrides] = useState<Record<number, boolean | undefined>>({});
   const [selectedPeriod, setSelectedPeriod] = useState<OverviewPeriod>("weekly");
-  const [profileStats, setProfileStats] = useState<{ exp: number; level: number } | null>(null);
+  const [profileStats, setProfileStats] = useState<ProfileStats | null>(null);
 
   const periodLabel = useMemo(() => {
     switch (selectedPeriod) {
@@ -454,15 +267,14 @@ const DashboardOverview = ({
     }
     void (async () => {
       try {
-        //await taskService.updateTask(task.id, { completed: nextChecked });
-        const response = await taskService.updateTask(task.id, {completed: nextChecked} )
+        const response = await taskService.updateTask(task.id, { completed: nextChecked });
         if (nextChecked && !task.completed) {
           const expDelta = 10 + 2 * task.importance;
           emitXpGained(expDelta);
         }
 
-        if (response.level_up && response.new_level != null){
-          emitLevelup(response.new_level)
+        if (response.level_up && response.new_level != null) {
+          emitLevelup(response.new_level);
         }
       } catch (error) {
         console.error(error);
@@ -472,132 +284,33 @@ const DashboardOverview = ({
   };
 
   return (
-  <main className="h-full min-h-0 w-full px-6 pt-4 pb-0 lg:px-10">
-    <header className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-      <div className="flex flex-wrap items-center gap-3">
-        <h1 className="text-2xl font-semibold text-black">
-          {periodLabel} Overview
-        </h1>
-      </div>
-      <div className="flex items-center gap-2">
-        <label className="text-sm text-gray-500" htmlFor="overview-period">
-          Period
-        </label>
-        <select
-          id="overview-period"
-          value={selectedPeriod}
-          onChange={(event) => setSelectedPeriod(event.target.value as OverviewPeriod)}
-          className="rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 shadow-sm focus:border-primary focus:ring-primary"
-        >
-          <option value="daily">Daily</option>
-          <option value="weekly">Weekly</option>
-          <option value="monthly">Monthly</option>
-          <option value="yearly">Yearly</option>
-          <option value="all_time">All-Time</option>
-        </select>
-      </div>
-    </header>
-
-    <section className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-5">
-      <div className="rounded-xl bg-white p-5 shadow-sm ring-1 ring-gray-900/5">
-        <div className="flex items-center justify-between gap-3">
-          <p className="min-w-0 text-xs font-semibold uppercase tracking-[0.18em] text-gray-500">
-            {periodLabel} Progress
-          </p>
-          <span
-            aria-hidden="true"
-            className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl ${overviewIconClassName}`}
-          >
-            <span className="material-icons block text-xl leading-none">track_changes</span>
-          </span>
-        </div>
-        <div className="mt-5 text-[clamp(1.8rem,2.3vw,2.4rem)] font-semibold leading-none tracking-tight text-gray-900">
-          {derivedStats ? `${derivedStats.completion_percentage}%` : "Loading..."}
-        </div>
-        <p className="mt-2 text-sm text-gray-500">
-          {derivedStats
-            ? `${derivedStats.completed_tasks}/${derivedStats.total_tasks} tasks completed`
-            : "Loading..."}
-        </p>
-        <div className="mt-5 h-3 w-full rounded-full bg-gray-100">
-          <div
-            className="h-3 rounded-full bg-cyan-500 transition-all"
-            style={{
-              width: derivedStats ? `${Math.min(100, derivedStats.completion_percentage)}%` : "0%",
-            }}
-          />
-        </div>
-      </div>
-      <WeeklyStatCard
-        title="Time Planned"
-        value={minutesPlannedText}
-        subtitle={derivedStats ? "Planned this period" : undefined}
-        icon="schedule"
-        iconClassName={overviewIconClassName}
+    <main className="h-full min-h-0 w-full px-6 pt-4 pb-6 lg:px-10">
+      <DashboardOverviewHeader
+        periodLabel={periodLabel}
+        selectedPeriod={selectedPeriod}
+        onPeriodChange={setSelectedPeriod}
       />
-      <WeeklyStatCard
-        title="Daily Averages"
-        value={averageCompletedPerDayText}
-        subtitle={averageTaskDurationText}
-        icon="equalizer"
-        iconClassName={overviewIconClassName}
-        valueClassName="text-[clamp(1.65rem,2vw,2.15rem)]"
+      <DashboardStatsGrid
+        derivedStats={derivedStats}
+        periodLabel={periodLabel}
+        minutesPlannedText={minutesPlannedText}
+        averageCompletedPerDayText={averageCompletedPerDayText}
+        averageTaskDurationText={averageTaskDurationText}
+        overdueCount={overdueCount}
+        overdueToneClass={overdueToneClass}
+        streakCount={streakCount}
+        streakToneClass={streakToneClass}
       />
-      <WeeklyStatCard
-        title="Overdue Tasks"
-        value={String(overdueCount)}
-        subtitle="Past deadline"
-        className={overdueToneClass}
-        icon="warning_amber"
-        iconClassName={overviewIconClassName}
+      <DashboardAgendaGrid
+        tasks={tasks}
+        events={events}
+        recentTasks={recentTasks}
+        checkedOverrides={checkedOverrides}
+        periodLabel={periodEmptyLabel}
+        profileStats={profileStats}
+        onToggleTask={handleToggleTask}
       />
-      <WeeklyStatCard
-        title="Streak"
-        value={`${streakCount} day${streakCount === 1 ? "" : "s"}`}
-        subtitle="Consecutive days completed"
-        className={streakToneClass}
-        icon="local_fire_department"
-        iconClassName={overviewIconClassName}
-      />
-    </section>
-
-    <section className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-5 items-stretch">
-      <section className="lg:col-span-3 min-h-[580px]">
-        <Link
-          to="/calendar"
-          className="flex h-full w-full flex-col rounded-lg bg-white p-6 shadow-sm ring-1 ring-gray-900/5 transition hover:bg-gray-50 hover:ring-gray-300"
-          aria-label="Open calendar page"
-        >
-          <div className="flex items-center justify-between">
-            <div>
-              <h2 className="text-lg font-semibold text-gray-900">Weekly Agenda</h2>
-              <p className="mt-1 text-sm text-gray-500">
-                Your week at a glance. Click to open full calendar.
-              </p>
-            </div>
-            <span className="material-icons text-2xl text-gray-500">calendar_view_week</span>
-          </div>
-          <div className="mt-4 flex-1 overflow-hidden rounded-md border border-gray-200">
-            <div className="h-full w-full min-h-0">
-              <MiniCalendarPreview tasks={tasks} events={events} />
-            </div>
-          </div>
-        </Link>
-      </section>
-
-      <section className="lg:col-span-2">
-        <div className="flex h-full flex-col gap-6">
-          <UpcomingTasksCard
-            tasks={recentTasks}
-            checkedOverrides={checkedOverrides}
-            onToggle={handleToggleTask}
-            periodLabel={periodEmptyLabel}
-          />
-          <XpProgressCard profileStats={profileStats} />
-        </div>
-      </section>
-    </section>
-  </main>
+    </main>
   );
 };
 

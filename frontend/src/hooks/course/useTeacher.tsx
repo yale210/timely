@@ -1,96 +1,54 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { authStore, AUTH_CHANGE_EVENT } from "@/services/authService";
 import { getCurrentTeacher } from "@/services/courseService";
 import type { Teacher } from "@/types/teacher";
 
 interface UseTeacherState {
   teacher: Teacher | null;
-  isTeacher: boolean;
   loading: boolean;
   error: string | null;
 }
 
+interface UseTeacherResult extends UseTeacherState {
+  isTeacher : boolean;
+  reload?: () => Promise<void>;
+}
+
+const noTokenState = () => ({teacher: null, loading: false, error: null})
+const successState = (teacher : Teacher | null) => ({teacher, loading : false, error: null})
+const errorState = (e: unknown) => ({teacher: null, loading: false, error : e instanceof Error && e.message? e.message : "you are not registered as a teacher"})
+
 /**
  * Tracks whether the current authenticated user is registered as a teacher.
  */
-export function useTeacher() {
+export function useTeacher(): UseTeacherResult {
   const [state, setState] = useState<UseTeacherState>({
     teacher: null,
-    isTeacher: false,
     loading: true,
     error: null,
   });
 
-  useEffect(() => {
-    let cancelled = false;
-    const controller = new AbortController();
+  const loadTeacher = useCallback(async () => {
+    const token = authStore.getToken();
 
-    const loadTeacher = async () => {
-      const token = authStore.getToken();
+    if(!token) {setState(noTokenState()); return};
+    setState({teacher: null, loading: true, error: null})
 
-      if (!token) {
-        if (cancelled) return;
-
-        setState({
-          teacher: null,
-          isTeacher: false,
-          loading: false,
-          error: null,
-        });
-        return;
-      }
-
-      setState((prev) => ({
-        ...prev,
-        teacher: null,
-        isTeacher: false,
-        loading: true,
-        error: null,
-      }));
-
-      try {
-        const teacher = await getCurrentTeacher();
-
-        if (cancelled || controller.signal.aborted) return;
-
-        setState({
-          teacher,
-          isTeacher: true,
-          loading: false,
-          error: null,
-        });
-      } catch (error: unknown) {
-        if (cancelled || controller.signal.aborted) return;
-
-        const message =
-          error instanceof Error && error.message
-            ? error.message
-            : "You are not registered as an active teacher.";
-
-        setState({
-          teacher: null,
-          isTeacher: false,
-          loading: false,
-          error: message,
-        });
-      }
-    };
-
-    void loadTeacher();
-
-    const handleAuthChange = () => {
-      void loadTeacher();
-    };
-
-    window.addEventListener(AUTH_CHANGE_EVENT, handleAuthChange);
-
-    return () => {
-      cancelled = true;
-      controller.abort();
-      window.removeEventListener(AUTH_CHANGE_EVENT, handleAuthChange);
-    };
+    try {
+      const teacher = await getCurrentTeacher();
+      setState(successState(teacher))
+    } catch (error: unknown) {
+      setState(errorState(error));
+    }
   }, []);
 
-  return state;
-}
+  useEffect(() => {
+    queueMicrotask(() => void loadTeacher());
+    const handler = () => void loadTeacher();
+    window.addEventListener(AUTH_CHANGE_EVENT, handler);
 
+    return () => { window.removeEventListener(AUTH_CHANGE_EVENT, handler); };
+  }, [loadTeacher]);
+
+  return {  ...state, isTeacher: state.teacher !== null, reload: loadTeacher,};
+}

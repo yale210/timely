@@ -1,7 +1,6 @@
 """Tests for scheduler.engine.availability."""
 
 from datetime import date, datetime, time, timedelta
-from types import SimpleNamespace
 from unittest.mock import patch
 
 from django.contrib.auth import get_user_model
@@ -22,7 +21,6 @@ class FakeScheduler(SchedulerAvailabilityMixin, SchedulerCategoryMixin):
         self.scheduled_tasks = []
         self._scheduled_task_segments = []
         self._scheduled_blocks = []
-        self.commutes = []
         self.event_slots = []
 
     def _aware(self, dt):
@@ -56,7 +54,7 @@ class FakeScheduler(SchedulerAvailabilityMixin, SchedulerCategoryMixin):
 
 
 class SchedulerAvailabilityMixinTests(TestCase):
-    """Test availability calculations and commute handling."""
+    """Test availability calculations."""
 
     def setUp(self):
         self.user = get_user_model().objects.create_user(
@@ -91,47 +89,41 @@ class SchedulerAvailabilityMixinTests(TestCase):
         )
         return task
 
-    def test_commute_slots_and_application_rules(self):
-        matching_day = SimpleNamespace(day=5)
-        non_matching_day = SimpleNamespace(day=2)
-        matching_commute = SimpleNamespace(
-            commute_start=time(8, 0),
-            commute_end=time(8, 30),
-            day_of_week=SimpleNamespace(all=lambda: [matching_day]),
+    def test_get_occupied_slots_combines_events_tasks_and_manual_blocks(self):
+        """Test get occupied slots combines events tasks and manual blocks."""
+        self.scheduler.event_slots = [
+            (
+                make_aware(datetime.combine(self.target_date, time(8, 0))),
+                make_aware(datetime.combine(self.target_date, time(8, 30))),
+            )
+        ]
+        task = self._task(
+            "Occupied task",
+            allocation=[
+                {
+                    "start": make_aware(
+                        datetime.combine(self.target_date, time(9, 0))
+                    ).isoformat(),
+                    "end": make_aware(
+                        datetime.combine(self.target_date, time(9, 30))
+                    ).isoformat(),
+                }
+            ],
         )
-        non_matching_commute = SimpleNamespace(
-            commute_start=time(9, 0),
-            commute_end=time(9, 30),
-            day_of_week=SimpleNamespace(all=lambda: [non_matching_day]),
-        )
-        always_commute = SimpleNamespace(
-            commute_start=time(10, 0),
-            commute_end=time(10, 15),
-        )
-        self.scheduler.commutes = [
-            matching_commute,
-            non_matching_commute,
-            always_commute,
+        self.scheduler.scheduled_tasks = [task]
+        self.scheduler._scheduled_blocks = [
+            (
+                make_aware(datetime.combine(self.target_date, time(10, 0))),
+                make_aware(datetime.combine(self.target_date, time(10, 30))),
+            )
         ]
 
-        occupied = self.scheduler._commute_slots(self.target_date)
+        occupied = self.scheduler._get_occupied_slots(self.target_date)
 
-        self.assertEqual(len(occupied), 2)
-        self.assertTrue(
-            self.scheduler._commute_applies(
-                SimpleNamespace(
-                    day_of_week=SimpleNamespace(all=lambda: [matching_day])
-                ),
-                self.target_date,
-            )
-        )
-        self.assertTrue(
-            self.scheduler._commute_applies(
-                SimpleNamespace(day_of_week=None), self.target_date
-            )
-        )
+        self.assertEqual(len(occupied), 3)
 
     def test_get_available_slots_applies_trimming_blocks_and_capacity(self):
+        """Test get available slots applies trimming blocks and capacity."""
         self.scheduler.event_slots = [
             (
                 make_aware(datetime.combine(self.target_date, time(9, 0))),
@@ -185,6 +177,7 @@ class SchedulerAvailabilityMixinTests(TestCase):
         self.assertEqual(slots, [])
 
     def test_apply_daily_capacity_can_be_disabled_and_counts_scheduled_segments(self):
+        """Test apply daily capacity can be disabled and counts scheduled segments."""
         window = self.scheduler._day_window(self.target_date)
         task = self._task(
             "Scheduled task",

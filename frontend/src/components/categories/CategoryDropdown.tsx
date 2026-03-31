@@ -44,6 +44,161 @@ interface CategoryDropdownProps {
   onMenuOpen: (id: number, target: HTMLButtonElement) => void;
 }
 
+const CategoryItem = ({
+  category,
+  isSelected,
+  colourValue,
+  optionBaseClass,
+  onSelectOption,
+  onMenuOpen,
+}: {
+  category: Category;
+  isSelected: boolean;
+  colourValue: string;
+  optionBaseClass: string;
+  onSelectOption: (id: number) => void;
+  onMenuOpen: (id: number, target: HTMLButtonElement) => void;
+}) => (
+  <div key={category.id} className="group flex items-center gap-2 px-3 py-2">
+    <button
+      type="button"
+      onMouseDown={(event) => {
+        event.preventDefault();
+        onSelectOption(category.id);
+      }}
+      className={`flex flex-1 min-w-0 items-center gap-2 text-left text-sm ${optionBaseClass}`}
+    >
+      <span
+        className="truncate font-medium rounded-md border px-2 py-0.5 text-black"
+        style={{
+          borderColor: colourValue,
+          backgroundColor: hexToRgba(colourValue, 0.12),
+        }}
+      >
+        {isSelected ? `${category.text} \u2713` : category.text}
+      </span>
+    </button>
+    <div className="flex items-center gap-2">
+      <button
+        type="button"
+        aria-label={`Open actions for ${category.text}`}
+        onMouseDown={(event) => {
+          event.preventDefault();
+          event.stopPropagation();
+        }}
+        onClick={(event) => {
+          event.stopPropagation();
+          onMenuOpen(category.id, event.currentTarget);
+        }}
+        className="opacity-0 group-hover:opacity-100 transition-opacity text-gray-400 hover:text-gray-600"
+      >
+        <span className="material-icons text-base">more_vert</span>
+      </button>
+    </div>
+  </div>
+);
+
+const CreateCategoryButton = ({
+  query,
+  addBaseClass,
+  onCreate,
+}: {
+  query: string;
+  addBaseClass: string;
+  onCreate: () => void;
+}) => (
+  <button
+    type="button"
+    onMouseDown={(event) => {
+      event.preventDefault();
+      onCreate();
+    }}
+    className={`flex w-full items-center justify-between px-3 py-2 text-sm font-semibold ${addBaseClass}`}
+  >
+    <span>Add new category &quot;{query.trim()}&quot;</span>
+    <span className="material-icons text-base">add</span>
+  </button>
+);
+
+const DropdownStatusMessages = ({
+  normalizedQuery,
+  maxCategoryLength,
+  isCreating,
+  error,
+}: {
+  normalizedQuery: string;
+  maxCategoryLength: number;
+  isCreating: boolean;
+  error: string | null;
+}) => (
+  <>
+    {normalizedQuery.length > maxCategoryLength && (
+      <div className="px-3 py-2 text-xs text-red-600">
+        Category names must be {maxCategoryLength} characters or fewer.
+      </div>
+    )}
+    {isCreating && (
+      <div className="px-3 py-2 text-xs text-gray-500">Creating category...</div>
+    )}
+    {error && <div className="px-3 py-2 text-xs text-red-600">{error}</div>}
+  </>
+);
+
+const CategoryListItems = ({
+  filtered,
+  selectedIds,
+  defaultSwatch,
+  optionBaseClass,
+  onSelectOption,
+  onMenuOpen,
+}: Pick<
+  CategoryDropdownProps,
+  | "filtered"
+  | "selectedIds"
+  | "defaultSwatch"
+  | "optionBaseClass"
+  | "onSelectOption"
+  | "onMenuOpen"
+>) => (
+  <>
+    {filtered.map((cat) => (
+      <CategoryItem
+        key={cat.id}
+        category={cat}
+        isSelected={selectedIds.includes(cat.id)}
+        colourValue={cat.colour ?? defaultSwatch}
+        optionBaseClass={optionBaseClass}
+        onSelectOption={onSelectOption}
+        onMenuOpen={onMenuOpen}
+      />
+    ))}
+  </>
+);
+
+const DropdownContent = ({
+  filtered,
+  canCreate,
+  query,
+  addBaseClass,
+  onCreate,
+  ...props
+}: Omit<CategoryDropdownProps, "isOpen" | "dropdownPosition" | "dropdownMaxHeight">) => (
+  <>
+    {filtered.length === 0 && !canCreate && (
+      <div className="px-3 py-2 text-sm text-gray-500">No categories match.</div>
+    )}
+    <CategoryListItems filtered={filtered} {...props} />
+    {canCreate && (
+      <CreateCategoryButton
+        query={query}
+        addBaseClass={addBaseClass}
+        onCreate={onCreate}
+      />
+    )}
+    <DropdownStatusMessages {...props} />
+  </>
+);
+
 /**
  * Renders the dropdown list of categories with actions.
  * @param root0 - Component props.
@@ -67,110 +222,20 @@ interface CategoryDropdownProps {
  */
 export const CategoryDropdown = ({
   isOpen,
-  dropdownPosition,
-  dropdownMaxHeight,
-  filtered,
-  selectedIds,
-  defaultSwatch,
-  normalizedQuery,
-  query,
-  canCreate,
-  maxCategoryLength,
-  isCreating,
-  error,
-  optionBaseClass,
-  addBaseClass,
-  onSelectOption,
-  onCreate,
-  onMenuOpen,
+  dropdownPosition: pos,
+  dropdownMaxHeight: h,
+  ...props
 }: CategoryDropdownProps) => {
-  if (!isOpen || !dropdownPosition || typeof document === "undefined") {
-    return null;
-  }
+  if (!isOpen || !pos || typeof document === "undefined") return null;
 
   return createPortal(
     <div
       className="fixed z-80 rounded-lg border border-gray-200 bg-white shadow-lg"
-      style={{
-        top: dropdownPosition.top,
-        left: dropdownPosition.left,
-        width: dropdownPosition.width,
-      }}
-      onMouseDown={(event) => event.stopPropagation()}
+      style={{ top: pos.top, left: pos.left, width: pos.width }}
+      onMouseDown={(e) => e.stopPropagation()}
     >
-      <div className="overflow-y-auto py-1" style={{ maxHeight: dropdownMaxHeight }}>
-        {filtered.length === 0 && !canCreate && (
-          <div className="px-3 py-2 text-sm text-gray-500">
-            No categories match.
-          </div>
-        )}
-        {filtered.map((category) => {
-          const isSelected = selectedIds.includes(category.id);
-          const colourValue = category.colour ?? defaultSwatch;
-          return (
-            <div key={category.id} className="group flex items-center gap-2 px-3 py-2">
-              <button
-                type="button"
-                onMouseDown={(event) => {
-                  event.preventDefault();
-                  onSelectOption(category.id);
-                }}
-                className={`flex flex-1 min-w-0 items-center gap-2 text-left text-sm ${optionBaseClass}`}
-              >
-                <span
-                  className="truncate font-medium rounded-md border px-2 py-0.5 text-black"
-                  style={{
-                    borderColor: colourValue,
-                    backgroundColor: hexToRgba(colourValue, 0.12),
-                  }}
-                >
-                  {isSelected ? `${category.text} \u2713` : category.text}
-                </span>
-              </button>
-              <div className="flex items-center gap-2">
-                <button
-                  type="button"
-                  aria-label={`Open actions for ${category.text}`}
-                  onMouseDown={(event) => {
-                    event.preventDefault();
-                    event.stopPropagation();
-                  }}
-                  onClick={(event) => {
-                    event.stopPropagation();
-                    onMenuOpen(category.id, event.currentTarget);
-                  }}
-                  className="opacity-0 group-hover:opacity-100 transition-opacity text-gray-400 hover:text-gray-600"
-                >
-                  <span className="material-icons text-base">more_vert</span>
-                </button>
-              </div>
-            </div>
-          );
-        })}
-        {canCreate && (
-          <button
-            type="button"
-            onMouseDown={(event) => {
-              event.preventDefault();
-              onCreate();
-            }}
-            className={`flex w-full items-center justify-between px-3 py-2 text-sm font-semibold ${addBaseClass}`}
-          >
-            <span>Add new category &quot;{query.trim()}&quot;</span>
-            <span className="material-icons text-base">add</span>
-          </button>
-        )}
-        {normalizedQuery.length > maxCategoryLength && (
-          <div className="px-3 py-2 text-xs text-red-600">
-            Category names must be {maxCategoryLength} characters or fewer.
-          </div>
-        )}
-        {isCreating && (
-          <div className="px-3 py-2 text-xs text-gray-500">Creating category...</div>
-        )}
-        {error && (
-          <div className="px-3 py-2 text-xs text-red-600">{error}</div>
-        )}
+      <div className="overflow-y-auto py-1" style={{ maxHeight: h }}>
+        <DropdownContent {...props} />
       </div>
     </div>,
     document.body,

@@ -5,6 +5,7 @@ services:
     restart: always
     volumes:
       - ./data:/data
+      - ./media:/app/media
     environment:
       - DEBUG=False
       - POSTGRES=True
@@ -65,6 +66,8 @@ services:
     restart: always
     ports:
       - "80:80"
+    volumes:
+      - ./media:/app/media:ro
     depends_on:
       - backend
   postgres:

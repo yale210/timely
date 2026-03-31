@@ -101,6 +101,7 @@ class SchedulerSplitSchedulingTests(TestCase):
         )
 
     def test_next_chunk_and_split_slot_cover_failure_and_success_paths(self):
+        """Test next chunk and split slot cover failure and success paths."""
         slot = (
             make_aware(datetime.combine(self.start_date, time(9, 0))),
             make_aware(datetime.combine(self.start_date, time(10, 0))),
@@ -157,6 +158,7 @@ class SchedulerSplitSchedulingTests(TestCase):
     def test_schedule_task_split_covers_success_remainder_and_insufficient_category(
         self,
     ):
+        """Test schedule task split covers success remainder and insufficient category."""
         task = self._task(
             "Split task",
             allow_split=True,

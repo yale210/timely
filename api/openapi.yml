@@ -7,6 +7,14 @@ paths:
   /api/admin/audience_counts/:
     get:
       operationId: admin_audience_counts_retrieve
+      description: |-
+        Return audience counts for admin notification targeting.
+
+        Args:
+            request: The incoming DRF request.
+
+        Returns:
+            Response: Counts for each supported audience type.
       tags:
       - admin
       security:
@@ -21,7 +29,28 @@ paths:
           description: ''
   /api/admin/broadcasts/:
     get:
-      operationId: admin_broadcasts_retrieve
+      operationId: admin_broadcasts_list
+      description: |-
+        List broadcast jobs with optional admin filters.
+
+        Args:
+            request: The incoming DRF request.
+
+        Returns:
+            Response: Paginated or full broadcast job list.
+      parameters:
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      - name: page_size
+        required: false
+        in: query
+        description: Number of results to return per page.
+        schema:
+          type: integer
       tags:
       - admin
       security:
@@ -32,16 +61,26 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/AdminUserList'
+                $ref: '#/components/schemas/PaginatedBroadcastJobListList'
           description: ''
   /api/admin/broadcasts/{broadcast_id}/:
     get:
-      operationId: admin_broadcasts_retrieve_2
+      operationId: admin_broadcasts_retrieve
+      description: |-
+        Return detailed data for a single broadcast job.
+
+        Args:
+            request: The incoming DRF request.
+            broadcast_id: Broadcast job primary key from the URL.
+
+        Returns:
+            Response: Broadcast detail payload or a not-found error.
       parameters:
       - in: path
         name: broadcast_id
         schema:
-          type: string
+          type: integer
+        description: Broadcast job primary key.
         required: true
       tags:
       - admin
@@ -53,31 +92,35 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/AdminUserList'
+                $ref: '#/components/schemas/BroadcastJobDetail'
+          description: ''
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BroadcastNotFoundResponse'
           description: ''
   /api/admin/broadcasts/{broadcast_id}/retry_failed/:
     post:
       operationId: admin_broadcasts_retry_failed_create
+      description: |-
+        Create a retry broadcast for failed recipients only.
+
+        Args:
+            request: The incoming DRF request.
+            broadcast_id: Broadcast job primary key from the URL.
+
+        Returns:
+            Response: Accepted retry job metadata or an error payload.
       parameters:
       - in: path
         name: broadcast_id
         schema:
-          type: string
+          type: integer
+        description: Broadcast job primary key.
         required: true
       tags:
       - admin
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/AdminUserList'
-          application/x-www-form-urlencoded:
-            schema:
-              $ref: '#/components/schemas/AdminUserList'
-          multipart/form-data:
-            schema:
-              $ref: '#/components/schemas/AdminUserList'
-        required: true
       security:
       - knoxApiToken: []
       - cookieAuth: []
@@ -91,11 +134,21 @@ paths:
   /api/admin/broadcasts/{broadcast_id}/status/:
     get:
       operationId: admin_broadcasts_status_retrieve
+      description: |-
+        Return summary status information for a broadcast job.
+
+        Args:
+            request: The incoming DRF request.
+            broadcast_id: Broadcast job primary key from the URL.
+
+        Returns:
+            Response: Broadcast status payload or a not-found error.
       parameters:
       - in: path
         name: broadcast_id
         schema:
-          type: string
+          type: integer
+        description: Broadcast job primary key.
         required: true
       tags:
       - admin
@@ -107,11 +160,19 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/AdminUserList'
+                $ref: '#/components/schemas/BroadcastStatusResponse'
           description: ''
   /api/admin/send_notification/:
     post:
       operationId: admin_send_notification_create
+      description: |-
+        Queue a broadcast notification for the selected audience.
+
+        Args:
+            request: The incoming DRF request.
+
+        Returns:
+            Response: Accepted broadcast metadata or a validation error.
       tags:
       - admin
       requestBody:
@@ -139,6 +200,14 @@ paths:
   /api/admin/users/:
     get:
       operationId: admin_users_retrieve
+      description: |-
+        Return a paginated list of users for the admin panel.
+
+        Args:
+            request: The incoming DRF request.
+
+        Returns:
+            Response: Paginated or full serialized user list.
       tags:
       - admin
       security:
@@ -151,9 +220,223 @@ paths:
               schema:
                 $ref: '#/components/schemas/AdminUserList'
           description: ''
+  /api/assessments/:
+    get:
+      operationId: assessments_list
+      description: |-
+        ViewSet for managing student assessments.
+
+        Provides standard CRUD operations for assessments linked to the authenticated user.
+      parameters:
+      - in: query
+        name: assessment_type
+        schema:
+          type: string
+          enum:
+          - COURSEWORK
+          - EXAM
+          - FORMATIVE
+          - OTHER
+          - PRACTICAL
+          - PRESENTATION
+          - QUIZ
+          - SUMMATIVE
+        description: |-
+          * `COURSEWORK` - Coursework
+          * `EXAM` - Exam
+          * `QUIZ` - Quiz
+          * `PRESENTATION` - Presentation
+          * `PRACTICAL` - Practical
+          * `FORMATIVE` - Formative
+          * `SUMMATIVE` - Summative
+          * `OTHER` - Other
+      - in: query
+        name: categories
+        schema:
+          type: array
+          items:
+            type: integer
+        description: Multiple values may be separated by commas.
+        explode: false
+        style: form
+      - in: query
+        name: completed
+        schema:
+          type: boolean
+      - name: ordering
+        required: false
+        in: query
+        description: Which field to use when ordering the results.
+        schema:
+          type: string
+      tags:
+      - assessments
+      security:
+      - knoxApiToken: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Assessment'
+          description: ''
+    post:
+      operationId: assessments_create
+      description: |-
+        ViewSet for managing student assessments.
+
+        Provides standard CRUD operations for assessments linked to the authenticated user.
+      tags:
+      - assessments
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Assessment'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Assessment'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Assessment'
+        required: true
+      security:
+      - knoxApiToken: []
+      - cookieAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Assessment'
+          description: ''
+  /api/assessments/{id}/:
+    get:
+      operationId: assessments_retrieve
+      description: |-
+        ViewSet for managing student assessments.
+
+        Provides standard CRUD operations for assessments linked to the authenticated user.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this assessment.
+        required: true
+      tags:
+      - assessments
+      security:
+      - knoxApiToken: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Assessment'
+          description: ''
+    put:
+      operationId: assessments_update
+      description: |-
+        ViewSet for managing student assessments.
+
+        Provides standard CRUD operations for assessments linked to the authenticated user.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this assessment.
+        required: true
+      tags:
+      - assessments
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Assessment'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Assessment'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Assessment'
+        required: true
+      security:
+      - knoxApiToken: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Assessment'
+          description: ''
+    patch:
+      operationId: assessments_partial_update
+      description: |-
+        ViewSet for managing student assessments.
+
+        Provides standard CRUD operations for assessments linked to the authenticated user.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this assessment.
+        required: true
+      tags:
+      - assessments
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedAssessment'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedAssessment'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedAssessment'
+      security:
+      - knoxApiToken: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Assessment'
+          description: ''
+    delete:
+      operationId: assessments_destroy
+      description: |-
+        ViewSet for managing student assessments.
+
+        Provides standard CRUD operations for assessments linked to the authenticated user.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this assessment.
+        required: true
+      tags:
+      - assessments
+      security:
+      - knoxApiToken: []
+      - cookieAuth: []
+      responses:
+        '204':
+          description: No response body
   /api/authentication/logout/:
     post:
       operationId: authentication_logout_create
+      description: Log out the current authenticated session.
       tags:
       - authentication
       security:
@@ -164,9 +447,7 @@ paths:
   /api/authentication/logoutall/:
     post:
       operationId: authentication_logoutall_create
-      description: |-
-        Log the user out of all sessions
-        I.E. deletes all auth tokens for the user
+      description: Log out the user from all active authenticated sessions.
       tags:
       - authentication
       security:
@@ -177,6 +458,14 @@ paths:
   /api/authentication/register/:
     post:
       operationId: authentication_register_create
+      description: |-
+        Create a new user account.
+
+        Args:
+            request: The incoming DRF request containing registration data.
+
+        Returns:
+            Response: A `201 Created` response with the serialized user data.
       tags:
       - authentication
       requestBody:
@@ -205,6 +494,16 @@ paths:
   /api/authentication/session/:
     post:
       operationId: authentication_session_create
+      description: |-
+        Log in a user and return token-based auth data.
+
+        Args:
+            request: The incoming DRF request containing login credentials.
+            format: Optional response format passed through by DRF.
+
+        Returns:
+            Response: A `200 OK` response containing the Knox token payload
+            and serialized user information.
       tags:
       - authentication
       requestBody:
@@ -233,6 +532,14 @@ paths:
   /api/authentication/test/:
     get:
       operationId: authentication_test_retrieve
+      description: |-
+        Return a message confirming the user is authenticated.
+
+        Args:
+            request: The incoming authenticated DRF request.
+
+        Returns:
+            Response: A `200 OK` response with a simple authentication message.
       tags:
       - authentication
       security:
@@ -245,11 +552,28 @@ paths:
               schema:
                 $ref: '#/components/schemas/TestPermissionResponse'
           description: ''
-  /api/categories/:
+  /api/authentication/username/{user_id}/:
     get:
-      operationId: categories_list
+      operationId: authentication_username_retrieve
+      description: |-
+        Return the requested user's public identifier fields.
+
+        Args:
+            request: The incoming DRF request.
+            user_id: The primary key of the user being looked up.
+
+        Returns:
+            Response: A `200 OK` payload with the user's ID and username,
+            or `404 Not Found` if the user does not exist.
+      parameters:
+      - in: path
+        name: user_id
+        schema:
+          type: integer
+        description: Primary key of the user to look up.
+        required: true
       tags:
-      - categories
+      - authentication
       security:
       - knoxApiToken: []
       - cookieAuth: []
@@ -259,13 +583,72 @@ paths:
           content:
             application/json:
               schema:
+                $ref: '#/components/schemas/UsernameResponse'
+          description: ''
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsernameNotFoundResponse'
+          description: ''
+  /api/categories/:
+    get:
+      operationId: categories_list
+      description: |-
+        ViewSet for managing user-defined categories.
+
+        Provides standard CRUD operations for categories belonging to the authenticated user.
+      tags:
+      - categories
+      security:
+      - knoxApiToken: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
                 type: array
                 items:
                   $ref: '#/components/schemas/Category'
           description: ''
+    post:
+      operationId: categories_create
+      description: |-
+        ViewSet for managing user-defined categories.
+
+        Provides standard CRUD operations for categories belonging to the authenticated user.
+      tags:
+      - categories
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Category'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Category'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Category'
+        required: true
+      security:
+      - knoxApiToken: []
+      - cookieAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Category'
+          description: ''
   /api/categories/{id}/:
     get:
       operationId: categories_retrieve
+      description: |-
+        ViewSet for managing user-defined categories.
+
+        Provides standard CRUD operations for categories belonging to the authenticated user.
       parameters:
       - in: path
         name: id
@@ -278,7 +661,6 @@ paths:
       security:
       - knoxApiToken: []
       - cookieAuth: []
-      - {}
       responses:
         '200':
           content:
@@ -286,9 +668,850 @@ paths:
               schema:
                 $ref: '#/components/schemas/Category'
           description: ''
+    put:
+      operationId: categories_update
+      description: |-
+        ViewSet for managing user-defined categories.
+
+        Provides standard CRUD operations for categories belonging to the authenticated user.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this category.
+        required: true
+      tags:
+      - categories
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Category'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Category'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Category'
+        required: true
+      security:
+      - knoxApiToken: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Category'
+          description: ''
+    patch:
+      operationId: categories_partial_update
+      description: |-
+        ViewSet for managing user-defined categories.
+
+        Provides standard CRUD operations for categories belonging to the authenticated user.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this category.
+        required: true
+      tags:
+      - categories
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedCategory'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedCategory'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedCategory'
+      security:
+      - knoxApiToken: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Category'
+          description: ''
+    delete:
+      operationId: categories_destroy
+      description: |-
+        ViewSet for managing user-defined categories.
+
+        Provides standard CRUD operations for categories belonging to the authenticated user.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this category.
+        required: true
+      tags:
+      - categories
+      security:
+      - knoxApiToken: []
+      - cookieAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/courses/:
+    get:
+      operationId: courses_list
+      description: |-
+        Return courses relevant to the authenticated user.
+
+        Args:
+            request: The incoming DRF request.
+
+        Returns:
+            Response: A response containing the visible course list.
+      tags:
+      - courses
+      security:
+      - knoxApiToken: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Course'
+          description: ''
+    post:
+      operationId: courses_create
+      description: |-
+        Creates a new course and assigns the requesting user as the lead teacher.
+
+        Args:
+            request: The current HttpRequest containing course data.
+
+        Returns:
+            A Response object containing the created Course data.
+      tags:
+      - courses
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Course'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Course'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Course'
+        required: true
+      security:
+      - knoxApiToken: []
+      - cookieAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Course'
+          description: ''
+  /api/courses/{id}/:
+    get:
+      operationId: courses_retrieve
+      description: |-
+        Retrieves detailed information about a single course.
+
+        Includes cohort size and a list of enrolled student usernames in the
+        response data.
+
+        Args:
+            request: The current HttpRequest.
+            pk: The primary key of the course to retrieve.
+
+        Returns:
+            A Response object containing detailed Course data including enrollment info.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this course.
+        required: true
+      tags:
+      - courses
+      security:
+      - knoxApiToken: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Course'
+          description: ''
+    put:
+      operationId: courses_update
+      description: |-
+        Updates an existing course, respecting granular field-level permissions.
+
+        Args:
+            request: The current HttpRequest containing updated data.
+            pk: The primary key of the course to update.
+
+        Returns:
+            A Response object containing the updated Course data.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this course.
+        required: true
+      tags:
+      - courses
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Course'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Course'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Course'
+        required: true
+      security:
+      - knoxApiToken: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Course'
+          description: ''
+    patch:
+      operationId: courses_partial_update
+      description: |-
+        Partially updates a course, respecting granular field-level permissions.
+
+        Args:
+            request: The current HttpRequest containing partial update data.
+            pk: The primary key of the course.
+
+        Returns:
+            A Response object containing the updated Course data.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this course.
+        required: true
+      tags:
+      - courses
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedCourse'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedCourse'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedCourse'
+      security:
+      - knoxApiToken: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Course'
+          description: ''
+    delete:
+      operationId: courses_destroy
+      description: |-
+        Performs a soft-delete by deactivating the course.
+
+        Args:
+            request: The current HttpRequest.
+            pk: The primary key of the course to deactivate.
+
+        Returns:
+            A Response object containing the deactivated Course data with a 204 status.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this course.
+        required: true
+      tags:
+      - courses
+      security:
+      - knoxApiToken: []
+      - cookieAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/courses/{id}/events/:
+    get:
+      operationId: courses_events_retrieve
+      description: |-
+        View and manage course events.
+
+        GET: Returns a chronological list of events for the specified course.
+        POST: Creates a new event for the course, assigning the current user as creator.
+
+        Args:
+            request: The current HttpRequest object.
+            pk: The primary key of the course.
+
+        Returns:
+            A Response object with event data or the created event.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this course.
+        required: true
+      tags:
+      - courses
+      security:
+      - knoxApiToken: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Course'
+          description: ''
+    post:
+      operationId: courses_events_create
+      description: |-
+        View and manage course events.
+
+        GET: Returns a chronological list of events for the specified course.
+        POST: Creates a new event for the course, assigning the current user as creator.
+
+        Args:
+            request: The current HttpRequest object.
+            pk: The primary key of the course.
+
+        Returns:
+            A Response object with event data or the created event.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this course.
+        required: true
+      tags:
+      - courses
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Course'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Course'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Course'
+        required: true
+      security:
+      - knoxApiToken: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Course'
+          description: ''
+  /api/courses/{id}/join/:
+    post:
+      operationId: courses_join_create
+      description: |-
+        Allows the current user to enroll in the specified course.
+
+        Creates a CourseEnrollment instance for the user. If the enrollment
+        already exists but is inactive, it is reactivated.
+
+        Args:
+            request: The current HttpRequest object.
+            pk: The primary key of the course to join.
+
+        Returns:
+            A Response indicating success or failure if the course is inactive.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this course.
+        required: true
+      tags:
+      - courses
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Course'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Course'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Course'
+        required: true
+      security:
+      - knoxApiToken: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Course'
+          description: ''
+  /api/courses/{id}/join-code/:
+    post:
+      operationId: courses_join_code_create
+      description: |-
+        Generates a new, unique join code for a specific course.
+
+        Restricted to users with sufficient permissions (leads, admins, staff).
+
+        Args:
+            request: The current HttpRequest.
+            pk: The primary key of the course.
+
+        Returns:
+            A Response containing the details of the newly created join code.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this course.
+        required: true
+      tags:
+      - courses
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Course'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Course'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Course'
+        required: true
+      security:
+      - knoxApiToken: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Course'
+          description: ''
+  /api/courses/{id}/leave/:
+    post:
+      operationId: courses_leave_create
+      description: |-
+        Allows the current user to leave (soft-delete enrollment) the course.
+
+        Sets the 'active' flag of the CourseEnrollment instance to False.
+
+        Args:
+            request: The current HttpRequest.
+            pk: The primary key of the course to leave.
+
+        Returns:
+            A Response confirming the user has left the course.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this course.
+        required: true
+      tags:
+      - courses
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Course'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Course'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Course'
+        required: true
+      security:
+      - knoxApiToken: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Course'
+          description: ''
+  /api/courses/{id}/permissions/:
+    get:
+      operationId: courses_permissions_retrieve
+      description: |-
+        Retrieves the calculated permission set for the specified course.
+
+        Args:
+            request: The current HttpRequest.
+            pk: The primary key of the course.
+
+        Returns:
+            A Response containing serialized permission data.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this course.
+        required: true
+      tags:
+      - courses
+      security:
+      - knoxApiToken: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Course'
+          description: ''
+  /api/courses/{id}/remove-user/:
+    post:
+      operationId: courses_remove_user_create
+      description: |-
+        Removes a user from the course by deactivating their enrollment.
+
+        Expected payload:
+            {
+                "user_id": 123
+            }
+
+        Args:
+            request: The current HttpRequest.
+            pk: The primary key of the course to leave.
+
+        Returns:
+            Response: API response indicating success or failure.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this course.
+        required: true
+      tags:
+      - courses
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Course'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Course'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Course'
+        required: true
+      security:
+      - knoxApiToken: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Course'
+          description: ''
+  /api/courses/{id}/staff/:
+    get:
+      operationId: courses_staff_retrieve
+      description: |-
+        Manages the staff members associated with a specific course.
+
+        Supports listing active staff (GET), adding a new staff member (POST),
+        and removing a staff member (DELETE).
+
+        Args:
+            request: The current HttpRequest.
+            pk: The primary key of the course.
+
+        Returns:
+            A Response containing the staff list, success message, or no content.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this course.
+        required: true
+      tags:
+      - courses
+      security:
+      - knoxApiToken: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Course'
+          description: ''
+    post:
+      operationId: courses_staff_create
+      description: |-
+        Manages the staff members associated with a specific course.
+
+        Supports listing active staff (GET), adding a new staff member (POST),
+        and removing a staff member (DELETE).
+
+        Args:
+            request: The current HttpRequest.
+            pk: The primary key of the course.
+
+        Returns:
+            A Response containing the staff list, success message, or no content.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this course.
+        required: true
+      tags:
+      - courses
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Course'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Course'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Course'
+        required: true
+      security:
+      - knoxApiToken: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Course'
+          description: ''
+    delete:
+      operationId: courses_staff_destroy
+      description: |-
+        Manages the staff members associated with a specific course.
+
+        Supports listing active staff (GET), adding a new staff member (POST),
+        and removing a staff member (DELETE).
+
+        Args:
+            request: The current HttpRequest.
+            pk: The primary key of the course.
+
+        Returns:
+            A Response containing the staff list, success message, or no content.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this course.
+        required: true
+      tags:
+      - courses
+      security:
+      - knoxApiToken: []
+      - cookieAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/courses/{id}/students/:
+    get:
+      operationId: courses_students_retrieve
+      description: |-
+        Retrieves a list of active students enrolled in the course.
+
+        Args:
+            request: The current HttpRequest.
+            pk: The primary key of the course.
+
+        Returns:
+            A Response containing a list of serialized student enrollment data.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this course.
+        required: true
+      tags:
+      - courses
+      security:
+      - knoxApiToken: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Course'
+          description: ''
+  /api/courses/join-by-code/:
+    post:
+      operationId: courses_join_by_code_create
+      description: |-
+        Enrolls a student into a course using a unique join code.
+
+        Validates the code's existence, activation status, and expiration
+        before creating or reactivating an enrollment.
+
+        Args:
+            request: The current HttpRequest containing the 'code'.
+
+        Returns:
+            A Response indicating enrollment success or providing an error detail.
+      tags:
+      - courses
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Course'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Course'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Course'
+        required: true
+      security:
+      - knoxApiToken: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Course'
+          description: ''
+  /api/delete_account/:
+    delete:
+      operationId: delete_account_destroy
+      description: |-
+        Delete the account for the requesting user.
+
+        Args:
+            request (Request): The DRF request object.
+
+        Returns:
+            Response: A response message.
+      tags:
+      - delete_account
+      security:
+      - knoxApiToken: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DeleteAccountResponse'
+          description: ''
+  /api/delete_events/:
+    delete:
+      operationId: delete_events_destroy
+      description: |-
+        Delete all events for the current user.
+
+        Args:
+            request (Request): The DRF request object.
+
+        Returns:
+            Response: A response message indicating the number of events deleted.
+      tags:
+      - delete_events
+      security:
+      - knoxApiToken: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DeleteAllEventsResponse'
+          description: ''
+  /api/delete_tasks/:
+    delete:
+      operationId: delete_tasks_destroy
+      description: |-
+        Delete all tasks for the current authenticated user.
+
+        Args:
+            request (Request): The DRF request object.
+
+        Returns:
+            Response: A response message indicating the number of tasks deleted.
+      tags:
+      - delete_tasks
+      security:
+      - knoxApiToken: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DeleteAllTasksResponse'
+          description: ''
   /api/events/:
     get:
       operationId: events_list
+      description: |-
+        List events or expanded recurring instances for the requested window.
+
+        Returns:
+            Response: Serialised event list response.
       parameters:
       - in: query
         name: end_date
@@ -318,6 +1541,7 @@ paths:
           description: ''
     post:
       operationId: events_create
+      description: Manage event CRUD operations, including recurrence-scope mutations.
       tags:
       - events
       requestBody:
@@ -344,6 +1568,7 @@ paths:
   /api/events/{id}/:
     get:
       operationId: events_retrieve
+      description: Manage event CRUD operations, including recurrence-scope mutations.
       parameters:
       - in: path
         name: id
@@ -364,6 +1589,11 @@ paths:
           description: ''
     put:
       operationId: events_update
+      description: |-
+        Handle full event updates.
+
+        Returns:
+            Response: Updated event response.
       parameters:
       - in: path
         name: id
@@ -406,6 +1636,11 @@ paths:
           description: ''
     patch:
       operationId: events_partial_update
+      description: |-
+        Handle partial event updates.
+
+        Returns:
+            Response: Updated event response.
       parameters:
       - in: path
         name: id
@@ -448,6 +1683,11 @@ paths:
           description: ''
     delete:
       operationId: events_destroy
+      description: |-
+        Delete an event or recurring slice based on the requested scope.
+
+        Returns:
+            Response: Deletion response.
       parameters:
       - in: path
         name: id
@@ -476,6 +1716,11 @@ paths:
   /api/events/{id}/revert-instance/:
     post:
       operationId: events_revert_instance_create
+      description: |-
+        Revert a single overridden recurring instance back to the base series.
+
+        Returns:
+            Response: Revert result response.
       parameters:
       - in: path
         name: id
@@ -500,6 +1745,11 @@ paths:
   /api/events/server_time/:
     get:
       operationId: events_server_time_retrieve
+      description: |-
+        Return the current server time.
+
+        Returns:
+            Response: Current server time payload.
       tags:
       - events
       security:
@@ -512,9 +1762,289 @@ paths:
               schema:
                 $ref: '#/components/schemas/ServerTimeResponse'
           description: ''
+  /api/export/:
+    get:
+      operationId: export_retrieve
+      description: |-
+        Generate and return an iCalendar format text file for the user's events.
+
+        Args:
+            request (Request): The DRF request object.
+
+        Returns:
+            HttpResponse: A plain text file attachment in iCalendar format.
+      tags:
+      - export
+      security:
+      - knoxApiToken: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: string
+          description: iCalendar format text file download.
+  /api/friendships/:
+    get:
+      operationId: friendships_list
+      description: |-
+        Manage friendship requests for the authenticated user.
+
+        Users can send, accept, and decline friend requests.
+      tags:
+      - friendships
+      security:
+      - knoxApiToken: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Friendship'
+          description: ''
+    post:
+      operationId: friendships_create
+      description: |-
+        Manage friendship requests for the authenticated user.
+
+        Users can send, accept, and decline friend requests.
+      tags:
+      - friendships
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Friendship'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Friendship'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Friendship'
+      security:
+      - knoxApiToken: []
+      - cookieAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Friendship'
+          description: ''
+  /api/friendships/{id}/:
+    get:
+      operationId: friendships_retrieve
+      description: |-
+        Manage friendship requests for the authenticated user.
+
+        Users can send, accept, and decline friend requests.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this friendship.
+        required: true
+      tags:
+      - friendships
+      security:
+      - knoxApiToken: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Friendship'
+          description: ''
+    put:
+      operationId: friendships_update
+      description: |-
+        Manage friendship requests for the authenticated user.
+
+        Users can send, accept, and decline friend requests.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this friendship.
+        required: true
+      tags:
+      - friendships
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Friendship'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Friendship'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Friendship'
+      security:
+      - knoxApiToken: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Friendship'
+          description: ''
+    patch:
+      operationId: friendships_partial_update
+      description: |-
+        Manage friendship requests for the authenticated user.
+
+        Users can send, accept, and decline friend requests.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this friendship.
+        required: true
+      tags:
+      - friendships
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedFriendship'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedFriendship'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedFriendship'
+      security:
+      - knoxApiToken: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Friendship'
+          description: ''
+    delete:
+      operationId: friendships_destroy
+      description: |-
+        Manage friendship requests for the authenticated user.
+
+        Users can send, accept, and decline friend requests.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this friendship.
+        required: true
+      tags:
+      - friendships
+      security:
+      - knoxApiToken: []
+      - cookieAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/friendships/{id}/accept/:
+    post:
+      operationId: friendships_accept_create
+      description: |-
+        Accept a friend request if the authenticated user is the receiver.
+
+        Args:
+            request (Request): The DRF request object.
+            pk (int | None): The primary key of the friendship object.
+
+        Returns:
+            Response: A DRF response indicating success or forbidden status.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this friendship.
+        required: true
+      tags:
+      - friendships
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Friendship'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Friendship'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Friendship'
+      security:
+      - knoxApiToken: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Friendship'
+          description: ''
+  /api/friendships/{id}/decline/:
+    post:
+      operationId: friendships_decline_create
+      description: |-
+        Decline a friend request if the authenticated user is the receiver.
+
+        Args:
+            request (Request): The DRF request object.
+            pk (int | None): The primary key of the friendship object.
+
+        Returns:
+            Response: A DRF response indicating success or forbidden status.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this friendship.
+        required: true
+      tags:
+      - friendships
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Friendship'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Friendship'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Friendship'
+      security:
+      - knoxApiToken: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Friendship'
+          description: ''
   /api/grades/:
     get:
       operationId: grades_list
+      description: |-
+        ViewSet for managing student grades.
+
+        Provides standard CRUD operations for grades belonging to the authenticated user.
       tags:
       - grades
       security:
@@ -531,6 +2061,10 @@ paths:
           description: ''
     post:
       operationId: grades_create
+      description: |-
+        ViewSet for managing student grades.
+
+        Provides standard CRUD operations for grades belonging to the authenticated user.
       tags:
       - grades
       requestBody:
@@ -558,6 +2092,10 @@ paths:
   /api/grades/{id}/:
     get:
       operationId: grades_retrieve
+      description: |-
+        ViewSet for managing student grades.
+
+        Provides standard CRUD operations for grades belonging to the authenticated user.
       parameters:
       - in: path
         name: id
@@ -579,6 +2117,10 @@ paths:
           description: ''
     put:
       operationId: grades_update
+      description: |-
+        ViewSet for managing student grades.
+
+        Provides standard CRUD operations for grades belonging to the authenticated user.
       parameters:
       - in: path
         name: id
@@ -612,6 +2154,10 @@ paths:
           description: ''
     patch:
       operationId: grades_partial_update
+      description: |-
+        ViewSet for managing student grades.
+
+        Provides standard CRUD operations for grades belonging to the authenticated user.
       parameters:
       - in: path
         name: id
@@ -644,6 +2190,10 @@ paths:
           description: ''
     delete:
       operationId: grades_destroy
+      description: |-
+        ViewSet for managing student grades.
+
+        Provides standard CRUD operations for grades belonging to the authenticated user.
       parameters:
       - in: path
         name: id
@@ -659,9 +2209,48 @@ paths:
       responses:
         '204':
           description: No response body
+  /api/import/:
+    post:
+      operationId: import_create
+      description: |-
+        Handle the import of events from a .txt file in iCalendar format.
+
+        The file must follow the iCalendar format, with events defined between
+        BEGIN:VEVENT and END:VEVENT.
+
+        Args:
+            request (Request): The DRF request object containing the uploaded file.
+
+        Returns:
+            Response: A DRF response indicating success or providing an error message.
+      tags:
+      - import
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ImportFileRequest'
+        required: true
+      security:
+      - knoxApiToken: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ImportSuccessResponse'
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ImportErrorResponse'
+          description: ''
   /api/notifications/:
     get:
       operationId: notifications_list
+      description: ViewSet for viewing and managing user notifications.
       parameters:
       - name: page
         required: false
@@ -683,6 +2272,7 @@ paths:
           description: ''
     post:
       operationId: notifications_create
+      description: ViewSet for viewing and managing user notifications.
       tags:
       - notifications
       requestBody:
@@ -710,11 +2300,13 @@ paths:
   /api/notifications/{id}/:
     get:
       operationId: notifications_retrieve
+      description: ViewSet for viewing and managing user notifications.
       parameters:
       - in: path
         name: id
         schema:
-          type: string
+          type: integer
+        description: A unique integer value identifying this notification.
         required: true
       tags:
       - notifications
@@ -730,11 +2322,13 @@ paths:
           description: ''
     put:
       operationId: notifications_update
+      description: ViewSet for viewing and managing user notifications.
       parameters:
       - in: path
         name: id
         schema:
-          type: string
+          type: integer
+        description: A unique integer value identifying this notification.
         required: true
       tags:
       - notifications
@@ -762,11 +2356,13 @@ paths:
           description: ''
     patch:
       operationId: notifications_partial_update
+      description: ViewSet for viewing and managing user notifications.
       parameters:
       - in: path
         name: id
         schema:
-          type: string
+          type: integer
+        description: A unique integer value identifying this notification.
         required: true
       tags:
       - notifications
@@ -793,11 +2389,13 @@ paths:
           description: ''
     delete:
       operationId: notifications_destroy
+      description: ViewSet for viewing and managing user notifications.
       parameters:
       - in: path
         name: id
         schema:
-          type: string
+          type: integer
+        description: A unique integer value identifying this notification.
         required: true
       tags:
       - notifications
@@ -810,11 +2408,21 @@ paths:
   /api/notifications/{id}/mark_read/:
     post:
       operationId: notifications_mark_read_create
+      description: |-
+        Mark a specific notification as read.
+
+        Args:
+            request: The current request.
+            pk: Primary key of the notification.
+
+        Returns:
+            A Response indicating completion.
       parameters:
       - in: path
         name: id
         schema:
-          type: string
+          type: integer
+        description: A unique integer value identifying this notification.
         required: true
       tags:
       - notifications
@@ -843,11 +2451,21 @@ paths:
   /api/notifications/{id}/mark_unread/:
     post:
       operationId: notifications_mark_unread_create
+      description: |-
+        Mark a specific notification as unread.
+
+        Args:
+            request: The current request.
+            pk: Primary key of the notification.
+
+        Returns:
+            A Response indicating completion.
       parameters:
       - in: path
         name: id
         schema:
-          type: string
+          type: integer
+        description: A unique integer value identifying this notification.
         required: true
       tags:
       - notifications
@@ -876,6 +2494,17 @@ paths:
   /api/notifications/delete_all/:
     delete:
       operationId: notifications_delete_all_destroy
+      description: |-
+        Delete all notifications for the current user.
+
+        Uses an unfiltered queryset to ensure every notification is
+        removed regardless of query-param filters on the viewset.
+
+        Args:
+            request: The current request.
+
+        Returns:
+            A 204 No Content response.
       tags:
       - notifications
       security:
@@ -887,6 +2516,17 @@ paths:
   /api/notifications/mark_all_read/:
     post:
       operationId: notifications_mark_all_read_create
+      description: |-
+        Mark all notifications for the current user as read.
+
+        Uses an unfiltered queryset to ensure every notification is
+        included regardless of query-param filters on the viewset.
+
+        Args:
+            request: The current request.
+
+        Returns:
+            A Response indicating completion.
       tags:
       - notifications
       requestBody:
@@ -914,6 +2554,14 @@ paths:
   /api/notifications/unread_count/:
     get:
       operationId: notifications_unread_count_retrieve
+      description: |-
+        Retrieve the current unread notification count.
+
+        Args:
+            request: The current request.
+
+        Returns:
+            A JSON response containing the count.
       tags:
       - notifications
       security:
@@ -926,9 +2574,108 @@ paths:
               schema:
                 $ref: '#/components/schemas/Notification'
           description: ''
+  /api/pomo/sessions/:
+    get:
+      operationId: pomo_sessions_list
+      description: |-
+        ViewSet for handling CRUD operations on Pomodoro sessions.
+
+        This ViewSet allows authenticated users to retrieve and create their
+        own pomodoro sessions.
+
+        Attributes:
+            serializer_class (type): The serializer class to use.
+            permission_classes (list): The list of permission classes.
+            http_method_names (list): Supported HTTP methods.
+      tags:
+      - pomo
+      security:
+      - knoxApiToken: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/PomoSession'
+          description: ''
+    post:
+      operationId: pomo_sessions_create
+      description: |-
+        ViewSet for handling CRUD operations on Pomodoro sessions.
+
+        This ViewSet allows authenticated users to retrieve and create their
+        own pomodoro sessions.
+
+        Attributes:
+            serializer_class (type): The serializer class to use.
+            permission_classes (list): The list of permission classes.
+            http_method_names (list): Supported HTTP methods.
+      tags:
+      - pomo
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PomoSession'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PomoSession'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PomoSession'
+        required: true
+      security:
+      - knoxApiToken: []
+      - cookieAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PomoSession'
+          description: ''
+  /api/pomo/sessions/{id}/:
+    get:
+      operationId: pomo_sessions_retrieve
+      description: |-
+        ViewSet for handling CRUD operations on Pomodoro sessions.
+
+        This ViewSet allows authenticated users to retrieve and create their
+        own pomodoro sessions.
+
+        Attributes:
+            serializer_class (type): The serializer class to use.
+            permission_classes (list): The list of permission classes.
+            http_method_names (list): Supported HTTP methods.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this pomo session.
+        required: true
+      tags:
+      - pomo
+      security:
+      - knoxApiToken: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PomoSession'
+          description: ''
   /api/preferences/:
     get:
       operationId: preferences_list
+      description: |-
+        ViewSet for managing user preferences.
+
+        Provides standard CRUD operations and a 'me' action for the current user's preferences.
       tags:
       - preferences
       security:
@@ -945,6 +2692,10 @@ paths:
           description: ''
     post:
       operationId: preferences_create
+      description: |-
+        ViewSet for managing user preferences.
+
+        Provides standard CRUD operations and a 'me' action for the current user's preferences.
       tags:
       - preferences
       requestBody:
@@ -971,6 +2722,10 @@ paths:
   /api/preferences/{id}/:
     get:
       operationId: preferences_retrieve
+      description: |-
+        ViewSet for managing user preferences.
+
+        Provides standard CRUD operations and a 'me' action for the current user's preferences.
       parameters:
       - in: path
         name: id
@@ -992,6 +2747,10 @@ paths:
           description: ''
     put:
       operationId: preferences_update
+      description: |-
+        ViewSet for managing user preferences.
+
+        Provides standard CRUD operations and a 'me' action for the current user's preferences.
       parameters:
       - in: path
         name: id
@@ -1024,6 +2783,10 @@ paths:
           description: ''
     patch:
       operationId: preferences_partial_update
+      description: |-
+        ViewSet for managing user preferences.
+
+        Provides standard CRUD operations and a 'me' action for the current user's preferences.
       parameters:
       - in: path
         name: id
@@ -1056,6 +2819,10 @@ paths:
           description: ''
     delete:
       operationId: preferences_destroy
+      description: |-
+        ViewSet for managing user preferences.
+
+        Provides standard CRUD operations and a 'me' action for the current user's preferences.
       parameters:
       - in: path
         name: id
@@ -1074,6 +2841,14 @@ paths:
   /api/preferences/me/:
     get:
       operationId: preferences_me_retrieve
+      description: |-
+        Retrieve the authenticated user's preferences.
+
+        Args:
+            request (Request): The DRF request object.
+
+        Returns:
+            Response: A DRF response containing preference data.
       tags:
       - preferences
       security:
@@ -1088,6 +2863,14 @@ paths:
           description: ''
     patch:
       operationId: preferences_me_partial_update
+      description: |-
+        Partial update the authenticated user's preferences.
+
+        Args:
+            request (Request): The DRF request object.
+
+        Returns:
+            Response: A DRF response containing updated preference data.
       tags:
       - preferences
       requestBody:
@@ -1113,7 +2896,127 @@ paths:
           description: ''
   /api/profiles/:
     get:
+      operationId: profiles_me_retrieve
+      description: |-
+        Return the authenticated user's profile payload.
+
+        Args:
+            request: The incoming DRF request.
+
+        Returns:
+            Response: Serialized profile data.
+      tags:
+      - profiles
+      security:
+      - knoxApiToken: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Profile'
+          description: ''
+    put:
+      operationId: profiles_update
+      description: |-
+        Replace the authenticated user's editable profile fields.
+
+        Args:
+            request: The incoming DRF request.
+
+        Returns:
+            Response: Serialized updated profile data.
+      tags:
+      - profiles
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Profile'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Profile'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Profile'
+        required: true
+      security:
+      - knoxApiToken: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Profile'
+          description: ''
+    patch:
+      operationId: profiles_partial_update
+      description: |-
+        Apply a partial update to the authenticated user's profile.
+
+        Args:
+            request: The incoming DRF request.
+
+        Returns:
+            Response: Serialized updated profile data.
+      tags:
+      - profiles
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedProfile'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedProfile'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedProfile'
+      security:
+      - knoxApiToken: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Profile'
+          description: ''
+  /api/profiles/{username}/:
+    get:
       operationId: profiles_retrieve
+      description: Expose public profile details for a username.
+      parameters:
+      - in: path
+        name: username
+        schema:
+          type: string
+        required: true
+      tags:
+      - profiles
+      security:
+      - knoxApiToken: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PublicProfile'
+          description: ''
+  /api/profiles/leaderboard/:
+    get:
+      operationId: profiles_leaderboard_retrieve
+      description: |-
+        Return leaderboard entries for the current user and accepted friends.
+
+        Args:
+            request: The incoming DRF request.
+
+        Returns:
+            Response: Serialized leaderboard profiles ordered by level.
       tags:
       - profiles
       security:
@@ -1129,6 +3032,7 @@ paths:
   /api/push/:
     get:
       operationId: push_list
+      description: ViewSet for managing user-specific Web Push subscriptions.
       tags:
       - push
       security:
@@ -1145,6 +3049,7 @@ paths:
           description: ''
     post:
       operationId: push_create
+      description: ViewSet for managing user-specific Web Push subscriptions.
       tags:
       - push
       requestBody:
@@ -1172,6 +3077,7 @@ paths:
   /api/push/{id}/:
     get:
       operationId: push_retrieve
+      description: ViewSet for managing user-specific Web Push subscriptions.
       parameters:
       - in: path
         name: id
@@ -1193,6 +3099,7 @@ paths:
           description: ''
     put:
       operationId: push_update
+      description: ViewSet for managing user-specific Web Push subscriptions.
       parameters:
       - in: path
         name: id
@@ -1226,6 +3133,7 @@ paths:
           description: ''
     patch:
       operationId: push_partial_update
+      description: ViewSet for managing user-specific Web Push subscriptions.
       parameters:
       - in: path
         name: id
@@ -1258,6 +3166,7 @@ paths:
           description: ''
     delete:
       operationId: push_destroy
+      description: ViewSet for managing user-specific Web Push subscriptions.
       parameters:
       - in: path
         name: id
@@ -1276,6 +3185,14 @@ paths:
   /api/push/subscribe/:
     post:
       operationId: push_subscribe_create
+      description: |-
+        Register or update a push subscription for the current user.
+
+        Args:
+            request: The current request containing subscription details.
+
+        Returns:
+            A Response with the created/updated subscription data.
       tags:
       - push
       requestBody:
@@ -1303,6 +3220,14 @@ paths:
   /api/push/unsubscribe/:
     post:
       operationId: push_unsubscribe_create
+      description: |-
+        Remove a push subscription based on its endpoint.
+
+        Args:
+            request: The current request containing the endpoint to remove.
+
+        Returns:
+            A 204 No Content response or 400 if endpoint is missing.
       tags:
       - push
       requestBody:
@@ -1330,6 +3255,14 @@ paths:
   /api/push/vapid_public_key/:
     get:
       operationId: push_vapid_public_key_retrieve
+      description: |-
+        Retrieve the server's VAPID public key.
+
+        Args:
+            request: The current request.
+
+        Returns:
+            A JSON response containing the public key.
       tags:
       - push
       security:
@@ -1346,18 +3279,345 @@ paths:
   /api/schedule/:
     post:
       operationId: schedule_create
+      description: |-
+        Handle task scheduling request.
+
+        Args:
+            request: The DRF request object containing scheduling parameters.
+
+        Returns:
+            A Response object with the results of the scheduling process.
       tags:
       - schedule
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ScheduleRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/ScheduleRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ScheduleRequest'
       security:
       - knoxApiToken: []
       - cookieAuth: []
       responses:
         '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ScheduleTasksResponse'
+          description: ''
+  /api/share_accept/:
+    post:
+      operationId: share_accept_create
+      description: |-
+        Handle accepting or rejecting a shared event.
+
+        Args:
+            request (Request): The DRF request object containing:
+                - Decision (str): Either "accept" or "reject".
+                - Event-ID (int): The ID of the pending share event.
+
+        Returns:
+            Response: A DRF response with a success message or an error message.
+      tags:
+      - share_accept
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ShareAcceptRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/ShareAcceptRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ShareAcceptRequest'
+        required: true
+      security:
+      - knoxApiToken: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ShareAcceptSuccessResponse'
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ShareAcceptErrorResponse'
+          description: ''
+  /api/share_events/:
+    get:
+      operationId: share_events_list
+      description: |-
+        Retrieve list of shared events involving the user.
+
+        Args:
+            request (Request): The DRF request object.
+
+        Returns:
+            Response: A list of shared event metadata including sender,
+                receiver, and event details.
+      tags:
+      - share_events
+      security:
+      - knoxApiToken: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/SharedEventItem'
+          description: ''
+  /api/share_send/:
+    post:
+      operationId: share_send_create
+      description: |-
+        Send an event share request to another user.
+
+        Args:
+            request (Request): The DRF request object containing:
+                - Receiver (str): The username of the recipient.
+                - Event-ID (str|int): The ID of the event to share.
+
+        Returns:
+            Response: A DRF response indicating if the event was sent or
+                an error message if validation fails.
+      tags:
+      - share_send
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ShareSendRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/ShareSendRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ShareSendRequest'
+        required: true
+      security:
+      - knoxApiToken: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ShareSendSuccessResponse'
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ShareSendErrorResponse'
+          description: ''
+  /api/special-dates/:
+    get:
+      operationId: special_dates_list
+      description: |-
+        ViewSet for viewing and editing special dates.
+
+        Provides actions for all standard CRUD operations on SpecialDates model.
+        Querysets are scoped to the authenticated user.
+      tags:
+      - special-dates
+      security:
+      - knoxApiToken: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/SpecialDates'
+          description: ''
+    post:
+      operationId: special_dates_create
+      description: |-
+        ViewSet for viewing and editing special dates.
+
+        Provides actions for all standard CRUD operations on SpecialDates model.
+        Querysets are scoped to the authenticated user.
+      tags:
+      - special-dates
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SpecialDates'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/SpecialDates'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/SpecialDates'
+        required: true
+      security:
+      - knoxApiToken: []
+      - cookieAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SpecialDates'
+          description: ''
+  /api/special-dates/{id}/:
+    get:
+      operationId: special_dates_retrieve
+      description: |-
+        ViewSet for viewing and editing special dates.
+
+        Provides actions for all standard CRUD operations on SpecialDates model.
+        Querysets are scoped to the authenticated user.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this special dates.
+        required: true
+      tags:
+      - special-dates
+      security:
+      - knoxApiToken: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SpecialDates'
+          description: ''
+    put:
+      operationId: special_dates_update
+      description: |-
+        ViewSet for viewing and editing special dates.
+
+        Provides actions for all standard CRUD operations on SpecialDates model.
+        Querysets are scoped to the authenticated user.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this special dates.
+        required: true
+      tags:
+      - special-dates
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SpecialDates'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/SpecialDates'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/SpecialDates'
+        required: true
+      security:
+      - knoxApiToken: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SpecialDates'
+          description: ''
+    patch:
+      operationId: special_dates_partial_update
+      description: |-
+        ViewSet for viewing and editing special dates.
+
+        Provides actions for all standard CRUD operations on SpecialDates model.
+        Querysets are scoped to the authenticated user.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this special dates.
+        required: true
+      tags:
+      - special-dates
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedSpecialDates'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedSpecialDates'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedSpecialDates'
+      security:
+      - knoxApiToken: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SpecialDates'
+          description: ''
+    delete:
+      operationId: special_dates_destroy
+      description: |-
+        ViewSet for viewing and editing special dates.
+
+        Provides actions for all standard CRUD operations on SpecialDates model.
+        Querysets are scoped to the authenticated user.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this special dates.
+        required: true
+      tags:
+      - special-dates
+      security:
+      - knoxApiToken: []
+      - cookieAuth: []
+      responses:
+        '204':
           description: No response body
   /api/stats/weekly/:
     get:
       operationId: stats_weekly_retrieve
-      description: Retrieve weekly statistics for the authenticated user.
+      description: |-
+        Retrieve weekly stats for the user based on an optional date.
+
+        Args:
+            request (Request): The DRF request object.
+
+        Returns:
+            Response: A DRF response containing weekly statistics.
+      parameters:
+      - in: query
+        name: date
+        schema:
+          type: string
+          format: date
+        description: Reference date in YYYY-MM-DD format. Defaults to today.
       tags:
       - stats
       security:
@@ -1365,10 +3625,18 @@ paths:
       - cookieAuth: []
       responses:
         '200':
-          description: No response body
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WeeklySummary'
+          description: ''
   /api/tasks/:
     get:
       operationId: tasks_list
+      description: |-
+        ViewSet for managing tasks in the calendar context.
+
+        Provides CRUD operations for tasks and a custom action for rescheduling.
       parameters:
       - in: query
         name: categories
@@ -1415,6 +3683,10 @@ paths:
           description: ''
     post:
       operationId: tasks_create
+      description: |-
+        ViewSet for managing tasks in the calendar context.
+
+        Provides CRUD operations for tasks and a custom action for rescheduling.
       tags:
       - tasks
       requestBody:
@@ -1442,6 +3714,10 @@ paths:
   /api/tasks/{id}/:
     get:
       operationId: tasks_retrieve
+      description: |-
+        ViewSet for managing tasks in the calendar context.
+
+        Provides CRUD operations for tasks and a custom action for rescheduling.
       parameters:
       - in: path
         name: id
@@ -1462,6 +3738,16 @@ paths:
           description: ''
     put:
       operationId: tasks_update
+      description: |-
+        Update a task and include profile metadata in the response.
+
+        Args:
+            request (Request): The DRF request object.
+            *args: Variable length argument list.
+            **kwargs: Arbitrary keyword arguments.
+
+        Returns:
+            Response: A DRF response containing updated task data and metadata.
       parameters:
       - in: path
         name: id
@@ -1494,6 +3780,16 @@ paths:
           description: ''
     patch:
       operationId: tasks_partial_update
+      description: |-
+        Partial update a task and include profile metadata in the response.
+
+        Args:
+            request (Request): The DRF request object.
+            *args: Variable length argument list.
+            **kwargs: Arbitrary keyword arguments.
+
+        Returns:
+            Response: A DRF response containing updated task data and metadata.
       parameters:
       - in: path
         name: id
@@ -1525,6 +3821,10 @@ paths:
           description: ''
     delete:
       operationId: tasks_destroy
+      description: |-
+        ViewSet for managing tasks in the calendar context.
+
+        Provides CRUD operations for tasks and a custom action for rescheduling.
       parameters:
       - in: path
         name: id
@@ -1539,9 +3839,178 @@ paths:
       responses:
         '204':
           description: No response body
+  /api/tasks/{id}/save-and-reschedule/:
+    post:
+      operationId: tasks_save_and_reschedule_create
+      description: |-
+        Save task changes and trigger a full reschedule for the user.
+
+        Args:
+            request (Request): The DRF request object.
+            *args: Variable length argument list.
+            **kwargs: Arbitrary keyword arguments.
+
+        Returns:
+            Response: A DRF response with the updated task and reschedule status.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this task.
+        required: true
+      tags:
+      - tasks
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Calendar'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Calendar'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Calendar'
+        required: true
+      security:
+      - knoxApiToken: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Calendar'
+          description: ''
+  /api/teachers/:
+    get:
+      operationId: teachers_list
+      description: |-
+        Lists all active teachers and their managed courses.
+
+        Args:
+            request: The current HttpRequest.
+
+        Returns:
+            A Response containing a list of teacher profiles and their courses.
+      tags:
+      - teachers
+      security:
+      - knoxApiToken: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/TeacherListResponse'
+          description: ''
+  /api/teachers/create_teacher/:
+    post:
+      operationId: teachers_create_teacher_create
+      description: |-
+        Registers a new teacher profile for the current or specified user.
+
+        Args:
+            request: The current HttpRequest containing 'user_id'.
+
+        Returns:
+            A Response containing the serialized teacher profile.
+      tags:
+      - teachers
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TeacherCreate'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/TeacherCreate'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/TeacherCreate'
+        required: true
+      security:
+      - knoxApiToken: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Teacher'
+          description: ''
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Teacher'
+          description: ''
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TeacherCreateForbiddenResponse'
+          description: ''
+  /api/teachers/me/:
+    get:
+      operationId: teachers_me_retrieve
+      description: Returns the current user's teacher profile if they are a teacher.
+      tags:
+      - teachers
+      security:
+      - knoxApiToken: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TeacherMeResponse'
+          description: ''
+  /api/teachers/unregister_teacher/:
+    post:
+      operationId: teachers_unregister_teacher_create
+      description: |-
+        Deactivates the teacher profile for the current user.
+
+        Args:
+            request: The current HttpRequest.
+
+        Returns:
+            A Response containing the updated teacher profile state.
+      tags:
+      - teachers
+      security:
+      - knoxApiToken: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Teacher'
+          description: ''
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TeacherUnregisterNotFoundResponse'
+          description: ''
   /api/unschedule/:
     post:
       operationId: unschedule_create
+      description: |-
+        Handle task unscheduling request.
+
+        Args:
+            request: The DRF request object.
+
+        Returns:
+            A Response object with the count of unscheduled tasks.
       tags:
       - unschedule
       security:
@@ -1549,17 +4018,23 @@ paths:
       - cookieAuth: []
       responses:
         '200':
-          description: No response body
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UnscheduleTasksResponse'
+          description: ''
 components:
   schemas:
     AdminUserList:
       type: object
+      description: Serialize user data for the admin panel user list.
       properties:
         id:
           type: integer
           readOnly: true
         username:
           type: string
+          pattern: ^[0-9a-zA-Z]*$
           maxLength: 255
         email:
           type: string
@@ -1584,11 +4059,349 @@ components:
       - email
       - id
       - username
+    Assessment:
+      type: object
+      description: Serializer for the Assessment model.
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        title:
+          type: string
+          maxLength: 500
+        assessment_type:
+          $ref: '#/components/schemas/AssessmentTypeEnum'
+        due_date:
+          type: string
+          format: date-time
+        length_of_assessment:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: 1
+          format: int64
+          nullable: true
+        weighting_of_assessment:
+          type: integer
+          maximum: 100
+          minimum: 0
+        notes:
+          type: string
+        reminder_offset:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: 0
+          format: int64
+          nullable: true
+        assessment_category:
+          type: integer
+          nullable: true
+        module_category:
+          type: integer
+          nullable: true
+        categories:
+          type: array
+          items:
+            type: integer
+        completed:
+          type: boolean
+        linked_event:
+          type: integer
+          readOnly: true
+          nullable: true
+        linked_event_details:
+          allOf:
+          - $ref: '#/components/schemas/EventResponse'
+          nullable: true
+          readOnly: true
+        event_details:
+          allOf:
+          - $ref: '#/components/schemas/AssessmentEventInput'
+          writeOnly: true
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - created_at
+      - due_date
+      - id
+      - linked_event
+      - linked_event_details
+      - title
+      - updated_at
+      - weighting_of_assessment
+    AssessmentEventInput:
+      type: object
+      description: Serializer for inputting event details when creating or updating
+        an assessment.
+      properties:
+        start_time:
+          type: string
+          format: date-time
+        end_time:
+          type: string
+          format: date-time
+        location:
+          type: string
+          maxLength: 255
+      required:
+      - end_time
+      - start_time
+    AssessmentTypeEnum:
+      enum:
+      - COURSEWORK
+      - EXAM
+      - QUIZ
+      - PRESENTATION
+      - PRACTICAL
+      - FORMATIVE
+      - SUMMATIVE
+      - OTHER
+      type: string
+      description: |-
+        * `COURSEWORK` - Coursework
+        * `EXAM` - Exam
+        * `QUIZ` - Quiz
+        * `PRESENTATION` - Presentation
+        * `PRACTICAL` - Practical
+        * `FORMATIVE` - Formative
+        * `SUMMATIVE` - Summative
+        * `OTHER` - Other
     BlankEnum:
       enum:
       - ''
+    BroadcastJobDetail:
+      type: object
+      description: Serialize detailed broadcast job data with nested recipients.
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        title:
+          type: string
+          maxLength: 60
+        message:
+          type: string
+          maxLength: 240
+        target:
+          $ref: '#/components/schemas/TargetEnum'
+        status:
+          $ref: '#/components/schemas/BroadcastStatusEnum'
+        task_id:
+          type: string
+          maxLength: 255
+        recipient_count:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: 0
+          format: int64
+        delivered_count:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: 0
+          format: int64
+        failed_count:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: 0
+          format: int64
+        sender:
+          type: integer
+          nullable: true
+        sender_username:
+          type: string
+          readOnly: true
+        audience_filters: {}
+        audience_snapshot: {}
+        provider_errors: {}
+        queued_at:
+          type: string
+          format: date-time
+          readOnly: true
+        started_at:
+          type: string
+          format: date-time
+          nullable: true
+        completed_at:
+          type: string
+          format: date-time
+          nullable: true
+        retry_of:
+          type: integer
+          nullable: true
+        recipients:
+          type: array
+          items:
+            $ref: '#/components/schemas/BroadcastRecipient'
+          readOnly: true
+      required:
+      - id
+      - message
+      - queued_at
+      - recipients
+      - sender_username
+      - target
+      - title
+    BroadcastJobList:
+      type: object
+      description: Serialize summary data for broadcast job listings.
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        title:
+          type: string
+          maxLength: 60
+        target:
+          $ref: '#/components/schemas/TargetEnum'
+        status:
+          $ref: '#/components/schemas/BroadcastStatusEnum'
+        recipient_count:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: 0
+          format: int64
+        delivered_count:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: 0
+          format: int64
+        failed_count:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: 0
+          format: int64
+        sender:
+          type: integer
+          nullable: true
+        sender_username:
+          type: string
+          readOnly: true
+        queued_at:
+          type: string
+          format: date-time
+          readOnly: true
+        completed_at:
+          type: string
+          format: date-time
+          nullable: true
+      required:
+      - id
+      - queued_at
+      - sender_username
+      - target
+      - title
+    BroadcastNotFoundError:
+      type: object
+      properties:
+        code:
+          type: string
+        message:
+          type: string
+      required:
+      - code
+      - message
+    BroadcastNotFoundResponse:
+      type: object
+      properties:
+        error:
+          $ref: '#/components/schemas/BroadcastNotFoundError'
+      required:
+      - error
+    BroadcastRecipient:
+      type: object
+      description: Serialize delivery details for a broadcast recipient.
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        recipient:
+          type: integer
+        username:
+          type: string
+          readOnly: true
+        email:
+          type: string
+          format: email
+          readOnly: true
+        status:
+          $ref: '#/components/schemas/DeliveryStatusEnum'
+        error_code:
+          type: string
+          maxLength: 64
+        error_message:
+          type: string
+        last_attempt_at:
+          type: string
+          format: date-time
+          nullable: true
+        notification:
+          type: integer
+          nullable: true
+      required:
+      - email
+      - id
+      - recipient
+      - username
+    BroadcastStatusEnum:
+      enum:
+      - QUEUED
+      - IN_PROGRESS
+      - COMPLETED
+      - PARTIAL
+      - FAILED
+      type: string
+      description: |-
+        * `QUEUED` - Queued
+        * `IN_PROGRESS` - In progress
+        * `COMPLETED` - Completed
+        * `PARTIAL` - Partial
+        * `FAILED` - Failed
+    BroadcastStatusResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+        status:
+          type: string
+        recipient_count:
+          type: integer
+        delivered_count:
+          type: integer
+        failed_count:
+          type: integer
+        queued_at:
+          type: string
+        started_at:
+          type: string
+          nullable: true
+        completed_at:
+          type: string
+          nullable: true
+        task_id:
+          type: string
+          nullable: true
+        updated_at:
+          type: string
+      required:
+      - completed_at
+      - delivered_count
+      - failed_count
+      - id
+      - queued_at
+      - recipient_count
+      - started_at
+      - status
+      - task_id
+      - updated_at
     Calendar:
       type: object
+      description: Serializer for the calendar .
       properties:
         id:
           type: integer
@@ -1602,11 +4415,23 @@ components:
           type: array
           items:
             type: integer
+        colour:
+          type: string
+          nullable: true
+          maxLength: 7
         estimated_minutes:
           type: integer
           maximum: 9223372036854775807
           minimum: 1
           format: int64
+        completed_minutes:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: 0
+          format: int64
+        remaining_minutes:
+          type: integer
+          readOnly: true
         start_time:
           type: string
           format: date-time
@@ -1620,6 +4445,27 @@ components:
           maximum: 10
         completed:
           type: boolean
+        locked:
+          type: boolean
+        allow_split:
+          type: boolean
+        min_split_minutes:
+          type: integer
+          maximum: 240
+          minimum: 15
+        max_split_minutes:
+          type: integer
+          maximum: 1440
+          minimum: 15
+          nullable: true
+        buffer_before_minutes:
+          type: integer
+          maximum: 240
+          minimum: 0
+        buffer_after_minutes:
+          type: integer
+          maximum: 240
+          minimum: 0
         parent_task:
           type: integer
           nullable: true
@@ -1627,18 +4473,19 @@ components:
           nullable: true
         total_task_allocations:
           type: integer
-          maximum: 9223372036854775807
-          minimum: 0
-          format: int64
+          readOnly: true
       required:
       - deadline
       - estimated_minutes
       - id
       - importance
+      - remaining_minutes
       - start_time
       - title
+      - total_task_allocations
     CalendarResponse:
       type: object
+      description: Serializer for the Calendar Responses.
       properties:
         id:
           type: integer
@@ -1653,11 +4500,23 @@ components:
           items:
             $ref: '#/components/schemas/Category'
           readOnly: true
+        colour:
+          type: string
+          nullable: true
+          maxLength: 7
         estimated_minutes:
           type: integer
           maximum: 9223372036854775807
           minimum: 1
           format: int64
+        completed_minutes:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: 0
+          format: int64
+        remaining_minutes:
+          type: integer
+          readOnly: true
         start_time:
           type: string
           format: date-time
@@ -1671,6 +4530,27 @@ components:
           maximum: 10
         completed:
           type: boolean
+        locked:
+          type: boolean
+        allow_split:
+          type: boolean
+        min_split_minutes:
+          type: integer
+          maximum: 240
+          minimum: 15
+        max_split_minutes:
+          type: integer
+          maximum: 1440
+          minimum: 15
+          nullable: true
+        buffer_before_minutes:
+          type: integer
+          maximum: 240
+          minimum: 0
+        buffer_after_minutes:
+          type: integer
+          maximum: 240
+          minimum: 0
         parent_task:
           type: integer
           nullable: true
@@ -1680,10 +4560,12 @@ components:
       - estimated_minutes
       - id
       - importance
+      - remaining_minutes
       - start_time
       - title
     Category:
       type: object
+      description: Serializer for the Category model.
       properties:
         id:
           type: integer
@@ -1691,11 +4573,111 @@ components:
         text:
           type: string
           maxLength: 20
+        colour:
+          type: string
+          nullable: true
+          pattern: ^#[0-9A-Fa-f]{6}$
+          maxLength: 7
+        colour_override:
+          type: boolean
+        max_daily_study_time:
+          type: integer
+          maximum: 1440
+          minimum: 0
+          nullable: true
       required:
       - id
       - text
+    Course:
+      type: object
+      description: |-
+        General purpose serializer for Course objects.
+
+        Provides a comprehensive read/write representation of the course entity,
+        including its administrative metadata.
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        name:
+          type: string
+          maxLength: 255
+        description:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        active:
+          type: boolean
+          readOnly: true
+        lead:
+          type: integer
+          readOnly: true
+          nullable: true
+      required:
+      - active
+      - created_at
+      - id
+      - lead
+      - name
+    DailyStat:
+      type: object
+      properties:
+        day:
+          type: string
+        completed_count:
+          type: integer
+        total_minutes:
+          type: integer
+      required:
+      - completed_count
+      - day
+      - total_minutes
+    DefaultLandingPageEnum:
+      enum:
+      - dashboard
+      - calendar
+      - tasks
+      type: string
+      description: |-
+        * `dashboard` - Dashboard
+        * `calendar` - Calendar
+        * `tasks` - Tasks
+    DeleteAccountResponse:
+      type: object
+      properties:
+        message:
+          type: string
+      required:
+      - message
+    DeleteAllEventsResponse:
+      type: object
+      properties:
+        message:
+          type: string
+      required:
+      - message
+    DeleteAllTasksResponse:
+      type: object
+      properties:
+        message:
+          type: string
+      required:
+      - message
+    DeliveryStatusEnum:
+      enum:
+      - PENDING
+      - SENT
+      - FAILED
+      type: string
+      description: |-
+        * `PENDING` - Pending
+        * `SENT` - Sent
+        * `FAILED` - Failed
     Event:
       type: object
+      description: Serializer for the Event model.
       properties:
         id:
           type: integer
@@ -1708,6 +4690,10 @@ components:
         location:
           type: string
           maxLength: 255
+        colour:
+          type: string
+          nullable: true
+          maxLength: 7
         categories:
           type: array
           items:
@@ -1740,13 +4726,12 @@ components:
       - split_from_event_id
     EventReminder:
       type: object
+      description: Serializer for the EventReminder model.
       properties:
         id:
           type: integer
           readOnly: true
         send_push:
-          type: boolean
-        send_email:
           type: boolean
         minutes_before:
           type: integer
@@ -1758,6 +4743,7 @@ components:
       - minutes_before
     EventResponse:
       type: object
+      description: Serializer for the Event model used in responses.
       properties:
         id:
           type: integer
@@ -1770,6 +4756,10 @@ components:
         location:
           type: string
           maxLength: 255
+        colour:
+          type: string
+          nullable: true
+          maxLength: 7
         categories:
           type: array
           items:
@@ -1806,6 +4796,7 @@ components:
       - split_from_event_id
     ExpandedEventInstance:
       type: object
+      description: Serializer for event instances.
       properties:
         id:
           type: integer
@@ -1815,6 +4806,9 @@ components:
           type: string
         location:
           type: string
+        colour:
+          type: string
+          nullable: true
         categories:
           type: array
           items:
@@ -1866,13 +4860,11 @@ components:
       - title
     ExpandedEventReminder:
       type: object
+      description: Serializer for event reminders with expanded fields.
       properties:
         id:
           type: integer
         send_push:
-          type: boolean
-          default: false
-        send_email:
           type: boolean
           default: false
         minutes_before:
@@ -1880,8 +4872,64 @@ components:
           minimum: 0
       required:
       - minutes_before
+    Friendship:
+      type: object
+      description: Serializer for the Friendship model.
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        sender:
+          type: integer
+          readOnly: true
+        receiver:
+          type: integer
+        receiver_username:
+          type: string
+          writeOnly: true
+        sender_username:
+          type: string
+          readOnly: true
+        receiver_username_display:
+          type: string
+          readOnly: true
+        sender_name:
+          type: string
+          readOnly: true
+        receiver_name:
+          type: string
+          readOnly: true
+        sender_avatar:
+          type: string
+          nullable: true
+          readOnly: true
+        receiver_avatar:
+          type: string
+          nullable: true
+          readOnly: true
+        state:
+          allOf:
+          - $ref: '#/components/schemas/StateEnum'
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+          nullable: true
+      required:
+      - id
+      - receiver_avatar
+      - receiver_name
+      - receiver_username_display
+      - sender
+      - sender_avatar
+      - sender_name
+      - sender_username
+      - state
+      - updated_at
     Grade:
       type: object
+      description: Serializer for the Grade model.
       properties:
         id:
           type: integer
@@ -1897,6 +4945,10 @@ components:
           type: integer
           nullable: true
         category_name:
+          type: string
+          nullable: true
+          readOnly: true
+        category_colour:
           type: string
           nullable: true
           readOnly: true
@@ -1920,6 +4972,7 @@ components:
           minimum: 0
           readOnly: true
       required:
+      - category_colour
       - category_name
       - date_achieved
       - id
@@ -1929,6 +4982,28 @@ components:
       - time_spent_minutes
       - total_possible
       - user
+    ImportErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+      required:
+      - error
+    ImportFileRequest:
+      type: object
+      properties:
+        file:
+          type: string
+          format: uri
+      required:
+      - file
+    ImportSuccessResponse:
+      type: object
+      properties:
+        message:
+          type: string
+      required:
+      - message
     ImportanceEnum:
       enum:
       - 1
@@ -1953,8 +5028,19 @@ components:
         * `8` - High
         * `9` - Very high
         * `10` - Critical
+    ImportanceStat:
+      type: object
+      properties:
+        level:
+          type: integer
+        completed_count:
+          type: integer
+      required:
+      - completed_count
+      - level
     Login:
       type: object
+      description: Serialize and validate user login credentials.
       properties:
         username:
           type: string
@@ -1966,6 +5052,7 @@ components:
       - username
     Notification:
       type: object
+      description: Serializer for the Notification model.
       properties:
         id:
           type: integer
@@ -2014,6 +5101,29 @@ components:
     NullEnum:
       enum:
       - null
+    PaginatedBroadcastJobListList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/BroadcastJobList'
     PaginatedNotificationList:
       type: object
       required:
@@ -2037,8 +5147,76 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/Notification'
+    PatchedAssessment:
+      type: object
+      description: Serializer for the Assessment model.
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        title:
+          type: string
+          maxLength: 500
+        assessment_type:
+          $ref: '#/components/schemas/AssessmentTypeEnum'
+        due_date:
+          type: string
+          format: date-time
+        length_of_assessment:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: 1
+          format: int64
+          nullable: true
+        weighting_of_assessment:
+          type: integer
+          maximum: 100
+          minimum: 0
+        notes:
+          type: string
+        reminder_offset:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: 0
+          format: int64
+          nullable: true
+        assessment_category:
+          type: integer
+          nullable: true
+        module_category:
+          type: integer
+          nullable: true
+        categories:
+          type: array
+          items:
+            type: integer
+        completed:
+          type: boolean
+        linked_event:
+          type: integer
+          readOnly: true
+          nullable: true
+        linked_event_details:
+          allOf:
+          - $ref: '#/components/schemas/EventResponse'
+          nullable: true
+          readOnly: true
+        event_details:
+          allOf:
+          - $ref: '#/components/schemas/AssessmentEventInput'
+          writeOnly: true
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
     PatchedCalendar:
       type: object
+      description: Serializer for the calendar .
       properties:
         id:
           type: integer
@@ -2052,11 +5230,23 @@ components:
           type: array
           items:
             type: integer
+        colour:
+          type: string
+          nullable: true
+          maxLength: 7
         estimated_minutes:
           type: integer
           maximum: 9223372036854775807
           minimum: 1
           format: int64
+        completed_minutes:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: 0
+          format: int64
+        remaining_minutes:
+          type: integer
+          readOnly: true
         start_time:
           type: string
           format: date-time
@@ -2070,6 +5260,27 @@ components:
           maximum: 10
         completed:
           type: boolean
+        locked:
+          type: boolean
+        allow_split:
+          type: boolean
+        min_split_minutes:
+          type: integer
+          maximum: 240
+          minimum: 15
+        max_split_minutes:
+          type: integer
+          maximum: 1440
+          minimum: 15
+          nullable: true
+        buffer_before_minutes:
+          type: integer
+          maximum: 240
+          minimum: 0
+        buffer_after_minutes:
+          type: integer
+          maximum: 240
+          minimum: 0
         parent_task:
           type: integer
           nullable: true
@@ -2077,11 +5288,59 @@ components:
           nullable: true
         total_task_allocations:
           type: integer
-          maximum: 9223372036854775807
+          readOnly: true
+    PatchedCategory:
+      type: object
+      description: Serializer for the Category model.
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        text:
+          type: string
+          maxLength: 20
+        colour:
+          type: string
+          nullable: true
+          pattern: ^#[0-9A-Fa-f]{6}$
+          maxLength: 7
+        colour_override:
+          type: boolean
+        max_daily_study_time:
+          type: integer
+          maximum: 1440
           minimum: 0
-          format: int64
+          nullable: true
+    PatchedCourse:
+      type: object
+      description: |-
+        General purpose serializer for Course objects.
+
+        Provides a comprehensive read/write representation of the course entity,
+        including its administrative metadata.
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        name:
+          type: string
+          maxLength: 255
+        description:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        active:
+          type: boolean
+          readOnly: true
+        lead:
+          type: integer
+          readOnly: true
+          nullable: true
     PatchedEvent:
       type: object
+      description: Serializer for the Event model.
       properties:
         id:
           type: integer
@@ -2094,6 +5353,10 @@ components:
         location:
           type: string
           maxLength: 255
+        colour:
+          type: string
+          nullable: true
+          maxLength: 7
         categories:
           type: array
           items:
@@ -2121,8 +5384,53 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/EventReminder'
+    PatchedFriendship:
+      type: object
+      description: Serializer for the Friendship model.
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        sender:
+          type: integer
+          readOnly: true
+        receiver:
+          type: integer
+        receiver_username:
+          type: string
+          writeOnly: true
+        sender_username:
+          type: string
+          readOnly: true
+        receiver_username_display:
+          type: string
+          readOnly: true
+        sender_name:
+          type: string
+          readOnly: true
+        receiver_name:
+          type: string
+          readOnly: true
+        sender_avatar:
+          type: string
+          nullable: true
+          readOnly: true
+        receiver_avatar:
+          type: string
+          nullable: true
+          readOnly: true
+        state:
+          allOf:
+          - $ref: '#/components/schemas/StateEnum'
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+          nullable: true
     PatchedGrade:
       type: object
+      description: Serializer for the Grade model.
       properties:
         id:
           type: integer
@@ -2138,6 +5446,10 @@ components:
           type: integer
           nullable: true
         category_name:
+          type: string
+          nullable: true
+          readOnly: true
+        category_colour:
           type: string
           nullable: true
           readOnly: true
@@ -2162,6 +5474,7 @@ components:
           readOnly: true
     PatchedNotification:
       type: object
+      description: Serializer for the Notification model.
       properties:
         id:
           type: integer
@@ -2191,6 +5504,7 @@ components:
           $ref: '#/components/schemas/NotificationTypeEnum'
     PatchedPreference:
       type: object
+      description: Serializer for the Preference model.
       properties:
         id:
           type: integer
@@ -2201,16 +5515,70 @@ components:
         day_end:
           type: string
           format: time
+        day_schedule: {}
         max_hours_study_per_day:
           type: integer
           maximum: 24
           minimum: 0
+        max_days_ahead:
+          type: integer
+          maximum: 365
+          minimum: 1
+        drag_snap_minutes:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: 0
+          format: int64
+        limit_max_hours:
+          type: boolean
+        disable_sound_effects:
+          type: boolean
+        default_landing_page:
+          $ref: '#/components/schemas/DefaultLandingPageEnum'
+        week_starts_on:
+          $ref: '#/components/schemas/WeekStartsOnEnum'
+        time_format:
+          $ref: '#/components/schemas/TimeFormatEnum'
         days_off:
           type: array
           items:
             type: integer
+        timezone:
+          type: string
+          maxLength: 100
+    PatchedProfile:
+      type: object
+      description: Serialize editable profile data for the authenticated user.
+      properties:
+        name:
+          type: string
+          maxLength: 255
+        date_of_birth:
+          type: string
+          format: date
+          nullable: true
+        creation_date:
+          type: string
+          format: date-time
+          readOnly: true
+        slogan:
+          type: string
+          maxLength: 255
+        bio:
+          type: string
+        avatar:
+          type: string
+          format: uri
+          nullable: true
+        xp:
+          type: integer
+          readOnly: true
+        level:
+          type: integer
+          readOnly: true
     PatchedPushSubscription:
       type: object
+      description: Serializer for the PushSubscription model.
       properties:
         id:
           type: integer
@@ -2229,8 +5597,53 @@ components:
           type: string
           format: date-time
           readOnly: true
+    PatchedSpecialDates:
+      type: object
+      description: Serializer for the SpecialDates model.
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        date:
+          type: string
+          format: date
+        text:
+          type: string
+          maxLength: 250
+    PomoSession:
+      type: object
+      description: |-
+        Serialiser for the PomoSession model.
+
+        This class handles the conversion of PomoSession instances to and from
+        JSON formats, including validation of the duration.
+
+        Attributes:
+            duration_minutes (IntegerField): Duration field with defined constraints.
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        duration_minutes:
+          type: integer
+          maximum: 600
+          minimum: 1
+        completed_at:
+          type: string
+          format: date-time
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - completed_at
+      - created_at
+      - duration_minutes
+      - id
     Preference:
       type: object
+      description: Serializer for the Preference model.
       properties:
         id:
           type: integer
@@ -2241,18 +5654,42 @@ components:
         day_end:
           type: string
           format: time
+        day_schedule: {}
         max_hours_study_per_day:
           type: integer
           maximum: 24
           minimum: 0
+        max_days_ahead:
+          type: integer
+          maximum: 365
+          minimum: 1
+        drag_snap_minutes:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: 0
+          format: int64
+        limit_max_hours:
+          type: boolean
+        disable_sound_effects:
+          type: boolean
+        default_landing_page:
+          $ref: '#/components/schemas/DefaultLandingPageEnum'
+        week_starts_on:
+          $ref: '#/components/schemas/WeekStartsOnEnum'
+        time_format:
+          $ref: '#/components/schemas/TimeFormatEnum'
         days_off:
           type: array
           items:
             type: integer
+        timezone:
+          type: string
+          maxLength: 100
       required:
       - id
     Profile:
       type: object
+      description: Serialize editable profile data for the authenticated user.
       properties:
         name:
           type: string
@@ -2270,11 +5707,49 @@ components:
           maxLength: 255
         bio:
           type: string
+        avatar:
+          type: string
+          format: uri
+          nullable: true
+        xp:
+          type: integer
+          readOnly: true
+        level:
+          type: integer
+          readOnly: true
       required:
       - creation_date
+      - level
       - name
+      - xp
+    PublicProfile:
+      type: object
+      description: Serialize the public-facing subset of profile fields.
+      properties:
+        username:
+          type: string
+          readOnly: true
+        name:
+          type: string
+          maxLength: 255
+        bio:
+          type: string
+        avatar_url:
+          type: string
+          nullable: true
+          readOnly: true
+        joined_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - avatar_url
+      - joined_at
+      - name
+      - username
     PushSubscription:
       type: object
+      description: Serializer for the PushSubscription model.
       properties:
         id:
           type: integer
@@ -2313,12 +5788,14 @@ components:
         * `yearly` - Yearly
     Register:
       type: object
+      description: Serialize and validate data for user registration.
       properties:
         id:
           type: integer
           readOnly: true
         username:
           type: string
+          pattern: ^[0-9a-zA-Z]*$
           maxLength: 255
         email:
           type: string
@@ -2328,11 +5805,103 @@ components:
           type: string
           writeOnly: true
           maxLength: 128
+        name:
+          type: string
+          writeOnly: true
       required:
       - email
       - id
+      - name
       - password
       - username
+    ScheduleRequest:
+      type: object
+      description: |-
+        Serializer for scheduling requests.
+
+        This serializer validates the parameters for the scheduling process,
+        such as the start date, maximum days ahead, and split allowance.
+      properties:
+        start_date:
+          type: string
+          format: date
+        max_days_ahead:
+          type: integer
+          maximum: 30
+          minimum: 1
+        allow_split:
+          type: boolean
+        replace_existing:
+          type: boolean
+        min_block_minutes:
+          type: integer
+          maximum: 240
+          minimum: 15
+    ScheduleResult:
+      type: object
+      description: |-
+        Serializer for scheduling results.
+
+        This serializer formats the output of the scheduling engine, providing
+        details on whether a task was successfully scheduled and its time range.
+      properties:
+        task_id:
+          type: integer
+        success:
+          type: boolean
+        scheduled_start:
+          type: string
+          format: date-time
+          nullable: true
+        scheduled_end:
+          type: string
+          format: date-time
+          nullable: true
+        reason:
+          type: string
+          nullable: true
+        segments:
+          type: array
+          items:
+            $ref: '#/components/schemas/ScheduleSegment'
+          readOnly: true
+      required:
+      - scheduled_end
+      - scheduled_start
+      - segments
+      - success
+      - task_id
+    ScheduleSegment:
+      type: object
+      properties:
+        start:
+          type: string
+          format: date-time
+        end:
+          type: string
+          format: date-time
+      required:
+      - end
+      - start
+    ScheduleTasksResponse:
+      type: object
+      properties:
+        start_date:
+          type: string
+          format: date
+        scheduled_count:
+          type: integer
+        failed_count:
+          type: integer
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/ScheduleResult'
+      required:
+      - failed_count
+      - results
+      - scheduled_count
+      - start_date
     ServerTimeResponse:
       type: object
       properties:
@@ -2340,6 +5909,230 @@ components:
           type: string
       required:
       - server_time
+    ShareAcceptErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+      required:
+      - error
+    ShareAcceptRequest:
+      type: object
+      properties:
+        Decision:
+          type: string
+          description: Either "accept" or "reject".
+        Event-ID:
+          type: integer
+          description: ID of the pending share event.
+      required:
+      - Decision
+      - Event-ID
+    ShareAcceptSuccessResponse:
+      type: object
+      properties:
+        message:
+          type: string
+      required:
+      - message
+    ShareSendErrorResponse:
+      type: object
+      properties:
+        message:
+          type: string
+      required:
+      - message
+    ShareSendRequest:
+      type: object
+      properties:
+        Receiver:
+          type: string
+          description: Username of the recipient.
+        Event-ID:
+          type: string
+          description: ID of the event to share (optionally prefixed with 'e').
+      required:
+      - Event-ID
+      - Receiver
+    ShareSendSuccessResponse:
+      type: object
+      properties:
+        message:
+          type: string
+      required:
+      - message
+    SharedEventItem:
+      type: object
+      properties:
+        id:
+          type: integer
+        sender:
+          type: integer
+        receiver:
+          type: integer
+        sender_username:
+          type: string
+        receiver_username:
+          type: string
+        event_id:
+          type: integer
+        event_title:
+          type: string
+      required:
+      - event_id
+      - event_title
+      - id
+      - receiver
+      - receiver_username
+      - sender
+      - sender_username
+    SpecialDates:
+      type: object
+      description: Serializer for the SpecialDates model.
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        date:
+          type: string
+          format: date
+        text:
+          type: string
+          maxLength: 250
+      required:
+      - date
+      - id
+    StateEnum:
+      enum:
+      - SENT
+      - ACCEPTED
+      - DECLINED
+      type: string
+      description: |-
+        * `SENT` - Sent
+        * `ACCEPTED` - Accepted
+        * `DECLINED` - Declined
+    TargetEnum:
+      enum:
+      - all
+      - staff
+      - admin
+      - users
+      - retry_failed
+      type: string
+      description: |-
+        * `all` - All users
+        * `staff` - Staff
+        * `admin` - Admins
+        * `users` - Specific users
+        * `retry_failed` - Retry failed recipients
+    Teacher:
+      type: object
+      description: |-
+        Serializer for representing a Teacher profile.
+
+        Includes user metadata alongside the teacher's active status, flattening
+        the relationship with the underlying User model for the API.
+      properties:
+        user_id:
+          type: integer
+          readOnly: true
+        username:
+          type: string
+          readOnly: true
+        first_name:
+          type: string
+          readOnly: true
+        last_name:
+          type: string
+          readOnly: true
+        active:
+          type: boolean
+      required:
+      - first_name
+      - last_name
+      - user_id
+      - username
+    TeacherCourseItem:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        description:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+        active:
+          type: boolean
+      required:
+      - active
+      - created_at
+      - description
+      - id
+      - name
+    TeacherCreate:
+      type: object
+      description: Serializer for promoting a system user to a teacher role.
+      properties:
+        user_id:
+          type: integer
+      required:
+      - user_id
+    TeacherCreateForbiddenResponse:
+      type: object
+      properties:
+        detail:
+          type: string
+      required:
+      - detail
+    TeacherListResponse:
+      type: object
+      properties:
+        courses:
+          $ref: '#/components/schemas/TeacherCourseItem'
+        id:
+          type: integer
+        user_id:
+          type: integer
+        username:
+          type: string
+        active:
+          type: boolean
+      required:
+      - active
+      - courses
+      - id
+      - user_id
+      - username
+    TeacherMeResponse:
+      type: object
+      properties:
+        courses:
+          $ref: '#/components/schemas/TeacherCourseItem'
+        id:
+          type: integer
+        user_id:
+          type: integer
+        username:
+          type: string
+        active:
+          type: boolean
+      required:
+      - active
+      - courses
+      - id
+      - user_id
+      - username
+    TeacherUnregisterNotFoundResponse:
+      type: object
+      properties:
+        detail:
+          type: string
+      required:
+      - detail
     TestPermissionResponse:
       type: object
       properties:
@@ -2347,6 +6140,83 @@ components:
           type: string
       required:
       - message
+    TimeFormatEnum:
+      enum:
+      - 24h
+      - 12h
+      type: string
+      description: |-
+        * `24h` - 24-hour
+        * `12h` - 12-hour
+    UnscheduleTasksResponse:
+      type: object
+      properties:
+        unscheduled_count:
+          type: integer
+      required:
+      - unscheduled_count
+    UsernameNotFoundResponse:
+      type: object
+      properties:
+        detail:
+          type: string
+      required:
+      - detail
+    UsernameResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+        username:
+          type: string
+      required:
+      - id
+      - username
+    WeekStartsOnEnum:
+      enum:
+      - monday
+      - sunday
+      type: string
+      description: |-
+        * `monday` - Monday
+        * `sunday` - Sunday
+    WeeklySummary:
+      type: object
+      description: |-
+        Serializer for a weekly task summary.
+
+        Fields:
+          - total_tasks (int)
+          - completed_tasks (int)
+          - completion_percentage (float)
+          - total_minutes_planned (int)
+      properties:
+        total_tasks:
+          type: integer
+        completed_tasks:
+          type: integer
+        completion_percentage:
+          type: number
+          format: double
+        total_minutes_planned:
+          type: integer
+        daily_stats:
+          type: array
+          items:
+            $ref: '#/components/schemas/DailyStat'
+          readOnly: true
+        importance_stats:
+          type: array
+          items:
+            $ref: '#/components/schemas/ImportanceStat'
+          readOnly: true
+      required:
+      - completed_tasks
+      - completion_percentage
+      - daily_stats
+      - importance_stats
+      - total_minutes_planned
+      - total_tasks
   securitySchemes:
     cookieAuth:
       type: apiKey

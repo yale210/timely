@@ -1,6 +1,6 @@
 import { render, screen } from "@testing-library/react";
 import { describe, it, expect } from "vitest";
-import { AdminBroadcastFormActions } from "@/components/admin/notifications/AdminBroadcastForm/AdminBroadcastFormActions";
+import { AdminBroadcastFormActions } from "@/components/admin/notifications/AdminBroadcastForm";
 
 describe("AdminBroadcastFormActions Component", () => {
   it("renders button correctly", () => {

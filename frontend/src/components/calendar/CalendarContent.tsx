@@ -1,4 +1,4 @@
-import { useLayoutEffect, useRef } from "react";
+import { useLayoutEffect, useMemo, useRef } from "react";
 import type { UseCalendarReturn } from "@/hooks/calendar/useCalendar";
 import CalendarSidebar from "@/components/calendar/CalendarSidebar";
 import CalendarToolbar from "@/components/calendar/CalendarToolbar";
@@ -56,50 +56,59 @@ const CalendarContent = ({
     return () => {
       window.removeEventListener("resize", updateHeaderHeight);
     };
-  }, [actions]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const toolbarState = useMemo(() => ({
+    view: state.view,
+    date: state.date,
+    currentLabel: state.currentLabel,
+    dateStripDays: state.dateStripDays,
+    timeGutterWidth: state.timeGutterWidth,
+    isRescheduling: state.isRescheduling,
+    rescheduleWarnings: state.rescheduleWarnings,
+    preference: state.preference,
+  }), [state.view, state.date, state.currentLabel, state.dateStripDays, state.timeGutterWidth, state.isRescheduling, state.rescheduleWarnings, state.preference]);
+
+  const toolbarActions = useMemo(() => ({
+    setView: actions.setView,
+    goToToday: actions.goToToday,
+    goToPrevious: actions.goToPrevious,
+    goToNext: actions.goToNext,
+    rescheduleTasks: actions.rescheduleTasks,
+    openCreateSidebar: actions.openCreateSidebar,
+  }), [actions.setView, actions.goToToday, actions.goToPrevious, actions.goToNext, actions.rescheduleTasks, actions.openCreateSidebar]);
+
+  const viewState = useMemo(() => ({
+    calendarEntries: state.calendarEntries,
+    view: state.view,
+    date: state.date,
+    preference: state.preference,
+    headerHeight: state.headerHeight,
+  }), [state.calendarEntries, state.view, state.date, state.preference, state.headerHeight]);
+
+  const viewActions = useMemo(() => ({
+    setView: actions.setView,
+    setDate: actions.setDate,
+    selectSlot: actions.selectSlot,
+    selectEntry: actions.selectEntry,
+    handleEventDrop: actions.handleEventDrop,
+    handleEventResize: actions.handleEventResize,
+    handleToggleTaskComplete: actions.handleToggleTaskComplete,
+    setTimeGutterWidth: actions.setTimeGutterWidth,
+  }), [actions.setView, actions.setDate, actions.selectSlot, actions.selectEntry, actions.handleEventDrop, actions.handleEventResize, actions.handleToggleTaskComplete, actions.setTimeGutterWidth]);
 
   return (
     <div className="flex h-full min-h-0 flex-col bg-white text-black">
       <CalendarToolbar
         headerRef={headerRef}
         calendarHeaderTopClass={calendarHeaderTopClass}
-        state={{
-          view: state.view,
-          date: state.date,
-          currentLabel: state.currentLabel,
-          dateStripDays: state.dateStripDays,
-          timeGutterWidth: state.timeGutterWidth,
-          isRescheduling: state.isRescheduling,
-          rescheduleWarnings: state.rescheduleWarnings,
-        }}
-        actions={{
-          setView: actions.setView,
-          goToToday: actions.goToToday,
-          goToPrevious: actions.goToPrevious,
-          goToNext: actions.goToNext,
-          rescheduleTasks: actions.rescheduleTasks,
-          exportEvents: actions.exportEvents,
-          importEvents: actions.importEvents,
-        }}
+        state={toolbarState}
+        actions={toolbarActions}
       />
       <CalendarView
-        state={{
-          calendarEntries: state.calendarEntries,
-          view: state.view,
-          date: state.date,
-          preference: state.preference,
-          headerHeight: state.headerHeight,
-        }}
-        actions={{
-          setView: actions.setView,
-          setDate: actions.setDate,
-          selectSlot: actions.selectSlot,
-          selectEntry: actions.selectEntry,
-          handleEventDrop: actions.handleEventDrop,
-          handleEventResize: actions.handleEventResize,
-          handleToggleTaskComplete: actions.handleToggleTaskComplete,
-          setTimeGutterWidth: actions.setTimeGutterWidth,
-        }}
+        state={viewState}
+        actions={viewActions}
       />
       <CalendarSidebar
         state={{

@@ -1,10 +1,11 @@
 import api from "@/services/api";
 
-import { type Category, type Task, type TaskUpdatedResponse,  type TaskSubmission } from "@/types";
-
-interface DeleteResponse {
-  message: string;
-}
+import type {
+  Category,
+  Task,
+  TaskUpdatedResponse,
+  TaskSubmission,
+  DeleteResponse } from "@/types";
 
 /**
  * Retrieves a list of tasks from the server, optionally filtered by the provided criteria.

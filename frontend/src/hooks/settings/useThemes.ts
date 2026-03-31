@@ -1,4 +1,3 @@
-import { useMemo } from "react";
 import { applyFont, applyTheme } from "@/utils/themeSettings";
 
 interface ThemesState {
@@ -31,50 +30,41 @@ export interface UseThemesReturn {
   actions: ThemesActions;
 }
 
-/**
- * Provides theme and font actions for the themes page.
- * @returns Structured state, loading, error, and theme actions.
- */
-export const useThemes = (): UseThemesReturn => {
-  const themeOptions = useMemo(
-    () => [
-      "light",
-      "dark",
-      "midnight",
-      "retro",
-      "bento",
-      "taro",
-      "paper",
-      "terminal",
-      "sea-glass",
-      "coral",
-      "forest-night",
-      "plum-ink",
-      "neon-noir",
-      "ivy",
-      "arctic",
-      "signal",
-    ],
-    [],
-  );
-  const fontOptions = useMemo(
-    () => [
-      "poppins",
-      "comfortaa",
-      "righteous",
-      "fira-code",
-      "kalam",
-      "gloria-hallelujah",
-      "bitcount",
-      "bebas-neue",
-    ],
-    [],
-  );
+const THEME_OPTIONS = [
+  "light",
+  "dark",
+  "midnight",
+  "retro",
+  "bento",
+  "taro",
+  "paper",
+  "terminal",
+  "sea-glass",
+  "coral",
+  "forest-night",
+  "plum-ink",
+  "neon-noir",
+  "ivy",
+  "arctic",
+  "signal",
+];
 
+const FONT_OPTIONS = [
+  "poppins",
+  "comfortaa",
+  "righteous",
+  "fira-code",
+  "kalam",
+  "gloria-hallelujah",
+  "bitcount",
+  "bebas-neue",
+];
+
+function buildThemesResult(): UseThemesReturn {
   return {
     state: {
-      themeOptions,
-      fontOptions,
+      themeOptions: THEME_OPTIONS,
+      fontOptions: FONT_OPTIONS,
     },
     loading: {
       theme: false,
@@ -89,4 +79,12 @@ export const useThemes = (): UseThemesReturn => {
       applyFont,
     },
   };
+}
+
+/**
+ * Provides theme and font actions for the themes page.
+ * @returns Structured state, loading, error, and theme actions.
+ */
+export const useThemes = (): UseThemesReturn => {
+  return buildThemesResult();
 };

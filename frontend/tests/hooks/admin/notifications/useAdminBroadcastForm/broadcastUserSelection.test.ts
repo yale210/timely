@@ -4,7 +4,7 @@ import {
   areAllVisibleUsersSelected,
   removeVisibleUserIds,
   toggleSelectedUserId,
-} from "@/hooks/admin/notifications/useAdminBroadcastForm/broadcastUserSelection";
+} from "@/hooks/admin/notifications/useAdminBroadcastUsers";
 
 describe("broadcastUserSelection", () => {
   const users = [{ id: 1 }, { id: 2 }, { id: 3 }];

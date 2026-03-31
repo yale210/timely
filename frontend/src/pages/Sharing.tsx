@@ -88,13 +88,13 @@ export default function Sharing() {
           <div className="mx-auto flex w-full max-w-3xl flex-col space-y-6">
             <section className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
               <h2 className="text-lg font-semibold">Share an Event</h2>
-              <div className="mt-4 flex flex-wrap items-center gap-3">
+              <div className="mt-4 flex flex-wrap gap-3 sm:items-center">
                 <input
                   type="text"
                   placeholder="Username"
                   value={receiverUsername}
                   onChange={(event) => setReceiverUsername(event.target.value)}
-                  className="h-10 w-40 rounded-md border border-gray-300 px-3 text-sm focus:border-cyan-400 focus:outline-none"
+                  className="h-10 w-full rounded-md border border-gray-300 px-3 text-sm focus:border-cyan-400 focus:outline-none sm:w-40"
                 />
 
                 <input
@@ -102,7 +102,7 @@ export default function Sharing() {
                   placeholder="EventID"
                   value={eventID}
                   onChange={(event) => setEventID(event.target.value)}
-                  className="h-10 w-40 rounded-md border border-gray-300 px-3 text-sm focus:border-cyan-400 focus:outline-none"
+                  className="h-10 min-w-0 flex-1 rounded-md border border-gray-300 px-3 text-sm focus:border-cyan-400 focus:outline-none sm:w-40 sm:flex-none"
                 />
 
 
@@ -110,7 +110,7 @@ export default function Sharing() {
                   type="button"
                   onClick={handleSend}
                   disabled={isSharing || !receiverUsername.trim()}
-                  className={`h-10 rounded-md px-4 text-sm font-semibold text-white transition-colors ${
+                  className={`h-10 shrink-0 rounded-md px-4 text-sm font-semibold text-white transition-colors ${
                     isSharing || !receiverUsername.trim()
                       ? "cursor-not-allowed bg-gray-300"
                       : "bg-cyan-600 hover:bg-cyan-500"
@@ -119,9 +119,9 @@ export default function Sharing() {
                   {isSharing ? "Sharing..." : "Share Event"}
                 </button>
                 {currentUserId ? (
-                  <span className="text-xs text-gray-500">Signed in as {user?.username ?? "Unknown"}.</span>
+                  <span className="basis-full text-xs text-gray-500">Signed in as {user?.username ?? "Unknown"}.</span>
                 ) : (
-                  <span className="text-xs text-red-500">Unable to determine your user id.</span>
+                  <span className="basis-full text-xs text-red-500">Unable to determine your user id.</span>
                 )}
               </div>
             </section>

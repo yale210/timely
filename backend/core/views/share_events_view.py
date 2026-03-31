@@ -1,10 +1,13 @@
 """View to retrieve shared event requests."""
 
-from rest_framework import permissions
-from rest_framework.views import APIView
-from rest_framework.response import Response
-from core.models import PendingShareEvent
 from django.db.models import Q
+from rest_framework import permissions, serializers
+from rest_framework.response import Response
+from rest_framework.views import APIView
+
+from drf_spectacular.utils import extend_schema, inline_serializer
+
+from core.models import PendingShareEvent
 
 
 class ShareEventsView(APIView):
@@ -16,6 +19,24 @@ class ShareEventsView(APIView):
 
     permission_classes = [permissions.IsAuthenticated]
 
+    @extend_schema(
+        request=None,
+        responses={
+            200: inline_serializer(
+                name="SharedEventItem",
+                fields={
+                    "id": serializers.IntegerField(),
+                    "sender": serializers.IntegerField(),
+                    "receiver": serializers.IntegerField(),
+                    "sender_username": serializers.CharField(),
+                    "receiver_username": serializers.CharField(),
+                    "event_id": serializers.IntegerField(),
+                    "event_title": serializers.CharField(),
+                },
+                many=True,
+            ),
+        },
+    )
     def get(self, request):
         """Retrieve list of shared events involving the user.
 

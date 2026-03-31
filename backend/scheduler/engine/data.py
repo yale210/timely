@@ -7,7 +7,7 @@ from datetime import date, datetime, time, timedelta
 from django.db.models import Q
 from django.utils import timezone
 
-from core.models import Commute, Event, Preference, SpecialDates, Task
+from core.models import Event, Preference, SpecialDates, Task
 from core.services import expand_user_events
 
 
@@ -15,7 +15,7 @@ class SchedulerDataMixin:
     """Mixin for managing data and state within the scheduler engine.
 
     This class handles the initialization of scheduler state, including
-    retrieving tasks, events, commutes, and user preferences from the database.
+        retrieving tasks, events, and user preferences from the database.
     """
 
     def __init__(
@@ -48,7 +48,6 @@ class SchedulerDataMixin:
         self.tasks = self._get_unscheduled_tasks()
         self.scheduled_tasks = self._get_scheduled_tasks()
         self.events = self._get_events()
-        self.commutes = self._get_commutes()
         self.special_dates = self._get_special_dates()
         self._scheduled_blocks: list[tuple[datetime, datetime]] = []
         self._scheduled_task_segments: list[tuple[Task, datetime, datetime]] = []
@@ -117,14 +116,6 @@ class SchedulerDataMixin:
             A list of Event objects sorted by start time.
         """
         return list(Event.objects.filter(user=self.user).order_by("start_time"))
-
-    def _get_commutes(self) -> list[Commute]:
-        """Retrieve the list of commutes for the user.
-
-        Returns:
-            A list of Commute objects.
-        """
-        return list(Commute.objects.filter(user=self.user))
 
     def _get_special_dates(self):
         """Retrieve the set of special dates (e.g., holidays) for the user.

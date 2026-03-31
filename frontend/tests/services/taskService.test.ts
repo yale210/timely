@@ -32,6 +32,7 @@ vi.mock('axios', () => {
 
 import * as taskService from '@/services/taskService'
 import api from '@/services/api'
+import { authService } from '@/services/authService'
 
 describe('taskService', () => {
     beforeEach(() => {
@@ -108,6 +109,15 @@ describe('taskService', () => {
         expect(result).toBe(message)
     })
 
+    it('deleteAccount should call api.delete', async () => {
+        const message = "Delete Account"
+        const spy = vi.spyOn(api, 'delete').mockResolvedValue({ data: { message: message }, } as { data: { message: string } })
+        const result = await authService.deleteAccount("secret");
+        expect(spy).toHaveBeenCalledWith('/api/delete_account/', {
+            data: { password: "secret" },
+        })
+        expect(result).toBe(message)
+    })
+
 
 })
-

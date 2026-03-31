@@ -102,6 +102,7 @@ class SchedulerSchedulingMixinTests(TestCase):
         )
 
     def test_clip_helpers_cover_boundary_cases(self):
+        """Test clip helpers cover boundary cases."""
         slot = (
             make_aware(datetime.combine(self.start_date, time(9, 0))),
             make_aware(datetime.combine(self.start_date, time(11, 0))),
@@ -124,6 +125,7 @@ class SchedulerSchedulingMixinTests(TestCase):
         self.assertIsNone(self.scheduler._clip_slot(None, task_start, deadline))
 
     def test_schedule_task_no_split_covers_success_empty_and_failure_paths(self):
+        """Test schedule task no split covers success empty and failure paths."""
         task = self._task("No split task")
         self.scheduler.remaining_minutes[task.id] = 0
         empty_result = self.scheduler._schedule_task_no_split(task, self.start_date)
@@ -147,6 +149,7 @@ class SchedulerSchedulingMixinTests(TestCase):
         self.assertFalse(failure_result.success)
 
     def test_schedule_tasks_store_results_and_route_split_or_no_split(self):
+        """Test schedule tasks store results and route split or no split."""
         split_task = self._task("Split task routed", allow_split=True)
         no_split_task = self._task("No split routed", allow_split=False)
         no_split_task.importance = 9
@@ -160,8 +163,8 @@ class SchedulerSchedulingMixinTests(TestCase):
             scheduled_end=task.start_time + timedelta(minutes=30),
             segments=[(task.start_time, task.start_time + timedelta(minutes=30))],
         )
-        self.scheduler._schedule_task_no_split = (
-            lambda task, start_date: ScheduleResult(
+        self.scheduler._schedule_task_no_split = lambda task, start_date: (
+            ScheduleResult(
                 task_id=task.id,
                 success=True,
                 scheduled_start=task.start_time,

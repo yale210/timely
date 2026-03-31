@@ -14,6 +14,21 @@ const PICKER_OFFSET = 280;
 const clamp = (value: number, min: number, max: number) =>
   Math.min(Math.max(value, min), max);
 
+const calculateDropdownAbove = (
+  spaceAbove: number,
+  spaceBelow: number,
+) => spaceBelow < DROPDOWN_PREFERRED_HEIGHT && spaceAbove > spaceBelow;
+
+const calculateDropdownMaxHeight = (
+  useAbove: boolean,
+  spaceAbove: number,
+  spaceBelow: number,
+) =>
+  Math.max(
+    DROPDOWN_MIN_HEIGHT,
+    Math.min(DROPDOWN_PREFERRED_HEIGHT, useAbove ? spaceAbove : spaceBelow),
+  );
+
 const normaliseHex = (value: string): string | null => {
   const trimmed = value.trim().toLowerCase();
   if (trimmed.startsWith("#") && trimmed.length === 7) {
@@ -92,35 +107,22 @@ export const fitFloatingPosition = (
 export const getDropdownLayout = (
   input: HTMLInputElement | null,
 ): { position: DropdownPosition; maxHeight: number } | null => {
-  if (!input) {
-    return null;
-  }
+  if (!input) return null;
 
   const rect = input.getBoundingClientRect();
-  const width = rect.width;
   const left = Math.min(
     Math.max(rect.left, FLOATING_PADDING),
-    window.innerWidth - width - FLOATING_PADDING,
+    window.innerWidth - rect.width - FLOATING_PADDING,
   );
   const spaceBelow = window.innerHeight - rect.bottom - FLOATING_PADDING;
   const spaceAbove = rect.top - FLOATING_PADDING;
-  const useAbove =
-    spaceBelow < DROPDOWN_PREFERRED_HEIGHT && spaceAbove > spaceBelow;
-  const maxHeight = Math.max(
-    DROPDOWN_MIN_HEIGHT,
-    Math.min(
-      DROPDOWN_PREFERRED_HEIGHT,
-      useAbove ? spaceAbove : spaceBelow,
-    ),
-  );
+  const useAbove = calculateDropdownAbove(spaceAbove, spaceBelow);
+  const maxHeight = calculateDropdownMaxHeight(useAbove, spaceAbove, spaceBelow);
   const top = useAbove
     ? rect.top - maxHeight - DROPDOWN_OFFSET
     : rect.bottom + DROPDOWN_OFFSET;
 
-  return {
-    position: { top, left, width },
-    maxHeight,
-  };
+  return { position: { top, left, width: rect.width }, maxHeight };
 };
 
 /**

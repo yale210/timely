@@ -1,17 +1,20 @@
-import { useState } from "react"
+import { useState } from "react";
+import ConfirmationModal from "@/components/modals/ConfirmationModal";
+import AccountDeletionModal from "@/components/modals/AccountDeletionModal";
 
 interface PrivacySectionProps {
-  deleting: boolean
-  onDeleteTasks: () => Promise<string>
-  onDeleteEvents: () => Promise<string>
+  deleting: boolean;
+  onDeleteTasks: () => Promise<string>;
+  onDeleteEvents: () => Promise<string>;
+  onDeleteAccount: (password: string) => Promise<string>;
 }
 
 interface PrivacyActionCardProps {
-  description: string
-  deleting: boolean
-  icon: string
-  onClick: () => void
-  title: string
+  description: string;
+  deleting: boolean;
+  icon: string;
+  onClick: () => void;
+  title: string;
 }
 
 const PrivacyActionCard = ({
@@ -31,57 +34,73 @@ const PrivacyActionCard = ({
         type="button"
         onClick={onClick}
         disabled={deleting}
-        className={`inline-flex shrink-0 items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
+        aria-label={deleting ? `Deleting ${title}` : title}
+        title={deleting ? `Deleting ${title}` : title}
+        className={`inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-lg transition-colors ${
           deleting
             ? "cursor-not-allowed bg-gray-200 text-gray-500"
             : "bg-red-50 text-red-700 hover:bg-red-100"
         }`}
       >
         <span className="material-icons text-lg">{icon}</span>
-        {deleting ? "Deleting..." : title}
       </button>
     </div>
   </div>
-)
+);
 
 const PrivacySection = ({
   deleting,
   onDeleteTasks,
   onDeleteEvents,
+  onDeleteAccount,
 }: PrivacySectionProps) => {
-  const [message, setMessage] = useState<string | null>(null)
-  const [error, setError] = useState<string | null>(null)
+  const [message, setMessage] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [pendingAction, setPendingAction] = useState<
+    "events" | "tasks" | "account" | null
+  >(null);
 
-  const handleDeleteEvents = () => {
-    setMessage(null)
-    setError(null)
-    onDeleteEvents()
-      .then((result) => {
-        setMessage(result)
-      })
-      .catch(() => {
-        setError("Failed to delete events.")
-      })
-  }
+  const executeAction = async (
+    action: () => Promise<string>,
+    fallbackError: string,
+    rethrow = false,
+  ) => {
+    setMessage(null);
+    setError(null);
 
-  const handleDeleteTasks = () => {
-    setMessage(null)
-    setError(null)
-    onDeleteTasks()
-      .then((result) => {
-        setMessage(result)
-      })
-      .catch(() => {
-        setError("Failed to delete tasks.")
-      })
-  }
+    try {
+      const result = await action();
+      setMessage(result);
+    } catch {
+      setError(fallbackError);
+      if (rethrow) {
+        throw new Error(fallbackError);
+      }
+    }
+  };
+
+  const handleDeleteEvents = async () => {
+    await executeAction(onDeleteEvents, "Failed to delete events.");
+  };
+
+  const handleDeleteTasks = async () => {
+    await executeAction(onDeleteTasks, "Failed to delete tasks.");
+  };
+
+  const handleDeleteAccount = async (password: string) => {
+    await executeAction(
+      () => onDeleteAccount(password),
+      "Failed to delete account.",
+      true,
+    );
+  };
 
   return (
     <div className="space-y-6">
       <div>
         <h2 className="text-lg font-semibold text-gray-900">Privacy</h2>
         <p className="mt-1 text-sm text-gray-500">
-          Manage destructive actions for your personal data in the app.
+          Manage your personal data in the app.
         </p>
       </div>
 
@@ -101,20 +120,68 @@ const PrivacySection = ({
         <PrivacyActionCard
           title="Delete Events"
           description="Remove all calendar events from your account. This cannot be undone."
-          icon="event_busy"
+          icon="delete_forever"
           deleting={deleting}
-          onClick={handleDeleteEvents}
+          onClick={() => setPendingAction("events")}
         />
         <PrivacyActionCard
           title="Delete Tasks"
           description="Remove all tasks from your account. This cannot be undone."
           icon="delete_forever"
           deleting={deleting}
-          onClick={handleDeleteTasks}
+          onClick={() => setPendingAction("tasks")}
+        />
+        <PrivacyActionCard
+          title="Delete Account"
+          description="Permanently delete your account and all associated data. This cannot be undone."
+          icon="delete_forever"
+          deleting={deleting}
+          onClick={() => setPendingAction("account")}
         />
       </div>
-    </div>
-  )
-}
 
-export default PrivacySection
+      <ConfirmationModal
+        isOpen={pendingAction === "events" || pendingAction === "tasks"}
+        onClose={() => setPendingAction(null)}
+        onConfirm={() => {
+          if (pendingAction === "events") {
+            void handleDeleteEvents();
+            return;
+          }
+          if (pendingAction === "tasks") {
+            void handleDeleteTasks();
+          }
+        }}
+        title={
+          pendingAction === "events"
+            ? "Delete all events"
+            : pendingAction === "tasks"
+              ? "Delete all tasks"
+              : "Delete account"
+        }
+        message={
+          pendingAction === "events"
+            ? "This will permanently remove all calendar events from your account."
+            : pendingAction === "tasks"
+              ? "This will permanently remove all tasks from your account."
+              : "This will permanently delete your account and all associated data."
+        }
+        confirmText={
+          pendingAction === "events"
+            ? "Delete events"
+            : pendingAction === "tasks"
+              ? "Delete tasks"
+              : "Delete account"
+        }
+      />
+      <AccountDeletionModal
+        isOpen={pendingAction === "account"}
+        isDeleting={deleting}
+        onClose={() => setPendingAction(null)}
+        onConfirm={handleDeleteAccount}
+      />
+    </div>
+  );
+};
+
+export default PrivacySection;

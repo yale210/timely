@@ -7,6 +7,7 @@ import { usePomodoro } from "@/context/PomodoroContext";
 import AppLayout from "@/layouts/AppLayout";
 import { getTasks, updateTask } from "@/services/taskService";
 import type { Task } from "@/types";
+import { formatDateTimeInTimezone } from "@/utils/userTimezone";
 
 /**
  * Dedicated Pomodoro page surfaced from the Extras section.
@@ -132,7 +133,7 @@ const Pomodoro = () => {
   }, [tasks]);
 
   const formatSlotTime = (value: string) => (
-    new Date(value).toLocaleString([], {
+    formatDateTimeInTimezone(value, {
       month: "short",
       day: "numeric",
       hour: "2-digit",
@@ -172,9 +173,9 @@ const Pomodoro = () => {
           }}
         >
           <div className="px-6 py-4">
-            <div className="flex flex-wrap items-start justify-between gap-4">
+            <div className="flex items-center justify-between gap-3 sm:flex-wrap sm:items-start sm:gap-4">
               <h1 className="text-2xl font-semibold text-black">Pomodoro</h1>
-              <p className="text-sm font-medium text-gray-500">
+              <p className="text-right text-sm font-medium text-gray-500">
                 {isActive ? "Running" : "Paused"} | {mode === "focus" ? "Focus period" : mode === "shortBreak" ? "Short break" : "Long break"}
               </p>
             </div>

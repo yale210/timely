@@ -7,6 +7,7 @@ import {
   getProgressMetrics,
   getRankValueClassName,
 } from "@/utils/leaderboardUtils";
+import { formatDateInTimezone } from "@/utils/userTimezone";
 import type { Profile } from "@/types";
 
 const buildProfile = (overrides: Partial<Profile> = {}): Profile => ({
@@ -37,14 +38,11 @@ describe("leaderboardUtils", () => {
   it("builds derived leaderboard summary stats", () => {
     const profile = buildProfile();
     const leaderboard = [buildProfile({ name: "Bob Example" }), profile];
-    const expectedJoinedDate = new Date(profile.creation_date).toLocaleDateString(
-      [],
-      {
-        year: "numeric",
-        month: "short",
-        day: "numeric",
-      },
-    );
+    const expectedJoinedDate = formatDateInTimezone(profile.creation_date, {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+    });
 
     expect(buildProfileStats(profile, leaderboard)).toEqual({
       avatarFallback: "AE",

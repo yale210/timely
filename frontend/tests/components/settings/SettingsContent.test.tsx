@@ -8,7 +8,72 @@ vi.mock("@/components/settings/ProfileSection", () => ({
 }));
 
 vi.mock("@/components/settings/PreferencesSection", () => ({
-  default: () => <div>preferences-section</div>,
+  default: ({
+    onSave,
+    onExport,
+    onImport,
+    prefSaving,
+    prefDirty,
+    onPrefChange,
+  }: {
+    onSave: () => void;
+    onExport: () => void;
+    onImport: () => void;
+    prefSaving: boolean;
+    prefDirty: boolean;
+    onPrefChange: (pref: Preference) => void;
+  }) => (
+    <div>
+      <div>preferences-section</div>
+      <button
+        onClick={onSave}
+        disabled={!onSave || prefSaving || !prefDirty}
+      >
+        Save changes
+      </button>
+      <button onClick={onExport}>Export events</button>
+      <button onClick={onImport}>Import events</button>
+      <button
+        role="button"
+        aria-pressed={true}
+        onClick={() => onPrefChange({ disable_sound_effects: true } as Preference)}
+      >
+        Sound effects
+      </button>
+      <label htmlFor="landing-page">Default landing page</label>
+      <select
+        id="landing-page"
+        onChange={(e) => onPrefChange({ default_landing_page: e.currentTarget.value as Preference["default_landing_page"] } as Preference)}
+      >
+        <option value="home">Home</option>
+        <option value="calendar">Calendar</option>
+      </select>
+      <label htmlFor="week-starts">Week starts on</label>
+      <select
+        id="week-starts"
+        onChange={(e) => onPrefChange({ week_starts_on: e.currentTarget.value as Preference["week_starts_on"] } as Preference)}
+      >
+        <option value="monday">Monday</option>
+        <option value="sunday">Sunday</option>
+      </select>
+      <label htmlFor="time-format">Time format</label>
+      <select
+        id="time-format"
+        onChange={(e) => onPrefChange({ time_format: e.currentTarget.value as Preference["time_format"] } as Preference)}
+      >
+        <option value="24h">24h</option>
+        <option value="12h">12h</option>
+      </select>
+      <label htmlFor="drag-snap">Calendar drag timeslot</label>
+      <select
+        id="drag-snap"
+        onChange={(e) => onPrefChange({ drag_snap_minutes: Number(e.currentTarget.value) as Preference["drag_snap_minutes"] } as Preference)}
+      >
+        <option value="15">15</option>
+        <option value="30">30</option>
+      </select>
+    </div>
+  ),
 }));
 
 vi.mock("@/components/settings/SettingsSidebar", () => ({
@@ -22,14 +87,16 @@ vi.mock("@/components/settings/ThemeSection", () => ({
 interface PrivacySettingsProps {
   onDeleteEvents: () => void;
   onDeleteTasks: () => void;
+  onDeleteAccount: (password: string) => void;
 }
 
 vi.mock("@/components/settings/PrivacySection", () => ({
-  default: ({onDeleteEvents, onDeleteTasks}: PrivacySettingsProps) => (
+  default: ({onDeleteEvents, onDeleteTasks, onDeleteAccount}: PrivacySettingsProps) => (
   <div>
   <div>privacy-section</div>
   <button onClick={onDeleteEvents}>Delete Events</button>
   <button onClick={onDeleteTasks}>Delete Tasks</button>
+  <button onClick={() => onDeleteAccount("secret")}>Delete Account</button>
   </div>
   ),
 }));
@@ -75,6 +142,7 @@ const createProps = (
     applyFont: vi.fn(),
     deleteEvents: vi.fn(),
     deleteTasks: vi.fn(),
+    deleteAccount: vi.fn(),
     makeTeacher: vi.fn(),
     unregisterTeacher: vi.fn(),
   },
@@ -128,6 +196,47 @@ describe("SettingsContent", () => {
     expect(screen.getByText("theme-section")).toBeInTheDocument();
   });
 
+  it("renders preferences section and handles actions", () => {
+    const props = createProps("preferences");
+    render(<SettingsContent {...props} />);
+
+    // Interactions
+    const saveButton = screen.getByRole("button", { name: "Save changes" });
+    expect(saveButton).toBeDisabled(); // Because isPreferenceDirty is not set or false
+
+    // Sound effects toggle
+    const soundEffectsToggle = screen.getByRole("button", { pressed: true }); // enabled initially (disable_sound_effects is false/undefined)
+    fireEvent.click(soundEffectsToggle);
+    expect(props.actions.setPreference).toHaveBeenCalledWith(expect.objectContaining({ disable_sound_effects: true }));
+
+    // Dropdowns
+    const landingPageSelect = screen.getByLabelText("Default landing page");
+    fireEvent.change(landingPageSelect, { target: { value: "calendar" } });
+    expect(props.actions.setPreference).toHaveBeenCalledTimes(2);
+
+    const weekStartsOnSelect = screen.getByLabelText("Week starts on");
+    fireEvent.change(weekStartsOnSelect, { target: { value: "sunday" } });
+    expect(props.actions.setPreference).toHaveBeenCalledTimes(3);
+
+    const timeFormatSelect = screen.getByLabelText("Time format");
+    fireEvent.change(timeFormatSelect, { target: { value: "12h" } });
+    expect(props.actions.setPreference).toHaveBeenCalledTimes(4);
+
+    const dragSnapSelect = screen.getByLabelText("Calendar drag timeslot");
+    fireEvent.change(dragSnapSelect, { target: { value: "30" } });
+    expect(props.actions.setPreference).toHaveBeenCalledTimes(5);
+  });
+
+  it("handles export and import events", () => {
+    const props = createProps("preferences");
+    render(<SettingsContent {...props} />);
+
+    const exportBtn = screen.getByRole("button", { name: "Export events" });
+    const importBtn = screen.getByRole("button", { name: "Import events" });
+
+    fireEvent.click(exportBtn);
+    fireEvent.click(importBtn); 
+  });
   it("renders privacy menu", () => {
     render(<SettingsContent {...createProps("privacy")} />);
 
@@ -136,9 +245,11 @@ describe("SettingsContent", () => {
 
     const deleteEventsButton = screen.getByText("Delete Events")
     const deleteTasksButton = screen.getByText("Delete Tasks")
+    const deleteAccountButton = screen.getByText("Delete Account")
 
     fireEvent.click(deleteEventsButton);
     fireEvent.click(deleteTasksButton);
+    fireEvent.click(deleteAccountButton);
   });
 
 

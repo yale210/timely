@@ -198,6 +198,6 @@ def _get_importance_breakdown(week_q):
     """
     out = []
     for level in range(1, 11):
-        c = week_q.filter(importance=level, completed=True).count()
-        out.append({"level": level, "completed_count": c})
+        completed_count = week_q.filter(importance=level, completed=True).count()
+        out.append({"level": level, "completed_count": completed_count})
     return out
