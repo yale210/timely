@@ -120,10 +120,6 @@ tasks = [
             "importance": 10,
         },
     },
-
-
-
-
     {
         "model": "core.tasks",
         "fields": {
