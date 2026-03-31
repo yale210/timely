@@ -1,105 +1,125 @@
 # Timely
 
-**Timely** is a time management system designed for students in higher education. It combines a calendar, task scheduler, course manager, assessment tracker, and social features into a single cohesive platform.
+Timely is a time management platform for higher education students. It combines a calendar, task scheduler, course manager, assessment tracker, notifications, sharing, and focus tools in one system so users can organise academic work more effectively.
 
-🌐 **Live deployment:** [timely.subhan.work](https://timely.subhan.work)
+Live deployment: [timely.subhan.work](https://timely.subhan.work)
 
----
+## Team name: It Worked On My Machine
+
+Members:
+- David Dudun
+- Harkaran (Mark) Bual
+- Mahdi Mustafa Razzaque
+- Mohammed Al-Amin
+- Muhammad Subhan Afzal
+- Patrick Sebastian Beckwith
+- Rashid Bin Shehzad
+- Thomas Richard Yale
+- Tommy Hoang
+- Valentino Garcia-Pianovszky
 
 ## Overview
 
-Timely helps students plan, prioritise, and track their academic workload. Its standout feature is an automated task scheduling engine that intelligently allocates study time across a student's calendar, respecting deadlines, importance, personal availability, and per-category daily limits.
-
----
+Timely helps students plan, prioritise, and track their academic workload. Its standout feature is an automated task scheduling engine that allocates study time across a student's calendar while respecting deadlines, importance, personal availability, and per-category daily limits.
 
 ## Features
 
-- **Smart scheduler** — automatic time-slot allocation for tasks based on importance, deadlines, and user preferences
-- **Calendar** — full recurring-event support with per-occurrence overrides
-- **Tasks** — estimated-effort tracking, split-task scheduling, completion progress
-- **Assessments & Gradebook** — linked to calendar events, with weighting and completion tracking
-- **Courses** — teacher-led course creation, join codes, student enrolment, and course-event propagation
-- **Notifications** — real-time WebSocket alerts, browser push notifications, and event reminders
-- **Leaderboard & XP** — gamification layer rewarding task completion
-- **Pomodoro timer** — focus-session logging
-- **Social / Sharing** — friend system, send and accept calendar events between friends
-- **Import / Export** — calendar data portability
-- **16 themes** — fully customisable UI colour themes
-
----
+- Smart scheduler with automatic time-slot allocation for tasks
+- Calendar with recurring-event support and per-occurrence overrides
+- Tasks with estimated effort, split scheduling, and completion progress
+- Assessments and gradebook linked to course activity
+- Courses with teacher-led creation, join codes, and event propagation
+- Notifications via WebSockets, browser push, and reminders
+- Leaderboard, XP, and Pomodoro support for motivation and focus
+- Sharing, import/export, and profile/theme personalisation
 
 ## Tech Stack
 
 | Layer | Technology |
 |-------|-----------|
 | Backend framework | Django 5.2 + Django REST Framework 3.16 |
-| Authentication | Knox token auth (custom `User` model) |
+| Authentication | Knox token auth |
 | Real-time | Django Channels 4 (Daphne ASGI) |
 | Task queue | Celery 5 + Redis 7 |
 | Database | PostgreSQL 16 (production) / SQLite (development) |
-| Frontend framework | React 19 + TypeScript (strict) |
+| Frontend framework | React 19 + TypeScript |
 | Build tooling | Vite 7 |
 | Styling | Tailwind CSS 4 |
-| HTTP client | Axios |
 | Containerisation | Docker + Docker Compose |
-| Reverse proxy | Nginx (with Cloudflare IP filtering) |
-| CI/CD | GitHub Actions → DigitalOcean Container Registry |
+| Reverse proxy | Nginx |
 
----
+## Quick Start
 
-## Installation
+The recommended path is the Nix flake because it installs dependencies, prepares a local SQLite database, generates local VAPID keys, and exposes consistent entrypoints.
+
+```bash
+nix run .#init
+nix run .#run
+```
+
+You can then access the app at `http://localhost`.
+
+- Test suite: `nix run .#tests`
+- Seed database only: `nix run .#seed`
+- Remove seeded data: `nix run .#unseed`
+
+If Nix is not available, use the manual setup below.
+
+## Manual Setup
 
 ### Prerequisites
 
 | Tool | Minimum version |
-|------|----------------|
+|------|-----------------|
 | Python | 3.12 |
 | Node.js | 20 |
 | npm | 10 |
 | Redis | 7 (for WebSocket + Celery in dev) |
 
-### Manual setup
+### Backend
 
 ```bash
-# 1. Clone the repository
 git clone https://github.com/xlightningstar/It-Worked-On-My-Machine
 cd It-Worked-On-My-Machine
 
-# 2. Create and activate a Python virtual environment
 python -m venv venv
-source venv/bin/activate          # Windows: venv\Scripts\activate
+source venv/bin/activate
 
-# 3. Install Python dependencies
 pip install -r backend/requirements.txt
-
-# 4. Configure backend environment
 cp backend/.env.example backend/.env
-# Edit backend/.env — set SECRET_KEY at minimum; POSTGRES=False for SQLite
-
-# 5. Apply database migrations
 python backend/manage.py migrate
-
-# 6. (Optional) Seed sample data
 python backend/manage.py seed
-
-# 7. Install frontend dependencies
-cd frontend && npm install && cd ..
 ```
 
-See [docs/02-installation.md](./docs/02-installation.md) for the full guide, including Docker dev/prod options and environment variable reference.
+Set `SECRET_KEY` in `backend/.env` at minimum. For SQLite-based local development, set `POSTGRES=False`.
 
----
+Windows PowerShell equivalents:
+
+```powershell
+python -m venv venv
+.\venv\Scripts\Activate.ps1
+pip install -r backend/requirements.txt
+Copy-Item backend/.env.example backend/.env
+python backend/manage.py migrate
+```
+
+### Frontend
+
+```bash
+cd frontend
+npm install
+```
+
+See `docs/02-installation.md` for the full guide, including Docker dev/prod options and environment variable reference.
 
 ## Running the Application
 
 ```bash
 # Start both backend and frontend dev servers (from frontend/)
 cd frontend && npm run main
-# Django:  http://localhost:8000
-# Vite:    http://localhost:5173
 ```
 
-To start them individually:
+Or run them separately:
 
 ```bash
 # Backend only
@@ -109,7 +129,10 @@ cd backend && python manage.py runserver
 cd frontend && npm run dev
 ```
 
----
+Manual local URLs:
+
+- Frontend: `http://localhost:5173`
+- Backend API: `http://localhost:8000/api/`
 
 ## Running Tests
 
@@ -117,63 +140,17 @@ cd frontend && npm run dev
 
 ```bash
 cd backend
-
-# Run all tests
 python manage.py test
-
-# Run with coverage report
 coverage run manage.py test && coverage report
 ```
-
-Coverage threshold: **90 %** (enforced in CI).
 
 ### Frontend
 
 ```bash
 cd frontend
-
-# Run test suite
 npm test
-
-# Run with coverage report
 npm run coverage
 ```
-
-Coverage threshold: **80 %** (lines, statements, branches — enforced in CI).
-
----
-
-## Project Structure
-
-```
-.
-├── backend/                   # Django project ("source")
-│   ├── source/                # Settings, URLs, ASGI, Celery config
-│   ├── core/                  # Primary app: tasks, events, categories, etc.
-│   ├── authentication/        # Knox auth, custom User model
-│   ├── scheduler/             # Time-slot allocation engine
-│   ├── notifications/         # WebSocket, push, Celery tasks
-│   ├── profiles/              # User profiles, XP, leaderboard
-│   ├── admin_panel/           # Admin broadcast & user management
-│   ├── courses/               # Course entities and calendar sync
-│   ├── pomo/                  # Pomodoro session tracking
-│   └── requirements.txt
-├── frontend/                  # React 19 + Vite 7 SPA
-│   ├── src/
-│   │   ├── pages/             # Route-level page components
-│   │   ├── components/        # Domain-grouped UI components
-│   │   ├── hooks/             # Custom React hooks
-│   │   ├── services/          # Axios API service modules
-│   │   ├── context/           # React Context providers
-│   │   └── styles/themes/     # CSS variable theme files (16 themes)
-│   └── tests/                 # Vitest test suite
-├── docs/                      # Project documentation
-├── docker-compose.yml         # Production stack
-├── docker-compose.dev.yml     # Development stack
-└── .github/workflows/         # CI/CD pipelines
-```
-
----
 
 ## Access Credentials
 
@@ -185,78 +162,46 @@ The following accounts are available on the seeded development database and the 
 | `david` | `Password123` | Student |
 | `patrick` | `Password123` | Student |
 
----
-
 ## Environment Variables
 
 The following variables must be set in `backend/.env`. A template is provided at `backend/.env.example`.
 
 | Variable | Required | Description |
 |----------|----------|-------------|
-| `SECRET_KEY` | ✅ | Django secret key |
-| `DEBUG` | ✅ | `True` for development, `False` for production |
-| `ALLOWED_HOSTS` | ✅ | Comma-separated hostnames |
-| `POSTGRES` | ✅ | `True` to use PostgreSQL; `False` for SQLite |
-| `POSTGRES_DB` | — | PostgreSQL database name |
-| `POSTGRES_USER` | — | PostgreSQL user |
-| `POSTGRES_PASSWORD` | — | PostgreSQL password |
-| `POSTGRES_HOST` | — | PostgreSQL host |
-| `REDIS_URL` | — | Redis connection string (e.g. `redis://localhost:6379/0`) |
-| `CORS_ALLOWED_ORIGINS` | — | Frontend origin(s) |
-| `VAPID_PUBLIC_KEY` | — | Web Push VAPID public key |
-| `VAPID_PRIVATE_KEY` | — | Web Push VAPID private key |
-| `VAPID_ADMIN_EMAIL` | — | VAPID contact email |
+| `SECRET_KEY` | Yes | Django secret key |
+| `DEBUG` | Yes | `True` for development, `False` for production |
+| `ALLOWED_HOSTS` | Yes | Comma-separated hostnames |
+| `POSTGRES` | Yes | `True` to use PostgreSQL; `False` for SQLite |
+| `POSTGRES_DB` | No | PostgreSQL database name |
+| `POSTGRES_USER` | No | PostgreSQL user |
+| `POSTGRES_PASSWORD` | No | PostgreSQL password |
+| `POSTGRES_HOST` | No | PostgreSQL host |
+| `REDIS_URL` | No | Redis connection string |
+| `CORS_ALLOWED_ORIGINS` | No | Frontend origin(s) |
+| `VAPID_PUBLIC_KEY` | No | Web Push VAPID public key |
+| `VAPID_PRIVATE_KEY` | No | Web Push VAPID private key |
+| `VAPID_ADMIN_EMAIL` | No | VAPID contact email |
 
-See [docs/02-installation.md](./docs/02-installation.md) for the full environment variable reference.
+See `docs/02-installation.md` for the full environment variable reference.
 
----
+## External Libraries and Services
 
-## External Libraries / Reused Code
-
-### Backend
-
-| Library | Purpose |
-|---------|---------|
-| Django 5.2 | Web framework |
-| Django REST Framework 3.16 | REST API layer |
-| django-knox | Token authentication |
-| Django Channels 4 | WebSocket / ASGI support |
-| Celery 5 | Asynchronous task queue |
-| channels-redis | Redis channel layer for Django Channels |
-| pywebpush | Web Push notification delivery (VAPID) |
-| Faker | Seed data generation |
-| coverage.py | Test coverage measurement |
-| Ruff | Python linting and formatting |
-
-### Frontend
-
-| Library | Purpose |
-|---------|---------|
-| React 19 | UI framework |
-| TypeScript 5 | Static typing |
-| Vite 7 | Build tool and dev server |
-| Tailwind CSS 4 | Utility-first styling |
-| React Router 7 | Client-side routing |
-| Axios | HTTP client |
-| react-big-calendar | Calendar view rendering |
-| Moment.js | Date/time manipulation |
-| Vitest | Test runner |
-| React Testing Library | Component testing utilities |
-
----
+Timely depends on modern web tooling across the stack, including Django, DRF, Channels, Celery, Redis, React, TypeScript, Vite, Tailwind CSS, Axios, Vitest, Ruff, and supporting libraries declared in `backend/requirements.txt` and `frontend/package.json`.
 
 ## AI Usage Disclosure
 
-<!-- TODO: complete before submission -->
+We have used tools like ChatGPT and GitHub Copilot for:
+- understanding Django patterns and APIs
+- guidance on how to implement common functionality
+- debugging and error explanation
+- generating migrations from the source code
+- pull request reviewing
 
----
-
-## Screenshots
-
-<!-- TODO: add screenshots before submission -->
-
----
+GitHub Copilot was used in these pull requests:
+[#320](https://github.com/xlightningstar/It-Worked-On-My-Machine/pull/320), [#309](https://github.com/xlightningstar/It-Worked-On-My-Machine/pull/309), [#288](https://github.com/xlightningstar/It-Worked-On-My-Machine/pull/288), [#286](https://github.com/xlightningstar/It-Worked-On-My-Machine/pull/286), [#280](https://github.com/xlightningstar/It-Worked-On-My-Machine/pull/280), [#271](https://github.com/xlightningstar/It-Worked-On-My-Machine/pull/271), [#255](https://github.com/xlightningstar/It-Worked-On-My-Machine/pull/255), [#176](https://github.com/xlightningstar/It-Worked-On-My-Machine/pull/176), [#174](https://github.com/xlightningstar/It-Worked-On-My-Machine/pull/174), [#156](https://github.com/xlightningstar/It-Worked-On-My-Machine/pull/156), [#150](https://github.com/xlightningstar/It-Worked-On-My-Machine/pull/150), [#164](https://github.com/xlightningstar/It-Worked-On-My-Machine/pull/164), [#155](https://github.com/xlightningstar/It-Worked-On-My-Machine/pull/155), [#154](https://github.com/xlightningstar/It-Worked-On-My-Machine/pull/154), [#149](https://github.com/xlightningstar/It-Worked-On-My-Machine/pull/149), [#145](https://github.com/xlightningstar/It-Worked-On-My-Machine/pull/145), [#140](https://github.com/xlightningstar/It-Worked-On-My-Machine/pull/140), [#133](https://github.com/xlightningstar/It-Worked-On-My-Machine/pull/133), [#104](https://github.com/xlightningstar/It-Worked-On-My-Machine/pull/104), [#87](https://github.com/xlightningstar/It-Worked-On-My-Machine/pull/87), [#71](https://github.com/xlightningstar/It-Worked-On-My-Machine/pull/71), [#69](https://github.com/xlightningstar/It-Worked-On-My-Machine/pull/69), [#65](https://github.com/xlightningstar/It-Worked-On-My-Machine/pull/65), [#64](https://github.com/xlightningstar/It-Worked-On-My-Machine/pull/64), [#62](https://github.com/xlightningstar/It-Worked-On-My-Machine/pull/62), [#53](https://github.com/xlightningstar/It-Worked-On-My-Machine/pull/53), [#48](https://github.com/xlightningstar/It-Worked-On-My-Machine/pull/48), [#45](https://github.com/xlightningstar/It-Worked-On-My-Machine/pull/45), [#40](https://github.com/xlightningstar/It-Worked-On-My-Machine/pull/40), [#37](https://github.com/xlightningstar/It-Worked-On-My-Machine/pull/37), [#25](https://github.com/xlightningstar/It-Worked-On-My-Machine/pull/25)
 
 ## Known Limitations
 
-<!-- TODO: complete before submission -->
+- Push notifications require valid VAPID keys and a compatible browser environment.
+- Courses and notifications do not work via the Nix setup; they require Docker for local use.
+- The complete iCalendar specification is not implemented, so some valid files may fail to import.
