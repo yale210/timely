@@ -32,15 +32,15 @@ vi.mock("@/pages/Notification/NotificationDetail", () => ({
   NotificationDetail: () => <div>Notification Detail Page</div>,
 }));
 
-vi.mock("@/pages/Admin/Notifications/AdminNotifications", () => ({
+vi.mock("@/pages/AdminNotifications/AdminNotifications", () => ({
   AdminNotifications: () => <div>Admin Notifications Page</div>,
 }));
 
-vi.mock("@/pages/Admin/Notifications/AdminNotificationHistory", () => ({
+vi.mock("@/pages/AdminNotifications/AdminNotificationHistory", () => ({
   AdminNotificationHistory: () => <div>Admin Notification History Page</div>,
 }));
 
-vi.mock("@/pages/Admin/Notifications/AdminNotificationHistoryDetail", () => ({
+vi.mock("@/pages/AdminNotifications/AdminNotificationHistoryDetail", () => ({
   AdminNotificationHistoryDetail: () => <div>Admin Notification History Detail Page</div>,
 }));
 

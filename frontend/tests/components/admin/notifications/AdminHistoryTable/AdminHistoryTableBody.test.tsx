@@ -1,7 +1,7 @@
 import { render, screen } from "@testing-library/react";
 import { vi, describe, it, expect } from "vitest";
 import { MemoryRouter } from "react-router-dom";
-import { AdminHistoryTableBody } from "@/components/admin/notifications/AdminHistoryTable/AdminHistoryTableBody";
+import { AdminHistoryTableBody } from "@/components/admin/notifications/AdminHistoryTable";
 import { type BroadcastJobSummary } from "@/types";
 
 describe("AdminHistoryTableBody Component", () => {
