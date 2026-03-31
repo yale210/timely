@@ -36,7 +36,6 @@ describe("AdminNotificationHistoryDetail Page", () => {
       queued_at: "2023-01-01T10:00:00Z",
       started_at: "2023-01-01T10:00:00Z",
       completed_at: "2023-01-01T10:00:00Z",
-      recipients: [],
       recipient_count: 10,
       delivered_count: 10,
       failed_count: 0,
@@ -69,6 +68,14 @@ describe("AdminNotificationHistoryDetail Page", () => {
     failedRecipientsCount: 2,
   };
 
+  const mockRecipientPagination = {
+    recipients: [],
+    page: 1,
+    totalPages: 1,
+    loading: false,
+  };
+  const mockGoToRecipientsPage = vi.fn();
+
   beforeEach(() => {
     vi.clearAllMocks();
     vi.mocked(useAdminHistoryDetail).mockReturnValue({
@@ -77,9 +84,11 @@ describe("AdminNotificationHistoryDetail Page", () => {
       error: null,
       retryError: null,
       broadcastId: 1,
+      recipientPagination: mockRecipientPagination,
       actions: {
         handleRetry: mockHandleRetry,
         setRetryConfirmOpen: mockSetRetryConfirmOpen,
+        goToRecipientsPage: mockGoToRecipientsPage,
       },
     });
   });
@@ -91,9 +100,11 @@ describe("AdminNotificationHistoryDetail Page", () => {
       error: null,
       retryError: null,
       broadcastId: 1,
+      recipientPagination: mockRecipientPagination,
       actions: {
         handleRetry: mockHandleRetry,
         setRetryConfirmOpen: mockSetRetryConfirmOpen,
+        goToRecipientsPage: mockGoToRecipientsPage,
       },
     });
     render(
@@ -111,9 +122,11 @@ describe("AdminNotificationHistoryDetail Page", () => {
       state: mockState,
       retryError: null,
       broadcastId: 1,
+      recipientPagination: mockRecipientPagination,
       actions: {
         handleRetry: mockHandleRetry,
         setRetryConfirmOpen: mockSetRetryConfirmOpen,
+        goToRecipientsPage: mockGoToRecipientsPage,
       },
     });
     render(
@@ -142,9 +155,11 @@ describe("AdminNotificationHistoryDetail Page", () => {
       error: null,
       retryError: "Retry failed miserably",
       broadcastId: 1,
+      recipientPagination: mockRecipientPagination,
       actions: {
         handleRetry: mockHandleRetry,
         setRetryConfirmOpen: mockSetRetryConfirmOpen,
+        goToRecipientsPage: mockGoToRecipientsPage,
       },
     });
     render(
@@ -172,9 +187,11 @@ describe("AdminNotificationHistoryDetail Page", () => {
         error: null,
         retryError: null,
         broadcastId: 1,
+        recipientPagination: mockRecipientPagination,
         actions: {
           handleRetry: mockHandleRetry,
           setRetryConfirmOpen: mockSetRetryConfirmOpen,
+          goToRecipientsPage: mockGoToRecipientsPage,
         },
     });
     rerender(
@@ -194,9 +211,11 @@ describe("AdminNotificationHistoryDetail Page", () => {
         error: null,
         retryError: null,
         broadcastId: 1,
+        recipientPagination: mockRecipientPagination,
         actions: {
           handleRetry: mockHandleRetry,
           setRetryConfirmOpen: mockSetRetryConfirmOpen,
+          goToRecipientsPage: mockGoToRecipientsPage,
         },
     });
     render(

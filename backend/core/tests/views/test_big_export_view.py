@@ -27,7 +27,7 @@ class RealisitcExportViewTests(TestCase):
         self.assertEqual(Event.objects.count(), 0)
 
         rec_end = datetime.strptime("20260827T000000", "%Y%m%dT%H%M%S").date()
-        Event.objects.create(
+        e1 = Event.objects.create(
             user=self.user,
             title="Module 1 Lecture",
             description="This is a module.",
@@ -38,7 +38,7 @@ class RealisitcExportViewTests(TestCase):
             recurrence_interval=Event.RecurrenceInterval.WEEKLY,
             recurrence_end=rec_end,
         )
-        Event.objects.create(
+        e2 = Event.objects.create(
             user=self.user,
             title="Module 2 Lecture",
             description="This is a module.",
@@ -49,7 +49,7 @@ class RealisitcExportViewTests(TestCase):
             recurrence_interval=Event.RecurrenceInterval.WEEKLY,
             recurrence_end=rec_end,
         )
-        Event.objects.create(
+        e3 = Event.objects.create(
             user=self.user,
             title="Module 3 Lecture",
             description="This is a module.",
@@ -60,7 +60,7 @@ class RealisitcExportViewTests(TestCase):
             recurrence_interval=Event.RecurrenceInterval.WEEKLY,
             recurrence_end=rec_end,
         )
-        Event.objects.create(
+        e4 = Event.objects.create(
             user=self.user,
             title="Module 4 Lecture",
             description="This is a module.",
@@ -71,7 +71,7 @@ class RealisitcExportViewTests(TestCase):
             recurrence_interval=Event.RecurrenceInterval.WEEKLY,
             recurrence_end=rec_end,
         )
-        Event.objects.create(
+        e5 = Event.objects.create(
             user=self.user,
             title="Module 1 SGT",
             description="This is a SGT.",
@@ -82,7 +82,7 @@ class RealisitcExportViewTests(TestCase):
             recurrence_interval=Event.RecurrenceInterval.WEEKLY,
             recurrence_end=rec_end,
         )
-        Event.objects.create(
+        e6 = Event.objects.create(
             user=self.user,
             title="Module 2 SGT",
             description="This is a SGT.",
@@ -93,7 +93,7 @@ class RealisitcExportViewTests(TestCase):
             recurrence_interval=Event.RecurrenceInterval.WEEKLY,
             recurrence_end=rec_end,
         )
-        Event.objects.create(
+        e7 = Event.objects.create(
             user=self.user,
             title="Module 3 SGT",
             description="This is a SGT.",
@@ -104,7 +104,7 @@ class RealisitcExportViewTests(TestCase):
             recurrence_interval=Event.RecurrenceInterval.WEEKLY,
             recurrence_end=rec_end,
         )
-        Event.objects.create(
+        e8 = Event.objects.create(
             user=self.user,
             title="Module 4 SGT",
             description="This is a SGT.",
@@ -125,7 +125,7 @@ class RealisitcExportViewTests(TestCase):
             "CALSCALE:GREGORIAN\n"
             "METHOD:PUBLISH\n"
             "BEGIN:VEVENT\n"
-            "UID:e1\n"
+            f"UID:e{e1.pk}\n"
             "DTSTAMP:20260327T194747Z\n"
             "DTSTART;TZID=Europe/London:20260322T090000\n"
             "DTEND;TZID=Europe/London:20260322T110000\n"
@@ -135,7 +135,7 @@ class RealisitcExportViewTests(TestCase):
             "RRULE:FREQ=WEEKLY;UNTIL=20260827T000000Z\n"
             "END:VEVENT\n"
             "BEGIN:VEVENT\n"
-            "UID:e2\n"
+            f"UID:e{e2.pk}\n"
             "DTSTAMP:20260327T194747Z\n"
             "DTSTART;TZID=Europe/London:20260323T090000\n"
             "DTEND;TZID=Europe/London:20260323T110000\n"
@@ -145,7 +145,7 @@ class RealisitcExportViewTests(TestCase):
             "RRULE:FREQ=WEEKLY;UNTIL=20260827T000000Z\n"
             "END:VEVENT\n"
             "BEGIN:VEVENT\n"
-            "UID:e3\n"
+            f"UID:e{e3.pk}\n"
             "DTSTAMP:20260327T194747Z\n"
             "DTSTART;TZID=Europe/London:20260324T090000\n"
             "DTEND;TZID=Europe/London:20260324T110000\n"
@@ -155,7 +155,7 @@ class RealisitcExportViewTests(TestCase):
             "RRULE:FREQ=WEEKLY;UNTIL=20260827T000000Z\n"
             "END:VEVENT\n"
             "BEGIN:VEVENT\n"
-            "UID:e4\n"
+            f"UID:e{e4.pk}\n"
             "DTSTAMP:20260327T194747Z\n"
             "DTSTART;TZID=Europe/London:20260325T090000\n"
             "DTEND;TZID=Europe/London:20260325T110000\n"
@@ -165,7 +165,7 @@ class RealisitcExportViewTests(TestCase):
             "RRULE:FREQ=WEEKLY;UNTIL=20260827T000000Z\n"
             "END:VEVENT\n"
             "BEGIN:VEVENT\n"
-            "UID:e5\n"
+            f"UID:e{e5.pk}\n"
             "DTSTAMP:20260327T194747Z\n"
             "DTSTART;TZID=Europe/London:20260322T130000\n"
             "DTEND;TZID=Europe/London:20260322T140000\n"
@@ -175,7 +175,7 @@ class RealisitcExportViewTests(TestCase):
             "RRULE:FREQ=WEEKLY;UNTIL=20260827T000000Z\n"
             "END:VEVENT\n"
             "BEGIN:VEVENT\n"
-            "UID:e6\n"
+            f"UID:e{e6.pk}\n"
             "DTSTAMP:20260327T194747Z\n"
             "DTSTART;TZID=Europe/London:20260323T130000\n"
             "DTEND;TZID=Europe/London:20260323T140000\n"
@@ -185,7 +185,7 @@ class RealisitcExportViewTests(TestCase):
             "RRULE:FREQ=WEEKLY;UNTIL=20260827T000000Z\n"
             "END:VEVENT\n"
             "BEGIN:VEVENT\n"
-            "UID:e7\n"
+            f"UID:e{e7.pk}\n"
             "DTSTAMP:20260327T194747Z\n"
             "DTSTART;TZID=Europe/London:20260324T130000\n"
             "DTEND;TZID=Europe/London:20260324T140000\n"
@@ -195,7 +195,7 @@ class RealisitcExportViewTests(TestCase):
             "RRULE:FREQ=WEEKLY;UNTIL=20260827T000000Z\n"
             "END:VEVENT\n"
             "BEGIN:VEVENT\n"
-            "UID:e8\n"
+            f"UID:e{e8.pk}\n"
             "DTSTAMP:20260327T194747Z\n"
             "DTSTART;TZID=Europe/London:20260325T130000\n"
             "DTEND;TZID=Europe/London:20260325T140000\n"

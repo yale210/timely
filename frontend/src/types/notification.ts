@@ -114,7 +114,7 @@ export interface BroadcastRecipientDetail {
 }
 
 /**
- * Full details for a broadcast job including recipients and provider errors.
+ * Full details for a broadcast job including provider errors.
  */
 export interface BroadcastJobDetail {
   id: number;
@@ -142,7 +142,17 @@ export interface BroadcastJobDetail {
   started_at: string | null;
   completed_at: string | null;
   retry_of: number | null;
-  recipients: BroadcastRecipientDetail[];
+}
+
+/**
+ * Paginated response for broadcast recipient list endpoints.
+ */
+export interface PaginatedBroadcastRecipientResponse {
+  count: number;
+  next: string | null;
+  previous: string | null;
+  num_pages: number;
+  results: BroadcastRecipientDetail[];
 }
 
 /**

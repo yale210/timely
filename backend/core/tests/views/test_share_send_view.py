@@ -69,13 +69,11 @@ class ShareSendViewTests(TestCase):
         """Test user shares event they do not own."""
         self.client.login(username="testuser", password="password")
 
-        get_user_model().objects.create_user(
+        user2 = get_user_model().objects.create_user(
             username="user2", password="password", email="test2@user.com"
         )
 
-        user2 = get_user_model().objects.get(username="user2")
-
-        Event.objects.create(
+        event2 = Event.objects.create(
             user=user2,
             title="Title Event 2",
             description="Description Event",
@@ -89,7 +87,7 @@ class ShareSendViewTests(TestCase):
             "/api/share_send/",
             data={
                 "Receiver": "testuser",
-                "Event-ID": "e2",
+                "Event-ID": f"e{event2.pk}",
             },
         )
 
@@ -106,7 +104,7 @@ class ShareSendViewTests(TestCase):
             username="user2", password="password", email="test2@user.com"
         )
 
-        Event.objects.create(
+        event = Event.objects.create(
             user=self.user,
             title="Title Event 2",
             description="Description Event",
@@ -120,7 +118,7 @@ class ShareSendViewTests(TestCase):
             "/api/share_send/",
             data={
                 "Receiver": "testuserDOESNOTEXISTNOW",
-                "Event-ID": "e1",
+                "Event-ID": f"e{event.pk}",
             },
         )
 
@@ -133,13 +131,11 @@ class ShareSendViewTests(TestCase):
         """Test recipient already has the same event."""
         self.client.login(username="testuser", password="password")
 
-        get_user_model().objects.create_user(
+        user2 = get_user_model().objects.create_user(
             username="user2", password="password", email="test2@user.com"
         )
 
-        user2 = get_user_model().objects.get(username="user2")
-
-        Event.objects.create(
+        event = Event.objects.create(
             user=self.user,
             title="Title Event 2",
             description="Description Event",
@@ -163,7 +159,7 @@ class ShareSendViewTests(TestCase):
             "/api/share_send/",
             data={
                 "Receiver": "user2",
-                "Event-ID": "e1",
+                "Event-ID": f"e{event.pk}",
             },
         )
 
@@ -178,9 +174,7 @@ class ShareSendViewTests(TestCase):
             username="user2", password="password", email="test2@user.com"
         )
 
-        get_user_model().objects.get(username="user2")
-
-        Event.objects.create(
+        event = Event.objects.create(
             user=self.user,
             title="Title Event 1",
             description="Description Event",
@@ -190,11 +184,11 @@ class ShareSendViewTests(TestCase):
             last_edited=timezone.make_aware(datetime(2026, 2, 5, 12, 5, 48)),
         )
 
-        response = self.client.post(
+        self.client.post(
             "/api/share_send/",
             data={
                 "Receiver": "user2",
-                "Event-ID": "e1",
+                "Event-ID": f"e{event.pk}",
             },
         )
 
@@ -202,7 +196,7 @@ class ShareSendViewTests(TestCase):
             "/api/share_send/",
             data={
                 "Receiver": "user2",
-                "Event-ID": "e1",
+                "Event-ID": f"e{event.pk}",
             },
         )
 
@@ -220,9 +214,7 @@ class ShareSendViewTests(TestCase):
             username="user2", password="password", email="test2@user.com"
         )
 
-        get_user_model().objects.get(username="user2")
-
-        Event.objects.create(
+        event = Event.objects.create(
             user=self.user,
             title="Title Event 2",
             description="Description Event",
@@ -236,7 +228,7 @@ class ShareSendViewTests(TestCase):
             "/api/share_send/",
             data={
                 "Receiver": "user2",
-                "Event-ID": "e1",
+                "Event-ID": f"e{event.pk}",
             },
         )
 
@@ -251,7 +243,7 @@ class ShareSendViewTests(TestCase):
             username="user2", password="password", email="test2@user.com"
         )
 
-        Event.objects.create(
+        event = Event.objects.create(
             user=self.user,
             title="Title Event 2",
             description="Description Event",
@@ -265,7 +257,7 @@ class ShareSendViewTests(TestCase):
             "/api/share_send/",
             data={
                 "Receiver": "  USER2  ",
-                "Event-ID": "e1",
+                "Event-ID": f"e{event.pk}",
             },
         )
 

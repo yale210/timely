@@ -33,14 +33,20 @@ export function AdminHistoryRecipientRow(props: AdminHistoryRecipientRowProps) {
 
 interface AdminHistoryDetailRecipientsTableProps {
   recipients: BroadcastRecipientDetail[];
+  page: number;
+  totalPages: number;
+  loading: boolean;
+  onPageChange: (page: number) => void;
 }
 
 /**
- * Renders per-recipient delivery status for a broadcast.
- * @param props - Recipient table data.
+ * Renders per-recipient delivery status for a broadcast with pagination.
+ * @param props - Recipient table data and pagination controls.
  * @returns A table of recipient delivery outcomes.
  */
 export const AdminHistoryDetailRecipientsTable = (props: AdminHistoryDetailRecipientsTableProps) => {
+  const { recipients, page, totalPages, loading, onPageChange } = props;
+
   return (
     <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
       <h2 className="text-sm font-semibold text-gray-900">Recipient delivery</h2>
@@ -54,12 +60,47 @@ export const AdminHistoryDetailRecipientsTable = (props: AdminHistoryDetailRecip
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-100">
-            {props.recipients.map((recipient) => (
-              <AdminHistoryRecipientRow key={recipient.id} recipient={recipient} />
-            ))}
+            {loading ? (
+              <tr>
+                <td colSpan={3} className="px-3 py-8 text-center text-gray-500">Loading...</td>
+              </tr>
+            ) : recipients.length === 0 ? (
+              <tr>
+                <td colSpan={3} className="px-3 py-8 text-center text-gray-500">No recipients found.</td>
+              </tr>
+            ) : (
+              recipients.map((recipient) => (
+                <AdminHistoryRecipientRow key={recipient.id} recipient={recipient} />
+              ))
+            )}
           </tbody>
         </table>
       </div>
+      {totalPages > 1 && (
+        <div className="flex items-center justify-between border-t px-4 py-3 text-sm">
+          <p className="text-gray-500">
+            Page {page} of {totalPages}
+          </p>
+          <div className="flex gap-2">
+            <button
+              type="button"
+              onClick={() => onPageChange(page - 1)}
+              disabled={page === 1 || loading}
+              className="rounded-md border border-gray-300 px-3 py-1.5 text-gray-700 disabled:opacity-50"
+            >
+              Previous
+            </button>
+            <button
+              type="button"
+              onClick={() => onPageChange(page + 1)}
+              disabled={page >= totalPages || loading}
+              className="rounded-md border border-gray-300 px-3 py-1.5 text-gray-700 disabled:opacity-50"
+            >
+              Next
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

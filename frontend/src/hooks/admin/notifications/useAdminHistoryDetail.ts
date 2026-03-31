@@ -1,8 +1,9 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { type BroadcastJobDetail, type BroadcastJobStatusResponse } from "@/types";
+import { type BroadcastJobDetail, type BroadcastJobStatusResponse, type BroadcastRecipientDetail } from "@/types";
 import {
   getBroadcastDetail,
+  getBroadcastRecipients,
   getBroadcastStatus,
   retryFailedBroadcast,
 } from "@/api/notifications";
@@ -18,10 +19,18 @@ const POLL_INTERVAL_MS = 3000;
 const isTerminal = (status: string) =>
   status === "COMPLETED" || status === "PARTIAL" || status === "FAILED";
 
+interface RecipientPaginationState {
+  recipients: BroadcastRecipientDetail[];
+  page: number;
+  totalPages: number;
+  loading: boolean;
+}
+
 interface UseAdminHistoryDetailReturn {
   state: { detail: BroadcastJobDetail | null; status: BroadcastJobStatusResponse | null; isRetryConfirmOpen: boolean; failedRecipientsCount: number; };
   loading: boolean; error: string | null; retryError: string | null; broadcastId: number;
-  actions: { setRetryConfirmOpen: (isOpen: boolean) => void; handleRetry: () => Promise<void>; };
+  recipientPagination: RecipientPaginationState;
+  actions: { setRetryConfirmOpen: (isOpen: boolean) => void; handleRetry: () => Promise<void>; goToRecipientsPage: (page: number) => void; };
 }
 
 /**
@@ -132,6 +141,45 @@ export const useAdminHistoryDetailRetry = (
 };
 
 /**
+ * Hook to fetch paginated broadcast recipients.
+ * @param broadcastId - The broadcast job ID.
+ * @param isReady - Whether the parent detail has loaded.
+ * @returns Recipient list, pagination state, and page navigation.
+ */
+export const useAdminHistoryDetailRecipients = (broadcastId: number, isReady: boolean) => {
+  const [recipients, setRecipients] = useState<BroadcastRecipientDetail[]>([]);
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [loading, setLoading] = useState(false);
+
+  const fetchPage = useCallback(async (targetPage: number) => {
+    try {
+      setLoading(true);
+      const data = await getBroadcastRecipients(broadcastId, targetPage);
+      setRecipients(data.results);
+      setTotalPages(data.num_pages);
+      setPage(targetPage);
+    } catch (err) {
+      console.error("Failed to load recipients", err);
+    } finally {
+      setLoading(false);
+    }
+  }, [broadcastId]);
+
+  useEffect(() => {
+    if (isReady && !isInvalidBroadcastId(broadcastId)) {
+      void fetchPage(1);
+    }
+  }, [broadcastId, isReady, fetchPage]);
+
+  const goToPage = useCallback((targetPage: number) => {
+    void fetchPage(targetPage);
+  }, [fetchPage]);
+
+  return { recipients, page, totalPages, loading, goToPage };
+};
+
+/**
  * Provides state and actions for the admin broadcast detail page.
  */
 export const useAdminHistoryDetail = (): UseAdminHistoryDetailReturn => {
@@ -157,14 +205,17 @@ export const useAdminHistoryDetail = (): UseAdminHistoryDetailReturn => {
     }
   );
 
+  const rp = useAdminHistoryDetailRecipients(activeBroadcastId, !f.loading && f.detail !== null);
+
   const failedRecipientsCount = useMemo(
-    () => f.detail?.recipients.filter((item) => item.status === "FAILED").length ?? 0,
+    () => f.detail?.failed_count ?? 0,
     [f.detail]
   );
 
   return {
     state: { detail: f.detail, status: f.status, isRetryConfirmOpen, failedRecipientsCount },
     loading: f.loading, error: f.error, retryError: r.retryError, broadcastId,
-    actions: { setRetryConfirmOpen: setIsRetryConfirmOpen, handleRetry: r.handleRetry },
+    recipientPagination: { recipients: rp.recipients, page: rp.page, totalPages: rp.totalPages, loading: rp.loading },
+    actions: { setRetryConfirmOpen: setIsRetryConfirmOpen, handleRetry: r.handleRetry, goToRecipientsPage: rp.goToPage },
   };
 };

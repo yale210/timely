@@ -332,7 +332,7 @@ class SeederEventTests(SeederTestCase):
         with patch.object(seeder, "faker") as faker:
             faker.user_name.return_value = "task-fallback-user"
             faker.email.return_value = "task-fallback@example.com"
-            faker.word.return_value = "Fallback Task Category"
+            faker.word.return_value = "FallbackCategory"
             faker.hex_color.return_value = "#223344"
 
             user = seeder._get_or_create_random_user()

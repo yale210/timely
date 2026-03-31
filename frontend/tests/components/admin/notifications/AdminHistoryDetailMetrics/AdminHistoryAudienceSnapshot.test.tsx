@@ -24,7 +24,6 @@ describe("AdminHistoryAudienceSnapshot Component", () => {
       started_at: "2023-01-01T00:00:01Z",
       completed_at: "2023-01-01T00:05:00Z",
       retry_of: null,
-      recipients: [],
     };
     render(<AdminHistoryAudienceSnapshot detail={detail} />);
 

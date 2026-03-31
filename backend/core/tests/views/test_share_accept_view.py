@@ -63,16 +63,13 @@ class ShareAcceptViewTests(TestCase):
         self.client.login(username="testuser", password="password")
 
         # Sharing requires 2 accounts
-        get_user_model().objects.create_user(
+        user2 = get_user_model().objects.create_user(
             username="user2", password="password", email="test2@user.com"
         )
 
-        get_user_model().objects.create_user(
+        user3 = get_user_model().objects.create_user(
             username="user3", password="password", email="test3@user.com"
         )
-
-        user2 = get_user_model().objects.get(username="user2")
-        user3 = get_user_model().objects.get(username="user3")
 
         event2 = Event.objects.create(
             user=user2,
@@ -95,7 +92,7 @@ class ShareAcceptViewTests(TestCase):
         response = self.client.post(
             "/api/share_accept/",
             data={
-                "Event-ID": 1,
+                "Event-ID": event2.pk,
                 "Decision": "accept",
             },
         )
@@ -107,10 +104,9 @@ class ShareAcceptViewTests(TestCase):
         self.client.login(username="testuser", password="password")
 
         # Sharing requires 2 accounts
-        get_user_model().objects.create_user(
+        user2 = get_user_model().objects.create_user(
             username="user2", password="password", email="test2@user.com"
         )
-        user2 = get_user_model().objects.get(username="user2")
 
         event2 = Event.objects.create(
             user=user2,
@@ -134,7 +130,7 @@ class ShareAcceptViewTests(TestCase):
         response = self.client.post(
             "/api/share_accept/",
             data={
-                "Event-ID": 1,
+                "Event-ID": event2.pk,
                 "Decision": "accept",
             },
         )
@@ -147,10 +143,9 @@ class ShareAcceptViewTests(TestCase):
         self.client.login(username="testuser", password="password")
 
         # Sharing requires 2 accounts
-        get_user_model().objects.create_user(
+        user2 = get_user_model().objects.create_user(
             username="user2", password="password", email="test2@user.com"
         )
-        user2 = get_user_model().objects.get(username="user2")
 
         event2 = Event.objects.create(
             user=user2,
@@ -174,7 +169,7 @@ class ShareAcceptViewTests(TestCase):
         response = self.client.post(
             "/api/share_accept/",
             data={
-                "Event-ID": 1,
+                "Event-ID": event2.pk,
                 "Decision": "reject",
             },
         )

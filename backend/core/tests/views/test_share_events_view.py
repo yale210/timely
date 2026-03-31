@@ -63,7 +63,7 @@ class ShareEventsViewTests(TestCase):
         self.client.logout()
         self.client.login(username="user2", password="password")
 
-        Event.objects.create(
+        event = Event.objects.create(
             user=user2,
             title="Title Event 1",
             description="Description Event",
@@ -81,7 +81,7 @@ class ShareEventsViewTests(TestCase):
             "/api/share_send/",
             data={
                 "Receiver": "testuser",
-                "Event-ID": "e1",
+                "Event-ID": f"e{event.pk}",
             },
         )
 
