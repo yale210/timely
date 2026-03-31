@@ -90,7 +90,7 @@ const NotificationDropdownPanel = ({
       {notifications.map((notification) => <NotificationCard key={notification.id} notification={notification} onClick={onItemClick} onToggleRead={onToggleRead} onDelete={onDeleteItem} showActions showReadToggle={false} showDivider={false} compact />)}
       {notifications.length === 0 && requests.length === 0 && <div className="px-6 py-12 text-center text-sm text-gray-500">No notifications</div>}
     </div>
-    {notifications.length > 0 && <DropdownFooter />}
+    <DropdownFooter />
   </div>
 );
 
