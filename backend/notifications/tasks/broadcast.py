@@ -258,7 +258,10 @@ def _send_single_push(recipient, broadcast):
     )
 
     if push_result["success"]:
-        recipient.status = BroadcastRecipient.DeliveryStatus.SENT
+        if push_result["error_code"] == "NO_PUSH_SUBSCRIPTIONS":
+            recipient.status = BroadcastRecipient.DeliveryStatus.SENT_NO_PUSH
+        else:
+            recipient.status = BroadcastRecipient.DeliveryStatus.SENT
         recipient.error_code = ""
         recipient.error_message = ""
         return True, "", ""
