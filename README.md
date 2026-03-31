@@ -233,3 +233,4 @@ GitHub Copilot was used in these pull requests:
 - Push notifications require valid VAPID keys and a compatible browser environment.
 - Courses and notifications do not work via the Nix setup; they require Docker for local use.
 - The complete iCalendar specification is not implemented, so some valid files may fail to import.
+- Max body size for profile pictures is 1 mb, so images larger than this may be rejected.
