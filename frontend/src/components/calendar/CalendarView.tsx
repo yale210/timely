@@ -13,7 +13,6 @@ import {
   getCalendarEntryStyle,
 } from "@/components/calendar/CalendarViewEventContent";
 import {
-  CALENDAR_DISPLAY_TIMEZONE,
   fromCalendarDisplayDate,
   getCalendarDisplayDayOfWeek,
   getCalendarDisplayMinutes,
@@ -144,7 +143,7 @@ const CalendarView = ({
   actions,
 }: CalendarViewProps) => {
   const calendarShellRef = useRef<HTMLDivElement | null>(null);
-  const localizer = useCalendarLocalizer(CALENDAR_DISPLAY_TIMEZONE);
+  const localizer = useCalendarLocalizer();
   const activeTimezone = state.preference?.timezone ?? getStoredUserTimezone();
   const displayDate = useMemo(
     () => toCalendarDisplayDate(state.date, activeTimezone),

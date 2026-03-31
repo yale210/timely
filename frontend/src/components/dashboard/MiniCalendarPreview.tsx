@@ -3,7 +3,7 @@ import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react"
 import { Calendar, Views, type Formats } from "react-big-calendar";
 import { preferenceService } from "@/services/preferenceService";
 import type { Category, Event, Task } from "@/types";
-import { CALENDAR_DISPLAY_TIMEZONE, toCalendarDisplayDate } from "@/utils/calendarDisplayTime";
+import { toCalendarDisplayDate } from "@/utils/calendarDisplayTime";
 import { useCalendarLocalizer } from "@/utils/calendarLocalizer";
 import { getOverrideColour, hexToRgba } from "@/utils/colorUtils";
 import { getStoredTimeFormat, getStoredWeekStartsOn } from "@/utils/userPreferences";
@@ -213,7 +213,7 @@ const getEntryStyle = (entry: MiniCalendarEntry) => {
 const useMiniCalendarViewModel = (tasks: Task[], events: Event[]) => {
   const { dayStart, dayEnd, daySchedule, weekStartsOn, timeFormat, timezone } = useMiniCalendarPreferences();
   const { ref: containerRef, height: containerHeight, width: containerWidth } = useObservedHeight();
-  const localizer = useCalendarLocalizer(CALENDAR_DISPLAY_TIMEZONE);
+  const localizer = useCalendarLocalizer();
   useEffect(() => {
     syncCalendarWeekStart(weekStartsOn);
   }, [weekStartsOn]);
