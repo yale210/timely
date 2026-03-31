@@ -86,8 +86,3 @@ class BroadcastJobDetailSerializerTests(TestCase):
         self.assertEqual(serializer.data["audience_filters"]["target"], "users")
         self.assertEqual(serializer.data["audience_snapshot"]["recipient_count"], 2)
         self.assertEqual(serializer.data["provider_errors"][0]["code"], "PUSH_FAILED")
-        self.assertEqual(len(serializer.data["recipients"]), 2)
-        self.assertEqual(
-            [recipient["username"] for recipient in serializer.data["recipients"]],
-            ["alice", "bob"],
-        )

@@ -50,6 +50,7 @@ class AdminPanelViewSetConfigurationTests(SimpleTestCase):
                 "audience_counts",
                 "broadcasts",
                 "broadcast_detail",
+                "broadcast_recipients",
                 "broadcast_status",
                 "retry_failed",
             },

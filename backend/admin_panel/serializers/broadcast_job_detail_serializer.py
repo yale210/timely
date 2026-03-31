@@ -2,17 +2,13 @@
 
 from rest_framework import serializers
 
-from admin_panel.serializers.broadcast_recipient_serializer import (
-    BroadcastRecipientSerializer,
-)
 from notifications.models import BroadcastJob
 
 
 class BroadcastJobDetailSerializer(serializers.ModelSerializer):
-    """Serialize detailed broadcast job data with nested recipients."""
+    """Serialize detailed broadcast job data."""
 
     sender_username = serializers.ReadOnlyField(source="sender.username")
-    recipients = BroadcastRecipientSerializer(many=True, read_only=True)
 
     class Meta:
         """Metadata for the BroadcastJobDetailSerializer."""
@@ -37,5 +33,4 @@ class BroadcastJobDetailSerializer(serializers.ModelSerializer):
             "started_at",
             "completed_at",
             "retry_of",
-            "recipients",
         ]

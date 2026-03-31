@@ -2,7 +2,7 @@
 
 from django.contrib.auth import get_user_model
 from django.utils import timezone
-from rest_framework import serializers, status
+from rest_framework import pagination, serializers, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
 
@@ -13,6 +13,7 @@ from admin_panel.serializers import (
     AdminNotificationRequestSerializer,
     BroadcastJobDetailSerializer,
     BroadcastJobListSerializer,
+    BroadcastRecipientSerializer,
 )
 from admin_panel.services import (
     build_queued_job_payload,
@@ -21,8 +22,29 @@ from admin_panel.services import (
     get_failed_recipient_ids,
     queue_broadcast_job,
 )
-from notifications.models import BroadcastJob
+from notifications.models import BroadcastJob, BroadcastRecipient
 from notifications.tasks import process_broadcast_job
+
+
+class BroadcastRecipientPagination(pagination.PageNumberPagination):
+    """Pagination settings for broadcast recipient list endpoints."""
+
+    page_size = 10
+    page_size_query_param = "page_size"
+    max_page_size = 100
+    
+    def get_paginated_response(self, data):
+        """Override to include num_pages in the response.
+
+        Args:
+            data: Serialized page data.
+
+        Returns:
+            Response: Paginated response with an additional ``num_pages`` field.
+        """
+        response = super().get_paginated_response(data)
+        response.data['num_pages'] = self.page.paginator.num_pages
+        return response
 
 _BROADCAST_ID_PARAM = OpenApiParameter(
     "broadcast_id",
@@ -231,6 +253,47 @@ class AdminNotificationActionMixin:
             )
 
         serializer = BroadcastJobDetailSerializer(broadcast)
+        return Response(serializer.data)
+
+    @extend_schema(
+        parameters=[_BROADCAST_ID_PARAM],
+        responses={200: BroadcastRecipientSerializer(many=True)},
+    )
+    @action(
+        detail=False,
+        methods=["get"],
+        url_path=r"broadcasts/(?P<broadcast_id>[^/.]+)/recipients",
+    )
+    def broadcast_recipients(self, request, broadcast_id=None):
+        """Return paginated recipients for a single broadcast job.
+
+        Args:
+            request: The incoming DRF request.
+            broadcast_id: Broadcast job primary key from the URL.
+
+        Returns:
+            Response: Paginated recipient list or a not-found error.
+        """
+        if not BroadcastJob.objects.filter(id=broadcast_id).exists():
+            return Response(
+                self._serialize_error(
+                    code="NOT_FOUND",
+                    message="Broadcast not found.",
+                ),
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        queryset = BroadcastRecipient.objects.filter(
+            broadcast_job_id=broadcast_id,
+        ).select_related("recipient")
+
+        paginator = BroadcastRecipientPagination()
+        page = paginator.paginate_queryset(queryset, request)
+        if page is not None:
+            serializer = BroadcastRecipientSerializer(page, many=True)
+            return paginator.get_paginated_response(serializer.data)
+
+        serializer = BroadcastRecipientSerializer(queryset, many=True)
         return Response(serializer.data)
 
     @extend_schema(

@@ -42,6 +42,10 @@ class AdminBroadcastActionTests(APITestCase):
         """Build the broadcast detail endpoint URL."""
         return f"/api/admin/broadcasts/{broadcast_id}/"
 
+    def _broadcast_recipients_url(self, broadcast_id):
+        """Build the broadcast recipients endpoint URL."""
+        return f"/api/admin/broadcasts/{broadcast_id}/recipients/"
+
     def _broadcast_status_url(self, broadcast_id):
         """Build the broadcast status endpoint URL."""
         return f"/api/admin/broadcasts/{broadcast_id}/status/"
@@ -133,8 +137,17 @@ class AdminBroadcastActionTests(APITestCase):
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data["id"], broadcast.id)
-        self.assertEqual(len(response.data["recipients"]), 1)
-        self.assertEqual(response.data["recipients"][0]["username"], "regular")
+        self.assertNotIn("recipients", response.data)
+
+        recipients_response = self.client.get(
+            self._broadcast_recipients_url(broadcast.id)
+        )
+
+        self.assertEqual(recipients_response.status_code, status.HTTP_200_OK)
+        self.assertEqual(recipients_response.data["count"], 1)
+        self.assertEqual(
+            recipients_response.data["results"][0]["username"], "regular"
+        )
 
     def test_broadcast_detail_returns_not_found_for_missing_broadcast(self):
         """Verify missing broadcasts return a not-found payload."""
