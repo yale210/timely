@@ -81,8 +81,8 @@ describe("useTaskList Hook", () => {
   });
 
   it("keeps overdue tasks out of the today bucket", async () => {
-    const earlierToday = moment().subtract(8, "hours").toISOString();
-    const laterToday = moment().add(2, "hours").toISOString();
+    const earlierToday = moment().startOf("day").toISOString();
+    const laterToday = moment().endOf("day").toISOString();
 
     vi.mocked(taskService.getTasks).mockResolvedValue([
       {

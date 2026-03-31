@@ -1,5 +1,26 @@
 import { type BroadcastRecipientDetail } from "@/types";
 
+const STATUS_BADGE_CLASSES: Record<BroadcastRecipientDetail["status"], string> = {
+  PENDING: "bg-gray-100 text-gray-700",
+  SENT: "bg-green-100 text-green-700",
+  SENT_NO_PUSH: "bg-amber-100 text-amber-700",
+  FAILED: "bg-red-100 text-red-700",
+};
+
+const STATUS_LABELS: Record<BroadcastRecipientDetail["status"], string> = {
+  PENDING: "Pending",
+  SENT: "Sent",
+  SENT_NO_PUSH: "No push devices",
+  FAILED: "Failed",
+};
+
+const STATUS_TOOLTIPS: Record<BroadcastRecipientDetail["status"], string> = {
+  PENDING: "In-app notification created. Push delivery is still queued.",
+  SENT: "In-app notification created. Push delivered to at least one device.",
+  SENT_NO_PUSH: "In-app notification created, but the user has no push-enabled devices.",
+  FAILED: "In-app notification created, but push delivery failed for all devices.",
+};
+
 interface AdminHistoryRecipientRowProps {
   /**
    * Recipient delivery detail object.
@@ -22,8 +43,11 @@ export function AdminHistoryRecipientRow(props: AdminHistoryRecipientRowProps) {
         <p className="text-xs text-gray-500">{recipient.email}</p>
       </td>
       <td className="px-3 py-2">
-        <span className="rounded-full bg-gray-100 px-2 py-0.5 text-xs font-semibold text-gray-700">
-          {recipient.status}
+        <span
+          title={STATUS_TOOLTIPS[recipient.status]}
+          className={`cursor-help rounded-full px-2 py-0.5 text-xs font-semibold ${STATUS_BADGE_CLASSES[recipient.status]}`}
+        >
+          {STATUS_LABELS[recipient.status]}
         </span>
       </td>
       <td className="px-3 py-2 text-xs text-gray-500">{recipient.error_message || "-"}</td>

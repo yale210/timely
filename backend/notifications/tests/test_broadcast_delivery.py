@@ -1,8 +1,11 @@
+from unittest.mock import patch
+
 from django.contrib.auth import get_user_model
 from django.test import TestCase
 from django.utils import timezone
 
 from notifications.models import BroadcastJob, BroadcastRecipient, Notification
+from notifications.tasks.broadcast import _send_single_push
 from notifications.tasks.broadcast_delivery import (
     build_broadcast_websocket_payload,
     complete_broadcast_without_recipients,
@@ -125,3 +128,89 @@ class BroadcastDeliveryTests(TestCase):
         self.assertEqual(self.broadcast.failed_count, 0)
         self.assertEqual(recipient.status, BroadcastRecipient.DeliveryStatus.SENT)
         self.assertEqual(recipient.notification_id, notification.id)
+
+
+class SendSinglePushTests(TestCase):
+    """Test cases for _send_single_push recipient status assignment."""
+
+    def setUp(self):
+        self.user = User.objects.create_user(
+            username="pushrecipient",
+            password="password",
+            email="pushrecipient@example.com",
+        )
+        self.broadcast = BroadcastJob.objects.create(
+            sender=None,
+            title="Broadcast",
+            message="Body",
+            target=BroadcastJob.Target.ALL,
+            audience_filters={},
+            audience_snapshot={},
+            recipient_count=1,
+            status=BroadcastJob.Status.IN_PROGRESS,
+        )
+        self.recipient = BroadcastRecipient.objects.create(
+            broadcast_job=self.broadcast,
+            recipient=self.user,
+        )
+
+    @patch("notifications.tasks.broadcast._send_push_notification_sync")
+    def test_sets_sent_no_push_when_no_subscriptions(self, mock_push):
+        """Test that recipient gets SENT_NO_PUSH when user has no push devices."""
+        mock_push.return_value = {
+            "success": True,
+            "error_code": "NO_PUSH_SUBSCRIPTIONS",
+            "error_message": "",
+        }
+
+        success, error_code, error_msg = _send_single_push(
+            self.recipient, self.broadcast
+        )
+
+        self.assertTrue(success)
+        self.assertEqual(error_code, "")
+        self.assertEqual(error_msg, "")
+        self.assertEqual(
+            self.recipient.status,
+            BroadcastRecipient.DeliveryStatus.SENT_NO_PUSH,
+        )
+
+    @patch("notifications.tasks.broadcast._send_push_notification_sync")
+    def test_sets_sent_when_push_delivered(self, mock_push):
+        """Test that recipient gets SENT when push succeeds."""
+        mock_push.return_value = {
+            "success": True,
+            "error_code": "",
+            "error_message": "",
+        }
+
+        success, error_code, error_msg = _send_single_push(
+            self.recipient, self.broadcast
+        )
+
+        self.assertTrue(success)
+        self.assertEqual(
+            self.recipient.status,
+            BroadcastRecipient.DeliveryStatus.SENT,
+        )
+
+    @patch("notifications.tasks.broadcast._send_push_notification_sync")
+    def test_sets_failed_when_push_fails(self, mock_push):
+        """Test that recipient gets FAILED with error details on push failure."""
+        mock_push.return_value = {
+            "success": False,
+            "error_code": "PUSH_PROVIDER_FAILURE",
+            "error_message": "Push subscription is invalid or expired.",
+        }
+
+        success, error_code, error_msg = _send_single_push(
+            self.recipient, self.broadcast
+        )
+
+        self.assertFalse(success)
+        self.assertEqual(error_code, "PUSH_PROVIDER_FAILURE")
+        self.assertEqual(error_msg, "Push subscription is invalid or expired.")
+        self.assertEqual(
+            self.recipient.status,
+            BroadcastRecipient.DeliveryStatus.FAILED,
+        )

@@ -11,6 +11,34 @@ from notifications.models import PushSubscription
 
 logger = logging.getLogger(__name__)
 
+_FRIENDLY_PUSH_ERRORS: dict[int, str] = {
+    400: "Push subscription is invalid or expired.",
+    401: "Push server rejected our credentials.",
+    403: "Push server denied access.",
+    404: "Push subscription no longer exists.",
+    410: "Push subscription has expired.",
+    413: "Notification payload was too large.",
+    429: "Too many push requests — try again later.",
+}
+
+
+def _humanize_push_error(ex: WebPushException) -> str:
+    """Convert a WebPushException into a short, human-readable message.
+
+    Args:
+        ex: The WebPushException raised by pywebpush.
+
+    Returns:
+        A concise description suitable for display in the admin UI.
+    """
+    if ex.response is not None:
+        status = ex.response.status_code
+        friendly = _FRIENDLY_PUSH_ERRORS.get(status)
+        if friendly:
+            return friendly
+        return f"Push delivery failed (HTTP {status})."
+    return "Push delivery failed due to a network error."
+
 
 def _dispatch_to_subscription(sub: PushSubscription, payload: str) -> tuple[bool, str]:
     """Dispatch a push notification to a single subscription.
@@ -23,7 +51,9 @@ def _dispatch_to_subscription(sub: PushSubscription, payload: str) -> tuple[bool
         A tuple of (success_boolean, error_message_string).
     """
     try:
-        # Execute the push request using the webpush library
+        # Execute the push request using the webpush library.
+        # TTL must be > 0 for Edge/WNS (rejects TTL=0 with 400).
+        # X-WNS-Cache-Policy is required by WNS; other push services ignore it.
         webpush(
             subscription_info={
                 "endpoint": sub.endpoint,
@@ -32,13 +62,21 @@ def _dispatch_to_subscription(sub: PushSubscription, payload: str) -> tuple[bool
             data=payload,
             vapid_private_key=settings.VAPID_PRIVATE_KEY,
             vapid_claims={"sub": f"mailto:{settings.VAPID_ADMIN_EMAIL}"},
+            ttl=86400,
+            headers={"x-wns-cache-policy": "cache"},
         )
         return True, ""
     except WebPushException as ex:
-        # Automatically delete subscriptions that are no longer valid
-        if ex.response and ex.response.status_code in [404, 410]:
+        if ex.response and ex.response.status_code in [400, 404, 410]:
+            logger.warning(
+                "Removing invalid push subscription %s (user %s): %s %s",
+                sub.id,
+                sub.user_id,
+                ex.response.status_code,
+                ex,
+            )
             sub.delete()
-        return False, str(ex)
+        return False, _humanize_push_error(ex)
 
 
 def _send_push_notification_sync(user_id, title, message):
@@ -54,7 +92,11 @@ def _send_push_notification_sync(user_id, title, message):
     """
     subscriptions = list(PushSubscription.objects.filter(user_id=user_id))
     if not subscriptions:
-        return {"success": True, "error_code": "", "error_message": ""}
+        return {
+            "success": True,
+            "error_code": "NO_PUSH_SUBSCRIPTIONS",
+            "error_message": "",
+        }
 
     payload = json.dumps({"title": title, "message": message})
     had_success = False

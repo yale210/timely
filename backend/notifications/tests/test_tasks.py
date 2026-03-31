@@ -441,7 +441,7 @@ class TasksTests(TestCase):
             "notifications.tasks.broadcast._send_push_notification_sync"
         ) as mock_push:
             mock_push.side_effect = [
-                {"success": True},
+                {"success": True, "error_code": "", "error_message": ""},
                 {"success": False, "error_code": "E", "error_message": "M"},
             ]
             process_broadcast_job(job.id)

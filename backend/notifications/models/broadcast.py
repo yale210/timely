@@ -83,6 +83,7 @@ class BroadcastRecipient(models.Model):
 
         PENDING = "PENDING", "Pending"
         SENT = "SENT", "Sent"
+        SENT_NO_PUSH = "SENT_NO_PUSH", "Sent (no push devices)"
         FAILED = "FAILED", "Failed"
 
     broadcast_job = models.ForeignKey(
