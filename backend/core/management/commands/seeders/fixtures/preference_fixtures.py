@@ -9,6 +9,7 @@ preferences = [
             "day_start": "08:57:02",
             "days_off": [1, 2, 3],
             "timezone": "Europe/London",
+            "max_hours_study_per_day": 10,
         },
     },
     {
@@ -19,6 +20,7 @@ preferences = [
             "day_start": "05:57:02",
             "days_off": [1],
             "timezone": "Europe/London",
+            "max_hours_study_per_day": 24,
         },
     },
     {
@@ -29,6 +31,7 @@ preferences = [
             "day_start": "12:53:05",
             "days_off": [2],
             "timezone": "Europe/London",
+            "max_hours_study_per_day": 7,
         },
     },
     {
@@ -39,6 +42,7 @@ preferences = [
             "day_start": "03:11:02",
             "days_off": [6, 7],
             "timezone": "Europe/London",
+            "max_hours_study_per_day": 6,
         },
     },
     {
@@ -49,6 +53,7 @@ preferences = [
             "day_start": "03:18:00",
             "days_off": [3],
             "timezone": "Europe/London",
+            "max_hours_study_per_day": 7,
         },
     },
 ]
