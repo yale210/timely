@@ -109,7 +109,10 @@ function buildTodayTasks(
   now: moment.Moment,
 ) {
   return tasks.filter(
-    (task) => !task.completed && moment(task.deadline).isSame(now, "day")
+    (task) =>
+      !task.completed
+      && moment(task.deadline).isSame(now, "day")
+      && !moment(task.deadline).isBefore(now)
   );
 }
 

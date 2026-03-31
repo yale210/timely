@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import type { ReactNode } from "react";
+import type * as AdminBroadcastFormCoreModule from "@/hooks/admin/notifications/useAdminBroadcastFormCore";
 import { AdminNotifications } from "@/pages/AdminNotifications/AdminNotifications";
 import {
   getAdminUsers,
@@ -22,9 +23,9 @@ vi.mock("@/api/notifications", () => ({
 }));
 
 vi.mock("@/hooks/admin/notifications/useAdminBroadcastFormCore", async () => {
-  const actual = await vi.importActual<
-    typeof import("@/hooks/admin/notifications/useAdminBroadcastFormCore")
-  >("@/hooks/admin/notifications/useAdminBroadcastFormCore");
+  const actual = await vi.importActual<typeof AdminBroadcastFormCoreModule>(
+    "@/hooks/admin/notifications/useAdminBroadcastFormCore",
+  );
 
   return {
     ...actual,
