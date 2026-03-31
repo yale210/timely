@@ -55,11 +55,7 @@ def _get_locked_broadcast(broadcast_job_id):
     Returns:
         BroadcastJob | None: The locked job row if it exists.
     """
-    return (
-        BroadcastJob.objects.select_for_update()
-        .filter(id=broadcast_job_id)
-        .first()
-    )
+    return BroadcastJob.objects.select_for_update().filter(id=broadcast_job_id).first()
 
 
 def _get_broadcast_recipients(broadcast):

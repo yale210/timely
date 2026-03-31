@@ -32,7 +32,7 @@ class BroadcastRecipientPagination(pagination.PageNumberPagination):
     page_size = 10
     page_size_query_param = "page_size"
     max_page_size = 100
-    
+
     def get_paginated_response(self, data):
         """Override to include num_pages in the response.
 
@@ -43,8 +43,9 @@ class BroadcastRecipientPagination(pagination.PageNumberPagination):
             Response: Paginated response with an additional ``num_pages`` field.
         """
         response = super().get_paginated_response(data)
-        response.data['num_pages'] = self.page.paginator.num_pages
+        response.data["num_pages"] = self.page.paginator.num_pages
         return response
+
 
 _BROADCAST_ID_PARAM = OpenApiParameter(
     "broadcast_id",

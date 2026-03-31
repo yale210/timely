@@ -145,9 +145,7 @@ class AdminBroadcastActionTests(APITestCase):
 
         self.assertEqual(recipients_response.status_code, status.HTTP_200_OK)
         self.assertEqual(recipients_response.data["count"], 1)
-        self.assertEqual(
-            recipients_response.data["results"][0]["username"], "regular"
-        )
+        self.assertEqual(recipients_response.data["results"][0]["username"], "regular")
 
     def test_broadcast_detail_returns_not_found_for_missing_broadcast(self):
         """Verify missing broadcasts return a not-found payload."""
