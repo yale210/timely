@@ -1,12 +1,18 @@
-import { type FormEvent, useCallback, useEffect } from "react";
-import { useBroadcastUsers } from "./useAdminBroadcastForm/useBroadcastUsers";
-import { useBroadcastAudience } from "./useAdminBroadcastForm/useBroadcastAudience";
-import { useBroadcastDelivery } from "./useAdminBroadcastForm/useBroadcastDelivery";
-import { useBroadcastValidation } from "./useAdminBroadcastForm/useBroadcastValidation";
-import { useBroadcastSubmission } from "./useAdminBroadcastForm/useBroadcastSubmission";
-import { useBroadcastFormState } from "./useAdminBroadcastForm/useBroadcastFormState";
-import { useBroadcastFormEffects } from "./useAdminBroadcastForm/useBroadcastFormEffects";
-import { TITLE_LIMIT, MESSAGE_LIMIT, targetOptions } from "./useAdminBroadcastForm/constants";
+import { type EventHandler, type SyntheticEvent, useCallback, useEffect } from "react";
+import {
+  MESSAGE_LIMIT,
+  TITLE_LIMIT,
+  targetOptions,
+  useBroadcastFormEffects,
+  useBroadcastFormState,
+  useBroadcastValidation,
+} from "./useAdminBroadcastFormCore";
+import { useBroadcastUsers } from "./useAdminBroadcastUsers";
+import { useAdminBroadcastAudience } from "./useAdminBroadcastAudience";
+import {
+  useBroadcastDelivery,
+  useBroadcastSubmission,
+} from "./useAdminBroadcastDelivery";
 
 const useResetBroadcastUsers = (
   target: string,
@@ -24,12 +30,12 @@ const useResetBroadcastUsers = (
 const buildBroadcastFormReturn = (
   s: ReturnType<typeof useBroadcastFormState>,
   u: ReturnType<typeof useBroadcastUsers>,
-  a: ReturnType<typeof useBroadcastAudience>,
+  a: ReturnType<typeof useAdminBroadcastAudience>,
   d: ReturnType<typeof useBroadcastDelivery>,
   v: ReturnType<typeof useBroadcastValidation>["validation"],
   canSubmit: boolean,
   sub: ReturnType<typeof useBroadcastSubmission>,
-  handleSubmit: (event: FormEvent<HTMLFormElement>) => void,
+  handleSubmit: EventHandler<SyntheticEvent<HTMLFormElement>>,
 ) => ({
   state: {
     formData: { title: s.title, message: s.message, target: s.target, userIdsInput: s.userIdsInput, confirmationChecked: s.confirmationChecked },
@@ -54,7 +60,7 @@ const buildBroadcastFormReturn = (
 export const useAdminBroadcastForm = () => {
   const s = useBroadcastFormState();
   const u = useBroadcastUsers(s.target);
-  const a = useBroadcastAudience(s.target, u.selectedUserIds, s.userIdsInput);
+  const a = useAdminBroadcastAudience(s.target, u.selectedUserIds, s.userIdsInput);
   const d = useBroadcastDelivery();
   const { validation: v, canSubmit } = useBroadcastValidation(s.title, s.message, s.target, a.targetAudienceCount, s.confirmationChecked);
   const sub = useBroadcastSubmission(d);
@@ -62,7 +68,7 @@ export const useAdminBroadcastForm = () => {
   useBroadcastFormEffects(s.title, s.message, s.setPreviewTitle, s.setPreviewMessage);
   useResetBroadcastUsers(s.target, u.setSelectedUserIds, s.setUserIdsInput);
 
-  const handleSubmit = useCallback((e: FormEvent<HTMLFormElement>) => {
+  const handleSubmit: EventHandler<SyntheticEvent<HTMLFormElement>> = useCallback((e) => {
     e.preventDefault();
     sub.setError(null);
     if (!canSubmit) { sub.setError("Please complete all required fields and confirmation."); return; }

@@ -25,7 +25,6 @@ def _normalise_reminders(
         return []
     return [
         {
-            "send_email": bool(reminder.get("send_email", False)),
             "send_push": bool(reminder.get("send_push", False)),
             "minutes_before": int(reminder.get("minutes_before", 0)),
         }
@@ -42,7 +41,6 @@ def _current_event_reminder_snapshot(event: Any) -> list[ReminderData]:
     reminder_rows = serialise_event_reminders(event)
     return [
         {
-            "send_email": bool(reminder["send_email"]),
             "send_push": bool(reminder["send_push"]),
             "minutes_before": int(reminder["minutes_before"]),
         }
@@ -95,16 +93,15 @@ def _category_id_set(values: Iterable[Any]) -> set[int]:
 
 def _canonicalise_reminders(
     reminders_data: list[ReminderData],
-) -> list[tuple[int, bool, bool]]:
+) -> list[tuple[int, bool]]:
     """Sort reminder payloads into a deterministic comparison tuple format.
 
     Returns:
-        list[tuple[int, bool, bool]]: The reminder comparison tuples.
+        list[tuple[int, bool]]: The reminder comparison tuples.
     """
     return sorted(
         (
             int(reminder["minutes_before"]),
-            bool(reminder["send_email"]),
             bool(reminder["send_push"]),
         )
         for reminder in reminders_data

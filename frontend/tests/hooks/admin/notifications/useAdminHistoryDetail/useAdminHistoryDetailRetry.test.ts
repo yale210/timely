@@ -1,6 +1,6 @@
 import { renderHook, act } from "@testing-library/react";
 import { vi, describe, it, expect, beforeEach } from "vitest";
-import { useAdminHistoryDetailRetry } from "@/hooks/admin/notifications/useAdminHistoryDetail/useAdminHistoryDetailRetry";
+import { useAdminHistoryDetailRetry } from "@/hooks/admin/notifications/useAdminHistoryDetail";
 import * as api from "@/api/notifications";
 
 vi.mock("@/api/notifications", () => ({

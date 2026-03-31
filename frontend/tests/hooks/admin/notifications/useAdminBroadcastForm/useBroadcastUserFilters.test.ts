@@ -1,6 +1,6 @@
 import { renderHook, act } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
-import { useBroadcastUserFilters } from "@/hooks/admin/notifications/useAdminBroadcastForm/useBroadcastUserFilters";
+import { useBroadcastUserFilters } from "@/hooks/admin/notifications/useAdminBroadcastUsers";
 
 describe("useBroadcastUserFilters", () => {
   it("starts with the default state", () => {

@@ -1,6 +1,6 @@
 import { render, screen, fireEvent } from "@testing-library/react";
 import { vi, describe, it, expect } from "vitest";
-import { AdminBroadcastFormFields } from "@/components/admin/notifications/AdminBroadcastForm/AdminBroadcastFormFields";
+import { AdminBroadcastFormFields } from "@/components/admin/notifications/AdminBroadcastForm";
 
 describe("AdminBroadcastFormFields Component", () => {
   const defaultProps = {

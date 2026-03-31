@@ -68,4 +68,35 @@ describe("NotificationDropdown Component", () => {
       expect(screen.getByText("Test Notif")).toBeDefined();
     });
   });
+
+  it("calls onDeleteItem when the delete action is clicked", async () => {
+    const onDeleteItem = vi.fn();
+
+    render(
+      <MemoryRouter>
+        <NotificationDropdown {...defaultProps} onDeleteItem={onDeleteItem} />
+      </MemoryRouter>
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: /view notifications/i }));
+    const deleteButtons = await screen.findAllByLabelText(/delete notification/i);
+    fireEvent.click(deleteButtons[0]);
+
+    expect(onDeleteItem).toHaveBeenCalledTimes(1);
+    expect(onDeleteItem).toHaveBeenCalledWith(mockNotifications[0]);
+  });
+
+  it("shows the empty state when there are no notifications", async () => {
+    render(
+      <MemoryRouter>
+        <NotificationDropdown {...defaultProps} notifications={[]} unreadCount={0} />
+      </MemoryRouter>
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: /view notifications/i }));
+
+    await waitFor(() => {
+      expect(screen.getByText("No notifications")).toBeDefined();
+    });
+  });
 });

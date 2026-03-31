@@ -26,9 +26,9 @@ import {
 } from "@/pages"
 import { Notifications } from "@/pages/Notification/Notifications"
 import { NotificationDetail } from "@/pages/Notification/NotificationDetail"
-import { AdminNotifications } from "@/pages/Admin/Notifications/AdminNotifications"
-import { AdminNotificationHistory } from "@/pages/Admin/Notifications/AdminNotificationHistory"
-import { AdminNotificationHistoryDetail } from "@/pages/Admin/Notifications/AdminNotificationHistoryDetail"
+import { AdminNotifications } from "@/pages/AdminNotifications/AdminNotifications"
+import { AdminNotificationHistory } from "@/pages/AdminNotifications/AdminNotificationHistory"
+import { AdminNotificationHistoryDetail } from "@/pages/AdminNotifications/AdminNotificationHistoryDetail"
 import CourseManagement from "@/pages/Course/CourseManagement.tsx";
 import RequireTeacher from "@/context/auth/RequireTeacher.tsx";
 import CourseCreate from "@/pages/Course/CourseCreate.tsx";

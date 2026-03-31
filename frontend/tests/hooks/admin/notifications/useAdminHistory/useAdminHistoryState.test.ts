@@ -1,6 +1,6 @@
 import { renderHook, act } from "@testing-library/react";
 import { describe, it, expect } from "vitest";
-import { useAdminHistoryState } from "@/hooks/admin/notifications/useAdminHistory/useAdminHistoryState";
+import { useAdminHistoryState } from "@/hooks/admin/notifications/useAdminHistory";
 
 describe("useAdminHistoryState hook", () => {
   it("manages history state", () => {

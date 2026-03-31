@@ -157,7 +157,7 @@ class EventSerializerTests(TestCase):
         )
         data = {
             "reminders": [
-                {"send_push": True, "send_email": False, "minutes_before": 10},
+                {"send_push": True, "minutes_before": 10},
             ]
         }
         serializer = EventSerializer(

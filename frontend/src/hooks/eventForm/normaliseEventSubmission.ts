@@ -1,7 +1,6 @@
 import type { Event, EventSubmission } from "@/types";
 
 interface NormalisedEventReminder {
-    send_email: boolean;
     send_push: boolean;
     minutes_before: number;
 }
@@ -46,7 +45,6 @@ export function normaliseEventSubmission(
 function normaliseEventReminders(submission: EventSubmission) {
     return [...(submission.reminders ?? [])]
         .map((reminder) => ({
-        send_email: Boolean(reminder.send_email),
         send_push: Boolean(reminder.send_push),
         minutes_before: Number(reminder.minutes_before),
         }))
@@ -59,9 +57,6 @@ function compareEventReminders(
 ) {
     if (left.minutes_before !== right.minutes_before) {
         return left.minutes_before - right.minutes_before;
-    }
-    if (left.send_email !== right.send_email) {
-        return Number(left.send_email) - Number(right.send_email);
     }
     return Number(left.send_push) - Number(right.send_push);
 }

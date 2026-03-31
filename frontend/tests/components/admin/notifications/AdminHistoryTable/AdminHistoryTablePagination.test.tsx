@@ -1,6 +1,6 @@
 import { render, screen, fireEvent } from "@testing-library/react";
 import { vi, describe, it, expect } from "vitest";
-import { AdminHistoryTablePagination } from "@/components/admin/notifications/AdminHistoryTable/AdminHistoryTablePagination";
+import { AdminHistoryTablePagination } from "@/components/admin/notifications/AdminHistoryTable";
 
 describe("AdminHistoryTablePagination Component", () => {
   it("renders and handles pagination", () => {

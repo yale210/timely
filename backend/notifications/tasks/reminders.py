@@ -58,7 +58,6 @@ def _reminder_signature(reminder: dict) -> str:
     payload = json.dumps(
         {
             "minutes_before": int(reminder["minutes_before"]),
-            "send_email": bool(reminder.get("send_email", False)),
             "send_push": bool(reminder.get("send_push", False)),
         },
         sort_keys=True,

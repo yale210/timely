@@ -5,7 +5,7 @@ import { UNIT_LABELS } from "@/hooks/eventForm/eventFormReminderHelpers";
 interface Props {
     index: number;
     reminder: ReminderFormState;
-    toggleReminderChannel: (i: number, f: "send_email" | "send_push", v: boolean) => void;
+    toggleReminderChannel: (i: number, f: "send_push", v: boolean) => void;
     permission: PushPermission;
     handleTogglePush: (i: number, n: boolean) => void;
     pushLoading: boolean;
@@ -23,7 +23,7 @@ interface Props {
  * @param props - The props for the reminder row.
  * @param props.index - The index of the reminder in the reminders list.
  * @param props.reminder - The reminder state being rendered.
- * @param props.toggleReminderChannel - Toggles email or popup delivery for a reminder.
+ * @param props.toggleReminderChannel - Toggles popup delivery for a reminder.
  * @param props.permission - The current browser push notification permission state.
  * @param props.handleTogglePush - Handles enabling or disabling push notifications for the reminder.
  * @param props.pushLoading - Whether push subscription state is currently loading.
@@ -38,15 +38,6 @@ export default function EventFormReminder(props: Props) {
         <div key={props.index} className={`flex flex-col gap-2 rounded-lg px-3 py-2 ${props.pastReminderIndices.has(props.index) ? "bg-red-50 text-red-700" : "bg-gray-50 text-gray-700"}`}>
                 <div className="flex flex-wrap items-center gap-3">
                   <span className="text-sm font-medium">Reminder</span>
-                  <label className="inline-flex items-center gap-2 text-sm text-gray-600">
-                    <input
-                      type="checkbox"
-                      checked={props.reminder.send_email}
-                      onChange={(e) => props.toggleReminderChannel(props.index, "send_email", e.target.checked)}
-                      className="h-4 w-4 rounded border-gray-300 text-orange-500 focus:ring-orange-500"
-                    />
-                    Email
-                  </label>
                   <label className="inline-flex items-center gap-2 text-sm text-gray-600">
                     <input
                       type="checkbox"

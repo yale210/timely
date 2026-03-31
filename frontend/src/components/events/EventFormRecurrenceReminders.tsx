@@ -18,7 +18,7 @@ interface EventFormRecurrenceRemindersProps {
   addReminder: () => void;
   toggleReminderChannel: (
     index: number,
-    field: "send_email" | "send_push",
+    field: "send_push",
     value: boolean,
   ) => void;
   handleTogglePush: (index: number, nextValue: boolean) => Promise<void>;
@@ -48,7 +48,7 @@ interface EventFormRecurrenceRemindersProps {
  * @param root0.maxReminders Maximum reminder count.
  * @param root0.canAddReminder Whether another reminder can be added.
  * @param root0.addReminder Adds a reminder row.
- * @param root0.toggleReminderChannel Toggles email or push delivery.
+ * @param root0.toggleReminderChannel Toggles push delivery.
  * @param root0.handleTogglePush Handles push permission and push state.
  * @param root0.updateReminder Updates one reminder field.
  * @param root0.removeReminder Removes a reminder row.

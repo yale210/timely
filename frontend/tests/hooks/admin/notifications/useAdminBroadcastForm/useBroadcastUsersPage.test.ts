@@ -1,7 +1,7 @@
 import { renderHook, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { getAdminUsers } from "@/api/notifications";
-import { useBroadcastUsersPage } from "@/hooks/admin/notifications/useAdminBroadcastForm/useBroadcastUsersPage";
+import { useBroadcastUsersPage } from "@/hooks/admin/notifications/useAdminBroadcastUsers";
 import type { AdminUserListResponse } from "@/types";
 
 vi.mock("@/api/notifications", () => ({

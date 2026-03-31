@@ -11,7 +11,6 @@ class EventReminder(models.Model):
     event = models.ForeignKey(
         "Event", related_name="reminders", on_delete=models.CASCADE
     )
-    send_email = models.BooleanField(default=False)
     send_push = models.BooleanField(default=False)
     minutes_before = models.PositiveIntegerField()
 

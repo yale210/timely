@@ -1,6 +1,6 @@
 import { render, screen, fireEvent } from "@testing-library/react";
 import { vi, describe, it, expect } from "vitest";
-import { AdminHistoryTargetFilter } from "@/components/admin/notifications/AdminHistoryFilters/AdminHistoryTargetFilter";
+import { AdminHistoryTargetFilter } from "@/components/admin/notifications/AdminHistoryFilters";
 
 describe("AdminHistoryTargetFilter Component", () => {
   it("renders and handles changes", () => {
