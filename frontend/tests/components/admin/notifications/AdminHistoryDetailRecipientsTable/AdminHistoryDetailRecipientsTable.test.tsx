@@ -1,5 +1,5 @@
 import { render, screen } from "@testing-library/react";
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi } from "vitest";
 import { AdminHistoryDetailRecipientsTable } from "@/components/admin/notifications";
 import type { BroadcastRecipientDetail } from "@/types";
 
@@ -29,8 +29,16 @@ describe("AdminHistoryDetailRecipientsTable Component", () => {
     },
   ];
 
+  const defaultProps = {
+    recipients: mockRecipients,
+    page: 1,
+    totalPages: 1,
+    loading: false,
+    onPageChange: vi.fn(),
+  };
+
   it("renders recipient list correctly", () => {
-    render(<AdminHistoryDetailRecipientsTable recipients={mockRecipients} />);
+    render(<AdminHistoryDetailRecipientsTable {...defaultProps} />);
     
     expect(screen.getByText("Recipient delivery")).toBeDefined();
     
@@ -44,13 +52,12 @@ describe("AdminHistoryDetailRecipientsTable Component", () => {
   });
 
   it("shows error message when present", () => {
-    render(<AdminHistoryDetailRecipientsTable recipients={mockRecipients} />);
+    render(<AdminHistoryDetailRecipientsTable {...defaultProps} />);
     expect(screen.getByText("Network Timeout")).toBeDefined();
   });
 
   it("shows dash when error message is absent", () => {
-    render(<AdminHistoryDetailRecipientsTable recipients={mockRecipients} />);
-    // There should be at least one dash for user1
+    render(<AdminHistoryDetailRecipientsTable {...defaultProps} />);
     expect(screen.getAllByText("-").length).toBeGreaterThanOrEqual(1);
   });
 });

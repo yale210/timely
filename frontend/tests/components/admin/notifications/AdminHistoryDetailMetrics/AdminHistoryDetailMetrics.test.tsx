@@ -25,7 +25,6 @@ describe("AdminHistoryDetailMetrics Component", () => {
     },
     provider_errors: [],
     retry_of: null,
-    recipients: [],
   };
 
   const mockStatus: BroadcastJobStatusResponse = {
