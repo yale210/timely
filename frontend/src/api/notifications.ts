@@ -12,6 +12,7 @@ import type {
   BroadcastJobDetail,
   BroadcastJobStatusResponse,
   RetryBroadcastResponse,
+  PaginatedBroadcastRecipientResponse,
 } from "@/types";
 
 /**
@@ -184,6 +185,23 @@ export const getBroadcastHistory = async (params?: {
  */
 export const getBroadcastDetail = async (broadcastId: number): Promise<BroadcastJobDetail> => {
   const response = await api.get<BroadcastJobDetail>(`/api/admin/broadcasts/${broadcastId}/`);
+  return response.data;
+};
+
+/**
+ * Fetches a paginated list of recipients for a broadcast job.
+ * @param broadcastId - The broadcast job id.
+ * @param page - The page number to fetch (defaults to 1).
+ * @returns Paginated recipient delivery details.
+ */
+export const getBroadcastRecipients = async (
+  broadcastId: number,
+  page = 1,
+): Promise<PaginatedBroadcastRecipientResponse> => {
+  const response = await api.get<PaginatedBroadcastRecipientResponse>(
+    `/api/admin/broadcasts/${broadcastId}/recipients/`,
+    { params: { page } },
+  );
   return response.data;
 };
 
