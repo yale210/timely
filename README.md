@@ -198,18 +198,6 @@ cd frontend
 npm run test
 ```
 
-## Reused Code, Libraries, and External Sources
-
-### Reused source code
-
-The team must complete this table before final submission for any code copied or adapted from tutorials, examples, documentation, prior projects, Stack Overflow, blog posts, or similar external sources.
-
-| File or path | Affected function / class / component | Source | Nature of reuse | Notes |
-| --- | --- | --- | --- | --- |
-| `TBC by team before submission` | `TBC` | `TBC` | `Copied / adapted / derived` | `Add every direct reused source code instance here.` |
-
-If there was no direct reuse of source code beyond third-party libraries, replace the placeholder row above with `None`.
-
 ### External libraries and services
 
 This project depends on external libraries and frameworks including:
@@ -284,12 +272,3 @@ All the pull requests in which GitHub Copilot was used to review/generate code:
 - Push notifications require valid VAPID keys and a compatible browser environment.
 - Courses and Notifications do not work using Nix or local setup, it only works using Docker
 - The complete iCalendar specification is not implemented, meaning that imported files with certain unsupported (by the application) syntax will fail to be parsed. Currently, this results in no changes being made. Future development would certainly require an expansion of the iCakendar specification supported so that more valid files can be imported.
-
-
-## Submission Checklist
-
-- the `Reused source code` table above is complete, or explicitly states `None`
-- the `AI Usage Disclosure` table above is complete for every AI-assisted code contribution
-- the manual setup steps have been tested from a clean machine or environment
-- the Nix quick-start path still runs without requiring markers to debug configuration issues
-
