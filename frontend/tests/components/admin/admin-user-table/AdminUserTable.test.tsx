@@ -1,6 +1,6 @@
 import { render, screen, fireEvent } from "@testing-library/react";
 import { vi, describe, it, expect } from "vitest";
-import { AdminUserTable } from "@/components/admin/AdminUserTable";
+import { AdminUserTable } from "@/components/admin/admin-user-table/AdminUserTable";
 import type { AdminUserSummary } from "@/types";
 
 describe("AdminUserTable Component", () => {

@@ -1,6 +1,6 @@
 import { render, screen } from "@testing-library/react";
 import { describe, it, expect } from "vitest";
-import { AdminUserRoleBadge } from "@/components/admin/AdminUserTable/AdminUserBadges";
+import { AdminUserRoleBadge } from "@/components/admin/admin-user-table/AdminUserBadges";
 
 describe("AdminUserRoleBadge Component", () => {
   it("renders Admin for superusers", () => {

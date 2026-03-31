@@ -1,8 +1,8 @@
 import { type AdminNotificationTarget, type AdminUserRole, type AdminUserSummary } from "@/types";
-import { AdminUserTableControls } from "./AdminUserTable/AdminUserTableControls";
-import { AdminUserTableList } from "./AdminUserTable/AdminUserTableList";
-import { AdminUserTablePagination } from "./AdminUserTable/AdminUserTablePagination";
-import { AdminUserTableManualInput } from "./AdminUserTable/AdminUserTableManualInput";
+import { AdminUserTableControls } from "./AdminUserTableControls";
+import { AdminUserTableList } from "./AdminUserTableList";
+import { AdminUserTablePagination } from "./AdminUserTablePagination";
+import { AdminUserTableManualInput } from "./AdminUserTableManualInput";
 
 interface AdminUserTableProps {
   target: AdminNotificationTarget;

@@ -1,4 +1,4 @@
-export { AdminUserTable } from "./AdminUserTable";
+export { AdminUserTable } from "./admin-user-table/AdminUserTable";
 export {
   AdminBroadcastForm,
   AdminHistoryTable,

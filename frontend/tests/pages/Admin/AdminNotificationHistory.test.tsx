@@ -1,7 +1,7 @@
 import { render, screen, fireEvent } from "@testing-library/react";
 import { vi, describe, it, expect, beforeEach } from "vitest";
 import { MemoryRouter, useNavigate } from "react-router-dom";
-import { AdminNotificationHistory } from "@/pages/Admin/Notifications/AdminNotificationHistory";
+import { AdminNotificationHistory } from "@/pages/AdminNotifications/AdminNotificationHistory";
 import { useAdminHistory } from "@/hooks/admin/notifications/useAdminHistory";
 import type { ReactNode } from "react";
 

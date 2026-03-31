@@ -1,7 +1,7 @@
 import { render, screen, fireEvent } from "@testing-library/react";
 import { vi, describe, it, expect, beforeEach } from "vitest";
 import { MemoryRouter } from "react-router-dom";
-import { AdminNotificationHistoryDetail } from "@/pages/Admin/Notifications/AdminNotificationHistoryDetail";
+import { AdminNotificationHistoryDetail } from "@/pages/AdminNotifications/AdminNotificationHistoryDetail";
 import { useAdminHistoryDetail } from "@/hooks/admin/notifications/useAdminHistoryDetail";
 
 // Mock Hook

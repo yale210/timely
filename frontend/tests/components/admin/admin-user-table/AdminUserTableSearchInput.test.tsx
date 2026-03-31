@@ -1,6 +1,6 @@
 import { render, screen, fireEvent } from "@testing-library/react";
 import { vi, describe, it, expect } from "vitest";
-import { AdminUserTableSearchInput } from "@/components/admin/AdminUserTable/AdminUserTableControls";
+import { AdminUserTableSearchInput } from "@/components/admin/admin-user-table/AdminUserTableControls";
 
 describe("AdminUserTableSearchInput Component", () => {
   it("renders and handles changes", () => {

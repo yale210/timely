@@ -1,5 +1,5 @@
 import { type FormEvent } from "react";
-import { AdminUserTable } from "@/components/admin/AdminUserTable";
+import { AdminUserTable } from "@/components/admin/admin-user-table/AdminUserTable";
 import { type AdminNotificationTarget, type AdminUserRole, type AdminUserSummary } from "@/types";
 
 interface AdminBroadcastFormTitleFieldProps {

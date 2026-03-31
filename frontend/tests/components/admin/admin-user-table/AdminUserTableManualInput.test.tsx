@@ -1,6 +1,6 @@
 import { render, screen, fireEvent } from "@testing-library/react";
 import { vi, describe, it, expect } from "vitest";
-import { AdminUserTableManualInput } from "@/components/admin/AdminUserTable/AdminUserTableManualInput";
+import { AdminUserTableManualInput } from "@/components/admin/admin-user-table/AdminUserTableManualInput";
 
 describe("AdminUserTableManualInput Component", () => {
   const defaultProps = {

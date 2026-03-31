@@ -1,6 +1,6 @@
 import { render, screen } from "@testing-library/react";
 import { describe, it, expect } from "vitest";
-import { AdminUserTableStates } from "@/components/admin/AdminUserTable/AdminUserTableStates";
+import { AdminUserTableStates } from "@/components/admin/admin-user-table/AdminUserTableStates";
 
 describe("AdminUserTableStates Component", () => {
   it("renders loading state", () => {

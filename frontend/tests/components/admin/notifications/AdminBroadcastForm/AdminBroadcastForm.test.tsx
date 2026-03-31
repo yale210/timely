@@ -3,7 +3,7 @@ import { describe, expect, it, vi } from "vitest";
 import { AdminBroadcastForm } from "@/components/admin/notifications";
 import type { AdminNotificationTarget, AdminUserRole, AdminUserSummary } from "@/types";
 
-vi.mock("@/components/admin/AdminUserTable", () => ({
+vi.mock("@/components/admin/admin-user-table/AdminUserTable", () => ({
   AdminUserTable: (props: {
     target: string;
     onSearchChange: (value: string) => void;

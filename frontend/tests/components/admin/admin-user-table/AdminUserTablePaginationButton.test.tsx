@@ -1,6 +1,6 @@
 import { render, screen, fireEvent } from "@testing-library/react";
 import { vi, describe, it, expect } from "vitest";
-import { AdminUserTablePaginationButton } from "@/components/admin/AdminUserTable/AdminUserTablePagination";
+import { AdminUserTablePaginationButton } from "@/components/admin/admin-user-table/AdminUserTablePagination";
 
 describe("AdminUserTablePaginationButton Component", () => {
   it("renders with label and handles click", () => {

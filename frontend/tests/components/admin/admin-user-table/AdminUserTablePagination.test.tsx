@@ -1,6 +1,6 @@
 import { render, screen, fireEvent } from "@testing-library/react";
 import { vi, describe, it, expect } from "vitest";
-import { AdminUserTablePagination } from "@/components/admin/AdminUserTable/AdminUserTablePagination";
+import { AdminUserTablePagination } from "@/components/admin/admin-user-table/AdminUserTablePagination";
 
 describe("AdminUserTablePagination Component", () => {
   const defaultProps = {
