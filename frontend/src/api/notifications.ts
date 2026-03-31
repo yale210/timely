@@ -1,4 +1,5 @@
 import api from "@/services/api";
+import type { AxiosError } from "axios";
 import type {
   AdminAudienceCounts,
   AdminNotificationSendResponse,
@@ -109,8 +110,18 @@ export const unsubscribeFromPush = async (endpoint: string): Promise<void> => {
  * @returns Promise containing the VAPID public key
  */
 export const getVapidPublicKey = async (): Promise<{ public_key: string }> => {
-  const response = await api.get<{ public_key: string }>("/api/push/vapid_public_key/");
-  return response.data;
+  try {
+    const response = await api.get<{ public_key: string }>("/api/push/vapid_public_key/");
+    return response.data;
+  } catch (err) {
+    const axiosError = err as AxiosError<{ error?: string }>;
+    if (axiosError.response?.status === 503) {
+      throw new Error(
+        "Push notifications are not available right now. Server admin has not configured VAPID keys.",
+      );
+    }
+    throw err;
+  }
 };
 
 /**

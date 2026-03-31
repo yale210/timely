@@ -106,7 +106,7 @@ export interface BroadcastRecipientDetail {
   recipient: number;
   username: string;
   email: string;
-  status: "PENDING" | "SENT" | "FAILED";
+  status: "PENDING" | "SENT" | "SENT_NO_PUSH" | "FAILED";
   error_code: string;
   error_message: string;
   last_attempt_at: string | null;
