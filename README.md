@@ -152,18 +152,6 @@ npm test
 npm run coverage
 ```
 
-## Project Structure
-
-```text
-.
-|- backend/                   # Django project ("source")
-|- frontend/                  # React + Vite SPA
-|- docs/                      # Project documentation
-|- docker-compose.yml         # Production stack
-|- docker-compose.dev.yml     # Development stack
-`- .github/workflows/         # CI/CD pipelines
-```
-
 ## Access Credentials
 
 The following accounts are available on the seeded development database and the live deployment.
