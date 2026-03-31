@@ -74,10 +74,10 @@ describe("useTaskList Hook", () => {
     await waitFor(() => expect(result.current.loading).toBe(false));
 
     const { sections } = result.current.state;
-    expect(sections.todayTasks.length).toBe(1);
-    expect(sections.overdueTasks.length).toBe(1);
-    expect(sections.upcomingTasks.length).toBe(1);
+    expect(sections.upcomingTasks.length).toBe(2);
     expect(sections.pastTasks.length).toBe(1);
+    expect(sections.upcomingTasks.map((task) => task.title)).toContain("Task 1");
+    expect(sections.upcomingTasks.map((task) => task.title)).toContain("Task 3");
   });
 
   it("handles toggleComplete", async () => {
