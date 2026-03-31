@@ -33,7 +33,6 @@ assessments = [
             "notes": "Need to do well!",
             "reminder_offset": 25,
             "linked_event": None,
-
         },
     },
     {
