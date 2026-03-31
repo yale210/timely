@@ -225,6 +225,22 @@ The following migrations were created or updated with AI assistance:
 - `backend/profiles/migrations/0002_profile_avatar_upload.py`
 - `backend/profiles/migrations/0003_delete_preference.py`
 
+The following test files were created or updated with AI assistance:
+- `frontend/tests/components/tasks/TaskFormProgress.test.tsx` - 100%
+- `frontend/tests/components/tasks/TaskFormSave.test.tsx`  - 100%
+- `frontend/tests/components/tasks/TaskFormSplitter.test.tsx`  - 100%
+- `frontend/tests/components/tasks/TaskListHeader.test.tsx`  - 100%
+- `frontend/tests/components/tasks/TaskListToolbar.test.tsx`  - 100%
+- `frontend/tests/components/tasks/TaskUpcomingSection.test.tsx` - 100% 
+- `frontend/tests/components/tasks/SettingsContext.test.tsx` - 100%
+- `frontend/tests/CategoryMultiSelect.constants.test.ts` - 100%
+- `frontend/tests/CategoryMultiSelect.test.tsx` - 100%
+- `frontend/tests/CategoryMultiSelect.utils.test.ts` - 100%
+- `frontend/tests/context/PomodoroContext.test.tsx` - 20%
+- `frontend/tests/hooks/taskForm/buildTaskSubmission.test.ts` - 100%
+- `frontend/tests/hooks/taskForm/normaliseTaskSubmissions.test.ts` - 100%
+- `frontend/tests/hooks/taskForm/taskFormColour.test.ts` - 100%
+
 GitHub Copilot was used in these pull requests:
 [#320](https://github.com/xlightningstar/It-Worked-On-My-Machine/pull/320), [#309](https://github.com/xlightningstar/It-Worked-On-My-Machine/pull/309), [#288](https://github.com/xlightningstar/It-Worked-On-My-Machine/pull/288), [#286](https://github.com/xlightningstar/It-Worked-On-My-Machine/pull/286), [#280](https://github.com/xlightningstar/It-Worked-On-My-Machine/pull/280), [#271](https://github.com/xlightningstar/It-Worked-On-My-Machine/pull/271), [#255](https://github.com/xlightningstar/It-Worked-On-My-Machine/pull/255), [#176](https://github.com/xlightningstar/It-Worked-On-My-Machine/pull/176), [#174](https://github.com/xlightningstar/It-Worked-On-My-Machine/pull/174), [#156](https://github.com/xlightningstar/It-Worked-On-My-Machine/pull/156), [#150](https://github.com/xlightningstar/It-Worked-On-My-Machine/pull/150), [#164](https://github.com/xlightningstar/It-Worked-On-My-Machine/pull/164), [#155](https://github.com/xlightningstar/It-Worked-On-My-Machine/pull/155), [#154](https://github.com/xlightningstar/It-Worked-On-My-Machine/pull/154), [#149](https://github.com/xlightningstar/It-Worked-On-My-Machine/pull/149), [#145](https://github.com/xlightningstar/It-Worked-On-My-Machine/pull/145), [#140](https://github.com/xlightningstar/It-Worked-On-My-Machine/pull/140), [#133](https://github.com/xlightningstar/It-Worked-On-My-Machine/pull/133), [#104](https://github.com/xlightningstar/It-Worked-On-My-Machine/pull/104), [#87](https://github.com/xlightningstar/It-Worked-On-My-Machine/pull/87), [#71](https://github.com/xlightningstar/It-Worked-On-My-Machine/pull/71), [#69](https://github.com/xlightningstar/It-Worked-On-My-Machine/pull/69), [#65](https://github.com/xlightningstar/It-Worked-On-My-Machine/pull/65), [#64](https://github.com/xlightningstar/It-Worked-On-My-Machine/pull/64), [#62](https://github.com/xlightningstar/It-Worked-On-My-Machine/pull/62), [#53](https://github.com/xlightningstar/It-Worked-On-My-Machine/pull/53), [#48](https://github.com/xlightningstar/It-Worked-On-My-Machine/pull/48), [#45](https://github.com/xlightningstar/It-Worked-On-My-Machine/pull/45), [#40](https://github.com/xlightningstar/It-Worked-On-My-Machine/pull/40), [#37](https://github.com/xlightningstar/It-Worked-On-My-Machine/pull/37), [#25](https://github.com/xlightningstar/It-Worked-On-My-Machine/pull/25)
 
