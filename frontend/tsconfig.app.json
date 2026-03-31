@@ -30,5 +30,5 @@
     "noFallthroughCasesInSwitch": true,
     "noUncheckedSideEffectImports": true
   },
-  "include": ["src", "tests", "vite.config.ts", "vitest.config.ts", "../../AdminNotificationsHeader.test.tsx", "../../AdminNotificationsTips.test.tsx", "../../AdminNotificationsDeliveryStatus.test.tsx", "../../AdminNotificationsConfirmModal.test.tsx"]
+  "include": ["src", "tests", "vite.config.ts", "vitest.config.ts"]
 }
