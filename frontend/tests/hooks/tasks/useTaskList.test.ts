@@ -74,10 +74,42 @@ describe("useTaskList Hook", () => {
     await waitFor(() => expect(result.current.loading).toBe(false));
 
     const { sections } = result.current.state;
-    expect(sections.todayTasks.length).toBe(1);
-    expect(sections.overdueTasks.length).toBe(1);
-    expect(sections.upcomingTasks.length).toBe(1);
+    expect(sections.upcomingTasks.length).toBe(2);
     expect(sections.pastTasks.length).toBe(1);
+    expect(sections.upcomingTasks.map((task) => task.title)).toContain("Task 1");
+    expect(sections.upcomingTasks.map((task) => task.title)).toContain("Task 3");
+  });
+
+  it("keeps overdue tasks out of the today bucket", async () => {
+    const earlierToday = moment().subtract(8, "hours").toISOString();
+    const laterToday = moment().add(2, "hours").toISOString();
+
+    vi.mocked(taskService.getTasks).mockResolvedValue([
+      {
+        id: 10,
+        title: "Earlier today",
+        deadline: earlierToday,
+        importance: 5,
+        estimated_minutes: 30,
+        completed: false,
+      },
+      {
+        id: 11,
+        title: "Later today",
+        deadline: laterToday,
+        importance: 5,
+        estimated_minutes: 30,
+        completed: false,
+      },
+    ] as Task[]);
+
+    const { result } = renderHook(() => useTaskList());
+    await waitFor(() => expect(result.current.loading).toBe(false));
+
+    const { overdueTasks, todayTasks } = result.current.state.sections;
+
+    expect(overdueTasks.map((task) => task.title)).toEqual(["Earlier today"]);
+    expect(todayTasks.map((task) => task.title)).toEqual(["Later today"]);
   });
 
   it("handles toggleComplete", async () => {

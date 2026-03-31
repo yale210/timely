@@ -107,14 +107,12 @@ function buildOverdueTasks(tasks: Task[], now: moment.Moment) {
 function buildTodayTasks(
   tasks: Task[],
   now: moment.Moment,
-  overdueTasks: Task[],
-  pastTasks: Task[],
 ) {
   return tasks.filter(
     (task) =>
-      moment(task.deadline).isSame(now, "day")
-      && !overdueTasks.some((overdueTask) => overdueTask.id === task.id)
-      && !pastTasks.some((pastTask) => pastTask.id === task.id),
+      !task.completed
+      && moment(task.deadline).isSame(now, "day")
+      && !moment(task.deadline).isBefore(now)
   );
 }
 
@@ -123,7 +121,6 @@ function buildUpcomingTasks(tasks: Task[], now: moment.Moment) {
     (task) =>
       !task.completed
       && moment(task.deadline).isAfter(now)
-      && !moment(task.deadline).isSame(now, "day"),
   );
 }
 
@@ -151,7 +148,7 @@ export function buildTaskSections(filteredTasks: Task[]): TaskListSections {
   const sevenDaysAgo = moment().subtract(7, "days").startOf("day");
   const pastTasks = buildPastTasks(filteredTasks, sevenDaysAgo, now);
   const overdueTasks = buildOverdueTasks(filteredTasks, now);
-  const todayTasks = buildTodayTasks(filteredTasks, now, overdueTasks, pastTasks);
+  const todayTasks = buildTodayTasks(filteredTasks, now);
   const upcomingTasks = buildUpcomingTasks(filteredTasks, now);
   const completedTasks = buildCompletedTasks(filteredTasks);
   const groupedUpcomingTasks = buildUpcomingTaskGroups(upcomingTasks);

@@ -21,10 +21,10 @@ import type {
   UseCoursesReturn,
   UseCoursesState,
 } from "@/types/course";
-import { useCourseDetailStates } from "@/hooks/course/useCourseDetail";
-import { useCourseDetailConsts } from "@/hooks/course/useCourseDetailConsts";
-import { useCourseDetailHooks } from "@/hooks/course/useCourseDetailHooks";
-import { useCourseManagementState } from "@/hooks/course/useCourseManagementState";
+import type { useCourseDetailStates } from "@/hooks/course/useCourseDetail";
+import type { useCourseDetailConsts } from "@/hooks/course/useCourseDetailConsts";
+import type { useCourseDetailHooks } from "@/hooks/course/useCourseDetailHooks";
+import type { useCourseManagementState } from "@/hooks/course/useCourseManagementState";
 
 describe("course types", () => {
   it("keeps the exported hook-derived aliases aligned", () => {
