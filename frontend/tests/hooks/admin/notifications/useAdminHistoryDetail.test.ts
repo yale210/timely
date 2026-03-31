@@ -4,6 +4,7 @@ import { useAdminHistoryDetail } from "@/hooks/admin/notifications/useAdminHisto
 import { useNavigate, useParams } from "react-router-dom";
 import {
   getBroadcastDetail,
+  getBroadcastRecipients,
   getBroadcastStatus,
   retryFailedBroadcast,
 } from "@/api/notifications";
@@ -18,6 +19,7 @@ vi.mock("react-router-dom", () => ({
 // Mock API
 vi.mock("@/api/notifications", () => ({
   getBroadcastDetail: vi.fn(),
+  getBroadcastRecipients: vi.fn(),
   getBroadcastStatus: vi.fn(),
   retryFailedBroadcast: vi.fn(),
 }));
@@ -25,6 +27,7 @@ vi.mock("@/api/notifications", () => ({
 const mockedUseParams = vi.mocked(useParams);
 const mockedUseNavigate = vi.mocked(useNavigate);
 const mockedGetBroadcastDetail = vi.mocked(getBroadcastDetail);
+const mockedGetBroadcastRecipients = vi.mocked(getBroadcastRecipients);
 const mockedGetBroadcastStatus = vi.mocked(getBroadcastStatus);
 const mockedRetryFailedBroadcast = vi.mocked(retryFailedBroadcast);
 
@@ -50,31 +53,31 @@ describe("useAdminHistoryDetail Hook", () => {
     started_at: "2023-01-01T10:00:05Z",
     completed_at: "2023-01-01T10:10:00Z",
     retry_of: null,
-    recipients: [
-      { 
-        id: 1, 
-        recipient: 1,
-        username: "u1",
-        email: "u1@e.com",
-        status: "SENT" as const,
-        error_code: "",
-        error_message: "",
-        last_attempt_at: "2023-01-01T10:05:00Z",
-        notification: 1
-      },
-      { 
-        id: 2, 
-        recipient: 2,
-        username: "u2",
-        email: "u2@e.com",
-        status: "FAILED" as const,
-        error_code: "500",
-        error_message: "Error",
-        last_attempt_at: "2023-01-01T10:05:00Z",
-        notification: 2
-      },
-    ],
   };
+  const mockRecipients = [
+    { 
+      id: 1, 
+      recipient: 1,
+      username: "u1",
+      email: "u1@e.com",
+      status: "SENT" as const,
+      error_code: "",
+      error_message: "",
+      last_attempt_at: "2023-01-01T10:05:00Z",
+      notification: 1
+    },
+    { 
+      id: 2, 
+      recipient: 2,
+      username: "u2",
+      email: "u2@e.com",
+      status: "FAILED" as const,
+      error_code: "500",
+      error_message: "Error",
+      last_attempt_at: "2023-01-01T10:05:00Z",
+      notification: 2
+    },
+  ];
   const mockStatus: BroadcastJobStatusResponse = {
     id: 1,
     status: "COMPLETED" as const,
@@ -93,6 +96,13 @@ describe("useAdminHistoryDetail Hook", () => {
     mockedUseParams.mockReturnValue({ id: mockId });
     mockedUseNavigate.mockReturnValue(mockNavigate);
     mockedGetBroadcastDetail.mockResolvedValue(mockDetail);
+    mockedGetBroadcastRecipients.mockResolvedValue({
+      count: mockRecipients.length,
+      next: null,
+      previous: null,
+      num_pages: 1,
+      results: mockRecipients,
+    });
     mockedGetBroadcastStatus.mockResolvedValue(mockStatus);
   });
 
