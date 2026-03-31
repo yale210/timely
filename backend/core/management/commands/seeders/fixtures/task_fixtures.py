@@ -61,7 +61,7 @@ tasks = [
             "categories": ["Work"],
             "estimated_minutes": 500,
             "start_time": "2026-02-09T19:30:00Z",
-            "deadline": "2026-05-20T19:30:00Z",
+            "deadline": "2026-08-20T19:30:00Z",
             "completed": False,
             "parent_task": None,
             "total_task_allocations": 0,
@@ -94,8 +94,8 @@ tasks = [
             "description": "Code the robot so the motors move",
             "categories": [],
             "estimated_minutes": 100,
-            "start_time": "2026-02-09T19:30:00Z",
-            "deadline": "2026-02-15T16:30:00Z",
+            "start_time": "2026-10-09T19:30:00Z",
+            "deadline": "2026-10-15T16:30:00Z",
             "completed": False,
             "parent_task": "Robotics project",
             "total_task_allocations": 0,
@@ -103,6 +103,27 @@ tasks = [
             "importance": 10,
         },
     },
+    {
+        "model": "core.tasks",
+        "fields": {
+            "user": "david",
+            "title": "Revise German",
+            "description": "Revise German vocab and grammar",
+            "categories": [],
+            "estimated_minutes": 250,
+            "start_time": "2026-08-09T19:30:00Z",
+            "deadline": "2026-10-15T16:30:00Z",
+            "completed": False,
+            "parent_task": None,
+            "total_task_allocations": 0,
+            "allocation": [],
+            "importance": 10,
+        },
+    },
+
+
+
+
     {
         "model": "core.tasks",
         "fields": {
