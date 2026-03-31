@@ -27,6 +27,17 @@ describe("AdminHistoryDetailRecipientsTable Component", () => {
       last_attempt_at: "2023-01-01T10:00:05Z",
       notification: null,
     },
+    {
+      id: 3,
+      recipient: 103,
+      username: "user3",
+      email: "user3@example.com",
+      status: "SENT_NO_PUSH",
+      error_code: "",
+      error_message: "",
+      last_attempt_at: "2023-01-01T10:00:03Z",
+      notification: 3,
+    },
   ];
 
   const defaultProps = {
@@ -44,11 +55,14 @@ describe("AdminHistoryDetailRecipientsTable Component", () => {
     
     expect(screen.getByText("user1")).toBeDefined();
     expect(screen.getByText("user1@example.com")).toBeDefined();
-    expect(screen.getByText("SENT")).toBeDefined();
+    expect(screen.getByText("Sent")).toBeDefined();
     
     expect(screen.getByText("user2")).toBeDefined();
     expect(screen.getByText("user2@example.com")).toBeDefined();
-    expect(screen.getByText("FAILED")).toBeDefined();
+    expect(screen.getByText("Failed")).toBeDefined();
+
+    expect(screen.getByText("user3")).toBeDefined();
+    expect(screen.getByText("No push devices")).toBeDefined();
   });
 
   it("shows error message when present", () => {
