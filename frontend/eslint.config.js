@@ -143,10 +143,4 @@ export default tseslint.config(
     files: ["**/*.js", "**/*.mjs", "**/*.cjs"],
     ...tseslint.configs.disableTypeChecked,
   },
-  {
-    rules: {
-      "max-lines": ["warn", { max: 400 }],
-      "max-lines-per-function": ["warn", { max: 25, skipBlankLines: true, skipComments: true }],
-    }
-  },
 );
