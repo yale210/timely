@@ -16,7 +16,7 @@ node "Browser" as Browser {
 cloud "Static Hosting\n(Nginx in deployment)" as StaticHost
 
 node "Timely Backend" as BackendNode {
-  component "Daphne + Django + DRF\nHTTP API" as DjangoApi
+  component "Uvicorn + Django + DRF\nHTTP API" as DjangoApi
   component "Channels\nWebSocket Endpoint" as ChannelsWs
 
   package "Backend Apps" as Apps {

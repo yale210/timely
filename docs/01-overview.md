@@ -81,13 +81,13 @@ Timely follows a clean separation between a stateless REST + WebSocket backend a
 | Layer | Technology | Notes |
 |-------|-----------|-------|
 | SPA | React 19 + TypeScript | Vite 7 build, Tailwind 4 styling |
-| REST API | Django 5.2 + DRF 3.16 | Knox token authentication |
-| Real-time | Django Channels 4 + Daphne | Redis channel layer |
+| REST API | Django 5.2 + DRF 3.18 | Knox token authentication |
+| Real-time | Django Channels 4 + Uvicorn | Redis channel layer |
 | Task queue | Celery 5 | Notification delivery only |
 | Scheduler | Custom Python engine | Synchronous, no external libraries |
 | Database | PostgreSQL 16 / SQLite | Postgres in production |
 | Cache/broker | Redis 7 | Celery broker + WebSocket channel layer |
-| Reverse proxy | Nginx | Cloudflare IP filtering in production |
+| Reverse proxy | Nginx | Provider-neutral API and WebSocket proxying |
 
 For a full breakdown of all Django apps and their responsibilities, see [Architecture →](./03-architecture.md).
 
@@ -99,10 +99,11 @@ For a full breakdown of all Django apps and their responsibilities, see [Archite
 
 | Package | Version | Purpose |
 |---------|---------|---------|
-| Django | 5.2.7 | Web framework |
-| djangorestframework | 3.16.1 | REST API |
+| Django | 5.2.18 | Web framework |
+| djangorestframework | 3.18.3 | REST API |
 | django-rest-knox | 5.0.2 | Token authentication |
-| channels[daphne] | 4.3.2 | WebSocket / ASGI |
+| channels | 4.3.2 | WebSocket application support |
+| uvicorn | 0.54.0 | ASGI process server |
 | celery[redis] | 5.6.2 | Async task queue |
 | redis | 6.4.0 | Broker + channel layer client |
 | psycopg[binary,pool] | 3.3.2 | PostgreSQL adapter |

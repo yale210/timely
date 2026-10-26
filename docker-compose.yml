@@ -1,82 +1,131 @@
+x-backend-environment: &backend-environment
+  DEBUG: "False"
+  POSTGRES: "True"
+  POSTGRES_HOST: postgres
+  REDIS_URL: redis://redis:6379/0
+
+x-backend-service: &backend-service
+  image: ${BACKEND_IMAGE:-timely-backend:latest}
+  build:
+    context: ./backend
+  env_file:
+    - .env
+  environment: *backend-environment
+
 services:
-  backend:
-    image: registry.digitalocean.com/segmajor/backend:latest 
-    command: ["daphne", "-b", "0.0.0.0", "-p", "8000", "source.asgi:application"]
-    restart: always
-    volumes:
-      - ./data:/data
-      - ./media:/app/media
-    environment:
-      - DEBUG=False
-      - POSTGRES=True
-      - POSTGRES_HOST=postgres
-      - REDIS_URL=redis://redis:6379/0
-    env_file:
-      - .env
+  migrate:
+    <<: *backend-service
+    command: ["python", "manage.py", "migrate", "--noinput"]
+    restart: "no"
     depends_on:
       postgres:
-        condition: service_started
+        condition: service_healthy
+
+  backend:
+    <<: *backend-service
+    command:
+      [
+        "uvicorn",
+        "source.asgi:application",
+        "--host",
+        "0.0.0.0",
+        "--port",
+        "8000",
+        "--proxy-headers",
+        "--forwarded-allow-ips=*",
+      ]
+    restart: unless-stopped
+    volumes:
+      - ./media:/app/media
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
       redis:
-        condition: service_started
+        condition: service_healthy
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "python",
+          "-c",
+          "import urllib.request; request = urllib.request.Request('http://127.0.0.1:8000/api/health/', headers={'X-Forwarded-Proto': 'https'}); urllib.request.urlopen(request, timeout=3).read()",
+        ]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
 
   celery-worker:
-    image: registry.digitalocean.com/segmajor/backend:latest
+    <<: *backend-service
     command: ["celery", "-A", "source", "worker", "--loglevel=info"]
-    restart: always
-    environment:
-      - DEBUG=False
-      - POSTGRES=True
-      - POSTGRES_HOST=postgres
-      - REDIS_URL=redis://redis:6379/0
-    env_file:
-      - .env
+    restart: unless-stopped
     depends_on:
-      postgres:
-        condition: service_started
+      migrate:
+        condition: service_completed_successfully
       redis:
-        condition: service_started
+        condition: service_healthy
 
   celery-beat:
-    image: registry.digitalocean.com/segmajor/backend:latest
-    command: ["celery", "-A", "source", "beat", "--loglevel=info", "--schedule=/data/celerybeat-schedule"]
-    restart: always
+    <<: *backend-service
+    command:
+      [
+        "celery",
+        "-A",
+        "source",
+        "beat",
+        "--loglevel=info",
+        "--schedule=/data/celerybeat-schedule",
+      ]
+    restart: unless-stopped
     volumes:
       - ./data:/data
-    environment:
-      - DEBUG=False
-      - POSTGRES=True
-      - POSTGRES_HOST=postgres
-      - REDIS_URL=redis://redis:6379/0
-    env_file:
-      - .env
     depends_on:
-      postgres:
-        condition: service_started
+      migrate:
+        condition: service_completed_successfully
       redis:
-        condition: service_started
+        condition: service_healthy
 
   redis:
     image: redis:7-alpine
-    restart: always
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   frontend:
-
-    image: registry.digitalocean.com/segmajor/frontend:latest
-    command: ["nginx", "-g", "daemon off;"]
-    restart: always
+    image: ${FRONTEND_IMAGE:-timely-frontend:latest}
+    build:
+      context: ./frontend
+    restart: unless-stopped
     ports:
-      - "80:80"
+      - "${HTTP_BIND:-127.0.0.1}:${HTTP_PORT:-8080}:80"
     volumes:
       - ./media:/app/media:ro
     depends_on:
-      - backend
+      backend:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://127.0.0.1/"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
   postgres:
     image: postgres:16-alpine
-    restart: always
+    restart: unless-stopped
     env_file:
       - .env
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
 
 volumes:
   postgres_data:

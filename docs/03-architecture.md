@@ -13,7 +13,7 @@ Timely is structured as two independent deployable units — a Django backend se
 ### Request path (HTTP)
 
 ```
-Browser → Cloudflare (IP filter) → Nginx → Django Daphne (ASGI)
+Browser → TLS reverse proxy → Nginx → Django Uvicorn (ASGI)
                                         ↘ Static files (served directly by Nginx)
 ```
 

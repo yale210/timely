@@ -37,9 +37,9 @@ Timely helps students plan, prioritise, and track their academic workload. Its s
 
 | Layer | Technology |
 |-------|-----------|
-| Backend framework | Django 5.2 + Django REST Framework 3.16 |
+| Backend framework | Django 5.2 + Django REST Framework 3.18 |
 | Authentication | Knox token auth |
-| Real-time | Django Channels 4 (Daphne ASGI) |
+| Real-time | Django Channels 4 (Uvicorn ASGI) |
 | Task queue | Celery 5 + Redis 7 |
 | Database | PostgreSQL 16 (production) / SQLite (development) |
 | Frontend framework | React 19 + TypeScript |
@@ -72,7 +72,7 @@ If Nix is not available, use the manual setup below.
 | Tool | Minimum version |
 |------|-----------------|
 | Python | 3.12 |
-| Node.js | 20 |
+| Node.js | 22 |
 | npm | 10 |
 | Redis | 7 (for WebSocket + Celery in dev) |
 
@@ -91,7 +91,7 @@ python backend/manage.py migrate
 python backend/manage.py seed
 ```
 
-Set `SECRET_KEY` in `backend/.env` at minimum. For SQLite-based local development, set `POSTGRES=False`.
+Set a unique `SECRET_KEY` in `backend/.env` at minimum. For SQLite-based local development, set `POSTGRES=False`.
 
 Windows PowerShell equivalents:
 
@@ -111,6 +111,17 @@ npm install
 ```
 
 See `docs/02-installation.md` for the full guide, including Docker dev/prod options and environment variable reference.
+
+### Production with Docker Compose
+
+```bash
+cp .env.example .env
+# Replace every placeholder in .env, then set your real hostname/origin.
+docker compose up -d --build
+curl http://127.0.0.1:8080/api/health/
+```
+
+The stack runs PostgreSQL migrations before starting the API and waits for database, Redis, API, and frontend health checks. It binds HTTP to `127.0.0.1:8080` by default for a host-level TLS reverse proxy. See `docs/10-deployment.md` for the production checklist, TLS guidance, backups, and upgrades.
 
 ## Running the Application
 
@@ -164,7 +175,7 @@ The following accounts are available on the seeded development database and the 
 
 ## Environment Variables
 
-The following variables must be set in `backend/.env`. A template is provided at `backend/.env.example`.
+Local backend variables are set in `backend/.env`. Production Compose variables are set in the root `.env`. Templates are provided for both.
 
 | Variable | Required | Description |
 |----------|----------|-------------|
@@ -178,6 +189,7 @@ The following variables must be set in `backend/.env`. A template is provided at
 | `POSTGRES_HOST` | No | PostgreSQL host |
 | `REDIS_URL` | No | Redis connection string |
 | `CORS_ALLOWED_ORIGINS` | No | Frontend origin(s) |
+| `CSRF_TRUSTED_ORIGINS` | Production | Public HTTPS origin(s) |
 | `VAPID_PUBLIC_KEY` | No | Web Push VAPID public key |
 | `VAPID_PRIVATE_KEY` | No | Web Push VAPID private key |
 | `VAPID_ADMIN_EMAIL` | No | VAPID contact email |

@@ -30,7 +30,7 @@ The frontend establishes a persistent WebSocket connection on authentication:
 ws://host/ws/notifications/
 ```
 
-In production, Nginx upgrades the connection and proxies it to the Daphne ASGI server.
+In production, Nginx upgrades the connection and proxies it to the Uvicorn ASGI server.
 
 ### Consumer
 

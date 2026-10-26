@@ -1,5 +1,6 @@
 .venv/
 .ruff_cache/
+staticfiles/
 
 # Created by https://www.toptal.com/developers/gitignore/api/django,react,windows,pycharm+all,visualstudiocode,visualstudio
 # Edit at https://www.toptal.com/developers/gitignore?templates=django,react,windows,pycharm+all,visualstudiocode,visualstudio

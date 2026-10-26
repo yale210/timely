@@ -30,6 +30,7 @@ from courses.views.teacher_view import TeacherView
 from core.views.delete_account_view import DeleteAccountView
 
 from scheduler.views import ScheduleTasksAPIView, UnscheduleTasksAPIView
+from source.views import health_check
 
 # Register the core REST resources under the shared ``/api/`` prefix.
 router = DefaultRouter()
@@ -45,6 +46,7 @@ router.register(r"courses", CourseViewSet, basename="course")
 router.register(r"teachers", TeacherView, basename="teacher")
 
 urlpatterns = [
+    path("api/health/", health_check, name="health-check"),
     path("api/admin/", include("admin_panel.urls")),
     path("api/", include("notifications.urls")),
     path("api/", include(router.urls)),

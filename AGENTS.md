@@ -11,9 +11,9 @@ Keep changes minimal, reversible, and well-tested.
 - `docker-compose.yml`: production; `docker-compose.dev.yml`: local development
 
 ## Tool Versions
-- Python 3.12, Django 5.2, DRF 3.16
+- Python 3.12, Django 5.2, DRF 3.18
 - Ruff 0.14.5 (lint/format)
-- Node 20, npm, Vite 7
+- Node 22, npm, Vite 7
 - TypeScript 5.9 (strict mode)
 - Tailwind CSS 4.1
 
@@ -23,7 +23,7 @@ Keep changes minimal, reversible, and well-tested.
 cd backend && python -m venv venv && source venv/bin/activate
 pip install -r requirements.txt
 python manage.py migrate
-python manage.py runserver  # http://localhost:8000
+uvicorn source.asgi:application --reload  # http://localhost:8000
 
 # Frontend setup
 cd frontend && npm install
@@ -130,7 +130,7 @@ cd backend && coverage run manage.py test && coverage report
 - Key vars: `POSTGRES`, `DEBUG`, `SECRET_KEY`, `DB_*`
 
 ## Key Dependencies
-- Backend: Django, DRF, django-cors-headers, psycopg, whitenoise, Faker
+- Backend: Django, DRF, Uvicorn, Channels, django-cors-headers, psycopg, whitenoise, Faker
 - Frontend: React 19, React Router v7, Axios, Tailwind 4, Headless UI, Heroicons
 
 ## Security

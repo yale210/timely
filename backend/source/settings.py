@@ -23,18 +23,33 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 load_dotenv(BASE_DIR / ".env")
 
-# only turn debug on when it is in debug mode
 
-DEBUG = os.getenv("DEBUG", "True") == "True"
-ENABLE_RECURRENCE_OVERRIDES = os.getenv("ENABLE_RECURRENCE_OVERRIDES", "True") == "True"
+def env_bool(name, default=False):
+    """Return a boolean environment variable with strict, predictable parsing."""
+    return os.getenv(name, str(default)).strip().lower() in {"1", "true", "yes", "on"}
 
-# only turn SQLite on when using SQLite instead of PostgreSQL databasa
-POSTGRES = os.getenv("POSTGRES", "False") == "True"
-DB_HOST = os.getenv("POSTGRES_HOST", "localhost")
-DB_USER = os.getenv("POSTGRES_USER", "admin")
-DB_PASSWORD = os.getenv("POSTGRES_PASSWORD", "root")
-DB_PORT = os.getenv("POSTGRES_PORT", 5432)
-DB_DB = os.getenv("POSTGRES_DB", "django")
+
+def env_list(name, default=()):
+    """Return a comma-separated environment variable as a clean list."""
+    value = os.getenv(name)
+    if value is None:
+        return list(default)
+    return [item.strip() for item in value.split(",") if item.strip()]
+
+
+# Only turn debug on when it is explicitly enabled.
+
+DEBUG = env_bool("DEBUG", True)
+ENABLE_RECURRENCE_OVERRIDES = env_bool("ENABLE_RECURRENCE_OVERRIDES", True)
+TESTING = "test" in sys.argv or env_bool("TESTING", False)
+
+# Use SQLite unless PostgreSQL is explicitly enabled.
+POSTGRES = env_bool("POSTGRES", False)
+DB_HOST = os.getenv("POSTGRES_HOST", "")
+DB_USER = os.getenv("POSTGRES_USER", "")
+DB_PASSWORD = os.getenv("POSTGRES_PASSWORD", "")
+DB_PORT = os.getenv("POSTGRES_PORT", "5432")
+DB_DB = os.getenv("POSTGRES_DB", "")
 
 if POSTGRES:
     postgres_settings = {
@@ -57,16 +72,13 @@ if POSTGRES:
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/6.0/howto/deployment/checklist/
 
-# SECURITY WARNING: keep the secret key used in production secret!
-if DEBUG:
-    SECRET_KEY = "django-insecure-)_*v#sz$v86$wjkin7-wy5t^^=0#2v+kd=gy(+$$zn4okpq3t("
-else:
-    SECRET_KEY = os.getenv("SECRET_KEY")
-    if not SECRET_KEY:
-        raise ImproperlyConfigured("SECRET_KEY not set!")
+# SECURITY WARNING: keep the secret key used in every environment secret.
+SECRET_KEY = os.getenv("SECRET_KEY")
+if not SECRET_KEY:
+    raise ImproperlyConfigured("SECRET_KEY not set!")
 
-ALLOWED_HOSTS = []
-CORS_ALLOWED_ORIGINS = [
+development_hosts = ["127.0.0.1", "localhost", "0.0.0.0", "[::1]", "testserver"]
+development_origins = [
     "http://localhost",
     "http://127.0.0.1",
     "http://localhost:80",
@@ -77,33 +89,29 @@ CORS_ALLOWED_ORIGINS = [
     "http://127.0.0.1:3000",
 ]
 
-CSRF_TRUSTED_ORIGINS = [
-    "http://localhost",
-    "http://127.0.0.1",
-    "http://localhost:80",
-    "http://127.0.0.1:80",
-    "http://localhost:5173",
-    "http://127.0.0.1:5173",
-    "http://localhost:3000",
-    "http://127.0.0.1:3000",
-]
+ALLOWED_HOSTS = env_list("ALLOWED_HOSTS", development_hosts if DEBUG or TESTING else ())
+CORS_ALLOWED_ORIGINS = env_list(
+    "CORS_ALLOWED_ORIGINS", development_origins if DEBUG else ()
+)
+CSRF_TRUSTED_ORIGINS = env_list(
+    "CSRF_TRUSTED_ORIGINS", development_origins if DEBUG else ()
+)
 
-
-if DEBUG:
-    ALLOWED_HOSTS.extend(["127.0.0.1", "localhost", "0.0.0.0", "[::1]", "testserver"])
-else:
-    ALLOWED_HOSTS.append("timely.subhan.work")
-    CSRF_TRUSTED_ORIGINS = ["https://timely.subhan.work"]
-    CORS_ALLOWED_ORIGINS = ["https://timely.subhan.work"]
+if not DEBUG and not TESTING:
+    if not ALLOWED_HOSTS:
+        raise ImproperlyConfigured("ALLOWED_HOSTS must be set when DEBUG=False")
     SESSION_COOKIE_SECURE = True
     CSRF_COOKIE_SECURE = True
     SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+    SECURE_SSL_REDIRECT = env_bool("SECURE_SSL_REDIRECT", False)
+    SECURE_HSTS_SECONDS = int(os.getenv("SECURE_HSTS_SECONDS", "0"))
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = env_bool("SECURE_HSTS_INCLUDE_SUBDOMAINS", False)
+    SECURE_HSTS_PRELOAD = env_bool("SECURE_HSTS_PRELOAD", False)
 
 
 # Application definition
 
 INSTALLED_APPS = [
-    "daphne",
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
@@ -269,6 +277,15 @@ USE_TZ = True
 STATIC_URL = "/api/static/"
 STATIC_ROOT = BASE_DIR / "staticfiles"
 
+STORAGES = {
+    "default": {
+        "BACKEND": "django.core.files.storage.FileSystemStorage",
+    },
+    "staticfiles": {
+        "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
+    },
+}
+
 MEDIA_URL = "/api/media/"
 MEDIA_ROOT = BASE_DIR / "media"
 
@@ -292,9 +309,6 @@ CELERY_BEAT_SCHEDULE = {
         "schedule": crontab(minute=5),
     },
 }
-
-# Test detection
-TESTING = "test" in sys.argv or os.getenv("TESTING") == "True"
 
 if TESTING:
     if "testserver" not in ALLOWED_HOSTS:

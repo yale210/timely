@@ -2,343 +2,165 @@
 
 > **Related docs:** [Installation →](./02-installation.md) | [Architecture →](./03-architecture.md) | [Notifications →](./08-notifications.md)
 
----
+## Production architecture
 
-## Overview
+The root `docker-compose.yml` is the supported production entrypoint. It runs:
 
-Timely is deployed on **DigitalOcean** using Docker Compose. The CI/CD pipeline is fully automated: a push to `main` builds container images, pushes them to DigitalOcean Container Registry (DOCR), and deploys via SSH.
+- Nginx with the compiled React app and reverse proxies for `/api/` and `/ws/`
+- Uvicorn for Django HTTP and WebSocket traffic
+- one Celery worker and one Celery beat scheduler
+- PostgreSQL 16 and Redis 7
+- a one-shot migration container that must succeed before application processes start
 
-![CI/CD pipeline diagram](./images/cicd-pipeline.svg)
+The stack can build images directly from this repository. A registry is optional, so it can run on any Linux host with Docker Engine and Docker Compose v2.
 
----
+## Prerequisites
 
-## Infrastructure
+- A Linux server with Docker Engine and the Compose plugin
+- A DNS record for the public hostname
+- A TLS-terminating reverse proxy or load balancer in front of the app
+- Persistent disk space for the PostgreSQL volume and the `media/` directory
 
-| Component | Technology | Notes |
-|-----------|-----------|-------|
-| Cloud provider | DigitalOcean Droplet | Any Ubuntu 22.04+ Droplet |
-| Container registry | DigitalOcean Container Registry (DOCR) | `registry.digitalocean.com/{registry}/{image}` |
-| Web server / reverse proxy | Nginx 1.27 (in frontend container) | TLS termination via Cloudflare |
-| ASGI server | Daphne | Handles HTTP + WebSocket for backend |
-| Database | PostgreSQL 16 | `postgres:16-alpine` container |
-| Cache / broker | Redis 7 | `redis:7-alpine` container |
-| Task queue | Celery (worker + beat) | Separate containers |
+Do not expose PostgreSQL, Redis, or the backend container directly. The Compose file only publishes the frontend port.
 
----
+## First deployment
 
-## Docker Compose — Production
+Clone the repository on the server, then create the production environment file:
 
-`docker-compose.yml` defines the full production stack:
-
-```
-services:
-  backend        → Daphne ASGI server (port 8000)
-  celery-worker  → Celery worker
-  celery-beat    → Celery beat scheduler
-  redis          → Redis 7 Alpine
-  frontend       → Nginx serving built React app
-  postgres       → PostgreSQL 16 Alpine
+```bash
+cp .env.example .env
+python3 -c 'import secrets; print(secrets.token_urlsafe(50))'
 ```
 
-### Service startup order
+Edit `.env` and replace every placeholder. At minimum, set:
 
-```
-redis ← backend, celery-worker, celery-beat
-postgres ← backend, celery-worker, celery-beat
-backend ← (no other services depend on it)
-```
-
-### Volumes
-
-| Volume | Purpose |
-|--------|---------|
-| `postgres_data` | Persistent PostgreSQL data |
-| `static_volume` | Django `collectstatic` output |
-| `media_volume` | User-uploaded files (profile avatars) |
-
----
-
-## Dockerfiles
-
-### Backend (`backend/Dockerfile`)
-
-```
-Base:      ghcr.io/astral-sh/uv:python3.12-alpine
-Process:
-  1. Copy requirements and install deps with uv pip
-  2. Copy project source
-  3. RUN python manage.py collectstatic --noinput
-  4. EXPOSE 8000
-  5. CMD: daphne -b 0.0.0.0 -p 8000 source.asgi:application
+```dotenv
+SECRET_KEY=<generated value>
+ALLOWED_HOSTS=timely.example.com
+CSRF_TRUSTED_ORIGINS=https://timely.example.com
+POSTGRES_DB=timely
+POSTGRES_USER=timely
+POSTGRES_PASSWORD=<strong unique password>
 ```
 
-### Frontend (`frontend/Dockerfile`)
+`ALLOWED_HOSTS` values do not include a scheme. CSRF and CORS origins do include `https://`. The default deployment is same-origin, so `CORS_ALLOWED_ORIGINS` can remain empty.
 
-```
-Stage 1 — builder:
-  Base:  node:25-alpine3.22
-  Steps: npm ci && npm run build
+Start the stack:
 
-Stage 2 — runtime:
-  Base:  nginx:1.27-alpine
-  Steps: COPY --from=builder /app/dist /usr/share/nginx/html
-         COPY nginx.conf /etc/nginx/conf.d/default.conf
-  EXPOSE 80
+```bash
+mkdir -p data media
+docker compose up -d --build
+docker compose ps
+curl http://127.0.0.1:8080/api/health/
 ```
 
----
+The `migrate` service runs `manage.py migrate --noinput` and exits. Backend and worker services only start after it succeeds. The health endpoint returns HTTP 200 only when Django can connect to its database.
 
-## Nginx Configuration
+Create the first administrator after the stack is healthy:
 
-Nginx serves the React SPA and proxies API/WebSocket requests to the backend.
+```bash
+docker compose exec backend python manage.py createsuperuser
+```
 
-```nginx
-server {
-    listen 80;
+## TLS and proxy settings
 
-    # Cloudflare IP whitelist (production only)
-    include /etc/nginx/cloudflare_ips.conf;
+The bundled Nginx container serves HTTP on `127.0.0.1:8080` by default. Terminate HTTPS with a host-level proxy such as Caddy, Traefik, an ingress controller, or a cloud load balancer. For example, a minimal Caddy site is:
 
-    # Static files — React SPA
-    location / {
-        root /usr/share/nginx/html;
-        try_files $uri $uri/ /index.html;
-    }
-
-    # REST API
-    location /api/ {
-        proxy_pass http://backend:8000;
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-    }
-
-    # WebSocket
-    location /ws/ {
-        proxy_pass http://backend:8000;
-        proxy_http_version 1.1;
-        proxy_set_header Upgrade $http_upgrade;
-        proxy_set_header Connection "upgrade";
-    }
-
-    # Django admin
-    location /admin/ {
-        proxy_pass http://backend:8000;
-    }
-
-    # Django static files
-    location /static/ {
-        proxy_pass http://backend:8000;
-    }
+```caddyfile
+timely.example.com {
+    reverse_proxy 127.0.0.1:8080
 }
 ```
 
-The development Nginx config (`nginx.dev.conf`) is identical but omits the Cloudflare IP whitelist, allowing direct connections.
+The outer proxy must preserve the request host, support WebSocket upgrades, and set:
 
----
-
-## Environment Variables
-
-Sensitive configuration is passed via environment variables. Never commit `.env` files.
-
-### Backend (`.env` in `backend/`)
-
-| Variable | Required | Description |
-|----------|----------|-------------|
-| `SECRET_KEY` | ✅ | Django secret key |
-| `DEBUG` | ✅ | `False` in production |
-| `ALLOWED_HOSTS` | ✅ | Comma-separated hostnames |
-| `DATABASE_URL` | ✅ | PostgreSQL connection string |
-| `POSTGRES_DB` | ✅ | Database name |
-| `POSTGRES_USER` | ✅ | Database user |
-| `POSTGRES_PASSWORD` | ✅ | Database password |
-| `POSTGRES_HOST` | ✅ | Database host (use `postgres` in Docker) |
-| `POSTGRES_PORT` | — | Default `5432` |
-| `REDIS_URL` | ✅ | Redis connection string (e.g. `redis://redis:6379/0`) |
-| `CORS_ALLOWED_ORIGINS` | ✅ | Frontend origin(s) |
-| `VAPID_PUBLIC_KEY` | — | Web Push VAPID public key |
-| `VAPID_PRIVATE_KEY` | — | Web Push VAPID private key |
-| `VAPID_ADMIN_EMAIL` | — | VAPID contact email |
-| `ENABLE_RECURRENCE_OVERRIDES` | — | `True` to enable event instance overrides |
-
-### Root `.env` (Docker Compose)
-
-| Variable | Description |
-|----------|-------------|
-| `DOCR_REGISTRY` | DigitalOcean Container Registry name |
-| `IMAGE_TAG` | Docker image tag (set by CI to the commit SHA) |
-| `DROPLET_HOST` | Droplet IP address |
-| `DROPLET_USER` | SSH user on the Droplet |
-
----
-
-## CI/CD Pipeline
-
-### `build.yml` — Production deployment
-
-Triggered on: **push to `main`**.
-
-```
-Steps:
-  1. Checkout
-  2. Log in to DOCR
-  3. Build backend image  →  registry.digitalocean.com/{registry}/backend:{sha}
-  4. Push backend image
-  5. Build frontend image →  registry.digitalocean.com/{registry}/frontend:{sha}
-  6. Push frontend image
-  7. SSH into Droplet:
-       a. docker login DOCR
-       b. docker compose pull
-       c. docker compose up -d --no-build
-       d. docker compose exec backend python manage.py migrate
-       e. docker compose exec backend python manage.py collectstatic --noinput
+```text
+X-Forwarded-Proto: https
 ```
 
-### `test-backend.yml` — Backend CI
+If a remote load balancer must reach the server directly, set `HTTP_BIND=0.0.0.0` and restrict the published port at the firewall to that load balancer's addresses.
 
-Triggered on: pull requests to `main`.
+After HTTPS is confirmed, these optional settings can be added to `.env`:
 
-Runs: Ruff lint → Django tests → coverage ≥ 90 % → Docker build smoke test.
+```dotenv
+SECURE_SSL_REDIRECT=True
+SECURE_HSTS_SECONDS=31536000
+SECURE_HSTS_INCLUDE_SUBDOMAINS=True
+SECURE_HSTS_PRELOAD=False
+```
 
-### `test-frontend.yml` — Frontend CI
+Enable HSTS only after every relevant hostname is permanently available over HTTPS. A bad HSTS configuration is cached by browsers and is difficult to reverse.
 
-Triggered on: pull requests to `main`.
+If the React frontend is hosted on a different origin, add that full origin to both `CORS_ALLOWED_ORIGINS` and `CSRF_TRUSTED_ORIGINS`. This is not needed for the supplied same-origin Nginx setup.
 
-Runs: ESLint → Vitest (coverage ≥ 60 %) → Docker build smoke test.
+## Registry images
 
-### `previews.yml` — PR preview environments
+For CI-built images, set these values in `.env`:
 
-Triggered on: pull requests.
+```dotenv
+BACKEND_IMAGE=registry.example.com/timely/backend:<immutable tag>
+FRONTEND_IMAGE=registry.example.com/timely/frontend:<immutable tag>
+```
 
-Spins up an ephemeral preview environment per PR, posts the URL as a PR comment. Preview is torn down when the PR is closed.
-
-### `opencode.yml` — AI code review
-
-Triggered on: PR comments containing `/oc` or `/opencode`.
-
-Runs an OpenCode AI review on the pull request diff.
-
----
-
-## Deploying for the First Time
-
-### Prerequisites
-
-1. A DigitalOcean Droplet with Docker and Docker Compose installed.
-2. A DigitalOcean Container Registry created.
-3. GitHub secrets configured (see below).
-4. DNS pointing to the Droplet (or via Cloudflare proxy).
-
-### GitHub secrets required
-
-| Secret | Value |
-|--------|-------|
-| `DOCR_TOKEN` | DigitalOcean API token with registry write access |
-| `DOCR_REGISTRY` | Registry name (e.g. `my-registry`) |
-| `DROPLET_HOST` | Droplet IP |
-| `DROPLET_USER` | SSH user (usually `root`) |
-| `DROPLET_SSH_KEY` | Private key for SSH access |
-
-### First-time database setup
-
-After the first deployment:
+Then deploy without rebuilding:
 
 ```bash
-# SSH into the Droplet
-ssh user@droplet-ip
-
-# Run initial migrations
-docker compose exec backend python manage.py migrate
-
-# Create a superuser
-docker compose exec backend python manage.py createsuperuser
-
-# (Optional) Seed with sample data
-docker compose exec backend python manage.py seed
+docker compose pull
+docker compose up -d --no-build
 ```
 
----
+Use immutable release or commit tags for rollback safety instead of relying on `latest`.
 
-## Routine Operations
+## Upgrades and rollback
 
-### Updating the application
-
-Push to `main`. The `build.yml` workflow handles everything automatically.
-
-### Rolling back
+For a source-based deployment:
 
 ```bash
-# SSH into Droplet
-ssh user@droplet-ip
-
-# Set a previous image tag
-export IMAGE_TAG=<previous-commit-sha>
-
-# Pull and restart
-docker compose pull && docker compose up -d --no-build
+git pull --ff-only
+docker compose up -d --build
 ```
 
-### Viewing logs
+Compose recreates the one-shot migration service and waits for it before replacing application traffic. Review migrations and take a database backup before releases containing schema changes. Application rollback does not automatically reverse a database migration.
+
+For registry deployments, change `BACKEND_IMAGE` and `FRONTEND_IMAGE` to the previous immutable tags and run `docker compose up -d --no-build`.
+
+## Backups
+
+Back up both PostgreSQL and uploaded media. For example:
 
 ```bash
-# All services
+docker compose exec -T postgres pg_dump -U timely -d timely -Fc > timely.dump
+tar -czf timely-media.tar.gz media/
+```
+
+Use the actual database user and name from `.env`. Store backups away from the application server and test restoration periodically. The `postgres_data` Docker volume is persistent, but a volume is not a backup.
+
+## Operations
+
+```bash
+# Service state and health
+docker compose ps
+
+# Follow all logs
 docker compose logs -f
 
-# Backend only
+# Follow one service
 docker compose logs -f backend
 
-# Celery worker
-docker compose logs -f celery-worker
+# Re-run Django's production checks
+docker compose exec backend python manage.py check --deploy
 ```
 
-### Running management commands
+Only one Celery beat instance should run for a deployment. Celery workers can be scaled independently if workload grows. The local `media/` bind mount is suitable for one host; use shared/object storage before scaling the web tier across multiple hosts.
 
-```bash
-docker compose exec backend python manage.py <command>
+## Production checklist
 
-# Examples:
-docker compose exec backend python manage.py shell
-docker compose exec backend python manage.py dbshell
-docker compose exec backend python manage.py migrate
-docker compose exec backend python manage.py collectstatic --noinput
-docker compose exec backend python manage.py seed
-```
-
-### Restarting individual services
-
-```bash
-docker compose restart backend
-docker compose restart celery-worker
-docker compose restart celery-beat
-```
-
----
-
-## TLS / HTTPS
-
-TLS termination is handled by **Cloudflare** in front of the Nginx container. The Nginx config uses Cloudflare's IP ranges to enforce that only Cloudflare-proxied traffic reaches the Droplet (via the `cloudflare_ips.conf` include).
-
-- No `certbot` or self-signed certs are required on the Droplet.
-- Ensure the Cloudflare SSL/TLS mode is set to **Full (strict)** to prevent HTTP downgrade between Cloudflare and the origin.
-
----
-
-## Health Checks
-
-No explicit `HEALTHCHECK` is defined in the Dockerfiles. The deployment step runs `docker compose up -d --no-build`, which will restart any crashed containers.
-
-For production monitoring, consider adding `HEALTHCHECK` directives and a Droplet monitoring alert in DigitalOcean.
-
----
-
-## Dev Stack vs Production Stack
-
-| Setting | Development | Production |
-|---------|-------------|------------|
-| Database | SQLite (file in `backend/`) | PostgreSQL 16 container |
-| Static files | Django dev server | Nginx from `static_volume` |
-| Hot reload | Bind-mounted volumes | Immutable container image |
-| Cloudflare IPs | Not enforced | Enforced in Nginx |
-| HTTPS | HTTP only (`localhost`) | Via Cloudflare |
-| Celery | Optional | Always running |
-
-See [Installation →](./02-installation.md) for running the dev stack locally.
+- `.env` is not committed and contains unique production secrets.
+- `DEBUG=False` is supplied by the production Compose stack.
+- `ALLOWED_HOSTS` and `CSRF_TRUSTED_ORIGINS` match the public hostname.
+- HTTPS redirects and HSTS are enabled only after TLS is working.
+- `/api/health/` returns 200 through the public proxy.
+- `/ws/` successfully upgrades to a WebSocket connection.
+- PostgreSQL and `media/` backups are automated and restoration is tested.
+- Redis, PostgreSQL, and port 8000 are not publicly exposed.
+- VAPID keys are configured if browser push notifications are required.

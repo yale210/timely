@@ -2,9 +2,11 @@
 
 import sys
 from importlib import reload
+from unittest.mock import patch
 
+from django.db import DatabaseError
 from django.conf import settings
-from django.test import SimpleTestCase, override_settings
+from django.test import SimpleTestCase, TestCase, override_settings
 from django.urls import reverse
 
 
@@ -58,6 +60,7 @@ class SourceUrlsTest(SimpleTestCase):
 
     def test_named_source_routes_reverse_expected_paths(self):
         """Verify core named top-level routes reverse to stable API paths."""
+        self._assert_reverse_path("health-check", "/api/health/")
         self._assert_reverse_path("schedule-tasks", "/api/schedule/")
         self._assert_reverse_path("unschedule-tasks", "/api/unschedule/")
         self._assert_reverse_path("weekly-summary", "/api/stats/weekly/")
@@ -91,3 +94,22 @@ class SourceUrlsTest(SimpleTestCase):
         self._assert_reverse_path("notification-list", "/api/notifications/")
         self._assert_reverse_path("push-list", "/api/push/")
         self._assert_reverse_path("admin-users", "/api/admin/users/")
+
+
+class HealthCheckTest(TestCase):
+    """Tests for the deployment health endpoint."""
+
+    def test_health_check_reports_database_ready(self):
+        """Verify hosting health checks can confirm database connectivity."""
+        response = self.client.get("/api/health/")
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json(), {"status": "ok"})
+
+    @patch("source.views.connection.cursor", side_effect=DatabaseError)
+    def test_health_check_reports_database_unavailable(self, _cursor):
+        """Verify a failed database connection makes the readiness check fail."""
+        response = self.client.get("/api/health/")
+
+        self.assertEqual(response.status_code, 503)
+        self.assertEqual(response.json(), {"status": "unavailable"})
